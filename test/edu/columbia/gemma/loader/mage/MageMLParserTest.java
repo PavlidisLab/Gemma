@@ -2,6 +2,7 @@ package edu.columbia.gemma.loader.mage;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.Test;
@@ -15,6 +16,8 @@ import org.biomage.BioMaterial.BioMaterial;
 import org.biomage.BioSequence.BioSequence;
 import org.biomage.Experiment.Experiment;
 import org.biomage.QuantitationType.QuantitationType;
+
+import edu.columbia.gemma.util.PrettyPrinter;
 
 public class MageMLParserTest extends TestCase {
 
@@ -56,7 +59,8 @@ public class MageMLParserTest extends TestCase {
         istPhysicalBioAssay = MageMLParserTest.class.getResourceAsStream( "/data/mage/PhysicalBioAssay.xml" );
         istTIGRSimpleArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/TIGRSimpleArrayDesign.xml" );
         istTIGRBiomaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/TIGRBiomaterial_package1.xml" );
-        istDrosDesignElement = MageMLParserTest.class.getResourceAsStream( "/data/mage/DesignElement_minimal.package.xml" );
+        istDrosDesignElement = MageMLParserTest.class
+                .getResourceAsStream( "/data/mage/DesignElement_minimal.package.xml" );
         istProtocol = MageMLParserTest.class.getResourceAsStream( "/data/mage/Protocol_package.xml" );
         istQTAffy = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_Affymetrix.xml" );
         istQTGenePix = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_GenePix.xml" );
@@ -68,105 +72,114 @@ public class MageMLParserTest extends TestCase {
         mlp = null;
     }
 
-   
     // todo these tests are lame.
     public void testGetData() throws Exception {
 
         mlp.parse( istBioSequence );
         Collection result = mlp.getData( BioSequence.class );
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
         mlp.parse( istExperiment );
         result = mlp.getData( Experiment.class );
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
         mlp.parse( istArrayDesign );
         result = mlp.getData( ArrayDesign.class );
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
         mlp.parse( istBioMaterial );
         result = mlp.getData( BioMaterial.class );
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
         mlp.parse( istQuantitationType );
         result = mlp.getData( QuantitationType.class );
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
     }
 
-    public void testGetConvertedData() throws Exception {
-        mlp.parse( istBioSequence );
-        Collection result = mlp.getConvertedData( BioSequence.class );
-        assertTrue( result instanceof Collection );
+    public void testGetQuantitationTypes() throws Exception {
+        log.debug( ">>> Converting Quantitation Types" );
+
+        log.debug( "converting all: QuantitationType Affymetrix" );
+        mlp.parse( istQTAffy );
+        List result = ( List ) mlp.getConvertedData();
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
+
+        log.debug( "converting all: QuantitationType GenePix" );
+        mlp.parse( istQTGenePix );
+        result = ( List ) mlp.getConvertedData();
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
+
+        log.debug( "converting all: QuantitationType" );
+        mlp.parse( istQuantitationType );
+        result = ( List ) mlp.getConvertedData();
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
     }
 
     public void testGetAllConvertedData() throws Exception {
 
-        log.warn( "converting all: Biosequence" );
-        mlp.parse( istBioSequence );
+        log.debug( "converting all: TIGRBiomaterial" );
+        mlp.parse( istTIGRBiomaterial );
         Collection result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug(  "\n" + PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: QuantitationType" );
-        mlp.parse( istQuantitationType );
+        log.debug( "converting all: Biosequence" );
+        mlp.parse( istBioSequence );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug(  "\n" + PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: BioMaterial" );
+        log.debug( "converting all: BioMaterial" );
         mlp.parse( istBioMaterial );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug(  "\n" + PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: Experiment" );
+        log.debug( "converting all: Experiment" );
         mlp.parse( istExperiment );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" +  PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: ArrayDesign" );
+        log.debug( "converting all: ArrayDesign" );
         mlp.parse( istArrayDesign );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
-        log.warn( "converting all: DesignElement" );
+        log.debug( "converting all: DesignElement" );
         mlp.parse( istDesignElement );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
 
-        // this file is faulty, somehow; or there is a bug in the mage stk, or I'm doing something wrong.
-        log.info( "converting all: DrosDesignElement" );
-        mlp.parse( istDrosDesignElement );
-        result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        // this file is faulty, somehow; or there is a bug in the mage stk, or I'm doing something wrong. (actually, it
+        // is a MAGE bug)
+        // log.info( "converting all: DrosDesignElement" );
+        // mlp.parse( istDrosDesignElement );
+        // result = mlp.getConvertedData();
+        // log.debug( result.size() + " elements obtained" );
 
-        log.warn( "converting all: PhysicalBioAssay" );
+        log.debug( "converting all: PhysicalBioAssay" );
         mlp.parse( istPhysicalBioAssay );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug(  "\n" + PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: TIGRSimpleArrayDesign" );
+        log.debug( "converting all: TIGRSimpleArrayDesign" );
         mlp.parse( istTIGRSimpleArrayDesign );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug(  "\n" + PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: TIGRBiomaterial" );
-        mlp.parse( istTIGRBiomaterial );
-        result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
-
-        log.warn( "converting all: Protocol" );
+        log.debug( "converting all: Protocol" );
         mlp.parse( istProtocol );
         result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" +  PrettyPrinter.print( result ) );
 
-        log.warn( "converting all: QuantitationType Affymetrix" );
-        mlp.parse( istQTAffy );
-        result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
-
-        log.warn( "converting all: QuantitationType GenePix" );
-        mlp.parse( istQTGenePix );
-        result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
     }
 
     public void testBigBioSequence() throws Exception {
@@ -174,11 +187,13 @@ public class MageMLParserTest extends TestCase {
         istBigBioSequence = new GZIPInputStream( MageMLParserTest.class
                 .getResourceAsStream( "/data/mage/A-TIGR-1-BioSequence.xml.gz" ) );
 
-        log.warn( "Parsing big biosequence" );
+        log.debug( "Parsing big biosequence" );
         mlp.parse( istBigBioSequence );
-        log.warn( "Converting big biosequence" );
+        log.debug( "Converting big biosequence" );
         Collection result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+
+        istBigBioSequence.close();
     }
 
     public void testBigDesignElement() throws Exception {
@@ -186,36 +201,39 @@ public class MageMLParserTest extends TestCase {
         istBigDesignElement = new GZIPInputStream( MageMLParserTest.class
                 .getResourceAsStream( "/data/mage/A-TIGR-1-DesignElement.xml.gz" ) );
 
-        log.warn( "Parsing BigDesignElement" );
+        log.debug( "Parsing BigDesignElement" );
         mlp.parse( istBigDesignElement );
-        log.warn( "Converting BigDesignElement" );
+        log.debug( "Converting BigDesignElement" );
         Collection result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+
+        istBigDesignElement.close();
     }
 
     public void testBigArrayDesign() throws Exception {
         istBigArrayDesign = new GZIPInputStream( MageMLParserTest.class
                 .getResourceAsStream( "/data/mage/A-TIGR-1-ArrayDesign.xml.gz" ) );
 
-        log.warn( "Parsing BigArrayDesign" );
+        log.debug( "Parsing BigArrayDesign" );
         mlp.parse( istBigArrayDesign );
-        log.warn( "Converting BigArrayDesign" );
+        log.debug( "Converting BigArrayDesign" );
         Collection result = mlp.getConvertedData();
-        log.warn( result.size() + " elements obtained" );
+        log.debug( result.size() + " elements obtained" );
+
+        istBigArrayDesign.close();
     }
 
     // public void test100CP() throws Exception {
     // ist100CP = new GZIPInputStream( MageMLParserTest.class
     // .getResourceAsStream( "/data/mage/11188230_100CP_MAGE-ML.XML.gz" ) );
     //
-    // log.warn( "Parsing 100CP" );
+    // log.debug( "Parsing 100CP" );
     // mlp.parse( ist100CP );
-    // log.warn( "Converting 100CP" );
+    // log.debug( "Converting 100CP" );
     // Collection result = mlp.getConvertedData();
     // assertTrue( result instanceof Collection );
     // }
 
-    
     public static Test suite() {
         return new TestSuite( MageMLParserTest.class );
     }
