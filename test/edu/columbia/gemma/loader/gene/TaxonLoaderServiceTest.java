@@ -33,7 +33,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
     BufferedReader br;
     Configuration conf;
     File file;
-    TaxonDao taxonDao;
+    TaxonDao taxonDaoMock;
     TaxonLoaderService tls;
     InputStream isTaxonLoader;
     
@@ -47,8 +47,8 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
         file = new File( conf.getString( "testtaxa.filename" ) );
         tls = new TaxonLoaderService();
         control = MockControl.createControl( TaxonDao.class );
-        taxonDao = ( TaxonDao ) control.getMock();
-        tls.setTaxonDao( taxonDao );
+        taxonDaoMock = ( TaxonDao ) control.getMock();
+        tls.setTaxonDao( taxonDaoMock );
     }
 
     /**
@@ -80,7 +80,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
         br.readLine();
         while ( ( line = br.readLine() ) != null ) {
             String sArray[] = line.split( "\t" );
-            taxonDao.findByScientificName( sArray[2] );
+            taxonDaoMock.findByScientificName( sArray[2] );
             control.setReturnValue( col );
         }
         control.replay();
@@ -105,9 +105,9 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
         br.readLine();
         while ( ( line = br.readLine() ) != null ) {
             String sArray[] = line.split( "\t" );
-            taxonDao.findByScientificName( sArray[2] );
+            taxonDaoMock.findByScientificName( sArray[2] );
             control.setReturnValue( col );
-            taxonDao.create( tt );
+            taxonDaoMock.create( tt );
             control.setReturnValue( null );
         }
         control.replay();
@@ -135,7 +135,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
         br.readLine();
         while ( ( line = br.readLine() ) != null ) {
             String sArray[] = line.split( "\t" );
-            taxonDao.findByScientificName( sArray[2] );
+            taxonDaoMock.findByScientificName( sArray[2] );
             control.setReturnValue( col );
         }
         control.replay();
