@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +15,13 @@ import org.apache.commons.logging.LogFactory;
 import org.biomage.Array.ArrayManufacture;
 import org.biomage.ArrayDesign.ArrayDesign;
 import org.biomage.ArrayDesign.CompositeGroup;
+import org.biomage.ArrayDesign.FeatureGroup;
 import org.biomage.ArrayDesign.PhysicalArrayDesign;
 import org.biomage.ArrayDesign.ReporterGroup;
 import org.biomage.BQS.BibliographicReference;
 import org.biomage.BioAssay.BioAssay;
+import org.biomage.BioAssay.BioAssayCreation;
+import org.biomage.BioAssay.Channel;
 import org.biomage.BioAssay.DerivedBioAssay;
 import org.biomage.BioAssay.MeasuredBioAssay;
 import org.biomage.BioAssay.PhysicalBioAssay;
@@ -49,6 +53,7 @@ import org.biomage.QuantitationType.SpecializedQuantitationType;
 import edu.columbia.gemma.common.Identifscribable;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.protocol.Software;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.ScaleType;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
@@ -57,6 +62,7 @@ import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.sequence.biosequence.PolymerType;
 import edu.columbia.gemma.sequence.biosequence.SequenceType;
 import edu.columbia.gemma.sequence.gene.Taxon;
@@ -67,7 +73,19 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * method on any MAGE domain object and get a fully-populated Gemma domain object. There is no need to use the methods
  * in this class directly when handling MAGE-ML files: use the {@link edu.columbia.gemma.loader.mage.MageMLParser.}
  * <p>
- * FIXME: This is gigantic. The names of attributes etc. should be in an external file.
+ * FIXME: This is gigantic. The names of attributes etc. should be in an external file. todo: make sure all
+ * identifiables are cached properly
+ * <h2>Zoo of packages that have references between them</h2>
+ * <h3>DesignElement_package and ArrayDesign_package</h3>
+ * <p>
+ * DesignElement Contains the ReporterCompositeMap (and the FeatureReporterMap). This allows us to fill in the map in
+ * the CompositeSequence.
+ * <p>
+ * ArrayDesign Contains the CompositeGropus, FeatureGroups and ReporterGroups. This leads us to a description of all the
+ * DesignElement on the array, but not the reportercompositemap.
+ * <p>
+ * Thus both of these have references to CompositeSequences for example; the two packages can be in different files.
+ * Therefore we need to fill in object that have the same Identifier with data from the other file.
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
@@ -77,6 +95,10 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * @version $Id$
  */
 public class MageMLConverter {
+
+    // convertPerson
+    // convertOrganization
+    // convertContact
 
     /**
      * Used to indicate that a MAGE list should be converted to a Gemma list (or collection)
@@ -143,28 +165,33 @@ public class MageMLConverter {
      */
     public void convertArrayDesignAssociations( ArrayDesign mageObj,
             edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj, Method getter ) {
-        log.warn( "convertArrayDesignAssociations Not fully supported yet" );
+
         Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "CompositeGroups" ) ) {
             assert associatedObject instanceof List;
-            ;
+            specialConvertCompositeGroups( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "DesignProviders" ) ) {
             assert associatedObject instanceof List;
         } else if ( associationName.equals( "FeatureGroups" ) ) {
             assert associatedObject instanceof List;
+            specialConvertFeatureGroups( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "ProtocolApplications" ) ) {
             assert associatedObject instanceof List;
         } else if ( associationName.equals( "ReporterGroups" ) ) {
             assert associatedObject instanceof List;
+            specialConvertReporterGroups( ( List ) associatedObject, gemmaObj );
         } else {
             log.debug( "Unsupported or unknown association, or it belongs to the subclass: " + associationName );
         }
     }
 
     /**
-     * We don't support at all, so this is a no-op.
+     * A no-op, as we don't keep track of this.
+     * 
+     * @param mageObj
+     * @return
      */
     public Object convertArrayManufacture( ArrayManufacture mageObj ) {
         return null; // no-op.
@@ -241,8 +268,6 @@ public class MageMLConverter {
         }
     }
 
-    // public Description convertReplicateDescription()
-
     /**
      * @param mageObj
      * @return
@@ -254,8 +279,39 @@ public class MageMLConverter {
         edu.columbia.gemma.common.description.BibliographicReference result = edu.columbia.gemma.common.description.BibliographicReference.Factory
                 .newInstance();
         convertDescribable( mageObj, result );
+        result.setEditor( mageObj.getEditor() );
+        result.setAuthorList( mageObj.getAuthors() );
+        result.setIssue( mageObj.getIssue() );
+        result.setPages( mageObj.getPages() );
+        result.setPublication( mageObj.getPublication() );
+        result.setPublisher( mageObj.getPublisher() );
+        result.setTitle( mageObj.getTitle() );
+        result.setVolume( mageObj.getVolume() );
+        result.setYear( mageObj.getYear() );
+        result.setFullTextURI( mageObj.getURI() ); // FIXME URI is probably not right.
         convertAssociations( mageObj, result );
         return result;
+    }
+
+    /**
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     */
+    public void convertBibliographicReferenceAssociations( BibliographicReference mageObj,
+            edu.columbia.gemma.common.description.BibliographicReference gemmaObj, Method getter ) {
+
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        String associationName = getterToPropertyName( getter );
+        if ( associatedObject == null ) return;
+
+        if ( associationName.equals( "Accessions" ) ) {
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "PubAccession" );
+        } else if ( associationName.equals( "Parameters" ) ) {
+            // no-op, we don't support.
+        } else {
+            log.debug( "Unsupported or unknown association: " + associationName );
+        }
     }
 
     /**
@@ -268,13 +324,16 @@ public class MageMLConverter {
 
         edu.columbia.gemma.expression.bioAssay.BioAssay result = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory
                 .newInstance();
-        if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
+
+        // FIXME - we need the array designs to get filled in.
+
+        if ( !convertIdentifiable( mageObj, result ) ) {
+            convertAssociations( mageObj, result );
+        }
         return result;
     }
 
     /**
-     * FIXME - most of these associations aren't supported by us.
-     * 
      * @param mageObj
      * @param gemmaObj
      * @param getter
@@ -287,12 +346,13 @@ public class MageMLConverter {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
-        if ( associationName.equals( "BioAssayFactorValues" ) )
+        if ( associationName.equals( "BioAssayFactorValues" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "BioAssayFactorValues" );
-        else if ( associationName.equals( "Channels" ) )
+        } else if ( associationName.equals( "Channels" ) ) {
             ; // we don't support this.
-        else
+        } else {
             log.debug( "Unsupported or unknown association: " + associationName );
+        }
     }
 
     /**
@@ -321,7 +381,7 @@ public class MageMLConverter {
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Characteristics" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, null );
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Characteristics" );
         } else if ( associationName.equals( "MaterialType" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "QualityControlStatistics" ) ) {
@@ -329,8 +389,7 @@ public class MageMLConverter {
             // we don't support : TODO check
         } else if ( associationName.equals( "Treatments" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, null ); // FIXME - name of
-            // association is wrong
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Treatments" );
         } else {
             log.debug( "Unsupported or unknown association, or from subclass: " + associationName );
         }
@@ -453,32 +512,54 @@ public class MageMLConverter {
     }
 
     /**
+     * FIXME - need to push anything useful up to a single biomaterial.
+     * 
      * @param mageObj
      * @param gemmaObj
      * @param getter
      */
     public void convertBioSourceAssociations( BioSource mageObj, BioMaterial gemmaObj, Method getter ) {
-        log.warn( "convertBioMaterialAssociations (biosource) Not fully supported yet" );
         convertBioMaterialAssociations( mageObj, gemmaObj, getter );
-        // FIXME source contact.
+
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        String associationName = getterToPropertyName( getter );
+
+        if ( associatedObject == null ) return;
+
+        if ( associationName.equals( "SourceContacts" ) ) {
+            // no-op, we don't support this.
+        } else {
+            log.debug( "Unsupported or unknown association: " + associationName );
+        }
+
     }
 
     /**
-     * FIXME - what do we do with this?
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.description.OntologyEntry convertCategory( OntologyEntry mageObj ) {
+        return convertOntologyEntry( mageObj );
+    }
+
+    /**
+     * A no-op, since we don't explicitly support channels at the moment.
+     * 
+     * @param mageObj
+     * @return
+     */
+    public Object convertChannel( Channel mageObj ) {
+        return null; // No-op
+    }
+
+    /**
+     * NO-op, we deal with it elsewhere specially.
      * 
      * @param mageObj
      * @return
      */
     public Object convertCompositeGroup( CompositeGroup mageObj ) {
         if ( mageObj == null ) return null;
-
-        log.debug( "Converting CompositeGroup " + mageObj.getIdentifier() );
-        log.warn( "Conversion operation not yet implemented: convertCompositeGroup" );
-
-        // edu.columbia.gemma.expression.biomaterial. result = Reporter.Factory.newInstance();
-        // convertIdentifiable( mageObj, result );
-        // convertAssociations( mageObj, result );
-        // return result;
         return null;
     }
 
@@ -526,20 +607,13 @@ public class MageMLConverter {
 
     /**
      * FIXME - what do we do with this? Used for Label of LabeledExtract, and details of treatments and biomaterial
-     * measurements.
+     * measurements. - no-op for now.
      * 
      * @param mageObj
      * @return
      */
     public Object convertCompound( org.biomage.BioMaterial.Compound mageObj ) {
         if ( mageObj == null ) return null;
-
-        log.debug( "Converting Compound " + mageObj.getIdentifier() );
-        log.warn( "Conversion operation not yet implemented: convertCompound" );
-
-        // edu.columbia.gemma.expression.biomaterial. result = Reporter.Factory.newInstance();
-        // if (!convertIdentifiable( mageObj, result )) convertAssociations( mageObj, result );
-        // return result;
         return null;
     }
 
@@ -620,11 +694,39 @@ public class MageMLConverter {
      * @param mageObj
      * @return
      */
-    public Object convertDerivedBioAssay( DerivedBioAssay mageObj ) {
+    public PrimitiveType convertDataType( OntologyEntry mageObj ) {
+        if ( mageObj == null ) return null;
+
+        String val = mageObj.getValue();
+
+        if ( val.equals( "boolean" ) ) {
+            return PrimitiveType.BOOLEAN;
+        } else if ( val.equalsIgnoreCase( "char" ) ) {
+            return PrimitiveType.CHAR;
+        } else if ( val.equalsIgnoreCase( "double" ) ) {
+            return PrimitiveType.DOUBLE;
+        } else if ( val.equalsIgnoreCase( "float" ) ) {
+            return PrimitiveType.FLOAT;
+        } else if ( val.equalsIgnoreCase( "int" ) ) {
+            return PrimitiveType.INT;
+        } else if ( val.equalsIgnoreCase( "long" ) ) {
+            return PrimitiveType.LONG;
+        } else if ( val.equalsIgnoreCase( "string" ) ) {
+            return PrimitiveType.STRING;
+        } else {
+            log.error( "Unrecognized DataType " + val );
+        }
+        return null;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.expression.bioAssay.BioAssay convertDerivedBioAssay( DerivedBioAssay mageObj ) {
         if ( mageObj == null ) return null;
 
         log.debug( "Converting DerivedBioAssay " + mageObj.getIdentifier() );
-        log.warn( "Conversion operation not yet implemented: convertDerivedBioAssay" );
 
         edu.columbia.gemma.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
         convertAssociations( mageObj, result ); // FIXME this has to only do the subclass part.
@@ -640,17 +742,16 @@ public class MageMLConverter {
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
         Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
         String associationName = getterToPropertyName( getter );
-        log.warn( "convertDerivedBioAssayAssociations: Not supported fully" );
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "DerivedBioAssayMap" ) ) {
-            ;
-            ;
+            if ( ( ( List ) associatedObject ).size() > 0 ) log.warn( "Missing out on DerivedBioAssayMap" );
         } else if ( associationName.equals( "DerivedBioAssayData" ) ) {
-            ;
+            if ( ( ( List ) associatedObject ).size() > 0 ) log.warn( "Missing out on DerivedBioAssayData" );
+            ; // FIXME this may be what we actually use.
             ;
         } else if ( associationName.equals( "Type" ) ) {
-            // simpleFillIn(associatedObject, gemmaObj, getter);
+            // simpleFillIn( associatedObject, gemmaObj, getter, "Type" );
         } else {
             log.warn( "Unsupported or unknown association, or belongs to superclass: " + associationName );
         }
@@ -783,7 +884,7 @@ public class MageMLConverter {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "Category" ) )
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            simpleFillIn( associatedObject, gemmaObj, getter, "Category" );
         else if ( associationName.equals( "Annotations" ) )
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Annotations" );
         else if ( associationName.equals( "FactorValues" ) )
@@ -810,8 +911,8 @@ public class MageMLConverter {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "BioAssays" );
         } else if ( associationName.equals( "Providers" ) ) {
-            assert associatedObject instanceof List; // FIXME currently broken association.
-            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Provider" );
+            assert associatedObject instanceof List;
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Provider" );
         } else if ( associationName.equals( "BioAssayData" ) ) {
             assert associatedObject instanceof List;
             // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "BioAssayData" );
@@ -866,7 +967,7 @@ public class MageMLConverter {
             // we don't have this in our model TODO: check
         } else if ( associationName.equals( "Types" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Types" );
+          //  simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Types" ); // TODO quantifier is wrong
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -898,6 +999,38 @@ public class MageMLConverter {
         else
             log.debug( "Unsupported or unknown association: " + associationName );
 
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public FactorValue convertFactorValue( org.biomage.Experiment.FactorValue mageObj ) {
+        if ( mageObj == null ) return null;
+
+        FactorValue result = FactorValue.Factory.newInstance();
+        if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
+        return result;
+    }
+
+    /**
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     */
+    public void convertFactorValueAssociations( org.biomage.Experiment.FactorValue mageObj, FactorValue gemmaObj,
+            Method getter ) {
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        String associationName = getterToPropertyName( getter );
+        if ( associationName.equals( "ExperimentalFactor" ) ) {
+            simpleFillIn( associatedObject, gemmaObj, getter );
+        } else if ( associationName.equals( "Measurement" ) ) {
+            simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
+        } else if ( associationName.equals( "Value" ) ) {
+            simpleFillIn( associatedObject, gemmaObj, getter, "Value" );
+        } else {
+            log.warn( "Unsupported or unknown association: " + associationName );
+        }
     }
 
     /**
@@ -972,24 +1105,31 @@ public class MageMLConverter {
      * @param getter
      */
     public void convertLabeledExtractAssociations( LabeledExtract mageObj, BioMaterial gemmaObj, Method getter ) {
-        log.warn( "convertBioMaterialAssociations (labeled extract) Not fully supported yet" );
         convertBioMaterialAssociations( mageObj, gemmaObj, getter );
+
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        String associationName = getterToPropertyName( getter );
+
+        if ( associatedObject == null ) return;
+
+        if ( associationName.equals( "Labels" ) ) {
+            // we don't use this?
+        } else {
+            log.debug( "Unsupported or unknown association, or belongs to superclass: " + associationName );
+        }
     }
 
     /**
      * @param mageObj
      * @return
      */
-    public Object convertMeasuredBioAssay( MeasuredBioAssay mageObj ) {
+    public edu.columbia.gemma.expression.bioAssay.BioAssay convertMeasuredBioAssay( MeasuredBioAssay mageObj ) {
         if ( mageObj == null ) return null;
 
         log.debug( "Converting MeasuredBioAssay " + mageObj.getIdentifier() );
-        log.warn( "Conversion operation not yet implemented: convertMeasuredBioAssay" );
-
         edu.columbia.gemma.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
         // FIXME this will result in conversion twice because it is identifiable.
-        convertAssociations( mageObj, result ); // FIXME this has to only do the
-        // subclass part.
+        convertAssociations( mageObj, result );
         return result;
     }
 
@@ -1002,14 +1142,14 @@ public class MageMLConverter {
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
         Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
         String associationName = getterToPropertyName( getter );
-        log.warn( "convertMeasuredBioAssayAssociations: Not supported fully" );
+        log.debug( "Not supported fully yet" );
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "FeatureExtraction" ) ) {
-            ;
+            ; // FIXME we may not use this.
             ;
         } else if ( associationName.equals( "MeasuredBioAssayData" ) ) {
-            ;
+            ; // FIXME we may not use this.
             ;
         } else {
             log.debug( "Unsupported or unknown association, or belongs to superclass: " + associationName );
@@ -1022,6 +1162,14 @@ public class MageMLConverter {
      */
     public edu.columbia.gemma.common.quantitationtype.QuantitationType convertMeasuredSignal( MeasuredSignal mageObj ) {
         return convertQuantitationType( mageObj );
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.description.Description convertNormalizationDescription( Description mageObj ) {
+        return convertDescription( mageObj );
     }
 
     /**
@@ -1106,10 +1254,10 @@ public class MageMLConverter {
         if ( mageObj == null ) return null;
 
         log.debug( "Converting PhysicalBioAssay " + mageObj.getIdentifier() );
-        log.warn( "Conversion operation not yet fully implemented: convertPhysicalBioAssay" );
 
         edu.columbia.gemma.expression.bioAssay.BioAssay result = convertBioAssay( mageObj );
-        convertAssociations( mageObj, result ); // FIXME this has to only do the subclass part.
+
+        convertAssociations( mageObj, result );
         return result;
 
     }
@@ -1123,18 +1271,18 @@ public class MageMLConverter {
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
         Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
         String associationName = getterToPropertyName( getter );
-        log.warn( "convertPhysicalBioAssayAssociations: Not supported fully" );
+
         if ( associatedObject == null ) return;
 
-        if ( associationName.equals( "BioAssayCreation" ) ) {
-            ;
-            ;
+        if ( associationName.equals( "BioAssayCreation" ) ) { // we only use this to get the array designs.
+            specialGetArrayDesignForPhysicalBioAssay( mageObj, gemmaObj );
         } else if ( associationName.equals( "BioAssayTreatments" ) ) {
-            ;
-            ;
+            assert associatedObject instanceof List;
+            // if ( ( ( List ) associatedObject ).size() > 0 ) log.warn( "BioAssayTreatments is being missed" );
+            // this is not supported in our data model currently.
         } else if ( associationName.equals( "PhysicalBioAssayData" ) ) {
-            ;
-            ;
+            assert associatedObject instanceof List;
+            if ( ( ( List ) associatedObject ).size() > 0 ) log.warn( "PhysicalBioAssayData is being missed" );
         } else {
             log.debug( "Unsupported or unknown association, or belongs to superclass: " + associationName );
         }
@@ -1174,7 +1322,7 @@ public class MageMLConverter {
      */
     public edu.columbia.gemma.common.protocol.Protocol convertProtocol( Protocol mageObj ) {
         if ( mageObj == null ) return null;
-        log.warn( "Not fully supported: Protocol" );
+        // log.warn( "Not fully supported: Protocol" );
         edu.columbia.gemma.common.protocol.Protocol result = edu.columbia.gemma.common.protocol.Protocol.Factory
                 .newInstance();
 
@@ -1202,7 +1350,7 @@ public class MageMLConverter {
         if ( associationName.equals( "Hardwares" ) ) {
             ; // not supported
         } else if ( associationName.equals( "Softwares" ) ) {
-            // FIXME - not navigable.
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Softwares" );
         } else if ( associationName.equals( "Type" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "ParameterTypes" ) ) {
@@ -1218,6 +1366,14 @@ public class MageMLConverter {
      */
     public edu.columbia.gemma.common.quantitationtype.QuantitationType convertPValue( PValue mageObj ) {
         return convertQuantitationType( mageObj );
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.description.Description convertQualityControlDescription( Description mageObj ) {
+        return convertDescription( mageObj );
     }
 
     /**
@@ -1267,79 +1423,16 @@ public class MageMLConverter {
      * @param mageObj
      * @return
      */
-    public ScaleType convertScale( OntologyEntry mageObj ) {
-        if ( mageObj == null ) return null;
-
-        String val = mageObj.getValue();
-        if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else if ( val.equals( "" ) ) {
-            return ScaleType.FOLDCHANGE;
-        } else {
-            log.error( "Unrecognized Scale " + val );
-        }
-        return null;
-    }
-
-    /**
-     * @param mageObj
-     * @return
-     */
-    public PrimitiveType convertDataType( OntologyEntry mageObj ) {
-        if ( mageObj == null ) return null;
-
-        String val = mageObj.getValue();
-
-        if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else if ( val.equals( "" ) ) {
-            return PrimitiveType.BOOLEAN;
-        } else {
-            log.error( "Unrecognized DataType " + val );
-        }
-        return null;
-    }
-
-    /**
-     * @param mageObj
-     * @return
-     */
     public edu.columbia.gemma.common.quantitationtype.QuantitationType convertRatio( Ratio mageObj ) {
         return convertQuantitationType( mageObj );
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.description.Description convertReplicateDescription( Description mageObj ) {
+        return convertDescription( mageObj );
     }
 
     /**
@@ -1383,8 +1476,9 @@ public class MageMLConverter {
     }
 
     /**
-     * FIXME Unlike in MAGE, reporter-composite map is not an entity. (The mage name is also confusing: it is an
-     * assocation betwee a composite sequence and the reporters that make it up). Therefore, this is a no-op.
+     * Unlike in MAGE, reporter-composite map is not an entity. (The mage name is also confusing: it is an assocation
+     * betwee a composite sequence and the reporters that make it up). Therefore, this is a no-op, we deal with it
+     * specially.
      * 
      * @param mageObj
      * @return
@@ -1395,22 +1489,75 @@ public class MageMLConverter {
     }
 
     /**
-     * FIXME - what do we do with this?
+     * No-op, we deal with specially.
      * 
      * @param mageObj
      * @return
      */
     public Object convertReporterGroup( ReporterGroup mageObj ) {
         if ( mageObj == null ) return null;
-
-        log.debug( "Converting ReporterGroup " + mageObj.getIdentifier() );
-        log.warn( "Conversion operation not yet implemented: convertReporterGroup" );
-
-        // edu.columbia.gemma.expression.biomaterial. result = Reporter.Factory.newInstance();
-        // convertIdentifiable( mageObj, result );
-        // convertAssociations( mageObj, result );
-        // return result;
         return null;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public ScaleType convertScale( OntologyEntry mageObj ) {
+        if ( mageObj == null ) return null;
+
+        String val = mageObj.getValue();
+        if ( val.equalsIgnoreCase( "" ) ) {
+            return ScaleType.FOLDCHANGE;
+        } else if ( val.equalsIgnoreCase( "foldchange" ) ) {
+            return ScaleType.LINEAR;
+        } else if ( val.equalsIgnoreCase( "ln" ) ) {
+            return ScaleType.LN;
+        } else if ( val.equalsIgnoreCase( "log10" ) ) {
+            return ScaleType.LOG10;
+        } else if ( val.equalsIgnoreCase( "log2" ) ) {
+            return ScaleType.LOG2;
+        } else if ( val.equalsIgnoreCase( "other" ) ) {
+            return ScaleType.OTHER;
+        } else {
+            log.error( "Unrecognized Scale " + val );
+        }
+        return null;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public Software convertSoftware( org.biomage.Protocol.Software mageObj ) {
+        if ( mageObj == null ) return null;
+        Software result = Software.Factory.newInstance();
+        if ( !convertIdentifiable( mageObj, result ) ) {
+            convertAssociations( mageObj, result );
+        }
+        return result;
+    }
+
+    /**
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     */
+    public void convertSoftwareAssociations( org.biomage.Protocol.Software mageObj, Software gemmaObj, Method getter ) {
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        String associationName = getterToPropertyName( getter );
+        if ( associatedObject == null ) return;
+        if ( associationName.equals( "Hardware" ) ) {
+            // no-op
+        } else if ( associationName.equals( "SoftwareManufacturers" ) ) {
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "SoftwareManufacturers" );
+        } else if ( associationName.equals( "Softwares" ) ) {
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "SoftwareComponents" );
+        } else if ( associationName.equals( "Type" ) ) {
+            simpleFillIn( associatedObject, gemmaObj, getter );
+        } else {
+            log.debug( "Unsupported or unknown association: " + associationName );
+        }
     }
 
     /**
@@ -1478,6 +1625,14 @@ public class MageMLConverter {
     }
 
     /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.description.OntologyEntry convertValue( OntologyEntry mageObj ) {
+        return convertOntologyEntry( mageObj );
+    }
+
+    /**
      * Special case: Convert a ReporterCompositeMaps (list) to a Collection of Reporters.
      * 
      * @param reporterCompositeMaps
@@ -1519,11 +1674,32 @@ public class MageMLConverter {
             log.debug( "Found reporters for composite sequence" );
             for ( Iterator iterator = rcpps.iterator(); iterator.hasNext(); ) {
                 ReporterPosition rps = ( ReporterPosition ) iterator.next();
+
+                if ( rps == null ) continue;
+
                 org.biomage.DesignElement.Reporter repr = rps.getReporter();
+
+                if ( repr == null ) continue;
+
                 // FIXME: this reporter already exists in memory, probably.
                 Reporter conv = convertReporter( repr );
-                conv.setStartInBioChar( rps.getStart().intValue() );
+
+                if ( conv == null ) {
+                    log.error( "Null converted reporter!" );
+                    continue;
+                }
+
                 result.add( conv );
+
+                Integer m = rps.getStart();
+
+                if ( m == null ) {
+                    // log.error( "Null start for reporter " + repr.getIdentifier() );
+                    continue;
+                }
+
+                conv.setStartInBioChar( m.intValue() );
+
             }
             break; // only take the first one;
         }
@@ -1647,7 +1823,7 @@ public class MageMLConverter {
         } catch ( SecurityException e ) {
             log.error( e );
         } catch ( NoSuchMethodException e ) {
-            log.error( "No such setter: " + "set" + propertyName, e );
+            log.error( "No such setter: " + "set" + propertyName + "(" + setee.getName() + ")", e );
         }
         return gemmaSetter;
     }
@@ -1824,6 +2000,144 @@ public class MageMLConverter {
             log.error( e );
         }
 
+    }
+
+    /**
+     * Extract compositeSequence information from the ArrayDesign package. The ArrayDesign package doesn't have any
+     * information about the compositeSequences, other than the fact that they belong to this arrayDesign.
+     * 
+     * @param compositeGroups
+     * @param gemmaObj
+     */
+    private void specialConvertCompositeGroups( List compositeGroups,
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
+        if ( compositeGroups.size() > 1 ) log.warn( "*** More than one compositeGroup in an array design!!!" );
+
+        log.warn( "Converting compositeGroups" );
+
+        Collection designObjs;
+        if ( gemmaObj.getDesignElements() == null ) {
+            designObjs = new HashSet();
+            gemmaObj.setDesignElements( designObjs );
+        } else {
+            designObjs = gemmaObj.getDesignElements();
+        }
+
+        for ( Iterator iter = compositeGroups.iterator(); iter.hasNext(); ) {
+            CompositeGroup rg = ( CompositeGroup ) iter.next();
+            List reps = rg.getCompositeSequences();
+            for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
+                org.biomage.DesignElement.CompositeSequence compseq = ( org.biomage.DesignElement.CompositeSequence ) iterator
+                        .next();
+
+                CompositeSequence csconv = convertCompositeSequence( compseq );
+
+                if ( !designObjs.contains( csconv ) ) {
+                    log.warn( "Adding new compositeSequence to the ArrayDesign" );
+                    designObjs.add( csconv );
+                } else {
+                    log.warn( "We already have this compositesequence " + csconv.getIdentifier() );
+                }
+            }
+        }
+
+    }
+
+    /**
+     * We don't have features, just reporter, so FIXME
+     * 
+     * @param featureGroups
+     * @param gemmaObj
+     */
+    private void specialConvertFeatureGroups( List featureGroups,
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
+        if ( featureGroups.size() > 1 ) log.warn( "*** More than one featureGroup in an array design!!!" );
+
+        log.warn( "Converting featureGroups" );
+
+        Collection designObjs;
+        if ( gemmaObj.getDesignElements() == null ) {
+            designObjs = new HashSet();
+            gemmaObj.setDesignElements( designObjs );
+        } else {
+            designObjs = gemmaObj.getDesignElements();
+        }
+
+        for ( Iterator iter = featureGroups.iterator(); iter.hasNext(); ) {
+            FeatureGroup rg = ( FeatureGroup ) iter.next();
+            List reps = rg.getFeatures();
+            for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
+                // org.biomage.DesignElement.Feature feature = ( org.biomage.DesignElement.Feature ) iterator.next();
+
+                // edu.columbia.gemma.expression.designElement.Feature csconv = convertFeature( feature );
+                // if ( !designObjs.contains( csconv ) ) {
+                // log.warn( "Adding new feature to the ArrayDesign" );
+                // designObjs.add( csconv );
+                // } else {
+                // log.warn( "We already have this feature " + csconv.getIdentifier() );
+                // }
+            }
+        }
+    }
+
+    /**
+     * Convert all the reporters via the reporter groups.
+     * 
+     * @param reporterGroups
+     * @param gemmaObj
+     */
+    private void specialConvertReporterGroups( List reporterGroups,
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
+
+        if ( reporterGroups.size() > 1 ) log.warn( "*** More than one reporter group in an array design!!!" );
+
+        log.warn( "Converting reporterGroups" );
+
+        Collection designObjs;
+        if ( gemmaObj.getDesignElements() == null ) {
+            designObjs = new HashSet();
+            gemmaObj.setDesignElements( designObjs );
+        } else {
+            designObjs = gemmaObj.getDesignElements();
+        }
+
+        for ( Iterator iter = reporterGroups.iterator(); iter.hasNext(); ) {
+            ReporterGroup rg = ( ReporterGroup ) iter.next();
+            List reps = rg.getReporters();
+            for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
+                org.biomage.DesignElement.Reporter reporter = ( org.biomage.DesignElement.Reporter ) iterator.next();
+                Reporter csconv = convertReporter( reporter );
+                if ( !designObjs.contains( csconv ) ) {
+                    log.warn( "Adding new reporter to the ArrayDesign" );
+                    designObjs.add( csconv );
+                } else {
+                    log.warn( "We already have this reporter " + csconv.getIdentifier() );
+                }
+            }
+        }
+        // gemmaObj.setNumberOfFeatures( designObjs() );
+    }
+
+    /**
+     * From a PhysicalBioAssay, find the associated ArrayDesign.
+     * 
+     * @param mageObj
+     * @param result
+     */
+    private void specialGetArrayDesignForPhysicalBioAssay( PhysicalBioAssay mageObj,
+            edu.columbia.gemma.expression.bioAssay.BioAssay result ) {
+
+        BioAssayCreation bac = mageObj.getBioAssayCreation();
+        if ( bac == null ) return;
+
+        ArrayDesign ad = bac.getArray().getArrayDesign();
+        if ( ad == null ) return;
+
+        log.warn( "Looked in " + mageObj.getIdentifier() + " for ArrayDesign " + ad.getIdentifier() );
+
+        edu.columbia.gemma.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
+        if ( result.getArrayDesignUsed() == null ) result.setArrayDesignUsed( new ArrayList() );
+        result.getArrayDesignUsed().add( conv );
     }
 
 }
