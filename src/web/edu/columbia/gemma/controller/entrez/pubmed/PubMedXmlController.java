@@ -7,16 +7,18 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
-import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 
 /**
+ * Allows user to view the results of a pubMed search, with the option of submitting the results.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -26,11 +28,14 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
  * @spring.bean id="pubMedXmlController"
  * @spring.property name="sessionForm" value="true"
  * @spring.property name="formView" value="pubMedForm"
- * @spring.property name="successView" value="hello.jsp"
+ * @spring.property name="successView" value="pubMedSuccess"
  * @spring.property name = "pubMedXmlFetcher" ref="pubMedXmlFetcher"
  */
 public class PubMedXmlController extends SimpleFormController {
     private PubMedXMLFetcher pubMedXmlFetcher;
+
+    /** Logger for this class and subclasses */
+    protected final Log log = LogFactory.getLog( getClass() );
 
     /**
      * @return Returns the pubMedXmlFetcher.
@@ -48,14 +53,23 @@ public class PubMedXmlController extends SimpleFormController {
      */
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws IOException {
-        Map myModel = new HashMap();
+
         String pubMedId = RequestUtils.getStringParameter( request, "pubMedId", null );
+
+        log.info( "Context Path: " + request.getContextPath() );
+        log.info( "Requested Uri: " + request.getRequestURI() );
+        log.info( "Authentication Type: " + request.getAuthType() );
+
         BibliographicReference br = pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-        //myModel.put("bibliographicReference",br);
-        System.err.println("Context Path: " + request.getContextPath());
-        System.err.println("Authentication Type: " + request.getAuthType());
-        System.err.println("Requested Uri: " + request.getRequestURI());
-        return new ModelAndView( new RedirectView(getSuccessView(),true), "model", myModel );
+
+        Map myModel = new HashMap();
+        myModel.put( "title", br.getTitle() );
+        myModel.put( "publication", br.getPublication() );
+        myModel.put( "authorList", br.getAuthorList() );
+        myModel.put( "abstract", br.getAbstractText() );
+
+        //return new ModelAndView( new RedirectView(getSuccessView(),true), "model", myModel );
+        return new ModelAndView( getSuccessView(), "model", myModel );
     }
 
     /**
