@@ -29,98 +29,99 @@ import edu.columbia.gemma.loader.smd.model.SMDPublication;
  */
 public class Publications {
 
-   protected static final Log log = LogFactory.getLog( Publications.class );
+    protected static final Log log = LogFactory.getLog( Publications.class );
 
-   public static void main( String[] args ) {
-      try {
-         Publications foo = new Publications();
-         foo.retrieveByFTP( 5 );
-      } catch ( IOException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      } catch ( SAXException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      } catch ( ConfigurationException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
-   private String baseDir = "smd/publications/";
+    public static void main( String[] args ) {
+        try {
+            Publications foo = new Publications();
+            foo.retrieveByFTP( 5 );
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( SAXException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( ConfigurationException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
-   private FTPClient f;
+    private String baseDir = "smd/publications/";
 
-   private Set publications; // set of SMDPublication
+    private FTPClient f;
 
-   public Publications() throws ConfigurationException {
-      publications = new HashSet();
-      Configuration config = new PropertiesConfiguration( "smd.properties" );
-      baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
+    private Set publications; // set of SMDPublication
 
-   }
+    public Publications() throws ConfigurationException {
+        publications = new HashSet();
+        Configuration config = new PropertiesConfiguration( "smd.properties" );
+        baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
 
-   public Iterator getIterator() {
-      return publications.iterator();
-   }
+    }
 
-   /**
-    * @throws IOException
-    * @throws SAXException
-    */
-   public void retrieveByFTP() throws IOException, SAXException {
-      this.retrieveByFTP( 0 );
-   }
+    public Iterator getIterator() {
+        return publications.iterator();
+    }
 
-   /**
-    * @throws SAXException
-    * @throws IOException
-    */
-   public void retrieveByFTP( int limit ) throws IOException, SAXException {
-      if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
+    /**
+     * @throws IOException
+     * @throws SAXException
+     */
+    public void retrieveByFTP() throws IOException, SAXException {
+        this.retrieveByFTP( 0 );
+    }
 
-      FTPFile[] files = f.listFiles( baseDir );
+    /**
+     * @throws SAXException
+     * @throws IOException
+     */
+    public void retrieveByFTP( int limit ) throws IOException, SAXException {
+        if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
-      for ( int i = 0; i < files.length; i++ ) {
-         if ( files[i].isDirectory() ) {
-            String pubNum = files[i].getName();
+        FTPFile[] files = f.listFiles( baseDir );
 
-            FTPFile[] pubfiles = f.listFiles( baseDir + "/" + pubNum );
-            for ( int j = 0; j < pubfiles.length; j++ ) {
+        for ( int i = 0; i < files.length; i++ ) {
+            if ( files[i].isDirectory() ) {
+                String pubNum = files[i].getName();
 
-               if ( !pubfiles[j].isDirectory() ) {
-                  String pubFile = pubfiles[j].getName();
+                FTPFile[] pubfiles = f.listFiles( baseDir + "/" + pubNum );
+                for ( int j = 0; j < pubfiles.length; j++ ) {
 
-                  if ( !pubFile.matches( "publication_[0-9]+.meta" ) ) continue;
+                    if ( !pubfiles[j].isDirectory() ) {
+                        String pubFile = pubfiles[j].getName();
 
-                  InputStream is = f.retrieveFileStream( baseDir + "/" + pubNum + "/" + pubFile );
-                  if ( is == null ) throw new IOException( "Could not get stream for " + pubFile );
+                        if ( !pubFile.matches( "publication_[0-9]+.meta" ) ) continue;
 
-                  SMDPublication newPub = new SMDPublication();
-                  newPub.read( is );
-                  boolean success = f.completePendingCommand();
-                  is.close();
+                        InputStream is = f.retrieveFileStream( baseDir + "/" + pubNum + "/" + pubFile );
+                        if ( is == null ) throw new IOException( "Could not get stream for " + pubFile );
 
-                  if ( !success ) {
-                     log.error( "Failed to complete download of " + pubFile );
-                     continue;
-                  }
+                        SMDPublication newPub = new SMDPublication();
+                        newPub.read( is );
+                        boolean success = f.completePendingCommand();
+                        is.close();
 
-                  newPub.setId( Integer.parseInt( pubNum ) );
-                  publications.add( newPub );
-                  log.info( "Retrieved " + pubFile );
+                        if ( !success ) {
+                            log.error( "Failed to complete download of " + pubFile );
+                            continue;
+                        }
 
-               }
+                        newPub.setId( Integer.parseInt( pubNum ) );
+                        publications.add( newPub );
+                        log.info( "Retrieved " + pubFile );
+
+                    }
+                }
             }
-         }
-         if ( publications.size() >= limit && limit > 0 ) {
-            log.info( "Reached requested limit of " + limit + " publications retrieved" );
-            break;
-         }
-      }
+            if ( publications.size() >= limit && limit > 0 ) {
+                log.info( "Reached requested limit of " + limit + " publications retrieved" );
+                break;
+            }
+        }
 
-      log.info( publications.size() + " publications retrieved." );
+        log.info( publications.size() + " publications retrieved." );
 
-      f.disconnect();
-   }
+        f.disconnect();
+    }
 
 }

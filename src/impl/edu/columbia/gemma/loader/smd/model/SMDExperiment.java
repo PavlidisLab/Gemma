@@ -34,21 +34,23 @@ import edu.columbia.gemma.loader.smd.util.SmdUtil;
  *    
  *     
  *      
- *                    &lt;experiment_set&gt;
- *                   !Name=PLA2G2A and human gastric cancers
- *                   !ExptSetNo=1743
- *                   !Description=We analyzed gene expression patterns in human gastric cancers by using cDNA microarrays representing approximately 30,300 genes. Expression of PLA2G2A, a gene previously implicated as a modifier of the Apc(Mi\
- *                   n/+) (multiple intestinal neoplasia 1) mutant phenotype in the mouse, was significantly correlated with patient survival. We confirmed this observation in an independent set of patient samples by using quantitative RT-PCR. Beyond\
- *                   its potential diagnostic and prognostic significance, this result suggests the intriguing possibility that the activity of PLA2G2A may suppress progression or metastasis of human gastric cancer.
- *                   &lt;experiment&gt;
- *                   !Name=GC (HKG10L)
- *                   !Exptid=16709
- *                   &lt;/experiment&gt;
- *                   &lt;experiment&gt;
- *                   !Name=GC (HKG10N)
- *                   !Exptid=16253
- *                   &lt;/experiment&gt;
- *                  ....
+ *       
+ *                     &lt;experiment_set&gt;
+ *                    !Name=PLA2G2A and human gastric cancers
+ *                    !ExptSetNo=1743
+ *                    !Description=We analyzed gene expression patterns in human gastric cancers by using cDNA microarrays representing approximately 30,300 genes. Expression of PLA2G2A, a gene previously implicated as a modifier of the Apc(Mi\
+ *                    n/+) (multiple intestinal neoplasia 1) mutant phenotype in the mouse, was significantly correlated with patient survival. We confirmed this observation in an independent set of patient samples by using quantitative RT-PCR. Beyond\
+ *                    its potential diagnostic and prognostic significance, this result suggests the intriguing possibility that the activity of PLA2G2A may suppress progression or metastasis of human gastric cancer.
+ *                    &lt;experiment&gt;
+ *                    !Name=GC (HKG10L)
+ *                    !Exptid=16709
+ *                    &lt;/experiment&gt;
+ *                    &lt;experiment&gt;
+ *                    !Name=GC (HKG10N)
+ *                    !Exptid=16253
+ *                    &lt;/experiment&gt;
+ *                   ....
+ *        
  *       
  *      
  *     
@@ -78,213 +80,217 @@ import edu.columbia.gemma.loader.smd.util.SmdUtil;
  */
 public class SMDExperiment {
 
-   /**
-    * <hr>
-    * <p>
-    * Copyright (c) 2004 Columbia University
-    * 
-    * @author pavlidis
-    * @version $Id$
-    */
+    /**
+     * <hr>
+     * <p>
+     * Copyright (c) 2004 Columbia University
+     * 
+     * @author pavlidis
+     * @version $Id$
+     */
 
-   private String name;
-   private int number;
-   private String description;
-   private List experiments; // a vector of experiment (er, bioassay) objects.
-   private int publicationId;
+    private String name;
+    private int number;
+    private String description;
+    private List experiments; // a vector of experiment (er, bioassay) objects.
+    private int publicationId;
 
-   public Description toDescription() {
-      Description d = new DescriptionImpl();
-      d.setText( this.description );
-      return d;
+    public Description toDescription() {
+        Description d = new DescriptionImpl();
+        d.setText( this.description );
+        return d;
 
-   }
+    }
 
-   public ExpressionExperiment toExperiment( Description d) {
-      ExpressionExperiment result = new ExpressionExperimentImpl();
+    public ExpressionExperiment toExperiment( Description d ) {
+        ExpressionExperiment result = new ExpressionExperimentImpl();
 
-      result.setSource( SmdUtil.getHostName() );
-      result.setDescription( d );
-      result.setName( name );
-      result.setIdentifier( "SMD:Experiment:" + number );
+        result.setSource( SmdUtil.getHostName() );
+        result.setDescription( d );
+        result.setName( name );
+        result.setIdentifier( "SMD:Experiment:" + number );
 
-      return result;
-   }
+        return result;
+    }
 
-   
+    public void setNumber( int number ) {
+        this.number = number;
+    }
 
-   public void setNumber( int number ) {
-      this.number = number;
-   }
+    public SMDExperiment() {
+        experiments = new Vector();
+    }
 
-   public SMDExperiment() {
-      experiments = new Vector();
-   }
+    /**
+     * @throws IOException
+     * @throws SAXException
+     * @param fileName
+     * @throws IOException
+     */
+    public void read( String fileName ) throws IOException, SAXException {
+        File infile = new File( fileName );
+        if ( !infile.exists() || !infile.canRead() ) {
+            throw new IOException( "Could not read from file " + fileName );
+        }
+        FileInputStream stream = new FileInputStream( infile );
+        this.read( stream );
+        stream.close();
+    }
 
-   /**
-    * @throws IOException
-    * @throws SAXException
-    * @param fileName
-    * @throws IOException
-    */
-   public void read( String fileName ) throws IOException, SAXException {
-      File infile = new File( fileName );
-      if ( !infile.exists() || !infile.canRead() ) {
-         throw new IOException( "Could not read from file " + fileName );
-      }
-      FileInputStream stream = new FileInputStream( infile );
-      this.read( stream );
-      stream.close();
-   }
+    /**
+     * @throws SAXException
+     * @param inputStream
+     * @throws IOException
+     */
+    public void read( InputStream stream ) throws IOException, SAXException {
+        System.setProperty( "org.xml.sax.driver", "org.apache.xerces.parsers.SAXParser" );
 
-   /**
-    * @throws SAXException
-    * @param inputStream
-    * @throws IOException
-    */
-   public void read( InputStream stream ) throws IOException, SAXException {
-      System.setProperty( "org.xml.sax.driver", "org.apache.xerces.parsers.SAXParser" );
+        XMLReader xr = XMLReaderFactory.createXMLReader();
+        ExptMetaHandler handler = new ExptMetaHandler();
+        xr.setFeature( "http://xml.org/sax/features/validation", false );
+        xr.setFeature( "http://xml.org/sax/features/external-general-entities", false );
+        xr.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+        xr.setContentHandler( handler );
+        xr.setErrorHandler( handler );
+        xr.setEntityResolver( handler );
+        xr.setDTDHandler( handler );
+        xr.parse( new InputSource( stream ) );
 
-      XMLReader xr = XMLReaderFactory.createXMLReader();
-      ExptMetaHandler handler = new ExptMetaHandler();
-      xr.setFeature( "http://xml.org/sax/features/validation", false );
-      xr.setFeature( "http://xml.org/sax/features/external-general-entities", false );
-      xr.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-      xr.setContentHandler( handler );
-      xr.setErrorHandler( handler );
-      xr.setEntityResolver( handler );
-      xr.setDTDHandler( handler );
-      xr.parse( new InputSource( stream ) );
+    }
 
-   }
+    private class ExptMetaHandler extends DefaultHandler {
 
-   private class ExptMetaHandler extends DefaultHandler {
+        boolean inSet = false;
+        boolean inExp = false;
+        private StringBuffer expSetBuf;
+        private StringBuffer expBuf;
 
-      boolean inSet = false;
-      boolean inExp = false;
-      private StringBuffer expSetBuf;
-      private StringBuffer expBuf;
+        public void startElement( String uri, String name, String qName, Attributes atts ) {
 
-      public void startElement( String uri, String name, String qName, Attributes atts ) {
-
-         if ( name.equals( "experiment_set" ) ) {
-            inSet = true;
-            expSetBuf = new StringBuffer();
-         } else if ( name.equals( "experiment" ) ) {
-            inExp = true;
-            expBuf = new StringBuffer();
-         } else {
-            throw new IllegalStateException( "Unexpected tag '" + name + "' encountered." );
-         }
-      }
-
-      public void endElement( String uri, String tagName, String qName ) {
-         if ( tagName.equals( "experiment_set" ) && !inExp ) {
-            inSet = false;
-            String expSetStuff = expSetBuf.toString();
-            String[] expSetString = expSetStuff.split( SmdUtil.SMD_DELIM );
-            for ( int i = 0; i < expSetString.length; i++ ) {
-               String k = expSetString[i];
-
-               String[] vals = SmdUtil.smdSplit( k );
-
-               if ( vals == null ) continue;
-
-               String key = vals[0];
-               String value = "";
-               if ( vals.length > 1 ) {
-                  value = vals[1];
-               }
-
-               if ( key.equals( "Name" ) ) {
-                  name = value;
-               } else if ( key.equals( "Description" ) ) {
-                  description = value;
-               } else if ( key.equals( "ExptSetNo" ) ) {
-                  number = Integer.parseInt( value );
-               } else {
-                  throw new IllegalStateException( "Invalid key '" + key + "' found in metadata file" );
-               }
-
-            }
-
-         } else if ( tagName.equals( "experiment" ) ) {
-            inExp = false;
-            String expStuff = expBuf.toString();
-            String[] expString = expStuff.split( SmdUtil.SMD_DELIM );
-            SMDBioAssay newExp = new SMDBioAssay();
-
-            for ( int i = 0; i < expString.length; i++ ) {
-               String k = expString[i];
-
-               String[] vals = SmdUtil.smdSplit( k );
-               if ( vals == null ) continue;
-
-               String key = vals[0];
-               String value = "";
-               if ( vals.length > 1 ) {
-                  value = vals[1];
-               }
-
-               if ( key.equals( "Name" ) ) {
-                  newExp.setName( value );
-               } else if ( key.equals( "Exptid" ) ) {
-                  newExp.setId( Integer.parseInt( value ) );
-               } else {
-                  throw new IllegalStateException( "Invalid key '" + key + "' found in metadata file" );
-               }
-
-            }
-
-            experiments.add( newExp );
-
-         }
-      }
-
-      public void characters( char ch[], int start, int length ) {
-
-         if ( inSet ) {
-            if ( inExp ) {
-               expBuf.append( ch, start, length );
+            if ( name.equals( "experiment_set" ) ) {
+                inSet = true;
+                expSetBuf = new StringBuffer();
+            } else if ( name.equals( "experiment" ) ) {
+                inExp = true;
+                expBuf = new StringBuffer();
             } else {
-               expSetBuf.append( ch, start, length );
+                throw new IllegalStateException( "Unexpected tag '" + name + "' encountered." );
             }
-         }
-      }
+        }
 
-   }
+        public void endElement( String uri, String tagName, String qName ) {
+            if ( tagName.equals( "experiment_set" ) && !inExp ) {
+                inSet = false;
+                String expSetStuff = expSetBuf.toString();
+                String[] expSetString = expSetStuff.split( SmdUtil.SMD_DELIM );
+                for ( int i = 0; i < expSetString.length; i++ ) {
+                    String k = expSetString[i];
 
-   public String toString() {
-      return number + "\t" + name + "\t" + description;
-   }
+                    String[] vals = SmdUtil.smdSplit( k );
 
-   public int getPublicationId() {
-      return publicationId;
-   }
+                    if ( vals == null ) continue;
 
-   public void setPublicationId( int publicationId ) {
-      this.publicationId = publicationId;
-   }
-   public String getDescription() {
-      return description;
-   }
-   public void setDescription( String description ) {
-      this.description = description;
-   }
-   public String getName() {
-      return name;
-   }
-   public void setName( String name ) {
-      this.name = name;
-   }
-   public int getNumber() {
-      return number;
-   }
-   public List getExperiments() {
-      return experiments;
-   }
-   public void setExperiments( List experiments ) {
-      this.experiments = experiments;
-   }
+                    String key = vals[0];
+                    String value = "";
+                    if ( vals.length > 1 ) {
+                        value = vals[1];
+                    }
+
+                    if ( key.equals( "Name" ) ) {
+                        name = value;
+                    } else if ( key.equals( "Description" ) ) {
+                        description = value;
+                    } else if ( key.equals( "ExptSetNo" ) ) {
+                        number = Integer.parseInt( value );
+                    } else {
+                        throw new IllegalStateException( "Invalid key '" + key + "' found in metadata file" );
+                    }
+
+                }
+
+            } else if ( tagName.equals( "experiment" ) ) {
+                inExp = false;
+                String expStuff = expBuf.toString();
+                String[] expString = expStuff.split( SmdUtil.SMD_DELIM );
+                SMDBioAssay newExp = new SMDBioAssay();
+
+                for ( int i = 0; i < expString.length; i++ ) {
+                    String k = expString[i];
+
+                    String[] vals = SmdUtil.smdSplit( k );
+                    if ( vals == null ) continue;
+
+                    String key = vals[0];
+                    String value = "";
+                    if ( vals.length > 1 ) {
+                        value = vals[1];
+                    }
+
+                    if ( key.equals( "Name" ) ) {
+                        newExp.setName( value );
+                    } else if ( key.equals( "Exptid" ) ) {
+                        newExp.setId( Integer.parseInt( value ) );
+                    } else {
+                        throw new IllegalStateException( "Invalid key '" + key + "' found in metadata file" );
+                    }
+
+                }
+
+                experiments.add( newExp );
+
+            }
+        }
+
+        public void characters( char ch[], int start, int length ) {
+
+            if ( inSet ) {
+                if ( inExp ) {
+                    expBuf.append( ch, start, length );
+                } else {
+                    expSetBuf.append( ch, start, length );
+                }
+            }
+        }
+
+    }
+
+    public String toString() {
+        return number + "\t" + name + "\t" + description;
+    }
+
+    public int getPublicationId() {
+        return publicationId;
+    }
+
+    public void setPublicationId( int publicationId ) {
+        this.publicationId = publicationId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    public List getExperiments() {
+        return experiments;
+    }
+
+    public void setExperiments( List experiments ) {
+        this.experiments = experiments;
+    }
 }
-

@@ -17,44 +17,44 @@ import java.util.Set;
  */
 public class SpeciesExperimentMap {
 
-   Map speciesExperimentMap;
+    Map speciesExperimentMap;
 
-   /**
-    * @throws IOException
-    */
-   public SpeciesExperimentMap() throws IOException {
-      speciesExperimentMap = new HashMap();
-      SMDSpecies smds = new SMDSpecies();
-      String[] species = smds.getShortSpeciesNames();
+    /**
+     * @throws IOException
+     */
+    public SpeciesExperimentMap() throws IOException {
+        speciesExperimentMap = new HashMap();
+        SMDSpecies smds = new SMDSpecies();
+        String[] species = smds.getShortSpeciesNames();
 
-      for ( int i = 0; i < species.length; i++ ) {
-         String s = species[i];
-         SpeciesBioAssayList list = new SpeciesBioAssayList();
-         list.retrieveByFTP( s );
-         Set exps = list.getExperiments();
-         for ( Iterator iter = exps.iterator(); iter.hasNext(); ) {
-            String name = ( String ) iter.next();
-            speciesExperimentMap.put( name, s );
-         }
-      }
-   }
+        for ( int i = 0; i < species.length; i++ ) {
+            String s = species[i];
+            SpeciesBioAssayList list = new SpeciesBioAssayList();
+            list.retrieveByFTP( s );
+            Set exps = list.getExperiments();
+            for ( Iterator iter = exps.iterator(); iter.hasNext(); ) {
+                String name = ( String ) iter.next();
+                speciesExperimentMap.put( name, s );
+            }
+        }
+    }
 
-   public String getSpecies( int experimentId ) {
-      String key = ( new Integer( experimentId ) ).toString();
+    public String getSpecies( int experimentId ) {
+        String key = ( new Integer( experimentId ) ).toString();
 
-      if ( !speciesExperimentMap.containsKey( key ) ) return null;
-      return ( String ) speciesExperimentMap.get( key );
-   }
+        if ( !speciesExperimentMap.containsKey( key ) ) return null;
+        return ( String ) speciesExperimentMap.get( key );
+    }
 
-   public static void main( String[] args ) {
-      try {
-         SpeciesExperimentMap foo = new SpeciesExperimentMap();
-         for (int i = 0; i < 10000; i++) {
-            System.err.println(foo.getSpecies(i));
-         }
-      } catch ( IOException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
+    public static void main( String[] args ) {
+        try {
+            SpeciesExperimentMap foo = new SpeciesExperimentMap();
+            for ( int i = 0; i < 10000; i++ ) {
+                System.err.println( foo.getSpecies( i ) );
+            }
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 }

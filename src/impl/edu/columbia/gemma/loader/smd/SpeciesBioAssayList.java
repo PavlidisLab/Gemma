@@ -27,78 +27,77 @@ import edu.columbia.gemma.loader.smd.util.SmdUtil;
  */
 public class SpeciesBioAssayList {
 
-   protected static final Log log = LogFactory.getLog( SpeciesBioAssayList.class );
-   private String baseDir = "smd/organisms/";
-   private SMDSpecies speciesMap;
-   private Set experiments;
-   private FTPClient f;
-   
-   /**
-    * @param species
-    * @throws IOException
-    */
-   public SpeciesBioAssayList() {
-      Configuration config = null;
-      try {
-         config = new PropertiesConfiguration( "smd.properties" );
-      } catch ( ConfigurationException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-      speciesMap = new SMDSpecies();
-      experiments = new HashSet();
-      baseDir = ( String ) config.getProperty( "smd.organism.baseDir" );
-      
-   }
+    protected static final Log log = LogFactory.getLog( SpeciesBioAssayList.class );
+    private String baseDir = "smd/organisms/";
+    private SMDSpecies speciesMap;
+    private Set experiments;
+    private FTPClient f;
 
-   /**
-    * Retrieve the list of experiments (bioassays) for a given species. The species can be something like "human" or
-    * "Homo sapiens".
-    * 
-    * @param species
-    * @throws IOException
-    */
-   public void retrieveByFTP( String species ) throws IOException {
-      if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
- 
+    /**
+     * @param species
+     * @throws IOException
+     */
+    public SpeciesBioAssayList() {
+        Configuration config = null;
+        try {
+            config = new PropertiesConfiguration( "smd.properties" );
+        } catch ( ConfigurationException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        speciesMap = new SMDSpecies();
+        experiments = new HashSet();
+        baseDir = ( String ) config.getProperty( "smd.organism.baseDir" );
 
-      String work = baseDir + speciesMap.getCode( species );
-      FTPFile[] files = f.listFiles( work );
+    }
 
-      for ( int i = 0; i < files.length; i++ ) {
-         if ( !files[i].isDirectory() ) {
-            String name = files[i].getName();
-            name = name.replaceAll( "\\.xls\\.gz", "" );
-            experiments.add( name );
-         }
-      }
+    /**
+     * Retrieve the list of experiments (bioassays) for a given species. The species can be something like "human" or
+     * "Homo sapiens".
+     * 
+     * @param species
+     * @throws IOException
+     */
+    public void retrieveByFTP( String species ) throws IOException {
+        if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
-      log.info( experiments.size() + " experiments found for " + species );
-      f.disconnect();
-   }
+        String work = baseDir + speciesMap.getCode( species );
+        FTPFile[] files = f.listFiles( work );
 
-   /**
-    * @return
-    */
-   public Set getExperiments() {
-      return experiments;
-   }
+        for ( int i = 0; i < files.length; i++ ) {
+            if ( !files[i].isDirectory() ) {
+                String name = files[i].getName();
+                name = name.replaceAll( "\\.xls\\.gz", "" );
+                experiments.add( name );
+            }
+        }
 
-   /**
-    * @param experiments
-    */
-   public void setExperiments( Set experiments ) {
-      this.experiments = experiments;
-   }
+        log.info( experiments.size() + " experiments found for " + species );
+        f.disconnect();
+    }
 
-   public static void main( String[] args ) {
-      try {
-         SpeciesBioAssayList foo = new SpeciesBioAssayList();
-         foo.retrieveByFTP( "human" );
-         System.err.println( foo.getExperiments() );
-      } catch ( IOException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
+    /**
+     * @return
+     */
+    public Set getExperiments() {
+        return experiments;
+    }
+
+    /**
+     * @param experiments
+     */
+    public void setExperiments( Set experiments ) {
+        this.experiments = experiments;
+    }
+
+    public static void main( String[] args ) {
+        try {
+            SpeciesBioAssayList foo = new SpeciesBioAssayList();
+            foo.retrieveByFTP( "human" );
+            System.err.println( foo.getExperiments() );
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 }

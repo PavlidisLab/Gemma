@@ -34,133 +34,134 @@ import edu.columbia.gemma.loader.smd.model.SMDPublication;
  */
 public class Experiments {
 
-   protected static final Log log = LogFactory.getLog( Publications.class );
-   private String baseDir = "smd/publications/";
+    protected static final Log log = LogFactory.getLog( Publications.class );
+    private String baseDir = "smd/publications/";
 
-   private Publications pubs;
-   private Set experiments;
-   private SpeciesExperimentMap sem;
-   private FTPClient f;
+    private Publications pubs;
+    private Set experiments;
+    private SpeciesExperimentMap sem;
+    private FTPClient f;
 
-   // for each publication, get the experiment_sets. Then get the experiment set metadata file. then get the species.
+    // for each publication, get the experiment_sets. Then get the experiment set metadata file. then get the species.
 
-   /**
-    * @throws ConfigurationException
-    * @throws IOException
-    */
-   public Experiments( Publications pubs ) throws IOException, ConfigurationException {
-      this.pubs = pubs;
-      experiments = new HashSet();
+    /**
+     * @throws ConfigurationException
+     * @throws IOException
+     */
+    public Experiments( Publications pubs ) throws IOException, ConfigurationException {
+        this.pubs = pubs;
+        experiments = new HashSet();
 
-      Configuration config = new PropertiesConfiguration( "smd.properties" );
+        Configuration config = new PropertiesConfiguration( "smd.properties" );
 
-      baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
+        baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
 
-      sem = new SpeciesExperimentMap();
-   }
+        sem = new SpeciesExperimentMap();
+    }
 
-   /**
-    * @throws IOException
-    * @throws SAXException
-    */
-   public void retrieveByFTP() throws IOException, SAXException {
+    /**
+     * @throws IOException
+     * @throws SAXException
+     */
+    public void retrieveByFTP() throws IOException, SAXException {
 
-      if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
+        if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
-      for ( Iterator iter = pubs.getIterator(); iter.hasNext(); ) {
-         SMDPublication pubM = ( SMDPublication ) iter.next();
+        for ( Iterator iter = pubs.getIterator(); iter.hasNext(); ) {
+            SMDPublication pubM = ( SMDPublication ) iter.next();
 
-         log.info( "Seeking details for publication: " + pubM.getTitle() );
+            log.info( "Seeking details for publication: " + pubM.getTitle() );
 
-         List expSets = pubM.getExperimentSets();
-         for ( Iterator iterator = expSets.iterator(); iterator.hasNext(); ) {
-            SMDExperiment expM = ( SMDExperiment ) iterator.next();
-            expM.setPublicationId( pubM.getId() );
+            List expSets = pubM.getExperimentSets();
+            for ( Iterator iterator = expSets.iterator(); iterator.hasNext(); ) {
+                SMDExperiment expM = ( SMDExperiment ) iterator.next();
+                expM.setPublicationId( pubM.getId() );
 
-            log.info( "Seeking experiment set meta file for " + expM.getName() );
+                log.info( "Seeking experiment set meta file for " + expM.getName() );
 
-            //          now, the experiments for this won't be filled in. So we have to retrive it.
-            FTPFile[] expSetFiles = f.listFiles( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() );
+                // now, the experiments for this won't be filled in. So we have to retrive it.
+                FTPFile[] expSetFiles = f.listFiles( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() );
 
-            for ( int i = 0; i < expSetFiles.length; i++ ) {
-               String expFile = expSetFiles[i].getName();
+                for ( int i = 0; i < expSetFiles.length; i++ ) {
+                    String expFile = expSetFiles[i].getName();
 
-               if ( !expFile.matches( "exptset_[0-9]+.meta" ) ) continue;
+                    if ( !expFile.matches( "exptset_[0-9]+.meta" ) ) continue;
 
-               InputStream is = f.retrieveFileStream( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() + "/"
-                     + expFile );
-               if ( is == null ) throw new IOException( "Could not get stream for " + expFile );
-               SMDExperiment newExptSet = new SMDExperiment();
-               newExptSet.read( is );
-               is.close();
+                    InputStream is = f.retrieveFileStream( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() + "/"
+                            + expFile );
+                    if ( is == null ) throw new IOException( "Could not get stream for " + expFile );
+                    SMDExperiment newExptSet = new SMDExperiment();
+                    newExptSet.read( is );
+                    is.close();
 
-               if ( !f.completePendingCommand() ) {
-                  log.error( "Failed to complete download of " + expFile );
-                  continue;
-               }
+                    if ( !f.completePendingCommand() ) {
+                        log.error( "Failed to complete download of " + expFile );
+                        continue;
+                    }
 
-               experiments.add( newExptSet );
+                    experiments.add( newExptSet );
 
-               expM.setExperiments( newExptSet.getExperiments() );
+                    expM.setExperiments( newExptSet.getExperiments() );
 
-               log.info( "Retrieved " + expFile + " for publication " + pubM.getId() );
+                    log.info( "Retrieved " + expFile + " for publication " + pubM.getId() );
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
-   /**
-    * Print out a tabbed listing of all the experiments found.
-    */
-   public String toString() {
-      StringBuffer buf = new StringBuffer();
+    /**
+     * Print out a tabbed listing of all the experiments found.
+     */
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
 
-      for ( Iterator iter = pubs.getIterator(); iter.hasNext(); ) {
-         SMDPublication pubM = ( SMDPublication ) iter.next();
-         List expSets = pubM.getExperimentSets();
+        for ( Iterator iter = pubs.getIterator(); iter.hasNext(); ) {
+            SMDPublication pubM = ( SMDPublication ) iter.next();
+            List expSets = pubM.getExperimentSets();
 
-         String pubString = pubM.toString();
+            String pubString = pubM.toString();
 
-         for ( Iterator iterator = expSets.iterator(); iterator.hasNext(); ) {
-            SMDExperiment expM = ( SMDExperiment ) iterator.next();
+            for ( Iterator iterator = expSets.iterator(); iterator.hasNext(); ) {
+                SMDExperiment expM = ( SMDExperiment ) iterator.next();
 
-            String expSetString = expM.toString();
+                String expSetString = expM.toString();
 
-            List exps = expM.getExperiments();
-            for ( Iterator itr = exps.iterator(); itr.hasNext(); ) {
-               SMDBioAssay exp = ( SMDBioAssay ) itr.next();
+                List exps = expM.getExperiments();
+                for ( Iterator itr = exps.iterator(); itr.hasNext(); ) {
+                    SMDBioAssay exp = ( SMDBioAssay ) itr.next();
 
-               buf.append( pubString + "\t" + expSetString + "\t" + exp + "\t" + sem.getSpecies( exp.getId() ) + "\n" );
+                    buf.append( pubString + "\t" + expSetString + "\t" + exp + "\t" + sem.getSpecies( exp.getId() )
+                            + "\n" );
 
+                }
             }
-         }
-      }
+        }
 
-      return buf.toString();
-   }
+        return buf.toString();
+    }
 
-   public Iterator getExperimentsIterator() {
-      return experiments.iterator();
-   }
+    public Iterator getExperimentsIterator() {
+        return experiments.iterator();
+    }
 
-   public static void main( String[] args ) {
-      try {
-         Publications foo = new Publications();
-         foo.retrieveByFTP( 15 );
-         Experiments bar = new Experiments( foo );
-         bar.retrieveByFTP();
+    public static void main( String[] args ) {
+        try {
+            Publications foo = new Publications();
+            foo.retrieveByFTP( 15 );
+            Experiments bar = new Experiments( foo );
+            bar.retrieveByFTP();
 
-         System.out.print( bar );
-      } catch ( IOException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      } catch ( SAXException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      } catch ( ConfigurationException e ) {
-         // TODO Auto-generated catch block
-         e.printStackTrace();
-      }
-   }
+            System.out.print( bar );
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( SAXException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( ConfigurationException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
 }
