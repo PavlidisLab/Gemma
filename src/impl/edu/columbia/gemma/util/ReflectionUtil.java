@@ -29,7 +29,7 @@ public class ReflectionUtil {
      * @param obj
      * @return
      */
-    public static Class getImplForBase( Object obj ) {
+    public static Class getBaseForImpl( Object obj ) {
         return getImplForBase( obj.getClass() );
     }
 
