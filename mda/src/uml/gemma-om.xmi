@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 15 15:41:08 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 15 22:34:58 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -7262,9 +7262,10 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                   visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'If5b94bm1026e0fa944mmc69'>
+                                    <UML:Multiplicity xmi.id = 'I1846044m102a96b1075mm7d5'>
                                       <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'If5b94bm1026e0fa944mmc6a' lower = '1' upper = '1'/>
+                                        <UML:MultiplicityRange xmi.id = 'I1846044m102a96b1075mm7d4' lower = '0'
+                                          upper = '1'/>
                                       </UML:Multiplicity.range>
                                     </UML:Multiplicity>
                                   </UML:AssociationEnd.multiplicity>
@@ -10812,6 +10813,8 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                             </UML:AssociationEnd>
                           </UML:Association.connection>
                         </UML:Association>
+                        <UML:Comment xmi.id = 'I10f93f9m102a7804758mm62c' name = '' visibility = 'public'
+                          isSpecification = 'false' body = 'dummy() has been&#10;added to push the&#10;IdentifiableImpl into&#10;the impl directory.  &#10;We have overriden&#10;equals, hashCode, &#10;toString, and compareTo&#10;in this file'/>
                       </UML:Namespace.ownedElement>
                     </UML:Package>
                     <UML:Package xmi.id = 'I29dead4bm101b56ea970mm72ea' name = 'association'
