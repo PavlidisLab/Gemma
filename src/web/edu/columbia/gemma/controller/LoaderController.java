@@ -59,11 +59,10 @@ public class LoaderController extends SimpleFormController {
      */
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) {
-        BulkCreator bc = null;
         Map myModel = new HashMap();
         boolean hasHeader = RequestUtils.getBooleanParameter( request, "hasHeader", false );
         String typeOfLoader = RequestUtils.getStringParameter( request, "typeOfLoader", null );
-        bc = determineService( getApplicationContext(), typeOfLoader );
+        BulkCreator bc = determineService( getApplicationContext(), typeOfLoader );
         try {
             bc.bulkCreate( determineFilename( typeOfLoader ), hasHeader );
             return new ModelAndView( new RedirectView( getSuccessView() ), "model", myModel );
