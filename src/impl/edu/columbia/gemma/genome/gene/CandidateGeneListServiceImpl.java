@@ -31,10 +31,6 @@ package edu.columbia.gemma.genome.gene;
 
 import java.util.Iterator;
 import java.util.Collection;
-import java.util.ResourceBundle;
-
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.genome.Gene;
 
@@ -44,28 +40,9 @@ import edu.columbia.gemma.genome.Gene;
 public class CandidateGeneListServiceImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase
 {
-
-    // spring will automatically see this and create it for me.  Magic!
-    private static CandidateGeneListDao daoCGL;
-    private static CandidateGeneDao daoCG;
+    private CandidateGeneDao candidateGeneDao;
+    private CandidateGeneListDao candidateGeneListDao;
     
-    protected final static BeanFactory ctx;
-    protected ResourceBundle rb;
-    
-    //  This static block ensures that Spring's BeanFactory is only loaded
-    // once for all tests
-    static {
-        ResourceBundle db = ResourceBundle.getBundle( "testResources" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString("servlet.name.0");
-
-        // CAREFUL, these paths are dependent on the classpath for the test.
-        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml"};//, servletContext+"-servlet.xml" };
-        ctx = new ClassPathXmlApplicationContext( paths );
-        daoCG= ( CandidateGeneDao ) ctx.getBean( "candidateGeneDao" );
-        daoCGL= ( CandidateGeneListDao ) ctx.getBean( "candidateGeneListDao" );
-    }
-
     protected CandidateGene handleAddCandidateToList(CandidateGeneList candidateGeneList, Gene gene){
         Collection candidates = candidateGeneList.getCandidates();
         
@@ -88,19 +65,19 @@ public class CandidateGeneListServiceImpl
         CandidateGene cgNew = CandidateGene.Factory.newInstance();
         cgNew.setGene(gene);
         cgNew.setRank(new Integer(maxRank));
-        
-        daoCG.create(cgNew);
+               
+        candidateGeneDao.create(cgNew);
         
         // add newly created candidate gene to candidateGeneList and update
         candidateGeneList.addCandidate(cgNew);
-        daoCGL.update(candidateGeneList);
+        candidateGeneListDao.update(candidateGeneList);
         
         return cgNew;
     }
     protected void handleRemoveCandidateFromList(CandidateGeneList candidateGeneList, CandidateGene candidateGene){
         candidateGeneList.removeCandidate(candidateGene);
-        daoCGL.update(candidateGeneList);
-        daoCG.remove(candidateGene);
+        getCandidateGeneListDao().update(candidateGeneList);
+        getCandidateGeneDao().remove(candidateGene);
     }
     /**
      * @see edu.columbia.gemma.genome.gene.CandidateGeneListService#FindByGeneOfficialName(edu.columbia.gemma.genome.Gene)
@@ -122,4 +99,10 @@ public class CandidateGeneListServiceImpl
         return null;
     }
 
+    public void setDaoCG( CandidateGeneDao daoCG ) {
+        this.candidateGeneDao = daoCG;
+    }
+    public void setDaoCGL( CandidateGeneListDao daoCGL ) {
+        this.candidateGeneListDao = daoCGL;
+    }
 }
