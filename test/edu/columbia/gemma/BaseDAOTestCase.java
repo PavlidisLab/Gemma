@@ -34,7 +34,7 @@ public class BaseDAOTestCase extends TestCase {
         String servletContext = db.getString("servlet.name.0");
 
         // CAREFUL, these paths are dependent on the classpath for the test.
-        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml", servletContext+"-servlet.xml" };
+        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml", servletContext + "-servlet.xml" };
         ctx = new ClassPathXmlApplicationContext( paths );
     }
 
