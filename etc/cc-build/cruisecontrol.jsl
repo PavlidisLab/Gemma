@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+
+<!--
+ * ========================================================================
+ * 
+ * Copyright 2004 The Apache Software Foundation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ * ========================================================================
+-->
+
+<jsl:stylesheet select="$doc"
+  xmlns:jsl="jelly:jsl"
+  xmlns:j="jelly:core"
+  xmlns:maven="jelly:maven"
+  xmlns:x="jelly:xml"
+  xmlns:u="jelly:util"
+  xmlns="dummy" trim="false">
+  <jsl:template match="cruisecontrol" trim="false">
+    <jsl:copy>
+      <!-- TODO: more configurable -->
+      <project name="${pom.artifactId}">
+        <!-- FIXME: Shouldn't this use the second element of pom.repository.connection -->
+        <maven:pluginVar var="method" plugin='maven-scm-plugin' property='maven.scm.method' />
+        
+        <j:if test="${method == 'svn'}">
+          <plugin name="svn" classname="net.sourceforge.cruisecontrol.sourcecontrols.SVN"/> 
+          <plugin name="svnbootstrapper" classname="net.sourceforge.cruisecontrol.bootstrappers.SVNBootstrapper"/>
+        </j:if>
+        <bootstrappers>
+          <currentbuildstatusbootstrapper file="${maven.cruisecontrol.logs.dir}/${pom.artifactId}/${maven.cruisecontrol.currentbuildstatus.filename}"/>
+        </bootstrappers>
+        <modificationset>
+          <j:if test="${method == 'cvs'}">
+            <maven:pluginVar var="root" plugin='maven-scm-plugin' property='maven.scm.cvs.root' />
+            <maven:pluginVar var="module" plugin='maven-scm-plugin' property='maven.scm.cvs.module' />
+            <cvs cvsroot="${root}" localWorkingCopy="${maven.cruisecontrol.checkout.dir}/${module}" />
+          </j:if>
+          
+          <j:if test="${method == 'svn'}">
+            <maven:pluginVar var="root" plugin='maven-scm-plugin' property='maven.scm.svn.root' />
+            <maven:pluginVar var="module" plugin='maven-scm-plugin' property='maven.scm.svn.module' />
+            <svn repositoryLocation="${root}" localWorkingCopy="${maven.cruisecontrol.checkout.dir}/${module}" />
+          </j:if>
+          <!-- Add the list of additional directories for the classpath from ${maven.eclipse.classpath.include}-->
+          <u:tokenize var="triggerProjectsSplit" delim=",">${maven.cruisecontrol.trigger.projects}</u:tokenize>
+          <!-- add extra directories to be included in the classpath -->
+          <j:forEach var="triggerProject" items="${triggerProjectsSplit}">
+            <buildstatus logdir="${maven.cruisecontrol.logs.dir}/${triggerProject}"/>
+          </j:forEach>
+                    
+        </modificationset>
+ 
+        <j:set var="type" value="${maven.cruisecontrol.schedule.type}"/>
+        <j:choose>
+        <j:when test="${type == 'time'}">
+        <schedule>
+          <maven
+            mavenscript="${maven.cruisecontrol.maven.script}"
+            time="${maven.cruisecontrol.schedule.time}"
+            goal="${maven.cruisecontrol.goals}" 
+            projectfile="${maven.cruisecontrol.checkout.dir}/${module}/project.xml"/>
+        </schedule>
+        </j:when>
+        <j:otherwise>
+        <schedule interval="${maven.cruisecontrol.schedule.interval}">
+          <maven
+            mavenscript="${maven.cruisecontrol.maven.script}"
+            goal="${maven.cruisecontrol.goals}"
+            projectfile="${maven.cruisecontrol.checkout.dir}/${module}/project.xml"/>
+        </schedule>
+        </j:otherwise>
+        </j:choose>
+        
+        <log
+          encoding="${maven.cruisecontrol.logs.encodingtype}"
+          dir="${maven.cruisecontrol.logs.dir}/${pom.artifactId}">
+          <j:set var="mergevar" value="${maven.cruisecontrol.logs.merge}"/>
+          <j:if test="${mergevar == 'true'}">
+           <merge dir="${maven.cruisecontrol.logs.mergedirectory}"/>
+          </j:if>
+        </log>
+        <publishers>
+          <currentbuildstatuspublisher file="${maven.cruisecontrol.logs.dir}/${pom.artifactId}/${maven.cruisecontrol.currentbuildstatus.filename}"/>
+         <j:set var="publishartifacts" value="${maven.cruisecontrol.artifactspublisher}"/>
+         <j:if test="${publishartifacts == 'true'}">
+          <artifactspublisher 
+            dir="${maven.cruisecontrol.artifacts.dir}"
+            dest="${maven.cruisecontrol.artifacts.dest}/${pom.artifactId}"/>  
+         </j:if>
+         <j:set var="ftpstatus" value="${maven.cruisecontrol.currentbuildstatusftppublisher}"/>
+         <j:if test="${ftpstatus == 'true'}">
+          <currentbuildstatusftppublisher
+              targetHost="${maven.cruisecontrol.ftp.targetHost}"
+              targetUser="${maven.cruisecontrol.ftp.targetUser}"
+              targetPasswd="${maven.cruisecontrol.ftp.targetPasswd}"
+              targetPort="${maven.cruisecontrol.ftp.targetPort}"
+              targetDir="${maven.cruisecontrol.ftp.targetDir}"
+              targetSeparator="${maven.cruisecontrol.ftp.targetSeparator}"
+              file="${maven.cruisecontrol.currentbuildstatusftppublisher.file}"
+              destDir="${maven.cruisecontrol.currentbuildstatusftppublisher.destDir}"/>
+         </j:if>
+         <j:set var="ftppublisher" value="${maven.cruisecontrol.ftppublisher}"/>
+         <j:if test="${ftppublisher == 'true'}">
+          <ftppublisher
+              targetHost="${maven.cruisecontrol.ftp.targetHost}"
+              targetUser="${maven.cruisecontrol.ftp.targetUser}"
+              targetPasswd="${maven.cruisecontrol.ftp.targetPasswd}"
+              targetPort="${maven.cruisecontrol.ftp.targetPort}"
+              targetDir="${maven.cruisecontrol.ftp.targetDir}"
+              targetSeparator="${maven.cruisecontrol.ftp.targetSeparator}"
+              destDir="${maven.cruisecontrol.ftppublisher.destDir}"
+              srcDir="${maven.cruisecontrol.ftppublisher.srcDir}/${pom.artifactId}"
+              deleteArtifacts="${maven.cruisecontrol.ftppublisher.deleteArtifacts}"/>
+         </j:if>
+          <htmlemail 
+              skipusers="${maven.cruisecontrol.mail.skipusers}"
+              reportsuccess="${maven.cruisecontrol.mail.reportsuccess}"
+              subjectprefix="${maven.cruisecontrol.mail.subjectprefix}"
+              defaultsuffix="${maven.cruisecontrol.mail.defaultsuffix}"
+              mailhost="${maven.cruisecontrol.mail.host}"
+              returnaddress="${pom.build.nagEmailAddress}"
+              buildresultsurl="${maven.cruisecontrol.mail.buildresultsurl}"
+              spamwhilebroken="${maven.cruisecontrol.mail.spamwhilebroken}"
+              logdir="${maven.cruisecontrol.logs.dir}/${pom.artifactId}"
+              css="${maven.cruisecontrol.mail.css}"
+              xsldir="${maven.cruisecontrol.mail.xlsdir}">
+            <j:set var="usemap" value="${maven.cruisecontrol.mail.usemap}"/>
+            <j:if test="${usemap == 'true'}">
+             <!-- need to map ids to emails here -->
+             <j:set var="developers" value="${pom.developers}"/>
+             <j:if test="${!empty(developers)}">
+               <j:forEach var="developer" items="${pom.developers}">
+                 <map alias="${developer.id}" address="${developer.email}"/>
+               </j:forEach>
+             </j:if>
+            </j:if>
+            <j:set var="mailmaps" value="${maven.cruisecontrol.mail.maps}"/>
+            <j:if test="${!empty(mailmaps)}">
+               
+              <u:tokenize var="maps" delim=",">${mailmaps}</u:tokenize>
+              <j:forEach var="map" items="${maps}">
+                <j:set var="mapVarName" value="maven.cruisecontrol.mail.map.${map}"/>
+                <map alias="${map}" address="${context.getVariable(mapVarName)}"/>
+              </j:forEach>
+            </j:if>
+            
+            <failure address="${maven.cruisecontrol.mail.failureaddress}" />
+            <success address="${maven.cruisecontrol.mail.successaddress}" />
+          </htmlemail>
+         <j:set var="scppublisher" value="${maven.cruisecontrol.scppublisher}"/>
+         <j:if test="${scppublisher == 'true'}">
+          <j:set var="scpfile" value="${maven.cruisecontrol.scp.file}"/>
+          <j:choose>
+           <j:when test="${!empty(scpfile)}">
+            <scp
+              sourcedir="${maven.cruisecontrol.scp.sourcedir}"
+              targetuser="${maven.cruisecontrol.scp.targetuser}"
+              targethost="${maven.cruisecontrol.scp.targethost}"
+              targetdir="${maven.cruisecontrol.scp.targetdir}"
+              file="${maven.cruisecontrol.scp.file}"
+              ssh="${maven.cruisecontrol.scp.ssh}"/>
+             <scp
+              sourcedir="${maven.cruisecontrol.scp.sourcedir}"
+              targetuser="${maven.cruisecontrol.scp.targetuser}"
+              targethost="${maven.cruisecontrol.scp.targethost}"
+              targetdir="${maven.cruisecontrol.scp.targetdir}"
+              file="${maven.cruisecontrol.scp.statusfile}"
+              ssh="${maven.cruisecontrol.scp.ssh}"/>
+           </j:when>
+           <j:otherwise>
+            <scp
+              sourcedir="${maven.cruisecontrol.scp.sourcedir}"
+              targetuser="${maven.cruisecontrol.scp.targetuser}"
+              targethost="${maven.cruisecontrol.scp.targethost}"
+              targetdir="${maven.cruisecontrol.scp.targetlogdir}"
+              targetseparator="${maven.cruisecontrol.scp.targetseparator}"
+              ssh="${maven.cruisecontrol.scp.ssh}"/>
+             <scp
+              sourcedir="${maven.cruisecontrol.scp.sourcedir}"
+              targetuser="${maven.cruisecontrol.scp.targetuser}"
+              targethost="${maven.cruisecontrol.scp.targethost}"
+              targetdir="${maven.cruisecontrol.scp.targetstatusfiledir}"
+              targetseparator="${maven.cruisecontrol.scp.targetseparator}"
+              file="${maven.cruisecontrol.scp.statusfile}"
+              ssh="${maven.cruisecontrol.scp.ssh}"/>
+           </j:otherwise>
+          </j:choose>
+         </j:if>
+        </publishers>
+        <plugins>
+          <j:if test="${publishartifacts == 'true'}">
+            <plugin name="artifactspublisher" classname="net.sourceforge.cruisecontrol.publishers.ArtifactsPublisher"/>
+          </j:if>
+        </plugins>
+      </project>
+      <jsl:applyTemplates select="./project" />
+    </jsl:copy>
+  </jsl:template>
+
+  <jsl:template match="*" trim="false">
+    <j:set var="name"><x:expr select="@name" /></j:set>
+    <j:if test="${name != pom.artifactId}">
+      <jsl:copy>
+        <jsl:applyTemplates />
+      </jsl:copy>
+    </j:if>
+  </jsl:template>
+
+  <jsl:template match="@*" trim="false" />
+
+</jsl:stylesheet>
+
