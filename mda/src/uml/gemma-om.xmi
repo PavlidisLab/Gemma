@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Mar 24 08:44:51 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Mar 24 08:52:19 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -10351,6 +10351,14 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                             <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
                           </UML:Generalization.parent>
                         </UML:Generalization>
+                        <UML:Generalization xmi.id = 'Ia2f435m102d4cdcea1mm3bda' isSpecification = 'false'>
+                          <UML:Generalization.child>
+                            <UML:Class xmi.idref = 'Id2a49dm1025ed2a6cbmm7c14'/>
+                          </UML:Generalization.child>
+                          <UML:Generalization.parent>
+                            <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
+                          </UML:Generalization.parent>
+                        </UML:Generalization>
                       </UML:Namespace.ownedElement>
                     </UML:Package>
                     <UML:Package xmi.id = 'I29dead4bm101b56ea970mm72ea' name = 'association'
@@ -15223,6 +15231,14 @@ of nucleotides associated with a gene product.  This class only represents the s
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                           </UML:ModelElement.taggedValue>
+                          <UML:Classifier.feature>
+                            <UML:Attribute xmi.id = 'Ia2f435m102d4cdcea1mm3bd3' name = 'name' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                          </UML:Classifier.feature>
                         </UML:Class>
                         <UML:Association xmi.id = 'Ieeda37m101f2ab640dmm336f' name = 'AssemblyDatabase'
                           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
@@ -16753,6 +16769,9 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                           </UML:ModelElement.taggedValue>
+                          <UML:GeneralizableElement.generalization>
+                            <UML:Generalization xmi.idref = 'Ia2f435m102d4cdcea1mm3bda'/>
+                          </UML:GeneralizableElement.generalization>
                         </UML:Class>
                         <UML:Generalization xmi.id = 'Id2a49dm1025ed2a6cbmm7b5d' isSpecification = 'false'>
                           <UML:Generalization.child>
