@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+<extend>../project.xml</extend>
+
+  
+  <artifactId>test-mda</artifactId>
+  <name>test MDA</name>
+  <groupId>Test</groupId>
+  
+  
+  <dependencies> 
+<dependency>
+			<groupId>andromda</groupId>
+			<artifactId>andromda-profile</artifactId>
+			<version>3.0-RC1-SNAPSHOT</version>
+			<type>xml.zip</type>
+		</dependency>
+		<dependency>
+			<groupId>andromda</groupId>
+			<artifactId>maven-andromda-plugin</artifactId>
+			<version>3.0-RC1-SNAPSHOT</version>
+			<type>plugin</type>
+			<properties>
+				<languageMappingsUri>Java</languageMappingsUri>
+				<wrapperMappingsUri>JavaWrapper</wrapperMappingsUri>
+				<jdbcMappingsUri>JDBC</jdbcMappingsUri>
+				<maxSqlNameLength>60</maxSqlNameLength>
+			<!--	<foreignKeySuffix>FK</foreignKeySuffix>-->
+				<sqlMappingsUri>MySQL</sqlMappingsUri>
+			</properties>
+		</dependency>
+
+ 
+		<dependency>
+			<groupId>andromda</groupId>
+			<artifactId>andromda-spring-cartridge</artifactId>
+			<version>3.0-RC1-SNAPSHOT</version>
+			<properties><!--
+				<mergeLocation>${maven.andromda.spring.merge.custom}</mergeLocation>
+				<mergeMappingsUri>file:${maven.andromda.merge.mappings}</mergeMappingsUri>-->
+				<hibernateInheritanceStrategy>subclass</hibernateInheritanceStrategy>
+				<driver>com.mysql.jdbc.Driver</driver>
+				<username>pavlidis</username>
+				<password>toast</password>
+				<connectionUrl> 
+					jdbc:mysql://localhost:3306/gemd</connectionUrl>
+				<hibernateDialect> 
+					net.sf.hibernate.dialect.MySQLDialect</hibernateDialect>
+				<daos>${maven.andromda.spring.daos.dir}</daos>
+				<dao-impls>${maven.andromda.spring.dao.impls.dir}</dao-impls>
+				<spring-configuration>${maven.andromda.spring.spring.configuration.dir}</spring-configuration>
+				<!--<services>${maven.andromda.spring.services.dir}</services>
+				<service-impls>${maven.andromda.spring.service.impls.dir}</service-impls>
+				<service-locator>${maven.andromda.spring.service.locator.dir}</service-locator>
+				<springTypesPackage>edu.columbia.spring</springTypesPackage>
+				<applicationContext>applicationContext-hibernate.xml</applicationContext>-->
+			</properties>
+		</dependency>
+	 
+	 
+		<dependency>
+			<groupId>andromda</groupId>
+			<artifactId>andromda-hibernate-cartridge</artifactId>
+			<version>3.0-RC1-SNAPSHOT</version>
+			<properties>
+			
+		 	<!--<mergeLocation>${maven.andromda.hibernate.merge.custom}</mergeLocation>  
+				<mergeMappingsUri>file:${maven.andromda.merge.mappings}</mergeMappingsUri>
+			 <hibernateTypeMappingsUri>Hibernate</hibernateTypeMappingsUri>-->
+			
+				<driver>com.mysql.jdbc.Driver</driver>
+				<username>pavlidis</username>
+				<password>toast</password>
+				<connectionUrl> 
+					jdbc:mysql://localhost:3306/gemd</connectionUrl>
+				<hibernateDialect> 
+					net.sf.hibernate.dialect.MySQLDialect</hibernateDialect>
+					
+					 <entities>${maven.andromda.hibernate.generated.dir}</entities>
+                <man-impls>${maven.andromda.hibernate.manual.dir}</man-impls>  
+                <entity-impls>${maven.andromda.hibernate.manual.dir}</entity-impls>
+                <configuration>${maven.andromda.hibernate.generated.dir}</configuration>
+					
+	
+			   <session-beans.ignore/>
+			    <session-impls.ignore/>
+			 
+			</properties>
+		</dependency>
+	 
+		
+		
+			<dependency>
+			<groupId>andromda</groupId>
+			<artifactId>andromda-query-library</artifactId>
+			<version>3.0-RC1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>andromda</groupId>
+			<artifactId>andromda-validation-library</artifactId>
+			<version>3.0-RC1-SNAPSHOT</version>
+		</dependency>
+		
+	</dependencies>
+
+</project>
+
