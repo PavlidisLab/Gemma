@@ -25,7 +25,9 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 /**
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University Generic Controller used to decipher which LoaderService is called.
+ * Copyright (c) 2004 Columbia University 
+ * 
+ * Generic Controller used to decipher which LoaderService is called.
  * 
  * @author keshav
  * @version $Id$
@@ -34,32 +36,19 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * @spring.property name="formView" value="bulkLoadForm"
  */
 public class LoaderController extends SimpleFormController {
+    private Configuration conf;
+    private String ioError;
+    private String numberFormatError;
     /** Logger for this class and subclasses */
     protected final Log logger = LogFactory.getLog( getClass() );
-    Configuration conf;
-    String filepath;
-    String ioError;
-    String numberFormatError;
 
     /**
      * @throws ConfigurationException
      */
     public LoaderController() throws ConfigurationException {
         conf = new PropertiesConfiguration( "loader.properties" );
-        filepath = conf.getString( "loadercontroller.filepath" );
         ioError = conf.getString( "loader.ioError.view" );
         numberFormatError = conf.getString( "loader.numberFormatError.view" );
-    }
-
-    /**
-     * @param name
-     * @return String TODO Make private if not used elsewhere
-     */
-    public String cleanString( String name ) {
-        name = name.trim();
-        name = name.toLowerCase();
-
-        return name;
     }
 
     /**
@@ -68,7 +57,6 @@ public class LoaderController extends SimpleFormController {
      * @param command
      * @return ModelAndView
      */
-
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) {
         BulkCreator bc = null;
@@ -78,7 +66,6 @@ public class LoaderController extends SimpleFormController {
         bc = determineService( getApplicationContext(), typeOfLoader );
         try {
             bc.bulkCreate( determineFilename( typeOfLoader ), hasHeader );
-            System.err.println((new RedirectView (getSuccessView())).toString());
             return new ModelAndView( new RedirectView( getSuccessView() ), "model", myModel );
         } catch ( IOException e ) {
             return new ModelAndView( ioError, "model", myModel );
@@ -88,9 +75,10 @@ public class LoaderController extends SimpleFormController {
     }
 
     /**
+     * Determine file to read based on loader selected.
+     * 
      * @param typeOfLoader
-     * @return String
-     * TODO use reflection
+     * @return String TODO use reflection
      */
     private String determineFilename( String typeOfLoader ) {
         String filename = null;
@@ -101,7 +89,7 @@ public class LoaderController extends SimpleFormController {
         else if ( typeOfLoader.equals( "chromosomeLoaderService" ) )
             filename = conf.getString( "loader.filename.chromosome" );
         else if ( typeOfLoader.equals( "arrayDesignLoaderService" ) )
-            filename = conf.getString( "loader.filename.arrayDesign" );
+                filename = conf.getString( "loader.filename.arrayDesign" );
 
         return filename;
     }
@@ -120,10 +108,11 @@ public class LoaderController extends SimpleFormController {
     }
 
     /**
+     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
+     * 
      * @param request
      * @return Object
-     * @throws Exception 
-     * This is need or you will have to specify a commandClass in the DispatcherServlet's context
+     * @throws Exception
      */
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
