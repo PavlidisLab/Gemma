@@ -26,6 +26,8 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="arrayDesignLoaderService"
+ * @spring.property name="arrayDesignDao" ref="arrayDesignDao"
  */
 public class ArrayDesignLoaderService implements BulkCreator {
 
