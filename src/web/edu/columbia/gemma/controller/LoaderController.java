@@ -1,22 +1,26 @@
 package edu.columbia.gemma.controller;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.NullArgumentException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.loader.loaderutils.BulkCreator;
-import edu.columbia.gemma.loader.loaderutils.BulkCreatorProxyFactory;
-import edu.columbia.gemma.loader.sequence.gene.FileName;
 
 /**
  * <hr>
@@ -25,15 +29,17 @@ import edu.columbia.gemma.loader.sequence.gene.FileName;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="loaderController"
+ * @spring.property name="sessionForm" value="true"
+ * @spring.property name="formView" value="bulkLoadForm"
  */
 public class LoaderController extends SimpleFormController {
-
-    private BulkCreatorProxyFactory bulkCreatorProxyFactory;
     /** Logger for this class and subclasses */
     protected final Log logger = LogFactory.getLog( getClass() );
     Configuration conf;
-    String errorview;
     String filepath;
+    String ioError;
+    String numberFormatError;
 
     /**
      * @throws ConfigurationException
@@ -41,14 +47,13 @@ public class LoaderController extends SimpleFormController {
     public LoaderController() throws ConfigurationException {
         conf = new PropertiesConfiguration( "loader.properties" );
         filepath = conf.getString( "loadercontroller.filepath" );
-        errorview = conf.getString( "loader.error.view" );
-
+        ioError = conf.getString( "loader.ioError.view" );
+        numberFormatError = conf.getString( "loader.numberFormatError.view" );
     }
 
     /**
      * @param name
-     * @return String
-     * TODO Make private if not used elsewhere
+     * @return String TODO Make private if not used elsewhere
      */
     public String cleanString( String name ) {
         name = name.trim();
@@ -58,47 +63,45 @@ public class LoaderController extends SimpleFormController {
     }
 
     /**
-     * @return BulkCreatorProxyFactory.
-     */
-    public BulkCreatorProxyFactory getBulkCreatorProxyFactory() {
-        return bulkCreatorProxyFactory;
-    }
-
-    /**
      * Obtains filename to be read from the form.
      * 
      * @param command
      * @return ModelAndView
      */
-    public ModelAndView onSubmit( Object command ) {
-        String filename = ( ( FileName ) command ).getFileName();
-        filename = cleanString( filename );
-        BulkCreator proxy = null;
+
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) {
+        BulkCreator bc = null;
         Map myModel = new HashMap();
+        boolean hasHeader = RequestUtils.getBooleanParameter( request, "hasHeader", false );
+        String typeOfLoader = RequestUtils.getStringParameter( request, "typeOfLoader", null );
+        bc = determineService( getApplicationContext(), typeOfLoader );
         try {
-            proxy = determineService( getBulkCreatorProxyFactory(), filename );
-        } catch ( IllegalArgumentException e1 ) {
-            return new ModelAndView( errorview, "model", myModel );
-        } catch ( IllegalAccessException e1 ) {
-            return new ModelAndView( errorview, "model", myModel );
-        } catch ( InvocationTargetException e1 ) {
-            return new ModelAndView( errorview, "model", myModel );
-        }
-        String view;
-        filename = fullyQualifiedName( filepath, filename, ".txt" );
-        try {
-            view = proxy.bulkCreate( filename, true );
+            bc.bulkCreate( determineFilename( typeOfLoader ), hasHeader );
+            System.err.println((new RedirectView (getSuccessView())).toString());
+            return new ModelAndView( new RedirectView( getSuccessView() ), "model", myModel );
         } catch ( IOException e ) {
-            return new ModelAndView( errorview, "model", myModel );
+            return new ModelAndView( ioError, "model", myModel );
+        } catch ( NumberFormatException e ) {
+            return new ModelAndView( numberFormatError, "model", myModel );
         }
-        return new ModelAndView( view, "model", myModel );
     }
 
     /**
-     * @param bulkCreatorProxyFactory The bulkCreatorProxyFactory to set.
+     * @param typeOfLoader
+     * @return String
+     * TODO use reflection
      */
-    public void setBulkCreatorProxyFactory( BulkCreatorProxyFactory bulkCreatorProxyFactory ) {
-        this.bulkCreatorProxyFactory = bulkCreatorProxyFactory;
+    private String determineFilename( String typeOfLoader ) {
+        String filename = null;
+        if ( typeOfLoader.equals( "geneLoaderService" ) )
+            filename = conf.getString( "loader.filename.gene" );
+        else if ( typeOfLoader.equals( "taxonLoaderService" ) )
+            filename = conf.getString( "loader.filename.taxon" );
+        else if ( typeOfLoader.equals( "chromosomeLoaderService" ) )
+            filename = conf.getString( "loader.filename.chromosome" );
+
+        return filename;
     }
 
     /**
@@ -108,52 +111,19 @@ public class LoaderController extends SimpleFormController {
      * @param filename
      * @return BulkCreator
      * @throws IllegalArgumentException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
      */
-    private BulkCreator determineService( Object obj, String name ) throws IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
 
-        name = "get" + name.toLowerCase();
-        BulkCreator service = null;
-        Class type = obj.getClass();
-        final Method[] methods = type.getMethods();
-        String methodName;
-        for ( int i = 0; i < methods.length; i++ ) {
-            methodName = methods[i].getName();
-
-            if ( !methodName.toLowerCase().startsWith( name ) ) continue;
-
-            service = ( BulkCreator ) methods[i].invoke( obj, null );
-            break;
-        }
-        return service;
-    }
-
-    /**
-     * @param name
-     * @return String
-     */
-    private String fullyQualifiedName( String prefix, String name, String suffix ) {
-        if ( prefix.equals( null ) ) {
-            name = filepath + name;
-        } else {
-            name = prefix + name;
-        }
-        if ( !( name.endsWith( suffix ) ) ) name = name.concat( suffix );
-
-        return name;
+    private BulkCreator determineService( ApplicationContext ctx, String typeOfLoader ) throws NullArgumentException {
+        return ( BulkCreator ) ctx.getBean( typeOfLoader );
     }
 
     /**
      * @param request
      * @return Object
-     * @throws Exception
-     * TODO Add this fBO containing something like "enter name here"
+     * @throws Exception 
+     * This is need or you will have to specify a commandClass in the DispatcherServlet's context
      */
-    //    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-    //        FileName fileName = new FileName();
-    //        fileName.setFileName( filepath );
-    //        return fileName;
-    //    }
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        return request;
+    }
 }
