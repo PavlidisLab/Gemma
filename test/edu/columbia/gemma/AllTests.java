@@ -3,11 +3,13 @@ package edu.columbia.gemma;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
+import edu.columbia.gemma.controller.LoaderControllerTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
+import edu.columbia.gemma.loader.genome.TaxonLoaderServiceTest;
 import edu.columbia.gemma.loader.loaderutils.IdentifierCreatorTest;
 import edu.columbia.gemma.loader.mage.MageMLConverterTest;
 import edu.columbia.gemma.loader.mage.MageMLParserTest;
@@ -17,6 +19,7 @@ import edu.columbia.gemma.tools.SequenceManipulationTest;
 public class AllTests {
 
     public static Test suite() {
+        
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
@@ -34,6 +37,10 @@ public class AllTests {
         
         suite.addTestSuite(MageMLConverterTest.class);
         suite.addTestSuite(MageMLParserTest.class);
+        
+        suite.addTestSuite(LoaderControllerTest.class);
+        
+        suite.addTestSuite(TaxonLoaderServiceTest.class);
         // $JUnit-END$
         
         return suite;
