@@ -38,7 +38,7 @@
 			<properties><!--
 				<mergeLocation>${maven.andromda.spring.merge.custom}</mergeLocation>
 				<mergeMappingsUri>file:${maven.andromda.merge.mappings}</mergeMappingsUri>-->
-				<hibernateInheritanceStrategy>subclass</hibernateInheritanceStrategy>
+				<hibernateInheritanceStrategy>concrete</hibernateInheritanceStrategy>
 				<driver>com.mysql.jdbc.Driver</driver>
 				<username>pavlidis</username>
 				<password>toast</password>
@@ -92,12 +92,13 @@
 		
 			<dependency>
 			<groupId>andromda</groupId>
-			<artifactId>andromda-query-library</artifactId>
+			<artifactId>andromda-ocl-query-library</artifactId>
 			<version>3.0-RC1-SNAPSHOT</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>andromda</groupId>
-			<artifactId>andromda-validation-library</artifactId>
+			<artifactId>andromda-ocl-validation-library</artifactId>
 			<version>3.0-RC1-SNAPSHOT</version>
 		</dependency>
 		
