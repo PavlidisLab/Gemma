@@ -1,0 +1,86 @@
+*** applicationContext-hibernate.bad.xml	Wed Mar  2 16:37:18 2005
+--- applicationContext-hibernate.xml	Wed Mar  2 16:38:43 2005
+***************
+*** 23,33 ****
+          <property name="dataSource"><ref local="dataSource"/></property>
+          <property name="mappingResources">
+              <list>
+                  <value>edu/columbia/common/description/OntologyEntry.hbm.xml</value>
+                  <value>edu/columbia/common/auditAndSecurity/AuditTrail.hbm.xml</value>
+                  <value>edu/columbia/common/auditAndSecurity/AuditEvent.hbm.xml</value>
+!                 <value>edu/columbia/common/Identifscribable.hbm.xml</value>
+!                 <value>edu/columbia/expression/bioAssayData/DataVector.hbm.xml</value>
+              </list>
+          </property>
+          <property name="hibernateProperties">
+--- 23,92 ----
+          <property name="dataSource"><ref local="dataSource"/></property>
+          <property name="mappingResources">
+              <list>
++                <value>edu/columbia/common/description/Description.hbm.xml</value>
++         <value>edu/columbia/common/auditAndSecurity/Person.hbm.xml</value>
++         <value>edu/columbia/common/auditAndSecurity/User.hbm.xml</value>
++         <value>edu/columbia/expression/bioAssayData/DesignElementDataVector.hbm.xml</value>
++         <value>edu/columbia/common/protocol/Protocol.hbm.xml</value>
++         <value>edu/columbia/common/bqs/BibliographicReference.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/Gene.hbm.xml</value>
++         <value>edu/columbia/association/coexpression/OtherGeneCoExpression.hbm.xml</value>
++         <value>edu/columbia/sequence/sequenceAnalysis/BlatResult.hbm.xml</value>
++         <value>edu/columbia/expression/experiment/ExpressionExperimentSubSet.hbm.xml</value>
++         <value>edu/columbia/association/coexpression/HumanGeneCoExpression.hbm.xml</value>
++         <value>edu/columbia/common/measurement/Measurement.hbm.xml</value>
++         <value>edu/columbia/association/coexpression/MouseGeneCoExpression.hbm.xml</value>
++         <value>edu/columbia/common/measurement/Unit.hbm.xml</value>
++         <value>edu/columbia/common/protocol/Software.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/Taxon.hbm.xml</value>
++         <value>edu/columbia/analysis/GeneInvestigation.hbm.xml</value>
++         <value>edu/columbia/common/description/FileFormat.hbm.xml</value>
++         <value>edu/columbia/common/auditAndSecurity/ResearchGroup.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/MappingCandidateGene.hbm.xml</value>
++         <value>edu/columbia/common/auditAndSecurity/Security.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/GenomicROI.hbm.xml</value>
++         <value>edu/columbia/common/auditAndSecurity/Contact.hbm.xml</value>
++         <value>edu/columbia/association/coexpression/OtherProbeCoExpression.hbm.xml</value>
+          <value>edu/columbia/common/description/OntologyEntry.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/Chromosome.hbm.xml</value>
++         <value>edu/columbia/association/coexpression/HumanProbeCoExpression.hbm.xml</value>
+          <value>edu/columbia/common/auditAndSecurity/AuditTrail.hbm.xml</value>
++         <value>edu/columbia/association/GeneHomology.hbm.xml</value>
++         <value>edu/columbia/association/BlatAssociation.hbm.xml</value>
++         <value>edu/columbia/common/description/ExternalReference.hbm.xml</value>
++         <value>edu/columbia/expression/designElement/DesignElement.hbm.xml</value>
++         <value>edu/columbia/expression/experiment/ExperimentalFactor.hbm.xml</value>
++         <value>edu/columbia/common/description/File.hbm.xml</value>
++         <value>edu/columbia/association/coexpression/RatGeneCoExpression.hbm.xml</value>
++         <value>edu/columbia/analysis/Analysis.hbm.xml</value>
++         <value>edu/columbia/expression/bioAssay/BioAssay.hbm.xml</value>
++         <value>edu/columbia/association/Gene2GOAssociation.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/GeneProduct.hbm.xml</value>
++         <value>edu/columbia/analysis/AnalysisResult.hbm.xml</value>
++         <value>edu/columbia/expression/experiment/FactorValue.hbm.xml</value>
++         <value>edu/columbia/expression/experiment/ExperimentalDesign.hbm.xml</value>
++         <value>edu/columbia/sequence/gene/BibReferenceCandidateGene.hbm.xml</value>
+          <value>edu/columbia/common/auditAndSecurity/AuditEvent.hbm.xml</value>
+!         <value>edu/columbia/expression/bioAssayData/BioAssayDataVector.hbm.xml</value>
+!         <value>edu/columbia/common/description/DatabaseEntry.hbm.xml</value>
+!         <value>edu/columbia/association/BlastAssociation.hbm.xml</value>
+!         <value>edu/columbia/sequence/biosequence/BioSequence.hbm.xml</value>
+!         <value>edu/columbia/common/auditAndSecurity/SecurityGroup.hbm.xml</value>
+!         <value>edu/columbia/expression/experiment/ExpressionExperiment.hbm.xml</value>
+!         <value>edu/columbia/sequence/gene/CandidateGene.hbm.xml</value>
+!         <value>edu/columbia/expression/biomaterial/Treatment.hbm.xml</value>
+!         <value>edu/columbia/association/coexpression/MouseProbeCoExpression.hbm.xml</value>
+!         <value>edu/columbia/common/protocol/Parameter.hbm.xml</value>
+!         <value>edu/columbia/sequence/sequenceAnalysis/BlastResult.hbm.xml</value>
+!         <value>edu/columbia/association/coexpression/RatProbeCoExpression.hbm.xml</value>
+!         <value>edu/columbia/sequence/gene/GeneAlias.hbm.xml</value>
+!         <value>edu/columbia/common/description/ExternalDatabase.hbm.xml</value>
+!         <value>edu/columbia/common/auditAndSecurity/Organization.hbm.xml</value>
+!         <value>edu/columbia/common/quantitationtype/QuantitationType.hbm.xml</value>
+!         <value>edu/columbia/association/ReferenceAssociation.hbm.xml</value>
+!         <value>edu/columbia/expression/arrayDesign/ArrayDesign.hbm.xml</value>
+!         <value>edu/columbia/expression/biomaterial/BioMaterial.hbm.xml</value>
+! 
+              </list>
+          </property>
+          <property name="hibernateProperties">
