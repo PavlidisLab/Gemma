@@ -29,9 +29,6 @@ public class SpeciesBioAssayList {
 
    protected static final Log log = LogFactory.getLog( SpeciesBioAssayList.class );
    private String baseDir = "smd/organisms/";
-   private String host = "smd-ftp.stanford.edu";
-   private String login = "anonymous";
-   private String password = "pavlidis@dbmi.columbia.edu";
    private SMDSpecies speciesMap;
    private Set experiments;
    private FTPClient f;

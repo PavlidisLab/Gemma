@@ -3,7 +3,6 @@ package edu.columbia.gemma.loader.smd;
 import java.util.Set;
 
 import edu.columbia.common.bqs.BibliographicReference;
-import edu.columbia.common.description.File;
 import edu.columbia.expression.bioAssay.BioAssay;
 import edu.columbia.expression.experiment.ExpressionExperiment;
 import edu.columbia.sequence.gene.Taxon;

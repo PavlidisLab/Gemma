@@ -35,9 +35,9 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
    public final void testFindByExternalIdintString() {
 
       BibliographicReference f = new BibliographicReferenceImpl();
-      
-      String random = (new Date()).toString();
-      
+
+      String random = ( new Date() ).toString();
+
       f.setExternalId( random );
       f.setIdentifier( random );
       dao.create( f );
@@ -49,11 +49,12 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
       try {
          dao.create( f );
-         fail( "create didn't throw DataIntegrityViolationException" );
+         fail( "Create didn't throw DataIntegrityViolationException" );
       } catch ( DataIntegrityViolationException e ) {
          assertNotNull( e );
-         log.debug( "expected exception: " + e.getMessage() );
+         log.debug( "Good, expected exception: " + e.getMessage() );
       }
+
    }
 
 }
