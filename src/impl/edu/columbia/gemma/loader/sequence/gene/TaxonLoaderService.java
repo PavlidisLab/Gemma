@@ -72,16 +72,11 @@ public class TaxonLoaderService implements BulkCreator {
      * @param filename
      * @param hasHeader Indicate if the stream is from a file that has a one-line header
      * @return String
+     * @throws IOException
      */
-    public String bulkCreate( String filename, boolean hasHeader ) {
-        log.info( "Reading Taxa from " + filename );
-        try {
-            view = "taxon";
-            int count = bulkCreate( openFileAsStream( filename ), hasHeader );
-            log.info( "Created " + count + " new taxa from " + filename );
-        } catch ( IOException e ) {
-            view = "error";
-        }
+    public String bulkCreate( String filename, boolean hasHeader ) throws IOException {
+        log.info( "Reading from " + filename );
+        bulkCreate( openFileAsStream( filename ), hasHeader );
 
         return view;
     }

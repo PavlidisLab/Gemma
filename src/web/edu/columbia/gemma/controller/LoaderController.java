@@ -27,11 +27,13 @@ import edu.columbia.gemma.loader.sequence.gene.FileName;
  * @version $Id$
  */
 public class LoaderController extends SimpleFormController {
-    private BulkCreatorProxyFactory bulkCreatorProxyFactory;
     /** Logger for this class and subclasses */
     protected final Log logger = LogFactory.getLog( getClass() );
+    
+    private BulkCreatorProxyFactory bulkCreatorProxyFactory;
     Configuration conf;
     String filepath;
+    String errorview;
 
     /**
      * @throws ConfigurationException
@@ -39,6 +41,7 @@ public class LoaderController extends SimpleFormController {
     public LoaderController() throws ConfigurationException {
         conf = new PropertiesConfiguration( "loader.properties" );
         filepath = conf.getString( "loadercontroller.filepath" );
+        errorview = conf.getString("loader.error.view");
 
     }
 
@@ -54,12 +57,17 @@ public class LoaderController extends SimpleFormController {
      * @return ModelAndView
      * @throws IOException
      */
-    public ModelAndView onSubmit( Object command ) throws IOException {
+    public ModelAndView onSubmit( Object command ) {
         String filename = ( ( FileName ) command ).getFileName();
         filename = resolveFilename( filename );
         Map myModel = new HashMap();
         BulkCreator proxy = getBulkCreatorProxyFactory().getBulkCreatorProxy( filename );
-        String view = proxy.bulkCreate( filename, true );
+        String view;
+        try {
+            view = proxy.bulkCreate( filename, true );
+        } catch ( IOException e ) {
+            return new ModelAndView( errorview, "model", myModel );
+        }
         return new ModelAndView( view, "model", myModel );
     }
 
@@ -76,14 +84,10 @@ public class LoaderController extends SimpleFormController {
      */
     private String resolveFilename( String filename ) {
         filename = filename.toLowerCase();
-        if ( !(filename.startsWith( "//cgcfs1/projects/pavlidis/grp/databases/gemma/" )) ){
-            filename = "//cgcfs1/projects/pavlidis/grp/databases/gemma/" + filename;
-            System.err.println(filename);
+        if ( !(filename.startsWith( filepath )) ){
+            filename = filepath + filename;
         }
-//        if (!(filename.endsWith(".txt"))){
-//            filename = filename + ".txt";
-//            System.err.println(filename);
-//        }
+        
         return filename;
     }
 

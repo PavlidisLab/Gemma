@@ -78,16 +78,12 @@ public class GeneLoaderService implements BulkCreator {
     /**
      * @param filename
      * @param hasHeader Indicate if the stream is from a file that has a one-line header
+     * @throws IOException
      */
-    public String bulkCreate( String filename, boolean hasHeader ) {
+    public String bulkCreate( String filename, boolean hasHeader ) throws IOException {
         log.info( "Reading from " + filename );
-        try {
-            view = "gene";
-            int count = bulkCreate( openFileAsStream( filename ), hasHeader );
-            log.info( "Created " + count + " new taxa from " + filename );
-        } catch ( IOException e ) {
-            view = "error";
-        }
+        bulkCreate( openFileAsStream( filename ), hasHeader );
+        
         return view;
     }
 
