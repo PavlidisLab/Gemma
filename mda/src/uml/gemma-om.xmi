@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 18 12:58:48 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 18 15:57:31 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -13123,21 +13123,21 @@ etc. in order to capture the scores and other parameters that document why we th
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3dba'/>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4fdb' name = 'queryStarts'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3dba'/>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4fca' name = 'targetStarts'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3dba'/>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Operation xmi.id = 'I1a1f567m102b6501985mm22a' name = 'score' visibility = 'public'
@@ -14459,7 +14459,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'I183d08cm102a19e2aa6m72a6' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from TaxonImpl t where t.scientificName=? </UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
@@ -14523,7 +14523,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'I1a1f567m102b6501985mm199' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from TaxonImpl</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from TaxonImpl t</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
@@ -15801,6 +15801,12 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3e'/>
                               </UML:StructuralFeature.type>
                             </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I1a1f567m102b6501985mm194' name = 'strand' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
                           </UML:Classifier.feature>
                         </UML:Class>
                         <UML:Generalization xmi.id = 'Iff6185m1029346d98fmm2d5' isSpecification = 'false'>
@@ -15894,7 +15900,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
                               </UML:AssociationEnd.participant>
                             </UML:AssociationEnd>
-                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmm272' name = 'featureCytogenicLocation'
+                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmm272' name = 'cytogenicLocation'
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
@@ -15927,7 +15933,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
                               </UML:AssociationEnd.participant>
                             </UML:AssociationEnd>
-                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmm297' name = 'featureGeneticLocation'
+                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmm297' name = 'geneticLocation'
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
@@ -15960,7 +15966,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
                               </UML:AssociationEnd.participant>
                             </UML:AssociationEnd>
-                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmma93' name = 'featurePhysicalLocation'
+                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmma93' name = 'physicalLocation'
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
@@ -16813,7 +16819,7 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                             <UML:TaggedValue xmi.id = 'Idbfe9cm1025f34ddd2mm216d' isSpecification = 'false'>
-                              <UML:TaggedValue.dataValue>concrete</UML:TaggedValue.dataValue>
+                              <UML:TaggedValue.dataValue>subclass</UML:TaggedValue.dataValue>
                               <UML:TaggedValue.type>
                                 <UML:TagDefinition xmi.idref = 'Idbfe9cm1025f34ddd2mm2170'/>
                               </UML:TaggedValue.type>
@@ -17612,7 +17618,7 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                             <UML:Class xmi.idref = 'I1140071m101d462efa4mm42a2'/>
                           </UML:Generalization.parent>
                         </UML:Generalization>
-                        <UML:Association xmi.id = 'Ib6efb2m10268bb2e8am30de' name = 'AnalysisResults'
+                        <UML:Association xmi.id = 'Ib6efb2m10268bb2e8am30de' name = 'ExpressionAnalysisResults'
                           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                           <UML:Association.connection>
                             <UML:AssociationEnd xmi.id = 'Ib6efb2m10268bb2e8am30d8' name = 'analysis'
@@ -17629,7 +17635,7 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                                 <UML:Class xmi.idref = 'Ib6efb2m10268bb2e8am3041'/>
                               </UML:AssociationEnd.participant>
                             </UML:AssociationEnd>
-                            <UML:AssociationEnd xmi.id = 'Ib6efb2m10268bb2e8am30db' name = 'results'
+                            <UML:AssociationEnd xmi.id = 'Ib6efb2m10268bb2e8am30db' name = 'expressionAnalysisResults'
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
