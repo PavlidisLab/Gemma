@@ -1,5 +1,7 @@
 package edu.columbia.common.bqs;
 
+import java.util.Date;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,11 +35,14 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
    public final void testFindByExternalIdintString() {
 
       BibliographicReference f = new BibliographicReferenceImpl();
-      f.setExternalId( "12940" );
-      f.setIdentifier("dkja");
+      
+      String random = (new Date()).toString();
+      
+      f.setExternalId( random );
+      f.setIdentifier( random );
       dao.create( f );
 
-      f = dao.findByExternalId( "12940" );
+      f = dao.findByExternalId( random );
 
       assertTrue( f != null );
       assertTrue( dao.findByExternalId( "192029" ) == null );
