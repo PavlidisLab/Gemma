@@ -16,7 +16,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImpl;
-import edu.columbia.gemma.loader.sequence.gene.BlatResultParser;
+import edu.columbia.gemma.loader.genome.BlatResultParser;
 import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
 
 /**

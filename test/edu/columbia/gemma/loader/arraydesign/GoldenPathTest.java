@@ -49,12 +49,12 @@ public class GoldenPathTest extends TestCase {
             public int compare( Object a, Object b ) {
                 Gene ga = ( Gene ) a;
                 Gene gb = ( Gene ) b;
-                return ga.getName().compareTo( gb.getName() );
+                return ga.getOfficialSymbol().compareTo( gb.getOfficialSymbol() );
             };
         } );
         for ( Iterator iter = actualResult.iterator(); iter.hasNext(); ) {
             Gene gene = ( Gene ) iter.next();
-            assertEquals( "BET1L", gene.getName() );
+            assertEquals( "BET1L", gene.getOfficialSymbol() );
             break;
         }
 

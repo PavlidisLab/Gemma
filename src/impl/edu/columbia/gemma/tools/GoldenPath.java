@@ -86,10 +86,10 @@ public class GoldenPath {
 
                                         Gene gene = Gene.Factory.newInstance();
 
-                                        gene.setName( rs.getString( "name" ) ); // FIXME should be the ncbi id.
+                                        gene.setNcbiId( rs.getString( "name" ) );
 
                                         gene.setOfficialSymbol( rs.getString( "geneName" ) );
-                                        gene.setId( new Long( gene.getName().hashCode() ) );
+                                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
 
                                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
                                         pl.setNucleotide( new Integer( rs.getInt( "txStart" ) ) );
