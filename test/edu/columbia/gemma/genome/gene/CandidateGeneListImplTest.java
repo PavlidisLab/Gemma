@@ -61,7 +61,7 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
 		// create new list for fun
 		daoCGL = (CandidateGeneListDao) ctx.getBean("candidateGeneListDao");
 		cgl = CandidateGeneList.Factory.newInstance();
-		cgl.setDescription("Test candidate list");
+		cgl.setDescription("Test my candidate list");
 		cgl.setName("Test Candidates");
 	    daoCGL.create(cgl);
     }
@@ -78,25 +78,20 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
         
         CandidateGeneListServiceImpl cglService = new CandidateGeneListServiceImpl();
         
-        ArrayList newcgs = new ArrayList();
+        Gene gene1 = makeGene("foo1");
+        Gene gene2 = makeGene("foo2");
+        Gene gene3 = makeGene("foo3");
         
         // add some new genes as candidategenes (using makeGene shortcut)
-        newcgs.add(cglService.handleAddCandidateToList(cgl,makeGene("foo1")));
-        newcgs.add(cglService.handleAddCandidateToList(cgl,makeGene("foo2")));
-        newcgs.add(cglService.handleAddCandidateToList(cgl,makeGene("foo3")));
+        CandidateGene cg1 = cglService.handleAddCandidateToList(cgl,gene1);
+        CandidateGene cg2 = cglService.handleAddCandidateToList(cgl,gene2);
+        CandidateGene cg3 = cglService.handleAddCandidateToList(cgl,gene3);
         
-	    // now remove the genes from the list
-	    java.util.Iterator iter = newcgs.iterator();
-	    
-	    CandidateGene cgKill = null;
-	    Gene gKill = null;
-	    while(iter.hasNext()){
-	        cgKill = (CandidateGene) iter.next();
-	        gKill = cgKill.getGene();
-	        cglService.handleRemoveCandidateFromList(cgl, cgKill);
-	        daoGene.remove(gKill);
-	    }
-        
+        cglService.handleRemoveCandidateFromList(cgl, cg1);
+        cglService.handleRemoveCandidateFromList(cgl, cg2);
+        cglService.handleRemoveCandidateFromList(cgl, cg3);
+        daoGene.remove(gene1);
+        daoGene.remove(gene2);
+        daoGene.remove(gene3);
     }
-
 }
