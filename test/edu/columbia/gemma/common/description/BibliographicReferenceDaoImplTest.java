@@ -38,14 +38,17 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
       String random = ( new Date() ).toString();
 
-      f.setExternalId( random );
+      DatabaseEntry de = new DatabaseEntryImpl();
+      DatabaseEntry deb = new DatabaseEntryImpl();
+      
+      f.setPubAccession( de );
       f.setIdentifier( random );
       dao.create( f );
 
-      f = dao.findByExternalId( random );
+      f = dao.findByExternalId( de );
 
       assertTrue( f != null );
-      assertTrue( dao.findByExternalId( "192029" ) == null );
+      assertTrue( dao.findByExternalId( deb ) == null );
 
       try {
          dao.create( f );

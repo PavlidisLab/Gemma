@@ -15,7 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * Base class for running DAO tests. Based on code from Appfuse
+ * Base class for running DAO tests. Based on code from Appfuse.
  * 
  * @author mraible
  * @author pavlidis
