@@ -6,6 +6,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.controller.LoaderControllerTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
+import edu.columbia.gemma.loader.arraydesign.GoldenPathTest;
 import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
@@ -41,6 +42,8 @@ public class AllTests {
         suite.addTestSuite(LoaderControllerTest.class);
         
         suite.addTestSuite(TaxonLoaderServiceTest.class);
+        
+        suite.addTestSuite(GoldenPathTest.class);
         // $JUnit-END$
         
         return suite;
