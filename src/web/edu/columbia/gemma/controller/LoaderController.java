@@ -100,6 +100,8 @@ public class LoaderController extends SimpleFormController {
             filename = conf.getString( "loader.filename.taxon" );
         else if ( typeOfLoader.equals( "chromosomeLoaderService" ) )
             filename = conf.getString( "loader.filename.chromosome" );
+        else if ( typeOfLoader.equals( "arrayDesignLoaderService" ) )
+            filename = conf.getString( "loader.filename.arrayDesign" );
 
         return filename;
     }

@@ -36,7 +36,11 @@
 			<ref bean="taxonDao"/>
 		</property>
 	</bean>	
-	
+	<bean id="arrayDesignLoaderService" class="edu.columbia.gemma.loader.arraydesign.ArrayDesignLoaderService">
+		<property name="arrayDesignDao">
+			<ref bean="arrayDesignDao"/>
+		</property>
+	</bean>	
     <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
             <props>

@@ -35,8 +35,9 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * @spring.property name="taxonDao" ref="taxonDao"
  */
 public class GeneLoaderService implements BulkCreator {
-    private static boolean alreadyRetreivedTaxa;
     protected static final Log log = LogFactory.getLog( GeneLoaderService.class );
+    
+    private static boolean alreadyRetreivedTaxa;
     private edu.columbia.gemma.genome.Gene gene;
     private edu.columbia.gemma.genome.GeneDao geneDao;
     private int ncbiIdCol;

@@ -30,6 +30,7 @@ return false;
 <OPTION VALUE="geneLoaderService">Genes
 <OPTION VALUE="taxonLoaderService">Taxons
 <OPTION VALUE="chromosomeLoaderService">Chromosomes
+<OPTION VALUE="arrayDesignLoaderService">Array Designs
 </SELECT>
 
 <input type=checkbox name="hasHeader" value=true>File Has Header<br>
