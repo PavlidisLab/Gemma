@@ -31,6 +31,9 @@ public class CandidateGeneListServiceImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase
 {
 
+    protected void handleRemoveCandidate(CandidateGeneList candidateGeneList, CandidateGene candidateGene){
+        candidateGeneList.removeCandidate(candidateGene);
+    }
     /**
      * @see edu.columbia.gemma.genome.gene.CandidateGeneListService#FindByGeneOfficialName(edu.columbia.gemma.genome.Gene)
      */

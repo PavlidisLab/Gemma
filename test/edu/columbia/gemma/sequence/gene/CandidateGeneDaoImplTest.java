@@ -37,7 +37,6 @@ public class CandidateGeneDaoImplTest extends BaseDAOTestCase {
 		daoTaxon = (TaxonDao) ctx.getBean("taxonDao");
 		
 		t = daoTaxon.findByCommonName("mouse");
-		
 		if( t==null){
 		    t = Taxon.Factory.newInstance();
 		    t.setCommonName("mouse");
@@ -46,35 +45,32 @@ public class CandidateGeneDaoImplTest extends BaseDAOTestCase {
 		}
 		
 		Collection c = daoGene.findByOfficalSymbol("testmygene");
-		/*if( c.isEmpty() ){
+		if( c.isEmpty() ){
 		    g = Gene.Factory.newInstance();
 			g.setName("testmygene");
 			g.setOfficialSymbol("foo");
 			g.setOfficialName("testmygene");
-			//g.setTaxon(t);
+			g.setTaxon(t);
 			daoGene.create(g);
 		}
 		else
 		    g = (Gene)c.iterator().next();
-		  */  
 	}
-
 
 	protected void tearDown() throws Exception {
 		super.tearDown();
-	   /* daoCG.remove(cg);
-	    daoCG.remove(cg2);
+		daoCG.remove(cg);
 	    daoCG = null;
 		
 		daoGene.remove(g);
 		daoGene = null;
 		daoTaxon.remove(t);
 		daoTaxon=null;
-		*/
+		
 	}
 
 	public void testSetCandidateGene() {
-	  /*
+	  
 	    cg = CandidateGene.Factory.newInstance();
 	    cg.setRank(new Integer(1));
 	    Gene gFromDB = (Gene) daoGene.findByOfficalSymbol("testmygene").iterator().next();
@@ -82,7 +78,7 @@ public class CandidateGeneDaoImplTest extends BaseDAOTestCase {
 	    daoCG.create(cg);
 	    
 	    assertTrue(cg.getGene().equals(gFromDB));
-	    */
+	    
 	}
 
 }
