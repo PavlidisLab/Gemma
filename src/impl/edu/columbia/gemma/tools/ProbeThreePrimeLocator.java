@@ -14,9 +14,9 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImpl;
 import edu.columbia.gemma.loader.sequence.gene.BlatResultParser;
-import edu.columbia.gemma.sequence.gene.Gene;
-import edu.columbia.gemma.sequence.sequenceAnalysis.BlatResultImpl;
 import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
 
 /**

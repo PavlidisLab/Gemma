@@ -6,7 +6,7 @@ import java.util.Set;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
-import edu.columbia.gemma.sequence.biosequence.BioSequence;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
 
 /**
  * <hr>

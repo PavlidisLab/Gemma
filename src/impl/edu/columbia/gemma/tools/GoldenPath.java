@@ -14,8 +14,8 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.sequence.PhysicalLocation;
-import edu.columbia.gemma.sequence.gene.Gene;
+import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.PhysicalLocation;
 
 /**
  * This is temporary, until we have this in our own database.

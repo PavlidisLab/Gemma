@@ -11,7 +11,7 @@ import java.util.Iterator;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReader;
-import edu.columbia.gemma.sequence.biosequence.BioSequence;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
 
 /**
  * Given an Affymetrix array design, "collapse" the probes into sequences that include all probe sequence.
