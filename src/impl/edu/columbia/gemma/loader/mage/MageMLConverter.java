@@ -22,6 +22,7 @@ import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.sequence.biosequence.BioSequenceImpl;
 import edu.columbia.gemma.sequence.biosequence.PolymerType;
 import edu.columbia.gemma.sequence.biosequence.SequenceType;
 import edu.columbia.gemma.sequence.gene.Taxon;
@@ -124,14 +125,8 @@ public class MageMLConverter {
      */
     public void convertAssociations( Object mageObj, Object gemmaObj ) {
 
-        String gemmaObjName = ReflectionUtil.objectToTypeName( gemmaObj );
-
-        Class classToSeek = null;
-
-        if ( gemmaObjName.endsWith( "Impl" ) ) {
-            gemmaObjName = gemmaObjName.substring( 0, gemmaObjName.lastIndexOf( "Impl" ) );
-            classToSeek = gemmaObj.getClass().getSuperclass();
-        }
+        Class classToSeek = ReflectionUtil.getImplForBase( gemmaObj );
+        String gemmaObjName = ReflectionUtil.classToTypeName( classToSeek );
 
         try {
             Class[] interfaces = mageObj.getClass().getInterfaces();
@@ -207,13 +202,7 @@ public class MageMLConverter {
     public void convertBioSequenceAssociations( org.biomage.BioSequence.BioSequence mageObj,
             edu.columbia.gemma.sequence.biosequence.BioSequence gemmaObj, Method getter ) {
 
-        Object associatedObject = invokeGetter( mageObj, getter );
-
-        if ( associatedObject == null ) {
-            log.warn( "Getter called but failed to return a value: " + getter.getName() + " (Probably no data)" );
-            return;
-        }
-
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
         String associationName = getterToPropertyName( getter );
         log.debug( mageObj.getClass().getName() + "--->" + associationName );
 
@@ -223,7 +212,7 @@ public class MageMLConverter {
             List seqdbs = ( List ) associatedObject;
             simpleFillIn( seqdbs, gemmaObj, getter, true, "SequenceDatabaseEntry" );
         } else if ( associationName.equals( "Type" ) ) { // ontology entry, we map to a enumerated type.
-            simpleFillIn( mageObj, gemmaObj, getter, "Type" ); // because it's a SequenceType, not a "Type".
+            simpleFillIn( mageObj, gemmaObj, getter, "Type" ); // yes, we do.
         } else if ( associationName.equals( "Species" ) ) { // ontology entry, we map to a enumerated type.
             simpleFillIn( mageObj, gemmaObj, getter );
         } else if ( associationName.equals( "SeqFeatures" ) ) {
@@ -264,9 +253,46 @@ public class MageMLConverter {
 
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
         result.setWebURI( mageObj.getURI() );
-        convertIdentifiable( mageObj, result );
+        // we don't use version.
+        convertIdentifiable( mageObj, result ); // takes care of description...
         convertAssociations( mageObj, result ); // contacts
         return result;
+    }
+
+    /**
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     */
+    public void convertExternalDatabaseAssociations( Database mageObj, ExternalDatabase gemmaObj, Method getter ) {
+        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        String associationName = getterToPropertyName( getter );
+
+        if ( associationName.equals( "Contacts" ) )
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, true, "Contact" );
+        else
+            log.warn( "Unsupported or unknown association: " + associationName );
+
+    }
+
+    /**
+     * Initialize the conversion process by calling the getter and getting the association name
+     * 
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     * @return The name of the association, taken from the getter.
+     */
+    public Object intializeConversion( Object mageObj, Object gemmaObj, Method getter ) {
+        Object associatedObject = invokeGetter( mageObj, getter );
+
+        if ( associatedObject == null ) {
+            log.warn( "Getter called on " + mageObj.getClass().getName() + " but failed to return a value: " + getter.getName() + " (Probably no data)" );
+            return null;
+        }
+
+        log.debug( mageObj.getClass().getName() + "--->" + getterToPropertyName( getter ) );
+        return associatedObject;
     }
 
     /**
@@ -294,18 +320,13 @@ public class MageMLConverter {
      */
     public void convertDatabaseEntryAssociations( org.biomage.Description.DatabaseEntry mageObj,
             DatabaseEntry gemmaObj, Method getter ) {
-        Object associatedObject = invokeGetter( mageObj, getter );
-
-        if ( associatedObject == null ) {
-            log.warn( "Getter called but failed to return a value: " + getter.getName() + " (Probably no data)" );
-            return;
-        }
-
+        intializeConversion( mageObj, gemmaObj, getter );
         String associationName = getterToPropertyName( getter );
-        log.debug( mageObj.getClass().getName() + "--->" + associationName );
 
         if ( associationName.equals( "Database" ) )
             simpleFillIn( mageObj, gemmaObj, getter );
+        else if (associationName.equals("Type"))
+            ; // we ain't got that.
         else
             log.warn( "Unsupported or unknown association: " + associationName );
     }
@@ -707,6 +728,8 @@ public class MageMLConverter {
         try {
             Class mageAssociatedType = getter.getReturnType();
             Object gemmaAssociatedObj = findAndInvokeConverter( associatedObject, associationName, mageAssociatedType );
+            if ( gemmaAssociatedObj == null ) return;
+
             Class gemmaClass = ReflectionUtil.getImplForBase( gemmaAssociatedObj.getClass() );
 
             String inferredGemmaAssociationName;
