@@ -34,7 +34,6 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * @spring.property name="sessionForm" value="true"
  * @spring.property name="formView" value="bulkLoadForm"
  * @spring.property name="successView" value="home.jsp"
- * @web.servlet name="loader" class="org.springframework.web.servlet.DispatcherServlet"
  */
 public class LoaderController extends SimpleFormController {
     private Configuration conf;
