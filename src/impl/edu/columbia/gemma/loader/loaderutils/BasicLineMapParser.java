@@ -40,7 +40,9 @@ public abstract class BasicLineMapParser extends BasicLineParser {
         return results.keySet().iterator();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
@@ -53,13 +55,20 @@ public abstract class BasicLineMapParser extends BasicLineParser {
 
             if ( newItem != null ) {
                 String key = getKey( newItem );
+
+                assert key != null;
+
                 results.put( key, newItem );
                 count++;
+                if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..." );
+
+            } else {
+                log.debug( "Null object returned" ); // this could be a header
             }
-            if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..." );
 
         }
         log.info( "Read in " + count + " items..." );
+        br.close();
     }
 
     /*

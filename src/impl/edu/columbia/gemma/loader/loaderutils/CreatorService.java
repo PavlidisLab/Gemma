@@ -1,13 +1,11 @@
 package edu.columbia.gemma.loader.loaderutils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.util.ReflectionUtil;
@@ -20,7 +18,7 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="creatorService" lazy-init="true" singleton="true"
+ * @spring.bean id="creatorService"
  */
 public class CreatorService {
 
