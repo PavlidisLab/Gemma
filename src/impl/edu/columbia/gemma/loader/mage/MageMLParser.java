@@ -83,7 +83,8 @@ public class MageMLParser {
 
         Collection result = new ArrayList();
 
-        // todo: this is inefficient because it tries every possible package and class. - fix is to get just the mage
+        // todo: this is a little inefficient because it tries every possible package and class. - fix is to get just
+        // the mage
         // packages!
         for ( int i = 0; i < allPackages.length; i++ ) {
 
@@ -103,7 +104,6 @@ public class MageMLParser {
                     // log.error( "Class not found: " + name + "." + mageClasses[j] );
                 }
             }
-
         }
         return result;
     }
@@ -134,8 +134,7 @@ public class MageMLParser {
             try {
                 packageGetterMethod = mageJava.getClass().getMethod( packageGetterMethodName, new Class[] {} );
             } catch ( NoSuchMethodException e ) {
-                ; // that's okay - org.biomage.Common.MAGEJava.getCommon_package() triggers this.
-                return null;
+                return null; // that's okay - org.biomage.Common.MAGEJava.getCommon_package() triggers this.
             }
 
             Object packageOb = packageGetterMethod.invoke( mageJava, new Object[] {} );
@@ -148,8 +147,7 @@ public class MageMLParser {
             try {
                 listGetterMethod = packageOb.getClass().getMethod( listGetterMethodName, new Class[] {} );
             } catch ( NoSuchMethodException e ) {
-                // that's okay, not everybody has one.
-                return null;
+                return null; // that's okay, not everybody has one.
             }
 
             Object result = listGetterMethod.invoke( packageOb, new Object[] {} );

@@ -18,6 +18,9 @@ import org.biomage.ArrayDesign.CompositeGroup;
 import org.biomage.ArrayDesign.FeatureGroup;
 import org.biomage.ArrayDesign.PhysicalArrayDesign;
 import org.biomage.ArrayDesign.ReporterGroup;
+import org.biomage.AuditAndSecurity.Contact;
+import org.biomage.AuditAndSecurity.Organization;
+import org.biomage.AuditAndSecurity.Person;
 import org.biomage.BQS.BibliographicReference;
 import org.biomage.BioAssay.BioAssay;
 import org.biomage.BioAssay.BioAssayCreation;
@@ -50,7 +53,7 @@ import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 
-import edu.columbia.gemma.common.Identifscribable;
+import edu.columbia.gemma.common.DescribableImpl;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.protocol.Software;
@@ -95,10 +98,6 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * @version $Id$
  */
 public class MageMLConverter {
-
-    // convertPerson
-    // convertOrganization
-    // convertContact
 
     /**
      * Used to indicate that a MAGE list should be converted to a Gemma list (or collection)
@@ -166,7 +165,7 @@ public class MageMLConverter {
     public void convertArrayDesignAssociations( ArrayDesign mageObj,
             edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj, Method getter ) {
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "CompositeGroups" ) ) {
@@ -194,6 +193,7 @@ public class MageMLConverter {
      * @return
      */
     public Object convertArrayManufacture( ArrayManufacture mageObj ) {
+        if ( mageObj == null ) return null;
         return null; // no-op.
     }
 
@@ -287,7 +287,6 @@ public class MageMLConverter {
         result.setPublisher( mageObj.getPublisher() );
         result.setTitle( mageObj.getTitle() );
         result.setVolume( mageObj.getVolume() );
-        result.setYear( mageObj.getYear() );
         result.setFullTextURI( mageObj.getURI() ); // FIXME URI is probably not right.
         convertAssociations( mageObj, result );
         return result;
@@ -301,7 +300,7 @@ public class MageMLConverter {
     public void convertBibliographicReferenceAssociations( BibliographicReference mageObj,
             edu.columbia.gemma.common.description.BibliographicReference gemmaObj, Method getter ) {
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
@@ -342,7 +341,7 @@ public class MageMLConverter {
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
 
         log.warn( "convertBioAssayAssociations not fully supported!" );
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
@@ -376,7 +375,7 @@ public class MageMLConverter {
      */
     public void convertBioMaterialAssociations( org.biomage.BioMaterial.BioMaterial mageObj, BioMaterial gemmaObj,
             Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Characteristics" ) ) {
@@ -423,7 +422,7 @@ public class MageMLConverter {
 
         convertBioMaterialAssociations( mageObj, gemmaObj, getter );
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
 
         if ( associatedObject == null ) return;
 
@@ -472,7 +471,7 @@ public class MageMLConverter {
     public void convertBioSequenceAssociations( org.biomage.BioSequence.BioSequence mageObj,
             edu.columbia.gemma.sequence.biosequence.BioSequence gemmaObj, Method getter ) {
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
 
         if ( associatedObject == null ) return;
 
@@ -521,7 +520,7 @@ public class MageMLConverter {
     public void convertBioSourceAssociations( BioSource mageObj, BioMaterial gemmaObj, Method getter ) {
         convertBioMaterialAssociations( mageObj, gemmaObj, getter );
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -549,6 +548,7 @@ public class MageMLConverter {
      * @return
      */
     public Object convertChannel( Channel mageObj ) {
+        if ( mageObj == null ) return null;
         return null; // No-op
     }
 
@@ -560,6 +560,35 @@ public class MageMLConverter {
      */
     public Object convertCompositeGroup( CompositeGroup mageObj ) {
         if ( mageObj == null ) return null;
+        return null;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.auditAndSecurity.Contact convertContact( Contact mageObj ) {
+        if ( mageObj == null ) return null;
+        return null;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.auditAndSecurity.Organization convertOrganization( Organization mageObj ) {
+        if ( mageObj == null ) return null;
+
+        return null;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.auditAndSecurity.Person convertPerson( Person mageObj ) {
+        if ( mageObj == null ) return null;
+
         return null;
     }
 
@@ -585,7 +614,7 @@ public class MageMLConverter {
      */
     public void convertCompositeSequenceAssociations( org.biomage.DesignElement.CompositeSequence mageObj,
             edu.columbia.gemma.expression.designElement.CompositeSequence gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -643,7 +672,7 @@ public class MageMLConverter {
     public void convertDatabaseAssociations( Database mageObj,
             edu.columbia.gemma.common.description.ExternalDatabase gemmaObj, Method getter ) {
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -679,7 +708,7 @@ public class MageMLConverter {
      */
     public void convertDatabaseEntryAssociations( org.biomage.Description.DatabaseEntry mageObj,
             DatabaseEntry gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Database" ) )
@@ -740,7 +769,7 @@ public class MageMLConverter {
      */
     public void convertDerivedBioAssayAssociations( DerivedBioAssay mageObj,
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
@@ -772,7 +801,7 @@ public class MageMLConverter {
      * @param mageObj
      * @param gemmaObj
      */
-    public void convertDescribable( Describable mageObj, Identifscribable gemmaObj ) {
+    public void convertDescribable( Describable mageObj, edu.columbia.gemma.common.Describable gemmaObj ) {
 
         if ( mageObj == null ) return;
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
@@ -816,7 +845,7 @@ public class MageMLConverter {
      */
     public void convertDescriptionAssociations( Description mageObj,
             edu.columbia.gemma.common.description.Description gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "BibliographicReferences" ) ) {
@@ -879,7 +908,7 @@ public class MageMLConverter {
     public void convertExperimentalFactorAssociations( org.biomage.Experiment.ExperimentalFactor mageObj,
             ExperimentalFactor gemmaObj, Method getter ) {
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
@@ -899,7 +928,7 @@ public class MageMLConverter {
      * @param getter
      */
     public void convertExperimentAssociations( Experiment mageObj, ExpressionExperiment gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -948,7 +977,7 @@ public class MageMLConverter {
     public void convertExperimentDesignAssociations( ExperimentDesign mageObj, ExperimentalDesign gemmaObj,
             Method getter ) {
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -967,7 +996,8 @@ public class MageMLConverter {
             // we don't have this in our model TODO: check
         } else if ( associationName.equals( "Types" ) ) {
             assert associatedObject instanceof List;
-          //  simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Types" ); // TODO quantifier is wrong
+            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Types" ); // TODO quantifier is
+            // wrong
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -979,7 +1009,8 @@ public class MageMLConverter {
      * @param mageObj
      * @param gemmaObj
      */
-    public void convertExtendable( Extendable mageObj, Identifscribable gemmaObj ) {
+    public void convertExtendable( Extendable mageObj, edu.columbia.gemma.common.Describable gemmaObj ) {
+        if ( mageObj == null || gemmaObj == null ) return;
         ; // nothing to do, we aren't using this.
     }
 
@@ -989,7 +1020,7 @@ public class MageMLConverter {
      * @param getter
      */
     public void convertExternalDatabaseAssociations( Database mageObj, ExternalDatabase gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -1020,7 +1051,7 @@ public class MageMLConverter {
      */
     public void convertFactorValueAssociations( org.biomage.Experiment.FactorValue mageObj, FactorValue gemmaObj,
             Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associationName.equals( "ExperimentalFactor" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
@@ -1041,7 +1072,7 @@ public class MageMLConverter {
      * @return
      */
     public Object convertFeatureReporterMap( FeatureReporterMap mageObj ) {
-        // NO-OP
+        if ( mageObj == null ) return null;
         return null;
     }
 
@@ -1052,7 +1083,7 @@ public class MageMLConverter {
      * @return
      */
     public Object convertHardware( Hardware mageObj ) {
-        // no-op
+        if ( mageObj == null ) return null;
         return null;
     }
 
@@ -1062,14 +1093,15 @@ public class MageMLConverter {
      * @param mageObj
      * @return boolean True if the object is alreay in the cache and needs no further processing.
      */
-    public boolean convertIdentifiable( Identifiable mageObj, Identifscribable gemmaObj ) {
+    public boolean convertIdentifiable( org.biomage.Common.Identifiable mageObj,
+            edu.columbia.gemma.common.Identifiable gemmaObj ) {
 
         if ( mageObj == null ) return false;
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
 
         if ( isInCache( mageObj ) ) {
             log.debug( "Object exists in cache: " + mageObj.getIdentifier() );
-            gemmaObj = ( Identifscribable ) identifiableCache.get( mageObj.getIdentifier() );
+            gemmaObj = ( edu.columbia.gemma.common.Identifiable ) identifiableCache.get( mageObj.getIdentifier() );
             return true;
         }
 
@@ -1107,7 +1139,7 @@ public class MageMLConverter {
     public void convertLabeledExtractAssociations( LabeledExtract mageObj, BioMaterial gemmaObj, Method getter ) {
         convertBioMaterialAssociations( mageObj, gemmaObj, getter );
 
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -1140,7 +1172,7 @@ public class MageMLConverter {
      */
     public void convertMeasuredBioAssayAssociations( MeasuredBioAssay mageObj,
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         log.debug( "Not supported fully yet" );
         if ( associatedObject == null ) return;
@@ -1195,7 +1227,7 @@ public class MageMLConverter {
      */
     public void convertOntologyEntryAssociations( OntologyEntry mageObj,
             edu.columbia.gemma.common.description.OntologyEntry gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Associations" ) ) {
@@ -1233,7 +1265,7 @@ public class MageMLConverter {
     public void convertPhysicalArrayDesignAssociations( PhysicalArrayDesign mageObj,
             edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj, Method getter ) {
         convertArrayDesignAssociations( mageObj, gemmaObj, getter );
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "SurfaceType" ) ) {
@@ -1269,7 +1301,7 @@ public class MageMLConverter {
      */
     public void convertPhysicalBioAssayAssociations( PhysicalBioAssay mageObj,
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
 
         if ( associatedObject == null ) return;
@@ -1343,7 +1375,7 @@ public class MageMLConverter {
      */
     public void convertProtocolAssociations( Protocol mageObj, edu.columbia.gemma.common.protocol.Protocol gemmaObj,
             Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
@@ -1399,7 +1431,7 @@ public class MageMLConverter {
     public void convertQuantitationTypeAssociations( QuantitationType mageObj,
             edu.columbia.gemma.common.quantitationtype.QuantitationType gemmaObj, Method getter ) {
         log.warn( "Not fully implemented" );
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
 
@@ -1458,7 +1490,7 @@ public class MageMLConverter {
      */
     public void convertReporterAssociations( org.biomage.DesignElement.Reporter mageObj, Reporter gemmaObj,
             Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "FailTypes" ) ) {
@@ -1484,7 +1516,7 @@ public class MageMLConverter {
      * @return
      */
     public Object convertReporterCompositeMap( ReporterCompositeMap mageObj ) {
-        // NO-OP
+        if ( mageObj == null ) return null;
         return null;
     }
 
@@ -1544,7 +1576,7 @@ public class MageMLConverter {
      * @param getter
      */
     public void convertSoftwareAssociations( org.biomage.Protocol.Software mageObj, Software gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, gemmaObj, getter );
+        Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Hardware" ) ) {
@@ -1847,7 +1879,7 @@ public class MageMLConverter {
      * @param getter
      * @return The name of the association, taken from the getter.
      */
-    private Object intializeConversion( Object mageObj, Object gemmaObj, Method getter ) {
+    private Object intializeConversion( Object mageObj, Method getter ) {
         Object associatedObject = invokeGetter( mageObj, getter );
 
         if ( associatedObject == null ) {
@@ -2136,8 +2168,8 @@ public class MageMLConverter {
         log.warn( "Looked in " + mageObj.getIdentifier() + " for ArrayDesign " + ad.getIdentifier() );
 
         edu.columbia.gemma.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
-        if ( result.getArrayDesignUsed() == null ) result.setArrayDesignUsed( new ArrayList() );
-        result.getArrayDesignUsed().add( conv );
+        if ( result.getArrayDesignsUsed() == null ) result.setArrayDesignsUsed( new ArrayList() );
+        result.getArrayDesignsUsed().add( conv );
     }
 
 }
