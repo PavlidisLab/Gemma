@@ -1,11 +1,14 @@
 package edu.columbia.gemma.loader.arraydesign;
 
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
+import edu.columbia.gemma.expression.designElement.Reporter;
 
 import junit.framework.TestCase;
 
@@ -45,12 +48,26 @@ public class AffyProbeReaderTest extends TestCase {
      * Class under test for Map read(InputStream)
      */
     public final void testReadInputStream() throws Exception {
-         apr.parse( is );
+        apr.parse( is );
 
-        String expectedValue = "TCACGGCAGGACAACGAGAAAGCCC";
-        String actualValue = ( ( AffymetrixProbeSet ) apr.get( "1004_at" ) ).getProbeSequence( "10" ).toUpperCase();
+        String expectedValue = "TCACGGCAGGACAACGAGAAAGCCC"; // 10
+        CompositeSequence cs = ( ( CompositeSequence ) apr.get( "1004_at" ) );
 
-        assertEquals( expectedValue, actualValue );
+        assertTrue( "CompositeSequence was null", cs != null );
+
+        boolean foundIt = false;
+        for ( Iterator iter = cs.getReporters().iterator(); iter.hasNext(); ) {
+            Reporter element = ( Reporter ) iter.next();
+            //log.debug( element.getIdentifier() );
+            if ( element.getIdentifier().equals( "Reporter:1004_at:265:573" ) ) {
+                String actualValue = element.getImmobilizedCharacteristic().getSequence();
+
+                assertEquals( expectedValue, actualValue );
+                foundIt = true;
+                break;
+            }
+        }
+        assertTrue( "Didn't find the probe ", foundIt );
     }
 
 }

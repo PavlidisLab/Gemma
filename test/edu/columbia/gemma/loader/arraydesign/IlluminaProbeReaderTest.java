@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.expression.designElement.Reporter;
 
 import baseCode.io.reader.BasicLineMapParser;
 
@@ -48,7 +49,8 @@ public class IlluminaProbeReaderTest extends TestCase {
 
         String expectedValue = "GTGGCTGCCTTCCCAGCAGTCTCTACTTCAGCATATCTGGGAGCCAGAAG";
 
-        String actualValue = ( ( Probe ) apr.get( "GI_42655756-S" ) ).getSequence().seqString().toUpperCase();
+        String actualValue = ( ( Reporter ) apr.get( "GI_42655756-S" ) ).getImmobilizedCharacteristic().getSequence()
+                .toUpperCase();
 
         assertEquals( expectedValue, actualValue );
 
