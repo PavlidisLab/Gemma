@@ -67,8 +67,8 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
      */
     public void testBulkCreateInputStreamboolean() throws IOException {
         Collection col = new HashSet();
-        stream = TaxonLoaderServiceTest.class.getResourceAsStream( conf.getString( "testtaxa.data.filename" ) );
-        testStream = TaxonLoaderServiceTest.class.getResourceAsStream( conf.getString( "testtaxa.data.filename" ) );
+        stream = TaxonLoaderServiceTest.class.getResourceAsStream( "/data/loader/testtaxa.txt" );
+        testStream = TaxonLoaderServiceTest.class.getResourceAsStream( "/data/loader/testtaxa.txt" );
         for ( int i = 0; i < 4; i++ ) {
             Taxon tt = Taxon.Factory.newInstance();
             col.add( tt );
