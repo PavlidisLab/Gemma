@@ -27,7 +27,6 @@ import net.sf.hibernate.cfg.Settings;
 import net.sf.hibernate.impl.SessionFactoryImpl;
 import org.springframework.orm.hibernate.HibernateTemplate;
 
-import util.SmdUtil;
 import edu.columbia.gemma.sequence.gene.Gene;
 import edu.columbia.gemma.sequence.gene.GeneDao;
 import edu.columbia.gemma.sequence.gene.GeneDaoImpl;
