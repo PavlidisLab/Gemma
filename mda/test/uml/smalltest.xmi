@@ -1,0 +1,2686 @@
+<?xml version = '1.0' encoding = 'UTF-8' ?>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Feb 08 20:25:02 EST 2005'>
+  <XMI.header>
+    <XMI.documentation>
+      <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
+      <XMI.exporterVersion>1.0</XMI.exporterVersion>
+    </XMI.documentation>
+  </XMI.header>
+  <XMI.content>
+    <UML:Model xmi.id = 'Ieeda37m101f4482a7amm1273' name = 'Datos' isSpecification = 'false'
+      isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+      <UML:Namespace.ownedElement>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7amm14d9' name = 'datatype' isSpecification = 'false'
+          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+          <UML:Namespace.ownedElement>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm156f' name = 'String' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm156d' name = 'Boolean' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1527'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm156b' name = 'Long' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1523'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1569' name = 'Integer' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1525'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1567' name = 'Byte' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1515'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1565' name = 'Collection' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1563' name = 'List' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1535'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1561' name = 'Set' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1533'/>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1235'/>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm4cf'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm155f' name = 'Map' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm155d' name = 'Float' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm151f'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm155b' name = 'Decimal' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1559' name = 'Date' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1557' name = 'byte' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1555' name = 'int' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1553' name = 'boolean' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1551' name = 'void' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm154f' name = 'Blob' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm154d' name = 'Clob' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm154b' name = 'URL' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1549' name = 'URI' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1547' name = 'Object' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1545' name = 'Mappings' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1543' name = 'Short' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1541' name = 'String[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm153f' name = 'Timestamp' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1531'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm153d' name = 'Time' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm152f'/>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1231'/>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm4cb'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm153b' name = 'Money' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1539' name = 'long' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1537' name = 'float' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1535' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1563'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1565'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1533' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1561'/>
+              </UML:Generalization.child>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1531' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm153f'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1559'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm152f' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm153d'/>
+              </UML:Generalization.child>
+            </UML:Generalization>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm152d' name = 'Double' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1521'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm152b' name = 'double' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1529' name = 'Document' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1527' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm156d'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1553'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1525' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1569'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1523' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm156b'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1539'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1521' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm152d'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm152b'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm151f' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm155d'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1537'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm151b' name = 'TreeNode' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1519' name = 'Object[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1517' name = 'DateTime' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm150f'/>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm1213'/>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm4ad'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:DataType>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1515' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1567'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1557'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1513' name = 'byte[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1511' name = 'File' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm150f' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1517'/>
+              </UML:Generalization.child>
+            </UML:Generalization>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm150d' name = 'Date[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm150b' name = 'Decimal[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1509' name = 'DateTime[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1507' name = 'Byte[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1505' name = 'Double[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1503' name = 'double[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm1501' name = 'URI[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14ff' name = 'URL[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14fd' name = 'File[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14fb' name = 'Float[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14f9' name = 'float[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14f7' name = 'Timestamp[]'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14f5' name = 'Boolean[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14f3' name = 'boolean[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14f1' name = 'Long[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14ef' name = 'long[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14ed' name = 'Time[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14eb' name = 'Short[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14e9' name = 'short' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14e7' name = 'short[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14e5' name = 'int[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14e3' name = 'Integer[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14e1' name = 'char' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14df' name = 'char[]' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14dd' name = 'Character' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:DataType xmi.id = 'Ieeda37m101f4482a7amm14db' name = 'Character[]'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1235' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1561'/>
+              </UML:Generalization.child>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1231' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm153d'/>
+              </UML:Generalization.child>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm1213' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1517'/>
+              </UML:Generalization.child>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm4cf' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1561'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1565'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm4cb' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm153d'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1559'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm4ad' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1517'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1559'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+          </UML:Namespace.ownedElement>
+        </UML:Package>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7amm1277' name = 'Component View'
+          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7amm1275' name = 'Data types' isSpecification = 'false'
+          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7ammff1' name = 'java' isSpecification = 'false'
+          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+          <UML:Namespace.ownedElement>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7ammff3' name = 'lang' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:DataType xmi.id = 'Ieeda37m101f4482a7ammff7' name = 'int' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:DataType xmi.id = 'Ieeda37m101f4482a7ammff5' name = 'void' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+          </UML:Namespace.ownedElement>
+        </UML:Package>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7ammfef' name = 'test' visibility = 'public'
+          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7ammeeb' name = 'package_1' visibility = 'public'
+          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+          <UML:Namespace.ownedElement>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammfe9' name = 'Abstract_TablePerConcreteClass'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1fc' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1fb' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1fa' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1f9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1f8' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1f7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1f6' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1f5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1f4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>concrete</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammfeb' name = 'attribute_1'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammfd3' name = 'TablePerClass' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+              isActive = 'false'>
+              <UML:ModelElement.comment>
+                <UML:Comment xmi.idref = 'Ieeda37m101f4482a7ammeed'/>
+              </UML:ModelElement.comment>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfe7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfe5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfe3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfe1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfdf' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfdd' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfdb' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfd9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm18e' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm18d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm18c' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm18b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm18a' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm189' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm188' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm187' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm186' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>subclass</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammfd5' name = 'attribute_2'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammfbd' name = 'InterfaceForParent'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.comment>
+                <UML:Comment xmi.idref = 'Ieeda37m101f4482a7ammf07'/>
+              </UML:ModelElement.comment>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfd1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfcf' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfcd' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfcb' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfc9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfc7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfc5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfc3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ef' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ee' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ed' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ec' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1eb' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ea' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1e9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1e8' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1e7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>interface</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammfbf' name = 'attribute_1'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable' ordering = 'unordered'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammfa7' name = 'TablePerHierarchy'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.comment>
+                <UML:Comment xmi.idref = 'Ieeda37m101f4482a7ammf03'/>
+              </UML:ModelElement.comment>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfbb' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfb9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfb7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfb5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfb3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfb1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfaf' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfad' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm174' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm173' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm172' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm171' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm170' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm16f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm16e' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm16d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm16c' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>class</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammfa9' name = 'attribute_3'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf93' name = 'NoTaggedValue' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfa5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfa3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfa1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf9f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf9d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf9b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf99' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf97' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1e2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1e1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1e0' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1df' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1de' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1dd' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1dc' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1db' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1da' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf95' name = 'attribute_4'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf91' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf67'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfd3'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf8f' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf25'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfe9'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf7b' name = 'UnknownBehavior'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf8d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf8b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf89' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf87' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf85' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf83' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf81' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf7f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm209' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm208' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm207' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm206' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm205' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm204' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm203' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm202' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm201' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf01'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf7d' name = 'attribute_9'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf67' name = 'JoinedSubclass' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf79' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf77' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf75' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf73' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf71' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf6f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf6d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf6b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm19b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm19a' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm199' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm198' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm197' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm196' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm195' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm194' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm193' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf91'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf69' name = 'attribute_5'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf3d' name = 'ShouldImplementTheInterface'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf4f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf4d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf4b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf49' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf47' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf45' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf43' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf41' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1d5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1d4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1d3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1d2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1d1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1d0' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1cf' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ce' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1cd' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf0d'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf3f' name = 'attribute_2'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable' ordering = 'unordered'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf29' name = 'NoTablePlease' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf3b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf39' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf37' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf35' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf33' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf31' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf2f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf2d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm167' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm166' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm165' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm164' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm163' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm162' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm161' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm160' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm15f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf0b'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf2b' name = 'attribute_8'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf25' name = 'ShouldAlsoBeSubclassOfAbstract'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1b5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1b4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1b3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1b2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1b1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1b0' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1af' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ae' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1ad' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf8f'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf27' name = 'attribute_11'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf11' name = 'JoinedSubclassAlso'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf23' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf21' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf1f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf1d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf1b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf19' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf17' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf15' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm181' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm180' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm17f' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm17e' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm17d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm17c' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm17b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm17a' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm179' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf0f'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf13' name = 'attribute_6'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf0f' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf11'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfd3'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf0d' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf3d'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfbd'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf0b' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf29'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfa7'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Comment xmi.id = 'Ieeda37m101f4482a7ammf09' name = '' visibility = 'public'
+              isSpecification = 'false' body = 'Should be NO table for this'/>
+            <UML:Comment xmi.id = 'Ieeda37m101f4482a7ammf07' name = '' visibility = 'public'
+              isSpecification = 'false' body = 'Should be no table, and InterfaceForParent.java should be an interface.'>
+              <UML:Comment.annotatedElement>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfbd'/>
+              </UML:Comment.annotatedElement>
+            </UML:Comment>
+            <UML:Comment xmi.id = 'Ieeda37m101f4482a7ammf05' name = '' visibility = 'public'
+              isSpecification = 'false' body = 'We should get just one table called TablePerHierarchy'/>
+            <UML:Comment xmi.id = 'Ieeda37m101f4482a7ammf03' name = '' visibility = 'public'
+              isSpecification = 'false' body = 'There should be two tables, with a key&#10;so the subclass can find the parent.'>
+              <UML:Comment.annotatedElement>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfa7'/>
+              </UML:Comment.annotatedElement>
+            </UML:Comment>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf01' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf7b'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf93'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammeef' name = 'SomeOtherClass' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammeff' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammefd' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammefb' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammef9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammef7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammef5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammef3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammef1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a8' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a6' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1a0' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+            </UML:Class>
+            <UML:Comment xmi.id = 'Ieeda37m101f4482a7ammeed' name = '' visibility = 'public'
+              isSpecification = 'false' body = 'We should have three tables.'>
+              <UML:Comment.annotatedElement>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfd3'/>
+              </UML:Comment.annotatedElement>
+            </UML:Comment>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7ammf53' name = 'ShouldBeASubclassAbstractImpl'
+              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+              isAbstract = 'false' isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c8' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c6' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm1c0' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7ammf51'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammf55' name = 'attribute_10'
+                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                  changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7amm15e' name = 'interface1' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'true'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm10d' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm10c' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm10b' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm10a' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm109' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm108' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm107' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm106' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amm105' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>concrete</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammde' name = 'attribute_1' visibility = 'private'
+                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7amm14b' name = 'interface2' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'true'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammfa' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf9' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf8' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf6' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammf2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>concrete</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm138'/>
+              </UML:GeneralizableElement.generalization>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id = 'Ieeda37m101f4482a7ammcd' name = 'attribute_2' visibility = 'private'
+                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                  <UML:StructuralFeature.type>
+                    <UML:DataType xmi.idref = 'Ieeda37m101f4482a7amm1555'/>
+                  </UML:StructuralFeature.type>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm138' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7amm14b'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7amm15e'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Class xmi.id = 'Ieeda37m101f4482a7amm131' name = 'Class_3' visibility = 'public'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+              isActive = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm3a1'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme7' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3cb'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme6' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3c5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme5' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3bf'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme4' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme3' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3b3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme2' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ad'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme1' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3ab'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7amme0' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a9'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = 'Ieeda37m101f4482a7ammdf' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>class</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = 'Ieeda37m101f4482a7amm3a3'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm11e'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:Class>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm11e' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7amm131'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7amm14b'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7ammf51' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammf53'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Class xmi.idref = 'Ieeda37m101f4482a7ammfe9'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+          </UML:Namespace.ownedElement>
+        </UML:Package>
+        <UML:Package xmi.id = 'Ieeda37m101f4482a7amm297' name = 'org.andromda.profile'
+          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+          <UML:Namespace.ownedElement>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm475' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm2b1'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm2ab'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Generalization xmi.id = 'Ieeda37m101f4482a7amm473' isSpecification = 'false'>
+              <UML:Generalization.child>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm2ad'/>
+              </UML:Generalization.child>
+              <UML:Generalization.parent>
+                <UML:Stereotype xmi.idref = 'Ieeda37m101f4482a7amm2ab'/>
+              </UML:Generalization.parent>
+            </UML:Generalization>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7amm3d1' name = 'presentation' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm46d' name = '@andromda.struts.controller.usecase'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm46f'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm471' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm467' name = '@andromda.struts.view.field.type'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm469'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm46b' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm461' name = '@andromda.struts.view.field.required'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm463'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm465' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm45b' name = '@andromda.struts.action.success.message'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm45d'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm45f' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm455' name = '@andromda.struts.view.field.validwhen'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm457'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm459' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm44f' name = '@andromda.struts.action.type'
+                  isSpecification = 'false' tagType = '_9_0_1fe00f9_1104433308217_486892_196'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm451'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm453' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm449' name = '@andromda.struts.exception.type'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm44b'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm44d' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm443' name = '@andromda.struts.view.field.format'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm445'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm447' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm441' name = 'FrontEndEvent'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Transition</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm43f' name = 'FrontEndUseCase'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>UseCase</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm43d' name = 'FrontEndController'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm43b' name = 'FrontEndApplication'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>UseCase</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm439' name = 'FrontEndException'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Transition</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm437' name = 'FrontEndView'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>ActionState</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm431' name = '@andromda.struts.view.field.readonly'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm433'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm435' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm42b' name = '@andromda.struts.view.table.columns'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm42d'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm42f' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm425' name = '@andromda.struts.view.table.export'
+                  isSpecification = 'false' tagType = '_24400562_1076994099335_876795_42'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm427'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm429' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm41f' name = '@andromda.struts.view.table.sortable'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm421'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm423' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm419' name = '@andromda.struts.view.table.maxrows'
+                  isSpecification = 'false' tagType = '_ecb034c_1077313258855_789529_105'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm41b'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm41d' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm413' name = '@andromda.struts.usecase.activity'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm415'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm417' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm40d' name = '@andromda.struts.view.field.calendar'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm40f'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm411' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm407' name = '@andromda.struts.view.field.tablelink'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm409'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm40b' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm405' name = 'FrontEndSessionObject'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3ff' name = '@andromda.struts.action.warning.message'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm401'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm403' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3f9' name = '@andromda.struts.action.resettable'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3fb'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3fd' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3f3' name = '@andromda.struts.action.redirect'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3f5'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3f7' lower = '1' upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3ed' name = '@andromda.struts.view.field.reset'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3ef'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3f1' lower = '1' upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm3d9' name = 'StrutsFieldType'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3eb' name = 'select'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3e9' name = 'hidden'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3e7' name = 'password'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3e5' name = 'link'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3e3' name = 'text'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3e1' name = 'textfield'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3df' name = 'checkbox'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3dd' name = 'multibox'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3db' name = 'radio'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm3d3' name = 'StrutsActionType'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3d7' name = 'hyperlink'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm3d5' name = 'form'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7amm2e7' name = 'persistence' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm3a1' name = 'Entity' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                  <UML:Stereotype.definedTag>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3cb' name = '@andromda.ejb.transactionType'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3cd'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3cf' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3c5' name = '@andromda.ejb.resource-ref.jndi-name'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3c7'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3c9' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3bf' name = '@andromda.ejb.resource-ref.res-auth'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3c1'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3c3' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3b9' name = '@andromda.hibernate.generator.class'
+                      isSpecification = 'false' tagType = '_9_0_e8f0348_1105902146859_868435_92'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3bb'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3bd' lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3b3' name = '@andromda.ejb.noSyntheticCreateMethod'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3b5'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3b7' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3ad' name = '@andromda.ejb.automaticKey'
+                      isSpecification = 'false' tagType = 'Boolean'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3af'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3b1' lower = '0' upper = '-1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3ab' name = '@andromda.hibernate.entity.cache'
+                      isSpecification = 'false' tagType = '_9_0_7da0265_1105322653414_476806_96'/>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3a9' name = '@andromda.hibernate.entity.proxy'
+                      isSpecification = 'false' tagType = '_8a70287_1078772699751_36316_735'/>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm3a3' name = '@andromda.hibernate.inheritance'
+                      isSpecification = 'false' tagType = '_9_0_1fe00f9_1104434598767_378295_447'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm3a5'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm3a7' lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                  </UML:Stereotype.definedTag>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm39f' name = 'EntityRef' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Dependency</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm39d' name = 'PrimaryKey'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Attribute</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm377' name = 'FinderMethod'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Operation</UML:Stereotype.baseClass>
+                  <UML:Stereotype.definedTag>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm397' name = '@andromda.hibernate.query'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm399'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm39b' lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm391' name = '@andromda.ejb.query'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm393'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm395' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm38b' name = '@andromda.ejb.transactionType'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm38d'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm38f' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm385' name = '@andromda.ejb.query.dialect'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm387'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm389' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm37f' name = '@andromda.ejb.query.weblogic'
+                      isSpecification = 'false' tagType = 'String'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm381'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm383' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm379' name = '@andromda.hibernate.query.useCache'
+                      isSpecification = 'false' tagType = '_24400562_1076994141946_695331_76'>
+                      <UML:TagDefinition.multiplicity>
+                        <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm37b'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm37d' lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:TagDefinition.multiplicity>
+                    </UML:TagDefinition>
+                  </UML:Stereotype.definedTag>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm375' name = 'CreateMethod'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Operation</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm373' name = 'SelectMethod'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Operation</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm36d' name = '@andromda.persistence.column'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm36f'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm371' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm367' name = '@andromda.persistence.column.length'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm369'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm36b' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm361' name = '@andromda.persistence.column.weblogicDataType'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm363'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm365' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm35b' name = '@andromda.ejb.generateCMR'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm35d'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm35f' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm355' name = '@andromda.ejb.generateVOreference'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm357'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm359' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm353' name = 'ValueRef' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Relationship</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm34d' name = '@andromda.persistence.column.index'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm34f'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm351' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm34b' name = 'Unique' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Attribute</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm345' name = '@andromda.hibernate.lazy'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm347'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm349' lower = '0' upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm33f' name = '@andromda.hibernate.outerjoin'
+                  isSpecification = 'false' tagType = '_9_0_1fe00f9_1104434776329_774720_520'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm341'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm343' lower = '-1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm337' name = 'EjbViewType'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm33d' name = 'remote'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm33b' name = 'local'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm339' name = 'both'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm32d' name = 'HibernateInheritanceStrategy'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm335' name = 'class'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm333' name = 'subclass'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm331' name = 'concrete'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm32f' name = 'interface'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm327' name = '@andromda.hibernate.leafimpl'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm329'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm32b' lower = '0' upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm31f' name = 'HibernateOuterJoin'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm325' name = 'auto'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm323' name = 'true'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm321' name = 'false'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm319' name = '@andromda.persistence.dummyload.size'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm31b'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm31d' lower = '0' upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm311' name = 'HibernateCache'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm317' name = 'read-write'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm315' name = 'nonstrict-read-write'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm313' name = 'read-only'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm30b' name = '@andromda.hibernate.association.cache'
+                  isSpecification = 'false' tagType = '_9_0_7da0265_1105322653414_476806_96'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm30d'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm30f' lower = '0' upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm305' name = '@andromda.persistence.foreign.identifier'
+                  isSpecification = 'false' tagType = 'Boolean'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm307'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm309' lower = '1' upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm2ef' name = 'HibernateGeneratorClass'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm303' name = 'increment'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm301' name = 'identity'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2ff' name = 'sequence'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2fd' name = 'hilo'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2fb' name = 'seqhilo'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2f9' name = 'uuid.hex'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2f7' name = 'uuid.string'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2f5' name = 'native'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2f3' name = 'assigned'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2f1' name = 'foreign'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm2e9' name = '@andromda.persistence.table'
+                  isSpecification = 'false' tagType = 'String'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm2eb'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm2ed' lower = '0' upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7amm2d9' name = 'service' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2e5' name = 'ServiceRef'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Dependency</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2e1' name = 'Service' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                  <UML:Stereotype.definedTag>
+                    <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm2e3' name = '@andromda.ejb.viewType'
+                      isSpecification = 'false' tagType = '_9_0_1fe00f9_1104434538595_339077_409'/>
+                  </UML:Stereotype.definedTag>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm2db' name = '@andromda.transaction.type'
+                  isSpecification = 'false' tagType = '_24400562_1076994099335_876795_42'>
+                  <UML:TagDefinition.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7amm2dd'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7amm2df' lower = '1' upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:TagDefinition.multiplicity>
+                </UML:TagDefinition>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7amm2b9' name = 'webservice' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2d7' name = 'WebService'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2d5' name = 'WebServiceOperation'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Operation</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm2d3' name = '@andromda.webservice.use'
+                  isSpecification = 'false' tagType = '_9_0_1fe00f9_1104435077642_957889_782'/>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm2d1' name = '@andromda.webservice.style'
+                  isSpecification = 'false' tagType = '_9_0_1fe00f9_1104435069470_737862_747'/>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm2cf' name = '@andromda.webservice.provider'
+                  isSpecification = 'false' tagType = '_9_0_1fe00f9_1104435059689_627182_712'/>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm2c9' name = 'WebServiceProvider'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2cd' name = 'RPC'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2cb' name = 'EJB'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm2c1' name = 'WebServiceStyle'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2c7' name = 'wrapped'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2c5' name = 'document'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2c3' name = 'rpc'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+                <UML:Enumeration xmi.id = 'Ieeda37m101f4482a7amm2bb' name = 'WebServiceUse'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Enumeration.literal>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2bf' name = 'literal'
+                      isSpecification = 'false'/>
+                    <UML:EnumerationLiteral xmi.id = 'Ieeda37m101f4482a7amm2bd' name = 'encoded'
+                      isSpecification = 'false'/>
+                  </UML:Enumeration.literal>
+                </UML:Enumeration>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7amm2b3' name = 'meta' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2b7' name = 'metafacade'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2b5' name = 'metaclass' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2b1' name = 'UnexpectedException'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm475'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2af' name = 'ValueObject'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2ad' name = 'ApplicationException'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+              <UML:GeneralizableElement.generalization>
+                <UML:Generalization xmi.idref = 'Ieeda37m101f4482a7amm473'/>
+              </UML:GeneralizableElement.generalization>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2ab' name = 'Exception' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2a9' name = 'Enumeration'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2a7' name = 'EnvEntry' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Attribute</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2a5' name = 'ExceptionRef'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2a3' name = 'Nullable' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Parameter</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Package xmi.id = 'Ieeda37m101f4482a7amm29d' name = 'xml' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm2a1' name = 'XmlSchemaType'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+                <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm29f' name = 'XmlAttribute'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Stereotype.baseClass>Attribute</UML:Stereotype.baseClass>
+                </UML:Stereotype>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Stereotype xmi.id = 'Ieeda37m101f4482a7amm299' name = 'Role' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Actor</UML:Stereotype.baseClass>
+              <UML:Stereotype.definedTag>
+                <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7amm29b' name = '@andromda.role.name'
+                  isSpecification = 'false' tagType = 'String'/>
+              </UML:Stereotype.definedTag>
+            </UML:Stereotype>
+          </UML:Namespace.ownedElement>
+        </UML:Package>
+        <UML:TagDefinition xmi.id = 'Ieeda37m101f4482a7ammba' name = 'gentleware-logical-sourceroot'
+          isSpecification = 'false' tagType = 'String'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = 'Ieeda37m101f4482a7ammbb'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = 'Ieeda37m101f4482a7ammbc' lower = '1' upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
+      </UML:Namespace.ownedElement>
+    </UML:Model>
+  </XMI.content>
+</XMI>
