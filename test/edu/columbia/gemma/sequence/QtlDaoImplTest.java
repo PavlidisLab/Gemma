@@ -29,12 +29,12 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         Taxon tx = Taxon.Factory.newInstance();
         tx.setCommonName( "mouse" );
         tx.setNcbiId( 9609 );
-        tx = ( Taxon ) taxonDao.create( tx );
+        tx = taxonDao.create( tx );
 
         Chromosome chrom = Chromosome.Factory.newInstance();
         chrom.setName( "12" );
         chrom.setTaxon( tx );
-        chrom = ( Chromosome ) chromosomeDao.create( chrom );
+        chrom = chromosomeDao.create( chrom );
 
         // create some markers.
         PhysicalMarker mka = PhysicalMarker.Factory.newInstance();

@@ -88,7 +88,7 @@ public class GoldenPath {
 
                                         gene.setName( rs.getString( "name" ) ); // FIXME should be the ncbi id.
 
-                                        gene.setSymbol( rs.getString( "geneName" ) );
+                                        gene.setOfficialSymbol( rs.getString( "geneName" ) );
                                         gene.setId( new Long( gene.getName().hashCode() ) );
 
                                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
@@ -122,9 +122,9 @@ public class GoldenPath {
     }
 
     /**
-     * Given a physical location, find how close it is to the 3' end of a gene it is in.
+     * Given a physical location, find how close it is to the 3' end of a gene it is in. todo test whether we're in an
+     * intron.
      * 
-     * todo test whether we're in an intron.
      * @param chromosome The chromosome name (the organism is set by the constructor)
      * @param start The start base of the region to query.
      * @param end The end base of the region to query.

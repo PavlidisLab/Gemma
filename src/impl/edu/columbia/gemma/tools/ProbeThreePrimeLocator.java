@@ -65,7 +65,7 @@ public class ProbeThreePrimeLocator {
 
                 assert gene != null : "Null gene";
 
-                String geneName = gene.getSymbol();
+                String geneName = gene.getOfficialSymbol();
 
                 output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
                         + blatRes.getQuerySize() + "\t" + score + "\t" + geneName + "\t" + gene.getName() + "\t"

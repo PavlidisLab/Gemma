@@ -39,6 +39,7 @@ public class IdentifierCreatorTest extends BaseDAOTestCase {
 
     public final void testCreate() {
         String actualReturn = IdentifierCreator.create( a, ctx );
+        
         String expectedReturn = "ArrayDesign:Foo";
         assertEquals( expectedReturn, actualReturn );
     }
