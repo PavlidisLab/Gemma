@@ -1,6 +1,7 @@
 package edu.columbia.gemma.util;
 
 /**
+ * Various methods useful for manipulating Gemma objects using Reflection.
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
@@ -9,6 +10,9 @@ package edu.columbia.gemma.util;
  * @version $Id$
  */
 public class ReflectionUtil {
+
+    private static final String DAO_SUFFIX = "Dao";
+
     /**
      * @param obj
      * @return Unqualified type name
@@ -42,6 +46,19 @@ public class ReflectionUtil {
             return cls.getSuperclass();
         }
         return cls;
+    }
+
+    /**
+     * @param gemmaObj A Gemma domain object.
+     * @return Name of Dao bean; for example, given foo.Bar, it returns "barDao".
+     */
+    public static String constructDaoName( Object gemmaObj ) {
+        String baseDaoName = getBaseForImpl( gemmaObj ) + DAO_SUFFIX;
+
+        if ( baseDaoName.length() == DAO_SUFFIX.length() ) return null;
+
+        baseDaoName = baseDaoName.substring( baseDaoName.lastIndexOf( '.' ) + 1 );
+        return baseDaoName.substring( 0, 1 ).toLowerCase() + baseDaoName.substring( 1 );
     }
 
 }
