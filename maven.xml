@@ -21,13 +21,13 @@
 
 <goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
 	 <ant:delete>
- 
-	 	<fileset dir="src/db/dao/edu" includes="**/*.java"  excludes="impl/**/*.java" />
-	 	<fileset dir="src/db/model/edu" includes="**/*.java,**/**.hbm.xml"   excludes="impl/**/*.java" />
-	  	<fileset dir="src/service/edu" includes="**/*.java"  excludes="impl/**/*.java" />
+	 	<fileset dir="src/db/dao/edu/columbia" includes="**/*.java"  excludes="impl/**/*.java" />
+	 	<fileset dir="src/db/model/edu/columbia" includes="**/*.java,**/**.hbm.xml"   excludes="impl/**/*.java" />
+	  	<fileset dir="src/service/edu/columbia" includes="**/*.java"  excludes="impl/**/*.java" />
 	 </ant:delete>
 </goal>
 
+<!--  diff -c -w -d applicationContext-hibernate.bad.xml  applicationContext-hibernate.xml  > applicationContext-hibernate.patch -->
 <goal name="patch-applicationContext" description="Fix the hbm.xml files listed in the applicationContext file">
 	<ant:patch patchfile="${basedir}/web/WEB-INF/applicationContext-hibernate.patch" originalfile="${basedir}/web/WEB-INF/applicationContext-hibernate.xml" quiet="false" backups="true" ignorewhitespace="true" />
 </goal>
