@@ -18,64 +18,63 @@ import edu.columbia.gemma.BaseServiceTestCase;
  */
 public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
 
-   private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
-   private ArrayDesignDao arrayDesignDaoMock = null;
-   private MockControl control;
+    private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
+    private ArrayDesignDao arrayDesignDaoMock = null;
+    private MockControl control;
 
-   /*
-    * @see TestCase#setUp()
-    */
-   protected void setUp() throws Exception {
-      super.setUp();
-      control = MockControl.createControl( ArrayDesignDao.class );
-      arrayDesignDaoMock = ( ArrayDesignDao ) control.getMock();
-      arrayDesignService.setArrayDesign( arrayDesignDaoMock );
-   }
+    /*
+     * @see TestCase#setUp()
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+        control = MockControl.createControl( ArrayDesignDao.class );
+        arrayDesignDaoMock = ( ArrayDesignDao ) control.getMock();
+        arrayDesignService.setArrayDesign( arrayDesignDaoMock );
+    }
 
-   /*
-    * @see TestCase#tearDown()
-    */
-   protected void tearDown() throws Exception {
-      super.tearDown();
-   }
+    /*
+     * @see TestCase#tearDown()
+     */
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
 
-   public void testGetArrayDesigns() {
-      // to implement this test, the mock dao has to save several objects.
-      Collection m = new HashSet();
-      control.reset();
-      for ( int i = 0; i < 5; i++ ) {
-         ArrayDesign tad = new ArrayDesignImpl();
-         String id = ( new Date() ).toString();
-         tad.setIdentifier( id );
-         tad.setName( "Foo" + i );
-         m.add( tad );
-      }
-      arrayDesignDaoMock.getAllArrayDesigns();
-      control.setReturnValue( m );
+    public void testGetArrayDesigns() throws Exception {
+        // to implement this test, the mock dao has to save several objects.
+        Collection m = new HashSet();
 
-      control.replay(); // switch from record mode to replay
-      Collection allDesigns = arrayDesignService.getAllArrayDesigns();
-      assertEquals( allDesigns, m );
-      control.verify(); // verify that expectations were met
-   }
+        for ( int i = 0; i < 5; i++ ) {
+            ArrayDesign tad = ArrayDesign.Factory.newInstance();
+            tad.setIdentifier( ( new Date() ).toString() + i );
+            tad.setName( "Foo" + i );
+            if ( !m.add( tad ) ) throw new IllegalStateException( "Couldn't add to the collection - check equals" );
+        }
 
-   public void testSaveArrayDesign() {
-      ArrayDesign tad = new ArrayDesignImpl();
-      String id = ( new Date() ).toString();
-      tad.setIdentifier( id );
-      tad.setName( "Foo" );
+        // set the behavior for the DAO: get all array designs will retrive the collection.
+        arrayDesignDaoMock.getAllArrayDesigns();
+        control.setReturnValue( m );
 
-      // The expected behavior
-      arrayDesignDaoMock.findByName( "Foo" ); // Todo - method doesn't exist yet.
+        control.replay(); // switch from record mode to replay
+        arrayDesignService.getAllArrayDesigns();
+        control.verify(); // verify that expectations were met
+    }
 
-      control.replay(); // switch from record mode to replay
-      arrayDesignService.saveArrayDesign( tad );
-      control.verify(); // verify that expectations were met.
+    public void testSaveArrayDesign() throws Exception {
+        ArrayDesign tad = ArrayDesign.Factory.newInstance();
+        tad.setIdentifier( ( new Date() ).toString() );
+        tad.setName( "Foo" );
 
-   }
+        // The expected behavior
+        arrayDesignDaoMock.create( tad );
+        control.setReturnValue( tad );
 
-   public void testRemoveArrayDesign() {
-      // TODO Implement removeArrayDesign().
-   }
+        control.replay(); // switch from record mode to replay
+        arrayDesignService.saveArrayDesign( tad );
+        control.verify(); // verify that expectations were met.
+    }
+
+    public void testRemoveArrayDesign() throws Exception {
+        // TODO Implement removeArrayDesign().
+    }
 
 }

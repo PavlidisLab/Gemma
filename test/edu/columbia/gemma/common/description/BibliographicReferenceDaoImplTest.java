@@ -52,7 +52,7 @@ private ExternalDatabaseDao exdbdao = null;
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDBName( "database" );
-        ed.setIdentifier("fooblydoobly");
+        ed.setIdentifier("fooblydoobly" + random);
         exdbdao.create(ed);
         
         de.setExternalDatabase( ed );
