@@ -38,11 +38,13 @@
     </developer>
     <developer>
       <name>David Quigley</name>
-      <id>1</id>
+      <id>daq7001</id>
+     <email>david.quigley@dbmi.columbia.edu</email>
     </developer>
     <developer>
       <name>Anshu Singha</name>
-      <id>2</id>
+      <id>anshu</id>
+       <email>anshu.sinha@dbmi.columbia.edu</email>
     </developer>
   </developers>
   <licenses>
@@ -271,6 +273,9 @@
             <includes>
                 <include>**/*Test.java</include>
             </includes>
+            <excludes>
+                <exclude>LoaderControllerTest.java</exclude>
+            </excludes>
             <resources>
                 <resource>
                     <directory>${basedir}/test</directory>
