@@ -2,7 +2,7 @@ package edu.columbia.gemma.loader.smd;
 
 import java.util.Set;
 
-import edu.columbia.gemma.common.bqs.BibliographicReference;
+import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.sequence.gene.Taxon;

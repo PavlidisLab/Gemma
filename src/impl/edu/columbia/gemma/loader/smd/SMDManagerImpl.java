@@ -9,8 +9,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.xml.sax.SAXException;
 
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
-import edu.columbia.gemma.common.bqs.BibliographicReference;
-import edu.columbia.gemma.common.bqs.BibliographicReferenceDao;
+import edu.columbia.gemma.common.description.BibliographicReference;
+import edu.columbia.gemma.common.description.BibliographicReferenceDao;
 import edu.columbia.gemma.common.description.DescriptionDao;
 import edu.columbia.gemma.common.description.File;
 import edu.columbia.gemma.common.description.FileDao;

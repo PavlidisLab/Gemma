@@ -17,8 +17,8 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import edu.columbia.gemma.common.bqs.BibliographicReference;
-import edu.columbia.gemma.common.bqs.BibliographicReferenceImpl;
+import edu.columbia.gemma.common.description.BibliographicReference;
+import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.DatabaseEntryImpl;
 import edu.columbia.gemma.common.description.ExternalDatabase;
