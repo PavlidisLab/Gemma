@@ -30,14 +30,14 @@ public class PubMedXMLParser {
 
     private static final String PUB_STATUS_ELEMENT = "PubStatus";
     private static final String PUBMED_PUB_DATE_ELEMENT = "PubMedPubDate";
-  //  private static final String ARTICLE_ELEMENT = "Article";
-  //  private static final String MEDLINE_JOURNAL_INFO_ELEMENT = "MedlineJournalInfo";
+    // private static final String ARTICLE_ELEMENT = "Article";
+    // private static final String MEDLINE_JOURNAL_INFO_ELEMENT = "MedlineJournalInfo";
     private static final String MEDLINE_JOURNAL_TITLE_ELEMENT = "MedlineTA";
-  //  private static final String MEDLINE_ELEMENT = "MedlineCitation";
+    // private static final String MEDLINE_ELEMENT = "MedlineCitation";
     private static final String ABSTRACT_TEXT_ELEMENT = "AbstractText";
- //   private static final String ABSTRACT_ELEMENT = "Abstract";
+    // private static final String ABSTRACT_ELEMENT = "Abstract";
     private static final String TITLE_ELEMENT = "ArticleTitle";
-  // private static final String PAGINATION_ELEMENT = "Pagination";
+    // private static final String PAGINATION_ELEMENT = "Pagination";
     private static final String MEDLINE_PAGINATION_ELEMENT = "MedlinePgn";
     private static final String PMID_ELEMENT = "PMID";
 
@@ -77,9 +77,9 @@ public class PubMedXMLParser {
 
         bibRef
                 .setAbstractText( getTextValue( ( Element ) doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).item( 0 ) ) );
-        
+
         bibRef.setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).item( 0 ) ) );
-        
+
         bibRef
                 .setIdentifier( "pubmed:"
                         + getTextValue( ( Element ) doc.getElementsByTagName( PMID_ELEMENT ).item( 0 ) ) );
