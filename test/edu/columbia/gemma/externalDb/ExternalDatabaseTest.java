@@ -10,8 +10,8 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.externalDb.ExternalDatabaseDaoHg17;
-import edu.columbia.gemma.externalDb.ExternalDatabaseDaoHg17Hibernate;
+import edu.columbia.gemma.externalDb.GoldenPathHumanDao;
+import edu.columbia.gemma.externalDb.GoldenPathHumanDaoHibernate;
 
 /**
  * Tests connections to external databases.
@@ -25,7 +25,7 @@ import edu.columbia.gemma.externalDb.ExternalDatabaseDaoHg17Hibernate;
  */
 public class ExternalDatabaseTest extends BaseDAOTestCase {
     Configuration conf;
-    ExternalDatabaseDaoHg17 db;
+    GoldenPathHumanDao db;
 
     /**
      * Get the bean name of the appropriate dao object. These dao objects will be replaced by the "table name + Dao" for
@@ -36,7 +36,7 @@ public class ExternalDatabaseTest extends BaseDAOTestCase {
      */
     public void setUp() throws ConfigurationException {
         conf = new PropertiesConfiguration( "testResources.properties" );
-        db = ( ExternalDatabaseDaoHg17Hibernate ) ctx.getBean( conf.getString( "external.database.0" ) );
+        db = ( GoldenPathHumanDaoHibernate ) ctx.getBean( conf.getString( "external.database.0" ) );
         //ctx.getBean( conf.getString( "external.database.1" ) );
         //ctx.getBean( conf.getString( "external.database.2" ) )
         //ctx.getBean( conf.getString( "external.database.3" ) )
