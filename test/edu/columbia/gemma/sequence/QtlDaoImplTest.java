@@ -26,14 +26,14 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
     public final void testFindByPhysicalLocation() {
 
         // set up some dummy data. FIXME this should be put elsewhere.F
-        Taxon tx = Taxon.Factory.newInstance();
-        tx.setCommonName( "mouse" );
-        tx.setNcbiId( 9609 );
-        tx = ( Taxon ) taxonDao.create( tx );
+//        Taxon tx = Taxon.Factory.newInstance();
+//        tx.setCommonName( "mouse" );
+//        tx.setNcbiId( 9609 );
+//        tx = ( Taxon ) taxonDao.create( tx );
 
         Chromosome chrom = Chromosome.Factory.newInstance();
         chrom.setName( "12" );
-        chrom.setTaxon( tx );
+     //   chrom.setTaxon( tx );
         chrom = ( Chromosome ) chromosomeDao.create( chrom );
 
         // create some markers.

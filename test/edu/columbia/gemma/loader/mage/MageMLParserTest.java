@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipInputStream;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -44,6 +45,8 @@ public class MageMLParserTest extends TestCase {
     GZIPInputStream istBigDesignElement;
     GZIPInputStream istBigArrayDesign;
     GZIPInputStream ist100CP;
+
+    ZipInputStream istAffyGiantBioSequencePackage;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -125,25 +128,25 @@ public class MageMLParserTest extends TestCase {
         mlp.parse( istTIGRBiomaterial );
         Collection result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug(  "\n" + PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Biosequence" );
         mlp.parse( istBioSequence );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug(  "\n" + PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: BioMaterial" );
         mlp.parse( istBioMaterial );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug(  "\n" + PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Experiment" );
         mlp.parse( istExperiment );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug( "\n" +  PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: ArrayDesign" );
         mlp.parse( istArrayDesign );
@@ -166,65 +169,85 @@ public class MageMLParserTest extends TestCase {
         mlp.parse( istPhysicalBioAssay );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug(  "\n" + PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: TIGRSimpleArrayDesign" );
         mlp.parse( istTIGRSimpleArrayDesign );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug(  "\n" + PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Protocol" );
         mlp.parse( istProtocol );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug( "\n" +  PrettyPrinter.print( result ) );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
     }
 
-    public void testBigBioSequence() throws Exception {
+//    public void testBigBioSequence() throws Exception {
+//
+//        istBigBioSequence = new GZIPInputStream( MageMLParserTest.class
+//                .getResourceAsStream( "/data/mage/A-TIGR-1-BioSequence.xml.gz" ) );
+//
+//        log.debug( "Parsing big biosequence" );
+//        mlp.parse( istBigBioSequence );
+//        log.debug( "Converting big biosequence" );
+//        Collection result = mlp.getConvertedData();
+//        log.debug( result.size() + " elements obtained" );
+//
+//        istBigBioSequence.close();
+//    }
+//
+//    public void testBigDesignElement() throws Exception {
+//
+//        istBigDesignElement = new GZIPInputStream( MageMLParserTest.class
+//                .getResourceAsStream( "/data/mage/A-TIGR-1-DesignElement.xml.gz" ) );
+//
+//        log.debug( "Parsing BigDesignElement" );
+//        mlp.parse( istBigDesignElement );
+//        log.debug( "Converting BigDesignElement" );
+//        Collection result = mlp.getConvertedData();
+//        log.debug( result.size() + " elements obtained" );
+//
+//        istBigDesignElement.close();
+//    }
+//
+//    public void testBigArrayDesign() throws Exception {
+//        istBigArrayDesign = new GZIPInputStream( MageMLParserTest.class
+//                .getResourceAsStream( "/data/mage/A-TIGR-1-ArrayDesign.xml.gz" ) );
+//
+//        log.debug( "Parsing BigArrayDesign" );
+//        mlp.parse( istBigArrayDesign );
+//        log.debug( "Converting BigArrayDesign" );
+//        Collection result = mlp.getConvertedData();
+//        log.debug( result.size() + " elements obtained" );
+//
+//        istBigArrayDesign.close();
+//    }
 
-        istBigBioSequence = new GZIPInputStream( MageMLParserTest.class
-                .getResourceAsStream( "/data/mage/A-TIGR-1-BioSequence.xml.gz" ) );
+//    /**
+//     * A real stress-test.
+//     * 
+//     * @throws Exception
+//     */
+//    public void testAffyGiantBiosequence() throws Exception {
+//        istAffyGiantBioSequencePackage = new ZipInputStream( MageMLParserTest.class
+//                .getResourceAsStream( "/data/mage/HG-U133_Plus_2_annot_xml.zip" ) );
+//        istAffyGiantBioSequencePackage.getNextEntry();
+//
+//        log.debug( "Parsing BigArrayDesign" );
+//        mlp.parse( istAffyGiantBioSequencePackage );
+//        log.debug( "Converting Giant Biosequence Package (Affy)" );
+//        Collection result = mlp.getConvertedData();
+//        log.debug( result.size() + " elements obtained" );
+//
+//        istAffyGiantBioSequencePackage.close();
+//
+//    }
 
-        log.debug( "Parsing big biosequence" );
-        mlp.parse( istBigBioSequence );
-        log.debug( "Converting big biosequence" );
-        Collection result = mlp.getConvertedData();
-        log.debug( result.size() + " elements obtained" );
+    // public void test100CP() throws Exception { // ist100CP = new GZIPInputStream( MageMLParserTest.class
 
-        istBigBioSequence.close();
-    }
-
-    public void testBigDesignElement() throws Exception {
-
-        istBigDesignElement = new GZIPInputStream( MageMLParserTest.class
-                .getResourceAsStream( "/data/mage/A-TIGR-1-DesignElement.xml.gz" ) );
-
-        log.debug( "Parsing BigDesignElement" );
-        mlp.parse( istBigDesignElement );
-        log.debug( "Converting BigDesignElement" );
-        Collection result = mlp.getConvertedData();
-        log.debug( result.size() + " elements obtained" );
-
-        istBigDesignElement.close();
-    }
-
-    public void testBigArrayDesign() throws Exception {
-        istBigArrayDesign = new GZIPInputStream( MageMLParserTest.class
-                .getResourceAsStream( "/data/mage/A-TIGR-1-ArrayDesign.xml.gz" ) );
-
-        log.debug( "Parsing BigArrayDesign" );
-        mlp.parse( istBigArrayDesign );
-        log.debug( "Converting BigArrayDesign" );
-        Collection result = mlp.getConvertedData();
-        log.debug( result.size() + " elements obtained" );
-
-        istBigArrayDesign.close();
-    }
-
-    // public void test100CP() throws Exception {
-    // ist100CP = new GZIPInputStream( MageMLParserTest.class
     // .getResourceAsStream( "/data/mage/11188230_100CP_MAGE-ML.XML.gz" ) );
     //
     // log.debug( "Parsing 100CP" );
@@ -233,13 +256,5 @@ public class MageMLParserTest extends TestCase {
     // Collection result = mlp.getConvertedData();
     // assertTrue( result instanceof Collection );
     // }
-
-    public static Test suite() {
-        return new TestSuite( MageMLParserTest.class );
-    }
-
-    public static void main( String args[] ) {
-        junit.textui.TestRunner.run( suite() );
-    }
 
 }

@@ -22,54 +22,52 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  * @version $Id$
  */
 public class BaseDAOTestCase extends TestCase {
-   protected final Log log = LogFactory.getLog( getClass() );
-   protected final static ApplicationContext ctx;
-   protected ResourceBundle rb;
+    protected final Log log = LogFactory.getLog( getClass() );
+    protected final static ApplicationContext ctx;
+    protected ResourceBundle rb;
 
-   // This static block ensures that Spring's BeanFactory is only loaded
-   // once for all tests
-   static {
-      ResourceBundle db = ResourceBundle.getBundle( "testdatabase" );
-      String daoType = db.getString( "dao.type" );
+    // This static block ensures that Spring's BeanFactory is only loaded
+    // once for all tests
+    static {
+        ResourceBundle db = ResourceBundle.getBundle( "testdatabase" );
+        String daoType = db.getString( "dao.type" );
 
-      // CAREFUL, these paths are dependent on the classpath for the test.
-      String[] paths = {
-            "applicationContext-resources.xml", "applicationContext-" + daoType + ".xml"
-      };
-      ctx = new ClassPathXmlApplicationContext( paths );
-   }
+        // CAREFUL, these paths are dependent on the classpath for the test.
+        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml" };
+        ctx = new ClassPathXmlApplicationContext( paths );
+    }
 
-   public BaseDAOTestCase() {
-      // Since a ResourceBundle is not required for each class, just
-      // do a simple check to see if one exists
-      String className = this.getClass().getName();
+    public BaseDAOTestCase() {
+        // Since a ResourceBundle is not required for each class, just
+        // do a simple check to see if one exists
+        String className = this.getClass().getName();
 
-      try {
-         rb = ResourceBundle.getBundle( className ); // will look for <className>.properties
-      } catch ( MissingResourceException mre ) {
-         //log.warn("No resource bundle found for: " + className);
-      }
-   }
+        try {
+            rb = ResourceBundle.getBundle( className ); // will look for <className>.properties
+        } catch ( MissingResourceException mre ) {
+            // log.warn("No resource bundle found for: " + className);
+        }
+    }
 
-   /**
-    * Utility method to populate a javabean-style object with values from a Properties file
-    * 
-    * @param obj
-    * @return
-    * @throws Exception
-    */
-   protected Object populate( Object obj ) throws Exception {
-      // loop through all the beans methods and set its properties from
-      // its .properties file
-      Map map = new HashMap();
+    /**
+     * Utility method to populate a javabean-style object with values from a Properties file
+     * 
+     * @param obj
+     * @return
+     * @throws Exception
+     */
+    protected Object populate( Object obj ) throws Exception {
+        // loop through all the beans methods and set its properties from
+        // its .properties file
+        Map map = new HashMap();
 
-      for ( Enumeration keys = rb.getKeys(); keys.hasMoreElements(); ) {
-         String key = ( String ) keys.nextElement();
-         map.put( key, rb.getString( key ) );
-      }
+        for ( Enumeration keys = rb.getKeys(); keys.hasMoreElements(); ) {
+            String key = ( String ) keys.nextElement();
+            map.put( key, rb.getString( key ) );
+        }
 
-      BeanUtils.copyProperties( obj, map );
+        BeanUtils.copyProperties( obj, map );
 
-      return obj;
-   }
+        return obj;
+    }
 }

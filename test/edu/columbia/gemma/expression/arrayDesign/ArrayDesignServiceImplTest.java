@@ -29,7 +29,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
         super.setUp();
         control = MockControl.createControl( ArrayDesignDao.class );
         arrayDesignDaoMock = ( ArrayDesignDao ) control.getMock();
-        arrayDesignService.setArrayDesign( arrayDesignDaoMock );
+        arrayDesignService.setArrayDesignDao( arrayDesignDaoMock );
     }
 
     /*
