@@ -24,6 +24,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
+ * 
  * @see edu.columbia.gemma.loader.mage.MageMLConverter
  * @author pavlidis
  * @version $Id$

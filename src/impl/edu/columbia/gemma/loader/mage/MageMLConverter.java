@@ -2,6 +2,9 @@ package edu.columbia.gemma.loader.mage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -22,6 +25,7 @@ import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.sequence.biosequence.PolymerType;
 import edu.columbia.gemma.sequence.biosequence.SequenceType;
 import edu.columbia.gemma.sequence.gene.Taxon;
+import edu.columbia.gemma.util.ReflectionUtil;
 
 /**
  * Class to convert Mage domain objects to Gemma domain objects. In most cases, the user can simply call the "convert"
@@ -72,9 +76,7 @@ public class MageMLConverter {
                 return null;
             }
 
-            result = callMethod.invoke( this, new Object[] {
-                mageObj
-            } );
+            result = callMethod.invoke( this, new Object[] { mageObj } );
 
             if ( result != null ) convertAssociations( mageObj, result );
 
@@ -92,14 +94,15 @@ public class MageMLConverter {
 
     /**
      * TODO this can't clobber an existing array design, and there are a LOT of associations to figure out.
+     * 
      * @param mageObj
      * @return
      */
     public edu.columbia.gemma.expression.arrayDesign.ArrayDesign convertArrayDesign( ArrayDesign mageObj ) {
         if ( mageObj == null ) return null;
 
-        log.debug("(Incomplete) Converting Array design: " + mageObj.getName());
-        
+        log.debug( "(Incomplete) Converting Array design: " + mageObj.getName() );
+
         edu.columbia.gemma.expression.arrayDesign.ArrayDesign result = edu.columbia.gemma.expression.arrayDesign.ArrayDesign.Factory
                 .newInstance();
 
@@ -121,8 +124,7 @@ public class MageMLConverter {
      */
     public void convertAssociations( Object mageObj, Object gemmaObj ) {
 
-        String gemmaObjName = gemmaObj.getClass().getName().substring(
-                gemmaObj.getClass().getName().lastIndexOf( '.' ) + 1 );
+        String gemmaObjName = ReflectionUtil.objectToTypeName( gemmaObj );
 
         Class classToSeek = null;
 
@@ -135,7 +137,7 @@ public class MageMLConverter {
             Class[] interfaces = mageObj.getClass().getInterfaces();
             for ( int i = 0; i < interfaces.length; i++ ) {
                 Class infc = interfaces[i];
-                String infcName = infc.getName().substring( infc.getName().lastIndexOf( '.' ) + 1 );
+                String infcName = ReflectionUtil.classToTypeName( infc );
 
                 if ( infcName.startsWith( "Has" ) ) {
                     String propertyName = infcName.substring( 3 );
@@ -143,27 +145,14 @@ public class MageMLConverter {
                     Method getter = mageObj.getClass().getMethod( "get" + propertyName, new Class[] {} );
 
                     if ( getter != null ) {
-                        // log.debug( mageObj.getClass().getName() + " has " + propertyName );
-
                         try {
-
-                            // log.debug( "Seeking " + "convert" + gemmaObjName + "Association("
-                            // + mageObj.getClass().getName() + ", " + classToSeek.getName() + ", Method" );
-
                             Method converter = this.getClass().getMethod( "convert" + gemmaObjName + "Associations",
-                                    new Class[] {
-                                            mageObj.getClass(), classToSeek, getter.getClass()
-                                    } );
-
-                            // log.debug( "Found " + converter.getName() );
+                                    new Class[] { mageObj.getClass(), classToSeek, getter.getClass() } );
 
                             if ( converter == null ) throw new NoSuchMethodException();
 
-                            converter.invoke( this, new Object[] {
-                                    mageObj, gemmaObj, getter
-                            } );
+                            converter.invoke( this, new Object[] { mageObj, gemmaObj, getter } );
                         } catch ( NoSuchMethodException e ) {
-                            // log.warn( e.getMessage() );
                             log.warn( "Converstion of Associations Operation not yet supported: " + "convert"
                                     + gemmaObjName + "Associations" );
                         }
@@ -195,13 +184,10 @@ public class MageMLConverter {
         edu.columbia.gemma.sequence.biosequence.BioSequence result = edu.columbia.gemma.sequence.biosequence.BioSequence.Factory
                 .newInstance();
 
-        if ( mageObj.getSequence() != null ) result.setSequence( mageObj.getSequence() );
-
+        result.setSequence( mageObj.getSequence() );
         if ( mageObj.getLength() != null ) result.setLength( mageObj.getLength().intValue() );
-
         if ( mageObj.getIsApproximateLength() != null )
             result.setIsApproximateLength( mageObj.getIsApproximateLength().booleanValue() );
-
         if ( mageObj.getIsCircular() != null ) result.setIsCircular( mageObj.getIsCircular().booleanValue() );
 
         convertIdentifiable( mageObj, result );
@@ -232,68 +218,22 @@ public class MageMLConverter {
         log.debug( mageObj.getClass().getName() + "--->" + associationName );
 
         if ( associationName.equals( "PolymerType" ) ) { // Ontology Entry - enumerated type.
-            gemmaObj.setPolymerType( this.convertPolymerType( ( OntologyEntry ) associatedObject ) );
+            simpleFillIn( mageObj, gemmaObj, getter );
+        } else if ( associationName.equals( "SequenceDatabases" ) ) { // list of DatabaseEntries, we use one
+            List seqdbs = ( List ) associatedObject;
+            simpleFillIn( seqdbs, gemmaObj, getter, true, "SequenceDatabaseEntry" );
+        } else if ( associationName.equals( "Type" ) ) { // ontology entry, we map to a enumerated type.
+            simpleFillIn( mageObj, gemmaObj, getter, "Type" ); // because it's a SequenceType, not a "Type".
+        } else if ( associationName.equals( "Species" ) ) { // ontology entry, we map to a enumerated type.
+            simpleFillIn( mageObj, gemmaObj, getter );
         } else if ( associationName.equals( "SeqFeatures" ) ) {
             ; // list of Sequence features, we ignore
         } else if ( associationName.equals( "OntologyEntries" ) ) {
             ; // list of generic ontology entries, we ignore.
-        } else if ( associationName.equals( "SequenceDatabases" ) ) { // list of DatabaseEntries, we use one
-            List seqdbs = ( List ) associatedObject;
-
-            if ( seqdbs.size() == 0 ) {
-                log.error( "SequenceDatabases was not null, but empty" );
-                return;
-            }
-
-            org.biomage.Description.DatabaseEntry dbe = ( org.biomage.Description.DatabaseEntry ) seqdbs.get( 0 );
-            gemmaObj.setSequenceDatabaseEntry( this.convertDatabaseEntry( dbe ) );
-        } else if ( associationName.equals( "Type" ) ) { // ontology entry, we map to a enumerated type.
-            gemmaObj.setType( this.convertBioSequenceType( ( OntologyEntry ) associatedObject ) );
-        } else if ( associationName.equals( "Species" ) ) { // ontology entry, we map to a enumerated type.
-            gemmaObj.setTaxon( this.convertSpecies( ( OntologyEntry ) associatedObject ) );
         } else {
-            log.error( "Unknown type" );
+            log.error( "Unknown or unsupported type " + associationName );
         }
 
-    }
-
-    /**
-     * @param mageObj
-     * @return SequenceType
-     */
-    public SequenceType convertBioSequenceType( OntologyEntry mageObj ) {
-
-        if ( mageObj == null ) return null;
-
-        log.debug( "Converting sequence type of \"" + mageObj.getValue() + "\"" );
-
-        String value = mageObj.getValue();
-        if ( value.equalsIgnoreCase( "bc" ) ) {
-            return SequenceType.BAC;
-        } else if ( value.equalsIgnoreCase( "est" ) ) {
-            return SequenceType.EST;
-        } else if ( value.equalsIgnoreCase( "affyprobe" ) ) {
-            return SequenceType.AffyProbe;
-        } else if ( value.equalsIgnoreCase( "affytarget" ) ) {
-            return SequenceType.AffyTarget;
-        } else if ( value.equalsIgnoreCase( "mrna" ) ) {
-            return SequenceType.mRNA;
-        } else if ( value.equalsIgnoreCase( "refseq" ) ) {
-            return SequenceType.RefSeq;
-        } else if ( value.equalsIgnoreCase( "chromosome" ) ) {
-            return SequenceType.WholeChromosome;
-        } else if ( value.equalsIgnoreCase( "genome" ) ) {
-            return SequenceType.WholeGenome;
-        } else if ( value.equalsIgnoreCase( "orf" ) ) {
-            // fixme
-            return SequenceType.EST;
-        } else if ( value.equalsIgnoreCase( "dna" ) ) {
-            // return SequenceType.DNA; // FIXME
-            return SequenceType.EST;
-        } else {
-            // return SequenceType.OTHER; // FIXME
-            return SequenceType.EST;
-        }
     }
 
     /**
@@ -306,10 +246,8 @@ public class MageMLConverter {
         if ( mageObj == null ) return null;
 
         CompositeSequence result = CompositeSequence.Factory.newInstance();
-
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
-
         return result;
     }
 
@@ -322,15 +260,12 @@ public class MageMLConverter {
     public ExternalDatabase convertDatabase( Database mageObj ) {
         if ( mageObj == null ) return null;
 
-        log.debug( "Converting Database " + mageObj.getName() );
+        log.debug( "Converting Database " + mageObj.getIdentifier() );
 
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
-
         result.setWebURI( mageObj.getURI() );
         convertIdentifiable( mageObj, result );
-
         convertAssociations( mageObj, result ); // contacts
-
         return result;
     }
 
@@ -342,9 +277,9 @@ public class MageMLConverter {
 
         if ( mageObj == null ) return null;
 
-        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
-
         log.debug( "Converting DatabaseEntry " + mageObj.getAccession() );
+
+        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
         result.setAccession( mageObj.getAccession() );
         result.setAccessionVersion( mageObj.getAccessionVersion() );
         result.setURI( mageObj.getURI() );
@@ -366,16 +301,19 @@ public class MageMLConverter {
             return;
         }
 
-        // ExternalDatabase is the only one.
-
         String associationName = getterToPropertyName( getter );
         log.debug( mageObj.getClass().getName() + "--->" + associationName );
 
-        if ( associationName.equals( "Database" ) ) simpleFillIn( mageObj, gemmaObj, getter );
-
+        if ( associationName.equals( "Database" ) )
+            simpleFillIn( mageObj, gemmaObj, getter );
+        else
+            log.warn( "Unsupported or unknown association: " + associationName );
     }
 
     /**
+     * Convert a MAGE Describable to a Gemma domain object. We only allow a single description, so we take the first
+     * one. The association to Security and Audit are not filled in here - TODO something about that.
+     * 
      * @param mageObj
      * @param gemmaObj
      */
@@ -387,6 +325,10 @@ public class MageMLConverter {
         if ( mageObj.getDescriptions().size() > 0 ) {
             gemmaObj.setDescription( convertDescription( ( Description ) mageObj.getDescriptions().get( 0 ) ) );
         }
+
+        if ( mageObj.getDescriptions().size() > 1 )
+            log.warn( "There were multiple descriptions from a MAGE.Describable!" );
+
         convertExtendable( mageObj, gemmaObj );
     }
 
@@ -490,6 +432,167 @@ public class MageMLConverter {
     }
 
     /**
+     * @param mageObj
+     * @return SequenceType
+     */
+    public SequenceType convertType( OntologyEntry mageObj ) {
+
+        if ( mageObj == null ) return null;
+
+        log.debug( "Converting sequence type of \"" + mageObj.getValue() + "\"" );
+
+        String value = mageObj.getValue();
+        if ( value.equalsIgnoreCase( "bc" ) ) {
+            return SequenceType.BAC;
+        } else if ( value.equalsIgnoreCase( "est" ) ) {
+            return SequenceType.EST;
+        } else if ( value.equalsIgnoreCase( "affyprobe" ) ) {
+            return SequenceType.AffyProbe;
+        } else if ( value.equalsIgnoreCase( "affytarget" ) ) {
+            return SequenceType.AffyTarget;
+        } else if ( value.equalsIgnoreCase( "mrna" ) ) {
+            return SequenceType.mRNA;
+        } else if ( value.equalsIgnoreCase( "refseq" ) ) {
+            return SequenceType.RefSeq;
+        } else if ( value.equalsIgnoreCase( "chromosome" ) ) {
+            return SequenceType.WholeChromosome;
+        } else if ( value.equalsIgnoreCase( "genome" ) ) {
+            return SequenceType.WholeGenome;
+        } else if ( value.equalsIgnoreCase( "orf" ) ) {
+            // fixme
+            return SequenceType.EST;
+        } else if ( value.equalsIgnoreCase( "dna" ) ) {
+            // return SequenceType.DNA; // FIXME
+            return SequenceType.EST;
+        } else {
+            // return SequenceType.OTHER; // FIXME
+            return SequenceType.EST;
+        }
+    }
+
+    /**
+     * @param setterObj - The object on which we will call the setter
+     * @param settee - The object we want to set
+     * @param setteeClass - The class accepted by the setter - not necessarily the class of the setterObj (example:
+     *        DatabaseEntry vs. DatabaseEntryImpl)
+     * @param propertyName - The property name corresponding to the setteeClass
+     */
+    private void findAndInvokeSetter( Object setterObj, Object settee, Class setteeClass, String propertyName ) {
+        Method gemmaSetter = findSetter( setterObj, propertyName, setteeClass );
+        if ( gemmaSetter == null ) {
+            return;
+        }
+        try {
+            gemmaSetter.invoke( setterObj, new Object[] { settee } );
+        } catch ( IllegalArgumentException e ) {
+            log.error( e );
+        } catch ( IllegalAccessException e ) {
+            log.error( e );
+        } catch ( InvocationTargetException e ) {
+            log.error( e );
+        }
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private Object findAndInvokeConverter( Object mageObj ) {
+        Method converter = findConverter( mageObj );
+        if ( converter == null ) {
+            return null;
+        }
+        Object convertedGemmaObj = null;
+        try {
+            convertedGemmaObj = converter.invoke( this, new Object[] { mageObj } );
+        } catch ( IllegalArgumentException e ) {
+            log.error( e );
+        } catch ( IllegalAccessException e ) {
+            log.error( e );
+        } catch ( InvocationTargetException e ) {
+            log.error( e );
+        }
+        return convertedGemmaObj;
+    }
+
+    /**
+     * @param objectToConvert
+     * @param converterBaseName
+     * @param mageTypeToConvert
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private Object findAndInvokeConverter( Object mageObj, String converterBaseName, Class mageTypeToConvert ) {
+        Method gemmaConverter = findConverter( converterBaseName, mageTypeToConvert );
+        if ( gemmaConverter == null ) {
+            return null;
+        }
+        Object convertedGemmaObj = null;
+        try {
+            convertedGemmaObj = gemmaConverter.invoke( this, new Object[] { mageObj } );
+        } catch ( IllegalArgumentException e ) {
+            log.error( e );
+        } catch ( IllegalAccessException e ) {
+            log.error( e );
+        } catch ( InvocationTargetException e ) {
+            log.error( e );
+        }
+        return convertedGemmaObj;
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    private Method findConverter( Object mageObj ) {
+        String mageTypeName = ReflectionUtil.objectToTypeName( mageObj );
+        Method converter = null;
+        try {
+            converter = this.getClass().getMethod( "convert" + mageTypeName, new Class[] { mageObj.getClass() } );
+        } catch ( NoSuchMethodException e ) {
+            log.warn( "Conversion operation not yet supported: " + "convert" + mageTypeName );
+        }
+        return converter;
+    }
+
+    /**
+     * @param associationName
+     * @param mageAssociatedType
+     * @return
+     */
+    private Method findConverter( String associationName, Class mageAssociatedType ) {
+        Method gemmaConverter = null;
+        try {
+            gemmaConverter = this.getClass()
+                    .getMethod( "convert" + associationName, new Class[] { mageAssociatedType } );
+        } catch ( NoSuchMethodException e ) {
+            log.warn( "Conversion operation not yet supported: " + "convert" + associationName );
+        }
+        return gemmaConverter;
+    }
+
+    /**
+     * @param setter - The object on which we want to call the setter
+     * @param propertyName - The name of the property we want to set
+     * @param setee - The object which we want to enter as an argument to the setter.
+     * @return
+     */
+    private Method findSetter( Object setter, String propertyName, Class setee ) {
+        Method gemmaSetter = null;
+        try {
+            gemmaSetter = setter.getClass().getMethod( "set" + propertyName, new Class[] { setee } );
+        } catch ( SecurityException e ) {
+            log.error( e );
+        } catch ( NoSuchMethodException e ) {
+            log.error( "No such setter: " + "set" + propertyName, e );
+        }
+        return gemmaSetter;
+    }
+
+    /**
      * For a method like "getFoo", returns "Foo".
      * 
      * @param getter
@@ -523,6 +626,56 @@ public class MageMLConverter {
     }
 
     /**
+     * Generic method to fill in a Gemma object where the association in Mage has cardinality of >1.
+     * 
+     * @param associatedList - The result of the Getter call.
+     * @param gemmObj - The Gemma object in which to place the converted Mage object(s).
+     * @param onlyTakeOne - This indicates that the cardinality in the Gemma object is at most 1. Therefore we pare down
+     *        the Mage object list to take just the first one.
+     * @param actualGemmaAssociationName - for example, a BioSequence hasa "SequenceDatabaseEntry", not a
+     *        "DatabaseEntry". If null, the name is inferred.
+     */
+    private void simpleFillIn( List associatedList, Object gemmaObj, Method getter, boolean onlyTakeOne,
+            String actualGemmaAssociationName ) {
+
+        if ( associatedList == null || gemmaObj == null || getter == null )
+            throw new IllegalArgumentException( "Null objects" );
+
+        if ( associatedList.size() == 0 ) {
+            log.warn( "List was not null, but empty" );
+            return;
+        }
+
+        try {
+            if ( onlyTakeOne ) {
+                log.debug( "Converting a MAGE list to a single instance" );
+                Object mageObj = associatedList.get( 0 );
+                Object convertedGemmaObj = findAndInvokeConverter( mageObj );
+                Class convertedGemmaClass = ReflectionUtil.getImplForBase( convertedGemmaObj );
+                // String convertedTypeName = ReflectionUtil.classToTypeName( convertedGemmaClass );
+                findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, actualGemmaAssociationName );
+            } else {
+                log.debug( "Converting a MAGE list to a Gemma list" );
+                Collection gemmaObjList = new ArrayList();
+                for ( Iterator iter = associatedList.iterator(); iter.hasNext(); ) {
+                    Object mageObj = iter.next();
+                    Object convertedGemmaObj = findAndInvokeConverter( mageObj );
+                    gemmaObjList.add( convertedGemmaObj );
+                }
+                findAndInvokeSetter( gemmaObj, gemmaObjList, gemmaObjList.getClass(), actualGemmaAssociationName );
+            }
+
+        } catch ( SecurityException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( IllegalArgumentException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
      * Generic method to fill in a Gemma object's association with a Mage object where the name can be predicted from
      * the associated object type. E.g., the Gemma object with an association to "BioSequence" has a "bioSequence"
      * property; sometimes instead we have things like ImmobilizedCharacteristic.
@@ -553,58 +706,22 @@ public class MageMLConverter {
 
         try {
             Class mageAssociatedType = getter.getReturnType();
-
-            Method gemmaConverter = null;
-            try {
-                gemmaConverter = this.getClass().getMethod( "convert" + associationName, new Class[] {
-                    mageAssociatedType
-                } );
-            } catch ( NoSuchMethodException e ) {
-                log.warn( "Conversion operation not yet supported: " + "convert" + associationName );
-                return;
-            }
-
-            Object gemmaAssociatedObj = gemmaConverter.invoke( this, new Object[] {
-                associatedObject
-            } );
+            Object gemmaAssociatedObj = findAndInvokeConverter( associatedObject, associationName, mageAssociatedType );
+            Class gemmaClass = ReflectionUtil.getImplForBase( gemmaAssociatedObj.getClass() );
 
             String inferredGemmaAssociationName;
             if ( actualGemmaAssociationName != null ) {
                 inferredGemmaAssociationName = actualGemmaAssociationName;
             } else {
-
-                inferredGemmaAssociationName = gemmaAssociatedObj.getClass().getName().substring(
-                        gemmaAssociatedObj.getClass().getName().lastIndexOf( '.' ) + 1 );
-
-                if ( inferredGemmaAssociationName.endsWith( "Impl" ) ) {
-                    inferredGemmaAssociationName = inferredGemmaAssociationName.substring( 0,
-                            inferredGemmaAssociationName.lastIndexOf( "Impl" ) );
-                }
+                inferredGemmaAssociationName = ReflectionUtil.classToTypeName( ReflectionUtil
+                        .getImplForBase( gemmaAssociatedObj ) );
             }
 
-            Class gemmaClass = gemmaAssociatedObj.getClass(); // this will be an impl.
-
-            if ( gemmaClass.getName().endsWith( "Impl" ) ) {
-                gemmaClass = gemmaClass.getSuperclass();
-            }
-
-            Method gemmaSetter = gemmaObj.getClass().getMethod( "set" + inferredGemmaAssociationName, new Class[] {
-                gemmaClass
-            } );
-
-            gemmaSetter.invoke( gemmaObj, new Object[] {
-                gemmaAssociatedObj
-            } );
+            findAndInvokeSetter( gemmaObj, gemmaAssociatedObj, gemmaClass, inferredGemmaAssociationName );
 
         } catch ( SecurityException e ) {
             log.error( e );
-        } catch ( NoSuchMethodException e ) {
-            log.error( e );
         } catch ( IllegalArgumentException e ) {
-            log.error( e );
-        } catch ( IllegalAccessException e ) {
-            log.error( e );
-        } catch ( InvocationTargetException e ) {
             log.error( e );
         }
 
