@@ -43,7 +43,6 @@ public class MageMLParser {
         mlc = new MageMLConverter();
 
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
-
         String mageClassesString = rb.getString( "mage.classes" );
         mageClasses = mageClassesString.split( ", " );
 
@@ -54,7 +53,6 @@ public class MageMLParser {
         }
 
         cHandler = new MAGEContentHandler();
-
         parser.setContentHandler( cHandler );
     }
 
@@ -78,12 +76,13 @@ public class MageMLParser {
     public Collection getConvertedData() {
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
         Package[] allPackages = Package.getPackages();
-
+        
         Collection result = new ArrayList();
 
-        // todo: this is still a bit inefficient because it tries every possible package and class.
+        // todo: this is inefficient because it tries every possible package and class. - fix is to get just the mage
+        // packages!
         for ( int i = 0; i < allPackages.length; i++ ) {
-            
+
             String name = allPackages[i].getName();
             if ( !name.startsWith( "org.biomage." ) || name.startsWith( "org.biomage.tools." )
                     || name.startsWith( "org.biomage.Interface" ) ) continue;
@@ -95,13 +94,12 @@ public class MageMLParser {
                     Collection d = getConvertedData( c );
                     if ( d != null ) {
                         result.addAll( d );
-                        break;
                     }
                 } catch ( ClassNotFoundException e ) {
-                    ;
+                    // log.error( "Class not found: " + name + "." + mageClasses[j] );
                 }
             }
-            if (result != null) break; // we found it.
+
         }
         return result;
     }
@@ -127,10 +125,17 @@ public class MageMLParser {
         String targetMethodName = "get" + trimmedPackageName + "_package";
 
         try {
-            Method targetMethod = mageJava.getClass().getMethod( targetMethodName, new Class[] {} );
 
-            if ( targetMethod == null )
-                throw new NoSuchMethodException( "Couldn't locate method " + targetMethodName );
+            Method targetMethod = null;
+            try {
+                targetMethod = mageJava.getClass().getMethod( targetMethodName, new Class[] {} );
+            } catch ( NoSuchMethodException e ) {
+                ; // that's okay - org.biomage.Common.MAGEJava.getCommon_package() triggers this.
+                return null;
+            }
+
+            // if ( targetMethod == null )
+            // throw new NoSuchMethodException( "Couldn't locate method " + targetMethodName );
 
             // 2. get the _package class for that type.
             Object packageOb = targetMethod.invoke( mageJava, new Object[] {} );
@@ -145,7 +150,7 @@ public class MageMLParser {
                 secondMethod = packageOb.getClass().getMethod( secondMethodName, new Class[] {} );
             } catch ( NoSuchMethodException e ) {
                 // log.debug( "No such method: " + secondMethodName ); // that's okay, it isn't the kind of object we
-                // get by list.
+                // get by XX_list.
                 return null;
             }
 
@@ -155,8 +160,6 @@ public class MageMLParser {
 
         } catch ( SecurityException e ) {
             log.error( e );
-        } catch ( NoSuchMethodException e ) {
-            log.error( e );
         } catch ( IllegalArgumentException e ) {
             log.error( e );
         } catch ( IllegalAccessException e ) {
@@ -165,17 +168,6 @@ public class MageMLParser {
             log.error( e );
         }
         return null;
-    }
-
-    /**
-     * @param obj
-     */
-    public void getAssociations( Object obj ) {
-
-    }
-
-    private boolean isParsed() {
-        return mageJava != null;
     }
 
     /**
@@ -196,6 +188,15 @@ public class MageMLParser {
             result.add( mlc.convert( element ) );
         }
         return result;
+    }
+
+    /**
+     * Has the stream already been parsed?
+     * 
+     * @return
+     */
+    private boolean isParsed() {
+        return mageJava != null;
     }
 
 }

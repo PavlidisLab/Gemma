@@ -15,8 +15,10 @@ import org.biomage.Description.Description;
 import org.biomage.Description.OntologyEntry;
 
 import edu.columbia.gemma.common.Identifscribable;
+import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.sequence.biosequence.PolymerType;
 import edu.columbia.gemma.sequence.biosequence.SequenceType;
 import edu.columbia.gemma.sequence.gene.Taxon;
 
@@ -31,9 +33,9 @@ import edu.columbia.gemma.sequence.gene.Taxon;
  * @version $Id$
  */
 public class MageMLConverter {
+    private static final String START_AUDIT_NOTE = "Imported from MAGE";
 
     protected static final Log log = LogFactory.getLog( MageMLConverter.class );
-    private static final String START_AUDIT_NOTE = "Imported from MAGE";
 
     /**
      * A generic converter that figures out which specific conversion method to call based on the class of the object.
@@ -49,14 +51,12 @@ public class MageMLConverter {
             Class c = mageObj.getClass();
             String targetObjectName = c.getName().substring( c.getName().lastIndexOf( '.' ) + 1, c.getName().length() );
             String callMethodName = "convert" + targetObjectName;
-            log.debug( "Seeking " + callMethodName );
             Method[] methods = this.getClass().getMethods();
 
             // locate a method that has the right signature. todo This is inefficient..
             Method callMethod = null;
             for ( int i = 0; i < methods.length; i++ ) {
                 Class[] params = methods[i].getParameterTypes();
-                // log.debug("Testing " + methods[i].getName());
                 if ( methods[i].getName().equals( callMethodName ) && params.length == 1
                         && params[0] == mageObj.getClass() ) {
                     callMethod = methods[i];
@@ -68,22 +68,19 @@ public class MageMLConverter {
                 log.warn( "Operation not yet supported: " + callMethodName );
                 return null;
             }
-            log.debug( "Invoking" + callMethod.getName() );
 
             result = callMethod.invoke( this, new Object[] {
                 mageObj
             } );
 
-            if ( result != null ) {
-                convertAssociations( mageObj, result );
-            }
+            if ( result != null ) convertAssociations( mageObj, result );
 
         } catch ( IllegalArgumentException e ) {
             log.error( e );
         } catch ( IllegalAccessException e ) {
             log.error( e );
         } catch ( InvocationTargetException e ) {
-            log.error( e );
+            log.error( "Call resulted in an exception " + e.getCause(), e );
         } catch ( SecurityException e ) {
             log.error( e );
         }
@@ -91,14 +88,36 @@ public class MageMLConverter {
     }
 
     /**
-     * For a method like "getFoo", returns "Foo".
-     * 
-     * @param getter
+     * @param mageObj
      * @return
      */
-    private String getterToPropertyName( Method getter ) {
-        if ( !getter.getName().startsWith( "get" ) ) throw new IllegalArgumentException( "Not a getter" );
-        return getter.getName().substring( 3 );
+    public edu.columbia.gemma.expression.arrayDesign.ArrayDesign convertArrayDesign( ArrayDesign mageObj ) {
+        if ( mageObj == null ) return null;
+
+        edu.columbia.gemma.expression.arrayDesign.ArrayDesign result = edu.columbia.gemma.expression.arrayDesign.ArrayDesign.Factory
+                .newInstance();
+
+        return result;
+    }
+
+    /**
+     * @param mageObj
+     * @return edu.columbia.gemma.sequence.biosequence.BioSequence
+     */
+    public edu.columbia.gemma.sequence.biosequence.BioSequence convertBioSequence(
+            org.biomage.BioSequence.BioSequence mageObj ) {
+
+        log.debug( "Converting BioSequence " + mageObj.getIdentifier() );
+
+        if ( mageObj == null ) return null;
+
+        edu.columbia.gemma.sequence.biosequence.BioSequence result = edu.columbia.gemma.sequence.biosequence.BioSequence.Factory
+                .newInstance();
+
+        convertIdentifiable( mageObj, result );
+        result.setSequence( mageObj.getSequence() );
+        convertAssociations( mageObj, result );
+        return result;
     }
 
     /**
@@ -108,46 +127,192 @@ public class MageMLConverter {
      */
     public void convertBioSequenceAssociations( org.biomage.BioSequence.BioSequence mageObj,
             edu.columbia.gemma.sequence.biosequence.BioSequence gemmaObj, Method getter ) {
-        Object result = null;
-        try {
-            result = getter.invoke( mageObj, new Object[] {} );
-        } catch ( IllegalArgumentException e ) {
-            log.error(e);
-        } catch ( IllegalAccessException e ) {
-            log.error(e);
-        } catch ( InvocationTargetException e ) {
-            log.error(e);
-        }
-        if ( result != null ) {
+
+        Object associatedObject = invokeGetter( mageObj, getter );
+
+        if ( associatedObject != null ) {
             String associationName = getterToPropertyName( getter );
 
+            log.debug( mageObj.getClass().getName() + "--->" + associationName );
+
             if ( associationName.equals( "PolymerType" ) ) { // Ontology Entry - enumerated type.
-                log.debug( "Converting PolymerType" );
+                gemmaObj.setPolymerType( this.convertPolymerType( ( OntologyEntry ) associatedObject ) );
             } else if ( associationName.equals( "SeqFeatures" ) ) { // list of Sequence features, we ignore
-                log.debug( "Converting SeqFeatures" );
+                ;
             } else if ( associationName.equals( "OntologyEntries" ) ) { // list of generic ontology entries, we ignore.
-                log.debug( "Converting OntologyEntries" );
-            } else if ( associationName.equals( "SequenceDatabases" ) ) { // list of database entries, we use.
-                log.debug( "Converting SequenceDatabases" );
+                ;
+            } else if ( associationName.equals( "SequenceDatabases" ) ) { // list of DatabaseEntries, we use one
+                List seqdbs = ( List ) associatedObject;
+
+                if ( seqdbs.size() == 0 ) {
+                    log.error( "SequenceDatabases was not null, but empty" );
+                    return;
+                }
+
+                org.biomage.Description.DatabaseEntry dbe = ( org.biomage.Description.DatabaseEntry ) seqdbs.get( 0 );
+                gemmaObj.setSequenceDatabaseEntry( this.convertDatabaseEntry( dbe ) );
             } else if ( associationName.equals( "Type" ) ) { // ontology entry, we map to a enumerated type.
-                log.debug( "Converting Type" );
-                gemmaObj.setType( this.convertBioSequenceType( mageObj.getType() ) );
+                gemmaObj.setType( this.convertBioSequenceType( ( OntologyEntry ) associatedObject ) );
             } else if ( associationName.equals( "Species" ) ) { // ontology entry, we map to a enumerated type.
-                log.debug( "Converting Species" );
-                gemmaObj.setTaxon( this.convertSpecies( mageObj.getSpecies() ) );
+                gemmaObj.setTaxon( this.convertSpecies( ( OntologyEntry ) associatedObject ) );
             } else {
                 log.error( "Unknown type" );
             }
 
             // figure out what we need to do.
         } else {
-            log.warn( "Getter called but failed to return a value: " + getter.getName() );
+            log.warn( "Getter called but failed to return a value: " + getter.getName() + " (Probably no data)" );
         }
     }
 
-    private Taxon convertSpecies( OntologyEntry species ) {
-        Taxon result = Taxon.Factory.newInstance();
-        // FIXME - this should be written to ensure that the result agrees with what is already in the database.
+    /**
+     * Call a 'get' method to retrieve an associated MAGE object for conversion.
+     * 
+     * @param mageObj
+     * @param getter
+     * @return A MAGE domain object, or a List of MAGE domain objects. The caller has to figure out which.
+     */
+    private Object invokeGetter( org.biomage.BioSequence.BioSequence mageObj, Method getter ) {
+        Object associatedObject = null;
+        try {
+            associatedObject = getter.invoke( mageObj, new Object[] {} );
+        } catch ( IllegalArgumentException e ) {
+            log.error( e ); // really impossible, as we are calling a no-arg getter.
+        } catch ( IllegalAccessException e ) {
+            log.error( e );
+        } catch ( InvocationTargetException e ) {
+            log.error( mageObj.getClass().getName() + "." + getter.getName() + " threw an exception: " + e.getCause(),
+                    e );
+        }
+        return associatedObject;
+    }
+
+    /**
+     * @param mageObj
+     * @return SequenceType
+     */
+    public SequenceType convertBioSequenceType( OntologyEntry mageObj ) {
+
+        if ( mageObj == null ) return null;
+
+        log.debug( "Converting sequence type of \"" + mageObj.getValue() + "\"" );
+
+        String value = mageObj.getValue();
+        if ( value.equalsIgnoreCase( "bc" ) ) {
+            return SequenceType.BAC;
+        } else if ( value.equalsIgnoreCase( "est" ) ) {
+            return SequenceType.EST;
+        } else if ( value.equalsIgnoreCase( "affyprobe" ) ) {
+            return SequenceType.AffyProbe;
+        } else if ( value.equalsIgnoreCase( "affytarget" ) ) {
+            return SequenceType.AffyTarget;
+        } else if ( value.equalsIgnoreCase( "mrna" ) ) {
+            return SequenceType.mRNA;
+        } else if ( value.equalsIgnoreCase( "refseq" ) ) {
+            return SequenceType.RefSeq;
+        } else if ( value.equalsIgnoreCase( "chromosome" ) ) {
+            return SequenceType.WholeChromosome;
+        } else if ( value.equalsIgnoreCase( "genome" ) ) {
+            return SequenceType.WholeGenome;
+        } else if ( value.equalsIgnoreCase( "orf" ) ) {
+            // fixme
+            return SequenceType.EST;
+        } else if ( value.equalsIgnoreCase( "dna" ) ) {
+            // return SequenceType.DNA; // FIXME
+            return SequenceType.EST;
+        } else {
+            // return SequenceType.OTHER; // FIXME
+            return SequenceType.EST;
+        }
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.expression.designElement.CompositeSequence convertCompositeSequence(
+            org.biomage.DesignElement.CompositeSequence mageObj ) {
+
+        if ( mageObj == null ) return null;
+
+        CompositeSequence result = CompositeSequence.Factory.newInstance();
+
+        convertIdentifiable( mageObj, result );
+        convertAssociations( mageObj, result );
+
+        return result;
+    }
+
+    /**
+     * @param mageObj
+     * @param gemmaObj
+     */
+    public void convertDescribable( Describable mageObj, Identifscribable gemmaObj ) {
+
+        if ( mageObj == null ) return;
+        if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
+
+        if ( mageObj.getDescriptions().size() > 0 ) {
+            gemmaObj.setDescription( convertDescription( ( Description ) mageObj.getDescriptions().get( 0 ) ) );
+        }
+        convertExtendable( mageObj, gemmaObj );
+    }
+
+    /**
+     * @param mageObj
+     * @return edu.columbia.gemma.common.description.Description
+     */
+    public edu.columbia.gemma.common.description.Description convertDescription(
+            org.biomage.Description.Description mageObj ) {
+
+        if ( mageObj == null ) return null;
+
+        edu.columbia.gemma.common.description.Description result = edu.columbia.gemma.common.description.Description.Factory
+                .newInstance();
+        result.setText( mageObj.getText() );
+        result.setURI( mageObj.getURI() );
+        convertAssociations( mageObj, result );
+
+        return result;
+    }
+
+    /**
+     * @param mageObj
+     * @param gemmaObj
+     */
+    public void convertExtendable( Extendable mageObj, Identifscribable gemmaObj ) {
+        ; // nothing to do.
+    }
+
+    /**
+     * Copy attributes from a MAGE identifiable to a Gemma identifiscribable.
+     * 
+     * @param mageObj
+     */
+    public void convertIdentifiable( Identifiable mageObj, Identifscribable gemmaObj ) {
+
+        if ( mageObj == null ) return;
+        if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
+
+        gemmaObj.setIdentifier( mageObj.getIdentifier() );
+        gemmaObj.setName( mageObj.getName() );
+        convertDescribable( mageObj, gemmaObj );
+
+    }
+
+    /**
+     * @param mageObj
+     * @return edu.columbia.gemma.expression.designElement.Reporter
+     */
+    public edu.columbia.gemma.expression.designElement.Reporter convertReporter(
+            org.biomage.DesignElement.Reporter mageObj ) {
+
+        if ( mageObj == null ) return null;
+
+        Reporter result = Reporter.Factory.newInstance();
+        convertIdentifiable( mageObj, result );
+        convertAssociations( mageObj, result );
+
         return result;
     }
 
@@ -181,7 +346,7 @@ public class MageMLConverter {
                     Method getter = mageObj.getClass().getMethod( "get" + propertyName, new Class[] {} );
 
                     if ( getter != null ) {
-                        log.debug( mageObj.getClass().getName() + " has " + propertyName );
+                        // log.debug( mageObj.getClass().getName() + " has " + propertyName );
                         Method converter = null;
                         try {
 
@@ -194,6 +359,11 @@ public class MageMLConverter {
                                     } );
 
                             // log.debug( "Found " + converter.getName() );
+
+                            if ( converter == null )
+                                throw new NoSuchMethodException( "convert" + gemmaObjName + "Associations"
+                                        + ": Not supported yet." );
+
                             converter.invoke( this, new Object[] {
                                     mageObj, gemmaObj, getter
                             } );
@@ -204,176 +374,73 @@ public class MageMLConverter {
                 }
             }
         } catch ( NoSuchMethodException e ) {
-            log.error(e);
+            log.error( e );
         } catch ( IllegalArgumentException e ) {
-            log.error(e);
+            log.error( e );
         } catch ( IllegalAccessException e ) {
-            log.error(e);
+            log.error( e );
         } catch ( InvocationTargetException e ) {
-            log.error(e);
+            log.error( "For: " + gemmaObjName, e );
         }
     }
 
     /**
      * @param mageObj
-     * @return edu.columbia.gemma.sequence.biosequence.BioSequence
+     * @return
      */
-    public edu.columbia.gemma.sequence.biosequence.BioSequence convertBioSequence(
-            org.biomage.BioSequence.BioSequence mageObj ) {
-
-        log.debug( "Converting BioSequence" );
-
-        if ( mageObj == null ) return null;
-
-        edu.columbia.gemma.sequence.biosequence.BioSequence result = edu.columbia.gemma.sequence.biosequence.BioSequence.Factory
-                .newInstance();
-
-        convertIdentifiable( mageObj, result );
-        result.setSequence( mageObj.getSequence() );
-
-        return result;
-    }
-
-    /**
-     * @param mageObj
-     * @return SequenceType
-     */
-    public SequenceType convertBioSequenceType( OntologyEntry mageObj ) {
-
-        if ( mageObj == null ) return null;
-
-        log.debug( "Converting sequence type" );
-
-        String value = mageObj.getValue();
-        if ( value.equalsIgnoreCase( "bc" ) ) {
-            return SequenceType.BAC;
-        } else if ( value.equalsIgnoreCase( "est" ) ) {
-            return SequenceType.EST;
-        } else if ( value.equalsIgnoreCase( "affyprobe" ) ) {
-            return SequenceType.AffyProbe;
-        } else if ( value.equalsIgnoreCase( "affytarget" ) ) {
-            return SequenceType.AffyTarget;
-        } else if ( value.equalsIgnoreCase( "mrna" ) ) {
-            return SequenceType.mRNA;
-        } else if ( value.equalsIgnoreCase( "refseq" ) ) {
-            return SequenceType.RefSeq;
-        } else if ( value.equalsIgnoreCase( "chromosome" ) ) {
-            return SequenceType.WholeChromosome;
-        } else if ( value.equalsIgnoreCase( "genome" ) ) {
-            return SequenceType.WholeGenome;
-        } else if ( value.equalsIgnoreCase( "orf" ) ) {
-            // fixme
-            return SequenceType.EST;
-        } else if ( value.equalsIgnoreCase( "dna" ) ) {
-            // return SequenceType.DNA; // FIXME
-            return SequenceType.EST;
-        } else {
-            // return SequenceType.OTHER; // FIXME
-            return SequenceType.EST;
-        }
-    }
-
-    /**
-     * @param mageObj
-     * @return edu.columbia.gemma.common.description.Description
-     */
-    public edu.columbia.gemma.common.description.Description convertDescription(
-            org.biomage.Description.Description mageObj ) {
-
-        if ( mageObj == null ) return null;
-
-        edu.columbia.gemma.common.description.Description result = edu.columbia.gemma.common.description.Description.Factory
-                .newInstance();
-        result.setText( mageObj.getText() );
+    private DatabaseEntry convertDatabaseEntry( org.biomage.Description.DatabaseEntry mageObj ) {
+        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
+        // DatabaseEntry should not be identifiscribable, but it is.
+        log.debug( "Converting DatabaseEntry " + mageObj.getAccession() );
+        result.setAccession( mageObj.getAccession() );
         result.setURI( mageObj.getURI() );
         convertAssociations( mageObj, result );
-
         return result;
     }
 
     /**
-     * @param mageObj
-     * @return edu.columbia.gemma.expression.designElement.Reporter
-     */
-    public edu.columbia.gemma.expression.designElement.Reporter convertReporter(
-            org.biomage.DesignElement.Reporter mageObj ) {
-
-        if ( mageObj == null ) return null;
-
-        Reporter result = Reporter.Factory.newInstance();
-        convertIdentifiable( mageObj, result );
-        convertAssociations( mageObj, result );
-
-        return result;
-    }
-
-    /**
-     * @param mageObj
+     * @param associatedObject
      * @return
      */
-    public edu.columbia.gemma.expression.designElement.CompositeSequence convertCompositeSequence(
-            org.biomage.DesignElement.CompositeSequence mageObj ) {
+    private PolymerType convertPolymerType( OntologyEntry mageObj ) {
+        log.debug( "Converting PolymerType " + mageObj.getValue() );
 
-        if ( mageObj == null ) return null;
-
-        CompositeSequence result = CompositeSequence.Factory.newInstance();
-
-        convertIdentifiable( mageObj, result );
-        convertAssociations( mageObj, result );
-
-        return result;
-    }
-
-    /**
-     * Copy attributes from a MAGE identifiable to a Gemma identifiscribable.
-     * 
-     * @param mageObj
-     */
-    public void convertIdentifiable( Identifiable mageObj, Identifscribable gemmaObj ) {
-
-        if ( mageObj == null ) return;
-        if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
-
-        gemmaObj.setIdentifier( mageObj.getIdentifier() );
-        gemmaObj.setName( mageObj.getName() );
-        convertDescribable( mageObj, gemmaObj );
-
-    }
-
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     */
-    public void convertDescribable( Describable mageObj, Identifscribable gemmaObj ) {
-
-        if ( mageObj == null ) return;
-        if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
-
-        if ( mageObj.getDescriptions().size() > 0 ) {
-            gemmaObj.setDescription( convertDescription( ( Description ) mageObj.getDescriptions().get( 0 ) ) );
+        if ( mageObj.getValue().equalsIgnoreCase( "DNA" ) ) {
+            return PolymerType.DNA;
+        } else if ( mageObj.getValue().equalsIgnoreCase( "protein" ) ) {
+            return PolymerType.PROTEIN;
+        } else if ( mageObj.getValue().equalsIgnoreCase( "RNA" ) ) {
+            return PolymerType.RNA;
+        } else {
+            log.error( "Unsupported polymer type:" + mageObj.getValue() );
         }
-        convertExtendable( mageObj, gemmaObj );
+        return null;
     }
 
     /**
-     * @param mageObj
-     * @param gemmaObj
-     */
-    public void convertExtendable( Extendable mageObj, Identifscribable gemmaObj ) {
-        ; // nothing to do.
-    }
-
-    /**
-     * @param mageObj
+     * @param species
      * @return
      */
-    public edu.columbia.gemma.expression.arrayDesign.ArrayDesign convertArrayDesign( ArrayDesign mageObj ) {
-        if ( mageObj == null ) return null;
+    private Taxon convertSpecies( OntologyEntry species ) {
+        Taxon result = Taxon.Factory.newInstance();
 
-        edu.columbia.gemma.expression.arrayDesign.ArrayDesign result = edu.columbia.gemma.expression.arrayDesign.ArrayDesign.Factory
-                .newInstance();
+        log.debug( "Converting Species from  " + species.getValue() );
 
+        result.setCommonName( species.getValue() );
+
+        // FIXME - this should be written to ensure that the result agrees with what is already in the database.
         return result;
+    }
+
+    /**
+     * For a method like "getFoo", returns "Foo".
+     * 
+     * @param getter
+     * @return
+     */
+    private String getterToPropertyName( Method getter ) {
+        if ( !getter.getName().startsWith( "get" ) ) throw new IllegalArgumentException( "Not a getter" );
+        return getter.getName().substring( 3 );
     }
 
 }
