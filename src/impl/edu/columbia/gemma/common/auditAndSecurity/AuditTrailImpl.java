@@ -29,10 +29,11 @@ import java.util.Date;
  * @version $Id$
  */
 public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.AuditTrail {
+
    /**
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#addEvent(edu.columbia.gemma.common.auditAndSecurity.AuditEvent)
     */
-   public void addEvent( edu.columbia.gemma.common.auditAndSecurity.AuditEvent event ) {
+   public void addEvent( AuditEvent event ) {
       if ( event == null ) throw new IllegalArgumentException( "AuditEvent cannot be null" );
       assert this.getEvents() != null;
       this.getEvents().add( event );
@@ -41,20 +42,16 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
    /**
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getLast()
     */
-   public edu.columbia.gemma.common.auditAndSecurity.AuditEvent getLast() {
-      
+   public AuditEvent getLast() {
       assert this.getEvents() != null;
-      
       return ( AuditEvent ) this.getEvents().get( this.getEvents().size() - 1 );
    }
 
    /**
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getCreationEvent()
     */
-   public edu.columbia.gemma.common.auditAndSecurity.AuditEvent getCreationEvent() {
-      
+   public AuditEvent getCreationEvent() {
       assert this.getEvents() != null;
-      
       return ( AuditEvent ) this.getEvents().get( 0 );
    }
 
@@ -68,14 +65,13 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
    /**
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start(java.lang.String)
     */
-   public void start( java.lang.String note ) {
-      
+   public void start( String note ) {
       this.init(); // ensure that this is the first event.
       AuditEvent newEvent = AuditEvent.Factory.newInstance();
       newEvent.setAction( AuditAction.CREATE );
       newEvent.setDate( new Date() );
       if ( note != null ) newEvent.setNote( note );
-      
+
       this.addEvent( newEvent );
    }
 
@@ -89,30 +85,21 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
    /**
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update(java.lang.String)
     */
-   public void update( java.lang.String note ) {
-      
+   public void update( String note ) {
       assert this.getEvents() != null;
-      assert this.getEvents().size() > 0; // can't have update as the first event.
-      
+      assert this.getEvents().size() > 0; // can't have update as the first
+      // event.
+
       AuditEvent newEvent = AuditEvent.Factory.newInstance();
       newEvent.setAction( AuditAction.UPDATE );
       newEvent.setDate( new Date() );
       if ( note != null ) newEvent.setNote( note );
-      
+
       this.addEvent( newEvent );
    }
 
    /**
-    * Check whether the list of events is empty.
-    * 
-    * @return
-    */
-   private boolean trailIsNull() {
-      return this.getEvents() == null;
-   }
-
-   /**
-    * If this AudiTrail is empty, initialize it. Otherwise, clear any events.
+    * If this AudiTrail is empty or null, initialize it. Otherwise, clear any events.
     */
    private void init() {
       if ( trailIsNull() ) {
@@ -120,6 +107,15 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
       } else {
          this.getEvents().clear();
       }
+   }
+
+   /**
+    * Check whether the list of events doesn't exist yet.
+    * 
+    * @return
+    */
+   private boolean trailIsNull() {
+      return this.getEvents() == null;
    }
 
 }
