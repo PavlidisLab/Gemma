@@ -32,7 +32,6 @@ import edu.columbia.gemma.sequence.gene.Taxon;
  */
 public class SMDManagerImpl implements SMDManager {
 
-   
    private BibliographicReferenceDao bibliographicReferenceDAO;
    private ExpressionExperimentDao experimentDAO;
    private FileFormatDao fileFormtDAO;
@@ -40,30 +39,35 @@ public class SMDManagerImpl implements SMDManager {
    private PersonDao personDAO;
    private BioAssayDao bioAssayDAO;
    private DescriptionDao descriptionDAO;
-    
+
    public void setBibliographicReferenceDAO( BibliographicReferenceDao bibliographicReferenceDAO ) {
       this.bibliographicReferenceDAO = bibliographicReferenceDAO;
    }
+
    public void setBioAssayDAO( BioAssayDao bioAssayDAO ) {
       this.bioAssayDAO = bioAssayDAO;
    }
+
    public void setDescriptionDAO( DescriptionDao descriptionDAO ) {
       this.descriptionDAO = descriptionDAO;
    }
+
    public void setExperimentDAO( ExpressionExperimentDao experimentDAO ) {
       this.experimentDAO = experimentDAO;
    }
+
    public void setFileDAO( LocalFileDao fileDAO ) {
       this.fileDAO = fileDAO;
    }
+
    public void setFileFormtDAO( FileFormatDao fileFormtDAO ) {
       this.fileFormtDAO = fileFormtDAO;
    }
+
    public void setPersonDAO( PersonDao personDAO ) {
       this.personDAO = personDAO;
    }
-   
-   
+
    /*
     * (non-Javadoc)
     * 
@@ -81,9 +85,9 @@ public class SMDManagerImpl implements SMDManager {
             SMDPublication pub = ( SMDPublication ) iter.next();
 
             BibliographicReference checkMe = pub.toBiblioGraphicReference( pub.toDataBaseEntry() );
+            if ( bibliographicReferenceDAO.findByExternalId( pub.toDataBaseEntry() ) == null )
+                  bibliographicReferenceDAO.create( checkMe );
 
-      //      bibliographicReferenceDAO.
-            
          }
 
       } catch ( ConfigurationException e ) {
@@ -260,119 +264,170 @@ public class SMDManagerImpl implements SMDManager {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchPublications()
     */
    public Set fetchPublications() {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchPublications(edu.columbia.gemma.sequence.gene.Taxon)
     */
    public Set fetchPublications( Taxon species ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchNewPublications()
     */
    public Set fetchNewPublications() {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchNewPublications(edu.columbia.gemma.sequence.gene.Taxon)
     */
    public Set fetchNewPublications( Taxon species ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchPublication(int)
     */
    public BibliographicReference fetchPublication( int accessionNumber ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchExperiments()
     */
    public Set fetchExperiments() {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
     */
    public ExpressionExperiment fetchExperiment( ExpressionExperiment unfinishedExperiment ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchExperiments(edu.columbia.gemma.sequence.gene.Taxon)
     */
    public Set fetchExperiments( Taxon species ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchNewExperiments()
     */
    public Set fetchNewExperiments() {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchNewExperiments(edu.columbia.gemma.sequence.gene.Taxon)
     */
    public Set fetchNewExperiments( Taxon species ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchExperiment(int)
     */
    public ExpressionExperiment fetchExperiment( int accessionNumber ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchExperiment(edu.columbia.gemma.common.bqs.BibliographicReference)
     */
    public Set fetchExperiment( BibliographicReference publication ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchBioAssays(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
     */
    public Set fetchBioAssays( ExpressionExperiment experiment ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchBioAssay(int)
     */
    public BioAssay fetchBioAssay( int accessionNumber ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
     */
    public BioAssay fetchBioAssay( BioAssay unfinishedBioAssay ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchDataFiles(int)
     */
    public Set fetchDataFiles( int experimentAccessionNumber ) {
       // TODO Auto-generated method stub
       return null;
    }
-   /* (non-Javadoc)
+
+   /*
+    * (non-Javadoc)
+    * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchDataFile(int)
     */
    public LocalFile fetchDataFile( int bioAssayAccessionNumber ) {
