@@ -32,22 +32,22 @@ public class BioAssayServiceImpl
 {
 
     /**
-     * @see edu.columbia.gemma.expression.bioAssay.BioAssayService#saveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     * @see edu.columbia.gemma.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
      */
-    protected void handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
+    protected void handleSaveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
         throws java.lang.Exception
     {
-        //@todo implement protected void handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.expression.bioAssay.BioAssayService.handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay) Not implemented!");
+        //@todo implement protected void handleSaveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.expression.bioAssay.BioAssayService.handleSaveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay) Not implemented!");
     }
 
     /**
-     * @see edu.columbia.gemma.expression.bioAssay.BioAssayService#getBioAssays()
+     * @see edu.columbia.gemma.expression.bioAssay.BioAssayService#getAllBioAssays()
      */
-    protected java.util.List handleGetBioAssays()
+    protected java.util.Collection handleGetAllBioAssays()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetBioAssays()
+        //@todo implement protected java.util.Collection handleGetAllBioAssays()
         return null;
     }
 

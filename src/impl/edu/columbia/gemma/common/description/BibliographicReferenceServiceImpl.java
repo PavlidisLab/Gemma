@@ -32,23 +32,43 @@ public class BibliographicReferenceServiceImpl
 {
 
     /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getBibliographicReferences()
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
      */
-    protected java.util.List handleGetBibliographicReferences()
+    protected java.util.Collection handleGetAllBibliographicReferences()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetBibliographicReferences()
+        //@todo implement protected java.util.Collection handleGetAllBibliographicReferences()
         return null;
     }
 
     /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference)
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
      */
-    protected void handleSaveBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference BiobliographicReference)
+    protected void handleSaveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference BiobliographicReference)
         throws java.lang.Exception
     {
-        //@todo implement protected void handleSaveBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference BiobliographicReference)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.description.BibliographicReferenceService.handleSaveBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference BiobliographicReference) Not implemented!");
+        //@todo implement protected void handleSaveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference BiobliographicReference)
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.description.BibliographicReferenceService.handleSaveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference BiobliographicReference) Not implemented!");
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#findByExternalId(java.lang.String)
+     */
+    protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id)
+        throws java.lang.Exception
+    {
+        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id)
+        return null;
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#findByExternalId(java.lang.String, java.lang.String)
+     */
+    protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id, java.lang.String databaseName)
+        throws java.lang.Exception
+    {
+        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id, java.lang.String databaseName)
+        return null;
     }
 
 }
