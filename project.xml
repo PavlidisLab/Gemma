@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <pomVersion>3</pomVersion>
+  <artifactId>Gemma</artifactId>
+  <name>Gemma</name>
+  <groupId>Gemma</groupId>
+  <id>fear</id>
+  <currentVersion>1.0</currentVersion>
+  <organization>
+    <name>Columbia University</name>
+    <url>http://www.columbia.edu</url>
+  </organization>
+  <inceptionYear>2005</inceptionYear>
+  <url>http://microarray.cu-genome.org</url>
+  <siteAddress>microarray</siteAddress>
+  <siteDirectory>/proj/pavlidis/protected</siteDirectory>
+  <distributionSite>microarray</distributionSite>
+  <distributionDirectory>/proj/projectpages</distributionDirectory>
+  <repository>
+    <connection>scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:gemma</connection>
+  </repository>
+  <!--
+    <versions>
+        <version>
+            <id>2.0b3</id>
+            <name>beta3</name>
+        </version>
+    </versions>
+	-->
+  <developers>
+    <developer>
+      <name>Kiran Keshav</name>
+      <id>keshav</id>
+      <email>keshav@cu-genome.org</email>
+      <organization>Columbia University</organization>
+    </developer>
+    <developer>
+      <name>Paul Pavlidis</name>
+      <id>0</id>
+    </developer>
+    <developer>
+      <name>David Quigley</name>
+      <id>1</id>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>GPL</name>
+    </license>
+  </licenses>
+  <dependencies>
+    <dependency>
+      <groupId>hibernate</groupId>
+      <artifactId>hibernate</artifactId>
+      <version>2.1.8</version>
+      <type>jar</type>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>hessian</groupId>
+      <artifactId>hessian</artifactId>
+      <version>3.0.8</version>
+      <type>jar</type>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <!--
+     <dependency>
+            <groupId>xdoclet</groupId>
+            <artifactId>xdoclet</artifactId>
+            <version>1.2.1</version>
+            <type>jar</type>
+        </dependency>
+  
+    
+     <dependency>
+        <groupId>xdoclet</groupId>
+        <artifactId>xdoclet-hibernate-module</artifactId>
+        <version>1.2.2</version>
+        <type>jar</type>
+    </dependency>
+ -->
+    <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib-full</artifactId>
+      <version>2.0.2</version>
+      <jar>cglib-full-2.0.2.jar</jar>
+      <type>jar</type>
+      <properties>
+        <war.bundle>true</war.bundle>
+      </properties>
+    </dependency>
+    <dependency>
+      <groupId>xdoclet</groupId>
+      <artifactId>xjavadoc</artifactId>
+      <version>1.0.3</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>xdoclet</groupId>
+      <artifactId>maven-xdoclet-plugin</artifactId>
+      <version>1.2</version>
+      <type>plugin</type>
+    </dependency>
+  </dependencies>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>${basedir}/web/WEB-INF/classes</directory>
+        <includes>
+          <include>log4j.properties</include>
+          <include>messages.properties</include>
+        </includes>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+  </build>
+</project>
+

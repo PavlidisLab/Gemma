@@ -1,0 +1,20 @@
+<project xmlns:ant="jelly:ant"
+         xmlns:maven="jelly:maven">
+
+ <preGoal name="java:compile">
+    <mkdir dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
+    <attainGoal name="xdoclet:hibernatedoclet"/>
+  </preGoal>
+<preGoal name="java:jar-resources">
+    <echo message="${maven.build.dest}"/>
+    <copy todir="${maven.build.dest}">
+      <fileset dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
+    </copy>
+  </preGoal>
+<goal name="mda">
+		<maven:maven
+			descriptor="${basedir}/mda/project.xml"
+			goals="andromda:run"/>
+	</goal>	
+
+</project>
