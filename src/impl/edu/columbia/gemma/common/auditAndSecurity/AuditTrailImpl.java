@@ -42,7 +42,9 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getLast()
     */
    public edu.columbia.gemma.common.auditAndSecurity.AuditEvent getLast() {
+      
       assert this.getEvents() != null;
+      
       return ( AuditEvent ) this.getEvents().get( this.getEvents().size() - 1 );
    }
 
@@ -50,7 +52,9 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getCreationEvent()
     */
    public edu.columbia.gemma.common.auditAndSecurity.AuditEvent getCreationEvent() {
+      
       assert this.getEvents() != null;
+      
       return ( AuditEvent ) this.getEvents().get( 0 );
    }
 
@@ -65,11 +69,13 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start(java.lang.String)
     */
    public void start( java.lang.String note ) {
+      
       this.init(); // ensure that this is the first event.
       AuditEvent newEvent = AuditEvent.Factory.newInstance();
       newEvent.setAction( AuditAction.CREATE );
       newEvent.setDate( new Date() );
       if ( note != null ) newEvent.setNote( note );
+      
       this.addEvent( newEvent );
    }
 
