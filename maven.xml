@@ -79,7 +79,7 @@
 
 <goal name="mda-remove-logs" description="Clear out old Andromda log files">
 <ant:delete>
-<fileset dir="${basedir}" includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log" />
+<fileset dir="${basedir}" includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log, andromda-java.log" />
 </ant:delete>
 </goal>
 
