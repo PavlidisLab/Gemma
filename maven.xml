@@ -1,96 +1,131 @@
-<project xmlns:ant="jelly:ant"
-         xmlns:maven="jelly:maven"> 
+<project xmlns:ant="jelly:ant" xmlns:maven="jelly:maven"  >
+    
+    <!-- $Id$ -->
+    
+    <!-- ==================================================================
+               Compiles
+         ================================================================== -->
+    <preGoal name="java:compile">
+      	<attainGoal name="xdoclet:webdoclet"/>
+      	<attainGoal name="xdoclet:springdoclet"/>
+        <ant:path id="impl" location="${basedir}/src/impl"/>
+        <maven:addPath id="maven.compile.src.set" refid="impl"/>
+        <ant:path id="gen" location="${basedir}/src/gen"/>
+        <maven:addPath id="maven.compile.src.set" refid="gen"/>
+    </preGoal>
 
-
- 
-<goal name="dll" description="Create database">
-	<attainGoal name="hibernate:schema-export" />
-
-
-</goal>  
   
- <goal name="dll-test" description="Create test database">
- 	<!--  run the schema through "mysql gemdtest" todo, refactor -->
-	<ant:exec dir="${src}" executable="C:/mysql/bin/mysql" os="Windows XP" input="${basedir}/target/schema/Gemma-0.1-schema.sql">
-  <arg line="-upavlidis -ptoast -P3306 gemdtest" />   
-  </ant:exec>
- </goal> 
-  
-<postGoal name="site:generate">
-<attainGoal name="copydocs" />
-<attainGoal name="zipsite" />
-</postGoal>
-
-<goal name="copydocs" description="Copy javadocs and UML docs to the site directory">
-	<ant:copy todir="${basedir}/target/docs/apidocs">
-    	<fileset dir="${basedir}/docs/java/api" />
-  	</ant:copy>
-  	<ant:mkdir dir="${basedir}/target/docs/uml" />
-  	
-	<ant:copy todir="${basedir}/target/docs/uml">
-    	<fileset dir="${basedir}/docs/uml" />
-  	</ant:copy>
-</goal>
-
-<goal name="zipsite" description="Zip the web site">
-<ant:tar tarfile="${basedir}/target/site.tar" basedir="${basedir}/target/docs"/>
-  <ant:gzip zipfile="${basedir}/target/site.tar.gz" src="${basedir}/target/site.tar"/>
-</goal>
-
-
-<preGoal name="java:jar-resources">
-    <echo message="${maven.build.dest}"/>
-    <copy todir="${maven.build.dest}">
-      <fileset dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
-    </copy>
-</preGoal>
-
-<preGoal name="mda">
-	<attainGoal name="mda-clean" />
-	<attainGoal name="mda-remove-logs" />
-</preGoal>
-
-<goal name="mda" >
-		<maven:maven descriptor="${basedir}/mda/project.xml"
-			goals="andromda:run"/>
-</goal>	
-
-<goal name="test-mda" >
-		<maven:maven descriptor="${basedir}/mda/test/project.xml"
-			goals="andromda:run"/>
-</goal>	
-
-<preGoal name="test-mda">
-	<attainGoal name="mda-remove-logs" />
-</preGoal>
-
-<goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
-	 <ant:delete>
-	 	<fileset dir="${basedir}/src/gen/edu/columbia" includes="**/*.java,**/*.hbm.xml"  excludes="${basedir}/src/impl/**/*.java" />
-	 </ant:delete>
-</goal>
-
-
-<goal name="mda-pojo-impl-clean" description="Remove all Andromda-generated impl files" >
-	 <ant:delete>
-	 	<fileset dir="${basedir}/src/impl/edu/columbia/gemma" includes="**/*.java" excludes="**/*DaoImpl.java,**/*ServiceImpl.java,**/util/*,**/loader" />
-	 </ant:delete>
-</goal>
-
-<goal name="mda-remove-logs" description="Clear out old Andromda log files">
-<ant:delete>
-<fileset dir="${basedir}" includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log, andromda-java.log" />
-</ant:delete>
-</goal>
-
-<goal name="hib-console" description="Run the hibernate console">
-     <ant:java classname="Ide"
-          fork="true">
-      <!--<classpath refid="classpath.ide" /> -->
-      <arg value="${basedir}/web/WEB-INF/classes" />
-<!--      <sysproperty key="log4j.configuration" value="${LOG4J_OUT}" /> -->
-    </ant:java>
-</goal>
-
-
+    
+  <!-- ==================================================================
+           Build and export the database schema
+     ================================================================== -->
+    <goal name="dll" description="Create database">
+        <attainGoal name="hibernate:schema-export" />
+    </goal>
+    
+    
+     <!-- ==================================================================
+           Build and export the test database schema
+     ================================================================== -->
+    <goal name="dll-test" description="Create test database">
+        <!--  run the schema through "mysql gemdtest" todo, refactor -->
+        <ant:exec dir="${src}" executable="C:/mysql/bin/mysql" os="Windows XP" 
+            input="${basedir}/target/schema/Gemma-0.1-schema.sql">
+            <arg line="-upavlidis -ptoast -P3306 gemdtest" />
+        </ant:exec>
+    </goal>
+    
+    <!-- ==================================================================
+         Postgoals for website setup.
+     ================================================================== -->
+    <postGoal name="site:generate">
+        <attainGoal name="copydocs" />
+        <attainGoal name="zipsite" />
+    </postGoal>
+    
+     <!-- ==================================================================
+         Supporting goals
+     ================================================================== -->
+    <goal name="copydocs" 
+        description="Copy javadocs and UML docs to the site directory">
+        <ant:copy todir="${basedir}/target/docs/apidocs">
+            <fileset dir="${basedir}/docs/java/api" />
+        </ant:copy>
+        <ant:mkdir dir="${basedir}/target/docs/uml" />
+        <ant:copy todir="${basedir}/target/docs/uml">
+            <fileset dir="${basedir}/docs/uml" />
+        </ant:copy>
+    </goal>
+    
+    <goal name="zipsite" description="Zip the web site">
+        <ant:tar tarfile="${basedir}/target/site.tar" 
+            basedir="${basedir}/target/docs"/>
+        <ant:gzip zipfile="${basedir}/target/site.tar.gz" 
+            src="${basedir}/target/site.tar"/>
+    </goal>
+    
+   
+     <!-- ==================================================================
+         Run andromda
+     ================================================================== -->
+     <goal name="mda" >
+        <maven:maven descriptor="${basedir}/mda/project.xml" 
+            goals="andromda:run"/>
+    </goal>
+    <preGoal name="mda">
+        <attainGoal name="mda-clean" />
+        <attainGoal name="mda-remove-logs" />
+    </preGoal>
+    
+   
+    
+     <!-- ==================================================================
+          Run andromda on test models (used for debugging Andromda)
+     ================================================================== -->
+    <goal name="test-mda" >
+        <maven:maven descriptor="${basedir}/mda/test/project.xml" 
+            goals="andromda:run"/>
+    </goal>
+    <preGoal name="test-mda">
+        <attainGoal name="mda-remove-logs" />
+    </preGoal>
+    
+     <!-- ==================================================================
+         Remove all Andromda-generated files (except permanent impl classes)
+     ================================================================== -->
+    <goal name="mda-clean" 
+        description="Remove all Andromda-generated files (except permanent impl classes)" 
+        >
+        <ant:delete>
+            <fileset dir="${basedir}/src/gen/edu/columbia" 
+                includes="**/*.java,**/*.hbm.xml" 
+                excludes="${basedir}/src/impl/**/*.java" />
+        </ant:delete>
+    </goal>
+    
+     <!-- ==================================================================
+         Remove all Andromda-generated impl files
+     ================================================================== -->
+    <goal name="mda-pojo-impl-clean" 
+        description="Remove all Andromda-generated impl files" >
+        <ant:delete>
+            <fileset dir="${basedir}/src/impl/edu/columbia/gemma" 
+                includes="**/*.java" 
+                excludes="**/*DaoImpl.java,**/*ServiceImpl.java,**/util/*,**/loader" 
+                />
+        </ant:delete>
+    </goal>
+    
+     <!-- ==================================================================
+         Remove the log files generated by Andromda
+     ================================================================== -->
+    <goal name="mda-remove-logs" description="Clear out old Andromda log files">
+        <ant:delete>
+            <fileset dir="${basedir}" 
+                includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log, andromda-java.log" 
+                />
+        </ant:delete>
+    </goal>
+    
+     
 </project>
