@@ -73,9 +73,11 @@ import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.FactorValue;
+import edu.columbia.gemma.loader.loaderutils.IdentifierCreator;
 import edu.columbia.gemma.sequence.biosequence.PolymerType;
 import edu.columbia.gemma.sequence.biosequence.SequenceType;
 import edu.columbia.gemma.sequence.gene.Taxon;
+import edu.columbia.gemma.sequence.gene.TaxonDao;
 import edu.columbia.gemma.util.PrettyPrinter;
 import edu.columbia.gemma.util.ReflectionUtil;
 
@@ -124,7 +126,8 @@ public class MageMLConverter {
      */
     public Map identifiableCache;
 
-    private IdentifiableDao persistenceManager;
+    private IdentifiableDao identifiableDao;
+    private TaxonDao taxonDao;
 
     /**
      * 
@@ -141,7 +144,7 @@ public class MageMLConverter {
      * @return
      */
     public Object convert( Object mageObj ) {
-        assert persistenceManager != null;
+        assert identifiableDao != null;
         return findAndInvokeConverter( mageObj );
     }
 
@@ -1079,9 +1082,8 @@ public class MageMLConverter {
             return true;
         }
 
-        Identifiable k = null;
-        if ( ( k = isPersistent( gemmaObj ) ) != null ) {
-            // see if it exists in the database
+        Identifiable k = fetchExistingIdentifiable( IdentifierCreator.create( gemmaObj ) );
+        if ( k != null ) {
             gemmaObj = k;
             log.debug( "Object is already persistent: " + gemmaObj.getIdentifier() );
         } else {
@@ -1097,6 +1099,7 @@ public class MageMLConverter {
 
     }
 
+   
     /**
      * @param kindCV
      * @return
@@ -1744,20 +1747,19 @@ public class MageMLConverter {
     }
 
     /**
-     * This is a special case for an OntologyEntry that doesn't map to one in Gemma.
+     * This is a special case for an OntologyEntry that doesn't map to one in Gemma. Unfortunately, a 'species' in Mage
+     * doesn't necessarily include the taxon id or anything else that can be used to unequivocally identify the
+     * organism. Therefore we require that taxa match ones already in the data store.
      * 
      * @param species
-     * @return
+     * @return Taxon
      */
     public Taxon convertSpecies( OntologyEntry species ) {
-        Taxon result = Taxon.Factory.newInstance();
 
         log.debug( "Converting Species from  " + species.getValue() );
 
-        result.setCommonName( species.getValue() );
-
-        // FIXME - this should be written to ensure that the result agrees with what is already in the database.
-        return result;
+        return fetchExistingTaxonByCommonName( species.getValue() );
+        // FIXME there must be a better way.
     }
 
     /**
@@ -1882,8 +1884,8 @@ public class MageMLConverter {
      * 
      *
      */
-    public void setPersistenceManager( IdentifiableDao persistenceManager ) {
-        this.persistenceManager = persistenceManager;
+    public void setIdentifiableDao( IdentifiableDao persistenceManager ) {
+        this.identifiableDao = persistenceManager;
     }
 
     /**
@@ -2023,6 +2025,24 @@ public class MageMLConverter {
         } catch ( InvocationTargetException e ) {
             log.error( "InvocationTargetException For: " + gemmaObjName, e );
         }
+    }
+
+    /**
+     * @param gemmaObj
+     * @return
+     */
+    private Identifiable fetchExistingIdentifiable( String identifier ) {
+        if ( identifiableDao != null ) return this.identifiableDao.findByIdentifier( identifier );
+        return null;
+    }
+
+    /**
+     * @param result
+     * @return
+     */
+    private Taxon fetchExistingTaxonByCommonName( String commonName ) {
+        if ( taxonDao != null ) return taxonDao.findByCommonName( commonName );
+        return null;
     }
 
     /**
@@ -2220,15 +2240,6 @@ public class MageMLConverter {
      */
     private boolean isInCache( edu.columbia.gemma.common.Identifiable gemmaObj ) {
         return identifiableCache.containsKey( gemmaObj.getIdentifier() );
-    }
-
-    /**
-     * @param gemmaObj
-     * @return
-     */
-    private Identifiable isPersistent( Identifiable gemmaObj ) {
-        // return this.persistenceManager.findByIdentifier( gemmaObj.getIdentifier() );
-        return null;
     }
 
     /**
