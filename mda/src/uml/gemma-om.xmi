@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 08 11:41:13 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 08 12:26:19 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -2557,11 +2557,11 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                 </UML:Attribute>
                               </UML:Classifier.feature>
                             </UML:Class>
-                            <UML:Association xmi.id = 'Im8f64ed4m101a5582751mm7126' name = 'DesignElementMap'
+                            <UML:Association xmi.id = 'Im8f64ed4m101a5582751mm7126' name = 'CompositeReporterMap'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Im8f64ed4m101a5582751mm712c' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'aggregate'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Ia948c2m101cef0df55mm4ab8'>
@@ -2576,7 +2576,7 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                                 <UML:AssociationEnd xmi.id = 'Im8f64ed4m101a5582751mm7129' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Im8f64ed4m101a5582751mm70f2'>
@@ -2833,7 +2833,7 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                                 <UML:AssociationEnd xmi.id = 'Im8f64ed4m101a5582751mm71c1' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Im8f64ed4m101a5582751mm719b'>
@@ -13420,7 +13420,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                                 <UML:AssociationEnd xmi.id = 'Im8f64ed4m101a5582751mm71ec' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Im8f64ed4m101a5582751mm71c6'>
