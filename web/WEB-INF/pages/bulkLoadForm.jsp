@@ -7,19 +7,51 @@
 <body bgcolor="#ffffff">
 <%--<img src="bigicon.gif" width="88" height="97"> <br>--%>
 <h1><fmt:message key="bulkLoad.heading"/></h1>
+<SCRIPT TYPE="text/javascript">
+function dropdown(mySel)
+{
+var myWin, myVal;
+myVal = mySel.options[mySel.selectedIndex].value;
+if(myVal)
+ {
+ if(mySel.form.target)myWin = parent[mySel.form.target];
+ else myWin = window;
+ if (! myWin) return true;
+ myWin.location = myVal;
+ }
+return false;
+}
+</SCRIPT>
+
 <form method="post">
 <form name="form1" method="post" action="">
+<SELECT NAME="typeOfLoader">
+<OPTION VALUE="">Choose objects to load ...
+<OPTION VALUE="geneLoaderService">Genes
+<OPTION VALUE="taxonLoaderService">Taxons
+<OPTION VALUE="chromosomeLoaderService">Chromosomes
+</SELECT>
+
+<input type=checkbox name="hasHeader" value=true>File Has Header<br>
+
+<%--
       <td alignment="right" width="31%"><strong>Filename:</strong></td>
       <spring:bind path="fileName.fileName">
         <td width="38%">
-          <input name="fileName" type="text" value="<c:out value="${status.value}"/>
-          ">
+          <input name="fileName" type="text" value="<c:out value="${status.value}"/>">
         </td>
-        <td width="31%">
+        <td width="60%">
           <font color="red"><c:out value="${status.errorMessage}"/></font>
         </td>
       </spring:bind>
+--%>      
 <br></br>
+<%--
+<spring:hasBindErrors name="fileName">
+    <b>Please fix all errors!</b>
+</spring:hasBindErrors>
+--%>
+<br>
 <input type="submit" alignment="center" value="Submit">       
 </form>
 
