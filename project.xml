@@ -300,7 +300,7 @@
         <filtering>false</filtering>
       </resource>
       <resource>
-        <directory>${basedir}/../metadata/webproperties</directory>
+        <directory>${basedir}/metadata/webproperties</directory>
         <includes>
           <include>**/*.properties</include>
         </includes>
