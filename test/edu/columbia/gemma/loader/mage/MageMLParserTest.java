@@ -192,23 +192,26 @@ public class MageMLParserTest extends TestCase {
     }
 
     public void testMoreTests() throws Exception {
-        log.debug( "converting all: Dingledine" );
-        mlp.parse( istDingledine );
-        Collection result = mlp.getConvertedData();
-        log.debug( result.size() + " elements obtained" );
-        log.debug( "\n" + PrettyPrinter.print( result ) );
+
+        Collection result = null;
+
+         log.debug( "converting all: Dingledine" );
+         mlp.parse( istDingledine );
+         result = mlp.getConvertedData();
+         log.debug( result.size() + " elements obtained" );
+  //       log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Example Biomaterial" );
         mlp.parse( istExampleBioMaterial );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-        log.debug( "\n" + PrettyPrinter.print( result ) );
-        
-        log.debug( "converting all: Hemochromatosis" );
-        mlp.parse( istHematochromatosis );
-        result = mlp.getConvertedData();
-        log.debug( result.size() + " elements obtained" );
-        log.debug( "\n" + PrettyPrinter.print( result ) );
+  //      log.debug( "\n" + PrettyPrinter.print( result ) );
+
+         log.debug( "converting all: Hemochromatosis" );
+         mlp.parse( istHematochromatosis );
+         result = mlp.getConvertedData();
+         log.debug( result.size() + " elements obtained" );
+ //        log.debug( "\n" + PrettyPrinter.print( result ) );
 
     }
 

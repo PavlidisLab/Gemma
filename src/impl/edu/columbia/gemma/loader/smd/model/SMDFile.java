@@ -23,7 +23,7 @@ public class SMDFile {
         LocalFile f = new LocalFileImpl();
 
         f.setSize( ( int ) this.size );
-        f.setFileFormat( form );
+        f.setFormat( form );
         return f;
     }
 
