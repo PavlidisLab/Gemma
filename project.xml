@@ -74,6 +74,119 @@
       <type>jar</type>
     </dependency>
     <dependency>
+      <groupId>jmock</groupId>
+      <artifactId>jmock</artifactId>
+      <version>1.0.1</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.8</version>
+      <jar>log4j-1.2.8.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>aopalliance</groupId>
+      <artifactId>aopalliance</artifactId>
+      <jar>aopalliance.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <!--
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>1.5.3</version>
+      <jar>asm-1.5.3.jar</jar>
+      <type>jar</type>
+    </dependency>-->
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.7.0</version>
+      <jar>commons-beanutils-1.7.0.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
+      <version>1.0</version>
+      <jar>commons-configuration-1.0.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.0</version>
+      <jar>commons-lang-2.0.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.0.4</version>
+      <jar>commons-logging-1.0.4.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>commons-net</groupId>
+      <artifactId>commons-net</artifactId>
+      <version>1.1.0</version>
+      <jar>commons-net-1.1.0.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>dom4j</groupId>
+      <artifactId>dom4j</artifactId>
+      <version>1.4</version>
+      <jar>dom4j-1.4.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>ehcache</groupId>
+      <artifactId>ehcache</artifactId>
+      <version>0.9</version>
+      <jar>ehcache-0.9.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jstl</groupId>
+      <artifactId>jstl</artifactId>
+      <jar>jstl.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>jta</groupId>
+      <artifactId>jta</artifactId>
+      <jar>jta.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>odmg</groupId>
+      <artifactId>odmg</artifactId>
+      <version>3.0</version>
+      <jar>odmg-3.0.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>servlet</groupId>
+      <artifactId>servlet</artifactId>
+      <jar>servlet.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring</artifactId>
+      <jar>spring.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>standard</groupId>
+      <artifactId>standard</artifactId>
+      <jar>standard.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib-full</artifactId>
       <version>2.0.2</version>
@@ -96,16 +209,42 @@
       <type>plugin</type>
     </dependency>
     <dependency>
-      <groupId>jmock</groupId>
-      <artifactId>jmock</artifactId>
-      <version>1.0.1</version>
+      <groupId>cglib</groupId>
+      <artifactId>cglib-full</artifactId>
+      <version>2.0.2</version>
+      <jar>cglib-full-2.0.2.jar</jar>
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.8</version>
-      <jar>log4j-1.2.8.jar</jar>
+      <groupId>hibernate</groupId>
+      <artifactId>hibernate2</artifactId>
+      <jar>hibernate2.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>xmlapis</groupId>
+      <artifactId>xml-apis</artifactId>
+      <jar>xml-apis.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <jar>junit-3.8.1.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <jar>mysql-connector-java-3.1.6-bin.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+      <jar>colt-1.2.0.jar</jar>
       <type>jar</type>
     </dependency>
   </dependencies>
