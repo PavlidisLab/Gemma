@@ -32,7 +32,6 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
     private MockControl control;
     BufferedReader br;
     Configuration conf;
-    /* Refactored */
     File file;
     TaxonDao taxonDao;
     TaxonLoaderService tls;
