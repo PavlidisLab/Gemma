@@ -58,7 +58,7 @@ public class IdentifierCreator {
 
             if ( ctx == null ) return candidateIdentifier; // no way to check.
 
-            checkForDuplicate( gemmaObj, ctx, candidateIdentifier.toString() );
+        //    checkForDuplicate( gemmaObj, ctx, candidateIdentifier.toString() );
 
             return candidateIdentifier.toString();
 
