@@ -21,7 +21,6 @@
 package edu.columbia.gemma.common;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * @see edu.columbia.gemma.common.Identifiable
@@ -40,6 +39,8 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable imp
     }
 
     /**
+     * Warning! Subclasses can and should override this to provide finer-grained equality tests.
+     * 
      * @see java.lang.Object#equals(Object)
      */
     public boolean equals( Object object ) {
@@ -51,6 +52,8 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable imp
     }
 
     /**
+     * Warning! Subclasses must overrride this if they override equals()
+     * 
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
@@ -61,11 +64,15 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable imp
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return new ToStringBuilder( this ).append( "name", this.getName() ).append( "identifier", this.getIdentifier() )
-                .toString();
+        return "Class: " + this.getClass().getName() + " Name: " + this.getName() + " Identifier: "
+                + this.getIdentifier();
     }
 
+    // .substring( this.getClass().getName().lastIndexOf( '.' + 1 ))
+
     /**
+     * Warning! Subclasses must overrride this if they override equals()
+     * 
      * @see java.lang.Comparable#compareTo(Object)
      */
     public int compareTo( Object object ) {
