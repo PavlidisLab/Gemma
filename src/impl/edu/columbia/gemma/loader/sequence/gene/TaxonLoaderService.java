@@ -13,6 +13,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 import edu.columbia.gemma.sequence.gene.Taxon;
 import edu.columbia.gemma.sequence.gene.TaxonDao;
 
@@ -24,7 +26,7 @@ import edu.columbia.gemma.sequence.gene.TaxonDao;
  * @author keshav
  * @version $Id$
  */
-public class TaxonLoaderService implements TaxonLoaderServiceInterface{
+public class TaxonLoaderService implements BulkCreator{
     protected static final Log log = LogFactory.getLog( TaxonLoaderService.class );
     private int abbreviationCol;
     private int commonNameCol;
