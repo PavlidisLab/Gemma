@@ -10,6 +10,7 @@ src/db/model/*.xml
 src/gen
 service/edu
 web/WEB-INF/classes
+web/WEB-INF/lib
 target
 .tomcatplugin
 hibernate*.exc
