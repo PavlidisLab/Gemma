@@ -5,6 +5,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.view.AbstractView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
@@ -24,7 +25,7 @@ public class LoaderControllerTest extends BaseControllerTestCase {
     private LoaderController c;
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
-    private View returnedView;
+    private AbstractView returnedView;
 
     public void setUp() throws Exception {
         c = ( LoaderController ) ctx.getBean( "loaderController" );
@@ -48,8 +49,7 @@ public class LoaderControllerTest extends BaseControllerTestCase {
         request.addParameter( "hasHeader", "true" );
         request.addParameter( "typeOfLoader", "taxonLoaderService" );
         ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
-        assertEquals( returnedView.toString(), mav.getView().toString() );
-
+        assertEquals( returnedView.getBeanName() , mav.getViewName()  );
     }
 
     /**
