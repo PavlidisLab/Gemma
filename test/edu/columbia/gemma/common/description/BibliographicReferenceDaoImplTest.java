@@ -13,7 +13,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.genome.Qtl;
 
 /**
  * <hr>
