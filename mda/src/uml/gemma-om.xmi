@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Mar 10 17:06:29 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Mar 10 22:17:50 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -13649,15 +13649,16 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf12'/>
                               </UML:ModelElement.stereotype>
                               <UML:Classifier.feature>
-                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2c3e' name = 'AffyTarget'
+                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2c3e' name = 'AFFY_TARGET'
                                   visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2c2d' name = 'AffyProbe' visibility = 'private'
-                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2c2d' name = 'AFFY_PROBE'
+                                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
@@ -13674,7 +13675,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2bfa' name = 'RefSeq' visibility = 'private'
+                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2bfa' name = 'REFSEQ' visibility = 'private'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
@@ -13686,16 +13687,28 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2bd8' name = 'WholeGenome'
+                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2bd8' name = 'WHOLE_GENOME'
                                   visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2bc7' name = 'WholeChromosome'
+                                <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2bc7' name = 'WHOLE_CHROMOSOME'
                                   visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I18a178am1028f68bc4bmmd59' name = 'DNA' visibility = 'private'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I18a178am1028f68bc4bmmd48' name = 'OTHER' visibility = 'private'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
@@ -14883,7 +14896,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm727' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from GenomicRoiImpl qtl where qtl.end-qtl.start &gt; ?</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from GenomicRoiImpl qtl where qtl.start &lt; ? &lt; qtl.end</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
