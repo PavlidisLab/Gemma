@@ -11,6 +11,7 @@ src/gen
 service/edu
 web/WEB-INF/classes
 web/WEB-INF/lib
+web/WEB-INF/applicationContext.xml
 target
 .tomcatplugin
 hibernate*.exc
