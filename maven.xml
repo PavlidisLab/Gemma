@@ -17,6 +17,8 @@
         <maven:addPath id="maven.compile.src.set" refid="impl"/>
         <ant:path id="gen" location="${basedir}/src/gen"/>
         <maven:addPath id="maven.compile.src.set" refid="gen"/>
+        <ant:path id="web" location="${basedir}/src/web"/>
+        <maven:addPath id="maven.compile.src.set" refid="web"/>
     </preGoal>
     
     <postGoal name="java:compile">
