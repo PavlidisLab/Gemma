@@ -53,7 +53,7 @@ public class MageMLParser {
         try {
             parser = XMLReaderFactory.createXMLReader( "org.apache.xerces.parsers.SAXParser" );
         } catch ( SAXException e ) {
-            log.error( e );
+            log.error( e, e );
         }
 
         cHandler = new MAGEContentHandler();
@@ -97,7 +97,7 @@ public class MageMLParser {
                 try {
                     c = Class.forName( name + "." + mageClasses[j] );
                     Collection d = getConvertedData( c );
-                    if ( d != null ) {
+                    if ( d != null && d.size() > 0 ) {
                         log.info( "Adding " + d.size() + " converted " + name + "." + mageClasses[j] + "s" );
                         result.addAll( d );
                     }
@@ -156,13 +156,13 @@ public class MageMLParser {
             return ( Collection ) result;
 
         } catch ( SecurityException e ) {
-            log.error( e );
+            log.error( e, e );
         } catch ( IllegalArgumentException e ) {
-            log.error( e );
+            log.error( e, e );
         } catch ( IllegalAccessException e ) {
-            log.error( e );
+            log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            log.error( e );
+            log.error( e, e );
         }
         return null;
     }
