@@ -72,7 +72,7 @@
     
     <postGoal name="site:generate">
         <attainGoal name="copydocs" />
-        <attainGoal name="zipsite" />
+      <!--  <attainGoal name="zipsite" /> -->
     </postGoal>
     
      <!-- ==================================================================
