@@ -44,8 +44,13 @@
       	</ant:copy>
 	</goal>
 	
-	<goal name="cc-build" description="Special task for cruise control" prereqs="site:generate" />
-  
+	<goal name="cc-build" description="Special task for cruise control">      
+		<attainGoal name="mda-clean" />
+ 	  	<attainGoal name="mda-impl-clean" />
+   		<attainGoal name="scm:cvs-update-project" />
+     	<attainGoal name="site:generate" />
+	</goal>
+	  
     
   <!-- ==================================================================
            Build and export the database schema
@@ -149,12 +154,12 @@
      <!-- ==================================================================
          Remove all Andromda-generated impl files
      ================================================================== -->
-    <goal name="mda-pojo-impl-clean" 
+    <goal name="mda-impl-clean" 
         description="Remove all Andromda-generated impl files" >
         <ant:delete quiet="false" failonerror="false">
             <fileset dir="${basedir}/src/impl/edu/columbia/gemma" 
-                includes="**/*.java" 
-                excludes="**/*DaoImpl.java,**/*ServiceImpl.java,**/util/*,**/loader" 
+                includes="**/*Impl.java" 
+                excludes="**/util/*,**/loader/*,**/tools/*" 
                 />
         </ant:delete>
     </goal>

@@ -20,7 +20,7 @@
   <distributionSite>microarray</distributionSite>
   <distributionDirectory>/proj/projectpages</distributionDirectory>
   <repository>
-    <connection>scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:gemma</connection>
+    <connection>scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:Gemma</connection>
   </repository>
   <developers>
     <developer>
