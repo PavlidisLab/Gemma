@@ -7,7 +7,7 @@
          ================================================================== -->
     <preGoal name="java:compile">
     	<ant:delete quiet="false" failonerror="false" >
-	    	<fileset dir="${maven.build.dest}" includes="*.class,*.hbm.xml" />
+	    	<fileset dir="${maven.build.dest}" includes="**/*.class,**/*.hbm.xml" />
     	</ant:delete>
     	<attainGoal name="mda" /> 
         <ant:path id="impl" location="${basedir}/src/impl"/>
