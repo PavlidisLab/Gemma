@@ -46,7 +46,6 @@
 #foreach($entity in $entities)
 #set($generalization = $entity.generalization)
 #set($genstrat = $generalization.hibernateInheritanceStrategy)
-## <!-- ${entity.entityName} root:$entity.isRootInheritanceEntity() inheritance strategy:$entity.hibernateInheritanceStrategy superclass:$generalization ($genstrat)-->
 #if ( $entity.isRootInheritanceEntity() && $entity.hibernateInheritanceStrategy != "concrete" && $entity.hibernateInheritanceStrategy != "interface"  && $genstrat != "subclass" && $genstrat != "class")
                 <value>${entity.packagePath}/${entity.entityName}.hbm.xml</value>
 #end
