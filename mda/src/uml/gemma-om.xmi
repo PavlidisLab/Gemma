@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 11 08:30:07 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 11 09:50:27 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -2371,6 +2371,39 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                   </UML:AssociationEnd.multiplicity>
                                   <UML:AssociationEnd.participant>
                                     <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e25'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                              </UML:Association.connection>
+                            </UML:Association>
+                            <UML:Association xmi.id = 'I38ddccm102920aed20mmd20' name = 'Provider' isSpecification = 'false'
+                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:Association.connection>
+                                <UML:AssociationEnd xmi.id = 'I38ddccm102920aed20mmd26' visibility = 'public'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I38ddccm102920aed20mmd03'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I38ddccm102920aed20mmd02' lower = '0' upper = '-1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e25'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                                <UML:AssociationEnd xmi.id = 'I38ddccm102920aed20mmd23' visibility = 'public'
+                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+                                  targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I38ddccm102920aed20mmd01'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I38ddccm102920aed20mmd00' lower = '0' upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'I2863e477m101683735a4mm73f8'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
@@ -13708,6 +13741,12 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'I18a178am1028f68bc4bmmd48' name = 'OTHER' visibility = 'private'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I38ddccm102920aed20mmd37' name = 'ORF' visibility = 'private'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
