@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Mar 10 22:17:50 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 11 08:30:07 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -14896,7 +14896,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm727' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from GenomicRoiImpl qtl where qtl.start &lt; ? &lt; qtl.end</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from GenomicRoiImpl qtl where (qtl.end-qtl.start) &gt; abs(qtl.end-?)</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
