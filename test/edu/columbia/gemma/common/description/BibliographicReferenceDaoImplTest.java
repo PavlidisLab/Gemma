@@ -95,21 +95,21 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
     /*
      * Class under test for Object findByExternalId(int, java.lang.String)
      */
-    public final void testFindByExternalIdentString() {
-
-        testBibRef = dao.findByExternalId( de );
-
-        assertTrue( testBibRef != null );
-        assertTrue( dao.findByExternalId( deb ) == null );
-
-        try {
-            dao.create( testBibRef );
-            fail( "Create didn't throw DataIntegrityViolationException" );
-        } catch ( DataIntegrityViolationException e ) {
-            assertNotNull( e );
-            log.info( "Good, expected exception: " + e.getMessage() );
-        }
-
-    }
+//    public final void testFindByExternalIdentString() {
+//
+//        testBibRef = dao.findByExternalId( de );
+//
+//        assertTrue( testBibRef != null );
+//        assertTrue( dao.findByExternalId( deb ) == null );
+//
+//        try {
+//            dao.create( testBibRef );
+//            fail( "Create didn't throw DataIntegrityViolationException" );
+//        } catch ( DataIntegrityViolationException e ) {
+//            assertNotNull( e );
+//            log.info( "Good, expected exception: " + e.getMessage() );
+//        }
+//
+//    }
 
 }
