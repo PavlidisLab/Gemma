@@ -9,6 +9,8 @@ import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
 import edu.columbia.gemma.loader.loaderutils.IdentifierCreatorTest;
+import edu.columbia.gemma.loader.mage.MageMLConverterTest;
+import edu.columbia.gemma.loader.mage.MageMLParserTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 
@@ -17,8 +19,6 @@ public class AllTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
-
-        // $JUnit-END$
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );
@@ -31,6 +31,11 @@ public class AllTests {
         
         suite.addTestSuite(PubMedXMLFetcherTest.class);
         suite.addTestSuite(PubMedXMLParserTest.class);
+        
+        suite.addTestSuite(MageMLConverterTest.class);
+        suite.addTestSuite(MageMLParserTest.class);
+        // $JUnit-END$
+        
         return suite;
     }
 }
