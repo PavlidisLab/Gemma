@@ -16,6 +16,7 @@ import org.easymock.MockControl;
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.loader.genome.TaxonLoaderService;
+import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.TaxonImpl;
@@ -35,7 +36,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
     File file;
     TaxonDao taxonDaoMock;
     TaxonLoaderService tls;
-    InputStream isTaxonLoader;
+    InputStream testStream;
     
     /**
      * @see TestCase#setUp()
@@ -44,7 +45,8 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         conf = new PropertiesConfiguration( "testtaxa.properties" );
-        file = new File( conf.getString( "testtaxa.filename" ) );
+        //file = new File( conf.getString( "testtaxa.filename" ) );
+        testStream = TaxonLoaderServiceTest.class.getResourceAsStream( conf.getString( "testtaxa.data.filename" )  ) ;
         tls = new TaxonLoaderService();
         control = MockControl.createControl( TaxonDao.class );
         taxonDaoMock = ( TaxonDao ) control.getMock();
@@ -60,64 +62,32 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
         tls = null;
         br.close();
     }
-
-    /**
-     * Tests bulkCreate(String filename, boolean) behaviour = findByScientificName(String)
-     * 
-     * @throws IOException
-     */
-    public void testBulkCreatefilenameboolean() throws IOException {
-        Collection col = new HashSet();
-        control.reset();
-        for ( int i = 0; i < 4; i++ ) {
-            Taxon tt = new TaxonImpl();
-            //String id = ( new Date() ).toString();
-            //tt.setIdentifier( id );
-            //tt.setName( "FooBar" + i );
-            col.add( tt );
-        }
-        br = new BufferedReader( new InputStreamReader( new FileInputStream( file ) ) );
-        String line;
-        br.readLine();
-        while ( ( line = br.readLine() ) != null ) {
-            String sArray[] = line.split( "\t" );
-            taxonDaoMock.findByScientificName( sArray[2] );
-            control.setReturnValue( col );
-        }
-        control.replay();
-        tls.bulkCreate( conf.getString( "testtaxa.filename" ), true );
-        control.verify();
-    }
-
   
-    /*
-     * TODO This test works ... sometimes.  
-     */
+    
     /**
      * Tests bulkCreate(String filename, boolean) behaviour = findByScientificName(String) behaviour = create(Taxon)
      * 
      * @throws IOException
      */
-//    public void testBulkCreatefilenamebooleanCreate() throws IOException {
-//        Collection col = new HashSet();
-//        control.reset();
-//        br = new BufferedReader( new InputStreamReader( new FileInputStream( file ) ) );
-//        String line;
-//        br.readLine();
-//        while ( ( line = br.readLine() ) != null ) {
-//            String sArray[] = line.split( "\t" );
-//            Taxon tt = Taxon.Factory.newInstance();
-//            tt.setIdentifier("taxon::"+sArray[0]);
-//            tt.setName(sArray[1]);
-//            taxonDaoMock.findByScientificName( sArray[2] );
-//            control.setReturnValue( col );
-//            taxonDaoMock.create( tt );
-//            control.setReturnValue( null );
-//        }
-//        control.replay();
-//        tls.bulkCreate( conf.getString( "testtaxa.filename" ), true );
-//        control.verify();
-//    }
+    public void testBulkCreatefilenamebooleanCreate() throws IOException {
+        Collection col = new HashSet();
+        //br = new BufferedReader( new InputStreamReader( new FileInputStream( file ) ) );
+        br = new BufferedReader( new InputStreamReader( testStream) );
+        String line;
+        br.readLine();
+        while ( ( line = br.readLine() ) != null ) {
+            String sArray[] = line.split( "\t" );
+            Taxon tt = Taxon.Factory.newInstance();
+            taxonDaoMock.findByScientificName( sArray[2] );
+            control.setReturnValue( col );
+            taxonDaoMock.create( tt );
+            control.setReturnValue( null );
+        }
+        control.reset();
+        control.replay();
+        tls.bulkCreate( testStream, true );
+        control.verify();
+    }
 
     /**
      * Tests bulkCreate(InputStream, boolean) behaviour = findByScientificName(String)
@@ -126,15 +96,12 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
      */
     public void testBulkCreateInputStreamboolean() throws IOException {
         Collection col = new HashSet();
-        control.reset();
         for ( int i = 0; i < 4; i++ ) {
             Taxon tt = Taxon.Factory.newInstance();
-            //String id = ( new Date() ).toString();
-            //tt.setIdentifier( id );
-            //tt.setName( "FooBar" + i );
             col.add( tt );
         }
-        br = new BufferedReader( new InputStreamReader( new FileInputStream( file ) ) );
+        //br = new BufferedReader( new InputStreamReader( new FileInputStream( file ) ) );
+        br = new BufferedReader( new InputStreamReader( testStream) );
         String line;
         br.readLine();
         while ( ( line = br.readLine() ) != null ) {
@@ -142,8 +109,9 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
             taxonDaoMock.findByScientificName( sArray[2] );
             control.setReturnValue( col );
         }
+        control.reset();
         control.replay();
-        tls.bulkCreate( new FileInputStream( file ), true );
+        tls.bulkCreate( testStream, true );
         control.verify();
     }
 }
