@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Date;
@@ -35,6 +36,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
     File file;
     TaxonDao taxonDao;
     TaxonLoaderService tls;
+    InputStream isTaxonLoader;
     
     /**
      * @see TestCase#setUp()
@@ -93,7 +95,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
      * @throws IOException
      */
     public void testBulkCreatefilenamebooleanCreate() throws IOException {
-        Taxon tt = new TaxonImpl();
+        Taxon tt = Taxon.Factory.newInstance();
         String id = ( new Date() ).toString();
         tt.setIdentifier( id );
         tt.setName( "FooBar" );
@@ -123,7 +125,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
         Collection col = new HashSet();
         control.reset();
         for ( int i = 0; i < 4; i++ ) {
-            Taxon tt = new TaxonImpl();
+            Taxon tt = Taxon.Factory.newInstance();
             String id = ( new Date() ).toString();
             tt.setIdentifier( id );
             tt.setName( "FooBar" + i );
