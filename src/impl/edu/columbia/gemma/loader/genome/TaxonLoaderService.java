@@ -111,8 +111,8 @@ public class TaxonLoaderService implements BulkCreator {
     private boolean createFromRow( String line ) throws NumberFormatException {
         String[] sArray = line.split( "\t" );
         edu.columbia.gemma.genome.Taxon t = edu.columbia.gemma.genome.Taxon.Factory.newInstance();
-        //t.setIdentifier( "taxon::" + sArray[scientificNameCol] );
-        //t.setName( sArray[commonNameCol] );
+        // t.setIdentifier( "taxon::" + sArray[scientificNameCol] );
+        // t.setName( sArray[commonNameCol] );
         t.setScientificName( sArray[scientificNameCol] );
         t.setCommonName( sArray[commonNameCol] );
         t.setAbbreviation( sArray[abbreviationCol] );
@@ -148,4 +148,3 @@ public class TaxonLoaderService implements BulkCreator {
     }
 
 }
-

@@ -10,8 +10,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import edu.columbia.gemma.BaseControllerTestCase;
 
 /**
- * This test makes use of Spring's MockHttpServletRequest and MockHttpServletResponse.
- * I have used TaxonLoaderService as the loader of choice as it is fast (small file to read from).
+ * This test makes use of Spring's MockHttpServletRequest and MockHttpServletResponse. I have used TaxonLoaderService as
+ * the loader of choice as it is fast (small file to read from).
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -62,9 +62,12 @@ public class LoaderControllerTest extends BaseControllerTestCase {
     public void testOnSubmitIsFalse() throws Exception {
         request.addParameter( "hasHeader", "false" );
         request.addParameter( "typeOfLoader", "taxonLoaderService" );
-        ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
-        assertEquals( "numberFormatError", mav.getViewName() );
-
+        try {
+            ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
+            fail( "Should have thrown a NumberFormatException" );
+        } catch ( NumberFormatException e ) {
+            // log.debug("okay");
+        }
     }
 
 }

@@ -58,7 +58,6 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         tls = null;
-        br.close();
     }
 
     /**
