@@ -84,12 +84,15 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update(java.lang.String)
     */
    public void update( java.lang.String note ) {
+      
       assert this.getEvents() != null;
       assert this.getEvents().size() > 0; // can't have update as the first event.
+      
       AuditEvent newEvent = AuditEvent.Factory.newInstance();
       newEvent.setAction( AuditAction.UPDATE );
       newEvent.setDate( new Date() );
       if ( note != null ) newEvent.setNote( note );
+      
       this.addEvent( newEvent );
    }
 
