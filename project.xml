@@ -114,6 +114,12 @@
       <version>1.2</version>
       <type>plugin</type>
     </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql</artifactId>
+      <jar>mysql-connector-java-3.1.6-bin.jar</jar>
+      <type>jar</type>
+    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>
