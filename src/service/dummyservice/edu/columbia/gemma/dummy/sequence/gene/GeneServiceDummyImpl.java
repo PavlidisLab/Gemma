@@ -72,15 +72,14 @@ public class GeneServiceDummyImpl
     }
 
     /**
-     * @see edu.columbia.gemma.sequence.gene.GeneService#findAllQtlsByPhysicalMapLocation(java.lang.String)
+     * @see edu.columbia.gemma.sequence.gene.GeneService#findAllQtlsByPhysicalMapLocation(edu.columbia.gemma.sequence.PhysicalLocation)
      */
-    protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(int physicalMapLocation)
+    protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(edu.columbia.gemma.sequence.PhysicalLocation physicalMapLocation)
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(java.lang.String physicalMapLocation)
-//       if (getGenomicRoiDao() == null) throw new IllegalStateException("Null DAO");
-//       if (physicalMapLocation == null) throw new IllegalStateException("physical map location is null");
-        return getGenomicRoiDao().findAllQtlsByPhysicalMapLocation(physicalMapLocation);
+        //@todo implement protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(edu.columbia.gemma.sequence.PhysicalLocation physicalMapLocation)
+        //return getGenomicRoiDao().findAllQtlsByPhysicalMapLocation(physicalMapLocation);
+        return getQtlDaoBase().findByLocation(physicalMapLocation);
     }
 
 }
