@@ -74,8 +74,18 @@ public class TaxonLoaderService {
     /**
      * @throws IOException
      */
-    public void loadDatabase() throws IOException {
+    /*public void loadDatabase() throws IOException {
         saveTaxons( openFileAsStream() );
+    }*/
+    public void bulkLoad(String filename) throws IOException {
+        if (filename==null){
+            filename = this.filename;
+        }
+        else{
+            this.filename = filename;
+        }
+            
+        bulkLoad( openFileAsStream() );
     }
 
     /**
@@ -94,7 +104,7 @@ public class TaxonLoaderService {
      * @param is
      * @throws IOException
      */
-    public void saveTaxons( InputStream is ) throws IOException {
+    public void bulkLoad( InputStream is ) throws IOException {
         int count = 0;
         String line = null;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
