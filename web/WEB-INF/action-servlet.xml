@@ -67,7 +67,7 @@
     </bean>
 -->    
     <!-- Put controller mappings here -->
-    <bean id="personFormController" class="controller.edu.columbia.gemma.common.auditAndSecurity.PersonFormController">
+    <bean id="personFormController" class="edu.columbia.gemma.controller.common.auditAndSecurity.PersonFormController">
 	<property name="sessionForm">
 			<value>true</value>
 		</property>
@@ -92,7 +92,7 @@
 	</bean>
 	
 <!--<bean id="manualLoadValidator" class="bus.UserNameValidator"/>-->
-	<bean id="geneLoaderController" class="controller.edu.columbia.gemma.sequence.gene.GeneLoaderController">
+	<bean id="geneLoaderController" class="edu.columbia.gemma.controller.sequence.gene.GeneLoaderController">
 		<property name="sessionForm">
 			<value>true</value>
 		</property>
@@ -118,7 +118,33 @@
 		</property>
 	</bean>
 	<!--<bean id="manualLoadValidator" class="bus.UserNameValidator"/>-->
-	<bean id="geneFormSearchController" class="controller.edu.columbia.gemma.sequence.gene.GeneFormSearchController">
+	<bean id="taxonLoaderController" class="edu.columbia.gemma.controller.sequence.gene.TaxonLoaderController">
+		<property name="sessionForm">
+			<value>true</value>
+		</property>
+		<property name="commandName">
+			<value>taxon</value>
+		</property>
+		<property name="commandClass">
+			<value>edu.columbia.gemma.sequence.gene.TaxonImpl</value>
+		</property><!--
+		<property name="validator">
+			<ref bean="userNameValidator"/>
+		</property>-->
+		<property name="formView"><!--resolved by the viewResolver below -->
+			<value>taxonLoad</value>
+		</property>
+		<!--
+		<property name="successView">
+			<value>gene.htm</value>
+		</property>
+		-->
+		<property name="taxonLoaderService">
+			<ref bean="taxonLoaderService"/>
+		</property>
+	</bean>
+<!--	
+	<bean id="geneFormSearchController" class="edu.columbia.gemma.controller.sequence.gene.GeneFormSearchController">
 		<property name="sessionForm">
 			<value>true</value>
 		</property>
@@ -127,23 +153,28 @@
 		</property>
 		<property name="commandClass">
 			<value>edu.columbia.gemma.sequence.gene.GeneImpl</value>
-		</property><!--
+		</property>
+-->		
+		<!--
 		<property name="validator">
 			<ref bean="userNameValidator"/>
 		</property>-->
-		<property name="formView"><!--resolved by the viewResolver below -->
+<!--		
+		<property name="formView">
 			<value>geneFormSearch</value>
 		</property>
+-->		
 		<!--
 		<property name="successView">
 			<value>gene.htm</value>
 		</property>
 		-->
+<!--		
 		<property name="geneService">
 			<ref bean="geneService"/>
 		</property>
 	</bean>
-	
+-->	
 	
 	
 	
@@ -167,6 +198,7 @@
     </bean>
 	
 	<!-- GeneService Service Proxy  -->
+<!--	
     <bean id="geneService" class="org.springframework.aop.framework.ProxyFactoryBean">
          <property name="target"><ref bean="geneServiceDummyImpl"/></property>
          <property name="proxyInterfaces">
@@ -183,11 +215,17 @@
         <property name="gene"><ref bean="geneDao"/></property>
 		<property name="genomicRoi"><ref bean="genomicRoiDao"/></property>
     </bean>
+-->	
 	<!-- ***************************** End Dummy Service ******************************************* -->
 	
 	<bean id="geneLoaderService" class="edu.columbia.gemma.loader.sequence.gene.GeneLoaderService">
 		<property name="geneDao">
 			<ref bean="geneDao"/>
+		</property>
+	</bean>
+	<bean id="taxonLoaderService" class="edu.columbia.gemma.loader.sequence.gene.TaxonLoaderService">
+		<property name="taxonDao">
+			<ref bean="taxonDao"/>
 		</property>
 	</bean>
     <!-- Load WEB-INF/classes/ApplicationResources.properties for i18n messages using JSTL's fmt tag -->	
@@ -199,7 +237,7 @@
     <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
             <props>
-<!--				
+            <!--				
                 <prop key="/editProfile.html">userFormController</prop>
                 <prop key="/mainMenu.html">filenameController</prop>
                 <prop key="/editUser.html">userFormController</prop> 
@@ -207,10 +245,11 @@
                 <prop key="/uploadFile.html">fileUploadController</prop>
                 <prop key="/passwordHint.html">passwordHintController</prop>
                 <prop key="/signup.html">signupController</prop>
--->
+             -->
                 <!-- Add additional URL mappings here -->			
 				<prop key="/geneLoad.htm">geneLoaderController</prop>
-				<prop key="/geneFormSearch.htm">geneFormSearchController</prop>
+				<prop key="/taxonLoad.htm">taxonLoaderController</prop>
+<!--				<prop key="/geneFormSearch.htm">geneFormSearchController</prop> -->
 				<prop key="/editPerson.htm">personFormController</prop>			
             </props>
         </property>
