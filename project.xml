@@ -4,8 +4,10 @@
   <artifactId>Gemma</artifactId>
   <name>Gemma</name>
   <groupId>Gemma</groupId>
+  <logo>web/images/logo/gemOnlySmall.gif</logo>
+  <description>Large-scale integrative meta-analysis of gene expression data</description>
   <id>fear</id>
-  <currentVersion>1.0</currentVersion>
+  <currentVersion>0.1</currentVersion>
   <organization>
     <name>Columbia University</name>
     <url>http://www.columbia.edu</url>
@@ -36,11 +38,18 @@
     </developer>
     <developer>
       <name>Paul Pavlidis</name>
-      <id>0</id>
+      <id>pavlidis</id>
+      <email>pavlidis@dbmi.columbia.edu</email>
+      <organization>Columbia University</organization>
+      <url>http://microarray.cu-genome.org/pavlidis</url>
     </developer>
     <developer>
       <name>David Quigley</name>
       <id>1</id>
+    </developer>
+    <developer>
+      <name>Anshu Singha</name>
+      <id>2</id>
     </developer>
   </developers>
   <licenses>
