@@ -440,16 +440,13 @@ public class MageMLConverter {
     }
 
     /**
-     * TODO - call superclass converter.
-     * 
      * @param mageObj
      * @param gemmaObj
      * @param getter
+     * @see convertBioMaterialAssociations
      */
     public void convertBioSampleAssociations( BioSample mageObj, BioMaterial gemmaObj, Method getter ) {
-        log.debug( "convertBioMaterialAssociations (biosample) Not fully supported yet" );
         if ( mageObj == null ) return;
-
         convertBioMaterialAssociations( mageObj, gemmaObj, getter );
         Object associatedObject = intializeConversion( mageObj, getter );
         if ( associatedObject == null ) return;
@@ -1146,8 +1143,6 @@ public class MageMLConverter {
     }
 
     /**
-     * FIXME this is a problem because we don't want separate labeledextract and biomaterial objects.
-     * 
      * @param mageObj
      * @return
      */
@@ -1251,7 +1246,6 @@ public class MageMLConverter {
         if ( mageObj.getValue() != null ) result.setValue( mageObj.getValue().toString() ); // FIME - is this okay
 
         result.setType( convertMeasurementType( mageObj.getType() ) );
-        // result.setRepresentation(...) // FIXME
         return result;
     }
 
@@ -1544,13 +1538,10 @@ public class MageMLConverter {
         Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
-        // FIXME - we need to fill in the 'general type' and the 'type'.
-        if ( associationName.equals( "Channel" ) ) { // we aren't support this?
-            ; // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Associations" ); // we don't
-            // support
-        } else if ( associationName.equals( "ConfidenceIndicators" ) ) { // just another quantitation type.
-            // this is bidirectionally navigable in MAGE.
-            ; // simpleFillIn( associatedObject, gemmaObj, getter, "ExternalOntologyReference" ); // we don't support
+        if ( associationName.equals( "Channel" ) ) {
+            // we aren't support this
+        } else if ( associationName.equals( "ConfidenceIndicators" ) ) {
+            // this is bidirectionally navigable in MAGE - we don't support that.
         } else if ( associationName.equals( "DataType" ) ) {
             gemmaObj.setRepresentation( convertDataType( mageObj.getDataType() ) );
         } else if ( associationName.equals( "Scale" ) ) {
@@ -1584,10 +1575,9 @@ public class MageMLConverter {
     }
 
     /**
-     * TODO a reporter has a feature, which has the location information we need for the Gemma reporter.
-     * 
      * @param mageObj
      * @return edu.columbia.gemma.expression.designElement.Reporter
+     * @see convertReporterAssociations
      */
     public edu.columbia.gemma.expression.designElement.Reporter convertReporter(
             org.biomage.DesignElement.Reporter mageObj ) {
@@ -1595,6 +1585,17 @@ public class MageMLConverter {
         if ( mageObj == null ) return null;
 
         Reporter result = Reporter.Factory.newInstance();
+        List featureReporterMaps = mageObj.getFeatureReporterMaps();
+        for ( Iterator iter = featureReporterMaps.iterator(); iter.hasNext(); ) {
+            FeatureReporterMap featureReporterMap = ( FeatureReporterMap ) iter.next();
+            List featureInformationSources = featureReporterMap.getFeatureInformationSources();
+            for ( Iterator iterator = featureInformationSources.iterator(); iterator.hasNext(); ) {
+                FeatureInformation featureInformation = ( FeatureInformation ) iterator.next();
+                result.setCol( featureInformation.getFeature().getPosition().getX().intValue() );
+                result.setRow( featureInformation.getFeature().getPosition().getY().intValue() );
+            }
+        }
+
         if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
         return result;
     }
@@ -1610,10 +1611,9 @@ public class MageMLConverter {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "FailTypes" ) ) {
-            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Associations" ); // we don't
-            // support
+            // we don't support
         } else if ( associationName.equals( "FeatureReporterMaps" ) ) {
-            // simpleFillIn( associatedObject, gemmaObj, getter, "ExternalOntologyReference" ); // we don't support
+            // we don't support
         } else if ( associationName.equals( "ImmobilizedCharacteristics" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "ImmobilizedCharacteristic" );
         } else if ( associationName.equals( "WarningType" ) ) {
@@ -1676,10 +1676,9 @@ public class MageMLConverter {
         } else if ( val.equalsIgnoreCase( "other" ) ) {
             return ScaleType.OTHER;
         } else if ( val.equalsIgnoreCase( "unscaled" ) ) {
-            return ScaleType.OTHER; // FIXME - add unscaled to the model bug 76
-        } else {
-            log.error( "Unrecognized Scale " + val );
+            return ScaleType.UNSCALED; 
         }
+        log.error( "Unrecognized Scale " + val );
         return null;
     }
 
@@ -1749,7 +1748,6 @@ public class MageMLConverter {
      */
     public Taxon convertSpecies( OntologyEntry species ) {
         return fetchExistingTaxonByCommonName( species.getValue() );
-        // FIXME there must be a better way.
     }
 
     /**
@@ -2266,14 +2264,14 @@ public class MageMLConverter {
             return;
         }
 
-        String associationName = actualGemmaAssociationName; // FIXME, refactor so we use convertAssociationName
+        // This could be refactored to share more code with the other simpleFillIn methods.
+        String associationName = actualGemmaAssociationName;
 
         if ( associationName == null )
             associationName = ReflectionUtil.classToTypeName( associatedList.get( 0 ).getClass() );
 
         try {
             if ( onlyTakeOne ) {
-
                 Object mageObj = associatedList.get( 0 );
                 Object convertedGemmaObj = findAndInvokeConverter( mageObj );
                 if ( convertedGemmaObj == null ) return; // not supported.
@@ -2282,7 +2280,6 @@ public class MageMLConverter {
                         + ReflectionUtil.classToTypeName( convertedGemmaClass ) );
                 findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, associationName );
             } else {
-
                 Collection gemmaObjList = new ArrayList();
                 for ( Iterator iter = associatedList.iterator(); iter.hasNext(); ) {
                     Object mageObj = iter.next();
@@ -2291,14 +2288,12 @@ public class MageMLConverter {
                     log.debug( "Converting a MAGE list to a Gemma list" );
                     gemmaObjList.add( convertedGemmaObj );
                 }
-
                 findAndInvokeSetter( gemmaObj, gemmaObjList, Collection.class, associationName );
             }
-
         } catch ( SecurityException e ) {
-            log.error( e );
+            log.error( e, e );
         } catch ( IllegalArgumentException e ) {
-            log.error( e );
+            log.error( e, e );
         }
 
     }
