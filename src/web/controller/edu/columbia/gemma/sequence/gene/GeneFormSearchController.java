@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
+import edu.columbia.gemma.sequence.PhysicalLocation;
 import edu.columbia.gemma.sequence.gene.Gene;
 import edu.columbia.gemma.sequence.gene.GeneImpl;
 import edu.columbia.gemma.sequence.gene.GeneService;
@@ -52,7 +53,8 @@ public class GeneFormSearchController extends SimpleFormController {
       try {
          view = "qtl";
          g = ( getGeneService().findByOfficialName( officialName ) );
-         int physicalMapLocation = g.getPhysicalMapLocation();
+         //int physicalMapLocation = g.getPhysicalMapLocation();
+         PhysicalLocation physicalMapLocation = g.getFeaturePhysicalLocation();
          myModel.put( "now", now );
          myModel.put( "qtls", getGeneService()
                .findAllQtlsByPhysicalMapLocation( physicalMapLocation ) );
