@@ -98,6 +98,7 @@ public class MageMLParser {
                     c = Class.forName( name + "." + mageClasses[j] );
                     Collection d = getConvertedData( c );
                     if ( d != null ) {
+                        log.info( "Adding " + d.size() + " converted " + name + "." + mageClasses[j] + "s" );
                         result.addAll( d );
                     }
                 } catch ( ClassNotFoundException e ) {
@@ -181,7 +182,10 @@ public class MageMLParser {
         List result = new ArrayList();
         for ( Iterator iter = dataToConvert.iterator(); iter.hasNext(); ) {
             Object element = iter.next();
-            result.add( mlc.convert( element ) );
+            if ( element != null ) {
+                Object converted = mlc.convert( element );
+                if ( converted != null ) result.add( mlc.convert( element ) );
+            }
         }
         return result;
     }
