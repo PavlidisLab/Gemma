@@ -16,7 +16,7 @@
   <url>http://microarray.cu-genome.org</url>
   <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/enter_bug.cgi?product=Gemma</issueTrackingUrl>
   <siteAddress>microarray</siteAddress>
-  <siteDirectory>/proj/pavlidis/protected</siteDirectory>
+  <siteDirectory>/proj/pavlidis/protected/Gemma</siteDirectory>
   <distributionSite>microarray</distributionSite>
   <distributionDirectory>/proj/projectpages</distributionDirectory>
   <repository>
