@@ -309,9 +309,8 @@
       <resource>
         <directory>${basedir}/src/gen</directory>
         <includes>
-          <include>**/*.hbm.xml</include>
-          <include>ehcache.xml</include>
-          <include>hibernate.cfg.xml</include>
+            <include>**/*.hbm.xml</include>
+            <include>ehcache.xml</include>
         </includes>
         <filtering>false</filtering>
       </resource>
