@@ -53,7 +53,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         deb.setAccession( "bar" );
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setLocalInstallDBName( "database" );
+        ed.setLocalInstallDbName( "database" );
         ed.setIdentifier( "fooblydoobly" + random );
         exdbdao.create( ed );
 
