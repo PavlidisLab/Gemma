@@ -66,13 +66,11 @@
             <artifactId>andromda-hibernate-cartridge</artifactId>
             <version>3.0-RC1-SNAPSHOT</version>
             <properties>
-                <mergeLocation>
+                <mergeLocation> 
                     ${maven.andromda.hibernate.merge.custom}</mergeLocation>
-                <mergeMappingsUri>
+                <mergeMappingsUri> 
                     file:${maven.andromda.merge.mappings}</mergeMappingsUri>
                 <hibernateTypeMappingsUri>Hibernate</hibernateTypeMappingsUri>
-                <hibernateQueryNamedParameters>
-                    true</hibernateQueryNamedParameters>
                 <driver>com.mysql.jdbc.Driver</driver>
                 <username>pavlidis</username>
                 <password>toast</password>
@@ -81,12 +79,14 @@
                     net.sf.hibernate.dialect.MySQLDialect</hibernateDialect>
                 <entities>${maven.andromda.hibernate.generated.dir}</entities>
                 <man-impls>${maven.andromda.hibernate.manual.dir}</man-impls>
-                <entity-impls>
+                <entity-impls> 
                     ${maven.andromda.hibernate.manual.dir}</entity-impls>
-                <configuration>
+                <configuration> 
                     ${maven.andromda.hibernate.generated.dir}</configuration>
                 <session-beans.ignore/>
                 <session-impls.ignore/>
+                <hibernateQueryUseNamedParameters >
+                    true</hibernateQueryUseNamedParameters>
             </properties>
         </dependency>
          <dependency>
