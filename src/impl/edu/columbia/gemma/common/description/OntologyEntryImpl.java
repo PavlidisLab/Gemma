@@ -1,0 +1,51 @@
+/*
+ * The Gemma project.
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ */
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package edu.columbia.gemma.common.description;
+
+/**
+ * @see edu.columbia.gemma.common.description.OntologyEntry
+ */
+public class OntologyEntryImpl
+    extends edu.columbia.gemma.common.description.OntologyEntry
+{
+    /**
+     * @see edu.columbia.gemma.common.description.OntologyEntry#getParents()
+     */
+    public java.util.Set getParents()
+    {
+        //@todo implement public java.util.Set getParents()
+        return null;
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.description.OntologyEntry#getChildren()
+     */
+    public java.util.Set getChildren()
+    {
+        //@todo implement public java.util.Set getChildren()
+        return null;
+    }
+
+}
