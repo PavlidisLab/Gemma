@@ -4,15 +4,14 @@
   <artifactId>Gemma</artifactId>
   <name>Gemma</name>
   <groupId>Gemma</groupId>
-  <logo>web/images/logo/gemOnlySmall.gif</logo>
-  <description>Large-scale integrative meta-analysis of gene expression data</description>
-  <id>fear</id>
   <currentVersion>0.1</currentVersion>
   <organization>
     <name>Columbia University</name>
     <url>http://www.columbia.edu</url>
   </organization>
   <inceptionYear>2005</inceptionYear>
+  <logo>web/images/logo/gemOnlySmall.gif</logo>
+  <description>Large-scale integrative meta-analysis of gene expression data</description>
   <url>http://microarray.cu-genome.org</url>
   <siteAddress>microarray</siteAddress>
   <siteDirectory>/proj/pavlidis/protected</siteDirectory>
@@ -21,14 +20,6 @@
   <repository>
     <connection>scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:gemma</connection>
   </repository>
-  <!--
-    <versions>
-        <version>
-            <id>2.0b3</id>
-            <name>beta3</name>
-        </version>
-    </versions>
-	-->
   <developers>
     <developer>
       <name>Kiran Keshav</name>
@@ -76,22 +67,12 @@
         <war.bundle>true</war.bundle>
       </properties>
     </dependency>
-    <!--
-     <dependency>
-            <groupId>xdoclet</groupId>
-            <artifactId>xdoclet</artifactId>
-            <version>1.2.1</version>
-            <type>jar</type>
-        </dependency>
-  
-    
-     <dependency>
-        <groupId>xdoclet</groupId>
-        <artifactId>xdoclet-hibernate-module</artifactId>
-        <version>1.2.2</version>
-        <type>jar</type>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql</artifactId>
+      <jar>mysql-connector-java-3.1.6-bin.jar</jar>
+      <type>jar</type>
     </dependency>
- -->
     <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib-full</artifactId>
@@ -115,9 +96,16 @@
       <type>plugin</type>
     </dependency>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql</artifactId>
-      <jar>mysql-connector-java-3.1.6-bin.jar</jar>
+      <groupId>jmock</groupId>
+      <artifactId>jmock</artifactId>
+      <version>1.0.1</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.8</version>
+      <jar>log4j-1.2.8.jar</jar>
       <type>jar</type>
     </dependency>
   </dependencies>
