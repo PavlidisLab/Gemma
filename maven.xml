@@ -80,11 +80,11 @@
      ================================================================== -->
     <goal name="copydocs" 
         description="Copy javadocs and UML docs to the site directory">
-        <ant:copy todir="${basedir}/target/docs/apidocs">
+        <ant:copy  failonerror="false" todir="${basedir}/target/docs/apidocs">
             <fileset dir="${basedir}/docs/java/api" />
         </ant:copy>
         <ant:mkdir dir="${basedir}/target/docs/uml" />
-        <ant:copy todir="${basedir}/target/docs/uml">
+        <ant:copy failonerror="false" todir="${basedir}/target/docs/uml">
             <fileset dir="${basedir}/docs/uml" />
         </ant:copy>
     </goal>
