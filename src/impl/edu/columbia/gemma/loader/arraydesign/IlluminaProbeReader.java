@@ -3,8 +3,8 @@ package edu.columbia.gemma.loader.arraydesign;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.io.reader.BasicLineMapParser;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.sequence.biosequence.BioSequence;
 
 /**

@@ -1,6 +1,6 @@
 package edu.columbia.gemma.loader.sequence.gene;
 
-import baseCode.io.reader.BasicLineParser;
+import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 import edu.columbia.gemma.sequence.sequenceAnalysis.BlatResultImpl;
 
 /**
