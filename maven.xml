@@ -13,28 +13,33 @@
     </copy>
 </preGoal>
 
+<preGoal name="mda">
+	<attainGoal name="mda-clean" />
+	<attainGoal name="mda-remove-logs" />
+</preGoal>
+
 <goal name="mda" >
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run"/>
 </goal>	
 
-<!--
-<postGoal name="mda">
-	<attainGoal name="patch-applicationContext" />
-</postGoal>
--->
-
 <goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
 	 <ant:delete>
-	 	<fileset dir="src/gen/edu/columbia" includes="**/*.java,**/*.hbm.xml"  excludes="impl/**/*.java" />
+	 	<fileset dir="${basedir}/src/gen/edu/columbia" includes="**/*.java,**/*.hbm.xml"  excludes="${basedir}/src/impl/**/*.java" />
 	 </ant:delete>
 </goal>
 
 
 <goal name="mda-pojo-impl-clean" description="Remove all Andromda-generated impl files" >
 	 <ant:delete>
-	 	<fileset dir="src/impl/edu/columbia/gemma" includes="**/*.java" excludes="**/*DaoImpl.java,**/*ServiceImpl.java,**/util/*,**/loader" />
+	 	<fileset dir="${basedir}/src/impl/edu/columbia/gemma" includes="**/*.java" excludes="**/*DaoImpl.java,**/*ServiceImpl.java,**/util/*,**/loader" />
 	 </ant:delete>
+</goal>
+
+<goal name="mda-remove-logs" description="Clear out old Andromda log files">
+<ant:delete>
+<fileset dir="${basedir}" includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log" />
+</ant:delete>
 </goal>
 
 </project>
