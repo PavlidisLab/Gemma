@@ -39,41 +39,5 @@ public class MageMLConverterTest extends TestCase {
         assertTrue( result instanceof edu.columbia.gemma.genome.biosequence.BioSequence );
 
     }
-    
-    public final void testConvertBioSequence() throws Exception {
-        // TODO Implement convertBioSequence().
-    }
-
-    public final void testConvertBioSequenceType() throws Exception {
-        // TODO Implement convertBioSequenceType().
-    }
-
-    public final void testConvertDescription() throws Exception {
-        // TODO Implement convertDescription().
-    }
-
-    public final void testConvertReporter() throws Exception {
-        // TODO Implement convertReporter().
-    }
-
-    public final void testConvertCompositeSequence() throws Exception {
-        // TODO Implement convertCompositeSequence().
-    }
-
-    public final void testConvertIdentifiable() throws Exception {
-        // TODO Implement convertIdentifiable().
-    }
-
-    public final void testConvertAudit() throws Exception {
-        // TODO Implement convertAudit().
-    }
-
-    public final void testConvertSecurity() throws Exception {
-        // TODO Implement convertSecurity().
-    }
-
-    public final void testConvertArrayDesign() throws Exception {
-        // TODO Implement convertArrayDesign().
-    }
 
 }
