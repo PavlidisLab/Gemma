@@ -14,13 +14,13 @@
   <shortDescription>Large-scale integrative meta-analysis of gene expression 
         data</shortDescription>
   <url>http://microarray.cu-genome.org</url>
-  <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma</issueTrackingUrl>
+  <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/enter_bug.cgi?product=Gemma</issueTrackingUrl>
   <siteAddress>microarray</siteAddress>
-  <siteDirectory>/proj/pavlidis/protected/Gemma</siteDirectory>
+  <siteDirectory>/proj/pavlidis/protected</siteDirectory>
   <distributionSite>microarray</distributionSite>
   <distributionDirectory>/proj/projectpages</distributionDirectory>
   <repository>
-    <connection>scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:Gemma</connection>
+    <connection>scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:gemma</connection>
   </repository>
   <developers>
     <developer>
@@ -248,94 +248,148 @@
     </dependency>
     <dependency>
       <groupId>spring</groupId>
+      <artifactId>spring-aop</artifactId>
+      <jar>spring-aop.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-beans</artifactId>
+      <jar>spring-beans.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-context</artifactId>
+      <jar>spring-context.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-core</artifactId>
+      <jar>spring-core.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-dao</artifactId>
+      <jar>spring-dao.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-hibernate</artifactId>
+      <jar>spring-hibernate.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-jdbc</artifactId>
+      <jar>spring-jdbc.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
       <artifactId>spring-mock</artifactId>
       <jar>spring-mock.jar</jar>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>spring</groupId>
-      <artifactId>spring-sandbox</artifactId>
-      <jar>spring-sandbox.jar</jar>
+      <artifactId>spring-orm</artifactId>
+      <jar>spring-orm.jar</jar>
       <type>jar</type>
     </dependency>
     <dependency>
-        <groupId>odmg</groupId>
-        <artifactId>odmg</artifactId>
-        <version>3.0</version>
-        <type>jar</type>
+      <groupId>spring</groupId>
+      <artifactId>spring-remoting</artifactId>
+      <jar>spring-remoting.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-support</artifactId>
+      <jar>spring-support.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <jar>spring-webmvc.jar</jar>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>spring</groupId>
+      <artifactId>spring-web</artifactId>
+      <jar>spring-web.jar</jar>
+      <type>jar</type>
     </dependency>
   </dependencies>
- <build>
-        <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
-        <sourceDirectory>src/gen</sourceDirectory>
-        <unitTestSourceDirectory>${basedir}/test</unitTestSourceDirectory>
-        <unitTest>
-            <includes>
-                <include>**/*Test.java</include>
-            </includes>
-            <excludes>
-                <exclude>LoaderControllerTest.java</exclude>
-            </excludes>
-            <resources>
-                <resource>
-                    <directory>${basedir}/test</directory>
-                    <includes>
-                        <include>**/*.xml</include>
-                        <include>**/*.txt</include>
-                        <include>**/*.probes</include>
-                    </includes>
-                    <filtering>false</filtering>
-                </resource>
-                <resource>
-                    <directory>${basedir}/web/WEB-INF</directory>
-                    <includes>
-                        <include>**/*.xml</include>
-                    </includes>
-                    <filtering>false</filtering>
-                </resource>
-                <resource>
-                    <directory>${basedir}/metadata/webproperties</directory>
-                    <includes>
-                        <include>**/*.properties</include>
-                    </includes>
-                    <filtering>false</filtering>
-                </resource>
-            </resources>
-        </unitTest>
-        <resources>
-            <resource>
-                <directory>${basedir}/metadata/webproperties</directory>
-               
-                <includes>
-                    <include>**/*.properties</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-            <resource>
-                <directory>${basedir}/src/gen</directory>
-                
-                <includes>
-                    <include>**/*.hbm.xml</include>
-                    <include>ehcache.xml</include>
-                    <include>hibernate.cfg.xml</include>
-                </includes>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
-    </build>
-    <reports>
-        <report>maven-clover-plugin</report> 
-        <report>maven-changelog-plugin</report>
-        <report>maven-junit-report-plugin</report>
-      
-         <report>maven-file-activity-plugin</report>
-        <report>maven-developer-activity-plugin</report>
-        <report>maven-javadoc-plugin</report>
-     <!--   <report>maven-jdepend-plugin</report>
+  <build>
+    <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
+    <sourceDirectory>src/gen</sourceDirectory>
+    <unitTestSourceDirectory>${basedir}/test</unitTestSourceDirectory>
+    <unitTest>
+      <includes>
+        <include>**/*Test.java</include>
+      </includes>
+      <resources>
+        <resource>
+          <directory>${basedir}/test</directory>
+          <includes>
+            <include>**/*.xml</include>
+            <include>**/*.txt</include>
+            <include>**/*.probes</include>
+          </includes>
+          <filtering>false</filtering>
+        </resource>
+        <resource>
+          <directory>${basedir}/web/WEB-INF</directory>
+          <includes>
+            <include>**/*.xml</include>
+          </includes>
+          <filtering>false</filtering>
+        </resource>
+        <resource>
+          <directory>${basedir}/metadata/webproperties</directory>
+          <includes>
+            <include>**/*.properties</include>
+          </includes>
+          <filtering>false</filtering>
+        </resource>
+      </resources>
+    </unitTest>
+    <resources>
+      <resource>
+        <directory>${basedir}/metadata/webproperties</directory>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+        <filtering>false</filtering>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/gen</directory>
+        <includes>
+          <include>**/*.hbm.xml</include>
+          <include>ehcache.xml</include>
+          <include>hibernate.cfg.xml</include>
+        </includes>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+  </build>
+  <reports>
+    <report>maven-clover-plugin</report>
+    <report>maven-changelog-plugin</report>
+    <report>maven-junit-report-plugin</report>
+    <report>maven-file-activity-plugin</report>
+    <report>maven-developer-activity-plugin</report>
+    <report>maven-javadoc-plugin</report>
+    <!--   <report>maven-jdepend-plugin</report>
         <report>maven-pmd-plugin</report>
         <report>maven-jxr-plugin</report>
           <report>maven-tasklist-plugin</report>
          -->
-    </reports>
+  </reports>
 </project>
 
