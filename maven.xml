@@ -6,11 +6,11 @@
                Compiles
          ================================================================== -->
     <preGoal name="java:compile">
-    	<attainGoal name="clean" />
-    	<ant:mkdir dir="${maven.build.dest}" />
-    	<ant:mkdir dir="${basedir}/target" /> <!-- we shouldn't have to do this -->
     	<ant:delete quiet="false" failonerror="false" >
 	    	<fileset dir="${maven.build.dest}" includes="**/*.class,**/*.hbm.xml" />
+    	</ant:delete>
+    	<ant:delete quiet="false" failonerror="false" >
+	    	<fileset dir="${basedir}/target/test-classes" includes="**/*.class,**/*.hbm.xml" />
     	</ant:delete>
     	<attainGoal name="mda" /> 
         <ant:path id="impl" location="${basedir}/src/impl"/>
@@ -20,11 +20,23 @@
     </preGoal>
     
     <postGoal name="java:compile">
+    	<ant:copy toDir="${maven.build.dest}">
+    		<fileset dir="${basedir}/metadata/webproperties" includes="**/*.properties" />
+    	</ant:copy>
     	<attainGoal name="dll" />
-    	<attainGoal name="xdoclet:webdoclet"/>
-      	<attainGoal name="xdoclet:springdoclet"/> 
+    	<attainGoal name="xdoclet" />
     </postGoal>
 
+	<goal name="xdoclet">
+	<attainGoal name="xdoclet:webdoclet"/>
+      	<attainGoal name="xdoclet:springdoclet"/>
+	</goal>
+	
+	<goal name="copy-hibconfig" description="Copy hibernate configuration files to the output directory">
+		<ant:copy todir="${maven.build.dest}">
+      		<fileset dir="${basedir}/src/gen" includes="**/*.hbm.xml,ehcache.xml,hibernate.cfg.xml" />
+      	</ant:copy>
+	</goal>
   
     
   <!-- ==================================================================
@@ -33,7 +45,10 @@
     <goal name="dll" description="Create database">
         <attainGoal name="hibernate:schema-export" />
     </goal>
-    
+     
+    <preGoal name="dll">
+    	<attainGoal name="copy-hibconfig" />
+    </preGoal>
     
      <!-- ==================================================================
            Build and export the test database schema
