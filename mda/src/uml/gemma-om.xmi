@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 22 21:19:49 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 22 21:30:09 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -9942,7 +9942,7 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                 <UML:Class xmi.idref = 'Ia948c2m101cef0df55mm5a26'/>
                               </UML:Generalization.parent>
                             </UML:Generalization>
-                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm575f' name = 'ParameterDefaultValue'
+                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm575f' name = 'DefaultValue'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm5765' visibility = 'public'
@@ -10106,7 +10106,7 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                 <UML:Class xmi.idref = 'Ia948c2m101cef0df55mm5a26'/>
                               </UML:Generalization.parent>
                             </UML:Generalization>
-                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm5949' name = 'Software'
+                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm5949' name = 'SoftwareUsed'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm594f' visibility = 'public'
@@ -10124,8 +10124,8 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                     <UML:Class xmi.idref = 'I830624m101c472e35bmm63a1'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm594c' name = 'softwares'
-                                  visibility = 'public' isSpecification = 'false' isNavigable = 'false' ordering = 'unordered'
+                                <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm594c' name = 'softwareUsed'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Ia948c2m101cef0df55mm56f7'>
@@ -10211,7 +10211,7 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
-                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm5789' name = 'ParameterDataType'
+                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm5789' name = 'DataType'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm578f' visibility = 'public'
