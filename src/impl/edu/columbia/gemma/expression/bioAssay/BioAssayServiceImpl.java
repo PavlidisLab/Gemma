@@ -34,11 +34,11 @@ public class BioAssayServiceImpl
     /**
      * @see edu.columbia.gemma.expression.bioAssay.BioAssayService#saveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay)
      */
-    protected edu.columbia.gemma.expression.bioAssay.BioAssay handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
+    protected void handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
         throws java.lang.Exception
     {
-        //@todo implement protected edu.columbia.gemma.expression.bioAssay.BioAssay handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
-        return null;
+        //@todo implement protected void handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay)
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.expression.bioAssay.BioAssayService.handleSaveBioAssays(edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay) Not implemented!");
     }
 
     /**
