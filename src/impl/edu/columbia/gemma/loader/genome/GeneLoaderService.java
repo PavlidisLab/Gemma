@@ -16,6 +16,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Taxon;
+import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 
 /**
@@ -38,7 +39,7 @@ public class GeneLoaderService implements BulkCreator {
     private int refIdCol;
     private int symbolCol;
     private int taxonCol;
-    private edu.columbia.gemma.genome.TaxonDao taxonDao;
+    private TaxonDao taxonDao;
     private String view;
     Collection col;
     Configuration conf;
