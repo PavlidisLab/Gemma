@@ -17,6 +17,6 @@ Version @APPVERSION@
 <a href="http://www.bluerobot.com/web/layouts/">Layout Reservoir</a>
 -->
 
-<!--
+<%--
 <%@ include file="/WEB-INF/classes/build.properties"%>
--->
+--%>
