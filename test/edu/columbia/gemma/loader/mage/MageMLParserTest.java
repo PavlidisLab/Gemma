@@ -13,7 +13,9 @@ import org.biomage.BioSequence.BioSequence;
 import org.biomage.Experiment.Experiment;
 import org.biomage.QuantitationType.QuantitationType;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 public class MageMLParserTest extends TestCase {
 
@@ -23,7 +25,7 @@ public class MageMLParserTest extends TestCase {
     InputStream istArrayDesign;
     InputStream istBioMaterial;
     InputStream istQuantitationType;
-
+    
     protected void setUp() throws Exception {
         super.setUp();
         mlp = new MageMLParser();
@@ -73,11 +75,11 @@ public class MageMLParserTest extends TestCase {
 
     public void testGetAllConvertedData() throws Exception {
         System.err.println( "converting all" );
-        
+
         mlp.parse( istBioSequence );
         Object result = mlp.getConvertedData();
         assertTrue( result instanceof Collection );
-        
+
         mlp.parse( istQuantitationType );
         result = mlp.getConvertedData();
         assertTrue( result instanceof Collection );
@@ -94,6 +96,14 @@ public class MageMLParserTest extends TestCase {
         result = mlp.getConvertedData();
         assertTrue( result instanceof Collection );
 
+    }
+
+    public static Test suite() {
+        return new TestSuite( MageMLParserTest.class );
+    }
+
+    public static void main( String args[] ) {
+        junit.textui.TestRunner.run( suite() );
     }
 
 }
