@@ -13,40 +13,16 @@
 
 ## only generate this stuff if 'daos' has been defined in a namespace
 #if ($daosEnabled)
-#if ($stringUtils.isNotBlank($dataSource))
-    <!-- JNDI DataSource for J2EE environments -->
-    <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
-        <property name="jndiName"><value>$dataSource</value></property>
-    </bean>
-#else
-    <!-- Local DataSource that works in any environment -->
-    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-#if ($stringUtils.isNotBlank($driver))
-        <property name="driverClassName"><value>$driver</value></property>
-#end
-#if ($stringUtils.isNotBlank($username))
-        <property name="username"><value>$username</value></property>
-#end
-#if ($stringUtils.isNotBlank($password))
-        <property name="password"><value>$password</value></property>
-#end
-#if ($stringUtils.isNotBlank($connectionUrl))
-        <property name="url"><value>$connectionUrl</value></property>
-#end
-    </bean>
-#end
-
     <!-- Hibernate SessionFactory -->
     <bean id="sessionFactory" class="${sessionFactory}">
-        <property name="dataSource"><ref local="dataSource"/></property>
+        <property name="dataSource"><ref bean="dataSource"/></property>
         <property name="mappingResources">
             <list>
-            	
-## paul fixed
 #foreach($entity in $entities)
 #set($generalization = $entity.generalization)
 #set($genstrat = $generalization.hibernateInheritanceStrategy)
-#if ( ($entity.isRootInheritanceEntity() && $entity.hibernateInheritanceStrategy != "concrete" && $entity.hibernateInheritanceStrategy != "interface"  && $genstrat != "subclass" && $genstrat != "class" ) || 	($entity.generalizations.empty && $entity.hibernateInheritanceStrategy != "concrete" && $entity.hibernateInheritanceStrategy != "interface") )
+#set($entstrat = $entity.hibernateInheritanceStrategy)
+#if ( ($entity.isRootInheritanceEntity() && $entstrat != "concrete" && $entstrat != "interface"  && $genstrat != "subclass" && $genstrat != "class" ) || 	($entity.generalizations.empty && $entstrat != "concrete" && $entstrat != "interface") )
                <value>${entity.packagePath}/${entity.entityName}.hbm.xml</value>
 #end
 #end
@@ -204,12 +180,24 @@
 #foreach($service in $services)
     <!-- $service.name Service Implementation  -->
     <bean id="$service.getBeanName(true)" class="$service.fullyQualifiedImplementationName">
-#foreach($serviceRef in $service.serviceReferences)
-        <property name="$serviceRef.name"><ref bean="$serviceRef.targetElement.beanName"/></property>
-#end
 #if ($daosEnabled)
 #foreach($entityRef in $service.entityReferences)
         <property name="$entityRef.name"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+#end
+## Because of a bug in Spring with circular references (and using AOP proxies), 
+## we need to use the lookup-method as a work-a-round for dependencies
+## which represent circular references
+#foreach($serviceRef in $service.serviceReferences)
+#set ($serviceReferenceName = $serviceRef.targetElement.getBeanName(false))
+#if (!$serviceRef.circularReference)
+        <property name="$serviceReferenceName"><ref bean="$serviceReferenceName"/></property>
+#end
+#end
+#foreach($serviceRef in $service.serviceReferences)
+#set ($serviceReferenceName = $serviceRef.targetElement.getBeanName(false))
+#if ($serviceRef.circularReference)
+        <lookup-method name="get${serviceRef.targetElement.name}" bean="$serviceReferenceName"/>
 #end
 #end
     </bean>
