@@ -1,16 +1,12 @@
 package edu.columbia.gemma.expression.arrayDesign;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-//import org.jmock.Mock;
+import org.easymock.MockControl;
 
 import edu.columbia.gemma.BaseServiceTestCase;
-import org.easymock.MockControl;
 
 /**
  * <hr>
@@ -24,7 +20,6 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
 
    private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
    private ArrayDesignDao arrayDesignDaoMock = null;
-   private ArrayDesign arrayDesign = null;
    private MockControl control;
 
    /*
@@ -53,15 +48,14 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
          String id = ( new Date() ).toString();
          tad.setIdentifier( id );
          tad.setName( "Foo" + i );
-         m.add(tad);
+         m.add( tad );
       }
-       //arrayDesignDaoMock.getAllArrayDesigns(); // TODO
-      control.setReturnValue(m);
-     
-      
+      arrayDesignDaoMock.getAllArrayDesigns();
+      control.setReturnValue( m );
+
       control.replay(); // switch from record mode to replay
       Collection allDesigns = arrayDesignService.getAllArrayDesigns();
-      assertEquals(allDesigns, m);
+      assertEquals( allDesigns, m );
       control.verify(); // verify that expectations were met
    }
 
@@ -72,7 +66,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
       tad.setName( "Foo" );
 
       // The expected behavior
-   //   arrayDesignDaoMock.findByName( "Foo" ); // Todo - method doesn't exist yet.
+      arrayDesignDaoMock.findByName( "Foo" ); // Todo - method doesn't exist yet.
 
       control.replay(); // switch from record mode to replay
       arrayDesignService.saveArrayDesign( tad );
@@ -81,7 +75,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
    }
 
    public void testRemoveArrayDesign() {
-      //TODO Implement removeArrayDesign().
+      // TODO Implement removeArrayDesign().
    }
 
 }
