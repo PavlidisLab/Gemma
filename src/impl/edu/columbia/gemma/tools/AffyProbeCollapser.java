@@ -26,7 +26,7 @@ import edu.columbia.gemma.loader.arraydesign.AffymetrixProbeSet;
 public class AffyProbeCollapser {
 
     public AffyProbeCollapser() {
-    };
+    }
 
     public void collapse( String arrayName, InputStream is, Writer writer ) throws IOException {
 
@@ -39,7 +39,7 @@ public class AffyProbeCollapser {
             AffymetrixProbeSet apset = ( AffymetrixProbeSet ) apr.get( probeSetname );
 
             Sequence m = apset.collapse();
-            writer.write( ">target:" + arrayName + ":" + probeSetname + ";\n" + m.seqString() + "\n");
+            writer.write( ">target:" + arrayName + ":" + probeSetname + ";\n" + m.seqString() + "\n" );
         }
     }
 
@@ -51,7 +51,7 @@ public class AffyProbeCollapser {
 
         String outputFileName = args[2];
         File o = new File( outputFileName );
-  //      if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
+        // if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
 
         AffyProbeCollapser apc = new AffyProbeCollapser();
         apc.collapse( arrayName, new FileInputStream( f ), new BufferedWriter( new FileWriter( o ) ) );
