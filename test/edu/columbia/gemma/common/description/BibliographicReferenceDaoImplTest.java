@@ -33,6 +33,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
     private BibliographicReference testBibRef = null;
     private DatabaseEntry de = null;
     private DatabaseEntry deb = null;
+    ExternalDatabase ed = null;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -49,7 +50,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         deb.setAccession( "bar" );
 
         String random = ( new Date() ).toString();
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDbName( "database" );
         ed.setIdentifier( "fooblydoobly" + random );
         exdbdao.create( ed );
@@ -66,6 +67,9 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
     protected void tearDown() throws Exception {
         dao.remove( testBibRef );
+        exdbdao.remove( ed );
+        dedao.remove( de );
+        dedao.remove( deb );
         dao = null;
         dedao = null;
         exdbdao = null;
