@@ -83,7 +83,7 @@ public class MageMLParser {
 
         Collection result = new ArrayList();
 
-        // todo: this is a little inefficient because it tries every possible package and class. - fix is to get just
+        // this is a little inefficient because it tries every possible package and class. - fix is to get just
         // the mage
         // packages!
         for ( int i = 0; i < allPackages.length; i++ ) {

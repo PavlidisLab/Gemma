@@ -29,6 +29,7 @@ import org.biomage.BioAssay.FeatureExtraction;
 import org.biomage.BioAssay.MeasuredBioAssay;
 import org.biomage.BioAssay.PhysicalBioAssay;
 import org.biomage.BioAssayData.BioAssayData;
+import org.biomage.BioAssayData.BioAssayDimension;
 import org.biomage.BioAssayData.BioAssayMap;
 import org.biomage.BioAssayData.BioDataCube;
 import org.biomage.BioAssayData.BioDataTuples;
@@ -132,7 +133,7 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * </p>
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University
+ * Copyright (c) 2004-2005 Columbia University
  * 
  * @see edu.columbia.gemma.loader.mage.MageMLParser
  * @author pavlidis
@@ -176,6 +177,7 @@ public class MageMLConverter {
      */
     public Object convert( Object mageObj ) {
         assert identifiableDao != null;
+        log.debug( "Converting " + mageObj.getClass().getSimpleName() );
         return findAndInvokeConverter( mageObj );
     }
 
@@ -243,8 +245,7 @@ public class MageMLConverter {
         if ( actualGemmaAssociationName != null ) {
             inferredGemmaAssociationName = actualGemmaAssociationName;
         } else {
-            inferredGemmaAssociationName = ReflectionUtil.classToTypeName( ReflectionUtil
-                    .getBaseForImpl( gemmaAssociatedObj ) );
+            inferredGemmaAssociationName = ReflectionUtil.getBaseForImpl( gemmaAssociatedObj ).getSimpleName();
         }
         return inferredGemmaAssociationName;
     }
@@ -257,6 +258,8 @@ public class MageMLConverter {
      * @param gemmaObj
      */
     public void convertAssociations( Object mageObj, Object gemmaObj ) {
+        log.debug( "Converting associations of " + mageObj.getClass().getSimpleName() + " into associations for Gemma "
+                + gemmaObj.getClass().getSimpleName() );
         convertAssociations( mageObj.getClass(), mageObj, gemmaObj );
     }
 
@@ -267,7 +270,6 @@ public class MageMLConverter {
     public edu.columbia.gemma.common.description.BibliographicReference convertBibliographicReference(
             BibliographicReference mageObj ) {
         if ( mageObj == null ) return null;
-        log.debug( "Converting BibliographicReference " + mageObj.getTitle() );
         edu.columbia.gemma.common.description.BibliographicReference result = edu.columbia.gemma.common.description.BibliographicReference.Factory
                 .newInstance();
         convertDescribable( mageObj, result );
@@ -310,8 +312,6 @@ public class MageMLConverter {
      */
     public edu.columbia.gemma.expression.bioAssay.BioAssay convertBioAssay( BioAssay mageObj ) {
         if ( mageObj == null ) return null;
-
-        log.warn( "Converting BioAssay " + mageObj.getIdentifier() );
         edu.columbia.gemma.expression.bioAssay.BioAssay result = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory
                 .newInstance();
 
@@ -379,6 +379,16 @@ public class MageMLConverter {
         }
 
         return result;
+    }
+
+    /**
+     * Not supported, a no-op.
+     * 
+     * @param mageObj
+     * @return
+     */
+    public Object convertBioAssayDimension( BioAssayDimension mageObj ) {
+        return null;
     }
 
     /**
@@ -492,9 +502,7 @@ public class MageMLConverter {
             edu.columbia.gemma.genome.biosequence.BioSequence gemmaObj, Method getter ) {
 
         Object associatedObject = intializeConversion( mageObj, getter );
-
         if ( associatedObject == null ) return;
-
         String associationName = getterToPropertyName( getter );
 
         if ( associationName.equals( "PolymerType" ) ) { // Ontology Entry - enumerated type.
@@ -748,7 +756,7 @@ public class MageMLConverter {
             BioAssayMap dbap = ( BioAssayMap ) map.get( 0 );
 
             List bioAssays = dbap.getSourceBioAssays();
-            if ( bioAssays.size() == 0 ) log.warn( "DerivedBioAssayMap, but no sourcebioAssays" );
+            // if ( bioAssays.size() == 0 ) log.debug( "DerivedBioAssayMap, but no sourcebioAssays" );
             if ( bioAssays.size() > 1 ) log.warn( "More than one sourcebioAssay for a MeasuredBioAssay!" );
             for ( Iterator iter = bioAssays.iterator(); iter.hasNext(); ) {
                 BioAssay bioAssay = ( BioAssay ) iter.next();
@@ -1581,21 +1589,9 @@ public class MageMLConverter {
      */
     public edu.columbia.gemma.expression.designElement.Reporter convertReporter(
             org.biomage.DesignElement.Reporter mageObj ) {
-
         if ( mageObj == null ) return null;
-
         Reporter result = Reporter.Factory.newInstance();
-        List featureReporterMaps = mageObj.getFeatureReporterMaps();
-        for ( Iterator iter = featureReporterMaps.iterator(); iter.hasNext(); ) {
-            FeatureReporterMap featureReporterMap = ( FeatureReporterMap ) iter.next();
-            List featureInformationSources = featureReporterMap.getFeatureInformationSources();
-            for ( Iterator iterator = featureInformationSources.iterator(); iterator.hasNext(); ) {
-                FeatureInformation featureInformation = ( FeatureInformation ) iterator.next();
-                result.setCol( featureInformation.getFeature().getPosition().getX().intValue() );
-                result.setRow( featureInformation.getFeature().getPosition().getY().intValue() );
-            }
-        }
-
+        specialGetReporterFeatureLocations( mageObj, result );
         if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
         return result;
     }
@@ -1676,7 +1672,7 @@ public class MageMLConverter {
         } else if ( val.equalsIgnoreCase( "other" ) ) {
             return ScaleType.OTHER;
         } else if ( val.equalsIgnoreCase( "unscaled" ) ) {
-            return ScaleType.UNSCALED; 
+            return ScaleType.UNSCALED;
         }
         log.error( "Unrecognized Scale " + val );
         return null;
@@ -1948,7 +1944,7 @@ public class MageMLConverter {
         if ( mageObj == null || gemmaObj == null ) return;
 
         Class classToSeek = ReflectionUtil.getBaseForImpl( gemmaObj );
-        String gemmaObjName = ReflectionUtil.classToTypeName( classToSeek );
+        String gemmaObjName = classToSeek.getSimpleName();
 
         try {
             Class[] interfaces = mageClass.getInterfaces();
@@ -1957,7 +1953,7 @@ public class MageMLConverter {
 
             for ( int i = 0; i < interfaces.length; i++ ) {
                 Class infc = interfaces[i];
-                String infcName = ReflectionUtil.classToTypeName( infc );
+                String infcName = infc.getSimpleName();
 
                 if ( !infcName.startsWith( "Has" ) ) continue;
 
@@ -2042,7 +2038,7 @@ public class MageMLConverter {
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            log.error( "InvocationTargetException caused by " + e.getCause() + " when invoking  "
+            log.error( "InvocationTargetException caused by " + e.getCause() + " when invoking "
                     + gemmaConverter.getName() + " on a " + mageObj.getClass().getName(), e );
             throw new RuntimeException( e );
         }
@@ -2267,8 +2263,7 @@ public class MageMLConverter {
         // This could be refactored to share more code with the other simpleFillIn methods.
         String associationName = actualGemmaAssociationName;
 
-        if ( associationName == null )
-            associationName = ReflectionUtil.classToTypeName( associatedList.get( 0 ).getClass() );
+        if ( associationName == null ) associationName = associatedList.get( 0 ).getClass().getSimpleName();
 
         try {
             if ( onlyTakeOne ) {
@@ -2276,8 +2271,7 @@ public class MageMLConverter {
                 Object convertedGemmaObj = findAndInvokeConverter( mageObj );
                 if ( convertedGemmaObj == null ) return; // not supported.
                 Class convertedGemmaClass = ReflectionUtil.getBaseForImpl( convertedGemmaObj );
-                log.debug( "Converting a MAGE list to a single instance of "
-                        + ReflectionUtil.classToTypeName( convertedGemmaClass ) );
+                log.debug( "Converting a MAGE list to a single instance of " + convertedGemmaClass.getSimpleName() );
                 findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, associationName );
             } else {
                 Collection gemmaObjList = new ArrayList();
@@ -2469,6 +2463,37 @@ public class MageMLConverter {
         edu.columbia.gemma.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
         if ( result.getArrayDesignsUsed() == null ) result.setArrayDesignsUsed( new HashSet() );
         result.getArrayDesignsUsed().add( conv );
+    }
+
+    /**
+     * Extract the feature location information for a MAGE reporter and fill it into the Gemma Reporter.
+     * 
+     * @param mageObj
+     * @param result
+     */
+    private void specialGetReporterFeatureLocations( org.biomage.DesignElement.Reporter mageObj, Reporter result ) {
+        if ( mageObj == null ) return;
+        if ( result == null ) throw new IllegalArgumentException( "Null Reporter passed" );
+        List featureReporterMaps = mageObj.getFeatureReporterMaps();
+        if ( featureReporterMaps == null ) return;
+        for ( Iterator iter = featureReporterMaps.iterator(); iter.hasNext(); ) {
+            FeatureReporterMap featureReporterMap = ( FeatureReporterMap ) iter.next();
+            if ( featureReporterMap == null ) continue;
+            List featureInformationSources = featureReporterMap.getFeatureInformationSources();
+            for ( Iterator iterator = featureInformationSources.iterator(); iterator.hasNext(); ) {
+                FeatureInformation featureInformation = ( FeatureInformation ) iterator.next();
+                if ( featureInformation == null ) continue;
+
+                if ( featureInformation.getFeature() == null || featureInformation.getFeature().getPosition() == null )
+                    continue;
+
+                result.setCol( featureInformation.getFeature().getPosition().getX().intValue() );
+                result.setRow( featureInformation.getFeature().getPosition().getY().intValue() );
+                break;
+            }
+            break;
+        }
+
     }
 
 }
