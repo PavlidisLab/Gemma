@@ -56,21 +56,18 @@ public class LoaderController extends SimpleFormController {
      * 
      * @param command
      * @return ModelAndView
+     * @throws IOException
      */
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) {
+            BindException errors ) throws IOException {
         Map myModel = new HashMap();
         boolean hasHeader = RequestUtils.getBooleanParameter( request, "hasHeader", false );
         String typeOfLoader = RequestUtils.getStringParameter( request, "typeOfLoader", null );
         BulkCreator bc = determineService( getApplicationContext(), typeOfLoader );
-        try {
-            bc.bulkCreate( determineFilename( typeOfLoader ), hasHeader );
-            return new ModelAndView( new RedirectView( getSuccessView() ), "model", myModel );
-        } catch ( IOException e ) {
-            return new ModelAndView( ioError, "model", myModel );
-        } catch ( NumberFormatException e ) {
-            return new ModelAndView( numberFormatError, "model", myModel );
-        }
+        bc.bulkCreate( determineFilename( typeOfLoader ), hasHeader );
+        
+        return new ModelAndView( new RedirectView( getSuccessView() ), "model", myModel );
+
     }
 
     /**
