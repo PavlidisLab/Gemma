@@ -21,23 +21,24 @@ import org.springframework.orm.hibernate.support.HibernateDaoSupport;
  * 
  * @author keshav
  * @version $Id$
- * @see ExternalDatabaseDaoHg17
- * @spring.bean name="externalDatabaseDaoHg"
- * @spring.property name="sessionFactory" ref="sessionFactoryHg"
+ * @see GoldenPathHumanDao
+ * @spring.bean id="goldenPathHumanDao"
+ * @spring.property name="sessionFactory" ref="sessionFactoryGoldenPathHuman"
  */
-
-/*
- * TODO map classes from these other databases. The actual DAO's that will be used will be the ones corresponding to
- * tables in the database.
- */
-public class ExternalDatabaseDaoHg17Hibernate extends HibernateDaoSupport implements ExternalDatabaseDaoHg17 {
-    protected static final Log log = LogFactory.getLog( ExternalDatabaseDaoHg17Hibernate.class );
+public class GoldenPathHumanDaoHibernate extends HibernateDaoSupport implements GoldenPathHumanDao {
+    protected static final Log log = LogFactory.getLog( GoldenPathHumanDaoHibernate.class );
     private Connection c;
     private HibernateTemplate ht;
     private Query q;
     private Session s;
     private SessionFactory sf;
 
+
+    /*
+     * TODO map classes from these other databases. The actual DAO's that will be used will be the ones corresponding to
+     * tables in the database.
+     */
+    
     /**
      * Makes the database connection. The main purpose of this method is to verify that the datasources to the external
      * databases are establishing a connection.

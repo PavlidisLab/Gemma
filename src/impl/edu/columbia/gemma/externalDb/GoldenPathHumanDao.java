@@ -13,7 +13,7 @@ import net.sf.hibernate.HibernateException;
  * @author keshav
  * @version $Id$
  */
-public interface ExternalDatabaseDaoHg17 {
+public interface GoldenPathHumanDao {
     
     public boolean connectToDatabase() throws HibernateException, SQLException;
     

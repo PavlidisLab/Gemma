@@ -1,5 +1,5 @@
-<bean id="sessionFactoryHg17" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
-        <property name="dataSource"><ref bean="dataSourceHg17"/></property>
+<bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
+        <property name="dataSource"><ref bean="dataSourceGoldenPathHuman"/></property>
         <property name="mappingResources">
             <list>
                 
@@ -16,7 +16,7 @@
         </property>
 	</bean>	
 	
-	<bean id="dataSourceHg17" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+	<bean id="dataSourceGoldenPathHuman" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName"><value>com.mysql.jdbc.Driver</value></property>
         <property name="username"><value>pavlidis</value></property>
         <property name="password"><value>toast</value></property>
