@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 11 22:01:36 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sat Mar 12 05:58:49 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -4999,14 +4999,6 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                         <UML:Generalization xmi.id = 'I1140071m101d462efa4mm4a33' isSpecification = 'false'>
                           <UML:Generalization.child>
                             <UML:Class xmi.idref = 'I1140071m101d462efa4mm4e97'/>
-                          </UML:Generalization.child>
-                          <UML:Generalization.parent>
-                            <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
-                          </UML:Generalization.parent>
-                        </UML:Generalization>
-                        <UML:Generalization xmi.id = 'I8fcfaem101dcbbe403mm4211' isSpecification = 'false'>
-                          <UML:Generalization.child>
-                            <UML:Class xmi.idref = 'Ia948c2m101cef0df55mm4cf8'/>
                           </UML:Generalization.child>
                           <UML:Generalization.parent>
                             <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
@@ -14741,180 +14733,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
-                            <UML:Class xmi.id = 'Ia948c2m101cef0df55mm4cf8' name = 'GenomicRoi' visibility = 'public'
-                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-                              isActive = 'false'>
-                              <UML:ModelElement.taggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm428e' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue>&lt;p&gt;A region of interest in a genome. A QTL or other&lt;/p&gt;</UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm4295' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue>GENOMIC_ROI</UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfe4'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm4294' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfde'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm4293' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfd8'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm4292' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfd2'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm4291' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfca'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm4290' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfc4'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'I8fcfaem101dcbbe403mm428f' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfbe'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                                <UML:TaggedValue xmi.id = 'Idbfe9cm1025f34ddd2mm2131' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                  <UML:TaggedValue.type>
-                                    <UML:TagDefinition xmi.idref = 'Idbfe9cm1025f34ddd2mm2170'/>
-                                  </UML:TaggedValue.type>
-                                </UML:TaggedValue>
-                              </UML:ModelElement.taggedValue>
-                              <UML:GeneralizableElement.generalization>
-                                <UML:Generalization xmi.idref = 'I8fcfaem101dcbbe403mm4211'/>
-                              </UML:GeneralizableElement.generalization>
-                              <UML:Classifier.feature>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4cc0' name = 'start' visibility = 'public'
-                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4caf' name = 'end' visibility = 'public'
-                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4c9e' name = 'startCentimorgans'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4c8d' name = 'endCentimorgans'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4c7c' name = 'startScore'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e00'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4c6b' name = 'endScore' visibility = 'public'
-                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e00'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm4c5a' name = 'peakScore' visibility = 'public'
-                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
-                                  <UML:StructuralFeature.type>
-                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e00'/>
-                                  </UML:StructuralFeature.type>
-                                </UML:Attribute>
-                                <UML:Operation xmi.id = 'I1e3c942m1028cf8174cmm7f0' name = 'findAllQtlsByPhysicalMapLocation'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:ModelElement.stereotype>
-                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
-                                  </UML:ModelElement.stereotype>
-                                  <UML:ModelElement.taggedValue>
-                                    <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm727' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from GenomicRoiImpl qtl where (qtl.end-qtl.start) &gt; abs(qtl.end-?)</UML:TaggedValue.dataValue>
-                                      <UML:TaggedValue.type>
-                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
-                                      </UML:TaggedValue.type>
-                                    </UML:TaggedValue>
-                                    <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm726' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                      <UML:TaggedValue.type>
-                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
-                                      </UML:TaggedValue.type>
-                                    </UML:TaggedValue>
-                                    <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm725' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                      <UML:TaggedValue.type>
-                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
-                                      </UML:TaggedValue.type>
-                                    </UML:TaggedValue>
-                                    <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm724' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                      <UML:TaggedValue.type>
-                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
-                                      </UML:TaggedValue.type>
-                                    </UML:TaggedValue>
-                                    <UML:TaggedValue xmi.id = 'I1e3c942m1028cf8174cmm723' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
-                                      <UML:TaggedValue.type>
-                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
-                                      </UML:TaggedValue.type>
-                                    </UML:TaggedValue>
-                                  </UML:ModelElement.taggedValue>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'I1e3c942m1028cf8174cmm7ed' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'I1e3c942m1028cf8174cmm794' name = 'physicalMapLocation'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Method xmi.id = 'I1e3c942m1028cf8174cmm7ee' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'I1e3c942m1028cf8174cmm7ef' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'I1e3c942m1028cf8174cmm7f0'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
-                              </UML:Classifier.feature>
-                            </UML:Class>
                             <UML:Association xmi.id = 'I8fcfaem101dcbbe403mm4630' name = 'GenomeAssembly'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
@@ -15610,14 +15428,14 @@ of nucleotides associated with a gene product.  This class only represents the s
                             <UML:Generalization xmi.idref = 'Iff6185m1029346d98fmm2bb'/>
                           </UML:GeneralizableElement.generalization>
                           <UML:Classifier.feature>
-                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm1b9' name = 'startCentimorgans'
+                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm1b9' name = 'centimorgans'
                               visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                               changeability = 'changeable'>
                               <UML:StructuralFeature.type>
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e00'/>
                               </UML:StructuralFeature.type>
                             </UML:Attribute>
-                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm147' name = 'endCentimorgans'
+                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm147' name = 'centimorganLength'
                               visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                               changeability = 'changeable'>
                               <UML:StructuralFeature.multiplicity>
@@ -15701,23 +15519,25 @@ of nucleotides associated with a gene product.  This class only represents the s
                             <UML:Generalization xmi.idref = 'Iff6185m1029346d98fmm2d5'/>
                           </UML:GeneralizableElement.generalization>
                           <UML:Classifier.feature>
-                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm252' name = 'startNucleotide'
-                              visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                              changeability = 'changeable'>
+                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm252' name = 'nucleotide' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
                               <UML:StructuralFeature.type>
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3e'/>
                               </UML:StructuralFeature.type>
                             </UML:Attribute>
-                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm158' name = 'endNucleotide'
+                            <UML:Attribute xmi.id = 'Iff6185m1029346d98fmm158' name = 'nucleotideLength'
                               visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                               changeability = 'changeable'>
                               <UML:StructuralFeature.multiplicity>
-                                <UML:Multiplicity xmi.id = 'Iff6185m1029346d98fm289'>
+                                <UML:Multiplicity xmi.id = 'Iff6185m1029346d98fm4b7'>
                                   <UML:Multiplicity.range>
-                                    <UML:MultiplicityRange xmi.id = 'Iff6185m1029346d98fm28a' lower = '0' upper = '1'/>
+                                    <UML:MultiplicityRange xmi.id = 'Iff6185m1029346d98fm4b8' lower = '1' upper = '1'/>
                                   </UML:Multiplicity.range>
                                 </UML:Multiplicity>
                               </UML:StructuralFeature.multiplicity>
+                              <UML:Attribute.initialValue>
+                                <UML:Expression xmi.id = 'Iff6185m1029346d98fm4bd' language = 'java' body = 'new Integer(1)'/>
+                              </UML:Attribute.initialValue>
                               <UML:StructuralFeature.type>
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3e'/>
                               </UML:StructuralFeature.type>
@@ -16005,7 +15825,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                               </UML:ModelElement.stereotype>
                               <UML:ModelElement.taggedValue>
                                 <UML:TaggedValue xmi.id = 'Iff6185m1029346d98fmmc2' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue>from QtlImpl qtl where (qtl.physicalLocation.end-qtl.physicalLocation.start) &gt; abs(qtl.physicalLocation.end-:n.start) and qtl.physicalLocation.chromosome = :n.chromosome </UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.dataValue>from QtlImpl qtl where (qtl.startMaker.chromosome = :n.chromosome and qtl.startMaker.nucleotide &lt; :n.nucleotide and qtl.endMarker.nucleotide &gt; :n.nucleotide</UML:TaggedValue.dataValue>
                                   <UML:TaggedValue.type>
                                     <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                   </UML:TaggedValue.type>
