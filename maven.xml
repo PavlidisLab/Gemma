@@ -19,17 +19,18 @@
 
 <goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
 	 <ant:delete>
-	 	<fileset dir="src/db/dao" includes="**/*.java"  excludes="impl/**/*.java" />
-	 	<fileset dir="src/db/model" includes="**/*.java,**/**.hbm.xml"   excludes="impl/**/*.java" />
-	  	<fileset dir="src/service" includes="**/*.java"  excludes="impl/**/*.java" />
+	 	<fileset dir="src/db/dao/edu" includes="*/**" /> 
+	 	<fileset dir="src/db/model/edu" includes="*/**" />
+	 	<fileset dir="src/db/model/org" includes="*/**" />
+	  	<fileset dir="src/service/edu" includes="*/**" />
 	 </ant:delete>
 </goal>
 
 <goal name="mda-clean-impl" description="Remove all Andromda IMPL classes - DANGER, don't do this unless you are sure!" >
  <ant:delete>
-	 	<fileset dir="src/db/dao/impl" includes="**/*.java" />
-	 	<fileset dir="src/db/model/impl" includes="**/*.java" />
-	 	<fileset dir="src/service/impl" includes="**/*.java" />
+	 	<!--<fileset dir="src/db/dao/impl" includes="**/*.java" />-->
+	 	<fileset dir="src/db/model/impl/edu" includes="**/*.java" />
+	 	<fileset dir="src/service/impl/edu" includes="**/*.java" />
 	 	</ant:delete>
 </goal>
 
