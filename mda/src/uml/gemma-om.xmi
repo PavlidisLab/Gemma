@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Mar 16 14:42:31 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 18 12:03:25 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -4871,14 +4871,6 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                             <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
                           </UML:Comment.annotatedElement>
                         </UML:Comment>
-                        <UML:Generalization xmi.id = 'I322b7f4am101c5835e60mm6185' isSpecification = 'false'>
-                          <UML:Generalization.child>
-                            <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
-                          </UML:Generalization.child>
-                          <UML:Generalization.parent>
-                            <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
-                          </UML:Generalization.parent>
-                        </UML:Generalization>
                         <UML:Generalization xmi.id = 'I322b7f4am101c5835e60mm6173' isSpecification = 'false'>
                           <UML:Generalization.child>
                             <UML:Class xmi.idref = 'Im8f64ed4m101a5582751mm782f'/>
@@ -5007,14 +4999,6 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                         </UML:Comment>
                         <UML:Comment xmi.id = 'I1140071m101d462efa4mm4bc3' name = '' visibility = 'public'
                           isSpecification = 'false' body = 'I am not convinced that&#10;identifiable should inherit from describable.&#10;They seem reasonably independent.'/>
-                        <UML:Generalization xmi.id = 'I1140071m101d462efa4mm4a33' isSpecification = 'false'>
-                          <UML:Generalization.child>
-                            <UML:Class xmi.idref = 'I1140071m101d462efa4mm4e97'/>
-                          </UML:Generalization.child>
-                          <UML:Generalization.parent>
-                            <UML:Class xmi.idref = 'I5acf13m101bacaf829mm7046'/>
-                          </UML:Generalization.parent>
-                        </UML:Generalization>
                         <UML:Generalization xmi.id = 'I8fcfaem101dcbbe403mm420a' isSpecification = 'false'>
                           <UML:Generalization.child>
                             <UML:Class xmi.idref = 'Ia948c2m101cef0df55mm4efd'/>
@@ -10839,6 +10823,22 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                         </UML:Association>
                         <UML:Comment xmi.id = 'I10f93f9m102a7804758mm62c' name = '' visibility = 'public'
                           isSpecification = 'false' body = 'dummy() has been&#10;added to push the&#10;IdentifiableImpl into&#10;the impl directory.  &#10;We have overriden&#10;equals, hashCode, &#10;toString, and compareTo&#10;in this file'/>
+                        <UML:Generalization xmi.id = 'I1a1f567m102b6501985mm6b8' isSpecification = 'false'>
+                          <UML:Generalization.child>
+                            <UML:Class xmi.idref = 'I1140071m101d462efa4mm4e97'/>
+                          </UML:Generalization.child>
+                          <UML:Generalization.parent>
+                            <UML:Class xmi.idref = 'I10f93f9m102a7804758mm6f5'/>
+                          </UML:Generalization.parent>
+                        </UML:Generalization>
+                        <UML:Generalization xmi.id = 'I1a1f567m102b6501985mm3c5' isSpecification = 'false'>
+                          <UML:Generalization.child>
+                            <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
+                          </UML:Generalization.child>
+                          <UML:Generalization.parent>
+                            <UML:Class xmi.idref = 'I10f93f9m102a7804758mm6f5'/>
+                          </UML:Generalization.parent>
+                        </UML:Generalization>
                       </UML:Namespace.ownedElement>
                     </UML:Package>
                     <UML:Package xmi.id = 'I29dead4bm101b56ea970mm72ea' name = 'association'
@@ -12960,7 +12960,7 @@ etc. in order to capture the scores and other parameters that document why we th
                               </UML:ModelElement.stereotype>
                               <UML:ModelElement.taggedValue>
                                 <UML:TaggedValue xmi.id = 'Ia948c2m101cef0df55mm4fa5' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue>&lt;p&gt;Represnts the result of a BLAT search. The column names follow the convention of Kent et al., except for score.&lt;/p&gt;</UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.dataValue>Represnts the result of a BLAT search. The column names follow the convention of Kent et al.</UML:TaggedValue.dataValue>
                                   <UML:TaggedValue.type>
                                     <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
                                   </UML:TaggedValue.type>
@@ -13040,6 +13040,34 @@ etc. in order to capture the scores and other parameters that document why we th
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'Ia948c2m101cef0df55mm50eb' name = 'ncount' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I1a1f567m102b6501985mm26e' name = 'queryGaPBases'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I1a1f567m102b6501985mm25d' name = 'queryGaPCount'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I1a1f567m102b6501985mm23b' name = 'targetGaPBases'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I1a1f567m102b6501985mm24c' name = 'targetGaPCount'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
                                   </UML:StructuralFeature.type>
@@ -13140,6 +13168,28 @@ etc. in order to capture the scores and other parameters that document why we th
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
+                                <UML:Operation xmi.id = 'I1a1f567m102b6501985mm22a' name = 'score' visibility = 'public'
+                                  isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
+                                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'I1a1f567m102b6501985mm227' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e00'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'I1a1f567m102b6501985mm228' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'I1a1f567m102b6501985mm229' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'I1a1f567m102b6501985mm22a'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
                               </UML:Classifier.feature>
                             </UML:Class>
                             <UML:Class xmi.id = 'Ia948c2m101cef0df55mm5189' name = 'BlastResult' visibility = 'public'
@@ -13237,7 +13287,7 @@ etc. in order to capture the scores and other parameters that document why we th
                             </UML:Class>
                             <UML:Class xmi.id = 'I1140071m101d462efa4mm4805' name = 'SequenceSimilaritySearchResult'
                               visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-                              isAbstract = 'true' isActive = 'false'>
+                              isAbstract = 'false' isActive = 'false'>
                               <UML:ModelElement.comment>
                                 <UML:Comment xmi.idref = 'Ieeda37m101f2ab640dmm337e'/>
                               </UML:ModelElement.comment>
@@ -13288,7 +13338,7 @@ etc. in order to capture the scores and other parameters that document why we th
                                   </UML:TaggedValue.type>
                                 </UML:TaggedValue>
                                 <UML:TaggedValue xmi.id = 'Idbfe9cm1025f34ddd2mm2139' isSpecification = 'false'>
-                                  <UML:TaggedValue.dataValue>subclass</UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.dataValue>class</UML:TaggedValue.dataValue>
                                   <UML:TaggedValue.type>
                                     <UML:TagDefinition xmi.idref = 'Idbfe9cm1025f34ddd2mm2170'/>
                                   </UML:TaggedValue.type>
@@ -13314,8 +13364,8 @@ etc. in order to capture the scores and other parameters that document why we th
                                 <UML:Class xmi.idref = 'I1140071m101d462efa4mm4805'/>
                               </UML:Generalization.parent>
                             </UML:Generalization>
-                            <UML:Association xmi.id = 'Ieeda37m101f2ab640dmm34d9' name = 'Query' isSpecification = 'false'
-                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                            <UML:Association xmi.id = 'Ieeda37m101f2ab640dmm34d9' name = 'QuerySequence'
+                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ieeda37m101f2ab640dmm34df' visibility = 'public'
                                   isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
@@ -13332,7 +13382,7 @@ etc. in order to capture the scores and other parameters that document why we th
                                     <UML:Class xmi.idref = 'I1140071m101d462efa4mm4805'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'Ieeda37m101f2ab640dmm34dc' name = 'query'
+                                <UML:AssociationEnd xmi.id = 'Ieeda37m101f2ab640dmm34dc' name = 'querySequence'
                                   visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
@@ -14091,6 +14141,64 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:Method.body>
                                   <UML:Method.specification>
                                     <UML:Operation xmi.idref = 'I1e3c942m1028cf8174cmma04'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
+                                <UML:Operation xmi.id = 'I1a1f567m102b6501985mm6ad' name = 'findAllTaxa'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.stereotype>
+                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
+                                  </UML:ModelElement.stereotype>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'I1a1f567m102b6501985mm531' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>from TaxonImpl</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I1a1f567m102b6501985mm530' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I1a1f567m102b6501985mm52f' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I1a1f567m102b6501985mm52e' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I1a1f567m102b6501985mm52d' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'I1a1f567m102b6501985mm6aa' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'I1a1f567m102b6501985mm6ab' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'I1a1f567m102b6501985mm6ac' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'I1a1f567m102b6501985mm6ad'/>
                                   </UML:Method.specification>
                                 </UML:Method>
                               </UML:Classifier.feature>
@@ -15782,7 +15890,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                             </UML:TaggedValue>
                           </UML:ModelElement.taggedValue>
                           <UML:GeneralizableElement.generalization>
-                            <UML:Generalization xmi.idref = 'I322b7f4am101c5835e60mm6185'/>
+                            <UML:Generalization xmi.idref = 'I1a1f567m102b6501985mm3c5'/>
                           </UML:GeneralizableElement.generalization>
                         </UML:Class>
                         <UML:Association xmi.id = 'Iff6185m1029346d98fmm26f' name = 'FeatureCytogenicLocation'
@@ -16721,14 +16829,14 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                             <UML:TaggedValue xmi.id = 'Idbfe9cm1025f34ddd2mm216d' isSpecification = 'false'>
-                              <UML:TaggedValue.dataValue>class</UML:TaggedValue.dataValue>
+                              <UML:TaggedValue.dataValue>concrete</UML:TaggedValue.dataValue>
                               <UML:TaggedValue.type>
                                 <UML:TagDefinition xmi.idref = 'Idbfe9cm1025f34ddd2mm2170'/>
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                           </UML:ModelElement.taggedValue>
                           <UML:GeneralizableElement.generalization>
-                            <UML:Generalization xmi.idref = 'I1140071m101d462efa4mm4a33'/>
+                            <UML:Generalization xmi.idref = 'I1a1f567m102b6501985mm6b8'/>
                           </UML:GeneralizableElement.generalization>
                         </UML:Class>
                         <UML:Class xmi.id = 'I1140071m101d462efa4mm4e84' name = 'DesignElementAnalysisResult'
