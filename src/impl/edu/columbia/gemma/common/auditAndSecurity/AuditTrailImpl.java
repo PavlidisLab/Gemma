@@ -98,7 +98,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     * 
     * @return
     */
-   private boolean isEmpty() {
+   private boolean trailIsNull() {
       return this.getEvents() == null;
    }
 
@@ -106,7 +106,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     * If this AudiTrail is empty, initialize it. Otherwise, clear any events.
     */
    private void init() {
-      if ( isEmpty() ) {
+      if ( trailIsNull() ) {
          this.setEvents( new ArrayList() );
       } else {
          this.getEvents().clear();
