@@ -20,11 +20,11 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
- * Class to parse MAGE-ML files, and convert them into Gemma domain objects.
+ * Class to parse MAGE-ML files and convert them into Gemma domain objects.
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
- * 
+ * @see edu.columbia.gemma.loader.mage.MageMLConverter
  * @author pavlidis
  * @version $Id$
  */
@@ -38,6 +38,9 @@ public class MageMLParser {
     private MageMLConverter mlc;
     private String[] mageClasses;
 
+    /**
+     * Create a new MageMLParser
+     */
     public MageMLParser() {
 
         mlc = new MageMLConverter();
@@ -69,14 +72,14 @@ public class MageMLParser {
     }
 
     /**
-     * Convert all of the data, returning a collection of Gemma domain objects.
+     * Convert all of the data from the parsed stream (convenience method)
      * 
-     * @return
+     * @return Collection of Gemma domain objects.
      */
     public Collection getConvertedData() {
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
         Package[] allPackages = Package.getPackages();
-        
+
         Collection result = new ArrayList();
 
         // todo: this is inefficient because it tries every possible package and class. - fix is to get just the mage
@@ -105,12 +108,13 @@ public class MageMLParser {
     }
 
     /**
-     * Generic method to extract the desired MAGE objects. This is based on the assumption that each MAGE domain
-     * packages has a "getXXXX_package" method, which in turn has a "getXXX_list" method for each class it contains.
+     * Generic method to extract the desired MAGE objects. This is based on the assumption that each MAGE domain package
+     * has a "getXXXX_package" method, which in turn has a "getXXX_list" method for each class it contains. Other
+     * objects are only extracted during the process of conversion to Gemma objects. (This is basically a helper method)
      * <p>
      * 
      * @param type
-     * @return
+     * @return Collection of MAGE domain objects.
      */
     public Collection getData( Class type ) {
 
@@ -119,42 +123,35 @@ public class MageMLParser {
         String className = type.getName();
         String trimmedClassName = className.substring( className.lastIndexOf( '.' ) + 1 );
 
-        // 1. find the package of type.
         String packageName = type.getPackage().getName();
         String trimmedPackageName = packageName.substring( packageName.lastIndexOf( '.' ) + 1 );
-        String targetMethodName = "get" + trimmedPackageName + "_package";
+        String packageGetterMethodName = "get" + trimmedPackageName + "_package";
 
         try {
 
-            Method targetMethod = null;
+            Method packageGetterMethod = null;
             try {
-                targetMethod = mageJava.getClass().getMethod( targetMethodName, new Class[] {} );
+                packageGetterMethod = mageJava.getClass().getMethod( packageGetterMethodName, new Class[] {} );
             } catch ( NoSuchMethodException e ) {
                 ; // that's okay - org.biomage.Common.MAGEJava.getCommon_package() triggers this.
                 return null;
             }
 
-            // if ( targetMethod == null )
-            // throw new NoSuchMethodException( "Couldn't locate method " + targetMethodName );
-
-            // 2. get the _package class for that type.
-            Object packageOb = targetMethod.invoke( mageJava, new Object[] {} );
+            Object packageOb = packageGetterMethod.invoke( mageJava, new Object[] {} );
 
             // Null is not an error: not all MAGE-ML files have all packages (in fact they don't in general)
             if ( packageOb == null ) return null;
 
-            // 3. invoke the getXXX_list method for the _package.
-            String secondMethodName = "get" + trimmedClassName + "_list";
-            Method secondMethod = null;
+            String listGetterMethodName = "get" + trimmedClassName + "_list";
+            Method listGetterMethod = null;
             try {
-                secondMethod = packageOb.getClass().getMethod( secondMethodName, new Class[] {} );
+                listGetterMethod = packageOb.getClass().getMethod( listGetterMethodName, new Class[] {} );
             } catch ( NoSuchMethodException e ) {
-                // log.debug( "No such method: " + secondMethodName ); // that's okay, it isn't the kind of object we
-                // get by XX_list.
+                // that's okay, not everybody has one.
                 return null;
             }
 
-            Object result = secondMethod.invoke( packageOb, new Object[] {} );
+            Object result = listGetterMethod.invoke( packageOb, new Object[] {} );
             assert result instanceof List; // it should be a whatever_list.
             return ( Collection ) result;
 

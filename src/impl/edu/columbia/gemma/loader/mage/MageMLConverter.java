@@ -23,12 +23,14 @@ import edu.columbia.gemma.sequence.biosequence.SequenceType;
 import edu.columbia.gemma.sequence.gene.Taxon;
 
 /**
- * Class to convet Mage domain objects to Gemma domain objects. In most cases, the user can simply call the "convert"
- * method on any MAGE domain object and get a fully-populated Gemma domain object.
+ * Class to convert Mage domain objects to Gemma domain objects. In most cases, the user can simply call the "convert"
+ * method on any MAGE domain object and get a fully-populated Gemma domain object. There is no need to use the methods
+ * in this class directly when handling MAGE-ML files: use the {@link edu.columbia.gemma.loader.mage.MageMLParser.}
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
  * 
+ * @see edu.columbia.gemma.loader.mage.MageMLParser
  * @author pavlidis
  * @version $Id$
  */
@@ -121,6 +123,10 @@ public class MageMLConverter {
     }
 
     /**
+     * Implementation note: This is passed a 'get' method for an association to one or more MAGE domain objects. In some
+     * cases, the subsequent call can be computed using reflection; but in other cases it will have to be done by hand,
+     * as when there is not a direct mapping of Gemma objects to MAGE objects and vice versa.
+     * 
      * @param mageObj
      * @param gemmaObj
      * @param getter
@@ -137,10 +143,10 @@ public class MageMLConverter {
 
             if ( associationName.equals( "PolymerType" ) ) { // Ontology Entry - enumerated type.
                 gemmaObj.setPolymerType( this.convertPolymerType( ( OntologyEntry ) associatedObject ) );
-            } else if ( associationName.equals( "SeqFeatures" ) ) { // list of Sequence features, we ignore
-                ;
-            } else if ( associationName.equals( "OntologyEntries" ) ) { // list of generic ontology entries, we ignore.
-                ;
+            } else if ( associationName.equals( "SeqFeatures" ) ) {
+                ; // list of Sequence features, we ignore
+            } else if ( associationName.equals( "OntologyEntries" ) ) {
+                ; // list of generic ontology entries, we ignore.
             } else if ( associationName.equals( "SequenceDatabases" ) ) { // list of DatabaseEntries, we use one
                 List seqdbs = ( List ) associatedObject;
 
@@ -158,8 +164,6 @@ public class MageMLConverter {
             } else {
                 log.error( "Unknown type" );
             }
-
-            // figure out what we need to do.
         } else {
             log.warn( "Getter called but failed to return a value: " + getter.getName() + " (Probably no data)" );
         }
