@@ -46,8 +46,8 @@
 #foreach($entity in $entities)
 #set($generalization = $entity.generalization)
 #set($genstrat = $generalization.hibernateInheritanceStrategy)
-#if ( $entity.isRootInheritanceEntity() && $entity.hibernateInheritanceStrategy != "concrete" && $entity.hibernateInheritanceStrategy != "interface"  && $genstrat != "subclass" && $genstrat != "class")
-                <value>${entity.packagePath}/${entity.entityName}.hbm.xml</value>
+#if ( ($entity.isRootInheritanceEntity() && $entity.hibernateInheritanceStrategy != "concrete" && $entity.hibernateInheritanceStrategy != "interface"  && $genstrat != "subclass" && $genstrat != "class" ) || 	($entity.generalizations.empty && $entity.hibernateInheritanceStrategy != "concrete" && $entity.hibernateInheritanceStrategy != "interface") )
+               <value>${entity.packagePath}/${entity.entityName}.hbm.xml</value>
 #end
 #end
             </list>
