@@ -28,6 +28,8 @@
 
 package edu.columbia.gemma.dummy.common.auditAndSecurity;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 /**
  * 
  *
@@ -40,7 +42,7 @@ package edu.columbia.gemma.dummy.common.auditAndSecurity;
 public class PersonServiceDummyImpl
     extends edu.columbia.gemma.common.auditAndSecurity.PersonServiceBase
 {
-
+    private String identifier = null;
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.PersonService#savePerson(edu.columbia.gemma.common.auditAndSecurity.Person)
      */
@@ -48,6 +50,8 @@ public class PersonServiceDummyImpl
         throws java.lang.Exception
     {
         //@todo implement protected void handleSavePerson(edu.columbia.gemma.common.auditAndSecurity.Person person)
+       identifier = RandomStringUtils.randomAlphabetic(11);
+       person.setIdentifier(identifier);
         getPersonDao().create(person);
         //throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.PersonService.handleSavePerson(edu.columbia.gemma.common.auditAndSecurity.Person person) Not implemented!");
     }
@@ -69,11 +73,12 @@ public class PersonServiceDummyImpl
      * @param
      * @param
      */
-    protected void handleRemovePerson(java.lang.String firstName, java.lang.String lastName, java.lang.String middleName)
+    protected void handleRemovePerson(edu.columbia.gemma.common.auditAndSecurity.Person person)
         throws java.lang.Exception
     {
         //@todo implement protected void handleRemovePerson(java.lang.String firstName, java.lang.String lastName, java.lang.String middleName)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.PersonService.handleRemovePerson(java.lang.String firstName, java.lang.String lastName, java.lang.String middleName) Not implemented!");
+        //throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.PersonService.handleRemovePerson(java.lang.String firstName, java.lang.String lastName, java.lang.String middleName) Not implemented!");
+       getPersonDao().remove(person);
     }
 
     /**
