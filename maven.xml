@@ -17,7 +17,7 @@
 			goals="andromda:run"/>
 </goal>	
 
-<postGoal name="mda"><attainGoal name="patch-applicationContext" /></postGoal>
+<!--<postGoal name="mda"><attainGoal name="patch-applicationContext" /></postGoal>-->
 
 <goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
 	 <ant:delete>
