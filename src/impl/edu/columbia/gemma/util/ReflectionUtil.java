@@ -17,6 +17,7 @@ public class ReflectionUtil {
      * Get simple name for class ; given java.lang.Object.getClass(), will return "Object".
      * @param clazz
      * @return
+     * @deprecated - replace in JDK 1.5 with Class.getSimpleName()
      */
     public static String getSimpleName(Class clazz) {
         return clazz.getName().substring(clazz.getName().lastIndexOf('.') + 1);
