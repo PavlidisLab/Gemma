@@ -19,10 +19,12 @@ import edu.columbia.gemma.BaseDAOTestCase;
 public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
    private BibliographicReferenceDao dao = null;
+   private DatabaseEntryDao dedao = null;
 
    protected void setUp() throws Exception {
       Log log = LogFactory.getLog( BibliographicReferenceDaoImplTest.class );
       dao = ( BibliographicReferenceDao ) ctx.getBean( "bibliographicReferenceDao" );
+      dedao = ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" );
    }
 
    protected void tearDown() throws Exception {
@@ -38,9 +40,9 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
       String random = ( new Date() ).toString();
 
-      DatabaseEntry de = new DatabaseEntryImpl();
-      DatabaseEntry deb = new DatabaseEntryImpl();
-      
+      DatabaseEntry de = ( DatabaseEntry ) dedao.create( "2", "", "", ( new Date() ).toString(), "foo" );
+      DatabaseEntry deb = ( DatabaseEntry ) dedao.create( "3", "", "", ( new Date() ).toString(), "foo" );
+
       f.setPubAccession( de );
       f.setIdentifier( random );
       dao.create( f );
