@@ -3,8 +3,14 @@ package edu.columbia.gemma.sequence;
 import java.util.Collection;
 
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.sequence.gene.Taxon;
-import edu.columbia.gemma.sequence.gene.TaxonDao;
+import edu.columbia.gemma.genome.Chromosome;
+import edu.columbia.gemma.genome.ChromosomeDao;
+import edu.columbia.gemma.genome.PhysicalLocation;
+import edu.columbia.gemma.genome.PhysicalMarker;
+import edu.columbia.gemma.genome.Qtl;
+import edu.columbia.gemma.genome.QtlDao;
+import edu.columbia.gemma.genome.Taxon;
+import edu.columbia.gemma.genome.TaxonDao;
 
 public class QtlDaoImplTest extends BaseDAOTestCase {
 

@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.sequence.gene.Gene;
+import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.tools.GoldenPath;
 import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
 

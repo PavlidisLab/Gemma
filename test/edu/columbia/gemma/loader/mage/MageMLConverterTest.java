@@ -36,7 +36,7 @@ public class MageMLConverterTest extends TestCase {
         // mlp.parse( MageMLConverterTest.class.getResourceAsStream( "/data/mage/MGP-Biosequence.xml" ) );
         BioSequence bst = new BioSequence();
         Object result = mlc.convert( bst );
-        assertTrue( result instanceof edu.columbia.gemma.sequence.biosequence.BioSequence );
+        assertTrue( result instanceof edu.columbia.gemma.genome.biosequence.BioSequence );
 
     }
     

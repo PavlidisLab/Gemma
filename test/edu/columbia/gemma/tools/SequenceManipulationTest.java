@@ -11,7 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReader;
-import edu.columbia.gemma.sequence.biosequence.BioSequence;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
 
 /**
  * <hr>
