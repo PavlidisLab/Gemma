@@ -48,8 +48,8 @@ public class LoaderController extends SimpleFormController {
     /**
      * @param name
      * @return String
+     * TODO Make private if not used elsewhere
      */
-    //TODO Make private if not used elsewhere
     public String cleanString( String name ) {
         name = name.trim();
         name = name.toLowerCase();
