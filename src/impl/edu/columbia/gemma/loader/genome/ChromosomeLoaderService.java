@@ -25,15 +25,16 @@ import edu.columbia.gemma.genome.TaxonImpl;
 import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 
 /**
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2005 Columbia University
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
  * @author keshav
  * @version $Id$
  */
-public class ChromosomeLoaderService implements BulkCreator{
-    
+public class ChromosomeLoaderService implements BulkCreator {
+    private static boolean alreadyLoaded;
+
     private static boolean alreadyRetreivedTaxa;
     protected static final Log log = LogFactory.getLog( ChromosomeLoaderService.class );
     private Chromosome chromosome;
@@ -52,6 +53,8 @@ public class ChromosomeLoaderService implements BulkCreator{
         conf = new PropertiesConfiguration( "chromosome.properties" );
         nameCol = conf.getInt( "chromosome.nameCol" );
         taxonCol = conf.getInt( "chromosome.taxonCol" );
+        alreadyRetreivedTaxa = false;
+        alreadyLoaded = false;
         view = "chromosome";
     }
 
@@ -85,11 +88,83 @@ public class ChromosomeLoaderService implements BulkCreator{
     }
 
     /**
-     * @return Map
-     * TODO put in taxonutils after making taxaMap in createFromRow static
-     * 
+     * @return Returns the chromosome.
      */
-    public Map findAllTaxa() {
+    public edu.columbia.gemma.genome.Chromosome getChromosome() {
+        return chromosome;
+    }
+
+    /**
+     * @return Returns the chromosomeDao.
+     */
+    public edu.columbia.gemma.genome.ChromosomeDao getChromosomeDao() {
+        return chromosomeDao;
+    }
+
+    /**
+     * @return Returns the taxonDao.
+     */
+    public edu.columbia.gemma.genome.TaxonDao getTaxonDao() {
+        return taxonDao;
+    }
+
+    /**
+     * @param br
+     * @throws IOException TODO put in loaderutils
+     */
+    public void handleHeader( BufferedReader br ) throws IOException {
+        br.readLine();
+    }
+
+    /**
+     * @param chromosome The chromosome to set.
+     */
+    public void setChromosome( edu.columbia.gemma.genome.Chromosome chromosome ) {
+        this.chromosome = chromosome;
+    }
+
+    /**
+     * @param chromosomeDao
+     */
+    public void setChromosomeDao( edu.columbia.gemma.genome.ChromosomeDao chromosomeDao ) {
+        this.chromosomeDao = chromosomeDao;
+    }
+
+    /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( edu.columbia.gemma.genome.TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
+    }
+
+    /**
+     * @param line
+     * @throws NumberFormatException
+     */
+    private boolean createFromRow( String line ) throws NumberFormatException {
+        String[] sArray = line.split( "\t" );
+        Chromosome ch = Chromosome.Factory.newInstance();
+        ch.setName( sArray[nameCol] );
+
+        if ( !alreadyRetreivedTaxa ) taxaMap = findAllTaxa();
+
+        ch.setTaxon( loadOrCreateTaxon( taxaMap, Integer.parseInt( sArray[taxonCol] ), null ) );
+
+        Collection chromosomeCol = this.chromosomeDao.findByName( ch.getName() );
+
+        if ( chromosomeCol.size() > 0 ) {
+            log.info( "Chromosome with name: " + ch.getName() + " already exists, skipping." );
+            return false;
+        }
+        this.chromosomeDao.create( ch );
+
+        return true;
+    }
+
+    /**
+     * @return Map TODO put in taxonutils after making taxaMap in createFromRow static
+     */
+    private Map findAllTaxa() {
         Collection taxa = this.taxonDao.findAllTaxa();
         Map taxaMap = new HashMap();
         Iterator iter = taxa.iterator();
@@ -97,7 +172,6 @@ public class ChromosomeLoaderService implements BulkCreator{
         while ( iter.hasNext() ) {
             Integer Id = new Integer( id );
             taxaMap.put( Id, iter.next() );
-            System.err.println( "taxaMap: " + taxaMap.get( Id ) );
             id++;
         }
         alreadyRetreivedTaxa = true;
@@ -105,94 +179,19 @@ public class ChromosomeLoaderService implements BulkCreator{
     }
 
     /**
-     * @return Returns the chromosome.
-     */
-    public Chromosome getChromosome() {
-        return chromosome;
-    }
-
-    /**
-     * @return Returns the chromosomeDao.
-     */
-    public ChromosomeDao getChromosomeDao() {
-        return chromosomeDao;
-    }
-
-    /**
-     * @return Returns the taxonDao.
-     */
-    public TaxonDao getTaxonDao() {
-        return taxonDao;
-    }
-
-    /**
-     * @param chromosome The chromosome to set.
-     */
-    public void setChromosome( Chromosome chromosome ) {
-        this.chromosome = chromosome;
-    }
-
-    /**
-     * @param chromosomeDao
-     */
-    public void setchromosomeDao( ChromosomeDao chromosomeDao ) {
-        this.chromosomeDao = chromosomeDao;
-    }
-
-    /**
-     * @param taxonDao The taxonDao to set.
-     */
-    public void setTaxonDao( TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
-    }
-
-    /**
-     * @param line
-     * @throws NumberFormatException
-     * TODO Add finder findByName() to the model
-     */
-    private boolean createFromRow( String line ) throws NumberFormatException {
-        String[] sArray = line.split( "\t" );
-        Chromosome ch = Chromosome.Factory.newInstance();
-        ch.setName( sArray[nameCol] );
-        
-        if ( !alreadyRetreivedTaxa )taxaMap = findAllTaxa();
-
-        ch.setTaxon( loadOrCreateTaxon( taxaMap, Integer.parseInt( sArray[taxonCol] ), "" ) );
-        Collection chromosomeCol = this.chromosomeDao.findByName( ch.getName() );
-        if ( chromosomeCol.size() > 0 ) {
-            log.info( "Chromosome with name: " + ch.getName() + " already exists, skipping." );
-            return false;
-        }
-        this.chromosomeDao.create( ch );
-        return true;
-
-    }
-
-    /**
-     * @param br
-     * @throws IOException
-     * TODO put in loaderutils
-     */
-    public void handleHeader( BufferedReader br ) throws IOException {
-        br.readLine();
-    }
-
-    /**
      * @param taxaMap
      * @param id
      * @param s
-     * @return Taxon
-     * TODO put in taxonutils after making taxaMap in createFromRow static
+     * @return Taxon TODO put in taxonutils after making taxaMap in createFromRow static
      */
-    public Taxon loadOrCreateTaxon( Map taxaMap, int id, String s ) {
+    private Taxon loadOrCreateTaxon( Map taxaMap, int id, Taxon taxon ) {
         Taxon t;
         Integer Id = new Integer( id );
-        if ( taxaMap.containsKey( Id ) )
+        if ( taxaMap.containsKey( Id ) ) {
             t = ( TaxonImpl ) taxaMap.get( Id );
-        else {
-            t = Taxon.Factory.newInstance();
-            t.setCommonName( s );
+            System.err.println( t.toString() );
+        } else {
+            t = taxon;
         }
         return t;
     }

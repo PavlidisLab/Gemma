@@ -31,7 +31,6 @@ public class ArrayDesignLoaderService implements BulkCreator {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignLoaderService.class );
 
-    private ArrayDesign arrayDesign;
     private ArrayDesignDao arrayDesignDao;
 
     private int auditTrailCol;

@@ -104,7 +104,6 @@ public class GeneLoaderService implements BulkCreator {
         while ( iter.hasNext() ) {
             Integer Id = new Integer( id );
             taxaMap.put( Id, iter.next() );
-            System.err.println( "taxaMap: " + taxaMap.get( Id ) );
             id++;
         }
         alreadyRetreivedTaxa = true;
