@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Feb 28 14:19:32 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Feb 28 14:40:00 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -11755,6 +11755,69 @@ physical array.&lt;/p&gt;</UML:TaggedValue.dataValue>
                             <UML:Class xmi.idref = 'Im8f64ed4m101a5582751mm726b'/>
                           </UML:Comment.annotatedElement>
                         </UML:Comment>
+                        <UML:Class xmi.id = 'Ibaaea8m10259547663mm26f3' name = 'CompositeSequenceService'
+                          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+                          isAbstract = 'false' isActive = 'false'>
+                          <UML:ModelElement.clientDependency>
+                            <UML:Dependency xmi.idref = 'Ibaaea8m10259547663mm26d4'/>
+                          </UML:ModelElement.clientDependency>
+                          <UML:ModelElement.stereotype>
+                            <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf44'/>
+                          </UML:ModelElement.stereotype>
+                          <UML:ModelElement.taggedValue>
+                            <UML:TaggedValue xmi.id = 'Ibaaea8m10259547663mm26d6' isSpecification = 'false'>
+                              <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                              <UML:TaggedValue.type>
+                                <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf4c'/>
+                              </UML:TaggedValue.type>
+                            </UML:TaggedValue>
+                            <UML:TaggedValue xmi.id = 'Ibaaea8m10259547663mm26d5' isSpecification = 'false'>
+                              <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                              <UML:TaggedValue.type>
+                                <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf46'/>
+                              </UML:TaggedValue.type>
+                            </UML:TaggedValue>
+                          </UML:ModelElement.taggedValue>
+                          <UML:Classifier.feature>
+                            <UML:Operation xmi.id = 'Ibaaea8m10259547663mm26cd' name = 'saveCompositeSequence'
+                              visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                              isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                              isAbstract = 'false'>
+                              <UML:BehavioralFeature.parameter>
+                                <UML:Parameter xmi.id = 'Ibaaea8m10259547663mm26ca' name = 'return' isSpecification = 'false'
+                                  kind = 'return'>
+                                  <UML:Parameter.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                                <UML:Parameter xmi.id = 'Ibaaea8m10259547663mm26b5' name = 'compositeSequence'
+                                  isSpecification = 'false' kind = 'in'>
+                                  <UML:Parameter.type>
+                                    <UML:Class xmi.idref = 'Im8f64ed4m101a5582751mm727e'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                              </UML:BehavioralFeature.parameter>
+                            </UML:Operation>
+                            <UML:Method xmi.id = 'Ibaaea8m10259547663mm26cb' isSpecification = 'false'
+                              isQuery = 'false'>
+                              <UML:Method.body>
+                                <UML:ProcedureExpression xmi.id = 'Ibaaea8m10259547663mm26cc' language = 'java'
+                                  body = ''/>
+                              </UML:Method.body>
+                              <UML:Method.specification>
+                                <UML:Operation xmi.idref = 'Ibaaea8m10259547663mm26cd'/>
+                              </UML:Method.specification>
+                            </UML:Method>
+                          </UML:Classifier.feature>
+                        </UML:Class>
+                        <UML:Dependency xmi.id = 'Ibaaea8m10259547663mm26d4' isSpecification = 'false'>
+                          <UML:Dependency.client>
+                            <UML:Class xmi.idref = 'Ibaaea8m10259547663mm26f3'/>
+                          </UML:Dependency.client>
+                          <UML:Dependency.supplier>
+                            <UML:Class xmi.idref = 'Im8f64ed4m101a5582751mm727e'/>
+                          </UML:Dependency.supplier>
+                        </UML:Dependency>
                       </UML:Namespace.ownedElement>
                     </UML:Package>
                     <UML:Package xmi.id = 'I5acf13m101bacaf829mm7098' name = 'arrayDesign' visibility = 'public'
@@ -11855,11 +11918,7 @@ physical array.&lt;/p&gt;</UML:TaggedValue.dataValue>
                         <UML:Comment xmi.id = 'Ia948c2m101cef0df55mm52e3' name = '' visibility = 'public'
                           isSpecification = 'false' body = 'We have eliminated many of the &quot;extras&quot; in the MAGE model for ArrayDesign. &#10;There is no &quot;PhysicalArrayDesign&quot; distinction. There are no DesignElementGroups,&#10;because (so far...) there is only one group per array design, so nothing is gained.'/>
                         <UML:Comment xmi.id = 'Ia948c2m101cef0df55mm52a3' name = '' visibility = 'public'
-                          isSpecification = 'false' body = 'Note also there is no Array package. We aren&apos;t so interested in specific arrays. An array&#10;becomes individual when it is combined with a BioMaterial.'>
-                          <UML:Comment.annotatedElement>
-                            <UML:Comment xmi.idref = 'Iec780em1021c436373mm2c88'/>
-                          </UML:Comment.annotatedElement>
-                        </UML:Comment>
+                          isSpecification = 'false' body = 'Note also there is no Array package. We aren&apos;t so interested in specific arrays. An array&#10;becomes individual when it is combined with a BioMaterial.'/>
                         <UML:Comment xmi.id = 'Ia948c2m101cef0df55mm529c' name = '' visibility = 'public'
                           isSpecification = 'false' body = 'ArrayManufacturer instead of DesignProvider ( in MAGE)'>
                           <UML:Comment.annotatedElement>
@@ -11904,12 +11963,6 @@ physical array.&lt;/p&gt;</UML:TaggedValue.dataValue>
                             </UML:AssociationEnd>
                           </UML:Association.connection>
                         </UML:Association>
-                        <UML:Comment xmi.id = 'Iec780em1021c436373mm2c88' name = '' visibility = 'public'
-                          isSpecification = 'false' body = 'This is a Comment!'>
-                          <UML:ModelElement.comment>
-                            <UML:Comment xmi.idref = 'Ia948c2m101cef0df55mm52a3'/>
-                          </UML:ModelElement.comment>
-                        </UML:Comment>
                         <UML:Class xmi.id = 'Ibaaea8m10259547663mm292c' name = 'ArrayDesignService'
                           visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
                           isAbstract = 'false' isActive = 'false'>
