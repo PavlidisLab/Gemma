@@ -12,7 +12,7 @@
     	<ant:delete quiet="false" failonerror="false" >
 	    	<fileset dir="${basedir}/target/test-classes" includes="**/*.class,**/*.hbm.xml" />
     	</ant:delete>
-    	<attainGoal name="mda" /> 
+    	<!-- <attainGoal name="mda" />  -->
         <ant:path id="impl" location="${basedir}/src/impl"/>
         <maven:addPath id="maven.compile.src.set" refid="impl"/>
         <ant:path id="gen" location="${basedir}/src/gen"/>
