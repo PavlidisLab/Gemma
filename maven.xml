@@ -11,25 +11,30 @@
     <copy todir="${maven.build.dest}">
       <fileset dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
     </copy>
-  </preGoal>
+</preGoal>
+
 <goal name="mda" >
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run"/>
 </goal>	
 
-<!--<postGoal name="mda"><attainGoal name="patch-applicationContext" /></postGoal>-->
+<!--
+<postGoal name="mda">
+	<attainGoal name="patch-applicationContext" />
+</postGoal>
+-->
 
 <goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
 	 <ant:delete>
-	 	<fileset dir="src/db/dao/edu/columbia" includes="**/*.java"  excludes="impl/**/*.java" />
-	 	<fileset dir="src/db/model/edu/columbia" includes="**/*.java,**/**.hbm.xml"   excludes="impl/**/*.java" />
-	  	<fileset dir="src/service/edu/columbia" includes="**/*.java"  excludes="impl/**/*.java" />
+	 	<fileset dir="src/gen/edu/columbia" includes="**/*.java,**/*.hbm.xml"  excludes="impl/**/*.java" />
 	 </ant:delete>
 </goal>
 
-<!--  diff -c -w -d applicationContext-hibernate.bad.xml  applicationContext-hibernate.xml  > applicationContext-hibernate.patch -->
-<goal name="patch-applicationContext" description="Fix the hbm.xml files listed in the applicationContext file">
-	<ant:patch patchfile="${basedir}/web/WEB-INF/applicationContext-hibernate.patch" originalfile="${basedir}/web/WEB-INF/applicationContext-hibernate.xml" quiet="false" backups="true" ignorewhitespace="true" />
+
+<goal name="mda-pojo-impl-clean" description="Remove all Andromda-generated impl files" >
+	 <ant:delete>
+	 	<fileset dir="src/impl/edu/columbia/gemma" includes="**/*.java" excludes="**/*DaoImpl.java,**/*ServiceImpl.java,**/util/*,**/loader" />
+	 </ant:delete>
 </goal>
 
 </project>
