@@ -1,11 +1,7 @@
 package edu.columbia.gemma.loader.smd.model;
 
-import edu.columbia.gemma.common.description.Description;
-import edu.columbia.gemma.common.description.DescriptionImpl;
 import edu.columbia.gemma.common.description.FileFormat;
 import edu.columbia.gemma.common.description.FileFormatImpl;
-import edu.columbia.gemma.common.protocol.Protocol;
-import edu.columbia.gemma.common.protocol.ProtocolImpl;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssay.BioAssayImpl;
 
@@ -99,41 +95,25 @@ public class SMDBioAssay {
     public FileFormat toFileFormat() {
         FileFormat f = new FileFormatImpl();
 
-        f.setName( scanningSoftware + " version " + softwareVersion );
-        f.setIdentifier( "SMD:BioAssay:FileFormat" + id );
+        f.setFormatIdentifier( scanningSoftware + " version " + softwareVersion );
+        
         return f;
     }
 
-    /**
-     * @return
-     */
-    public Protocol toProtocol() {
-        Protocol p = new ProtocolImpl();
-        p.setIdentifier( "SMD:BioAssay:Protocol" + id );
-        p.setText( scanningSoftware + " version " + softwareVersion + ", Scanning parameters:" + scanningParameters );
-        return p;
-    }
+    
 
-    /**
-     * @return
-     */
-    public Description toDescription() {
-        Description d = new DescriptionImpl();
-        d.setText( "Category: " + category + ", SubCategory: " + ", Channel 1:" + channel1Description + ", Channel 2"
-                + channel2Description + ", Slide:" + slideName + ", Print: " + printName );
-        return d;
-    }
+    
 
     /**
      * @param d
      * @return
      */
-    public BioAssay toBioAssay( Description d ) {
+    public BioAssay toBioAssay( String description ) {
         BioAssay result = new BioAssayImpl();
 
         result.setIdentifier( "SMD:BioAssay:" + id );
         result.setName( name );
-        result.setDescription( d );
+        result.setDescription( description );
         return result;
     }
 

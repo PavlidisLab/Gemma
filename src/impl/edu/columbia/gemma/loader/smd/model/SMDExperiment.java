@@ -14,8 +14,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import edu.columbia.gemma.common.description.Description;
-import edu.columbia.gemma.common.description.DescriptionImpl;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentImpl;
 
@@ -35,21 +33,23 @@ import edu.columbia.gemma.loader.smd.util.SmdUtil;
  *     
  *      
  *       
- *                     &lt;experiment_set&gt;
- *                    !Name=PLA2G2A and human gastric cancers
- *                    !ExptSetNo=1743
- *                    !Description=We analyzed gene expression patterns in human gastric cancers by using cDNA microarrays representing approximately 30,300 genes. Expression of PLA2G2A, a gene previously implicated as a modifier of the Apc(Mi\
- *                    n/+) (multiple intestinal neoplasia 1) mutant phenotype in the mouse, was significantly correlated with patient survival. We confirmed this observation in an independent set of patient samples by using quantitative RT-PCR. Beyond\
- *                    its potential diagnostic and prognostic significance, this result suggests the intriguing possibility that the activity of PLA2G2A may suppress progression or metastasis of human gastric cancer.
- *                    &lt;experiment&gt;
- *                    !Name=GC (HKG10L)
- *                    !Exptid=16709
- *                    &lt;/experiment&gt;
- *                    &lt;experiment&gt;
- *                    !Name=GC (HKG10N)
- *                    !Exptid=16253
- *                    &lt;/experiment&gt;
- *                   ....
+ *        
+ *                      &lt;experiment_set&gt;
+ *                     !Name=PLA2G2A and human gastric cancers
+ *                     !ExptSetNo=1743
+ *                     !Description=We analyzed gene expression patterns in human gastric cancers by using cDNA microarrays representing approximately 30,300 genes. Expression of PLA2G2A, a gene previously implicated as a modifier of the Apc(Mi\
+ *                     n/+) (multiple intestinal neoplasia 1) mutant phenotype in the mouse, was significantly correlated with patient survival. We confirmed this observation in an independent set of patient samples by using quantitative RT-PCR. Beyond\
+ *                     its potential diagnostic and prognostic significance, this result suggests the intriguing possibility that the activity of PLA2G2A may suppress progression or metastasis of human gastric cancer.
+ *                     &lt;experiment&gt;
+ *                     !Name=GC (HKG10L)
+ *                     !Exptid=16709
+ *                     &lt;/experiment&gt;
+ *                     &lt;experiment&gt;
+ *                     !Name=GC (HKG10N)
+ *                     !Exptid=16253
+ *                     &lt;/experiment&gt;
+ *                    ....
+ *         
  *        
  *       
  *      
@@ -95,20 +95,12 @@ public class SMDExperiment {
     private List experiments; // a vector of experiment (er, bioassay) objects.
     private int publicationId;
 
-    public Description toDescription() {
-        Description d = new DescriptionImpl();
-        d.setText( this.description );
-        return d;
-
-    }
-
-    public ExpressionExperiment toExperiment( Description d ) {
+    public ExpressionExperiment toExperiment( String d ) {
         ExpressionExperiment result = new ExpressionExperimentImpl();
 
         result.setSource( SmdUtil.getHostName() );
         result.setDescription( d );
         result.setName( name );
-        result.setIdentifier( "SMD:Experiment:" + number );
 
         return result;
     }

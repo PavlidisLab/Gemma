@@ -5,7 +5,7 @@ import java.util.Set;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
-import edu.columbia.gemma.sequence.gene.Taxon;
+import edu.columbia.gemma.genome.Taxon;
 
 /**
  * Defines a class that can retrieve and persist data from the Stanford Microarray Database (SMD).

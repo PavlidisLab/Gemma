@@ -11,7 +11,7 @@ import org.xml.sax.SAXException;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceDao;
-import edu.columbia.gemma.common.description.DescriptionDao;
+
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.FileFormatDao;
@@ -20,7 +20,7 @@ import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.loader.smd.model.SMDPublication;
-import edu.columbia.gemma.sequence.gene.Taxon;
+import edu.columbia.gemma.genome.Taxon;
 
 /**
  * <hr>
@@ -38,7 +38,6 @@ public class SMDManagerImpl implements SMDManager {
     private LocalFileDao fileDAO;
     private PersonDao personDAO;
     private BioAssayDao bioAssayDAO;
-    private DescriptionDao descriptionDAO;
 
     public void setBibliographicReferenceDAO( BibliographicReferenceDao bibliographicReferenceDAO ) {
         this.bibliographicReferenceDAO = bibliographicReferenceDAO;
@@ -46,10 +45,6 @@ public class SMDManagerImpl implements SMDManager {
 
     public void setBioAssayDAO( BioAssayDao bioAssayDAO ) {
         this.bioAssayDAO = bioAssayDAO;
-    }
-
-    public void setDescriptionDAO( DescriptionDao descriptionDAO ) {
-        this.descriptionDAO = descriptionDAO;
     }
 
     public void setExperimentDAO( ExpressionExperimentDao experimentDAO ) {
