@@ -276,6 +276,7 @@
           <filtering>false</filtering>
         </resource>
         <resource>
+            
           <directory>${basedir}/web/WEB-INF</directory>
           <includes>
             <include>**/*.xml</include>
@@ -292,13 +293,13 @@
       </resources>
     </unitTest>
     <resources>
-      <resource>
-        <directory>${basedir}/web/WEB-INF</directory>
+    <!--   <resource>
+       <directory>${basedir}/web/WEB-INF</directory>
         <includes>
           <include>**/*.xml</include>
         </includes>
         <filtering>false</filtering>
-      </resource>
+      </resource> -->
       <resource>
         <directory>${basedir}/metadata/webproperties</directory>
         <includes>
@@ -311,6 +312,7 @@
         <includes>
             <include>**/*.hbm.xml</include>
             <include>ehcache.xml</include>
+             <include>hibernate.cfg.xml</include>
         </includes>
         <filtering>false</filtering>
       </resource>
