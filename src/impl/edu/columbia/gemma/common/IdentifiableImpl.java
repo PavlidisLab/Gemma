@@ -18,29 +18,22 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
 package edu.columbia.gemma.common;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * @see edu.columbia.gemma.common.Identifiable
- * @author pavlidis
- * @version $Id$
  */
-public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable implements Comparable {
-
+public class IdentifiableImpl
+    extends edu.columbia.gemma.common.Identifiable
+{
     /**
-     * This method is here to make Andromda put the implementation class in the right place
-     * 
-     * @see edu.columbia.gemma.common.Identifiable#dummy()
-     */
-    public void dummy() {
-        ; // nothing.
-    }
-
-    /**
-     * Warning! Subclasses can and should override this to provide finer-grained equality tests.
-     * 
      * @see java.lang.Object#equals(Object)
      */
     public boolean equals( Object object ) {
@@ -52,8 +45,6 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable imp
     }
 
     /**
-     * Warning! Subclasses must overrride this if they override equals()
-     * 
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
@@ -64,15 +55,11 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable imp
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "Class: " + this.getClass().getName() + " Name: " + this.getName() + " Identifier: "
-                + this.getIdentifier();
+        return new ToStringBuilder( this ).append( "name", this.getName() ).append( "identifier", this.getIdentifier() )
+                .toString();
     }
 
-    // .substring( this.getClass().getName().lastIndexOf( '.' + 1 ))
-
     /**
-     * Warning! Subclasses must overrride this if they override equals()
-     * 
      * @see java.lang.Comparable#compareTo(Object)
      */
     public int compareTo( Object object ) {
@@ -80,5 +67,4 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable imp
         Identifiable myClass = ( Identifiable ) object;
         return myClass.getIdentifier().compareTo( this.getIdentifier() );
     }
-
 }
