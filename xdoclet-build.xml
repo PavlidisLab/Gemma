@@ -2,7 +2,7 @@
 <project default="_xdoclet_generation_" name="XDoclet Generator">
 <property file="xdoclet-build.properties"/>
 <property name="eclipse.home" value="C:/java/eclipse"/>
-<property name="xdoclet.basedir" value="${eclipse.home}/plugins/org.jboss.ide.eclipse.xdoclet.core_1.4.0"/>
+<property name="xdoclet.basedir" value="${eclipse.home}/plugins/org.jboss.ide.eclipse.xdoclet.core_1.4.1"/>
 <property name="jboss.net.version" value="4.0"/>
 <path id="project.classpath"><pathelement location="web/WEB-INF/classes"/>
 <pathelement location="test-build"/>
@@ -29,7 +29,6 @@
 <pathelement location="C:/java/.maven/repository/colt/jars/colt-1.2.0.jar"/>
 <pathelement location="C:/java/.maven/repository/mysql/jars/mysql-connector-java-3.1.6-bin.jar"/>
 <pathelement location="C:/java/.maven/repository/oracle/jars/ojdbc14.jar"/>
-<pathelement location="C:/java/.maven/repository/castor/jars/castor-0.9.5.4.jar"/>
 <pathelement location="C:/java/.maven/repository/velocity/jars/velocity-1.4-dev.jar"/>
 <pathelement location="C:/java/.maven/repository/netcdf/jars/netcdfUI-2.2.05.jar"/>
 <pathelement location="C:/java/.maven/repository/openjgraph/jars/openjgraph.jar"/>
@@ -50,7 +49,10 @@
 <pathelement location="C:/java/.maven/repository/asm/jars/asm-1.4.3.jar"/>
 <pathelement location="C:/java/.maven/repository/jmock/jars/jmock-1.0.1.jar"/>
 <pathelement location="C:/java/.maven/repository/easymock/jars/easymock.jar"/>
+<pathelement location="C:/java/apps/hibernate-extensions/console/hibernateconsole.jar"/>
 <pathelement location="C:/java/.maven/repository/spring/jars/spring-sandbox.jar"/>
+<pathelement location="C:/java/.maven/repository/mage/jars/MGEDOntologyEntry-2004-11-29.jar"/>
+<pathelement location="C:/java/.maven/repository/mage/jars/MAGEstk-2004-11-29-v1.1-compatible.jar"/>
 </path>
 <path id="xdoclet.classpath">
 <path refid="project.classpath"/>
@@ -62,7 +64,7 @@
 <include name="xdoclet-module-jboss-net-${jboss.net.version}*.jar"/>
 </fileset>
 </path>
-<target name="_xdoclet_generation_" depends="N10004"/>
+<target name="_xdoclet_generation_" depends="N10004,N10262"/>
 <target name="N10004" description="web">
 <taskdef classpathref="xdoclet.classpath" classname="xdoclet.modules.web.WebDocletTask" name="webdoclet"/><webdoclet excludedTags="@version,@author,@todo"  destDir="src"  mergeDir="metadata/web"  verbose="true"  addedTags="@xdoclet-generated at ${TODAY},@copyright The XDoclet Team,@author XDoclet,@version ${version}"  validating="true" >
 
@@ -117,7 +119,7 @@
 
 
 </deploymentdescriptor>
-<jsptaglib Jspversion="1.2"  taglibversion="1.0"  shortname="Gemma"  description="Custom tag library for this application"  filename="Gemma.tld"  validateXML="true"  destDir="web/WEB-INF" >
+<jsptaglib Jspversion="1.2"  taglibversion="1.0"  shortname="Gemma"  description="Custom tag library for Gemma"  filename="Gemma.tld"  validateXML="true"  destDir="web/WEB-INF" >
 
 
 
@@ -157,4 +159,5 @@
 </jsptaglib>
 
 </webdoclet></target>
+<target name="N10262" description="hibernate"/>
 </project>
