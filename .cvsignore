@@ -2,6 +2,7 @@ bin
 *.log
 .classpath
 .project
+.tomcatplugin
 mda/*.log
 mda/0
 mda/src/db
