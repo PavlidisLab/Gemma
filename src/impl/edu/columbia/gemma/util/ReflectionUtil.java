@@ -14,14 +14,6 @@ public class ReflectionUtil {
     private static final String DAO_SUFFIX = "Dao";
 
     /**
-     * @param cls
-     * @return Unqualified type name; e.g., for edu.foo.Bar, yields Bar.
-     */
-    public static String classToTypeName( Class cls ) {
-        return cls.getName().substring( cls.getName().lastIndexOf( '.' ) + 1 );
-    }
-
-    /**
      * @param obj A data object that is expected to have an associated data access object.
      * @return Name of Dao bean; for example, given foo.Bar, it returns "barDao". This does not guarantee that the DAO
      *         exists.
