@@ -43,6 +43,8 @@
       		<fileset dir="${basedir}/src/gen" includes="**/*.hbm.xml,ehcache.xml,hibernate.cfg.xml" />
       	</ant:copy>
 	</goal>
+	
+	<goal name="cc-build" description="Special task for cruise control" prereqs="site:generate" />
   
     
   <!-- ==================================================================
