@@ -39,12 +39,12 @@
     <developer>
       <name>David Quigley</name>
       <id>daq7001</id>
-     <email>david.quigley@dbmi.columbia.edu</email>
+      <email>david.quigley@dbmi.columbia.edu</email>
     </developer>
     <developer>
       <name>Anshu Singha</name>
       <id>anshu</id>
-       <email>anshu.sinha@dbmi.columbia.edu</email>
+      <email>anshu.sinha@dbmi.columbia.edu</email>
     </developer>
   </developers>
   <licenses>
@@ -248,80 +248,14 @@
     </dependency>
     <dependency>
       <groupId>spring</groupId>
-      <artifactId>spring-aop</artifactId>
-      <jar>spring-aop.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-beans</artifactId>
-      <jar>spring-beans.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-context</artifactId>
-      <jar>spring-context.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-core</artifactId>
-      <jar>spring-core.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-dao</artifactId>
-      <jar>spring-dao.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-hibernate</artifactId>
-      <jar>spring-hibernate.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-jdbc</artifactId>
-      <jar>spring-jdbc.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
       <artifactId>spring-mock</artifactId>
       <jar>spring-mock.jar</jar>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>spring</groupId>
-      <artifactId>spring-orm</artifactId>
-      <jar>spring-orm.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-remoting</artifactId>
-      <jar>spring-remoting.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-support</artifactId>
-      <jar>spring-support.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-webmvc</artifactId>
-      <jar>spring-webmvc.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>spring</groupId>
-      <artifactId>spring-web</artifactId>
-      <jar>spring-web.jar</jar>
+      <artifactId>spring-sandbox</artifactId>
+      <jar>spring-sandbox.jar</jar>
       <type>jar</type>
     </dependency>
   </dependencies>
