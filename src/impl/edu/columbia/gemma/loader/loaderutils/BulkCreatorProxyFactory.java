@@ -1,7 +1,7 @@
 package edu.columbia.gemma.loader.loaderutils;
 
-import edu.columbia.gemma.loader.sequence.gene.GeneLoaderService;
-import edu.columbia.gemma.loader.sequence.gene.TaxonLoaderService;
+import edu.columbia.gemma.loader.genome.GeneLoaderService;
+import edu.columbia.gemma.loader.genome.TaxonLoaderService;
 
 /**
  * <hr>
@@ -10,6 +10,9 @@ import edu.columbia.gemma.loader.sequence.gene.TaxonLoaderService;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="bulkCreatorProxyFactory"
+ * @spring.property name="taxonLoaderService" ref="taxonLoaderService"
+ * @spring.property name="geneLoaderService" ref="geneLoaderService"
  */
 public class BulkCreatorProxyFactory {
     private GeneLoaderService geneLoaderService;

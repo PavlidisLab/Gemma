@@ -18,7 +18,6 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="creatorService"
  */
 public class CreatorService {
 
