@@ -32,12 +32,12 @@ public class ArrayDesignServiceImpl
 {
 
     /**
-     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#getArrayDesigns()
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
-    protected java.util.List handleGetArrayDesigns()
+    protected java.util.Collection handleGetAllArrayDesigns()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetArrayDesigns()
+        //@todo implement protected java.util.Collection handleGetAllArrayDesigns()
         return null;
     }
 
