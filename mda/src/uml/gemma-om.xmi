@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 25 06:52:34 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 25 17:04:57 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -18376,9 +18376,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                             <UML:Class xmi.id = 'Ia2f435m102d4cdcea1mm3866' name = 'CandidateGene candidate'
                               visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
                               isAbstract = 'false' isActive = 'false'/>
-                            <UML:Class xmi.id = 'Ia2f435m102d4cdcea1mm380f' name = 'candidateGene' visibility = 'public'
-                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-                              isActive = 'false'/>
                           </UML:Namespace.ownedElement>
                         </UML:Package>
                         <UML:Class xmi.id = 'Iff6185m1029346d98fmm2b4' name = 'CytogeneticLocation'
