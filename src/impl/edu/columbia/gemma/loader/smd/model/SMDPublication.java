@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -21,9 +18,6 @@ import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.DatabaseEntryImpl;
-import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.common.description.ExternalDatabaseImpl;
-
 import edu.columbia.gemma.loader.smd.util.SmdUtil;
 
 /**
@@ -41,16 +35,18 @@ import edu.columbia.gemma.loader.smd.util.SmdUtil;
  *      
  *       
  *        
- *         &lt;publication&gt;
- *         !Citation=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
- *         !Title=Diversity of gene expression in adenocarcinoma of the lung.
- *         !PubMedID=11707590
- *         &lt;experiment_set&gt;
- *         !Name=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
- *         !ExptSetNo=810
- *         !Description=The global gene expression profiles for 67 human lung tumors representing 56 patients were examined by using 24,000-element cDNA microarrays. Subdivision of the tumors based on gene expression patterns faithfully recapitulated morphological classification of the tumors into squamous, large cell, small cell, and adenocarcinoma. The gene expression patterns made possible the subclassification of adenocarcinoma into subgroups that correlated with the degree of tumor differentiation as well as patient survival. Gene expression analysis thus promises to extend and refine standard pathologic analysis.
- *         &lt;/experiment_set&gt;
- *         &lt;/publication&gt;
+ *         
+ *          &lt;publication&gt;
+ *          !Citation=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
+ *          !Title=Diversity of gene expression in adenocarcinoma of the lung.
+ *          !PubMedID=11707590
+ *          &lt;experiment_set&gt;
+ *          !Name=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
+ *          !ExptSetNo=810
+ *          !Description=The global gene expression profiles for 67 human lung tumors representing 56 patients were examined by using 24,000-element cDNA microarrays. Subdivision of the tumors based on gene expression patterns faithfully recapitulated morphological classification of the tumors into squamous, large cell, small cell, and adenocarcinoma. The gene expression patterns made possible the subclassification of adenocarcinoma into subgroups that correlated with the degree of tumor differentiation as well as patient survival. Gene expression analysis thus promises to extend and refine standard pathologic analysis.
+ *          &lt;/experiment_set&gt;
+ *          &lt;/publication&gt;
+ *          
  *         
  *        
  *       

@@ -95,7 +95,6 @@ public class SMDExperiment {
 
    public Description toDescription() {
       Description d = new DescriptionImpl();
-      d.setIdentifier( "SMD:Experiment:Description:" + number );
       d.setText( this.description );
       return d;
 

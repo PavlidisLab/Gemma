@@ -117,8 +117,6 @@ public class SMDBioAssay {
     */
    public Description toDescription() {
       Description d = new DescriptionImpl();
-
-      d.setIdentifier( "SMD:BioAssay:Description:" + id );
       d.setText( "Category: " + category + ", SubCategory: " + ", Channel 1:" + channel1Description + ", Channel 2"
             + channel2Description + ", Slide:" + slideName + ", Print: " + printName );
       return d;
