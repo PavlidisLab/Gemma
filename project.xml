@@ -245,7 +245,7 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>spring-1.1.3-dev</groupId>
+      <groupId>spring</groupId>
       <artifactId>spring-mock</artifactId>
       <jar>spring-mock.jar</jar>
       <type>jar</type>
