@@ -302,6 +302,7 @@
       </resource> -->
       <resource>
         <directory>${basedir}/metadata/webproperties</directory>
+        
         <includes>
           <include>**/*.properties</include>
         </includes>
