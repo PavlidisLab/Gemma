@@ -57,7 +57,7 @@ public class MageMLParserTest extends TestCase {
         istBioSequence = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biosequence.xml" );
         istExperiment = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Experiment.xml" );
         istArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-ArrayDesign.xml" );
-        istBioMaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-BioMaterial.xml" );
+        istBioMaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biomaterial.xml" );
         istQuantitationType = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-QuantitationType.xml" );
 
         istDesignElement = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-DesignElement.xml" );
