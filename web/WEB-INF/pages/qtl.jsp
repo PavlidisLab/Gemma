@@ -1,7 +1,7 @@
 <%@ include file="include.jsp" %>
 
 <html>
-<head><title>qtl.jsp</title></head>
+<head><title>qtl</title></head>
 <body>
 </p>
 <h3>QTLs Found</h3>
