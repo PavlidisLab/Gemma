@@ -5,24 +5,6 @@
 <html>
 <head><title><fmt:message key="title"/></title><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></head>
 <body bgcolor="#ffffff">
-<%--<img src="bigicon.gif" width="88" height="97"> <br>--%>
-<h1><fmt:message key="bulkLoad.heading"/></h1>
-<SCRIPT TYPE="text/javascript">
-function dropdown(mySel)
-{
-var myWin, myVal;
-myVal = mySel.options[mySel.selectedIndex].value;
-if(myVal)
- {
- if(mySel.form.target)myWin = parent[mySel.form.target];
- else myWin = window;
- if (! myWin) return true;
- myWin.location = myVal;
- }
-return false;
-}
-</SCRIPT>
-
 <form method="post">
 <form name="form1" method="post" action="">
 <SELECT NAME="typeOfLoader">
