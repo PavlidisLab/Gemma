@@ -1,4 +1,4 @@
-package edu.columbia;
+package edu.columbia.gemma;
 
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -7,7 +7,7 @@ import java.util.ResourceBundle;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.columbia.serviceutil.ConvertUtil;
+import edu.columbia.gemma.util.ConvertUtil;
 import org.jmock.MockObjectTestCase;
 
 

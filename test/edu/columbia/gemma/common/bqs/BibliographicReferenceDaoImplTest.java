@@ -1,4 +1,4 @@
-package edu.columbia.common.bqs;
+package edu.columbia.gemma.common.bqs;
 
 import java.util.Date;
 
@@ -6,7 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import edu.columbia.BaseDAOTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
  * <hr>

@@ -1,4 +1,4 @@
-package edu.columbia;
+package edu.columbia.gemma;
 
 import java.util.Enumeration;
 import java.util.HashMap;
