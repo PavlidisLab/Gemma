@@ -260,7 +260,7 @@
   <build>
     <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
     <sourceDirectory>src/gen</sourceDirectory>
-    <unitTestSourceDirectory>test</unitTestSourceDirectory>
+    <unitTestSourceDirectory>${basedir}/test</unitTestSourceDirectory>
     <unitTest>
       <includes>
         <include>**/*Test.java</include>
