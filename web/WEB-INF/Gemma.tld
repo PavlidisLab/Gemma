@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE taglib PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN" "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+
+<taglib>
+
+   <tlib-version>1.0</tlib-version>
+   <jsp-version>1.2</jsp-version>
+   <short-name>Gemma</short-name>
+
+   <description><![CDATA[Custom tag library for this application]]></description>
+<!--
+   <listener>
+      <listener-class>org.appfuse.webapp.listener.StartupListener</listener-class>
+   </listener>
+   <listener>
+      <listener-class>org.appfuse.webapp.listener.UserCounterListener</listener-class>
+   </listener>
+-->
+   <tag>
+
+      <name>label</name>
+      <tag-class>org.appfuse.webapp.taglib.LabelTag</tag-class>
+
+      <attribute>
+         <name>key</name>
+         <required>true</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>colon</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>styleClass</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>errorClass</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>helpTip</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>constants</name>
+      <tag-class>org.appfuse.webapp.taglib.ConstantsTag</tag-class>
+      <!--<tei-class>org.appfuse.webapp.taglib.ConstantsTei</tei-class>-->
+
+      <attribute>
+         <name>className</name>
+
+      </attribute>
+      <attribute>
+         <name>scope</name>
+
+      </attribute>
+      <attribute>
+         <name>var</name>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>secure</name>
+      <tag-class>org.appfuse.webapp.taglib.SecureTag</tag-class>
+
+      <attribute>
+         <name>mode</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+           <description><![CDATA[The mode attribute (secure | unsecured)]]></description>
+
+      </attribute>
+   </tag>
+   <tag>
+
+      <name>country</name>
+      <tag-class>org.appfuse.webapp.taglib.CountryTag</tag-class>
+
+      <attribute>
+         <name>name</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>prompt</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>default</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>toScope</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>style</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+      <attribute>
+         <name>styleClass</name>
+         <required>false</required>
+         <rtexprvalue>true</rtexprvalue>
+
+      </attribute>
+   </tag>
+
+</taglib>
