@@ -2,4 +2,15 @@ bin
 *.log
 .classpath
 .project
+mda/*.log
+mda/0
+mda/src/db
+src/db/model/edu
+src/db/model/org
+src/db/model/*.xml
+service/edu
+
+
+
+
 
