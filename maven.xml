@@ -2,6 +2,15 @@
     
     <!-- $Id$ -->
     
+    <goal name="set-source-dirs">
+    <ant:path id="impl" location="${basedir}/src/impl"/>
+        <maven:addPath id="maven.compile.src.set" refid="impl"/>
+        <ant:path id="gen" location="${basedir}/src/gen"/>
+        <maven:addPath id="maven.compile.src.set" refid="gen"/>
+        <ant:path id="web" location="${basedir}/src/web"/>
+        <maven:addPath id="maven.compile.src.set" refid="web"/>
+    </goal>
+    
     <!-- ==================================================================
                Compiles
          ================================================================== -->
@@ -13,12 +22,7 @@
 	    	<fileset dir="${basedir}/target/test-classes" includes="**/*.class,**/*.hbm.xml" />
     	</ant:delete>
     	<!-- <attainGoal name="mda" />  -->
-        <ant:path id="impl" location="${basedir}/src/impl"/>
-        <maven:addPath id="maven.compile.src.set" refid="impl"/>
-        <ant:path id="gen" location="${basedir}/src/gen"/>
-        <maven:addPath id="maven.compile.src.set" refid="gen"/>
-        <ant:path id="web" location="${basedir}/src/web"/>
-        <maven:addPath id="maven.compile.src.set" refid="web"/>
+        <attainGoal name="set-source-dirs" />
     </preGoal>
     
     <postGoal name="java:compile">
@@ -96,6 +100,10 @@
             src="${basedir}/target/site.tar"/>
     </goal>
     
+      
+    <preGoal name="build:start">
+    	<attainGoal name="set-source-dirs" />    
+    </preGoal>
    
      <!-- ==================================================================
          Run andromda
@@ -104,6 +112,7 @@
         <maven:maven descriptor="${basedir}/mda/project.xml" 
             goals="andromda:run"/>
     </goal>
+    
     <preGoal name="mda">
         <attainGoal name="mda-clean" />
         <attainGoal name="mda-remove-logs" />
