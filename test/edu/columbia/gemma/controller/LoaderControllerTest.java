@@ -10,8 +10,8 @@ import org.springframework.web.servlet.view.RedirectView;
 import edu.columbia.gemma.BaseControllerTestCase;
 
 /**
- * This test makes use of Spring's MockHttpServletRequest and MockHttpServletResponse.
- * I have used TaxonLoaderService as the loader of choice as it is fast (small file to read from).
+ * This test makes use of Spring's MockHttpServletRequest and MockHttpServletResponse. I have used TaxonLoaderService as
+ * the loader of choice as it is fast (small file to read from).
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -50,21 +50,21 @@ public class LoaderControllerTest extends BaseControllerTestCase {
         ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
         assertEquals( returnedView.toString(), mav.getView().toString() );
 
+        //
     }
 
     /**
      * hasHeader = false Calling onSubmit with hasHeader = false will cause a NumberFormatException, as expected. This
      * results in a call to the view numberFormatError.jsp (to display the error), with the view name being
-     * numberFormatError.
+     * numberFormatError. TODO is it possible to test this if LoaderController throws an exception?
      * 
      * @throws Exception
      */
-//    public void testOnSubmitIsFalse() throws Exception {
-//        request.addParameter( "hasHeader", "false" );
-//        request.addParameter( "typeOfLoader", "taxonLoaderService" );
-//        ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
-//        //assertEquals( "numberFormatError", mav.getViewName() );
-//
-//    }
-
+    //    public void testOnSubmitHeaderIsFalse() throws Exception {
+    //        request.addParameter( "hasHeader", "false" );
+    //        request.addParameter( "typeOfLoader", "taxonLoaderService" );
+    //        ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
+    //        System.err.println(mav.getView().toString());
+    //        assertEquals( null, mav.getView().toString() );
+    //    }
 }
