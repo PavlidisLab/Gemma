@@ -7,9 +7,18 @@
 <form name="form1" method="post" action="">
 
 <td alignment="right" width="31%"><strong>Bibliographic Reference Results:</strong></td>
-   
-</form>
 
+<table BORDER = 1 CELLPADDING = 10>
+<tr><td>Title</td><td><c:out value="${model.title}"/></td></tr>
+<tr><td>Publication</td><td><c:out value="${model.publication}"/></td></tr>
+<tr><td>Author List</td><td><c:out value="${model.authorList}"/></td></tr>
+<tr><td>Abstract</td><td width=400><c:out value="${model.abstract}"/></td></tr>
+</table>
+</form>
+<td alignment="right" width="31%"><strong>Would You Like To Submit This Information?</strong></td>
+<br><br>
+  <input type="submit" alignment="center" value="Submit">
+<br><br>
 <a href="<c:url value="home.jsp"/>">Home</a>
 </body>
 </html>
