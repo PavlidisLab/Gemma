@@ -44,7 +44,7 @@ public class PubMedXmlControllerTest extends BaseControllerTestCase {
         request.setAuthType("BASIC");
         ModelAndView mav = pubMedXmlController.onSubmit( request, response, ( Object ) null, ( BindException ) null );
         
-        assertEquals( "pubMedSuccess", mav.getViewName() );
+        assertEquals( "bibRef", mav.getViewName() );
 
         //
     }
