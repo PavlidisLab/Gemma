@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 21 13:53:21 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 21 14:08:31 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -14257,30 +14257,65 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 </UML:Method>
                                 <UML:Attribute xmi.id = 'I71edc8m102c5950a2emm62a' name = 'cdsStart' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2emm79'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2emm78' lower = '0' upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'I71edc8m102c5950a2emm5c9' name = 'cdsEnd' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2emm53'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2emm52' lower = '0' upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'I71edc8m102c5950a2emm568' name = 'exonCount' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2emm2d'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2emm2c' lower = '0' upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'I71edc8m102c5950a2emm507' name = 'exonStarts' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2emm7'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2emm6' lower = '0' upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'I71edc8m102c5950a2emm4a5' name = 'exonEnds' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2em1f'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2em20' lower = '0' upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
