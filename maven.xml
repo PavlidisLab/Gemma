@@ -6,15 +6,18 @@
                Compiles
          ================================================================== -->
     <preGoal name="java:compile">
-    	<attainGoal name="mda" />
-    	<attainGoal name="dll" />
-      	<attainGoal name="xdoclet:webdoclet"/>
-      	<attainGoal name="xdoclet:springdoclet"/>  
+    	<attainGoal name="mda" /> 
         <ant:path id="impl" location="${basedir}/src/impl"/>
         <maven:addPath id="maven.compile.src.set" refid="impl"/>
         <ant:path id="gen" location="${basedir}/src/gen"/>
         <maven:addPath id="maven.compile.src.set" refid="gen"/>
     </preGoal>
+    
+    <postGoal name="java:compile">
+    	<attainGoal name="dll" />
+    	<attainGoal name="xdoclet:webdoclet"/>
+      	<attainGoal name="xdoclet:springdoclet"/> 
+    </postGoal>
 
   
     
