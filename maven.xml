@@ -6,6 +6,8 @@
                Compiles
          ================================================================== -->
     <preGoal name="java:compile">
+    	<attainGoal name="mda" />
+    	<attainGoal name="dll" />
       	<attainGoal name="xdoclet:webdoclet"/>
       	<attainGoal name="xdoclet:springdoclet"/>
         <ant:path id="impl" location="${basedir}/src/impl"/>
