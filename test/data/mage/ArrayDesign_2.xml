@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
+<MAGE-ML identifier="Test ArrayDesign">
+    <BioSequence_package>
+        <BioSequence_assnlist>
+            <BioSequence isCircular="N" identifier="BioSequence:AF159801">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:R55882">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:H95716">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:AA489602">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:H20908">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:W31784">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:W01084">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:H93819">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:R16600">
+            </BioSequence>
+            <BioSequence isCircular="N" identifier="BioSequence:N62328">
+            </BioSequence>
+        </BioSequence_assnlist>
+    </BioSequence_package>
+    <DesignElement_package>
+        <Reporter_assnlist>
+            <Reporter identifier="Reporter:AF159801">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:AF159801"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:R55882">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:R55882"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:H95716">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:H95716"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:AA489602">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:AA489602"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:H20908">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:H20908"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:W31784">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:W31784"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:W01084">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:W01084"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:H93819">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:H93819"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:R16600">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:R16600"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+            <Reporter identifier="Reporter:N62328">
+                <ImmobilizedCharacteristics_assnreflist>
+                    <BioSequence_ref identifier="BioSequence:N62328"/>
+                </ImmobilizedCharacteristics_assnreflist>
+            </Reporter>
+        </Reporter_assnlist>
+    </DesignElement_package>
+    <ArrayDesign_package>
+        <ReporterGroup_assnlist>
+            <ReporterGroup identifier="ReporterGroup#1">
+                <Reporters_assnreflist>
+                    <Reporter_ref identifier="Reporter:AF159801"/>
+                    <Reporter_ref identifier="Reporter:R55882"/>
+                    <Reporter_ref identifier="Reporter:H95716"/>
+                    <Reporter_ref identifier="Reporter:AA489602"/>
+                    <Reporter_ref identifier="Reporter:H20908"/>
+                    <Reporter_ref identifier="Reporter:W31784"/>
+                    <Reporter_ref identifier="Reporter:W01084"/>
+                    <Reporter_ref identifier="Reporter:H93819"/>
+                    <Reporter_ref identifier="Reporter:R16600"/>
+                    <Reporter_ref identifier="Reporter:N62328"/>
+                </Reporters_assnreflist>
+            </ReporterGroup>
+        </ReporterGroup_assnlist>
+        <ArrayDesign_assnlist>
+            <PhysicalArrayDesign numberOfFeatures="32,448" version="1" 
+                identifier="CAG32k">
+                <FeatureGroups_assnlist>
+                    <FeatureGroup featureHeight="10u" 
+                        identifier="FeatureGroup#1">
+                        <Features_assnlist>
+                            <Feature identifier="Feature:1-1-1-1">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="1" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-2">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="2" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-3">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="3" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-4">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="4" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-5">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="5" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-6">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="6" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-7">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="7" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-8">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="8" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-9">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="9" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                            <Feature identifier="Feature:1-1-1-10">
+                                <Zone_assnref>
+                                    <Zone_ref identifier="Zone:1-1"/>
+                                </Zone_assnref>
+                                <FeatureLocation_assn>
+                                    <FeatureLocation column="10" row="1">
+                                    </FeatureLocation>
+                                </FeatureLocation_assn>
+                            </Feature>
+                        </Features_assnlist>
+                    </FeatureGroup>
+                </FeatureGroups_assnlist>
+                <ZoneGroups_assnlist>
+                    <ZoneGroup zonesPerX="2" zonesPerY="6">
+                        <ZoneLayout_assn>
+                            <ZoneLayout spacingBetweenCols="165" 
+                                spacingBetweenRows="165">
+                            </ZoneLayout>
+                        </ZoneLayout_assn>
+                        <ZoneLocations_assnlist>
+                            <Zone column="1" row="1" identifier="Zone:1-1">
+                            </Zone>
+                            <Zone column="2" row="1" identifier="Zone:1-2">
+                            </Zone>
+                            <Zone column="3" row="1" identifier="Zone:1-3">
+                            </Zone>
+                            <Zone column="4" row="1" identifier="Zone:1-4">
+                            </Zone>
+                            <Zone column="5" row="1" identifier="Zone:1-5">
+                            </Zone>
+                            <Zone column="6" row="1" identifier="Zone:1-6">
+                            </Zone>
+                            <Zone column="1" row="2" identifier="Zone:2-1">
+                            </Zone>
+                            <Zone column="2" row="2" identifier="Zone:2-2">
+                            </Zone>
+                            <Zone column="3" row="2" identifier="Zone:2-3">
+                            </Zone>
+                            <Zone column="4" row="2" identifier="Zone:2-4">
+                            </Zone>
+                            <Zone column="5" row="2" identifier="Zone:2-5">
+                            </Zone>
+                            <Zone column="6" row="2" identifier="Zone:2-6">
+                            </Zone>
+                        </ZoneLocations_assnlist>
+                    </ZoneGroup>
+                </ZoneGroups_assnlist>
+            </PhysicalArrayDesign>
+        </ArrayDesign_assnlist>
+    </ArrayDesign_package>
+    <Array_package>
+        <ArrayManufacture_assnlist>
+            <ArrayManufacture identifier="ArrayManufacture#1">
+                <FeatureLIMSs_assnlist>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="13" 
+                        bioMaterialPlateIdentifier="487">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-1"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="19" 
+                        bioMaterialPlateIdentifier="5">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-2"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="13" 
+                        bioMaterialPlateIdentifier="12">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-3"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="19" 
+                        bioMaterialPlateIdentifier="18">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-4"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="13" 
+                        bioMaterialPlateIdentifier="25">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-5"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="19" 
+                        bioMaterialPlateIdentifier="31">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-6"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="13" 
+                        bioMaterialPlateIdentifier="38">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-7"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="19" 
+                        bioMaterialPlateIdentifier="44">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-8"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="13" 
+                        bioMaterialPlateIdentifier="51">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-9"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                    <ManufactureLIMSBiomaterial bioMaterialPlateRow="19" 
+                        bioMaterialPlateIdentifier="57">
+                        <Feature_assnref>
+                            <Feature_ref identifier="Feature:1-1-1-10"/>
+                        </Feature_assnref>
+                    </ManufactureLIMSBiomaterial>
+                </FeatureLIMSs_assnlist>
+            </ArrayManufacture>
+        </ArrayManufacture_assnlist>
+    </Array_package>
+</MAGE-ML>

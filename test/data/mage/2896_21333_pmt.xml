@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
+<MAGE-ML identifier="Directors Challenge">
+    <AuditAndSecurity_package>
+        <Contact_assnlist>
+            <Person identifier="contact_id" URI="contact_uri" address="address" 
+                phone="phone" email="email" fax="fax">
+            </Person>
+        </Contact_assnlist>
+    </AuditAndSecurity_package>
+    <Protocol_package>
+        <Hardware_assnlist>
+            <Hardware identifier="hardware_id" make="make" model="model" 
+                URI="hardware_uri">
+                <Type_assn>
+                    <OntologyEntry category="NCI:HardwareType" 
+                        value="hardware_type">
+                    </OntologyEntry>
+                </Type_assn>
+            </Hardware>
+        </Hardware_assnlist>
+        <Software_assnlist>
+            <Software identifier="software_id" name="software_name" 
+                URI="software_uri">
+                <Type_assn>
+                    <OntologyEntry category="NCI:SoftwareType" 
+                        value="software_type">
+                    </OntologyEntry>
+                </Type_assn>
+            </Software>
+        </Software_assnlist>
+        <Protocol_assnlist>
+            <Protocol identifier="protocol_id" text="protocol_text">
+                <Type_assn>
+                    <OntologyEntry category="NCI:ProtocolType" 
+                        value="protocol_type_id">
+                    </OntologyEntry>
+                </Type_assn>
+            </Protocol>
+        </Protocol_assnlist>
+    </Protocol_package>
+    <BioMaterial_package>
+        <BioMaterial_assnlist>
+            <BioSource identifier="biosource_id">
+                <Characteristics_assnlist>
+                    <OntologyEntry category="disease_stage" 
+                        value="disease_stage">
+                    </OntologyEntry>
+                    <OntologyEntry category="disease_grade" 
+                        value="disease_grade">
+                    </OntologyEntry>
+                    <OntologyEntry category="sex" value="sex">
+                    </OntologyEntry>
+                    <OntologyEntry category="tissue" value="tissue">
+                    </OntologyEntry>
+                    <OntologyEntry category="disease_state" 
+                        value="disease_state">
+                    </OntologyEntry>
+                    <OntologyEntry category="age" value="age">
+                    </OntologyEntry>
+                    <OntologyEntry category="cell_type" value="cell_type">
+                    </OntologyEntry>
+                    <OntologyEntry category="source" value="source">
+                    </OntologyEntry>
+                    <OntologyEntry category="histology" value="histology">
+                    </OntologyEntry>
+                    <OntologyEntry category="organism_ncbi" 
+                        value="organism_ncbi">
+                    </OntologyEntry>
+                    <OntologyEntry category="cell_line" value="cell_line">
+                    </OntologyEntry>
+                </Characteristics_assnlist>
+                <MaterialType_assn>
+                    <OntologyEntry category="NCI:MaterialType" 
+                        value="biosource">
+                    </OntologyEntry>
+                </MaterialType_assn>
+            </BioSource>
+        </BioMaterial_assnlist>
+    </BioMaterial_package>
+    <DesignElement_package>
+        <Reporter_assnlist>
+            <Reporter identifier="reporter_name">
+            </Reporter>
+        </Reporter_assnlist>
+    </DesignElement_package>
+    <BioAssay_package>
+        <BioAssay_assnlist>
+            <PhysicalBioAssay identifier="bioassay_id">
+            </PhysicalBioAssay>
+        </BioAssay_assnlist>
+    </BioAssay_package>
+    <QuantitationType_package>
+        <QuantitationType_assnlist>
+            <SpecializedQuantitationType identifier="quantitation_type_id" 
+                isBackground="false">
+                <Scale_assn>
+                    <OntologyEntry category="NCI:Scale" value="scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="NCI:DataType" value="data_type">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+        </QuantitationType_assnlist>
+    </QuantitationType_package>
+    <BioAssayData_package>
+        <BioAssayDimension_assnlist>
+            <BioAssayDimension identifier="physical_bioassay_id">
+                <BioAssays_assnreflist>
+                    <PhysicalBioAssay_ref identifier="bioassay_id">
+                    </PhysicalBioAssay_ref>
+                </BioAssays_assnreflist>
+            </BioAssayDimension>
+        </BioAssayDimension_assnlist>
+        <DesignElementDimension_assnlist>
+            <ReporterDimension identifier="physical_bioassay_id">
+                <Reporters_assnreflist>
+                    <Reporter_ref identifier="reporter_name">
+                    </Reporter_ref>
+                </Reporters_assnreflist>
+            </ReporterDimension>
+        </DesignElementDimension_assnlist>
+        <QuantitationTypeDimension_assnlist>
+            <QuantitationTypeDimension identifier="physical_bioassay_id">
+                <QuantitationTypes_assnreflist>
+                    <SpecializedQuantitationType_ref 
+                        identifier="quantitation_type_id">
+                    </SpecializedQuantitationType_ref>
+                </QuantitationTypes_assnreflist>
+            </QuantitationTypeDimension>
+        </QuantitationTypeDimension_assnlist>
+        <BioAssayData_assnlist>
+            <DerivedBioAssayData identifier="physical_bioassay_id">
+                <BioAssayDimension_assnref>
+                    <BioAssayDimension_ref identifier="physical_bioassay_id">
+                    </BioAssayDimension_ref>
+                </BioAssayDimension_assnref>
+                <DesignElementDimension_assnref>
+                    <ReporterDimension_ref identifier="physical_bioassay_id">
+                    </ReporterDimension_ref>
+                </DesignElementDimension_assnref>
+                <QuantitationTypeDimension_assnref>
+                    <QuantitationTypeDimension_ref 
+                        identifier="physical_bioassay_id">
+                    </QuantitationTypeDimension_ref>
+                </QuantitationTypeDimension_assnref>
+                <BioDataValues_assn>
+                    <BioDataTuples>
+                        <BioAssayTuples_assnlist>
+                            <BioAssayTuple>
+                                <BioAssay_assnref>
+                                    <PhysicalBioAssay_ref 
+                                        identifier="bioassay_id">
+                                    </PhysicalBioAssay_ref>
+                                </BioAssay_assnref>
+                                <DesignElementTuples_assnlist>
+                                    <DesignElementTuple>
+                                        <DesignElement_assnref>
+                                            <Reporter_ref 
+                                                identifier="reporter_name">
+                                            </Reporter_ref>
+                                        </DesignElement_assnref>
+                                        <QuantitationTypeTuples_assnlist>
+                                            <QuantitationTypeTuple>
+                                                <QuantitationType_assnref>
+                                                    
+                                                        <SpecializedQuantitationType_ref 
+                                                        identifier="quantitation_type_id">
+                                                    </SpecializedQuantitationType_ref>
+                                                </QuantitationType_assnref>
+                                                <Datum_assn>
+                                                    <Datum 
+                                                        value="bioassay_datum_value">
+                                                    </Datum>
+                                                </Datum_assn>
+                                            </QuantitationTypeTuple>
+                                        </QuantitationTypeTuples_assnlist>
+                                    </DesignElementTuple>
+                                </DesignElementTuples_assnlist>
+                            </BioAssayTuple>
+                        </BioAssayTuples_assnlist>
+                    </BioDataTuples>
+                </BioDataValues_assn>
+            </DerivedBioAssayData>
+        </BioAssayData_assnlist>
+    </BioAssayData_package>
+    <Experiment_package>
+        <Experiment_assnlist>
+            <Experiment identifier="experiment_id" name="experiment_title">
+                <Descriptions_assnlist>
+                    <Description text="experiment_description">
+                        <Annotations_assnlist>
+                            <OntologyEntry category="NCI:SampleType" 
+                                value="sample_type_id">
+                            </OntologyEntry>
+                        </Annotations_assnlist>
+                    </Description>
+                </Descriptions_assnlist>
+                <Providers_assnreflist>
+                    <Person_ref identifier="contact_id">
+                    </Person_ref>
+                </Providers_assnreflist>
+                <BioAssays_assnreflist>
+                    <PhysicalBioAssay_ref identifier="bioassay_id">
+                    </PhysicalBioAssay_ref>
+                </BioAssays_assnreflist>
+                <ExperimentDesign_assn>
+                    <ExperimentDesign>
+                        <Types_assnlist>
+                            <OntologyEntry category="NCI:ExperimentDesignType" 
+                                value="experiment_design_type_id">
+                            </OntologyEntry>
+                        </Types_assnlist>
+                    </ExperimentDesign>
+                </ExperimentDesign_assn>
+            </Experiment>
+        </Experiment_assnlist>
+    </Experiment_package>
+</MAGE-ML>
