@@ -11,10 +11,26 @@
       <fileset dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
     </copy>
   </preGoal>
-<goal name="mda">
-		<maven:maven
-			descriptor="${basedir}/mda/project.xml"
+<goal name="mda" prereqs="mda-clean">
+		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run"/>
-	</goal>	
+</goal>	
+
+
+<goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
+	 <ant:delete>
+	 	<fileset dir="src/db/dao" includes="**/*.java"  excludes="impl/**/*.java" />
+	 	<fileset dir="src/db/model" includes="**/*.java,**/**.hbm.xml"   excludes="impl/**/*.java" />
+	  	<fileset dir="src/service" includes="**/*.java"  excludes="impl/**/*.java" />
+	 </ant:delete>
+</goal>
+
+<goal name="mda-clean-impl" description="Remove all Andromda IMPL classes - DANGER, don't do this unless you are sure!" >
+ <ant:delete>
+	 	<fileset dir="src/db/dao/impl" includes="**/*.java" />
+	 	<fileset dir="src/db/model/impl" includes="**/*.java" />
+	 	<fileset dir="src/db/service/impl" includes="**/*.java" />
+	 	</ant:delete>
+</goal>
 
 </project>
