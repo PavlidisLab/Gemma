@@ -34,6 +34,5 @@ public class EntrezUtil {
     public static String getBaseURL() {
         return baseURL;
     }
-    
 
 }
