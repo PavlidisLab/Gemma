@@ -54,6 +54,14 @@ public class IdentifiableImpl extends edu.columbia.gemma.common.Identifiable {
 
     }
 
+    /* (non-Javadoc)
+     * @see edu.columbia.gemma.common.Identifiable#findByIdentifier(java.lang.String)
+     */
+    public Identifiable findByIdentifier( String identifier ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     /**
      * @see edu.columbia.gemma.common.Identifiable#hashCode()
      */
