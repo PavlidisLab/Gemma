@@ -75,7 +75,7 @@
     </preGoal>
     
     <postGoal name="site:generate">
-        <attainGoal name="copydocs" />
+      <!--  <attainGoal name="copydocs" /> -->
       <!--  <attainGoal name="zipsite" /> -->
     </postGoal>
     
