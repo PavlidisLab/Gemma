@@ -66,7 +66,7 @@
     <!-- ==================================================================
          Pre and Postgoals for website setup.
      ================================================================== -->
-    <preGoal name="site:generate">
+    <preGoal name="site:run-reports">
     	<attainGoal name="mda" /> 
     </preGoal>
     
