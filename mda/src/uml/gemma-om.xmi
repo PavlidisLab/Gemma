@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 21 14:56:43 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 22 11:17:49 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -4714,7 +4714,7 @@ one class.
                       isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                       <UML:Namespace.ownedElement>
                         <UML:Class xmi.id = 'I5acf13m101bacaf829mm7046' name = 'Identifiable' visibility = 'public'
-                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'true'
+                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                           isActive = 'false'>
                           <UML:ModelElement.comment>
                             <UML:Comment xmi.idref = 'I830624m101c472e35bmm5ee9'/>
@@ -9681,7 +9681,7 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                           <UML:Namespace.ownedElement>
                             <UML:Class xmi.id = 'Ia948c2m101cef0df55mm5a26' name = 'Parameterizable'
                               visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-                              isAbstract = 'true' isActive = 'false'>
+                              isAbstract = 'false' isActive = 'false'>
                               <UML:ModelElement.stereotype>
                                 <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmfbc'/>
                               </UML:ModelElement.stereotype>
@@ -9815,8 +9815,8 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                 <UML:Generalization xmi.idref = 'Ia948c2m101cef0df55mm5716'/>
                               </UML:GeneralizableElement.generalization>
                             </UML:Class>
-                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm597c' name = 'Types' isSpecification = 'false'
-                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                            <UML:Association xmi.id = 'Ia948c2m101cef0df55mm597c' name = 'ParameterTypes'
+                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm5982' visibility = 'public'
                                   isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'composite'
@@ -10707,6 +10707,12 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
+                                <UML:Attribute xmi.id = 'I126172fm102c7e7014cmm339' name = 'UNSCALED' visibility = 'private'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
                               </UML:Classifier.feature>
                             </UML:Class>
                             <UML:Class xmi.id = 'Ieeda37m101f2ab640dmm283e' name = 'GeneralType' visibility = 'public'
@@ -10743,7 +10749,7 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                           </UML:Generalization.parent>
                         </UML:Generalization>
                         <UML:Class xmi.id = 'I10f93f9m102a7804758mm6f5' name = 'Describable' visibility = 'public'
-                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'true'
+                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                           isActive = 'false'>
                           <UML:ModelElement.stereotype>
                             <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmfbc'/>
@@ -14835,7 +14841,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Im2d2b0257m10190c6f854mm77e8' name = 'taxon'
-                                  visibility = 'public' isSpecification = 'false' isNavigable = 'false' ordering = 'unordered'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'I8fcfaem101dcbbe403mm4602'>
