@@ -30,7 +30,7 @@
     </postGoal>
 
 	<goal name="xdoclet">
-	<attainGoal name="xdoclet:webdoclet"/>
+		<attainGoal name="xdoclet:webdoclet"/>
       	<attainGoal name="xdoclet:springdoclet"/>
 	</goal>
 	
@@ -64,8 +64,12 @@
     </goal>
     
     <!-- ==================================================================
-         Postgoals for website setup.
+         Pre and Postgoals for website setup.
      ================================================================== -->
+    <preGoal name="site:generate">
+    	<attainGoal name="mda" /> 
+    </preGoal>
+    
     <postGoal name="site:generate">
         <attainGoal name="copydocs" />
         <attainGoal name="zipsite" />

@@ -256,6 +256,12 @@
       <jar>spring-sandbox.jar</jar>
       <type>jar</type>
     </dependency>
+    <dependency>
+        <groupId>odmg</groupId>
+        <artifactId>odmg</artifactId>
+        <version>3.0</version>
+        <type>jar</type>
+    </dependency>
   </dependencies>
  <build>
         <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
