@@ -66,7 +66,7 @@
         <property name="templateName"><value>accountCreated.vm</value></property>
     </bean>
 -->    
-    <!-- Put controller mappings here -->
+    <!-- Put controller mappings here --><!--
     <bean id="personFormController" class="edu.columbia.gemma.controller.common.auditAndSecurity.PersonFormController">
 	<property name="sessionForm">
 			<value>true</value>
@@ -76,20 +76,17 @@
 		</property>
 		<property name="commandClass">
 			<value>edu.columbia.gemma.common.auditAndSecurity.PersonImpl</value>
-		</property><!--
-		<property name="validator">
-			<ref bean="beanValidator"/>
-		</property>-->
-		<property name="formView"><!--resolved by the viewResolver below -->
+		</property>
+		<property name="formView">
 			<value>personForm</value>
 		</property>
-		<property name="successView"><!--cannot be resolved by the view resolver-->
+		<property name="successView">
 			<value>welcome.jsp</value>
 		</property>
 		<property name="personService">
 			<ref bean="personService"/>
 		</property>
-	</bean>
+	</bean>-->
 	<bean id="loaderController" class="edu.columbia.gemma.controller.LoaderController">
 		<property name="sessionForm">
 			<value>true</value>
@@ -140,7 +137,7 @@
 	
 	<!-- Added these Dummy Services so I do not have to coding in the Impl classes ... yet -->
 	<!-- PersonService Service Implementation  -->
-	<!-- PersonService Service Proxy  -->
+	<!-- PersonService Service Proxy  --><!--
     <bean id="personService" class="org.springframework.aop.framework.ProxyFactoryBean">
          <property name="target"><ref bean="personServiceDummyImpl"/></property>
          <property name="proxyInterfaces">
@@ -155,7 +152,7 @@
      </bean>
 	 <bean id="personServiceDummyImpl" class="edu.columbia.gemma.dummy.common.auditAndSecurity.PersonServiceDummyImpl">
         <property name="person"><ref bean="personDao"/></property>
-    </bean>
+    </bean>-->
 	
 	<!-- GeneService Service Proxy  -->
 <!--	
@@ -198,8 +195,8 @@
              -->
                 <!-- Add additional URL mappings here -->			
 				<prop key="/bulkLoad.htm">loaderController</prop>
-				<prop key="/editPerson.htm">personFormController</prop>
-<!--				<prop key="/geneFormSearch.htm">geneFormSearchController</prop> -->			
+<!--				<prop key="/editPerson.htm">personFormController</prop>
+				<prop key="/geneFormSearch.htm">geneFormSearchController</prop> -->			
             </props>
         </property>
     </bean>
