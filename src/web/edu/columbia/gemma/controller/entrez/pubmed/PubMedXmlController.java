@@ -1,6 +1,5 @@
 package edu.columbia.gemma.controller.entrez.pubmed;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,9 +11,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.mvc.SimpleFormController;
+import org.springframework.web.servlet.view.InternalResourceView;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
+import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 
 /**
@@ -30,12 +32,23 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
  * @spring.property name="formView" value="pubMedForm"
  * @spring.property name="successView" value="pubMedSuccess"
  * @spring.property name = "pubMedXmlFetcher" ref="pubMedXmlFetcher"
+ * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  */
 public class PubMedXmlController extends SimpleFormController {
+    private boolean alreadyViewed = false;
+    private BibliographicReferenceService bibliographicReferenceService;
+    private String pubMedId = null;
     private PubMedXMLFetcher pubMedXmlFetcher;
 
     /** Logger for this class and subclasses */
     protected final Log log = LogFactory.getLog( getClass() );
+
+    /**
+     * @return Returns the bibliographicReferenceService.
+     */
+    public BibliographicReferenceService getBibliographicReferenceService() {
+        return bibliographicReferenceService;
+    }
 
     /**
      * @return Returns the pubMedXmlFetcher.
@@ -45,31 +58,52 @@ public class PubMedXmlController extends SimpleFormController {
     }
 
     /**
+     * Useful for debugging.
+     * 
+     * @param request
+     * @param response TODO put in an mvcUtils class if you used elsewhere. I found this helpful when working with
+     *        Spring's MVC.
+     */
+    public void logHttp( HttpServletRequest request, HttpServletResponse response ) {
+        log.info( "Context Path: " + request.getContextPath() );
+        log.info( "Requested Uri: " + request.getRequestURI() );
+        log.info( "Authentication Type: " + request.getAuthType() );
+    }
+
+    /**
      * Obtains filename to be read from the form.
      * 
      * @param command
      * @return ModelAndView
-     * @throws IOException
+     * @throws Exception
      */
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws IOException {
+            BindException errors ) throws Exception {
 
-        String pubMedId = RequestUtils.getStringParameter( request, "pubMedId", null );
+        logHttp( request, response );
 
-        log.info( "Context Path: " + request.getContextPath() );
-        log.info( "Requested Uri: " + request.getRequestURI() );
-        log.info( "Authentication Type: " + request.getAuthType() );
+        if ( pubMedId == null )
+            pubMedId = RequestUtils.getStringParameter( request, "pubMedId", null );
+        else {
+            request.setAttribute( "pubMedId", pubMedId );
+        }
 
         BibliographicReference br = pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-
         Map myModel = new HashMap();
-        myModel.put( "title", br.getTitle() );
-        myModel.put( "publication", br.getPublication() );
-        myModel.put( "authorList", br.getAuthorList() );
-        myModel.put( "abstract", br.getAbstractText() );
+        myModel.put( "bibRef", br );
+        request.setAttribute( "model", myModel );
 
-        //return new ModelAndView( new RedirectView(getSuccessView(),true), "model", myModel );
-        return new ModelAndView( getSuccessView(), "model", myModel );
+        useInternalResourceView( request, response, br, myModel );
+
+        return new ModelAndView( "bibRef" );
+
+    }
+
+    /**
+     * @param bibliographicReferenceService The bibliographicReferenceService to set.
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
     /**
@@ -77,6 +111,24 @@ public class PubMedXmlController extends SimpleFormController {
      */
     public void setPubMedXmlFetcher( PubMedXMLFetcher pubMedXmlFetcher ) {
         this.pubMedXmlFetcher = pubMedXmlFetcher;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param myModel
+     * @throws Exception
+     */
+    private void useInternalResourceView( HttpServletRequest request, HttpServletResponse response, Object object,
+            Map model ) throws Exception {
+        if ( !alreadyViewed ) {
+            alreadyViewed = true;
+            View v = new InternalResourceView( "/WEB-INF/pages/pubMedSuccess.jsp" );
+            v.render( model, request, response );
+        } else {
+            alreadyViewed = false;
+            getBibliographicReferenceService().saveBibliographicReference( ( BibliographicReference ) object );
+        }
     }
 
     /**
