@@ -17,13 +17,15 @@ import edu.columbia.gemma.BaseDAOTestCase;
  * @version $Id$
  */
 public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
-
+    
+    private final Log log = LogFactory.getLog( BibliographicReferenceDaoImplTest.class );
     private BibliographicReferenceDao dao = null;
     private DatabaseEntryDao dedao = null;
-private ExternalDatabaseDao exdbdao = null;
+    private ExternalDatabaseDao exdbdao = null;
+
     protected void setUp() throws Exception {
         super.setUp();
-        Log log = LogFactory.getLog( BibliographicReferenceDaoImplTest.class );
+
         dao = ( BibliographicReferenceDao ) ctx.getBean( "bibliographicReferenceDao" );
         dedao = ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" );
         exdbdao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
@@ -52,9 +54,9 @@ private ExternalDatabaseDao exdbdao = null;
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDBName( "database" );
-        ed.setIdentifier("fooblydoobly" + random);
-        exdbdao.create(ed);
-        
+        ed.setIdentifier( "fooblydoobly" + random );
+        exdbdao.create( ed );
+
         de.setExternalDatabase( ed );
         deb.setExternalDatabase( ed );
         dedao.create( de );

@@ -6,8 +6,10 @@ import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
+import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
+import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
+import edu.columbia.gemma.loader.loaderutils.IdentifierCreatorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
-import edu.columbia.gemma.tools.SequenceManipulation;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 
 public class AllTests {
@@ -22,9 +24,13 @@ public class AllTests {
         suite.addTestSuite( QtlDaoImplTest.class );
 
         suite.addTestSuite( SequenceManipulationTest.class );
-        suite.addTestSuite( SequenceManipulation.class );
         suite.addTestSuite( AffyProbeReaderTest.class );
         suite.addTestSuite( IlluminaProbeReaderTest.class );
+        
+        suite.addTestSuite( IdentifierCreatorTest.class);
+        
+        suite.addTestSuite(PubMedXMLFetcherTest.class);
+        suite.addTestSuite(PubMedXMLParserTest.class);
         return suite;
     }
 }

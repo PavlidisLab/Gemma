@@ -11,7 +11,7 @@ import junit.framework.TestCase;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
@@ -23,7 +23,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class BaseDAOTestCase extends TestCase {
     protected final Log log = LogFactory.getLog( getClass() );
-    protected final static ApplicationContext ctx;
+    protected final static BeanFactory ctx;
     protected ResourceBundle rb;
 
     // This static block ensures that Spring's BeanFactory is only loaded
