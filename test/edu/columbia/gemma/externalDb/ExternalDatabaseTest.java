@@ -10,8 +10,8 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.externaldb.ExternalDatabaseDaoHg17;
-import edu.columbia.gemma.externaldb.ExternalDatabaseDaoHg17Hibernate;
+import edu.columbia.gemma.externalDb.ExternalDatabaseDaoHg17;
+import edu.columbia.gemma.externalDb.ExternalDatabaseDaoHg17Hibernate;
 
 /**
  * Tests connections to external databases.
