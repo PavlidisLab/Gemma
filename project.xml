@@ -14,7 +14,7 @@
   <shortDescription>Large-scale integrative meta-analysis of gene expression 
         data</shortDescription>
   <url>http://microarray.cu-genome.org</url>
-  <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/enter_bug.cgi?product=Gemma</issueTrackingUrl>
+  <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma</issueTrackingUrl>
   <siteAddress>microarray</siteAddress>
   <siteDirectory>/proj/pavlidis/protected/Gemma</siteDirectory>
   <distributionSite>microarray</distributionSite>
