@@ -11,7 +11,7 @@
       <fileset dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
     </copy>
   </preGoal>
-<goal name="mda" prereqs="mda-clean">
+<goal name="mda" >
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run"/>
 </goal>	
@@ -29,7 +29,7 @@
  <ant:delete>
 	 	<fileset dir="src/db/dao/impl" includes="**/*.java" />
 	 	<fileset dir="src/db/model/impl" includes="**/*.java" />
-	 	<fileset dir="src/db/service/impl" includes="**/*.java" />
+	 	<fileset dir="src/service/impl" includes="**/*.java" />
 	 	</ant:delete>
 </goal>
 
