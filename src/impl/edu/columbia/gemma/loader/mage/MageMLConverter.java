@@ -55,6 +55,8 @@ import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
 
+import edu.columbia.gemma.common.Identifiable;
+import edu.columbia.gemma.common.IdentifiableDao;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.measurement.Measurement;
@@ -82,7 +84,7 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * method on any MAGE domain object and get a fully-populated Gemma domain object. There is no need to use the methods
  * in this class directly when handling MAGE-ML files: use the {@link edu.columbia.gemma.loader.mage.MageMLParser.}
  * <p>
- * FIXME: This is gigantic. The names of attributes etc. should be in an external file.
+ * The names of attributes etc. should be in an external file.
  * <h2>Zoo of packages that have references between them</h2>
  * <h3>DesignElement_package and ArrayDesign_package</h3>
  * <p>
@@ -122,6 +124,12 @@ public class MageMLConverter {
      */
     public Map identifiableCache;
 
+    private IdentifiableDao persistenceManager;
+
+    /**
+     * 
+     *
+     */
     public MageMLConverter() {
         identifiableCache = new HashMap();
     }
@@ -133,13 +141,11 @@ public class MageMLConverter {
      * @return
      */
     public Object convert( Object mageObj ) {
+        assert persistenceManager != null;
         return findAndInvokeConverter( mageObj );
     }
 
     /**
-     * TODO this can't clobber an existing array design, and there are a LOT of associations to figure out. TODO - array
-     * deisgn has subclass physical array design, which we actually use.
-     * 
      * @param mageObj
      * @return
      */
@@ -244,7 +250,7 @@ public class MageMLConverter {
         result.setPublisher( mageObj.getPublisher() );
         result.setTitle( mageObj.getTitle() );
         result.setVolume( mageObj.getVolume() );
-        result.setFullTextURI( mageObj.getURI() ); // FIXME URI is probably not right.
+        // result.setFullTextURI( mageObj.getURI() );
         convertAssociations( mageObj, result );
         return result;
     }
@@ -276,7 +282,8 @@ public class MageMLConverter {
      */
     public edu.columbia.gemma.expression.bioAssay.BioAssay convertBioAssay( BioAssay mageObj ) {
         if ( mageObj == null ) return null;
-        log.debug( "Converting BioAssay " + mageObj.getIdentifier() );
+        log.debug( "Converting BioAssay -- associations with array designs not implemented yet "
+                + mageObj.getIdentifier() );
 
         edu.columbia.gemma.expression.bioAssay.BioAssay result = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory
                 .newInstance();
@@ -342,7 +349,7 @@ public class MageMLConverter {
             simpleFillIn( associatedObject, gemmaObj, getter, "MaterialType" );
         } else if ( associationName.equals( "QualityControlStatistics" ) ) {
             assert associatedObject instanceof List;
-            // we don't support : TODO check
+            // we don't support
         } else if ( associationName.equals( "Treatments" ) ) {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Treatments" );
@@ -463,8 +470,7 @@ public class MageMLConverter {
 
         edu.columbia.gemma.expression.biomaterial.BioMaterial result = convertBioMaterial( mageObj );
 
-        // FIXME: sourceContact. - we don't have this.
-
+        // mageObj.getSourceContact();
         return result;
     }
 
@@ -563,8 +569,7 @@ public class MageMLConverter {
     }
 
     /**
-     * FIXME - what do we do with this? Used for Label of LabeledExtract, and details of treatments and biomaterial
-     * measurements. - no-op for now.
+     * no-op for now.
      * 
      * @param mageObj
      * @return
@@ -584,8 +589,6 @@ public class MageMLConverter {
     }
 
     /**
-     * Todo: this should be set up so we don't get duplicate databases persisted.
-     * 
      * @param mageObj
      * @return
      */
@@ -750,7 +753,7 @@ public class MageMLConverter {
 
     /**
      * Convert a MAGE Describable to a Gemma domain object. We only allow a single description, so we take the first
-     * one. The association to Security and Audit are not filled in here - TODO something about that.
+     * one. The association to Security and Audit are not filled in here.
      * 
      * @param mageObj
      * @param gemmaObj
@@ -844,19 +847,16 @@ public class MageMLConverter {
     }
 
     /**
-     * TODO Incomplete
-     * 
      * @param mageObj
      * @return
      */
     public ExpressionExperiment convertExperiment( Experiment mageObj ) {
         if ( mageObj == null ) return null;
 
-        log.debug( "Incomplete: Converting Experiment: " + mageObj.getName() );
+        log.debug( "Converting Experiment: " + mageObj.getName() );
 
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
-
-        result.setSource( "Imported from MAGE-ML" );
+        result.setSource( "Imported from MAGE-ML" ); // duh.
 
         if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
         return result;
@@ -968,11 +968,10 @@ public class MageMLConverter {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "TopLevelBioAssays" ) ) {
             assert associatedObject instanceof List;
-            // we don't have this in our model TODO: check
+            // we don't have this in our model --- check
         } else if ( associationName.equals( "Types" ) ) {
             assert associatedObject instanceof List;
-            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Types" ); // TODO quantifier is
-            // wrong
+            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Types" );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -1040,8 +1039,8 @@ public class MageMLConverter {
     }
 
     /**
-     * FIXME Unlike in MAGE, feature-reporter map is not an entity. (The mage name is also confusing: it is an
-     * assocation between a reporter and the features that make it up). Therefore, this is a no-op.
+     * Unlike in MAGE, feature-reporter map is not an entity. (The mage name is also confusing: it is an assocation
+     * between a reporter and the features that make it up). Therefore, this is a no-op.
      * 
      * @param mageObj
      * @return
@@ -1079,8 +1078,18 @@ public class MageMLConverter {
             gemmaObj = ( edu.columbia.gemma.common.Identifiable ) identifiableCache.get( mageObj );
             return true;
         }
-        gemmaObj.setIdentifier( mageObj.getIdentifier() );
-        gemmaObj.setName( mageObj.getName() );
+
+        Identifiable k = null;
+        if ( ( k = isPersistent( gemmaObj ) ) != null ) {
+            // see if it exists in the database
+            gemmaObj = k;
+            log.debug( "Object is already persistent: " + gemmaObj.getIdentifier() );
+        } else {
+            gemmaObj.setIdentifier( mageObj.getIdentifier() );
+        }
+
+        gemmaObj.setName( mageObj.getName() ); // we do this here because Mage names go with Identifiable, not
+        // describable.
         identifiableCache.put( gemmaObj.getIdentifier(), gemmaObj );
 
         convertDescribable( mageObj, gemmaObj );
@@ -1130,7 +1139,7 @@ public class MageMLConverter {
         // log.warn( "Conversion operation not yet fully implemented: convertLabeledExtract" );
 
         BioMaterial result = convertBioMaterial( mageObj );
-        // TODO labels?
+        // mageObj.getLabels()
 
         return result;
     }
@@ -1190,10 +1199,10 @@ public class MageMLConverter {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "FeatureExtraction" ) ) {
-            ; // FIXME we may not use this.
+            ; // we may not use this.
             ;
         } else if ( associationName.equals( "MeasuredBioAssayData" ) ) {
-            ; // FIXME we may not use this.
+            ; // we may not use this.
             ;
         } else {
             log.debug( "Unsupported or unknown association, or belongs to superclass: " + associationName );
@@ -1327,7 +1336,7 @@ public class MageMLConverter {
 
         edu.columbia.gemma.expression.arrayDesign.ArrayDesign result = convertArrayDesign( mageObj );
 
-        // todo: convert the surfaceType and zoneGroups. We don't support these, though we could
+        // convert the surfaceType and zoneGroups? We don't support these, though we could
 
         convertAssociations( mageObj, result );
         return result;
@@ -1452,7 +1461,7 @@ public class MageMLConverter {
         if ( !convertIdentifiable( mageObj, result ) ) {
             result.setText( mageObj.getText() );
             result.setTitle( mageObj.getTitle() );
-            // result.setURI(mageObj.getURI()); // FIXME we should support
+            // result.setURI(mageObj.getURI()); // we should support
             convertAssociations( mageObj, result );
         }
 
@@ -1473,12 +1482,11 @@ public class MageMLConverter {
         if ( associationName.equals( "Hardwares" ) ) {
             ; // not supported
         } else if ( associationName.equals( "Softwares" ) ) {
-            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Softwares" ); // TODO, we can't
-            // make this navigable.
+            // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Softwares" ); Bug 78
         } else if ( associationName.equals( "Type" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "ParameterTypes" ) ) {
-            // FIXME broken.
+            // broken. Bug 77
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -1674,7 +1682,7 @@ public class MageMLConverter {
         } else if ( val.equalsIgnoreCase( "other" ) ) {
             return ScaleType.OTHER;
         } else if ( val.equalsIgnoreCase( "unscaled" ) ) {
-            return ScaleType.OTHER; // FIXME - add unscaled to the model
+            return ScaleType.OTHER; // FIXME - add unscaled to the model bug 76
         } else {
             log.error( "Unrecognized Scale " + val );
         }
@@ -1797,7 +1805,7 @@ public class MageMLConverter {
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Action" ) ) {
 
-            // TODO - we don't support any of this!
+            // we don't support any of this!
         } else if ( associationName.equals( "Action" ) ) {
             // simpleFillIn(associatedObject, gemmaObj, getter);
         } else if ( associationName.equals( "ActionMeasurement" ) ) {
@@ -1871,6 +1879,14 @@ public class MageMLConverter {
     }
 
     /**
+     * 
+     *
+     */
+    public void setPersistenceManager( IdentifiableDao persistenceManager ) {
+        this.persistenceManager = persistenceManager;
+    }
+
+    /**
      * Special case: Convert a ReporterCompositeMaps (list) to a Collection of Reporters.
      * 
      * @param reporterCompositeMaps
@@ -1889,7 +1905,7 @@ public class MageMLConverter {
                 org.biomage.DesignElement.Feature repr = rps.getFeature();
                 rep.setCol( repr.getPosition().getX().intValue() );
                 rep.setRow( repr.getPosition().getY().intValue() );
-                // todo: strand...
+                // strand...
             }
             break; // only take the first one
         }
@@ -1919,7 +1935,6 @@ public class MageMLConverter {
 
                 if ( repr == null ) continue;
 
-                // FIXME: this reporter already exists in memory, probably.
                 Reporter conv = convertReporter( repr );
 
                 if ( conv == null ) {
@@ -2208,6 +2223,15 @@ public class MageMLConverter {
     }
 
     /**
+     * @param gemmaObj
+     * @return
+     */
+    private Identifiable isPersistent( Identifiable gemmaObj ) {
+        // return this.persistenceManager.findByIdentifier( gemmaObj.getIdentifier() );
+        return null;
+    }
+
+    /**
      * Generic method to fill in a Gemma object where the association in Mage has cardinality of >1.
      * 
      * @param associatedList - The result of the Getter call.
@@ -2228,7 +2252,7 @@ public class MageMLConverter {
             return;
         }
 
-        String associationName = actualGemmaAssociationName; // todo, refactor so we use convertAssociationName
+        String associationName = actualGemmaAssociationName; // FIXME, refactor so we use convertAssociationName
 
         if ( associationName == null )
             associationName = ReflectionUtil.classToTypeName( associatedList.get( 0 ).getClass() );
