@@ -1,3 +1,6 @@
+<!-- Gemma Project: Comment out because we are not using this yet, March 23 2005
+	 My commented out code is left-justified ... all other commented out code was
+	 done previously by appfuse.
     <listener>
         <listener-class>com.opensymphony.clickstream.ClickstreamListener</listener-class>
     </listener>
@@ -7,3 +10,4 @@
     <listener>
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
+-->

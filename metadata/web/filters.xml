@@ -1,3 +1,6 @@
+<!-- Gemma Project: Comment out because we are not using this yet, March 23 2005
+	 My commented out code is left-justified ... all other commented out code was
+	 done previously by appfuse.
     <filter>
         <filter-name>cacheFilter</filter-name>
         <filter-class>com.opensymphony.oscache.web.filter.CacheFilter</filter-class>
@@ -34,3 +37,4 @@
         <filter-name>exportFilter</filter-name>
         <filter-class>org.displaytag.filter.ResponseOverrideFilter</filter-class>
     </filter>
+-->

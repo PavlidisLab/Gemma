@@ -1,14 +1,22 @@
+<!-- Gemma Project: Comment out because we are not using this yet, March 23 2005
+	 My commented out code is left-justified ... all other commented out code was
+	 done previously by appfuse.
     <filter-mapping>
         <filter-name>loginFilter</filter-name>
         <url-pattern>/login.jsp</url-pattern>
+-->		
         <!-- These are needed by Tomcat 5 since it does a forward to login.jsp -->
         <!--dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher-->
+<!--		
     </filter-mapping>
     <filter-mapping>
         <filter-name>loginFilter</filter-name>
         <url-pattern>/logout.jsp</url-pattern>
     </filter-mapping>
+-->	
+<!-- Gemma Project Comment out because we are not using this yet, March 23 2005-->	
+	
     <!-- Commented out for 2 reasons: 1) it's a pain when developing JSPs, and
                                       2) it causes the Signup webtest to fail -->
     <!--filter-mapping>
@@ -18,6 +26,7 @@
     <!-- The 'hibernateFilter', a.k.a. Spring's OpenSessionInViewFilter
          guarantees one session per request.  Performance seems to be the
          same if it's enabled or disabled. -->
+<!--		 
     <filter-mapping>
         <filter-name>hibernateFilter</filter-name>
         <url-pattern>*.html</url-pattern>
@@ -46,6 +55,7 @@
         <filter-name>compressionFilter</filter-name>
         <url-pattern>*.html</url-pattern>
     </filter-mapping>
+-->	
     <!--filter-mapping>
         <filter-name>rewriteFilter</filter-name>
         <url-pattern>/*</url-pattern-->
@@ -53,10 +63,14 @@
         <!--dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher-->
     <!--/filter-mapping-->
+<!--	
     <filter-mapping>
         <filter-name>sitemesh</filter-name>
         <url-pattern>/*</url-pattern>
+-->		
         <!-- These are needed by Tomcat 5 for forwards -->
         <!--dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher-->
+<!--		
     </filter-mapping>
+-->
