@@ -9,6 +9,8 @@ src/db/model/edu
 src/db/model/org
 src/db/model/*.xml
 service/edu
+web/WEB-INF/classes
+
 
 
 
