@@ -9,7 +9,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.externalDb.GoldenPathHumanDao;
 import edu.columbia.gemma.externalDb.GoldenPathHumanDaoHibernate;
 
