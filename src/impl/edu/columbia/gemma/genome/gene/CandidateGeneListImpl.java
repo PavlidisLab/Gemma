@@ -19,33 +19,34 @@
  *
  */
 /**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
+*
+*
+* <hr>
+* <p>Copyright (c) 2004, 2005 Columbia University
+* @author daq2101
+* @version $Id$
+*/
 package edu.columbia.gemma.genome.gene;
 
 import java.util.Collection;
+import java.util.HashSet;
 
-
-/**
- * @see edu.columbia.gemma.genome.gene.CandidateGeneList
- */
+ 
 public class CandidateGeneListImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneList
 {
     public void addCandidate(CandidateGene candidateGene){
-        // add new candidate to end of list.
-        // In one transaction, we want to calculate the next highest 
-        // ranking and add the candidate with that ranking.
-        // Maybe DAO just needs an "Add at end" function.
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.CandidateGeneList.addCandidate(CandidateGene candidate) Not implemented!");
+        if(this.getCandidates()==null)
+            this.setCandidates(new HashSet());
+        this.getCandidates().add(candidateGene);
+        
     }
     public void removeCandidate(CandidateGene candidateGene){
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.CandidateGeneList.removeCandidate(CandidateGene candidate) Not implemented!");
+        Collection c = this.getCandidates();
+        if(c != null && c.contains(candidateGene))
+            c.remove(candidateGene);
     }
-    public Collection getCandidates(){
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.CandidateGeneList.increaseRanking(CandidateGene candidate) Not implemented!");
-    }
+
     /**
      * @see edu.columbia.gemma.genome.gene.CandidateGeneList#increaseRanking(CandidateGene)
      */
