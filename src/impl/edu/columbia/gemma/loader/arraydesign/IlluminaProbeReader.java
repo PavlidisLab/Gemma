@@ -1,21 +1,11 @@
 package edu.columbia.gemma.loader.arraydesign;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.biojava.bio.seq.DNATools;
-import org.biojava.bio.seq.Sequence;
-import org.biojava.bio.symbol.IllegalSymbolException;
 
 import baseCode.io.reader.BasicLineMapParser;
+import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.sequence.biosequence.BioSequence;
 
 /**
  * Parse an Illumina "manifest.txt" file (tab-delimited). A one-line header is permitted.
@@ -46,15 +36,15 @@ public class IlluminaProbeReader extends BasicLineMapParser {
 
         String sequence = sArray[9];
 
-        try {
-            Sequence ns = DNATools.createDNASequence( sequence, probeSetId );
-            Probe ap = new SimpleProbe( probeSetId, ns );
+        Reporter ap = Reporter.Factory.newInstance();
 
-            return ap;
+        BioSequence immobChar = BioSequence.Factory.newInstance();
+        immobChar.setSequence( sequence );
+        immobChar.setIdentifier( probeSetId );
 
-        } catch ( IllegalSymbolException e ) {
-            throw new IllegalArgumentException( "a DNA sequence was not valid, or the file format is incorrect." );
-        }
+        ap.setImmobilizedCharacteristic( immobChar );
+        return ap;
+
     }
 
     /*
@@ -63,6 +53,6 @@ public class IlluminaProbeReader extends BasicLineMapParser {
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     protected String getKey( Object newItem ) {
-        return ( ( SimpleProbe ) newItem ).getIdentifier();
+        return ( ( Reporter ) newItem ).getIdentifier();
     }
 }

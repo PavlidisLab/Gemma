@@ -13,6 +13,11 @@ import org.biojava.bio.seq.DNATools;
 import org.biojava.bio.seq.Sequence;
 import org.biojava.bio.symbol.IllegalSymbolException;
 
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
+import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.sequence.biosequence.BioSequence;
+import edu.columbia.gemma.tools.SequenceManipulation;
+
 /**
  * <hr>
  * <p>
@@ -39,77 +44,20 @@ public class AffymetrixProbeSet {
         this.targetSequence = targetSequence;
     }
 
-    /**
-     * Try to convert this probe set into a single sequence.
-     * 
-     * @return
-     */
-    public Sequence collapse() {
-        Sequence collapsed = null;
-        try {
-
-            Set copyOfProbes = new HashSet();
-            for ( Iterator iter = probes.values().iterator(); iter.hasNext(); ) {
-                AffymetrixProbe next = ( AffymetrixProbe ) iter.next();
-                copyOfProbes.add( new AffymetrixProbe( "copy", "copy", DNATools.createDNASequence( next.getSequence()
-                        .seqString(), "a copy" ), next.getLocationInTarget() ) );
-            }
-
-            collapsed = DNATools.createDNASequence( "", "Collapsed" );
-            while ( !copyOfProbes.isEmpty() ) {
-                int ol = 0;
-                String nextSeqStr = null;
-                int minLocation = Integer.MAX_VALUE;
-                AffymetrixProbe next = null;
-
-                for ( Iterator iter = copyOfProbes.iterator(); iter.hasNext(); ) {
-                    AffymetrixProbe probe = ( AffymetrixProbe ) iter.next();
-
-                    int loc = probe.getLocationInTarget();
-                    if ( loc <= minLocation ) {
-                        minLocation = loc;
-                        next = probe;
-                    }
-                }
-
-                ol = next.rightHandOverlap( collapsed );
-
-                nextSeqStr = next.getSequence().seqString();
-                copyOfProbes.remove( next );
-
-                String newSeq = null;
-                if ( ol == 0 ) // just tack it on.
-                    newSeq = collapsed.seqString() + nextSeqStr;
-                else
-                    // add just the non-overlapping part.
-                    newSeq = collapsed.seqString() + nextSeqStr.substring( ol );
-
-                // log.debug( "Overlap of " + nextSeqStr.toUpperCase() + " with " + collapsed.seqString().toUpperCase()
-                // + " is " + ol + ", new is " + newSeq.toUpperCase() );
-
-                collapsed = DNATools.createDNASequence( newSeq, "Collapsed" );
-            }
-
-        } catch ( IllegalSymbolException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return collapsed;
-    }
-
+    
     /**
      * @param ap
      */
-    public void add( AffymetrixProbe ap ) {
+    public void add( Reporter ap ) {
         this.probes.put( ap.getIdentifier(), ap );
     }
 
-    public AffymetrixProbe getProbe( String id ) {
-        return ( AffymetrixProbe ) probes.get( id );
+    public Reporter getProbe( String id ) {
+        return ( Reporter ) probes.get( id );
     }
 
     public String getProbeSequence( String id ) {
-        return ( ( AffymetrixProbe ) probes.get( id ) ).getSequence().seqString();
+        return ( ( Reporter ) probes.get( id ) ).getImmobilizedCharacteristic().getSequence();
     }
 
     public String getProbeSetId() {
