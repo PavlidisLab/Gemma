@@ -3,6 +3,7 @@
     "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <beans>
+	<!--
     <bean id="exceptionResolver" 
         class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
         <property name="exceptionMappings">
@@ -64,17 +65,99 @@
         <property name="message"><ref bean="mailMessage"/></property>
         <property name="templateName"><value>accountCreated.vm</value></property>
     </bean>
-    
+-->    
     <!-- Put controller mappings here -->
-
-    <!-- Load WEB-INF/classes/ApplicationResources.properties for i18n messages using JSTL's fmt tag -->
-    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
-        <property name="basename"><value>ApplicationResources</value></property>
+    <bean id="personFormController" class="controller.edu.columbia.gemma.common.auditAndSecurity.PersonFormController">
+	<property name="sessionForm">
+			<value>true</value>
+		</property>
+		<property name="commandName">
+			<value>person</value>
+		</property>
+		<property name="commandClass">
+			<value>edu.columbia.gemma.common.auditAndSecurity.PersonImpl</value>
+		</property><!--
+		<property name="validator">
+			<ref bean="beanValidator"/>
+		</property>-->
+		<property name="formView"><!--resolved by the viewResolver below -->
+			<value>personForm</value>
+		</property>
+		<property name="successView"><!--cannot be resolved by the view resolver-->
+			<value>welcome.jsp</value>
+		</property>
+		<!--
+		<property name="personService">
+			<ref bean="personService"/>
+		</property>
+		-->
+		<property name="personService">
+			<ref bean="personService"/>
+		</property>
+	</bean>
+	
+<!--<bean id="manualLoadValidator" class="bus.UserNameValidator"/>-->
+	<bean id="geneLoaderController" class="controller.edu.columbia.gemma.sequence.gene.GeneLoaderController">
+		<property name="sessionForm">
+			<value>true</value>
+		</property>
+		<property name="commandName">
+			<value>gene</value>
+		</property>
+		<property name="commandClass">
+			<value>edu.columbia.gemma.sequence.gene.GeneImpl</value>
+		</property><!--
+		<property name="validator">
+			<ref bean="userNameValidator"/>
+		</property>-->
+		<property name="formView"><!--resolved by the viewResolver below -->
+			<value>geneLoad</value>
+		</property>
+		<!--
+		<property name="successView">
+			<value>gene.htm</value>
+		</property>
+		-->
+		<property name="geneLoaderService">
+			<ref bean="geneLoaderService"/>
+		</property>
+	</bean>
+	
+	<!-- Added these Dummy Services so I do not have to coding in the Impl classes ... yet -->
+	<!-- PersonService Service Implementation  -->
+    <bean id="personServiceDummyImpl" class="edu.columbia.gemma.dummy.common.auditAndSecurity.PersonServiceDummyImpl">
+        <property name="person"><ref bean="personDao"/></property>
     </bean>
-
+	<!-- PersonService Service Proxy  -->
+    <bean id="personService" class="org.springframework.aop.framework.ProxyFactoryBean">
+         <property name="target"><ref bean="personServiceDummyImpl"/></property>
+         <property name="proxyInterfaces">
+             <value>edu.columbia.gemma.common.auditAndSecurity.PersonService</value>
+         </property>
+         <property name="interceptorNames">
+             <list>
+                 <value>serviceTransactionInterceptor</value>
+                 <value>hibernateInterceptor</value>
+             </list>
+         </property>
+     </bean>
+	
+	
+	<bean id="geneLoaderService" class="edu.columbia.gemma.loader.sequence.gene.GeneLoaderService">
+		<property name="geneDao">
+			<ref bean="geneDao"/>
+		</property>
+	</bean>
+    <!-- Load WEB-INF/classes/ApplicationResources.properties for i18n messages using JSTL's fmt tag -->	
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+<!--      <property name="basename"><value>ApplicationResources</value></property> -->
+        <!-- The default place for this is in WEB-INF/classes -->
+		<property name="basename"><value>messages</value></property>
+    </bean>
     <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
             <props>
+<!--				
                 <prop key="/editProfile.html">userFormController</prop>
                 <prop key="/mainMenu.html">filenameController</prop>
                 <prop key="/editUser.html">userFormController</prop> 
@@ -82,11 +165,14 @@
                 <prop key="/uploadFile.html">fileUploadController</prop>
                 <prop key="/passwordHint.html">passwordHintController</prop>
                 <prop key="/signup.html">signupController</prop>
-                <!-- Add additional URL mappings here -->
+-->
+                <!-- Add additional URL mappings here -->			
+				<prop key="/geneLoad.htm">geneLoaderController</prop>
+				<prop key="/editPerson.htm">personFormController</prop>			
             </props>
         </property>
     </bean>
-
+<!--	
     <bean id="adminUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="interceptors">
             <list>
@@ -108,7 +194,7 @@
     </bean>
     
     <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController"/>
-
+-->
     <!-- View Resolver for JSPs -->
     <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="requestContextAttribute"><value>rc</value></property>
