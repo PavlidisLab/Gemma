@@ -31,6 +31,9 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="chromosomeLoaderService"
+ * @spring.property name="chromosomeDao" ref="chromosomeDao"
+ * @spring.property name="taxonDao" ref="taxonDao"
  */
 public class ChromosomeLoaderService implements BulkCreator {
     private static boolean alreadyLoaded;
