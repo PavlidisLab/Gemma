@@ -6,6 +6,7 @@
     <name>gemma MDA</name>
     <groupId>Gemma</groupId>
     <dependencies>
+        
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-profile</artifactId>
@@ -87,6 +88,15 @@
                 <session-beans.ignore/>
                 <session-impls.ignore/>
             </properties>
+        </dependency>
+         <dependency>
+            <groupId>andromda</groupId>
+            <artifactId>andromda-java-cartridge</artifactId>
+              <version>3.0-RC1-SNAPSHOT</version>
+                <properties>
+                    <enumerations>
+                        ${maven.andromda.hibernate.generated.dir}</enumerations>
+                </properties>
         </dependency>
         <dependency>
             <groupId>andromda</groupId>
