@@ -243,12 +243,6 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>mage</groupId>
-            <artifactId>mage-ontologyentry</artifactId>
-            <jar>MGEDOntologyEntry-2004-11-29.jar</jar>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-mock</artifactId>
             <jar>spring-mock.jar</jar>
@@ -258,6 +252,12 @@
             <groupId>spring</groupId>
             <artifactId>spring-sandbox</artifactId>
             <jar>spring-sandbox.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>odmg</groupId>
+            <artifactId>odmg</artifactId>
+            <version>3.0</version>
             <type>jar</type>
         </dependency>
     </dependencies>
