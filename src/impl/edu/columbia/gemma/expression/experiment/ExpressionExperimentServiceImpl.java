@@ -42,12 +42,12 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getExpressionExperiments()
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getAllExpressionExperiments()
      */
-    protected java.util.List handleGetExpressionExperiments()
+    protected java.util.Collection handleGetAllExpressionExperiments()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetExpressionExperiments()
+        //@todo implement protected java.util.Collection handleGetAllExpressionExperiments()
         return null;
     }
 

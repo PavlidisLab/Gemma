@@ -32,12 +32,12 @@ public class ExpressionExperimentSubSetServiceImpl
 {
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService#getExpressionExperimentSubSets()
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
      */
-    protected java.util.List handleGetExpressionExperimentSubSets()
+    protected java.util.Collection handleGetAllExpressionExperimentSubSets()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetExpressionExperimentSubSets()
+        //@todo implement protected java.util.Collection handleGetAllExpressionExperimentSubSets()
         return null;
     }
 

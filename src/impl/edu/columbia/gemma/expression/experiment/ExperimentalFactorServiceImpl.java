@@ -32,12 +32,12 @@ public class ExperimentalFactorServiceImpl
 {
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExperimentalFactorService#getExperimentalFactors()
+     * @see edu.columbia.gemma.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
      */
-    protected java.util.List handleGetExperimentalFactors()
+    protected java.util.Collection handleGetAllExperimentalFactors()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetExperimentalFactors()
+        //@todo implement protected java.util.Collection handleGetAllExperimentalFactors()
         return null;
     }
 

@@ -32,12 +32,12 @@ public class FactorValueServiceImpl
 {
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.FactorValueService#getFactorValues()
+     * @see edu.columbia.gemma.expression.experiment.FactorValueService#getAllFactorValues()
      */
-    protected java.util.List handleGetFactorValues()
+    protected java.util.Collection handleGetAllFactorValues()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.List handleGetFactorValues()
+        //@todo implement protected java.util.Collection handleGetAllFactorValues()
         return null;
     }
 
