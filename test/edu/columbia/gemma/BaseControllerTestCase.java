@@ -20,11 +20,11 @@ public class BaseControllerTestCase extends TestCase{
     protected final static ApplicationContext ctx;
     
     static {
-        ResourceBundle db = ResourceBundle.getBundle( "testdatabase" );
+        ResourceBundle db = ResourceBundle.getBundle( "testResources" );
         String daoType = db.getString( "dao.type" );
-
+        String servletContext = db.getString("servlet.name.0");
         // Make sure you have the /web on the junit classpath.
-        String[] paths = { "loader-servlet.xml", "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml" };
+        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml", servletContext+"-servlet.xml" };
         ctx = new ClassPathXmlApplicationContext( paths );
     }
     
