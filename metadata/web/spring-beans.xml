@@ -29,6 +29,7 @@
                 <!-- Add additional URL mappings here -->			
 				<prop key="/bulkLoadForm.htm">loaderController</prop>
 				<prop key="/pubMedForm.htm">pubMedXmlController</prop>
+				<prop key="/pubMedSuccess.htm">pubMedXmlPersistController</prop>
             </props>
         </property>
     </bean>
