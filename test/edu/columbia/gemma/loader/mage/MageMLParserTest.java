@@ -44,6 +44,10 @@ public class MageMLParserTest extends TestCase {
     GZIPInputStream istBigArrayDesign;
     GZIPInputStream ist100CP;
 
+    InputStream istDingledine;
+    InputStream istExampleBioMaterial;
+    InputStream istHematochromatosis;
+
     ZipInputStream istAffyGiantBioSequencePackage;
 
     protected void setUp() throws Exception {
@@ -66,6 +70,10 @@ public class MageMLParserTest extends TestCase {
         istQTAffy = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_Affymetrix.xml" );
         istQTGenePix = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_GenePix.xml" );
 
+        istDingledine = MageMLParserTest.class.getResourceAsStream( "/data/mage/dingledine-example.mageml.jsp.xml" );
+        istExampleBioMaterial = MageMLParserTest.class
+                .getResourceAsStream( "/data/mage/example-experiment.biomaterial.mageml.jsp.xml" );
+        istHematochromatosis = MageMLParserTest.class.getResourceAsStream( "/data/mage/murine_hemochromatosis.xml" );
     }
 
     protected void tearDown() throws Exception {
@@ -105,19 +113,19 @@ public class MageMLParserTest extends TestCase {
         mlp.parse( istQTAffy );
         List result = ( List ) mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-     //   log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: QuantitationType GenePix" );
         mlp.parse( istQTGenePix );
         result = ( List ) mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-       // log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: QuantitationType" );
         mlp.parse( istQuantitationType );
         result = ( List ) mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-    //    log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
     }
 
     public void testGetAllConvertedData() throws Exception {
@@ -126,25 +134,25 @@ public class MageMLParserTest extends TestCase {
         mlp.parse( istTIGRBiomaterial );
         Collection result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-     //   log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Biosequence" );
         mlp.parse( istBioSequence );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-   //     log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: BioMaterial" );
         mlp.parse( istBioMaterial );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-    //    log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Experiment" );
         mlp.parse( istExperiment );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-    //    log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: ArrayDesign" );
         mlp.parse( istArrayDesign );
@@ -167,19 +175,40 @@ public class MageMLParserTest extends TestCase {
         mlp.parse( istPhysicalBioAssay );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-   //     log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: TIGRSimpleArrayDesign" );
         mlp.parse( istTIGRSimpleArrayDesign );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-    //    log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
 
         log.debug( "converting all: Protocol" );
         mlp.parse( istProtocol );
         result = mlp.getConvertedData();
         log.debug( result.size() + " elements obtained" );
-   //     log.debug( "\n" + PrettyPrinter.print( result ) );
+        // log.debug( "\n" + PrettyPrinter.print( result ) );
+
+    }
+
+    public void testMoreTests() throws Exception {
+        log.debug( "converting all: Dingledine" );
+        mlp.parse( istDingledine );
+        Collection result = mlp.getConvertedData();
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
+
+        log.debug( "converting all: Example Biomaterial" );
+        mlp.parse( istExampleBioMaterial );
+        result = mlp.getConvertedData();
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
+        
+        log.debug( "converting all: Hemochromatosis" );
+        mlp.parse( istHematochromatosis );
+        result = mlp.getConvertedData();
+        log.debug( result.size() + " elements obtained" );
+        log.debug( "\n" + PrettyPrinter.print( result ) );
 
     }
 
