@@ -56,6 +56,7 @@
 				<service-locator>${maven.andromda.spring.service.locator.dir}</service-locator>
 				<springTypesPackage>edu.columbia.spring</springTypesPackage>
 				<applicationContext>applicationContext-hibernate.xml</applicationContext>
+                
 			</properties>
 		</dependency>
 	 
@@ -82,7 +83,7 @@
                 <man-impls>${maven.andromda.hibernate.manual.dir}</man-impls>  
                 <entity-impls>${maven.andromda.hibernate.manual.dir}</entity-impls>
                 <configuration>${maven.andromda.hibernate.generated.dir}</configuration>
-					
+					<hibernateQueryUseNamedParameters >true</hibernateQueryUseNamedParameters >
 	
 			   <session-beans.ignore/>
 			    <session-impls.ignore/>
