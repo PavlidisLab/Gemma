@@ -5,6 +5,7 @@ import junit.framework.TestSuite;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.controller.LoaderControllerTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
+import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.arraydesign.GoldenPathTest;
 import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
@@ -42,6 +43,8 @@ public class AllTests {
         suite.addTestSuite(LoaderControllerTest.class);
         
         suite.addTestSuite(TaxonLoaderServiceTest.class);
+        
+        suite.addTestSuite(ExternalDatabaseTest.class);
         
         suite.addTestSuite(GoldenPathTest.class);
         // $JUnit-END$
