@@ -19,42 +19,60 @@ import edu.columbia.gemma.sequence.gene.TaxonDao;
 /**
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University
+ * Copyright (c) 2004 - 2005 Columbia University
  * 
  * @author keshav
  * @version $Id$
  */
-public class TaxonLoaderService {
+public class TaxonLoaderService implements TaxonLoaderServiceInterface{
     protected static final Log log = LogFactory.getLog( TaxonLoaderService.class );
+    private int abbreviationCol;
+    private int commonNameCol;
+    private int ncbiIdCol;
+    private int scientificNameCol;
     private TaxonDao taxonDao;
-    int identifierCol;
-    int nameCol;
-    int scientificNameCol;
-    int commonNameCol;
-    int abbreviationCol;
-    int ncbiIdCol;
-    String localBasePath;
-    String filename;
-    String filepath;
-
-    public TaxonLoaderService( TaxonDao td ) {
-        this.taxonDao = td;
-    }
+    private Taxon taxon;
 
     /**
      * @throws ConfigurationException
      */
     public TaxonLoaderService() throws ConfigurationException {
         Configuration conf = new PropertiesConfiguration( "taxon.properties" );
-        localBasePath = ( String ) conf.getProperty( "taxon.local.datafile.basepath" );
-        filename = ( String ) conf.getProperty( "taxon.filename" );
-        filepath = localBasePath + "\\" + filename;
-        identifierCol = conf.getInt( "taxon.identifierCol" );
-        nameCol = conf.getInt( "taxon.nameCol" );
         scientificNameCol = conf.getInt( "taxon.scientificNameCol" );
         commonNameCol = conf.getInt( "taxon.commonNameCol" );
         abbreviationCol = conf.getInt( "taxon.abbreviationCol" );
         ncbiIdCol = conf.getInt( "taxon.ncbiIdCol" );
+    }
+
+    /**
+     * @param is
+     * @param hasHeader Indicate if the stream is from a file that has a one-line header
+     * @throws IOException
+     */
+    public int bulkCreate( InputStream is, boolean hasHeader ) throws IOException {
+
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+        if ( hasHeader ) handleHeader( br );
+
+        int count = 0;
+        String line = null;
+        while ( ( line = br.readLine() ) != null ) {
+            if ( createFromRow( line ) ) count++;
+        }
+        br.close();
+        return count;
+    }
+
+    /**
+     * @param filename
+     * @param hasHeader Indicate if the stream is from a file that has a one-line header
+     * @throws IOException
+     */
+    public void bulkCreate( String filename, boolean hasHeader ) throws IOException {
+        log.info( "Reading Taxa from " + filename );
+        int count = bulkCreate( openFileAsStream( filename ), hasHeader );
+        log.info( "Created " + count + " new taxa from " + filename );
     }
 
     /**
@@ -63,84 +81,61 @@ public class TaxonLoaderService {
     public void setTaxonDao( TaxonDao taxonDao ) {
         this.taxonDao = taxonDao;
     }
+    
 
     /**
-     * @return
+     * @return Returns the taxon.
      */
-    protected TaxonDao getTaxonDao() {
-        return this.taxonDao;
+    public Taxon getTaxon() {
+        return taxon;
+    }
+    /**
+     * @param taxon The taxon to set.
+     */
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
+    }
+    /**
+     * @param line
+     * @throws NumberFormatException
+     */
+    private boolean createFromRow( String line ) throws NumberFormatException {
+        String[] sArray = line.split( "\t" );
+        Taxon t = Taxon.Factory.newInstance();
+        t.setIdentifier( "taxon::" + sArray[scientificNameCol] );
+        t.setName( sArray[commonNameCol] );
+        t.setScientificName( sArray[scientificNameCol] );
+        t.setCommonName( sArray[commonNameCol] );
+        t.setAbbreviation( sArray[abbreviationCol] );
+        t.setNcbiId( Integer.parseInt( sArray[ncbiIdCol] ) );
+        Collection col = this.taxonDao.findByScientificName( t.getScientificName() );
+        if ( col.size() > 0 ) {
+            log.info( "Taxon with scientificName: " + t.getScientificName() + " already exists, skipping." );
+            return false;
+        }
+        this.taxonDao.create( t );
+        return true;
+
     }
 
     /**
+     * @param br
      * @throws IOException
      */
-    /*public void loadDatabase() throws IOException {
-        saveTaxons( openFileAsStream() );
-    }*/
-    public void bulkLoad(String filename) throws IOException {
-        if (filename==null){
-            filename = this.filename;
-        }
-        else{
-            this.filename = filename;
-        }
-            
-        bulkLoad( openFileAsStream() );
+    private void handleHeader( BufferedReader br ) throws IOException {
+        br.readLine();
     }
 
     /**
      * @return InputStream
      * @throws IOException
      */
-    public InputStream openFileAsStream() throws IOException {
-        File file = new File( filepath );
-        if ( !file.canRead() ) throw new IOException( "Can't read from file " + filepath );
+    private InputStream openFileAsStream( String filename ) throws IOException {
+        File file = new File( filename );
+        if ( !file.canRead() ) throw new IOException( "Can't read from file " + file );
 
         return new FileInputStream( file );
 
-    }
-
-    /**
-     * @param is
-     * @throws IOException
-     */
-    public void bulkLoad( InputStream is ) throws IOException {
-        int count = 0;
-        String line = null;
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        br.readLine();
-        log.info( "Reading file from " + filepath );
-        while ( ( line = br.readLine() ) != null ) {
-            String[] sArray = line.split( "\t" );
-            Taxon t = Taxon.Factory.newInstance();
-            t.setIdentifier( "taxon::" + count + "::" + sArray[identifierCol] );
-            t.setName( sArray[nameCol] );
-            t.setScientificName( sArray[nameCol] );
-            t.setCommonName( sArray[commonNameCol] );
-            t.setAbbreviation( sArray[abbreviationCol] );
-            t.setNcbiId( Integer.parseInt( sArray[ncbiIdCol] ) );
-            Collection col = getTaxonDao().findByScientificName( t.getScientificName() );
-            if ( col.size() > 0 ) {
-                log.info( " Object with scientificName: " + t.getScientificName() + " already exists." );
-            } else {
-                getTaxonDao().create( t );
-            }
-            count++;
-        }
-        br.close();
-    }
-    
-   /**
-    * 
-    * @param scientificName
-    * @return Collection
-    */
-    public Collection findByScientificName( String scientificName ) {
-        if ( scientificName == null ) {
-            throw new IllegalArgumentException(
-                    "edu.columbia.gemma.sequence.gene.GeneService.findByScientificName(java.lang.String officialName) - 'scientificName' can not be null" );
-        }
-        return getTaxonDao().findByScientificName( scientificName );
     }
 
 }
