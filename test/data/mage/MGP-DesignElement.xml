@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
+"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
+<MAGE-ML identifier="mged.org:MAGE Good Practice:DesignElement_package">
+<!--MAGE-ML Good Practice Guidelines-->
+<!--MIAME requirement: to indicate content requirement-->
+<!--MO TERMS: MGED Controlled vocabulary must be provided-->
+<!--ADF CREATION / ADF PARSING: Points to object that should used when creating an ADF-->
+<!--MO Rules: requires MO rules for appropriate coding-->
+
+<DesignElement_package>
+  <CompositeSequence_assnlist>
+    <CompositeSequence identifier="ebi.ac.uk:miamexpress/CompositeSequence:object">
+<!--ADF CREATION / ADF PARSING: Create field 'CompositeSequence Identifier'-->
+<!--ADF CREATION / ADF PARSING:  Create field 'CompositeSequence Name' and provide Sensible CompositeSequence Name as Displaid in interface-->
+<Descriptions_assnlist>
+<!-- ADF CREATION / ADF PARSING: Create a 'CompositeSequence Comment' to provide free text description-->
+ 	<Description/>
+      </Descriptions_assnlist>
+      <ControlType_assn>
+<!--MIAME-REQUIREMENT: to be specified if reporter is a control element-->
+<!--ADF CREATION / ADF PARSING: Create field 'CompositeSequence ControlType' in ADF to specify type of control using MO term-->
+<!--MO-terms: select term from controlled vocabulary-->
+<OntologyEntry category="ControlType" value="control_spike_calibration"/>
+      </ControlType_assn>
+      <BiologicalCharacteristics_assnreflist>
+        <BioSequence_ref identifier="ebi.ac.uk:miamexpress/BioSequence:object"/>
+<!--ADF CREATION / ADF PARSING: Create 'CompositeSequence BioSequence [Actual Sequence]' field in ADF-->
+</BiologicalCharacteristics_assnreflist>
+      <ReporterCompositeMaps_assnreflist>
+        <ReporterCompositeMap_ref identifier="ebi.ac.uk:miamexpress/ReporterCompositeMap:object"/>
+      </ReporterCompositeMaps_assnreflist>
+    </CompositeSequence>
+  </CompositeSequence_assnlist>
+  <Reporter_assnlist>
+    <Reporter identifier="ebi.ac.uk:miamexpress/Reporter:object" name="Reporter sensible name">
+<!--ADF CREATION / ADF PARSING: Create field 'Reporter Identifier'-->
+<!--ADF CREATION / ADF PARSING: Create field 'Reporter Name' and provide Sensible Reporter Name as Displaid in interface-->
+<Descriptions_assnlist>
+        <Description text="my favorite reporter"/>
+<!--ADF-CREATION / ADF PARSING:Create a 'Reporter Comment' to provide free text description-->
+</Descriptions_assnlist>
+      <ControlType_assn>
+<!--MIAME-REQUIREMENT: to be specified if reporter is a control element-->
+<!--ADF CREATION /ADF PARSING: Create field 'Reporter ControlType' in ADF to specify type of control using MO term-->
+<!--MO-terms: select term from controlled vocabulary-->
+<OntologyEntry category="ControlType" value="control_label"/>
+      </ControlType_assn>
+      <ImmobilizedCharacteristics_assnreflist>
+<!--Several BioSequence can be referenced hereas in case of Sequence and PCR primers.-->
+<BioSequence_ref identifier="ebi.ac.uk:miamexpress/BioSequence:object"/>
+<!--ADF CREATION / ADF PARSING: Create  Field 'Reporter BioSequence [Forward Primer]' to provide information-->
+<BioSequence_ref identifier="ebi.ac.uk:miamexpress/BioSequence:object"/>
+<!--ADF CREATION / ADF PARSING: Create  Field 'Reporter BioSequence [Reverse Primer]' to provide information-->
+<BioSequence_ref identifier="ebi.ac.uk:miamexpress/BioSequence:object"/>
+<!--ADF CREATION / ADF PARSING: Create 'Reporter BioSequence [Actual Sequence]' field in ADF-->
+</ImmobilizedCharacteristics_assnreflist>
+
+      <FailTypes_assnlist>
+<!--OPTIONAL -->
+<!--MIAME-REQUIREMENT: provide QC checks e.g. in the case of  PCR based arrays -->
+<!--ADF CREATION / ADF PARSING: Create 'Reporter Failed Type' field in ADF-->
+<!--MGED-terms: select term from  controlled vocabulary-->
+<OntologyEntry category="FailType" value="PCR_fail"/>
+      </FailTypes_assnlist>
+
+      <FeatureReporterMaps_assnreflist>
+        <FeatureReporterMap_ref identifier="ebi.ac.uk:miamexpress/FeatureReporterMap:object"/>
+      </FeatureReporterMaps_assnreflist>
+    </Reporter>
+  </Reporter_assnlist>
+
+  <ReporterCompositeMap_assnlist>
+    <ReporterCompositeMap identifier="ebi.ac.uk:miamexpress/ReporterCompositeMap:object">
+      <CompositeSequence_assnref>
+        <CompositeSequence_ref identifier="ebi.ac.uk:miamexpress/CompositeSequence:object"/>
+      </CompositeSequence_assnref>
+      <ReporterPositionSources_assnlist>
+        <ReporterPosition end="35" start="10">
+<!--Provide location of reporter within CompositeSequence object -->
+<Reporter_assnref>
+            <Reporter_ref identifier="ebi.ac.uk:miamexpress/Reporter:object"/>
+          </Reporter_assnref>
+        </ReporterPosition>
+      </ReporterPositionSources_assnlist>
+    </ReporterCompositeMap>
+  </ReporterCompositeMap_assnlist>
+
+  <FeatureReporterMap_assnlist>
+    <FeatureReporterMap identifier="ebi.ac.uk:miamexpress/FeatureReporterMap:object">
+<Reporter_assnref>
+        <Reporter_ref identifier="ebi.ac.uk:miamexpress/Reporter:object"/>
+      </Reporter_assnref>
+      <FeatureInformationSources_assnlist>
+        <FeatureInformation>
+          <Feature_assnref>
+            <Feature_ref identifier="ebi.ac.uk:miamexpress/Feature:object"/>
+          </Feature_assnref>
+        </FeatureInformation>
+      </FeatureInformationSources_assnlist>
+    </FeatureReporterMap>
+  </FeatureReporterMap_assnlist>
+</DesignElement_package>
+</MAGE-ML>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
+"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
+<MAGE-ML identifier="mged.org:MAGE Good Practice:QuantitationType_package">
+  <QuantitationType_package>
+    <QuantitationType_assnlist>
+
+      <MeasuredSignal identifier="ebi.ac.uk:miamexpress/MeasuredSignal:object" isBackground="false" name="Number of pixels in Green Channel">
+
+<!--MIAME REQUIREMENT: A full description of the Quantitation Type should be provided by Manufacturer-->
+<!--MIAME REQUIREMENT: Description should include method of calculation-->
+<!--MAGE-ML good practice-->
+
+<Descriptions_assnlist>
+             <Description text="Number of pixels in Green Channel Total number of pixels used to compute feature statistics ie. total number of inlier pixels/per spot">
+
+<!--MAGE-ML good practice-->
+
+<Annotations_assnlist>
+<!--MIAME REQUIREMENT: provide mapping when available to MGED approved Quantitation Type Definitions (to be  released)-->
+<!--MO TERMS:  use of MGED Ontology instances required-->
+<OntologyEntry  category="QuantitationType"
+                description="the raw signal column gives the raw signal output from the image analysis algorithm" value="SIGNAL_RAW"/>
+            </Annotations_assnlist>
+          
+</Description>
+
+        </Descriptions_assnlist>
+
+<!--OPTIONAL if QT is related to one Channel-->
+        <Channel_assnref>
+          <Channel_ref identifier="ebi.ac.uk:Channel:object"/>
+        </Channel_assnref>
+
+        <Scale_assn>
+<!--MO TERMS:  use of MGED Ontology instances required-->
+          <OntologyEntry category="Scale" value="unscaled"/>
+        </Scale_assn>
+
+        <DataType_assn>
+<!--MO TERMS:  use of MGED Ontology instances required-->
+          <OntologyEntry category="DataType" value="string_datatype"/>
+        </DataType_assn>
+
+<!--OPTIONAL -->
+        <QuantitationTypeMaps_assnreflist>
+          <QuantitationTypeMap_ref identifier="ebi.ac.uk:miamexpress/QuantitationTypeMap:object"/>
+        </QuantitationTypeMaps_assnreflist>
+
+      </MeasuredSignal>
+    </QuantitationType_assnlist>
+  </QuantitationType_package>
+  </MAGE-ML>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
+"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
+<MAGE-ML identifier="mged.org:MAGE Good Practice:Experiment_package">
+<!--MAGE-ML Good Practice Guidelines-->
+<!--MIAME requirement: to indicate content requirement-->
+<!--MO TERMS: MGED Controlled vocabulary must be provided-->
+<!--MO Rules: requires MO rules for appropriate coding-->
+<Experiment_package>
+<Experiment_assnlist>
+<Experiment identifier="ebi.ac.uk:miamexpress/Experiment:E-MEXP-XX">
+  <Descriptions_assnlist>
+    <Description text="description">
+      <BibliographicReferences_assnlist>
+      <!--MIAME requirement Provide Bibliographic Reference-->
+          <BibliographicReference URI="my uri"
+          authors="my name" editor="my editor" issue="my issue"
+          pages="my pages" publication="my publication"
+          publisher="my publisher" title="my title" volume="my volume" year="2004">
+          <Parameters_assnlist>
+          <!--MO TERM -->
+          <OntologyEntry
+              category="PublicationType" value="journal_article"/>
+          </Parameters_assnlist>
+        </BibliographicReference>
+      </BibliographicReferences_assnlist>
+    </Description>
+  </Descriptions_assnlist>
+  <Providers_assnreflist>
+  <!--MIAME requirement-->
+  <!--MAGE-ML Good Practice:-->
+      <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
+    <Organization_ref identifier=" ebi.ac.uk:miamexpress/Organization:object"/>
+  </Providers_assnreflist>
+  <BioAssayData_assnreflist>
+  <!--MAGE-ML Good Practice Strongly Recommended-->
+      <!--Provide references to ALL BioAssayData objects (MeasuredBioAssayData and DerivedBioAssayData in Experiment Package even if not required by DTD-->
+      <!--enhances data retrieval options-->
+      <MeasuredBioAssayData_ref identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object"/>
+    <DerivedBioAssayData_ref identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object"/>
+  </BioAssayData_assnreflist>
+  <BioAssays_assnreflist>
+  <!--MAGE-ML Good Practice:-->
+  <!--Provide all references to BioAssays objects  in Experiment Package even if not required by DTD-->
+  <!--enhances data retrieval options-->
+    <PhysicalBioAssay_ref identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object"/>
+    <MeasuredBioAssay_ref identifier="ebi.ac.uk:miamexpress/MeasuredBioAssay:object"/>
+    <DerivedBioAssay_ref identifier="ebi.ac.uk:miamexpress/DerivedBioAssay:object"/>
+  </BioAssays_assnreflist>
+  <ExperimentDesigns_assnlist>
+    <ExperimentDesign>
+      <Types_assnlist>
+      <!--MGED TERMS: -->
+      <OntologyEntry
+          category="EpidemiologicalDesign" value="family_history_design"/>
+      </Types_assnlist>
+      <ExperimentalFactors_assnlist>
+      <!--MIAME requirement-->
+      <!--MAGE-ML Good Practice:-->
+          <!--Declare here all variables (factor and values) related to the experiment-->
+          <!--MAGE-ML Good Practice: all Factor Values should be recalled at the Level of BioAssays-->
+          <!--MAGE-ML Good Practice: see also BioAssays Package for more information-->
+          <ExperimentalFactor identifier="ebi.ac.uk:miamexpress/ExperimentalFactor:object">
+          <Category_assn>
+          <!--MGED TERMS: -->
+          <OntologyEntry category="BiologicalFactorCategory" value="Compound"/>
+          </Category_assn>
+          <!--For Qualitative Values, use [OntologyEntry] association-->
+          <FactorValues_assnlist>
+            <FactorValue
+              identifier="ebi.ac.uk:miamexpress/FactorValue:object" name="$compound">
+              <Value_assn>
+                <OntologyEntry category="Compound" value="$compound"/>
+              </Value_assn>
+            </FactorValue>
+          </FactorValues_assnlist>
+        </ExperimentalFactor>
+        <ExperimentalFactor identifier="ebi.ac.uk:miamexpress/ExperimentalFactor:object">
+          <Category_assn>
+            <OntologyEntry category="BiologicalFactorCategory" value="Time"/>
+          </Category_assn>
+          <!--For Quantitative Values, use [Measurement] association-->
+          <FactorValues_assnlist>
+            <FactorValue
+              identifier="ebi.ac.uk:miamexpress/FactorValue:object" name="Duration">
+              <Measurement_assn>
+                <Measurement kindCV="time" type="absolute">
+                  <Unit_assn>
+                    <TimeUnit unitName="hours" unitNameCV="h"/>
+                  </Unit_assn>
+                </Measurement>
+              </Measurement_assn>
+            </FactorValue>
+          </FactorValues_assnlist>
+        </ExperimentalFactor>
+      </ExperimentalFactors_assnlist>
+      <!--OPTIONAL Association-->
+      <QualityControlDescription_assn>
+        <Description text="description text">
+          <Annotations_assnlist>
+            <OntologyEntry category="QualityControlDescription" value="dye-swap"/>
+          </Annotations_assnlist>
+        </Description>
+      </QualityControlDescription_assn>
+      <!--OPTIONAL Association-->
+      <ReplicateDescription_assn>
+        <Description text="description text">
+          <Annotations_assnlist>
+            <OntologyEntry category="ReplicateDescription" value="biological_duplicate"/>
+          </Annotations_assnlist>
+        </Description>
+      </ReplicateDescription_assn>
+    </ExperimentDesign>
+  </ExperimentDesigns_assnlist>
+</Experiment>
+</Experiment_assnlist>
+</Experiment_package>
+</MAGE-ML>

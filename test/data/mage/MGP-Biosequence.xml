@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
+"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
+<MAGE-ML identifier="mged.org:MAGE Good Practice:BioSequence_package">
+<!--MAGE-ML Good Practice Guidelines-->
+<!--MIAME requirement: to indicate content requirement-->
+<!--MO TERMS: MGED Controlled vocabulary must be provided-->
+<!--ADF creation / ADF parsing: Points to object that should used when creating an ADF-->
+<BioSequence_package>
+  <BioSequence_assnlist>
+    <BioSequence identifier="ebi.ac.uk:miamexpress/BioSequence:object"
+      isApproximateLength="n/a"
+        length="15">
+        <!--MIAME-REQUIREMENT:Attribute [sequence] required if Oligo-array  -->
+        <!--ADF creation / ADF parsing: Create field with 'Reporter/CompositeSequence BioSequence [Actual Sequence]'-->
+        <SequenceDatabases_assnlist>
+        <DatabaseEntry accession="NM_13243">
+        <!--ADF creation / ADF parsing: several accession numbers can be supplied in ADF using semi-colon (;) as separator-->
+        <Database_assnref>
+        <!--ADF creation / ADF parsing: Database Entry Field in ADF-->
+        <!--ADF creation / ADF parsing: database tag should be supplied between square brackets [] in field header-->
+        <Database_ref identifier="ebi.ac.uk:Database:refseq"/>
+          </Database_assnref>
+        </DatabaseEntry>
+      </SequenceDatabases_assnlist>
+      <PolymerType_assn>
+      <!--ADF creation / ADF parsing: MANDATORY Field in ADF-->
+          <!--ADF creation / ADF parsing: Create Field with 'BioSequence PolymerType' Header-->
+          <!--MO TERMS:  use of MGED Ontology instances requires-->
+          <OntologyEntry category="PolymerType" value="DNA"/>
+      </PolymerType_assn>
+      <Type_assn>
+      	  <!--ADF creation / ADF parsing: MANDATORY Field in ADF-->
+          <!--ADF creation / ADF parsing: Create Field with 'BioSequence PolymerType' Header-->
+          <!--MO TERMS:  use of MGED Ontology Instances required-->
+          <OntologyEntry
+          category="BioSequenceType" value="ORF"/>
+      </Type_assn>
+    </BioSequence>
+  </BioSequence_assnlist>
+</BioSequence_package>
+</MAGE-ML>

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
+"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" > 
+<MAGE-ML identifier="mged.org:MAGE Good Practice:BioMaterial_package">
+<BioMaterial_package>
+  <Compound_assnlist>
+  <!--IMPORTANT: PROVIDE NAMES TO ALL COMPOUNDS-->
+      <Compound
+      identifier="ebi.ac.uk:miamexpress/Compound:object"
+      isSolvent="false" name="cy3 dye">
+      <!--OPTIONAL association: only if MIAME information can not be provided  otherwise-->
+        <CompoundIndices_assnlist>
+        <!--MO TERMS:  use of MGED Ontology  instances requireds-->
+        <!--MO RULES:  use of MGED  Ontology Rules for representing Compound-->
+        <OntologyEntry
+        category="LabelCompound" value="Cy3"/>
+    </CompoundIndices_assnlist>
+    </Compound>
+  </Compound_assnlist>
+  <BioMaterial_assnlist>
+  <!--IMPORTANT: PROVIDE NAMES TO ALL BIOMATERIALS-->
+      <BioSource
+      identifier="ebi.ac.uk:miamexpress/BioSource:object"
+        name="BioSource">
+        <!--OPTIONAL association: only if MIAME information can not be provided otherwise-->
+        <Descriptions_assnlist>
+        <Description text="Description of my bioSource:this is free text"/>
+      </Descriptions_assnlist>
+      <Characteristics_assnlist>
+      <!--MIAME-REQUIREMENT: Provide Species  using MGED  ontology class ORGANISM-->
+          <!--MO TERMS: use of  MGED Ontology  instances required-->
+          <!--MO RULES: use of MGED  Ontology Rules for representing complex biomaterial characteristics instances requires-->
+          <OntologyEntry
+          category="Organism" value="Mus musculus"/>
+      </Characteristics_assnlist>
+      <MaterialType_assn>
+      <!--MO TERMS:  use of MGED Ontology instances   required-->
+          <OntologyEntry category="MaterialType" value="whole_organism"/>
+      </MaterialType_assn>
+      <SourceContact_assnreflist>
+      <!--MIAME-REQUIREMENT: to Track BioSource Provider-->
+          <Person_ref
+          identifier="ebi.ac.uk:miamexpress/Person:object" name="Person"/>
+      </SourceContact_assnreflist>
+      <!--IMPORTANT: BioSource should have NO association to Treatment-->
+        </BioSource>
+    <BioSample
+        identifier="ebi.ac.uk:miamexpress/BioSample:object">
+        <!--OPTIONAL association: only if MIAME information can not be provided otherwise-->
+        <Descriptions_assnlist>
+        <Description/>
+      </Descriptions_assnlist>
+      <Characteristics_assnlist>
+      <!--MAGE-ML BEST PRACTICE: -->
+      <!--MO RULES:  use of MGED Ontology Rules for representing complex  biomaterial characteristics instances required-->
+          <!--IMPORTANT: BioSamples can have new characterictics compared to BioSource they are deriving  from-->
+          <!--USE CASE: mutagenesis which causes change in genotype-->
+          <OntologyEntry category="Genotype" value="p53-/-"/>
+      </Characteristics_assnlist>
+      <MaterialType_assn>
+      <!--MO TERMS:  use of MGED Ontology instances  required-->
+          <OntologyEntry category="MaterialType" value="cell"/>
+      </MaterialType_assn>
+      <Treatments_assnlist>
+      <!--MAGE-ML BEST PRACTICE: provide association to protocol when applying a treatment-->
+          <!--MAGE-ML BEST PRACTICE: provide an order to Treatment-->
+          <!--MAGE-ML BEST PRACTICE: provide association to protocol & to performer for QC checks-->
+          <Treatment
+          identifier="ebi.ac.uk:miamexpress/Treatment:object" order="1">
+          <ProtocolApplications_assnlist>
+          <!--MAGE-ML BEST PRACTICE: DATE FORMATTING ISSUE-->
+              <ProtocolApplication activityDate="YYYY-MM-DD">
+              <!--OPTIONAL-->
+              <ParameterValues_assnlist>
+                <ParameterValue>
+                  <ParameterType_assnref>
+                    <Parameter_ref identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
+                  </ParameterType_assnref>
+                </ParameterValue>
+              </ParameterValues_assnlist>
+              <!--OPTIONAL-->
+              <Performers_assnreflist>
+                <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
+              </Performers_assnreflist>
+              <Protocol_assnref>
+                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+              </Protocol_assnref>
+            </ProtocolApplication>
+          </ProtocolApplications_assnlist>
+          <Action_assn>
+          <!--MO TERMS:  use of MGED Ontology instances  required-->
+              <!--MO RULES:  use of MGED Ontology Rules for representing ComplexAction class-->
+              <OntologyEntry
+              category="Action" value="grow"/>
+          </Action_assn>
+          <SourceBioMaterialMeasurements_assnlist>
+          <!--MAGE-ML BEST  PRACTICE: provide association to SourceBiomaterial & Measurement-->
+              <BioMaterialMeasurement>
+              <BioMaterial_assnref>
+                <BioSource_ref identifier="ebi.ac.uk:miamexpress/BioSource:object"/>
+              </BioMaterial_assnref>
+              <!--MAGE-ML BEST PRACTICE: provide   association to Measurement-->
+                </BioMaterialMeasurement>
+          </SourceBioMaterialMeasurements_assnlist>
+        </Treatment>
+      </Treatments_assnlist>
+    </BioSample>
+    <BioSample identifier="ebi.ac.uk:miamexpress/BioSample:object">
+      <Descriptions_assnlist>
+        <Description/>
+      </Descriptions_assnlist>
+      <Characteristics_assnlist>
+      <!--MO RULES:  use of MGED Ontology  Rules for representing complex biolmaterial characteristics  instances required-->
+          <!--MO TERMS:  use of MGED Ontology instances required-->
+          <OntologyEntry category="Genotype" value="pten -/-"/>
+      </Characteristics_assnlist>
+      <MaterialType_assn>
+      <!--MO TERMS:  use of MGED Ontology  instances required-->
+          <OntologyEntry category="MaterialType" value="cell_lysate"/>
+      </MaterialType_assn>
+      <Treatments_assnlist>
+      <!--MAGE-ML BEST PRACTICE: provide association to protocol when applying a treatment-->
+          <!--MAGE-ML BEST PRACTICE: provide an order to Treatment-->
+          <!--MAGE-ML BEST PRACTICE: provide association to  performer for QC checks-->
+          <Treatment
+          identifier="ebi.ac.uk:miamexpress/Treatment:object" order="1">
+          <ProtocolApplications_assnlist>
+          <!--MAGE-ML BEST PRACTICE: DATE  FORMATTING ISSUE-->
+              <ProtocolApplication activityDate="YYYY-MM-DD">
+              <Protocol_assnref>
+                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+              </Protocol_assnref>
+            </ProtocolApplication>
+          </ProtocolApplications_assnlist>
+          <Action_assn>
+          <!--MO TERMS:  use of MGED Ontology instances requires-->
+              <OntologyEntry category="Action" value="purify"/>
+          </Action_assn>
+          <SourceBioMaterialMeasurements_assnlist>
+          <!--MAGE-ML BEST PRACTICE: provide association to SourceBiomaterial and Measurement-->
+              <BioMaterialMeasurement>
+              <BioMaterial_assnref>
+                <BioSource_ref identifier="ebi.ac.uk:miamexpress/BioSource:object"/>
+              </BioMaterial_assnref>
+              <!--MAGE-ML BEST PRACTICE: provide association to Measurement-->
+                </BioMaterialMeasurement>
+          </SourceBioMaterialMeasurements_assnlist>
+        </Treatment>
+      </Treatments_assnlist>
+    </BioSample>
+    <BioSample identifier="ebi.ac.uk:miamexpress/BioSample:object">
+      <Descriptions_assnlist>
+        <Description/>
+      </Descriptions_assnlist>
+      <MaterialType_assn>
+        <OntologyEntry category="MaterialType" value="total_RNA"/>
+      </MaterialType_assn>
+      <Treatments_assnlist>
+      <!--MAGE-ML BEST PRACTICE: provide an order to Treatment-->
+          <!--MAGE-ML BEST PRACTICE: provide association to protocol when applying a treatment-->
+          <!--MAGE-ML BEST PRACTICE: provide association to performer for QC checks-->
+          <Treatment
+          identifier=" ebi.ac.uk:miamexpress/Treatment:object" order="1">
+          <ProtocolApplications_assnlist>
+          <!--MAGE-ML BEST PRACTICE: DATE FORMATTING ISSUE-->
+              <ProtocolApplication activityDate=" YYYY-MM-DD ">
+              <Protocol_assnref>
+                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+              </Protocol_assnref>
+            </ProtocolApplication>
+          </ProtocolApplications_assnlist>
+          <Action_assn>
+            <OntologyEntry category="Action" value="purify"/>
+          </Action_assn>
+          <SourceBioMaterialMeasurements_assnlist>
+          <!--MAGE-ML BEST  PRACTICE: provide association to SourceBiomaterial and Measurement-->
+          <BioMaterialMeasurement>
+              <BioMaterial_assnref>
+                <BioSource_ref identifier="ebi.ac.uk:miamexpress/BioSource:object"/>
+              </BioMaterial_assnref>
+              <!--MAGE-ML BEST PRACTICE: provide association to Measurement-->
+                </BioMaterialMeasurement>
+          </SourceBioMaterialMeasurements_assnlist>
+        </Treatment>
+      </Treatments_assnlist>
+    </BioSample>
+    <LabeledExtract
+        identifier="ebi.ac.uk:miamexpress/LabeledExtract:object">
+        <!--IMPORTANT: LabeledExtracts can be created from other LabeledExtracts-->
+        <!--USE CASE: Example, make labeled mRNA, separate by size, run on arrays--><Descriptions_assnlist>
+        <Description/>
+      </Descriptions_assnlist>
+      <MaterialType_assn>
+      <!--MO TERMS:  use of MGED Ontology instances required-->
+          <OntologyEntry category="MaterialType" value="synthetic_DNA"/>
+      </MaterialType_assn>
+      <Treatments_assnlist>
+      <!--IMPORTANT: LabeledExtracts can be created from other LabeledExtracts-->
+          <!--USE CASE: Example, prepare labeled mRNA, separate by size, run on arrays-->
+          <!--USE CASE: specify how using Treatment object-->
+          <Treatment
+          identifier="ebi.ac.uk:miamexpress/Treatment:object" order="1">
+          <ProtocolApplications_assnlist>
+          <!--MAGE-ML BEST PRACTICE: DATE FORMATTING ISSUE-->
+              <ProtocolApplication activityDate="YYYY-MM-DD">
+              <Protocol_assnref>
+                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+              </Protocol_assnref>
+            </ProtocolApplication>
+          </ProtocolApplications_assnlist>
+          <Action_assn>
+          <!--MO TERMS:  use of MGED Ontology instances required-->
+              <OntologyEntry category="Action" value="labeling"/>
+          </Action_assn>
+          <CompoundMeasurements_assnlist>
+            <CompoundMeasurement>
+              <Compound_assnref>
+                <Compound_ref identifier="ebi.ac.uk:miamexpress/Compound:object"/>
+              </Compound_assnref>
+            </CompoundMeasurement>
+          </CompoundMeasurements_assnlist>
+          <SourceBioMaterialMeasurements_assnlist>
+          <!--MAGE-ML BEST PRACTICE: provide association to SourceBiomaterial and Measurement-->
+              <BioMaterialMeasurement>
+              <BioMaterial_assnref>
+                <BioSample_ref identifier="ebi.ac.uk:miamexpress/BioSample:object"/>
+              </BioMaterial_assnref>
+              <!--MAGE-ML BEST PRACTICE: provide association to Measurement-->
+                </BioMaterialMeasurement>
+          </SourceBioMaterialMeasurements_assnlist>
+        </Treatment>
+      </Treatments_assnlist>
+      <Labels_assnreflist>
+        <Compound_ref identifier="ebi.ac.uk:miamexpress/Compound:object"/>
+      </Labels_assnreflist>
+    </LabeledExtract>
+  </BioMaterial_assnlist>
+</BioMaterial_package>
+</MAGE-ML>

@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<MAGE-ML identifier="EBI:eleh:Affymetrix QT XML">
+  <BioAssay_package>
+    <Channel_assnlist>
+      <Channel identifier="ebi.ac.uk:Channel:biotin" name="Biotin channel">
+      </Channel>
+    </Channel_assnlist>
+  </BioAssay_package>
+<QuantitationType_package>
+    <QuantitationType_assnlist>
+      <DerivedSignal identifier="Affymetrix:QuantitationType:CHPAvgDiff" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Average intensity difference.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </DerivedSignal>
+      <DerivedSignal identifier="Affymetrix:QuantitationType:CHPLogAvg" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Average log ratio.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="log_base_10">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </DerivedSignal>
+      <DerivedSignal identifier="Affymetrix:QuantitationType:CHPSignal" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="A measure of the relative abundance of a transcript.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="log_base_2">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </DerivedSignal>
+      <MeasuredSignal identifier="Affymetrix:QuantitationType:CELIntensity" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The intensity value of the probe. Represents the 75th percentile among the DAT file intensity values of the pixels in the feature.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </MeasuredSignal>
+      <PresentAbsent identifier="Affymetrix:QuantitationType:CHPAbsCall" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The call in an absolute analysis that indicates if the transcript was present (P), absent (A), or marginal (M).">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="unscaled">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="string_datatype">
+	  </OntologyEntry>
+	</DataType_assn>
+      </PresentAbsent>
+      <PresentAbsent identifier="Affymetrix:QuantitationType:CHPChange" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="A call indicating an Increase (I), Marginal Increase (MI), No Change (NC), Decrease (D), or Marginal Decrease (MD) in transcript level between a baseline array and an experiment array. May also have the value &quot;No Call&quot;.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="unscaled">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="string_datatype">
+	  </OntologyEntry>
+	</DataType_assn>
+      </PresentAbsent>
+      <PresentAbsent identifier="Affymetrix:QuantitationType:CHPDetection" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="A measurement indicating if the transcript was detected (Present), not detected (Absent) or marginally detected (Marginal). Can be one of &quot;A&quot;, &quot;M&quot;, &quot;P&quot; or &quot;No Call&quot;.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="unscaled">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="string_datatype">
+	  </OntologyEntry>
+	</DataType_assn>
+      </PresentAbsent>
+      <PresentAbsent identifier="Affymetrix:QuantitationType:CHPDiffCall" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The comparison change call">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="unscaled">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="string_datatype">
+	  </OntologyEntry>
+	</DataType_assn>
+      </PresentAbsent>
+      <PValue identifier="Affymetrix:QuantitationType:CHPChangePvalue" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Measures the probability that the expression levels of a probe set in two different arrays are the same or not. When the p-value is close to 0.5 they are likely to be the same. When the p-value is close to 0 the expression level in the experiment array is higher than that of the baseline array. When the p-value is close to 1, the expression level in the experiment arrays is lower than that of the baseline.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+	<TargetQuantitationType_assnref>
+	  <PresentAbsent_ref identifier="Affymetrix:QuantitationType:CHPChange"/>
+	</TargetQuantitationType_assnref>
+      </PValue>
+      <PValue identifier="Affymetrix:QuantitationType:CHPDetectionPvalue" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="See Detection p-value">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+	<TargetQuantitationType_assnref>
+	  <PresentAbsent_ref identifier="Affymetrix:QuantitationType:CHPDetection"/>
+	</TargetQuantitationType_assnref>
+      </PValue>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPDecRatio" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The ratio of decreasing pairs to the total number of pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPDPos-DNegRatio" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The ratio of the change in positive to the change in negative pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPFoldChange" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The fold change.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPIncDecRatio" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The ratio of increase to decrease pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPIncRatio" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The ratio of increasing pairs to the total number of pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPPosFraction" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The fraction of positive pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPPosNegRatio" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The ratio of the positive to the negative pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPSignalLogRatio" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The change in expression level for a transcript between a baseline and an experiment array. This change is expressed as the Log2 ratio.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="log_base_2">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPSignalLogRatioHigh" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The upper limit of the Signal Log Ratio within a 95% confidence interval.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="log_base_2">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <Ratio identifier="Affymetrix:QuantitationType:CHPSignalLogRatioLow" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The lower limit of the Signal Log Ratio within a 95% confidence interval.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="log_base_2">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </Ratio>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CELIntensityStdev" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The standard deviation of the intensity of the probe.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CELMask" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="A flag indicating that the probe was masked by the user.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="boolean">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CELOutlier" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="A flag indicating that the software called this probe an outlier.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="boolean">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CELPixels" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The number of pixels used to calculate the intensity.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CELX" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The x coordinate of the probe.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CELY" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The y coordinate of the probe.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPAvgDiffChange" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The change in average difference">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPBaselineAbsent" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Flag indicating if the baseline call was absent.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPCommonPairs" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The number of common probe pairs on two arrays (experiment versus baseline) after saturation across the probe set is determined.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPDec" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The number of decreasing pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPInc" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The number of increasing pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPLogAvgRatioChange" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The change in log average ratio.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="log_base_10">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPNegative" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Number of negative probe pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPNegChange" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The change in negative pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPPairs" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The number of probe pairs in a probe set.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPPairsInAvg" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Number of probe pairs used in computing the average intensity difference">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPPairsUsed" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The number of probe pairs in the probe set used in the Detection call.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPPosChange" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The change in positive pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPPositive" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Number of positive probe pairs.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="integer">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:CHPSortScore" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The sort score.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="Affymetrix:QuantitationType:ProbeSetName" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="The name of the probe set.">
+	  </Description>
+	</Descriptions_assnlist>
+	<Channel_assnref>
+	  <Channel_ref identifier="ebi.ac.uk:Channel:biotin"/>
+	</Channel_assnref>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="unscaled">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="string_datatype">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+    </QuantitationType_assnlist>
+</QuantitationType_package>
+</MAGE-ML>

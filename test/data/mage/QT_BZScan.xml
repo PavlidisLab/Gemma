@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<MAGE-ML identifier="EBI:eleh:BZScan QT XML">
+  <QuantitationType_package>
+    <QuantitationType_assnlist>
+      <MeasuredSignal identifier="TAGC ERM206:BZScan_QuantitationType:Q(image,const)" name="Q(image,const)" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Spot intensity based on user-provided diameter and measured data." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </MeasuredSignal>
+      <SpecializedQuantitationType identifier="TAGC ERM206:BZScan_QuantitationType:Q(image,var)" name="Q(image,var)" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Spot intensity based on computed diameter and measured data." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="TAGC ERM206:BZScan_QuantitationType:Q(fit,const)" name="Q(fit,const)" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Spot intensity based on user-provided diameter and theoretical fit to the data." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="TAGC ERM206:BZScan_QuantitationType:Q(fit,var)" name="Q(fit,var)" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Spot intensity based on computed diameter and and theoretical fit to the data." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="TAGC ERM206:BZScan_QuantitationType:Fit_correction" name="Fit_correction" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Background level by unit surface." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <SpecializedQuantitationType identifier="TAGC ERM206:BZScan_QuantitationType:Diameter" name="Diameter" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Automatically computed spot diameter." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+      <PValue identifier="TAGC ERM206:BZScan_QuantitationType:QM" name="QM" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Quality metric: distance between measured data and theoretical fit." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+	<TargetQuantitationType_assnref>
+	  <MeasuredSignal_ref identifier="TAGC ERM206:BZScan_QuantitationType:Q(image,const)"/>
+	</TargetQuantitationType_assnref>
+      </PValue>
+      <PresentAbsent identifier="TAGC ERM206:BZScan_QuantitationType:SpotQuality" name="SpotQuality" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Present/Absent (automatic guess)." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="unscaled">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="boolean">
+	  </OntologyEntry>
+	</DataType_assn>
+      </PresentAbsent>
+      <SpecializedQuantitationType identifier="TAGC ERM206:BZScan_QuantitationType:Overshining_correction" name="Overshining_correction" isBackground="0">
+	<Descriptions_assnlist>
+	  <Description text="Correction for overshining by unit radius." URI="http://tagc.univ-mrs.fr/bioinformatics/bzscan.html">
+	  </Description>
+	</Descriptions_assnlist>
+	<Scale_assn>
+	  <OntologyEntry category="Scale" value="linear_scale">
+	  </OntologyEntry>
+	</Scale_assn>
+	<DataType_assn>
+	  <OntologyEntry category="DataType" value="float">
+	  </OntologyEntry>
+	</DataType_assn>
+      </SpecializedQuantitationType>
+    </QuantitationType_assnlist>
+  </QuantitationType_package>
+</MAGE-ML>
