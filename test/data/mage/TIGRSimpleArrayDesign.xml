@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<MAGE-ML identifier="cage">
+  <BioSequence_package>
+    <BioSequence_assnlist>
+      <BioSequence identifier="AF159801">
+        <SequenceDatabases_assnlist>
+          <DatabaseEntry accession="AF159801">
+            <Database_assnref>
+              <Database_ref identifier="DB1" name="Genbank"/>
+            </Database_assnref>
+          </DatabaseEntry>
+        </SequenceDatabases_assnlist>
+        <PolymerType_assn>
+          <OntologyEntry category="nucleic acid" value="DNA"/>
+        </PolymerType_assn>
+        <Type_assn>
+          <OntologyEntry category="clone" value="cDNA"/>
+        </Type_assn>
+      </BioSequence>
+      <BioSequence identifier="A.t.LTP4">
+        <PolymerType_assn>
+          <OntologyEntry category="nucleic acid" value="DNA"/>
+        </PolymerType_assn>
+        <Type_assn>
+          <OntologyEntry category="clone" value="cDNA"/>
+        </Type_assn>
+      </BioSequence>
+      <BioSequence identifier="R55882">
+        <SequenceDatabases_assnlist>
+          <DatabaseEntry accession="R55882">
+            <Database_assnref>
+              <Database_ref identifier="DB1" name="Genbank"/>
+            </Database_assnref>
+          </DatabaseEntry>
+        </SequenceDatabases_assnlist>
+        <PolymerType_assn>
+          <OntologyEntry category="nucleic acid" value="DNA"/>
+        </PolymerType_assn>
+        <Type_assn>
+          <OntologyEntry category="clone" value="cDNA"/>
+        </Type_assn>
+      </BioSequence>
+      <BioSequence identifier="Image:40699">
+        <PolymerType_assn>
+          <OntologyEntry category="nucleic acid" value="DNA"/>
+        </PolymerType_assn>
+        <Type_assn>
+          <OntologyEntry category="clone" value="cDNA"/>
+        </Type_assn>
+      </BioSequence>
+    </BioSequence_assnlist>
+  </BioSequence_package>
+  <DesignElement_package>
+    <CompositeSequence_assnlist>
+      <CompositeSequence identifier="CS.AF159801">
+        <BiologicalCharacteristics_assnreflist>
+          <BioSequence_ref identifier="AF159801"/>
+        </BiologicalCharacteristics_assnreflist>
+      </CompositeSequence>
+      <CompositeSequence identifier="CS.R55882">
+        <BiologicalCharacteristics_assnreflist>
+          <BioSequence_ref identifier="R55882"/>
+        </BiologicalCharacteristics_assnreflist>
+      </CompositeSequence>
+    </CompositeSequence_assnlist>
+    <Reporter_assnlist>
+      <Reporter identifier="R.A.t.LTP4">
+        <ControlType_assn>
+          <OntologyEntry category="negative control" description="Arabidospsis clone" value="A.t.LTP4"/>
+        </ControlType_assn>
+        <ImmobilizedCharacteristics_assnreflist>
+          <BioSequence_ref identifier="A.t.LTP4"/>
+        </ImmobilizedCharacteristics_assnreflist>
+        <FeatureReporterMaps_assnreflist>
+          <FeatureReporterMap_ref identifier="FRM.A.t.LTP4"/>
+        </FeatureReporterMaps_assnreflist>
+      </Reporter>
+      <Reporter identifier="R.Image:40699">
+        <ImmobilizedCharacteristics_assnreflist>
+          <BioSequence_ref identifier="Image:40699"/>
+        </ImmobilizedCharacteristics_assnreflist>
+        <FeatureReporterMaps_assnreflist>
+          <FeatureReporterMap_ref identifier="FRM.Image:40699"/>
+        </FeatureReporterMaps_assnreflist>
+      </Reporter>
+    </Reporter_assnlist>
+    <ReporterCompositeMap_assnlist>
+      <ReporterCompositeMap identifier="RCM.AF159801">
+        <CompositeSequence_assnref>
+          <CompositeSequence_ref identifier="CS.AF159801"/>
+        </CompositeSequence_assnref>
+        <ReporterPositionSources_assnlist>
+          <ReporterPosition>
+            <Reporter_assnref>
+              <Reporter_ref identifier="R.A.t.LTP4"/>
+            </Reporter_assnref>
+          </ReporterPosition>
+        </ReporterPositionSources_assnlist>
+      </ReporterCompositeMap>
+      <ReporterCompositeMap identifier="RCM.R55882">
+        <CompositeSequence_assnref>
+          <CompositeSequence_ref identifier="CS.R55882"/>
+        </CompositeSequence_assnref>
+        <ReporterPositionSources_assnlist>
+          <ReporterPosition>
+            <Reporter_assnref>
+              <Reporter_ref identifier="R.Image:40699"/>
+            </Reporter_assnref>
+          </ReporterPosition>
+        </ReporterPositionSources_assnlist>
+      </ReporterCompositeMap>
+    </ReporterCompositeMap_assnlist>
+    <FeatureReporterMap_assnlist>
+      <FeatureReporterMap identifier="FRM.A.t.LTP4">
+        <Reporter_assnref>
+          <Reporter_ref identifier="R.A.t.LTP4"/>
+        </Reporter_assnref>
+        <FeatureInformationSources_assnlist>
+          <FeatureInformation>
+            <Feature_assnref>
+              <Feature_ref identifier="F.1.1.1.1"/>
+            </Feature_assnref>
+          </FeatureInformation>
+        </FeatureInformationSources_assnlist>
+      </FeatureReporterMap>
+      <FeatureReporterMap identifier="FRM.Image:40699">
+        <Reporter_assnref>
+          <Reporter_ref identifier="R.Image:40699"/>
+        </Reporter_assnref>
+        <FeatureInformationSources_assnlist>
+          <FeatureInformation>
+            <Feature_assnref>
+              <Feature_ref identifier="F.1.1.1.2"/>
+            </Feature_assnref>
+          </FeatureInformation>
+        </FeatureInformationSources_assnlist>
+      </FeatureReporterMap>
+    </FeatureReporterMap_assnlist>
+  </DesignElement_package>
+  <ArrayDesign_package>
+    <ReporterGroup_assnlist>
+      <ReporterGroup identifier="RG:1" name="Control">
+        <Species_assn>
+          <OntologyEntry category="species" value="Arabidopsis thaliana"/>
+        </Species_assn>
+        <Reporters_assnreflist>
+          <Reporter_ref identifier="R.A.t.LTP4"/>
+        </Reporters_assnreflist>
+      </ReporterGroup>
+      <ReporterGroup identifier="RG:2" name="Experimental">
+        <Species_assn>
+          <OntologyEntry category="species" value="Homo sapiens"/>
+        </Species_assn>
+        <Reporters_assnreflist>
+          <Reporter_ref identifier="R.Image:40699"/>
+        </Reporters_assnreflist>
+      </ReporterGroup>
+    </ReporterGroup_assnlist>
+    <CompositeGroup_assnlist>
+      <CompositeGroup identifier="CG.1" name="Control">
+        <CompositeSequences_assnreflist>
+          <CompositeSequence_ref identifier="CS.AF159801"/>
+        </CompositeSequences_assnreflist>
+      </CompositeGroup>
+      <CompositeGroup identifier="CG.2" name="Experimental">
+        <CompositeSequences_assnreflist>
+          <CompositeSequence_ref identifier="CS.R55882"/>
+        </CompositeSequences_assnreflist>
+      </CompositeGroup>
+    </CompositeGroup_assnlist>
+    <ArrayDesign_assnlist>
+      <ArrayDesign identifier="AD1"/>
+      <PhysicalArrayDesign identifier="PAD1" name="CAG32k" numberOfFeatures="32,448" version="1">
+        <FeatureGroups_assnlist>
+          <FeatureGroup identifier="FG1">
+            <TechnologyType_assn>
+              <OntologyEntry category="SequenceType" value="cDNA sequence"/>
+            </TechnologyType_assn>
+            <FeatureShape_assn>
+              <OntologyEntry category="featureShape" value="circle"/>
+            </FeatureShape_assn>
+            <Features_assnlist>
+              <Feature identifier="F.1.1.1.1" name="AF159801">
+                <Zone_assnref>
+                  <Zone_ref identifier="Z.1.1"/>
+                </Zone_assnref>
+                <FeatureLocation_assn>
+                  <FeatureLocation column="1" row="1"/>
+                </FeatureLocation_assn>
+              </Feature>
+              <Feature identifier="F.1.1.1.2" name="R55882">
+                <Zone_assnref>
+                  <Zone_ref identifier="Z.1.1"/>
+                </Zone_assnref>
+                <FeatureLocation_assn>
+                  <FeatureLocation column="1" row="2"/>
+                </FeatureLocation_assn>
+              </Feature>
+            </Features_assnlist>
+          </FeatureGroup>
+        </FeatureGroups_assnlist>
+        <CompositeGroups_assnreflist>
+          <CompositeGroup_ref identifier="CG1"/>
+          <CompositeGroup_ref identifier="CG2"/>
+        </CompositeGroups_assnreflist>
+        <SurfaceType_assn>
+          <OntologyEntry category="surfaceType" description="array surface material" value="Superamine on glass"/>
+        </SurfaceType_assn>
+        <ZoneGroups_assnlist>
+          <ZoneGroup zonesPerX="2" zonesPerY="6">
+            <ZoneLayout_assn>
+              <ZoneLayout numFeaturesPerCol="52" numFeaturesPerRow="52" spacingBetweenCols="165" spacingBetweenRows="165"/>
+            </ZoneLayout_assn>
+            <ZoneLocations_assnlist>
+              <Zone column="1" identifier="Z.1.1" name="Zone1" row="1"/>
+              <Zone column="2" identifier="Z.1.2" name="Zone2" row="1"/>
+              <Zone column="1" identifier="Z.2.1" name="Zone3" row="2"/>
+              <Zone column="2" identifier="Z.2.2" name="Zone4" row="2"/>
+              <Zone column="1" identifier="Z.3.1" name="Zone5" row="3"/>
+              <Zone column="2" identifier="Z.3.2" name="Zone6" row="3"/>
+              <Zone column="1" identifier="Z.4.1" name="Zone7" row="4"/>
+              <Zone column="2" identifier="Z.4.2" name="Zone8" row="4"/>
+              <Zone column="1" identifier="Z.5.1" name="Zone9" row="5"/>
+              <Zone column="2" identifier="Z.5.2" name="Zone10" row="5"/>
+              <Zone column="1" identifier="Z.6.1" name="Zone11" row="6"/>
+              <Zone column="2" identifier="Z.6.2" name="Zone12" row="6"/>
+            </ZoneLocations_assnlist>
+          </ZoneGroup>
+        </ZoneGroups_assnlist>
+      </PhysicalArrayDesign>
+    </ArrayDesign_assnlist>
+  </ArrayDesign_package>
+  <Array_package>
+    <Array_assnlist>
+      <Array arrayIdentifier="CAG-224" identifier="Array1">
+        <ArrayDesign_assnref>
+          <ArrayDesign_ref identifier="AD1"/>
+        </ArrayDesign_assnref>
+        <Information_assnref>
+          <ArrayManufacture_ref identifier="AM.CAG-224"/>
+        </Information_assnref>
+        <ArrayManufactureDeviations_assnlist>
+          <ArrayManufactureDeviation>
+            <FeatureDefects_assnlist>
+              <FeatureDefect>
+                <DefectType_assn>
+                  <OntologyEntry category="amplified" value="true"/>
+                </DefectType_assn>
+                <Feature_assnref>
+                  <Feature_ref identifier="F.1.1.1.1"/>
+                </Feature_assnref>
+              </FeatureDefect>
+            </FeatureDefects_assnlist>
+          </ArrayManufactureDeviation>
+        </ArrayManufactureDeviations_assnlist>
+      </Array>
+    </Array_assnlist>
+    <ArrayManufacture_assnlist>
+      <ArrayManufacture identifier="AM.CAG-224" manufacturingDate="Jul 10 2001  5:21PM" name="CAG-224">
+        <Arrays_assnreflist>
+          <Array_ref identifier="CAG-224"/>
+        </Arrays_assnreflist>
+        <FeatureLIMSs_assnlist>
+          <ManufactureLIMSBiomaterial bioMaterialPlateCol="1" bioMaterialPlateIdentifier="R43QU:437" bioMaterialPlateRow="B">
+            <Feature_assnref>
+              <Feature_ref identifier="F.1.1.1.1"/>
+            </Feature_assnref>
+            <IdentifierLIMS_assn>
+              <DatabaseEntry URI="ncbi.nlm.nih.gov" accession="AF159801">
+                <Database_assnref>
+                  <Database_ref identifier="Genbank"/>
+                </Database_assnref>
+              </DatabaseEntry>
+            </IdentifierLIMS_assn>
+          </ManufactureLIMSBiomaterial>
+          <ManufactureLIMSBiomaterial bioMaterialPlateCol="7" bioMaterialPlateIdentifier="R43AE:5" bioMaterialPlateRow="B">
+            <Feature_assnref>
+              <Feature_ref identifier="F.1.1.1.2"/>
+            </Feature_assnref>
+            <IdentifierLIMS_assn>
+              <DatabaseEntry URI="ncbi.nlm.nih.gov" accession="R55882">
+                <Database_assnref>
+                  <Database_ref identifier="Genbank"/>
+                </Database_assnref>
+              </DatabaseEntry>
+            </IdentifierLIMS_assn>
+          </ManufactureLIMSBiomaterial>
+        </FeatureLIMSs_assnlist>
+      </ArrayManufacture>
+    </ArrayManufacture_assnlist>
+  </Array_package>
+</MAGE-ML>

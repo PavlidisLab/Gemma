@@ -14,15 +14,15 @@
         <!--MIAME-REQUIREMENT:Attribute [sequence] required if Oligo-array  -->
         <!--ADF creation / ADF parsing: Create field with 'Reporter/CompositeSequence BioSequence [Actual Sequence]'-->
         <SequenceDatabases_assnlist>
-        <DatabaseEntry accession="NM_13243">
-        <!--ADF creation / ADF parsing: several accession numbers can be supplied in ADF using semi-colon (;) as separator-->
-        <Database_assnref>
-        <!--ADF creation / ADF parsing: Database Entry Field in ADF-->
-        <!--ADF creation / ADF parsing: database tag should be supplied between square brackets [] in field header-->
-        <Database_ref identifier="ebi.ac.uk:Database:refseq"/>
-          </Database_assnref>
-        </DatabaseEntry>
-      </SequenceDatabases_assnlist>
+            <DatabaseEntry accession="NM_13243">
+                <!--ADF creation / ADF parsing: several accession numbers can be supplied in ADF using semi-colon (;) as separator-->
+                <Database_assnref>
+                    <!--ADF creation / ADF parsing: Database Entry Field in ADF-->
+                    <!--ADF creation / ADF parsing: database tag should be supplied between square brackets [] in field header-->
+                    <Database_ref identifier="ebi.ac.uk:Database:refseq"/>
+                </Database_assnref>
+            </DatabaseEntry>
+        </SequenceDatabases_assnlist>
       <PolymerType_assn>
       <!--ADF creation / ADF parsing: MANDATORY Field in ADF-->
           <!--ADF creation / ADF parsing: Create Field with 'BioSequence PolymerType' Header-->

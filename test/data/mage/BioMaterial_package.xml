@@ -1,0 +1,465 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd">
+<MAGE-ML identifier="Protocol_test">
+    <AuditAndSecurity_package>
+        <Contact_assnlist>
+            <Person identifier="Person:John_Smith" name="John_Smith" 
+                lastName="Smith" firstName="John" phone="(800) 555 4325 x 561" 
+                email="jsmith@imakearrays.com" 
+                URI="http://www.imakearrays.com/~jsmith">
+                <Affiliation_assnref>
+                    <Organization_ref identifier="Organization:imakearrays"/>
+                </Affiliation_assnref>
+            </Person>
+            <Person identifier="Person:Ennio_DeGregorio" 
+                name="Ennio_DeGregorio" lastName="DeGregorio" firstName="Ennio">
+            </Person>
+            <Person identifier="Person:Jane_N_Rogers" name="John_Rogers" 
+                lastName="Rogers" firstName="Jane" midInitials="N" 
+                email="jrogers@higglesworth.edu" 
+                URI="http://bio.higglesworth.edu/~jrogers">
+                <Affiliation_assnref>
+                    <Organization_ref 
+                        identifier="Organization:Higglesworth_University"/>
+                </Affiliation_assnref>
+            </Person>
+            <Organization identifier="Organization:imakearrays" 
+                name="I Make Arrays Inc." 
+                address="1099 Pasteur Dr, San Benito, NM 79850" 
+                tollFreePhone="(800) 555 4325" email="orders@imakearrays.com" 
+                fax="(800) 555 4325" URI="http://www.imakearrays.com/" />
+            <Organization identifier="Organization:Higglesworth_University" 
+                name="Higglesworth University" 
+                address="453 Baron Ln, Brownsville, NV 87631" 
+                URI="http://www.higglesworth.edu/" />
+        </Contact_assnlist>
+        <SecurityGroup_assnlist>
+            <SecurityGroup identifier="SecurityGroup:Administrators" 
+                name="Administrators">
+                <Members_assnreflist>
+                    <Person_ref identifier="Person:Jane_N_Rogers" />
+                </Members_assnreflist>
+            </SecurityGroup>
+            <SecurityGroup identifier="SecurityGroup:Everyone" name="Everyone">
+                <Members_assnreflist>
+                    <Person_ref identifier="Person:Jane_N_Rogers" />
+                    <Person_ref identifier="Person:John_Smith" />
+                </Members_assnreflist>
+            </SecurityGroup>
+        </SecurityGroup_assnlist>
+        <Security_assnlist>
+            <Security identifier="Security:Array" name="Array" >
+                <Owner_assnref>
+                    <Person_ref identifier="Person:Jane_N_Rogers" />
+                </Owner_assnref>
+                <ReadGroups_assnreflist>
+                    <SecurityGroup_ref identifier="SecurityGroup:Everyone" />
+                </ReadGroups_assnreflist>
+                <WriteGroups_assnreflist>
+                    <SecurityGroup_ref 
+                        identifier="SecurityGroup:Administrators" />
+                </WriteGroups_assnreflist>
+            </Security>
+            <Security identifier="Security:Data" name="Data" >
+                <Owner_assnref>
+                    <Person_ref identifier="Person:Jane_N_Rogers" />
+                </Owner_assnref>
+                <ReadGroups_assnreflist>
+                    <SecurityGroup_ref 
+                        identifier="SecurityGroup:Administrators" />
+                </ReadGroups_assnreflist>
+                <WriteGroups_assnreflist>
+                    <SecurityGroup_ref 
+                        identifier="SecurityGroup:Administrators" />
+                </WriteGroups_assnreflist>
+            </Security>
+        </Security_assnlist>
+    </AuditAndSecurity_package>
+    <Protocol_package>
+        <Hardware_assnlist>
+            <Hardware identifier="Hardware:PCR1" name="PE TC 9700" model="9700" 
+                make="Perkin Elmer">
+            </Hardware>
+            <Hardware identifier="Hardware:OligoSynthesizer1" 
+                name="Synthesizer" make="Gene Machines">
+            </Hardware>
+            <Hardware identifier="Hardware:Scanner1" name="Axon Scanner" 
+                model="4000A" make="Axon Instruments">
+            </Hardware>
+            <Hardware identifier="Hardware:Arrayer1" 
+                name="DeRisi class arrayer" model="version 1.0">
+            </Hardware>
+        </Hardware_assnlist>
+        <Software_assnlist>
+            <Software identifier="Software:GenePix3.0" name="GenePix">
+            </Software>
+        </Software_assnlist>
+        <Protocol_assnlist>
+            <Protocol identifier="Protocol:SepticInjury" 
+                name="Septic injury of drosophila" 
+                text="Drosophila were pricked in the abdomen with a needlet that had been dipped in a solution of gram positive and gram negative bacteria" 
+                >
+            </Protocol>
+            <Protocol identifier="Protocol:Wait:Minutes" name="Wait Minutes" 
+                text="Wait a certain number of minutes" >
+                <ParameterType_assnlist>
+                    <Parameter identifier="Parameter:Wait:Minutes" 
+                        name="Wait Minutes"/>
+                </ParameterType_assnlist>
+            </Protocol>
+            <Protocol identifier="Protocol:OligoSynthesis" 
+                name="Oligonucleotide Synthesis" 
+                text="70mer oligos were synthesized">
+                <Hardware_assnreflist>
+                    <Hardware_ref identifier="Hardware:OligoSynthesizer1" />
+                </Hardware_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:PCRcDNA" name="PCR of cDNA" 
+                text="cDNAs were amplified using vector primers.">
+                <ParameterType_assnlist>
+                    <Parameter identifier="ForwardPrimer" 
+                        name="Forward Primer"/>
+                    <Parameter identifier="ReversePrimer" 
+                        name="Reverse Primer"/>
+                </ParameterType_assnlist>
+                <Hardware_assnreflist>
+                    <Hardware_ref identifier="Hardware:PCR1" />
+                </Hardware_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:ArrayPrinting" name="Array Printing">
+                <ParameterType_assnlist>
+                    <Parameter identifier="ParameterType:TipNumber" 
+                        name="Tip Number"/>
+                    <Parameter identifier="ParameterType:TipSpacing" 
+                        name="Tip Spacing"/>
+                    <Parameter identifier="ParameterType:SpotSpacing" 
+                        name="Spot Spacing"/>
+                    <Parameter identifier="ParameterType:ZoneColumns" 
+                        name="Zone Columns"/>
+                    <Parameter identifier="ParameterType:ZoneRows" 
+                        name="Zone Rows"/>
+                </ParameterType_assnlist>
+                <Hardware_assnreflist>
+                    <Hardware_ref identifier="Hardware:Arrayer1" />
+                </Hardware_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:Hybridization" 
+                name="Hybridization and wash">
+                <ParameterType_assnlist>
+                    <Parameter identifier="ParameterType:HybridizationTime" 
+                        name="Hybridization Time" />
+                    <Parameter identifier="ParameterType:Wash1Time" 
+                        name="Wash 1 Time" />
+                    <Parameter identifier="ParameterType:Wash2Time" 
+                        name="Wash 2 Time" />
+                </ParameterType_assnlist>
+            </Protocol>
+            <Protocol identifier="Protocol:Scan" name="Scan">
+                <ParameterType_assnlist>
+                    <Parameter identifier="ParameterType:PMT_voltage_635" 
+                        name="PMT Voltage" />
+                    <Parameter identifier="ParameterType:PMT_voltage_532" 
+                        name="PMT Voltage" />
+                </ParameterType_assnlist>
+                <Hardware_assnreflist>
+                    <Hardware_ref identifier="Hardware:Scanner1" />
+                </Hardware_assnreflist>
+                <Software_assnreflist>
+                    <Software_ref identifier="Software:GenePix3.0" />
+                </Software_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:FeatureExtraction" 
+                name="Feature Extraction">
+                <ParameterType_assnlist>
+                    <Parameter identifier="ParameterType:FeatureSpacing" 
+                        name="Feature Spacing"/>
+                    <Parameter identifier="ParameterType:Featurepacing" 
+                        name="Spot Spacing"/>
+                    <Parameter identifier="ParameterType:FeatureDiameter" 
+                        name="Spot Diameter"/>
+                </ParameterType_assnlist>
+                <Software_assnreflist>
+                    <Software_ref identifier="Software:GenePix3.0" />
+                </Software_assnreflist>
+            </Protocol>
+        </Protocol_assnlist>
+    </Protocol_package>
+    <BioMaterial_package>
+        <Compound_assnlist>
+            <Compound identifier="Compound:Biotin" name="Biotin" 
+                isSolvent="false" />
+        </Compound_assnlist>
+        <BioMaterial_assnlist>
+            <BioSource identifier="BioSource:Drosophila:OregonR" 
+                name="Drosophila strain, Oregon R">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" 
+                        value="Organism"/>
+                </MaterialType>
+                <Characteristic_assnlist>
+                    <OntologyEntry category="MGED:Organism" 
+                        value="Drosophila melanogaster"/>
+                    <OntologyEntry category="Flybase:Genotype" 
+                        value="wild type"/>
+                    <OntologyEntry category="Flybase:Strain" value="Oregon R"/>
+                    <OntologyEntry category="MGED:Age:DaysPostEclosion" 
+                        value="3"/>
+                </Characteristic_assnlist>
+                <SourceContact>
+                    <Person_ref identifier="Ennio_DeGregorio" />
+                </SourceContact>
+            </BioSource>
+            <BioSource identifier="BioSource:Drosophila:OregonR:spz-" 
+                name="Drosophila strain, Oregon R, spaetzle mutant">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" 
+                        value="Organism"/>
+                </MaterialType>
+                <Characteristic_assnlist>
+                    <OntologyEntry category="MGED:Organism" 
+                        value="Drosophila melanogaster"/>
+                    <OntologyEntry category="Flybase:Genotype" value="spz-"/>
+                    <OntologyEntry category="Flybase:Strain" value="Oregon R"/>
+                    <OntologyEntry category="MGED:Age:DaysPostEclosion" 
+                        value="3"/>
+                </Characteristic_assnlist>
+            </BioSource>
+            <BioSource identifier="BioSource:Drosophila:OregonR:imd-" 
+                name="Drosophila strain, Oregon R, imd mutant">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" 
+                        value="Organism"/>
+                </MaterialType>
+                <Characteristic_assnlist>
+                    <OntologyEntry category="MGED:Organism" 
+                        value="Drosophila melanogaster"/>
+                    <OntologyEntry category="Flybase:Genotype" value="imd-"/>
+                    <OntologyEntry category="Flybase:Strain" value="Oregon R"/>
+                    <OntologyEntry category="MGED:Age:DaysPostEclosion" 
+                        value="3"/>
+                </Characteristic_assnlist>
+            </BioSource>
+            <BioSource identifier="BioSource:Drosophila:OregonR:Toll10b" 
+                name="Drosophila strain, Oregon R, toll gain of function">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" 
+                        value="Organism"/>
+                </MaterialType>
+                <Characteristic_assnlist>
+                    <OntologyEntry category="MGED:Organism" 
+                        value="Drosophila melanogaster"/>
+                    <OntologyEntry category="Flybase:Genotype" value="spz-"/>
+                    <OntologyEntry category="Flybase:Strain" value="Toll10b"/>
+                    <OntologyEntry category="MGED:Age:DaysPostEclosion" 
+                        value="3"/>
+                </Characteristic_assnlist>
+            </BioSource>
+            <BioSample 
+                identifier="BioSample:Drosophila:OregonR:SepticInjury0090minutes" 
+                name="Drosophila strain, Oregon R, 90 minutes after septic injury">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" 
+                        value="Organism" />
+                </MaterialType>
+                <Treatment_assnlist>
+                    <Treatment identifier="Treatment:SepticInjury:1" order="1">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <Protocol_ref 
+                                    identifier="Protocol:SepticInjury" />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="Spellman:Action" 
+                                value="SepticInjury" />
+                        </Action>
+                        <SourceBioMaterialMeasurement_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioSource_ref 
+                                    identifier="BioSource:Drosophila:OregonR" />
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurement_assnlist>
+                    </Treatment>
+                    <Treatment identifier="Treatment:Wait:1" order="2">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <ParameterValue_assnlist>
+                                    <ParameterValue value="90">
+                                        <Parameter_ref 
+                                            identifier="Parameter:Wait:Minutes" 
+                                            />
+                                    </ParameterValue>
+                                </ParameterValue_assnlist>
+                                <Protocol_ref 
+                                    identifier="Protocol:SepticInjury" />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="MGED:Action" value="Wait" 
+                                />
+                        </Action>
+                        <ActionMeasurement>
+                            <Measurement type="change" value="90" kindCV="time">
+                                <TimeUnit unitNameCV="m"/>
+                            </Measurement>
+                        </ActionMeasurement>
+                    </Treatment>
+                </Treatment_assnlist>
+                <SourceBioMaterials_assnreflist>
+                    <BioSource_ref identifier="BioSource:Drosophila:OregonR" />
+                </SourceBioMaterials_assnreflist>
+                <Type>
+                    <OntologyEntry category="MGED:BioSample:Type" 
+                        value="Organism" />
+                </Type>
+            </BioSample>
+            <BioSample 
+                identifier="BioSample:Drosophila:OregonR:SepticInjury0180minutes" 
+                name="Drosophila strain, Oregon R, 180 minutes after septic injury">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" 
+                        value="Organism" />
+                </MaterialType>
+                <Treatment_assnlist>
+                    <Treatment identifier="Treatment:Wait:2" order="1">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <ParameterValue_assnlist>
+                                    <ParameterValue value="90">
+                                        <Parameter_ref 
+                                            identifier="Parameter:Wait:Minutes" 
+                                            />
+                                    </ParameterValue>
+                                </ParameterValue_assnlist>
+                                <Protocol_ref 
+                                    identifier="Protocol:SepticInjury" />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="MGED:Action" value="Wait" 
+                                />
+                        </Action>
+                        <ActionMeasurement>
+                            <Measurement type="change" value="90" kindCV="time">
+                                <TimeUnit unitNameCV="m"/>
+                            </Measurement>
+                        </ActionMeasurement>
+                        <SourceBioMaterialMeasurement_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioSource_ref 
+                                    identifier="BioSource:Drosophila:OregonR:SepticInjury0090minutes" 
+                                    />
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurement_assnlist>
+                    </Treatment>
+                </Treatment_assnlist>
+                <SourceBioMaterials_assnreflist>
+                    <BioSource_ref identifier="BioSource:Drosophila:OregonR" />
+                </SourceBioMaterials_assnreflist>
+                <Type>
+                    <OntologyEntry category="MGED:BioSample:Type" 
+                        value="Organism" />
+                </Type>
+            </BioSample>
+            <LabeledExtract identifier="LabeledExtract:Drosophila:OregonR" 
+                name="Labeled cRNA, Oregon R Drosophila">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" value="RNA" />
+                </MaterialType>
+                <Treatment_assnlist>
+                    <Treatment identifier="Treatment:AffymetrixRNAExtract" 
+                        order="1">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <Protocol_ref 
+                                    identifier="Protocol:AffymetrixRNAExtract" 
+                                    />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="MGED:Action" 
+                                value="Extract" />
+                        </Action>
+                        <SourceBioMaterialMeasurement_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioSource_ref 
+                                    identifier="BioSource:Drosophila:OregonR" />
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurement_assnlist>
+                    </Treatment>
+                    <Treatment identifier="Treatment:AffymetrixRNALabel" 
+                        order="2">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <Protocol_ref 
+                                    identifier="Protocol:AffymetrixRNALabel" />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="MGED:Action" value="Label" 
+                                />
+                        </Action>
+                    </Treatment>
+                </Treatment_assnlist>
+                <SourceBioMaterials_assnreflist>
+                    <BioSource_ref identifier="BioSource:Drosophila:OregonR" />
+                </SourceBioMaterials_assnreflist>
+                <Labels_assnreflist>
+                    <Compound_ref identifier="Compound:Biotin" />
+                </Labels_assnreflist>
+            </LabeledExtract>
+            <LabeledExtract 
+                identifier="LabeledExtract:Drosophila:OregonR:SepticInjury0090minutes" 
+                name="Labeled cRNA, Oregon R Drosophila bacterial infection 90 minutes">
+                <MaterialType>
+                    <OntologyEntry category="MGED:MaterialType" value="RNA" />
+                </MaterialType>
+                <Treatment_assnlist>
+                    <Treatment identifier="Treatment:AffymetrixRNAExtract" 
+                        order="1">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <Protocol_ref 
+                                    identifier="Protocol:AffymetrixRNAExtract" 
+                                    />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="MGED:Action" 
+                                value="Extract" />
+                        </Action>
+                        <SourceBioMaterialMeasurement_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioSource_ref 
+                                    identifier="BioSource:Drosophila:OregonR:SepticInjury0090minutes" 
+                                    />
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurement_assnlist>
+                    </Treatment>
+                    <Treatment identifier="Treatment:AffymetrixRNALabel" 
+                        order="2">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="20010301">
+                                <Protocol_ref 
+                                    identifier="Protocol:AffymetrixRNALabel" />
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                        <Action>
+                            <OntologyEntry category="MGED:Action" value="Label" 
+                                />
+                        </Action>
+                    </Treatment>
+                </Treatment_assnlist>
+                <SourceBioMaterials_assnreflist>
+                    <BioSource_ref 
+                        identifier="BioSource:Drosophila:OregonR:SepticInjury0090minutes" 
+                        />
+                </SourceBioMaterials_assnreflist>
+                <Labels_assnreflist>
+                    <Compound_ref identifier="Compound:Biotin" />
+                </Labels_assnreflist>
+            </LabeledExtract>
+        </BioMaterial_assnlist>
+    </BioMaterial_package>
+</MAGE-ML>

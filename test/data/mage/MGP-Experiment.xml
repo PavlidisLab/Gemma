@@ -11,19 +11,19 @@
 <Experiment identifier="ebi.ac.uk:miamexpress/Experiment:E-MEXP-XX">
   <Descriptions_assnlist>
     <Description text="description">
-      <BibliographicReferences_assnlist>
-      <!--MIAME requirement Provide Bibliographic Reference-->
-          <BibliographicReference URI="my uri"
-          authors="my name" editor="my editor" issue="my issue"
-          pages="my pages" publication="my publication"
-          publisher="my publisher" title="my title" volume="my volume" year="2004">
-          <Parameters_assnlist>
-          <!--MO TERM -->
-          <OntologyEntry
-              category="PublicationType" value="journal_article"/>
-          </Parameters_assnlist>
-        </BibliographicReference>
-      </BibliographicReferences_assnlist>
+        <BibliographicReferences_assnlist>
+            <!--MIAME requirement Provide Bibliographic Reference-->
+            <BibliographicReference URI="my uri" authors="my name" 
+                editor="my editor" issue="my issue" pages="my pages" 
+                publication="my publication" publisher="my publisher" 
+                title="my title" volume="my volume" year="2004">
+                <Parameters_assnlist>
+                    <!--MO TERM -->
+                    <OntologyEntry category="PublicationType" 
+                        value="journal_article"/>
+                </Parameters_assnlist>
+            </BibliographicReference>
+        </BibliographicReferences_assnlist>
     </Description>
   </Descriptions_assnlist>
   <Providers_assnreflist>

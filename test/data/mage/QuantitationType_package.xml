@@ -1,0 +1,272 @@
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd">
+<MAGE-ML identifier="Protocol_test">
+<QuantitationType_package>
+	<QuantitationType_assnlist>
+		<MeasuredSignal 
+			identifier="Intensity" 
+			name="Affymetrix Intensity"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</MeasuredSignal>
+		<MeasuredSignal 
+			identifier="CH1I" 
+			name="Cy3 Foreground"
+			isBackground="false">
+			<Channel_assnref >
+				<Channel_ref identifier="CH1" />
+			</Channel_assnref>
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</MeasuredSignal>
+		<MeasuredSignal 
+			identifier="CH1B" 
+			name="Cy3 Background"
+			isBackground="true">
+			<Channel_assnref >
+				<Channel_ref identifier="CH1" />
+			</Channel_assnref>
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</MeasuredSignal>
+		<DerivedSignal 
+			identifier="CH1D" 
+			name="Cy3 Net"
+			isBackground="false">
+			<Channel_assnref >
+				<Channel_ref identifier="CH1" />
+			</Channel_assnref>
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</DerivedSignal>
+		<MeasuredSignal 
+			identifier="CH2I" 
+			name="Cy5 Foreground"
+			isBackground="false">
+			<Channel_assnref >
+				<Channel_ref identifier="CH2" />
+			</Channel_assnref>
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</MeasuredSignal>
+		<MeasuredSignal 
+			identifier="CH2B" 
+			name="Cy5 Background"
+			isBackground="true">
+			<Channel_assnref >
+				<Channel_ref identifier="CH2" />
+			</Channel_assnref>
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</MeasuredSignal>
+		<DerivedSignal 
+			identifier="CH2D" 
+			name="Cy5 Net"
+			isBackground="false">
+			<Channel_assnref >
+				<Channel_ref identifier="CH2" />
+			</Channel_assnref>
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</DerivedSignal>
+		<Ratio 
+			identifier="CH2/CH1" 
+			name="Cy5/Cy3"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Log base2"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+			<ConfidenceIndicators_assnreflist>
+				<ExpectedValue_ref identifier="CH2/CH1Expected" />
+			</ConfidenceIndicators_assnreflist>
+		</Ratio>
+		<DerivedSignal 
+			identifier="LogCorrectedIntensity" 
+			name="Affymetrix Log base2 Intensity, match - mismatch"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Log base2"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</DerivedSignal>
+		<Ratio 
+			identifier="LogSubtractedIntensity" 
+			name="Affymetrix LogCorrectedIntensity (1) - LogCorrectedIntensity (2)"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Log base2"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</Ratio>
+		<Ratio 
+			identifier="AverageLogSubtractedIntensity" 
+			name="Average Affymetrix LogSubtractedIntensity [1..n]"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Log base2"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</Ratio>
+		<ExpectedValue
+			identifier="CH2/CH1Expected"
+			name="Expected CH2/Ch1"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+			<TargetQuantitationType_assnref>
+				<SpecializedQuantitationType_ref identifier="CH2/CH1" />
+			</TargetQuantitationType_assnref>
+		</ExpectedValue>
+		<ExpectedValue
+			identifier="IntensityExpected"
+			name="Expected Affymetrix Intensity"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Linear"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+			<TargetQuantitationType_assnref>
+				<SpecializedQuantitationType_ref identifier="Intensity" />
+			</TargetQuantitationType_assnref>
+		</ExpectedValue>
+		<SpecializedQuantitationType
+			identifier="CH1PIXGTBG"
+			name="Percent CH1 Pixels greater than background"
+			isBackground="false">
+			<Scale_assn>
+				<OntologyEntry
+					category="MGED:Scale"
+					value="Percent"
+				/>
+			</Scale_assn>
+			<DataType_assn>
+				<OntologyEntry
+					category="MGED:DataType"
+					value="float"
+				/>
+			</DataType_assn>
+		</SpecializedQuantitationType>
+	</QuantitationType_assnlist>
+</QuantitationType_package>
+</MAGE-ML>
