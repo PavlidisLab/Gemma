@@ -36,8 +36,8 @@
 			<artifactId>andromda-spring-cartridge</artifactId>
 			<version>3.0-RC1-SNAPSHOT</version>
 			<properties>
-				<services.ignore/>
-				<services-impl.ignore/>
+				<mergeLocation>/opt/andromda/custom</mergeLocation>
+				<hibernateInheritanceStrategy>subclass</hibernateInheritanceStrategy>
 				<driver>com.mysql.jdbc.Driver</driver>
 				<username>pavlidis</username>
 				<password>toast</password>
