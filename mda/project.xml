@@ -6,16 +6,17 @@
     <name>gemma MDA</name>
     <groupId>Gemma</groupId>
     <dependencies>
+        
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-profile</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
+            <version>3.0-RC2-SNAPSHOT</version>
             <type>xml.zip</type>
         </dependency>
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>maven-andromda-plugin</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
+            <version>3.0-RC2-SNAPSHOT</version>
             <type>plugin</type>
             <properties>
                 <languageMappingsUri>Java</languageMappingsUri>
@@ -29,7 +30,7 @@
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-spring-cartridge</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
+            <version>3.0-RC2-SNAPSHOT</version>
             <properties>
                 <mergeLocation> 
                     ${maven.andromda.spring.merge.custom}</mergeLocation>
@@ -58,15 +59,12 @@
                     ${maven.andromda.spring.service.locator.dir}</service-locator>
                 <applicationContext> 
                     applicationContext-hibernate.xml</applicationContext>
-                <hibernateQueryUseNamedParameters > 
-                    true</hibernateQueryUseNamedParameters>
-                <hibernateMaxFetchDepth>0</hibernateMaxFetchDepth>
             </properties>
         </dependency>
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-hibernate-cartridge</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
+            <version>3.0-RC2-SNAPSHOT</version>
             <properties>
                 <mergeLocation> 
                     ${maven.andromda.hibernate.merge.custom}</mergeLocation>
@@ -87,29 +85,28 @@
                     ${maven.andromda.hibernate.generated.dir}</configuration>
                 <session-beans.ignore/>
                 <session-impls.ignore/>
-                <hibernateQueryUseNamedParameters > 
+                <hibernateQueryUseNamedParameters >
                     true</hibernateQueryUseNamedParameters>
-                <hibernateMaxFetchDepth>0</hibernateMaxFetchDepth>
             </properties>
         </dependency>
-        <dependency>
+         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-java-cartridge</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
-            <properties>
-                <enumerations> 
-                    ${maven.andromda.hibernate.generated.dir}</enumerations>
-            </properties>
+              <version>3.0-RC2-SNAPSHOT</version>
+                <properties>
+                    <enumerations>
+                        ${maven.andromda.hibernate.generated.dir}</enumerations>
+                </properties>
         </dependency>
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-ocl-query-library</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
+            <version>3.0-RC2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-ocl-validation-library</artifactId>
-            <version>3.0-RC1-SNAPSHOT</version>
+            <version>3.0-RC2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
