@@ -1,109 +1,134 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
-"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" > 
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
 <MAGE-ML identifier="mged.org:MAGE Good Practice:BioAssayData_package">
-<BioAssayData_package>
-  <BioAssayDimension_assnlist>
-    <BioAssayDimension identifier="ebi.ac.uk:miamexpress/BioAssayDimension:object">
-      <BioAssays_assnreflist>
-        <PhysicalBioAssay_ref identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object"/>
-      </BioAssays_assnreflist>
-    </BioAssayDimension>
-  </BioAssayDimension_assnlist>
-  <DesignElementDimension_assnlist>
-    <ReporterDimension identifier="ebi.ac.uk:miamexpress/ReporterDimension:object">
-      <Reporters_assnreflist>
-        <Reporter_ref identifier="ebi.ac.uk:miamexpress/Reporter:object"/>
-      </Reporters_assnreflist>
-    </ReporterDimension>
-  </DesignElementDimension_assnlist>
-  <QuantitationTypeDimension_assnlist>
-    <QuantitationTypeDimension identifier="ebi.ac.uk:miamexpress/QuantitationTypeDimension:object">
-      <QuantitationTypes_assnreflist>
-        <DerivedSignal_ref identifier="ebi.ac.uk:miamexpress/DerivedSignal:object"/>
-      </QuantitationTypes_assnreflist>
-    </QuantitationTypeDimension>
-  </QuantitationTypeDimension_assnlist>
-  <!--OPTIONAL: MAPS-->
-  <!--MIAME REQUIREMENT:-->
-  <BioAssayMap_assnlist>
-    <BioAssayMap identifier="ebi.ac.uk:miamexpress/BioAssayMap:object">
-      <BioAssayMapTarget_assnref>
-        <DerivedBioAssay_ref identifier="ebi.ac.uk:miamexpress/DerivedBioAssay:object"/>
-      </BioAssayMapTarget_assnref>
-      <SourceBioAssays_assnreflist>
-        <MeasuredBioAssay_ref identifier="ebi.ac.uk:miamexpress/MeasuredBioAssay:object"/>
-      </SourceBioAssays_assnreflist>
-    </BioAssayMap>
-  </BioAssayMap_assnlist>
-  <QuantitationTypeMap_assnlist>
-    <QuantitationTypeMap identifier="ebi.ac.uk:miamexpress/QuantitationTypeMap:object">
-      <TargetQuantitationType_assnref>
-        <DerivedSignal_ref identifier=" ebi.ac.uk:miamexpress/DerivedSignal:object"/>
-      </TargetQuantitationType_assnref>
-      <SourcesQuantitationType_assnreflist>
-        <MeasuredSignal_ref identifier=" ebi.ac.uk:miamexpress/MeasuredSignal:object"/>
-      </SourcesQuantitationType_assnreflist>
-    </QuantitationTypeMap>
-  </QuantitationTypeMap_assnlist>
-  <BioAssayData_assnlist>
-    <DerivedBioAssayData identifier="ebi.ac.uk:miamexpress/DerivedBioAssayData:object">
-      <BioAssayDimension_assnref>
-        <BioAssayDimension_ref identifier="ebi.ac.uk:miamexpress/BioAssayDimension:object"/>
-      </BioAssayDimension_assnref>
-      <DesignElementDimension_assnref>
-        <ReporterDimension_ref identifier="ebi.ac.uk:miamexpress/ReporterDimension:object"/>
-      </DesignElementDimension_assnref>
-      <QuantitationTypeDimension_assnref>
-        <QuantitationTypeDimension_ref identifier="ebi.ac.uk:miamexpress/QuantitationTypeDimension:object"/>
-      </QuantitationTypeDimension_assnref>
-      <!--IMPORTANT: BioData Values should not be coded using Tuples -->
-        <!--ARRAYExpress favours BioDataCube coded as External-->
-        <BioDataValues_assn>
-        <BioDataCube>
-          <DataExternal_assn>
-            <DataExternal filenameURI="www.ebi.ac.uk/datafile.txt"/>
-          </DataExternal_assn>
-        </BioDataCube>
-      </BioDataValues_assn>
-      <ProducerTransformation_assn>
-        <Transformation identifier="ebi.ac.uk:miamexpress/Transformation:object">
-          <ProtocolApplications_assnlist>
-          <!--MAGE-ML BEST PRACTICE: DATE FORMATTING ISSUE-->
-          <ProtocolApplication activityDate="YYYY-MM-DD">
-              <!--OPTIONAL association:Performer-->
-              <Performers_assnreflist>
-                <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
-              </Performers_assnreflist>
-              <Protocol_assnref>
-                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
-              </Protocol_assnref>
-            </ProtocolApplication>
-          </ProtocolApplications_assnlist>
-          <BioAssayDataSources_assnreflist>
-            <MeasuredBioAssayData_ref identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object"/>
-          </BioAssayDataSources_assnreflist>
-        </Transformation>
-      </ProducerTransformation_assn>
-    </DerivedBioAssayData>
-    <MeasuredBioAssayData identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object">
-      <BioAssayDimension_assnref>
-        <BioAssayDimension_ref identifier="ebi.ac.uk:miamexpress/BioAssayDimension:object"/>
-      </BioAssayDimension_assnref>
-      <DesignElementDimension_assnref>
-        <FeatureDimension_ref identifier="ebi.ac.uk:miamexpress/FeatureDimension:object"/>
-      </DesignElementDimension_assnref>
-      <QuantitationTypeDimension_assnref>
-        <QuantitationTypeDimension_ref identifier="ebi.ac.uk:miamexpress/QuantitationTypeDimension:object"/>
-      </QuantitationTypeDimension_assnref>
-      <BioDataValues_assn>
-        <BioDataCube>
-          <DataExternal_assn>
-            <DataExternal filenameURI="www.ebi.ac.uk/datafile.txt"/>
-          </DataExternal_assn>
-        </BioDataCube>
-      </BioDataValues_assn>
-    </MeasuredBioAssayData>
-  </BioAssayData_assnlist>
-</BioAssayData_package>
+    <BioAssayData_package>
+        <BioAssayDimension_assnlist>
+            <BioAssayDimension 
+                identifier="ebi.ac.uk:miamexpress/BioAssayDimension:object">
+                <BioAssays_assnreflist>
+                    <PhysicalBioAssay_ref 
+                        identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object"/>
+                </BioAssays_assnreflist>
+            </BioAssayDimension>
+        </BioAssayDimension_assnlist>
+        <DesignElementDimension_assnlist>
+            <ReporterDimension 
+                identifier="ebi.ac.uk:miamexpress/ReporterDimension:object">
+                <Reporters_assnreflist>
+                    <Reporter_ref 
+                        identifier="ebi.ac.uk:miamexpress/Reporter:object"/>
+                </Reporters_assnreflist>
+            </ReporterDimension>
+        </DesignElementDimension_assnlist>
+        <QuantitationTypeDimension_assnlist>
+            <QuantitationTypeDimension 
+                identifier="ebi.ac.uk:miamexpress/QuantitationTypeDimension:object">
+                <QuantitationTypes_assnreflist>
+                    <DerivedSignal_ref 
+                        identifier="ebi.ac.uk:miamexpress/DerivedSignal:object"/>
+                </QuantitationTypes_assnreflist>
+            </QuantitationTypeDimension>
+        </QuantitationTypeDimension_assnlist>
+        <!--OPTIONAL: MAPS-->
+        <!--MIAME REQUIREMENT:-->
+        <BioAssayMap_assnlist>
+            <BioAssayMap identifier="ebi.ac.uk:miamexpress/BioAssayMap:object">
+                <BioAssayMapTarget_assnref>
+                    <DerivedBioAssay_ref 
+                        identifier="ebi.ac.uk:miamexpress/DerivedBioAssay:object"/>
+                </BioAssayMapTarget_assnref>
+                <SourceBioAssays_assnreflist>
+                    <MeasuredBioAssay_ref 
+                        identifier="ebi.ac.uk:miamexpress/MeasuredBioAssay:object"/>
+                </SourceBioAssays_assnreflist>
+            </BioAssayMap>
+        </BioAssayMap_assnlist>
+        <QuantitationTypeMap_assnlist>
+            <QuantitationTypeMap 
+                identifier="ebi.ac.uk:miamexpress/QuantitationTypeMap:object">
+                <TargetQuantitationType_assnref>
+                    <DerivedSignal_ref 
+                        identifier=" ebi.ac.uk:miamexpress/DerivedSignal:object"/>
+                </TargetQuantitationType_assnref>
+                <SourcesQuantitationType_assnreflist>
+                    <MeasuredSignal_ref 
+                        identifier=" ebi.ac.uk:miamexpress/MeasuredSignal:object"/>
+                </SourcesQuantitationType_assnreflist>
+            </QuantitationTypeMap>
+        </QuantitationTypeMap_assnlist>
+        <BioAssayData_assnlist>
+            <DerivedBioAssayData 
+                identifier="ebi.ac.uk:miamexpress/DerivedBioAssayData:object">
+                <BioAssayDimension_assnref>
+                    <BioAssayDimension_ref 
+                        identifier="ebi.ac.uk:miamexpress/BioAssayDimension:object"/>
+                </BioAssayDimension_assnref>
+                <DesignElementDimension_assnref>
+                    <ReporterDimension_ref 
+                        identifier="ebi.ac.uk:miamexpress/ReporterDimension:object"/>
+                </DesignElementDimension_assnref>
+                <QuantitationTypeDimension_assnref>
+                    <QuantitationTypeDimension_ref 
+                        identifier="ebi.ac.uk:miamexpress/QuantitationTypeDimension:object"/>
+                </QuantitationTypeDimension_assnref>
+                <!--IMPORTANT: BioData Values should not be coded using Tuples -->
+                <!--ARRAYExpress favours BioDataCube coded as External-->
+                <BioDataValues_assn>
+                    <BioDataCube>
+                        <DataExternal_assn>
+                            <DataExternal 
+                                filenameURI="www.ebi.ac.uk/datafile.txt"/>
+                        </DataExternal_assn>
+                    </BioDataCube>
+                </BioDataValues_assn>
+                <ProducerTransformation_assn>
+                    <Transformation 
+                        identifier="ebi.ac.uk:miamexpress/Transformation:object">
+                        <ProtocolApplications_assnlist>
+                            <!--MAGE-ML BEST PRACTICE: DATE FORMATTING ISSUE-->
+                            <ProtocolApplication activityDate="YYYY-MM-DD">
+                                <!--OPTIONAL association:Performer-->
+                                <Performers_assnreflist>
+                                    <Person_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Person:object"/>
+                                </Performers_assnreflist>
+                                <Protocol_assnref>
+                                    <Protocol_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+                                </Protocol_assnref>
+                            </ProtocolApplication>
+                        </ProtocolApplications_assnlist>
+                        <BioAssayDataSources_assnreflist>
+                            <MeasuredBioAssayData_ref 
+                                identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object"/>
+                        </BioAssayDataSources_assnreflist>
+                    </Transformation>
+                </ProducerTransformation_assn>
+            </DerivedBioAssayData>
+            <MeasuredBioAssayData 
+                identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object">
+                <BioAssayDimension_assnref>
+                    <BioAssayDimension_ref 
+                        identifier="ebi.ac.uk:miamexpress/BioAssayDimension:object"/>
+                </BioAssayDimension_assnref>
+                <DesignElementDimension_assnref>
+                    <FeatureDimension_ref 
+                        identifier="ebi.ac.uk:miamexpress/FeatureDimension:object"/>
+                </DesignElementDimension_assnref>
+                <QuantitationTypeDimension_assnref>
+                    <QuantitationTypeDimension_ref 
+                        identifier="ebi.ac.uk:miamexpress/QuantitationTypeDimension:object"/>
+                </QuantitationTypeDimension_assnref>
+                <BioDataValues_assn>
+                    <BioDataCube>
+                        <DataExternal_assn>
+                            <DataExternal 
+                                filenameURI="www.ebi.ac.uk/datafile.txt"/>
+                        </DataExternal_assn>
+                    </BioDataCube>
+                </BioDataValues_assn>
+            </MeasuredBioAssayData>
+        </BioAssayData_assnlist>
+    </BioAssayData_package>
 </MAGE-ML>

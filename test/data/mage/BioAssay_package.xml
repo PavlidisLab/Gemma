@@ -1,228 +1,226 @@
 <?xml version="1.0" standalone="no"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
 <MAGE-ML identifier="bioassay-test">
-  <AuditAndSecurity_package>
-    <Contact_assnlist>
-      <Person identifier="lab-tech1">
-      </Person>
-    </Contact_assnlist>
-  </AuditAndSecurity_package>
-  <Protocol_package>
-    <Protocol_assnlist>
-      <Protocol identifier="hyb-prot1"
-		URI="http://www.protocol.com/hyb/test.html" text="This is a
-		test" title="Test Hyb Protocol">
-      </Protocol>
-      <Protocol identifier="feat-extr-prot1"
-		URI="http://www.protocol.com/fe/test.html" text="This is a
-		test" title="Test Feature Extraction Protocol">
-      </Protocol>
-      <Protocol identifier="image-ac-prot1" 
-		URI="http://www.protocol.com/image/test.html" 
-		text="This is a test" title="Test Image Acquisition">
-      </Protocol>
-      <Protocol identifier="wash-prot1"
-		URI="http://www.protocol.com/wash/test.html" 
-		text="This is a test" 
-		title="Test Wash">
-      </Protocol>
-    </Protocol_assnlist>
-  </Protocol_package>
-  <BioMaterial_package>
-    <Compound_assnlist>
-      <Compound identifier="cy5-compound">
-      </Compound>
-      <Compound identifier="cy3-compound">
-      </Compound>
-    </Compound_assnlist>
-  </BioMaterial_package>
-  <BioAssay_package>
-    <Channel_assnlist>
-      <Channel identifier="cy3-channel">
-	<Labels_assnreflist>
-	  <Compound_ref identifier="cy3-compound"/>
-	</Labels_assnreflist>
-      </Channel>
-      <Channel identifier="cy5-channel">
-	<Labels_assnreflist>
-	  <Compound_ref identifier="cy5-compound"/>
-	</Labels_assnreflist>
-      </Channel>
-    </Channel_assnlist>
-    <BioAssay_assnlist>
-      <PhysicalBioAssay identifier="phys-bioassay1"
-			name="phys-bioassay1">
-			<Channels_assnreflist>
-			  <Channel_ref identifier="cy3-channel"/>
-			  <Channel_ref identifier="cy5-channel"/>
-			</Channels_assnreflist>
-			<FactorValues_assnreflist>
-			  <FactorValue_ref identifier="factor-strain-yeast1"/>
-			</FactorValues_assnreflist>
-			<Hybridization identifier="hyb-event1" 
-					   name="hyb-event1">
-			  <ProtocolApplication_assnlist>
-				<ProtocolApplication activityDate="2001-08-15">
-				  <HardwareApplication_assnlist>
-				<HardwareApplication>
-				  <Hardware_ref identifier="hyb-hardware"/>
-				</HardwareApplication>
-				  </HardwareApplication_assnlist>
-				  <Protocol_ref identifier="hyb-prot1"/>
-				</ProtocolApplication>
-			  </ProtocolApplication_assnlist>
-			  <Array_assnref>
-				<Array_ref identifier="foo"/>
-			  </Array_assnref>
-			</Hybridization>
-			<BioAssayTreatment_assnlist>
-			  <BioAssayTreatment identifier="wash-event1">
-				<ProtocolApplication_assnlist>
-				  <ProtocolApplication activityDate="2001-08-15">
-					<Performers_assnreflist>
-					  <Person_ref identifier="lab-tech1"/>
-					</Performers_assnreflist>
-					<Protocol_ref identifier="wash-prot1"/>
-				  </ProtocolApplication>
-				</ProtocolApplication_assnlist>
-			  </BioAssayTreatment>
-			  <ImageAcquisition identifier="image-ac-event1" name="image
+    <AuditAndSecurity_package>
+        <Contact_assnlist>
+            <Person identifier="lab-tech1">
+            </Person>
+        </Contact_assnlist>
+    </AuditAndSecurity_package>
+    <Protocol_package>
+        <Protocol_assnlist>
+            <Protocol identifier="hyb-prot1" 
+                URI="http://www.protocol.com/hyb/test.html" 
+                text="This is a test" title="Test Hyb Protocol">
+            </Protocol>
+            <Protocol identifier="feat-extr-prot1" 
+                URI="http://www.protocol.com/fe/test.html" 
+                text="This is a test" title="Test Feature Extraction Protocol">
+            </Protocol>
+            <Protocol identifier="image-ac-prot1" 
+                URI="http://www.protocol.com/image/test.html" 
+                text="This is a test" title="Test Image Acquisition">
+            </Protocol>
+            <Protocol identifier="wash-prot1" 
+                URI="http://www.protocol.com/wash/test.html" 
+                text="This is a test" title="Test Wash">
+            </Protocol>
+        </Protocol_assnlist>
+    </Protocol_package>
+    <BioMaterial_package>
+        <Compound_assnlist>
+            <Compound identifier="cy5-compound">
+            </Compound>
+            <Compound identifier="cy3-compound">
+            </Compound>
+        </Compound_assnlist>
+    </BioMaterial_package>
+    <BioAssay_package>
+        <Channel_assnlist>
+            <Channel identifier="cy3-channel">
+                <Labels_assnreflist>
+                    <Compound_ref identifier="cy3-compound"/>
+                </Labels_assnreflist>
+            </Channel>
+            <Channel identifier="cy5-channel">
+                <Labels_assnreflist>
+                    <Compound_ref identifier="cy5-compound"/>
+                </Labels_assnreflist>
+            </Channel>
+        </Channel_assnlist>
+        <BioAssay_assnlist>
+            <PhysicalBioAssay identifier="phys-bioassay1" name="phys-bioassay1">
+                <Channels_assnreflist>
+                    <Channel_ref identifier="cy3-channel"/>
+                    <Channel_ref identifier="cy5-channel"/>
+                </Channels_assnreflist>
+                <FactorValues_assnreflist>
+                    <FactorValue_ref identifier="factor-strain-yeast1"/>
+                </FactorValues_assnreflist>
+                <Hybridization identifier="hyb-event1" name="hyb-event1">
+                    <ProtocolApplication_assnlist>
+                        <ProtocolApplication activityDate="2001-08-15">
+                            <HardwareApplication_assnlist>
+                                <HardwareApplication>
+                                    <Hardware_ref identifier="hyb-hardware"/>
+                                </HardwareApplication>
+                            </HardwareApplication_assnlist>
+                            <Protocol_ref identifier="hyb-prot1"/>
+                        </ProtocolApplication>
+                    </ProtocolApplication_assnlist>
+                    <Array_assnref>
+                        <Array_ref identifier="foo"/>
+                    </Array_assnref>
+                </Hybridization>
+                <BioAssayTreatment_assnlist>
+                    <BioAssayTreatment identifier="wash-event1">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="2001-08-15">
+                                <Performers_assnreflist>
+                                    <Person_ref identifier="lab-tech1"/>
+                                </Performers_assnreflist>
+                                <Protocol_ref identifier="wash-prot1"/>
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                    </BioAssayTreatment>
+                    <ImageAcquisition identifier="image-ac-event1" 
+                        name="image
 						acquisition for Array1">
-					<ProtocolApplication_assnlist>
-					  <ProtocolApplication activityDate="2001-08-15">
-					<Performers_assnreflist>
-					  <Person_ref identifier="lab-tech1"/>
-					</Performers_assnreflist>
-					<Protocol_ref identifier="image-ac-prot1"/>
-					  </ProtocolApplication>
-					</ProtocolApplication_assnlist>
-			  </ImageAcquisition>
-			</BioAssayTreatment_assnlist>
-      </PhysicalBioAssay>
-      <MeasuredBioAssay identifier="meas-bioassay1">
-		<Channels_assnreflist>
-		  <Channel_ref identifier="cy3-channel"/>
-		  <Channel_ref identifier="cy5-channel"/>
-		</Channels_assnreflist>
-		<FeatureExtraction identifier="feat-extr-event1">
-		  <ProtocolApplication_assnlist>
-			<ProtocolApplication activityDate="2001-08-15">
-			  <Performers_assnreflist>
-				<Person_ref identifier="lab-tech1"/>
-			  </Performers_assnreflist>
-			  <Protocol_ref identifier="feat-extr-prot1"/>
-			</ProtocolApplication>
-		  </ProtocolApplication_assnlist>
-		</FeatureExtraction>
-      </MeasuredBioAssay>
-      <PhysicalBioAssay identifier="phys-bioassay2"
-			name="phys-bioassay2">
-		<Channels_assnreflist>
-		  <Channel_ref identifier="cy3-channel"/>
-		  <Channel_ref identifier="cy5-channel"/>
-		</Channels_assnreflist>
-		<FactorValues_assnreflist>
-		  <FactorValue_ref identifier="factor-strain-yeast2"/>
-		</FactorValues_assnreflist>
-		<Hybridization identifier="hyb-event2" 
-				   name="hyb-event2">
-		  <ProtocolApplication_assnlist>
-			<ProtocolApplication activityDate="2001-08-15">
-			  <HardwareApplication_assnlist>
-			<HardwareApplication>
-			  <Hardware_ref identifier="hyb-hardware"/>
-			</HardwareApplication>
-			  </HardwareApplication_assnlist>
-			  <Protocol_ref identifier="hyb-prot1"/>
-			</ProtocolApplication>
-		  </ProtocolApplication_assnlist>
-		  <Array_assnref>
-			<Array_ref identifier="foo"/>
-		  </Array_assnref>
-		</Hybridization>
-		<BioAssayTreatment_assnlist>
-		  <BioAssayTreatment identifier="wash-event2">
-			<ProtocolApplication_assnlist>
-			  <ProtocolApplication activityDate="2001-08-15">
-			<Performers_assnreflist>
-			  <Person_ref identifier="lab-tech1"/>
-			</Performers_assnreflist>
-			<Protocol_ref identifier="wash-prot1"/>
-			  </ProtocolApplication>
-			</ProtocolApplication_assnlist>
-		  </BioAssayTreatment>
-		  <ImageAcquisition identifier="image-ac-event2" name="image
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="2001-08-15">
+                                <Performers_assnreflist>
+                                    <Person_ref identifier="lab-tech1"/>
+                                </Performers_assnreflist>
+                                <Protocol_ref identifier="image-ac-prot1"/>
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                    </ImageAcquisition>
+                </BioAssayTreatment_assnlist>
+            </PhysicalBioAssay>
+            <MeasuredBioAssay identifier="meas-bioassay1">
+                <Channels_assnreflist>
+                    <Channel_ref identifier="cy3-channel"/>
+                    <Channel_ref identifier="cy5-channel"/>
+                </Channels_assnreflist>
+                <FeatureExtraction identifier="feat-extr-event1">
+                    <ProtocolApplication_assnlist>
+                        <ProtocolApplication activityDate="2001-08-15">
+                            <Performers_assnreflist>
+                                <Person_ref identifier="lab-tech1"/>
+                            </Performers_assnreflist>
+                            <Protocol_ref identifier="feat-extr-prot1"/>
+                        </ProtocolApplication>
+                    </ProtocolApplication_assnlist>
+                </FeatureExtraction>
+            </MeasuredBioAssay>
+            <PhysicalBioAssay identifier="phys-bioassay2" name="phys-bioassay2">
+                <Channels_assnreflist>
+                    <Channel_ref identifier="cy3-channel"/>
+                    <Channel_ref identifier="cy5-channel"/>
+                </Channels_assnreflist>
+                <FactorValues_assnreflist>
+                    <FactorValue_ref identifier="factor-strain-yeast2"/>
+                </FactorValues_assnreflist>
+                <Hybridization identifier="hyb-event2" name="hyb-event2">
+                    <ProtocolApplication_assnlist>
+                        <ProtocolApplication activityDate="2001-08-15">
+                            <HardwareApplication_assnlist>
+                                <HardwareApplication>
+                                    <Hardware_ref identifier="hyb-hardware"/>
+                                </HardwareApplication>
+                            </HardwareApplication_assnlist>
+                            <Protocol_ref identifier="hyb-prot1"/>
+                        </ProtocolApplication>
+                    </ProtocolApplication_assnlist>
+                    <Array_assnref>
+                        <Array_ref identifier="foo"/>
+                    </Array_assnref>
+                </Hybridization>
+                <BioAssayTreatment_assnlist>
+                    <BioAssayTreatment identifier="wash-event2">
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="2001-08-15">
+                                <Performers_assnreflist>
+                                    <Person_ref identifier="lab-tech1"/>
+                                </Performers_assnreflist>
+                                <Protocol_ref identifier="wash-prot1"/>
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                    </BioAssayTreatment>
+                    <ImageAcquisition identifier="image-ac-event2" 
+                        name="image
 					acquisition for Array2">
-			<ProtocolApplication_assnlist>
-			  <ProtocolApplication activityDate="2001-08-15">
-			<Performers_assnreflist>
-			  <Person_ref identifier="lab-tech1"/>
-			</Performers_assnreflist>
-			<Protocol_ref identifier="image-ac-prot1"/>
-			  </ProtocolApplication>
-			</ProtocolApplication_assnlist>
-		  </ImageAcquisition>
-		</BioAssayTreatment_assnlist>
-      </PhysicalBioAssay>
-      <MeasuredBioAssay identifier="meas-bioassay2">
-	<Channels_assnreflist>
-	  <Channel_ref identifier="cy3-channel"/>
-	  <Channel_ref identifier="cy5-channel"/>
-	</Channels_assnreflist>
-	<FeatureExtraction identifier="feat-extr-event2">
-	  <ProtocolApplication_assnlist>
-	    <ProtocolApplication activityDate="2001-08-15">
-	      <Performers_assnreflist>
-		<Person_ref identifier="lab-tech1"/>
-	      </Performers_assnreflist>
-	      <Protocol_ref identifier="feat-extr-prot1"/>
-	    </ProtocolApplication>
-	  </ProtocolApplication_assnlist>
-	</FeatureExtraction>
-      </MeasuredBioAssay>
-      <DerivedBioAssay identifier="der-bioassay1">
-	<SourceBioAssays_assnreflist>
-	  <MeasuredBioAssay_ref identifier="meas-bioassay1"/>
-	  <MeasuredBioAssay_ref identifier="meas-bioassay2"/>
-	</SourceBioAssays_assnreflist>
-	<Type>
-	  <OntologyEntry category="derived_bioassay_type"
-			 value="average_spot_replicates">
-	  </OntologyEntry>
-	</Type>
-      </DerivedBioAssay>
-    </BioAssay_assnlist>
-  </BioAssay_package>
-  <Experiment_package>
-    <Experiment_assnlist>
-      <Experiment identifier="experiment1">
-	<BioAssays_assnreflist>
-	  <PhysicalBioAssay_ref identifier="phys-bioassay1"/>
-	  <PhysicalBioAssay_ref identifier="phys-bioassay2"/>
-	  <MeasuredBioAssay_ref identifier="meas-bioassay1"/>
-	  <MeasuredBioAssay_ref identifier="meas-bioassay2"/>
-	  <DerivedBioAssay_ref identifier="der-bioassay1"/>
-	</BioAssays_assnreflist>
-	<ExperimentDesign>
-	  <ExperimentalFactor_assnlist>
-	    <ExperimentalFactor identifier="factor-strain">
-	      <Category>
-		<OntologyEntry category="biological_factor"
-			       value="strain">
-		</OntologyEntry>
-	      </Category>
-	      <FactorValue_assnlist>
-		<FactorValue identifier="factor-strain-yeast1">
-		  <Measurement value="yeast-strain1"/>
-		</FactorValue>
-		<FactorValue identifier="factor-strain-yeast2">
-		  <Measurement value="yeast-strain2"/>
-		</FactorValue>
-	      </FactorValue_assnlist>
-	    </ExperimentalFactor>
-	  </ExperimentalFactor_assnlist>
-	</ExperimentDesign>
-      </Experiment>
-    </Experiment_assnlist>
-  </Experiment_package>
+                        <ProtocolApplication_assnlist>
+                            <ProtocolApplication activityDate="2001-08-15">
+                                <Performers_assnreflist>
+                                    <Person_ref identifier="lab-tech1"/>
+                                </Performers_assnreflist>
+                                <Protocol_ref identifier="image-ac-prot1"/>
+                            </ProtocolApplication>
+                        </ProtocolApplication_assnlist>
+                    </ImageAcquisition>
+                </BioAssayTreatment_assnlist>
+            </PhysicalBioAssay>
+            <MeasuredBioAssay identifier="meas-bioassay2">
+                <Channels_assnreflist>
+                    <Channel_ref identifier="cy3-channel"/>
+                    <Channel_ref identifier="cy5-channel"/>
+                </Channels_assnreflist>
+                <FeatureExtraction identifier="feat-extr-event2">
+                    <ProtocolApplication_assnlist>
+                        <ProtocolApplication activityDate="2001-08-15">
+                            <Performers_assnreflist>
+                                <Person_ref identifier="lab-tech1"/>
+                            </Performers_assnreflist>
+                            <Protocol_ref identifier="feat-extr-prot1"/>
+                        </ProtocolApplication>
+                    </ProtocolApplication_assnlist>
+                </FeatureExtraction>
+            </MeasuredBioAssay>
+            <DerivedBioAssay identifier="der-bioassay1">
+                <SourceBioAssays_assnreflist>
+                    <MeasuredBioAssay_ref identifier="meas-bioassay1"/>
+                    <MeasuredBioAssay_ref identifier="meas-bioassay2"/>
+                </SourceBioAssays_assnreflist>
+                <Type>
+                    <OntologyEntry category="derived_bioassay_type" 
+                        value="average_spot_replicates">
+                    </OntologyEntry>
+                </Type>
+            </DerivedBioAssay>
+        </BioAssay_assnlist>
+    </BioAssay_package>
+    <Experiment_package>
+        <Experiment_assnlist>
+            <Experiment identifier="experiment1">
+                <BioAssays_assnreflist>
+                    <PhysicalBioAssay_ref identifier="phys-bioassay1"/>
+                    <PhysicalBioAssay_ref identifier="phys-bioassay2"/>
+                    <MeasuredBioAssay_ref identifier="meas-bioassay1"/>
+                    <MeasuredBioAssay_ref identifier="meas-bioassay2"/>
+                    <DerivedBioAssay_ref identifier="der-bioassay1"/>
+                </BioAssays_assnreflist>
+                <ExperimentDesign>
+                    <ExperimentalFactor_assnlist>
+                        <ExperimentalFactor identifier="factor-strain">
+                            <Category>
+                                <OntologyEntry category="biological_factor" 
+                                    value="strain">
+                                </OntologyEntry>
+                            </Category>
+                            <FactorValue_assnlist>
+                                <FactorValue identifier="factor-strain-yeast1">
+                                    <Measurement value="yeast-strain1"/>
+                                </FactorValue>
+                                <FactorValue identifier="factor-strain-yeast2">
+                                    <Measurement value="yeast-strain2"/>
+                                </FactorValue>
+                            </FactorValue_assnlist>
+                        </ExperimentalFactor>
+                    </ExperimentalFactor_assnlist>
+                </ExperimentDesign>
+            </Experiment>
+        </Experiment_assnlist>
+    </Experiment_package>
 </MAGE-ML>

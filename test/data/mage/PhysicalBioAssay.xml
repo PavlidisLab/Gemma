@@ -1,67 +1,69 @@
 <?xml version="1.0" standalone="no"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
 <MAGE-ML identifier="PhysicalBioAssay Example One">
-<BioAssay_package>
- <BioAssay_assnlist>
-  <PhysicalBioAssay identifier="PhysicalBioAssay:9">
-	<BioAssayCreation_assn>
-	  <Hybridization identifier="Hybridization One">
-	    <SourceBioMaterialMeasurements_assnlist>
-	      <BioMaterialMeasurement>
-		    <BioMaterial_assnref>
-		      <LabeledExtract_ref
-		          identifier="LabeledExtract:IH105_4-6"/>
-		      </BioMaterial_assnref>
-	      </BioMaterialMeasurement>
-	    </SourceBioMaterialMeasurements_assnlist>
-	    <Array_assnref>
-	      <Array_ref identifier="Array:filter1"/>
-	    </Array_assnref>
-	  </Hybridization>
-	</BioAssayCreation_assn>
-
-	<BioAssayTreatments_assnlist>
-	  <BioAssayTreatment identifier="BioAssayTreatment:some_treatment">
-<!-- NOTE: This is a bit redundent, since it's inside it's target BioAssay
+    <BioAssay_package>
+        <BioAssay_assnlist>
+            <PhysicalBioAssay identifier="PhysicalBioAssay:9">
+                <BioAssayCreation_assn>
+                    <Hybridization identifier="Hybridization One">
+                        <SourceBioMaterialMeasurements_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioMaterial_assnref>
+                                    <LabeledExtract_ref 
+                                        identifier="LabeledExtract:IH105_4-6"/>
+                                </BioMaterial_assnref>
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurements_assnlist>
+                        <Array_assnref>
+                            <Array_ref identifier="Array:filter1"/>
+                        </Array_assnref>
+                    </Hybridization>
+                </BioAssayCreation_assn>
+                <BioAssayTreatments_assnlist>
+                    <BioAssayTreatment 
+                        identifier="BioAssayTreatment:some_treatment">
+                        <!-- NOTE: This is a bit redundent, since it's inside it's target BioAssay
 	but the target association is required
 -->
-	    <Target_assnref>
-	      <PhysicalBioAssay_ref identifier="PhysicalBioAssay:9"/>
-	    </Target_assnref>
-	  </BioAssayTreatment>
-	  <BioAssayTreatment identifier="BioAssayTreatment:strip">
-<!-- NOTE: This isn't redundent, since the source BioAssay, which is to be stripped,
+                        <Target_assnref>
+                            <PhysicalBioAssay_ref 
+                                identifier="PhysicalBioAssay:9"/>
+                        </Target_assnref>
+                    </BioAssayTreatment>
+                    <BioAssayTreatment identifier="BioAssayTreatment:strip">
+                        <!-- NOTE: This isn't redundent, since the source BioAssay, which is to be stripped,
 	isn't the Target BioAssay
 -->
-	    <Target_assnref>
-	      <PhysicalBioAssay_ref identifier="PhysicalBioAssay:13"/>
-	    </Target_assnref>
-	  </BioAssayTreatment>
-	</BioAssayTreatments_assnlist>
-  </PhysicalBioAssay>
-
-  <PhysicalBioAssay identifier="PhysicalBioAssay:13">
-	<BioAssayCreation_assn>
-	  <Hybridization identifier="Hybridization Two">
-	    <SourceBioMaterialMeasurements_assnlist>
-	      <BioMaterialMeasurement>
-		    <BioMaterial_assnref>
-		      <LabeledExtract_ref
-		          identifier="LabeledExtract:IH105_4-6"/>
-		      </BioMaterial_assnref>
-	      </BioMaterialMeasurement>
-	    </SourceBioMaterialMeasurements_assnlist>
-	    <Array_assnref>
-	      <Array_ref identifier="Array:filter1"/>
-	    </Array_assnref>
-	  </Hybridization>
-	</BioAssayCreation_assn>
-<!-- NOTE: But in this case we can't record the Source for this BioAssay within this BioAssay, 
+                        <Target_assnref>
+                            <PhysicalBioAssay_ref 
+                                identifier="PhysicalBioAssay:13"/>
+                        </Target_assnref>
+                    </BioAssayTreatment>
+                </BioAssayTreatments_assnlist>
+            </PhysicalBioAssay>
+            <PhysicalBioAssay identifier="PhysicalBioAssay:13">
+                <BioAssayCreation_assn>
+                    <Hybridization identifier="Hybridization Two">
+                        <SourceBioMaterialMeasurements_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioMaterial_assnref>
+                                    <LabeledExtract_ref 
+                                        identifier="LabeledExtract:IH105_4-6"/>
+                                </BioMaterial_assnref>
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurements_assnlist>
+                        <Array_assnref>
+                            <Array_ref identifier="Array:filter1"/>
+                        </Array_assnref>
+                    </Hybridization>
+                </BioAssayCreation_assn>
+                <!-- NOTE: But in this case we can't record the Source for this BioAssay within this BioAssay, 
 	(because of the rule eliminating the composite), it can only be deduced from the above bit of xml.
 	But this is where the Model breaks down, the Source isn't the BioAssay that the source
 	needs to be recorded in!
 -->
-  </PhysicalBioAssay>
- </BioAssay_assnlist>
-</BioAssay_package>
+            </PhysicalBioAssay>
+        </BioAssay_assnlist>
+    </BioAssay_package>
 </MAGE-ML>

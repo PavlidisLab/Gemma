@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
 <MAGE-ML identifier="TIGRBioMaterial package">
     <BioMaterial_package>
         <BioMaterial_assnlist>

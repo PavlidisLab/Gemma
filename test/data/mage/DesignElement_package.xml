@@ -1,5 +1,5 @@
 <?xml version="1.0" standalone="no"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd">
 <MAGE-ML identifier="Affymetrix:DesignElement_DrosGenome1">
 	<DesignElement_package>
 		<CompositeSequence_assnlist>
@@ -442,7 +442,7 @@
 			<ReporterCompositeMap identifier="Affymetrix:Unit0">
 				<CompositeSequence_assnref>
 					<CompositeSequence_ref identifier="Affymetrix:Unit0"/>
-				</CompositeSequence_assnref>
+				</CompositeSequence_assnref> 
 				<ReporterPositionSources_assnlist>
 					<ReporterPosition>
 						<Reporter_assnref> <Reporter_ref identifier="Affymetrix:Unit0:Atom0"/> </Reporter_assnref>

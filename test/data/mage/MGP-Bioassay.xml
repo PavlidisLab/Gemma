@@ -1,317 +1,371 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN"
-"http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" > 
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.1//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd" >
 <MAGE-ML identifier="mged.org:MAGE Good Practice:BioAssay_package">
-<!--Example coded after graphical description produced by Angel Pizarro-->
-<!--According to this example, one PhysicalbioAssay is Created as an "Hybridization"-->
-<!--Then, 2 other Physical BioAssays are created corresponding to the Image Acquisition Event that occurs for each channel-->
-<!--Then, 2 MeasuredBioAssays are created to represent the "FeatureExtraction" events, leading to creation of Raw Data in each of the 2 channels-->
-<!--Both MeasuredBioAssays are referencing the same MeasuredBioAssayData object (see BioAssayData_package for additional information)-->
-<BioAssay_package>
-  <BioAssay_assnlist>
-    <PhysicalBioAssay
-        identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object">
-        <!--IMPORTANT  Association to Channel should be present only the Level of PhysicalBioAssays -->
-        <!--IMPORTANT Association to Channel is discouraged at the Level of Measured/DerivedBioAssays -->
-        <!--IMPORTANT Use the Dye name to specify Channel, so it can be related to Compound -->
-        <Channels_assnreflist>
-        <Channel_ref identifier="ebi.ac.uk:Channel:object"/>
-        <Channel_ref identifier="ebi.ac.uk:Channel:object"/>
-      </Channels_assnreflist>
-      <!--MAGE-ML Good Practice: Recall Factor  Values (declared in Experiment Package) at the level of ALL BioAssays-->
-      <BioAssayFactorValues_assnreflist>
-        <FactorValue_ref identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
-        <FactorValue_ref identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
-      </BioAssayFactorValues_assnreflist>
-      <BioAssayCreation_assn>
-      <!--IMPORTANT -->
-      <!--MAGE-ML Good Practice: If BioEvent is an actual "hybridization" then use "Hybridization" object as shown-->
-          <Hybridization identifier="ebi.ac.uk:miamexpress/Hybridization:object">
-          <ProtocolApplications_assnlist>
-            <ProtocolApplication activityDate="YYYY-MM-DD">
-            <!--OPTIONAL ASSOCIATION--><ParameterValues_assnlist>
-                <ParameterValue value="1">
-                  <ParameterType_assnref>
-                    <Parameter_ref identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
-                  </ParameterType_assnref>
-                </ParameterValue>
-              </ParameterValues_assnlist>
-              <HardwareApplications_assnlist>
-                <HardwareApplication>
-                  <Hardware_assnref>
-                    <Hardware_ref identifier="ebi.ac.uk:miamexpress/Hardware:object"/>
-                  </Hardware_assnref>
-                </HardwareApplication>
-              </HardwareApplications_assnlist>
-              <!--OPTIONAL ASSOCIATION-->
-                <!--MAGE-ML good practice:  if information recorded, always provided association to Performer-->
-                  <Performers_assnreflist>
-                  <!--MAGE-ML good  practice: if information recorded, always provided association to Performer-->
-                  <!--Enhances QC  possibilities-->
-                  <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
-              </Performers_assnreflist>
-              <Protocol_assnref>
-                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:object"/>
-              </Protocol_assnref>
-            </ProtocolApplication>
-          </ProtocolApplications_assnlist>
-          <SourceBioMaterialMeasurements_assnlist>
-            <BioMaterialMeasurement>
-              <BioMaterial_assnref>
-                <LabeledExtract_ref identifier="ebi.ac.uk:miamexpress/LabeledExtract:object"/>
-              </BioMaterial_assnref>
-            </BioMaterialMeasurement>
-            <BioMaterialMeasurement>
-              <BioMaterial_assnref>
-                <LabeledExtract_ref identifier="ebi.ac.uk:miamexpress/LabeledExtract:object"/>
-              </BioMaterial_assnref>
-            </BioMaterialMeasurement>
-          </SourceBioMaterialMeasurements_assnlist>
-          <Array_assnref>
-            <Array_ref identifier="ebi.ac.uk:miamexpress/Array:object"/>
-          </Array_assnref>
-        </Hybridization>
-      </BioAssayCreation_assn>
-      <BioAssayTreatments_assnlist>
-        <ImageAcquisition
-          identifier="ebi.ac.uk:miamexpress/ImageAcquisition:object" name="IA-Cy3">
-          <ProtocolApplications_assnlist>
-            <ProtocolApplication activityDate="YYYY-MM-DD">
-              <ParameterValues_assnlist>
-                <ParameterValue value="1">
-                  <ParameterType_assnref>
-                    <Parameter_ref identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
-                  </ParameterType_assnref>
-                </ParameterValue>
-              </ParameterValues_assnlist>
-              <!--OPTIONAL ASSOCIATION-->
-              <HardwareApplications_assnlist>
-                <HardwareApplication>
-                  <Hardware_assnref>
-                    <Hardware_ref identifier="ebi.ac.uk:miamexpress/Hardware:object"/>
-                  </Hardware_assnref>
-                </HardwareApplication>
-              </HardwareApplications_assnlist>
-              <!--OPTIONAL ASSOCIATION-->
-                  <Performers_assnreflist>
-                  <!--MAGE-ML good practice: if information recorded, always provided association to Performer-->
-                  <!--Enhances QC  possibilities-->
-                  <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
-              </Performers_assnreflist>
-              <Protocol_assnref>
-                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-PROT-XX"/>
-              </Protocol_assnref>
-            </ProtocolApplication>
-          </ProtocolApplications_assnlist>
-          <Target_assnref>
-            <PhysicalBioAssay_ref
-              identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" name="PBA-Cy3"/>
-          </Target_assnref>
-          <Images_assnreflist>
-            <Image_ref identifier="ebi.ac.uk:miamexpress/Image:object" name="IMAGE-Cy3"/>
-          </Images_assnreflist>
-        </ImageAcquisition>
-        <ImageAcquisition
-          identifier="ebi.ac.uk:miamexpress/ImageAcquisition:object" name="IA-Cy5">
-          <ProtocolApplications_assnlist>
-            <ProtocolApplication activityDate="YYYY-MM-DD">
-            <!--OPTIONAL ASSOCIATION-->
-            <ParameterValues_assnlist>
-                <ParameterValue value="1">
-                  <ParameterType_assnref>
-                    <Parameter_ref identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
-                  </ParameterType_assnref>
-                </ParameterValue>
-              </ParameterValues_assnlist>
-              <HardwareApplications_assnlist>
-                <HardwareApplication>
-                  <Hardware_assnref>
-                    <Hardware_ref identifier="ebi.ac.uk:miamexpress/Hardware:object"/>
-                  </Hardware_assnref>
-                </HardwareApplication>
-              </HardwareApplications_assnlist>
-              <!--OPTIONAL ASSOCIATION-->
-                  <Performers_assnreflist>
-                  <!--MAGE-ML good practice: if information recorded, always provided association to Performer-->
-                  <!--Enhances QC possibilities-->
-                  <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
-              </Performers_assnreflist>
-              <Protocol_assnref>
-                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
-              </Protocol_assnref>
-            </ProtocolApplication>
-          </ProtocolApplications_assnlist>
-          <Target_assnref>
-            <PhysicalBioAssay_ref
-              identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" name="PBA-Cy5"/>
-          </Target_assnref>
-          <Images_assnreflist>
-            <Image_ref identifier="ebi.ac.uk:miamexpress/Image:object" name="IMAGE-Cy5"/>
-          </Images_assnreflist>
-        </ImageAcquisition>
-      </BioAssayTreatments_assnlist>
-    </PhysicalBioAssay>
-    <PhysicalBioAssay
-      identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" name="PBA-Cy3">
-      <Channels_assnreflist>
-        <Channel_ref identifier="ebi.ac.uk:Channel:object" name="Channel:Cy3"/>
-      </Channels_assnreflist>
-      <BioAssayFactorValues_assnreflist>
-        <FactorValue_ref identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
-      </BioAssayFactorValues_assnreflist>
-      <!--OPTIONAL ASSOCIATION-->
-        <!--IMPORTANT: How to ensure linking between Channel and Experimental Value -->
-        <!--Providing association to Channel becomes necessary -->
-        <PhysicalBioAssayData_assnlist>
-        <Image identifier="ebi.ac.uk:miamexpress/Image:object" name="IMAGE:Cy3">
-          <Channels_assnreflist>
-            <Channel_ref identifier="ebi.ac.uk:Channel:object" name="Channel:Cy3"/>
-          </Channels_assnreflist>
-          <Format_assn>
-            <OntologyEntry category="ImageFormat" value="TIFF"/>
-          </Format_assn>
-        </Image>
-      </PhysicalBioAssayData_assnlist>
-    </PhysicalBioAssay>
-    <PhysicalBioAssay
-      identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" name="PBA-Cy5">
-      <Channels_assnreflist>
-      <!--MAGE-ML Good Practice: Provide association to Channel-->
-          <Channel_ref
-          identifier="ebi.ac.uk:Channel:object" name="Channel:Cy5"/>
-      </Channels_assnreflist>
-      <BioAssayFactorValues_assnreflist>
-      <!--MAGE-ML Good Practice:Provide association to Factor Value attached to BioAssay-->
-          <!--Greatly enhances data display and retrieval-->
-          <FactorValue_ref identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
-      </BioAssayFactorValues_assnreflist>
-      <PhysicalBioAssayData_assnlist>
-      <!--OPTIONAL ASSOCIATION-->
-          <!--IMPORTANT: How to ensure linking between Channel and Experimental Value -->
-          <!--Providing association to Channel becomes necessary -->
-          <Image
-          identifier="ebi.ac.uk:miamexpress/Image:object" name="IMAGE:Cy5">
-          <Channels_assnreflist>
-            <Channel_ref identifier="ebi.ac.uk:Channel:object" name="Channel:Cy5"/>
-          </Channels_assnreflist>
-          <Format_assn>
-            <OntologyEntry category="ImageFormat" value="TIFF"/>
-          </Format_assn>
-        </Image>
-      </PhysicalBioAssayData_assnlist>
-    </PhysicalBioAssay>
-    <MeasuredBioAssay
-      identifier="ebi.ac.uk:miamexpress/MeasuredBioAssay:object"
-        name="MBA-Cy3">
-        <!--MAGE-ML Good Practice: Association to Channel Discouraged-->
-          <BioAssayFactorValues_assnreflist>
-          <!--MAGE-ML  GOOD PRACTICE: Recall repeat Factor Value-->
-          <FactorValue_ref identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
-      </BioAssayFactorValues_assnreflist>
-      <FeatureExtraction_assn>
-        <FeatureExtraction
-          identifier="ebi.ac.uk:miamexpress/FeatureExtraction:object" name="FE-Cy3">
-          <ProtocolApplications_assnlist>
-            <ProtocolApplication activityDate="YYYY-MM-DD">
-              <ParameterValues_assnlist>
-                <ParameterValue value="1">
-                  <ParameterType_assnref>
-                    <Parameter_ref identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
-                  </ParameterType_assnref>
-                </ParameterValue>
-              </ParameterValues_assnlist>
-              <SoftwareApplications_assnlist>
-                <SoftwareApplication version="1.0">
-                  <Software_assnref>
-                    <Software_ref identifier="ebi.ac.uk:miamexpress/Software:object"/>
-                  </Software_assnref>
-                </SoftwareApplication>
-              </SoftwareApplications_assnlist>
-              <Performers_assnreflist>
-                <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
-              </Performers_assnreflist>
-              <Protocol_assnref>
-                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
-              </Protocol_assnref>
-            </ProtocolApplication>
-          </ProtocolApplications_assnlist>
-          <PhysicalBioAssaySource_assnref>
-            <PhysicalBioAssay_ref
-              identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" name="PBA-Cy3"/>
-          </PhysicalBioAssaySource_assnref>
-        </FeatureExtraction>
-      </FeatureExtraction_assn>
-      <!--MAGE-ML Good Practice: Provide association to Data-->
-        <MeasuredBioAssayData_assnreflist>
-        <MeasuredBioAssayData_ref
-          identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object" name="FE-MBAD-root"/>
-      </MeasuredBioAssayData_assnreflist>
-    </MeasuredBioAssay>
-    <MeasuredBioAssay
-      identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object"
-        name="MBA-Cy5">
-        <!--MAGE-ML Good Practice: Association to Channel Discouraged-->
-          <BioAssayFactorValues_assnreflist>
-          <!--MAGE-ML GOOD PRACTICE: Recall  Factor Value-->
-          <FactorValue_ref identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
-      </BioAssayFactorValues_assnreflist>
-      <FeatureExtraction_assn>
-        <FeatureExtraction
-          identifier="ebi.ac.uk:miamexpress/FeatureExtraction:object" name="FE-Cy5">
-          <ProtocolApplications_assnlist>
-            <ProtocolApplication activityDate="YYYY-MM-DD">
-              <ParameterValues_assnlist>
-                <ParameterValue value="1">
-                  <ParameterType_assnref>
-                    <Parameter_ref identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
-                  </ParameterType_assnref>
-                </ParameterValue>
-              </ParameterValues_assnlist>
-              <SoftwareApplications_assnlist>
-                <SoftwareApplication version="1.0">
-                  <Software_assnref>
-                    <Software_ref identifier="ebi.ac.uk:miamexpress/Software:object"/>
-                  </Software_assnref>
-                </SoftwareApplication>
-              </SoftwareApplications_assnlist>
-              <Performers_assnreflist>
-                <Person_ref identifier="ebi.ac.uk:miamexpress/Person:object"/>
-              </Performers_assnreflist>
-              <Protocol_assnref>
-                <Protocol_ref identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
-              </Protocol_assnref>
-            </ProtocolApplication>
-          </ProtocolApplications_assnlist>
-          <PhysicalBioAssaySource_assnref>
-            <PhysicalBioAssay_ref
-              identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" name="PBA-Cy5"/>
-          </PhysicalBioAssaySource_assnref>
-        </FeatureExtraction>
-      </FeatureExtraction_assn>
-      <!--MAGE-ML Good Practice: Provide association to Data-->
-        <MeasuredBioAssayData_assnreflist>
-        <MeasuredBioAssayData_ref
-          identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object" name="MBAD-root"/>
-      </MeasuredBioAssayData_assnreflist>
-    </MeasuredBioAssay>
-    <DerivedBioAssay
-      identifier="ebi.ac.uk:miamexpress/DerivedBioAssay:object"
-        name="DBA">
-        <!--MAGE-ML Good Practice: Association to Channel Discouraged-->
-        <!--MO TERMS:  use of MGED Ontology  instances requires-->
-        <!--MO RULES:  use of MGED Ontology Rules for representing Compound-->
-        <Type_assn>
-        <OntologyEntry category="DerivedBioAssayType" value="ratio"/>
-      </Type_assn>
-      <!--MAGE-ML Good Practice: Provide association to Data-->
-      <DerivedBioAssayData_assnreflist>
-        <DerivedBioAssayData_ref
-          identifier="ebi.ac.uk:miamexpress/DerivedBioAssayData:object" name="DBAD"/>
-      </DerivedBioAssayData_assnreflist>
-      <DerivedBioAssayMap_assnreflist>
-        <BioAssayMap_ref identifier="ebi.ac.uk:miamexpress/DerivedBioAssayMap:object"/>
-      </DerivedBioAssayMap_assnreflist>
-    </DerivedBioAssay>
-  </BioAssay_assnlist>
-</BioAssay_package>
+    <!--Example coded after graphical description produced by Angel Pizarro-->
+    <!--According to this example, one PhysicalbioAssay is Created as an "Hybridization"-->
+    <!--Then, 2 other Physical BioAssays are created corresponding to the Image Acquisition Event that occurs for each channel-->
+    <!--Then, 2 MeasuredBioAssays are created to represent the "FeatureExtraction" events, leading to creation of Raw Data in each of the 2 channels-->
+    <!--Both MeasuredBioAssays are referencing the same MeasuredBioAssayData object (see BioAssayData_package for additional information)-->
+    <BioAssay_package>
+        <BioAssay_assnlist>
+            <PhysicalBioAssay 
+                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object">
+                <!--IMPORTANT  Association to Channel should be present only the Level of PhysicalBioAssays -->
+                <!--IMPORTANT Association to Channel is discouraged at the Level of Measured/DerivedBioAssays -->
+                <!--IMPORTANT Use the Dye name to specify Channel, so it can be related to Compound -->
+                <Channels_assnreflist>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:object"/>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:object"/>
+                </Channels_assnreflist>
+                <!--MAGE-ML Good Practice: Recall Factor  Values (declared in Experiment Package) at the level of ALL BioAssays-->
+                <BioAssayFactorValues_assnreflist>
+                    <FactorValue_ref 
+                        identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
+                    <FactorValue_ref 
+                        identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
+                </BioAssayFactorValues_assnreflist>
+                <BioAssayCreation_assn>
+                    <!--IMPORTANT -->
+                    <!--MAGE-ML Good Practice: If BioEvent is an actual "hybridization" then use "Hybridization" object as shown-->
+                    <Hybridization 
+                        identifier="ebi.ac.uk:miamexpress/Hybridization:object">
+                        <ProtocolApplications_assnlist>
+                            <ProtocolApplication activityDate="YYYY-MM-DD">
+                                <!--OPTIONAL ASSOCIATION-->
+                                <ParameterValues_assnlist>
+                                    <ParameterValue value="1">
+                                        <ParameterType_assnref>
+                                            <Parameter_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
+                                        </ParameterType_assnref>
+                                    </ParameterValue>
+                                </ParameterValues_assnlist>
+                                <HardwareApplications_assnlist>
+                                    <HardwareApplication>
+                                        <Hardware_assnref>
+                                            <Hardware_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Hardware:object"/>
+                                        </Hardware_assnref>
+                                    </HardwareApplication>
+                                </HardwareApplications_assnlist>
+                                <!--OPTIONAL ASSOCIATION-->
+                                <!--MAGE-ML good practice:  if information recorded, always provided association to Performer-->
+                                <Performers_assnreflist>
+                                    <!--MAGE-ML good  practice: if information recorded, always provided association to Performer-->
+                                    <!--Enhances QC  possibilities-->
+                                    <Person_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Person:object"/>
+                                </Performers_assnreflist>
+                                <Protocol_assnref>
+                                    <Protocol_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Protocol:object"/>
+                                </Protocol_assnref>
+                            </ProtocolApplication>
+                        </ProtocolApplications_assnlist>
+                        <SourceBioMaterialMeasurements_assnlist>
+                            <BioMaterialMeasurement>
+                                <BioMaterial_assnref>
+                                    <LabeledExtract_ref 
+                                        identifier="ebi.ac.uk:miamexpress/LabeledExtract:object"/>
+                                </BioMaterial_assnref>
+                            </BioMaterialMeasurement>
+                            <BioMaterialMeasurement>
+                                <BioMaterial_assnref>
+                                    <LabeledExtract_ref 
+                                        identifier="ebi.ac.uk:miamexpress/LabeledExtract:object"/>
+                                </BioMaterial_assnref>
+                            </BioMaterialMeasurement>
+                        </SourceBioMaterialMeasurements_assnlist>
+                        <Array_assnref>
+                            <Array_ref 
+                                identifier="ebi.ac.uk:miamexpress/Array:object"/>
+                        </Array_assnref>
+                    </Hybridization>
+                </BioAssayCreation_assn>
+                <BioAssayTreatments_assnlist>
+                    <ImageAcquisition 
+                        identifier="ebi.ac.uk:miamexpress/ImageAcquisition:object" 
+                        name="IA-Cy3">
+                        <ProtocolApplications_assnlist>
+                            <ProtocolApplication activityDate="YYYY-MM-DD">
+                                <ParameterValues_assnlist>
+                                    <ParameterValue value="1">
+                                        <ParameterType_assnref>
+                                            <Parameter_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
+                                        </ParameterType_assnref>
+                                    </ParameterValue>
+                                </ParameterValues_assnlist>
+                                <!--OPTIONAL ASSOCIATION-->
+                                <HardwareApplications_assnlist>
+                                    <HardwareApplication>
+                                        <Hardware_assnref>
+                                            <Hardware_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Hardware:object"/>
+                                        </Hardware_assnref>
+                                    </HardwareApplication>
+                                </HardwareApplications_assnlist>
+                                <!--OPTIONAL ASSOCIATION-->
+                                <Performers_assnreflist>
+                                    <!--MAGE-ML good practice: if information recorded, always provided association to Performer-->
+                                    <!--Enhances QC  possibilities-->
+                                    <Person_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Person:object"/>
+                                </Performers_assnreflist>
+                                <Protocol_assnref>
+                                    <Protocol_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Protocol:P-PROT-XX"/>
+                                </Protocol_assnref>
+                            </ProtocolApplication>
+                        </ProtocolApplications_assnlist>
+                        <Target_assnref>
+                            <PhysicalBioAssay_ref 
+                                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" 
+                                name="PBA-Cy3"/>
+                        </Target_assnref>
+                        <Images_assnreflist>
+                            <Image_ref 
+                                identifier="ebi.ac.uk:miamexpress/Image:object" 
+                                name="IMAGE-Cy3"/>
+                        </Images_assnreflist>
+                    </ImageAcquisition>
+                    <ImageAcquisition 
+                        identifier="ebi.ac.uk:miamexpress/ImageAcquisition:object" 
+                        name="IA-Cy5">
+                        <ProtocolApplications_assnlist>
+                            <ProtocolApplication activityDate="YYYY-MM-DD">
+                                <!--OPTIONAL ASSOCIATION-->
+                                <ParameterValues_assnlist>
+                                    <ParameterValue value="1">
+                                        <ParameterType_assnref>
+                                            <Parameter_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
+                                        </ParameterType_assnref>
+                                    </ParameterValue>
+                                </ParameterValues_assnlist>
+                                <HardwareApplications_assnlist>
+                                    <HardwareApplication>
+                                        <Hardware_assnref>
+                                            <Hardware_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Hardware:object"/>
+                                        </Hardware_assnref>
+                                    </HardwareApplication>
+                                </HardwareApplications_assnlist>
+                                <!--OPTIONAL ASSOCIATION-->
+                                <Performers_assnreflist>
+                                    <!--MAGE-ML good practice: if information recorded, always provided association to Performer-->
+                                    <!--Enhances QC possibilities-->
+                                    <Person_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Person:object"/>
+                                </Performers_assnreflist>
+                                <Protocol_assnref>
+                                    <Protocol_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+                                </Protocol_assnref>
+                            </ProtocolApplication>
+                        </ProtocolApplications_assnlist>
+                        <Target_assnref>
+                            <PhysicalBioAssay_ref 
+                                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" 
+                                name="PBA-Cy5"/>
+                        </Target_assnref>
+                        <Images_assnreflist>
+                            <Image_ref 
+                                identifier="ebi.ac.uk:miamexpress/Image:object" 
+                                name="IMAGE-Cy5"/>
+                        </Images_assnreflist>
+                    </ImageAcquisition>
+                </BioAssayTreatments_assnlist>
+            </PhysicalBioAssay>
+            <PhysicalBioAssay 
+                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" 
+                name="PBA-Cy3">
+                <Channels_assnreflist>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:object" 
+                        name="Channel:Cy3"/>
+                </Channels_assnreflist>
+                <BioAssayFactorValues_assnreflist>
+                    <FactorValue_ref 
+                        identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
+                </BioAssayFactorValues_assnreflist>
+                <!--OPTIONAL ASSOCIATION-->
+                <!--IMPORTANT: How to ensure linking between Channel and Experimental Value -->
+                <!--Providing association to Channel becomes necessary -->
+                <PhysicalBioAssayData_assnlist>
+                    <Image identifier="ebi.ac.uk:miamexpress/Image:object" 
+                        name="IMAGE:Cy3">
+                        <Channels_assnreflist>
+                            <Channel_ref identifier="ebi.ac.uk:Channel:object" 
+                                name="Channel:Cy3"/>
+                        </Channels_assnreflist>
+                        <Format_assn>
+                            <OntologyEntry category="ImageFormat" value="TIFF"/>
+                        </Format_assn>
+                    </Image>
+                </PhysicalBioAssayData_assnlist>
+            </PhysicalBioAssay>
+            <PhysicalBioAssay 
+                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" 
+                name="PBA-Cy5">
+                <Channels_assnreflist>
+                    <!--MAGE-ML Good Practice: Provide association to Channel-->
+                    <Channel_ref identifier="ebi.ac.uk:Channel:object" 
+                        name="Channel:Cy5"/>
+                </Channels_assnreflist>
+                <BioAssayFactorValues_assnreflist>
+                    <!--MAGE-ML Good Practice:Provide association to Factor Value attached to BioAssay-->
+                    <!--Greatly enhances data display and retrieval-->
+                    <FactorValue_ref 
+                        identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
+                </BioAssayFactorValues_assnreflist>
+                <PhysicalBioAssayData_assnlist>
+                    <!--OPTIONAL ASSOCIATION-->
+                    <!--IMPORTANT: How to ensure linking between Channel and Experimental Value -->
+                    <!--Providing association to Channel becomes necessary -->
+                    <Image identifier="ebi.ac.uk:miamexpress/Image:object" 
+                        name="IMAGE:Cy5">
+                        <Channels_assnreflist>
+                            <Channel_ref identifier="ebi.ac.uk:Channel:object" 
+                                name="Channel:Cy5"/>
+                        </Channels_assnreflist>
+                        <Format_assn>
+                            <OntologyEntry category="ImageFormat" value="TIFF"/>
+                        </Format_assn>
+                    </Image>
+                </PhysicalBioAssayData_assnlist>
+            </PhysicalBioAssay>
+            <MeasuredBioAssay 
+                identifier="ebi.ac.uk:miamexpress/MeasuredBioAssay:object" 
+                name="MBA-Cy3">
+                <!--MAGE-ML Good Practice: Association to Channel Discouraged-->
+                <BioAssayFactorValues_assnreflist>
+                    <!--MAGE-ML  GOOD PRACTICE: Recall repeat Factor Value-->
+                    <FactorValue_ref 
+                        identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
+                </BioAssayFactorValues_assnreflist>
+                <FeatureExtraction_assn>
+                    <FeatureExtraction 
+                        identifier="ebi.ac.uk:miamexpress/FeatureExtraction:object" 
+                        name="FE-Cy3">
+                        <ProtocolApplications_assnlist>
+                            <ProtocolApplication activityDate="YYYY-MM-DD">
+                                <ParameterValues_assnlist>
+                                    <ParameterValue value="1">
+                                        <ParameterType_assnref>
+                                            <Parameter_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
+                                        </ParameterType_assnref>
+                                    </ParameterValue>
+                                </ParameterValues_assnlist>
+                                <SoftwareApplications_assnlist>
+                                    <SoftwareApplication version="1.0">
+                                        <Software_assnref>
+                                            <Software_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Software:object"/>
+                                        </Software_assnref>
+                                    </SoftwareApplication>
+                                </SoftwareApplications_assnlist>
+                                <Performers_assnreflist>
+                                    <Person_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Person:object"/>
+                                </Performers_assnreflist>
+                                <Protocol_assnref>
+                                    <Protocol_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+                                </Protocol_assnref>
+                            </ProtocolApplication>
+                        </ProtocolApplications_assnlist>
+                        <PhysicalBioAssaySource_assnref>
+                            <PhysicalBioAssay_ref 
+                                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" 
+                                name="PBA-Cy3"/>
+                        </PhysicalBioAssaySource_assnref>
+                    </FeatureExtraction>
+                </FeatureExtraction_assn>
+                <!--MAGE-ML Good Practice: Provide association to Data-->
+                <MeasuredBioAssayData_assnreflist>
+                    <MeasuredBioAssayData_ref 
+                        identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object" 
+                        name="FE-MBAD-root"/>
+                </MeasuredBioAssayData_assnreflist>
+            </MeasuredBioAssay>
+            <MeasuredBioAssay 
+                identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object" 
+                name="MBA-Cy5">
+                <!--MAGE-ML Good Practice: Association to Channel Discouraged-->
+                <BioAssayFactorValues_assnreflist>
+                    <!--MAGE-ML GOOD PRACTICE: Recall  Factor Value-->
+                    <FactorValue_ref 
+                        identifier="ebi.ac.uk:miamexpress/FactorValue:object"/>
+                </BioAssayFactorValues_assnreflist>
+                <FeatureExtraction_assn>
+                    <FeatureExtraction 
+                        identifier="ebi.ac.uk:miamexpress/FeatureExtraction:object" 
+                        name="FE-Cy5">
+                        <ProtocolApplications_assnlist>
+                            <ProtocolApplication activityDate="YYYY-MM-DD">
+                                <ParameterValues_assnlist>
+                                    <ParameterValue value="1">
+                                        <ParameterType_assnref>
+                                            <Parameter_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Parameter:object"/>
+                                        </ParameterType_assnref>
+                                    </ParameterValue>
+                                </ParameterValues_assnlist>
+                                <SoftwareApplications_assnlist>
+                                    <SoftwareApplication version="1.0">
+                                        <Software_assnref>
+                                            <Software_ref 
+                                                identifier="ebi.ac.uk:miamexpress/Software:object"/>
+                                        </Software_assnref>
+                                    </SoftwareApplication>
+                                </SoftwareApplications_assnlist>
+                                <Performers_assnreflist>
+                                    <Person_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Person:object"/>
+                                </Performers_assnreflist>
+                                <Protocol_assnref>
+                                    <Protocol_ref 
+                                        identifier="ebi.ac.uk:miamexpress/Protocol:P-MEXP-XX"/>
+                                </Protocol_assnref>
+                            </ProtocolApplication>
+                        </ProtocolApplications_assnlist>
+                        <PhysicalBioAssaySource_assnref>
+                            <PhysicalBioAssay_ref 
+                                identifier="ebi.ac.uk:miamexpress/PhysicalBioAssay:object" 
+                                name="PBA-Cy5"/>
+                        </PhysicalBioAssaySource_assnref>
+                    </FeatureExtraction>
+                </FeatureExtraction_assn>
+                <!--MAGE-ML Good Practice: Provide association to Data-->
+                <MeasuredBioAssayData_assnreflist>
+                    <MeasuredBioAssayData_ref 
+                        identifier="ebi.ac.uk:miamexpress/MeasuredBioAssayData:object" 
+                        name="MBAD-root"/>
+                </MeasuredBioAssayData_assnreflist>
+            </MeasuredBioAssay>
+            <DerivedBioAssay 
+                identifier="ebi.ac.uk:miamexpress/DerivedBioAssay:object" 
+                name="DBA">
+                <!--MAGE-ML Good Practice: Association to Channel Discouraged-->
+                <!--MO TERMS:  use of MGED Ontology  instances requires-->
+                <!--MO RULES:  use of MGED Ontology Rules for representing Compound-->
+                <Type_assn>
+                    <OntologyEntry category="DerivedBioAssayType" 
+                        value="ratio"/>
+                </Type_assn>
+                <!--MAGE-ML Good Practice: Provide association to Data-->
+                <DerivedBioAssayData_assnreflist>
+                    <DerivedBioAssayData_ref 
+                        identifier="ebi.ac.uk:miamexpress/DerivedBioAssayData:object" 
+                        name="DBAD"/>
+                </DerivedBioAssayData_assnreflist>
+                <DerivedBioAssayMap_assnreflist>
+                    <BioAssayMap_ref 
+                        identifier="ebi.ac.uk:miamexpress/DerivedBioAssayMap:object"/>
+                </DerivedBioAssayMap_assnreflist>
+            </DerivedBioAssay>
+        </BioAssay_assnlist>
+    </BioAssay_package>
 </MAGE-ML>

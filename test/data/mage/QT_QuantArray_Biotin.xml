@@ -1,516 +1,481 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
 <MAGE-ML identifier="EBI:eleh:QuantArray biotin QT XML">
-  <QuantitationType_package>
-    <QuantitationType_assnlist>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Number"
-                                   name="Number">
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:X Location"
-                                   name="X Location">
-	<Descriptions_assnlist>
-	  <Description text="X pixel coordinate of spot center.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Y Location"
-                                   name="Y Location">
-	<Descriptions_assnlist>
-	  <Description text="Y pixel coordinate of spot center.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <MeasuredSignal isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Intensity"
-                                   name="Biotin Intensity">
-	<Descriptions_assnlist>
-	  <Description text="Mean pixel biotin foreground intensity in biotin channel.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </MeasuredSignal>
-      <MeasuredSignal isBackground="1"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Background"
-                                   name="Biotin Background">
-	<Descriptions_assnlist>
-	  <Description text="Mean pixel biotin background intensity in biotin channel.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </MeasuredSignal>
-      <Error isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Intensity Std Dev"
-                                   name="Biotin Intensity Std Dev">
-	<Descriptions_assnlist>
-	  <Description text="Standard deviation of the raw biotin foreground pixel intensity.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-	<TargetQuantitationType_assnref>
-	  <MeasuredSignal_ref identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Intensity"/>
-	</TargetQuantitationType_assnref>
-      </Error>
-      <Error isBackground="1"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Background Std Dev"
-                                   name="Biotin Background Std Dev">
-	<Descriptions_assnlist>
-	  <Description text="Standard deviation of the raw biotin background pixel intensity.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-	<TargetQuantitationType_assnref>
-	  <MeasuredSignal_ref identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Background"/>
-	</TargetQuantitationType_assnref>
-      </Error>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Diameter"
-                                   name="Biotin Diameter">
-	<Descriptions_assnlist>
-	  <Description text="Average diameter of the spot (in microns). Used to determine whether the spot is close to the expected size or is perhaps an artifact on the slide.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Area"
-                                   name="Biotin Area">
-	<Descriptions_assnlist>
-	  <Description text="The area of the spot given as the number of pixels (in sq. microns). Used to determine whether the spot is close to the expected size or is an artifact on the slide.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Footprint"
-                                   name="Biotin Footprint">
-	<Descriptions_assnlist>
-	  <Description text="The distance between the expected position of a spot and its actual measured position (in microns).">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Circularity"
-                                   name="Biotin Circularity">
-	<Descriptions_assnlist>
-	  <Description text="Reports the degree to which a spot is close to a perfect circle. This measurement is used to determine the print quality of the microarray.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Spot Uniformity"
-                                   name="Biotin Spot Uniformity">
-	<Descriptions_assnlist>
-	  <Description text="The uniformity of the pixels used in the spot foreground intensity calculation.This helps in determining the quality of the spot and aids in selecting the correct quantification output method.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="1"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Bkg. Uniformity"
-                                   name="Biotin Bkg. Uniformity">
-	<Descriptions_assnlist>
-	  <Description text="The uniformity of the pixels used in the background intensity calculation.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <Ratio isBackground="1"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Signal Noise Ratio"
-                                   name="Biotin Signal/Noise Ratio">
-	<Descriptions_assnlist>
-	  <Description text="The ratio of spot intensity to the standard deviation of the local background of all spots in the microarray. Spots with a low Signal/Noise Ratio can be quickly identified for later reviews.">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </Ratio>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Confidence"
-                                   name="Biotin Confidence">
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Ignore Filter"
-                                   name="Ignore Filter">
-	<Descriptions_assnlist>
-	  <Description text="Whether the feature quantitation is used in down-stream analysis (flagging feature as valid): 0 = feature invalid (null data); 1 = feature valid.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Ratio"
-                                   name="Biotin Ratio">
-	<Descriptions_assnlist>
-	  <Description text="The portion of the overall spot fluorescence contributed by biotin channel (normalized so that biotin channel contribution equals 1).">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Percent"
-                                   name="Biotin Percent">
-	<Descriptions_assnlist>
-	  <Description text="The portion of the overall spot fluorescence contributed by biotin channel (in percent).">
-	  </Description>
-	</Descriptions_assnlist>
-	<Channel_assnref>
-	  <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
-	</Channel_assnref>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="linear_scale">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="float">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Diameter Filter"
-                                   name="Biotin Diameter Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Diameter Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Area Filter"
-                                   name="Biotin Area Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Area Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Footprint Filter"
-                                   name="Biotin Footprint Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Footprint Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Circularity Filter"
-                                   name="Biotin Circularity Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Circularity Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Spot Uniformity Filter"
-                                   name="Biotin Spot Uniformity Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Spot Uniformity Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Bkg. Uniformity Filter"
-                                   name="Biotin Bkg. Uniformity Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Bkg. Uniformity Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Signal Noise Ratio Filter"
-                                   name="Biotin Signal Noise Ratio Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Signal Noise Ratio Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-      <SpecializedQuantitationType isBackground="0"
-                                   identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Replicate Filter"
-                                   name="Biotin Replicate Filter">
-	<Descriptions_assnlist>
-	  <Description text="Biotin Replicate Filter.">
-	  </Description>
-	</Descriptions_assnlist>
-        <Scale_assn>
-          <OntologyEntry category="Scale"
-                         value="unscaled">
-          </OntologyEntry>
-        </Scale_assn>
-        <DataType_assn>
-          <OntologyEntry category="DataType"
-                         value="integer">
-          </OntologyEntry>
-        </DataType_assn>
-      </SpecializedQuantitationType>
-    </QuantitationType_assnlist>
-  </QuantitationType_package>
+    <QuantitationType_package>
+        <QuantitationType_assnlist>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Number" 
+                name="Number">
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:X Location" 
+                name="X Location">
+                <Descriptions_assnlist>
+                    <Description text="X pixel coordinate of spot center.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Y Location" 
+                name="Y Location">
+                <Descriptions_assnlist>
+                    <Description text="Y pixel coordinate of spot center.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <MeasuredSignal isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Intensity" 
+                name="Biotin Intensity">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Mean pixel biotin foreground intensity in biotin channel.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </MeasuredSignal>
+            <MeasuredSignal isBackground="1" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Background" 
+                name="Biotin Background">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Mean pixel biotin background intensity in biotin channel.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </MeasuredSignal>
+            <Error isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Intensity Std Dev" 
+                name="Biotin Intensity Std Dev">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Standard deviation of the raw biotin foreground pixel intensity.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+                <TargetQuantitationType_assnref>
+                    <MeasuredSignal_ref 
+                        identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Intensity"/>
+                </TargetQuantitationType_assnref>
+            </Error>
+            <Error isBackground="1" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Background Std Dev" 
+                name="Biotin Background Std Dev">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Standard deviation of the raw biotin background pixel intensity.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+                <TargetQuantitationType_assnref>
+                    <MeasuredSignal_ref 
+                        identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Background"/>
+                </TargetQuantitationType_assnref>
+            </Error>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Diameter" 
+                name="Biotin Diameter">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Average diameter of the spot (in microns). Used to determine whether the spot is close to the expected size or is perhaps an artifact on the slide.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Area" 
+                name="Biotin Area">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The area of the spot given as the number of pixels (in sq. microns). Used to determine whether the spot is close to the expected size or is an artifact on the slide.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Footprint" 
+                name="Biotin Footprint">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The distance between the expected position of a spot and its actual measured position (in microns).">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Circularity" 
+                name="Biotin Circularity">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Reports the degree to which a spot is close to a perfect circle. This measurement is used to determine the print quality of the microarray.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Spot Uniformity" 
+                name="Biotin Spot Uniformity">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The uniformity of the pixels used in the spot foreground intensity calculation.This helps in determining the quality of the spot and aids in selecting the correct quantification output method.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="1" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Bkg. Uniformity" 
+                name="Biotin Bkg. Uniformity">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The uniformity of the pixels used in the background intensity calculation.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <Ratio isBackground="1" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Signal Noise Ratio" 
+                name="Biotin Signal/Noise Ratio">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The ratio of spot intensity to the standard deviation of the local background of all spots in the microarray. Spots with a low Signal/Noise Ratio can be quickly identified for later reviews.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </Ratio>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Confidence" 
+                name="Biotin Confidence">
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Ignore Filter" 
+                name="Ignore Filter">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="Whether the feature quantitation is used in down-stream analysis (flagging feature as valid): 0 = feature invalid (null data); 1 = feature valid.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Ratio" 
+                name="Biotin Ratio">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The portion of the overall spot fluorescence contributed by biotin channel (normalized so that biotin channel contribution equals 1).">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Percent" 
+                name="Biotin Percent">
+                <Descriptions_assnlist>
+                    <Description 
+                        text="The portion of the overall spot fluorescence contributed by biotin channel (in percent).">
+                    </Description>
+                </Descriptions_assnlist>
+                <Channel_assnref>
+                    <Channel_ref identifier="ebi.ac.uk:Channel:Biotin"/>
+                </Channel_assnref>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="linear_scale">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="float">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Diameter Filter" 
+                name="Biotin Diameter Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Diameter Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Area Filter" 
+                name="Biotin Area Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Area Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Footprint Filter" 
+                name="Biotin Footprint Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Footprint Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Circularity Filter" 
+                name="Biotin Circularity Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Circularity Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Spot Uniformity Filter" 
+                name="Biotin Spot Uniformity Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Spot Uniformity Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Bkg. Uniformity Filter" 
+                name="Biotin Bkg. Uniformity Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Bkg. Uniformity Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Signal Noise Ratio Filter" 
+                name="Biotin Signal Noise Ratio Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Signal Noise Ratio Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+            <SpecializedQuantitationType isBackground="0" 
+                identifier="PackardBioChipTechnologies:QuantArray_QuantitationType:Biotin Replicate Filter" 
+                name="Biotin Replicate Filter">
+                <Descriptions_assnlist>
+                    <Description text="Biotin Replicate Filter.">
+                    </Description>
+                </Descriptions_assnlist>
+                <Scale_assn>
+                    <OntologyEntry category="Scale" value="unscaled">
+                    </OntologyEntry>
+                </Scale_assn>
+                <DataType_assn>
+                    <OntologyEntry category="DataType" value="integer">
+                    </OntologyEntry>
+                </DataType_assn>
+            </SpecializedQuantitationType>
+        </QuantitationType_assnlist>
+    </QuantitationType_package>
 </MAGE-ML>

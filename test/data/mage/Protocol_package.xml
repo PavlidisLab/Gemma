@@ -1,110 +1,101 @@
-<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
+<!DOCTYPE MAGE-ML PUBLIC "-//OMG//DTD MAGE-ML 1.0//EN" 
+    "http://schema.omg.org/lsr/gene_expression/1.0/MAGE-ML.dtd">
 <MAGE-ML identifier="Protocol_test">
-<Protocol_package>
-	<Hardware_assnlist>
-		<Hardware identifier="Hardware:PCR1"
-			  name="PE TC 9700"
-			  model="9700"
-			  make="Perkin Elmer">
-		</Hardware>
-		<Hardware identifier="Hardware:OligoSynthesizer1"
-			  name="Synthesizer"
-			  make="Gene Machines">
-		</Hardware>
-		<Hardware identifier="Hardware:Scanner1"
-			  name="Axon Scanner"
-			  model="4000A"
-			  make="Axon Instruments">
-		</Hardware>
-		<Hardware identifier="Hardware:Arrayer1"
-			  name="DeRisi class arrayer"
-			  model="version 1.0">
-		</Hardware>
-	</Hardware_assnlist>
-	<Software_assnlist>
-		<Software identifier="Software:GenePix3.0"
-			  name="GenePix">
-		</Software>
-	</Software_assnlist>
-	<Protocol_assnlist>
-		<Protocol identifier="Protocol:OligoSynthesis"
-			  name="Oligonucleotide Synthesis"
-			  text="70mer oligos were synthesized">
-			<Hardwares_assnreflist>
-				<Hardware_ref identifier="Hardware:OligoSynthesizer1" />
-			</Hardwares_assnreflist>
-		</Protocol>
-		<Protocol identifier="Protocol:PCRcDNA"
-			  name="PCR of cDNA"
-			  text="cDNAs were amplified using vector primers.">
-			<ParameterTypes_assnlist>
-				<Parameter identifier="ForwardPrimer" 
-					name="Forward Primer"/>
-				<Parameter identifier="ReversePrimer" 
-					name="Reverse Primer"/>
-			</ParameterTypes_assnlist>
-			<Hardwares_assnreflist>
-				<Hardware_ref identifier="Hardware:PCR1" />
-			</Hardwares_assnreflist>
-		</Protocol>
-		<Protocol identifier="Protocol:ArrayPrinting"
-			  name="Array Printing">
-			<ParameterTypes_assnlist>
-				<Parameter identifier="ParameterType:TipNumber" 
-					name="Tip Number"/>
-				<Parameter identifier="ParameterType:TipSpacing" 
-						name="Tip Spacing"/>
-				<Parameter identifier="ParameterType:SpotSpacing" 
-						name="Spot Spacing"/>
-				<Parameter identifier="ParameterType:ZoneColumns" 
-						name="Zone Columns"/>
-				<Parameter identifier="ParameterType:ZoneRows" 
-						name="Zone Rows"/>
-			</ParameterTypes_assnlist>
-			<Hardwares_assnreflist>
-				<Hardware_ref identifier="Hardware:Arrayer1" />
-			</Hardwares_assnreflist>
-		</Protocol>
-		<Protocol identifier="Protocol:Hybridization"
-			  name="Hybridization and wash">
-			<ParameterTypes_assnlist>
-				<Parameter identifier="ParameterType:HybridizationTime"
-					   name="Hybridization Time" />
-				<Parameter identifier="ParameterType:Wash1Time"
-					   name="Wash 1 Time" />
-				<Parameter identifier="ParameterType:Wash2Time"
-					   name="Wash 2 Time" />
-			</ParameterTypes_assnlist>
-		</Protocol>
-		<Protocol identifier="Protocol:Scan"
-			  name="Scan">
-			<ParameterTypes_assnlist>
-			<Parameter identifier="ParameterType:PMT_voltage_635"
-					   name="PMT Voltage" />
-			<Parameter identifier="ParameterType:PMT_voltage_532"
-					   name="PMT Voltage" />
-			</ParameterTypes_assnlist>
-			<Hardwares_assnreflist>
-				<Hardware_ref identifier="Hardware:Scanner1" />
-			</Hardwares_assnreflist>
-			<Softwares_assnreflist>
-				<Software_ref identifier="Software:GenePix3.0" />
-			</Softwares_assnreflist>
-		</Protocol>
-		<Protocol identifier="Protocol:FeatureExtraction"
-			  name="Feature Extraction">
-			<ParameterTypes_assnlist>
-			<Parameter identifier="ParameterType:FeatureSpacing" 
-					name="Feature Spacing"/>
-			<Parameter identifier="ParameterType:Featurepacing" 
-					name="Spot Spacing"/>
-			<Parameter identifier="ParameterType:FeatureDiameter" 
-					name="Spot Diameter"/>
-			</ParameterTypes_assnlist>
-			<Softwares_assnreflist>
-				<Software_ref identifier="Software:GenePix3.0" />
-			</Softwares_assnreflist>
-		</Protocol>
-	</Protocol_assnlist>
-	</Protocol_package>
+    <Protocol_package>
+        <Hardware_assnlist>
+            <Hardware identifier="Hardware:PCR1" name="PE TC 9700" model="9700" 
+                make="Perkin Elmer">
+            </Hardware>
+            <Hardware identifier="Hardware:OligoSynthesizer1" 
+                name="Synthesizer" make="Gene Machines">
+            </Hardware>
+            <Hardware identifier="Hardware:Scanner1" name="Axon Scanner" 
+                model="4000A" make="Axon Instruments">
+            </Hardware>
+            <Hardware identifier="Hardware:Arrayer1" 
+                name="DeRisi class arrayer" model="version 1.0">
+            </Hardware>
+        </Hardware_assnlist>
+        <Software_assnlist>
+            <Software identifier="Software:GenePix3.0" name="GenePix">
+            </Software>
+        </Software_assnlist>
+        <Protocol_assnlist>
+            <Protocol identifier="Protocol:OligoSynthesis" 
+                name="Oligonucleotide Synthesis" 
+                text="70mer oligos were synthesized">
+                <Hardwares_assnreflist>
+                    <Hardware_ref identifier="Hardware:OligoSynthesizer1" />
+                </Hardwares_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:PCRcDNA" name="PCR of cDNA" 
+                text="cDNAs were amplified using vector primers.">
+                <ParameterTypes_assnlist>
+                    <Parameter identifier="ForwardPrimer" 
+                        name="Forward Primer"/>
+                    <Parameter identifier="ReversePrimer" 
+                        name="Reverse Primer"/>
+                </ParameterTypes_assnlist>
+                <Hardwares_assnreflist>
+                    <Hardware_ref identifier="Hardware:PCR1" />
+                </Hardwares_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:ArrayPrinting" name="Array Printing">
+                <ParameterTypes_assnlist>
+                    <Parameter identifier="ParameterType:TipNumber" 
+                        name="Tip Number"/>
+                    <Parameter identifier="ParameterType:TipSpacing" 
+                        name="Tip Spacing"/>
+                    <Parameter identifier="ParameterType:SpotSpacing" 
+                        name="Spot Spacing"/>
+                    <Parameter identifier="ParameterType:ZoneColumns" 
+                        name="Zone Columns"/>
+                    <Parameter identifier="ParameterType:ZoneRows" 
+                        name="Zone Rows"/>
+                </ParameterTypes_assnlist>
+                <Hardwares_assnreflist>
+                    <Hardware_ref identifier="Hardware:Arrayer1" />
+                </Hardwares_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:Hybridization" 
+                name="Hybridization and wash">
+                <ParameterTypes_assnlist>
+                    <Parameter identifier="ParameterType:HybridizationTime" 
+                        name="Hybridization Time" />
+                    <Parameter identifier="ParameterType:Wash1Time" 
+                        name="Wash 1 Time" />
+                    <Parameter identifier="ParameterType:Wash2Time" 
+                        name="Wash 2 Time" />
+                </ParameterTypes_assnlist>
+            </Protocol>
+            <Protocol identifier="Protocol:Scan" name="Scan">
+                <ParameterTypes_assnlist>
+                    <Parameter identifier="ParameterType:PMT_voltage_635" 
+                        name="PMT Voltage" />
+                    <Parameter identifier="ParameterType:PMT_voltage_532" 
+                        name="PMT Voltage" />
+                </ParameterTypes_assnlist>
+                <Hardwares_assnreflist>
+                    <Hardware_ref identifier="Hardware:Scanner1" />
+                </Hardwares_assnreflist>
+                <Softwares_assnreflist>
+                    <Software_ref identifier="Software:GenePix3.0" />
+                </Softwares_assnreflist>
+            </Protocol>
+            <Protocol identifier="Protocol:FeatureExtraction" 
+                name="Feature Extraction">
+                <ParameterTypes_assnlist>
+                    <Parameter identifier="ParameterType:FeatureSpacing" 
+                        name="Feature Spacing"/>
+                    <Parameter identifier="ParameterType:Featurepacing" 
+                        name="Spot Spacing"/>
+                    <Parameter identifier="ParameterType:FeatureDiameter" 
+                        name="Spot Diameter"/>
+                </ParameterTypes_assnlist>
+                <Softwares_assnreflist>
+                    <Software_ref identifier="Software:GenePix3.0" />
+                </Softwares_assnreflist>
+            </Protocol>
+        </Protocol_assnlist>
+    </Protocol_package>
 </MAGE-ML>
