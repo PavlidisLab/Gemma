@@ -24,6 +24,8 @@
  */
 package edu.columbia.gemma.common.description;
 
+import java.util.Collection;
+
 /**
  * @see edu.columbia.gemma.common.description.BibliographicReferenceService
  */
@@ -46,7 +48,9 @@ public class BibliographicReferenceServiceImpl
      */
     protected void handleSaveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference BibliographicReference)
         throws java.lang.Exception
-    {
+    {   
+        Collection col = getBibliographicReferenceDao().findByTitle(BibliographicReference.getTitle());
+        if (col.size()==0)
         getBibliographicReferenceDao().create(BibliographicReference);
     }
 
