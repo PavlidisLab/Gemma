@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 04 16:09:48 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 07 13:43:53 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -2969,6 +2969,35 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                     <UML:Operation xmi.idref = 'Ibaaea8m10259547663mm286e'/>
                                   </UML:Method.specification>
                                 </UML:Method>
+                                <UML:Operation xmi.id = 'Idbab83m1027b5b20fcmm118d' name = 'findByName'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'Idbab83m1027b5b20fcmm118a' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                    <UML:Parameter xmi.id = 'Idbab83m1027b5b20fcmm1175' name = 'name' isSpecification = 'false'
+                                      kind = 'in'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'Idbab83m1027b5b20fcmm118b' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'Idbab83m1027b5b20fcmm118c' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'Idbab83m1027b5b20fcmm118d'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
                               </UML:Classifier.feature>
                             </UML:Class>
                             <UML:Class xmi.id = 'Im8f64ed4m101a5582751mm723f' name = 'ArrayDesign' visibility = 'public'
@@ -3123,6 +3152,70 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                   </UML:Method.body>
                                   <UML:Method.specification>
                                     <UML:Operation xmi.idref = 'If5b94bm1026e0fa944mm101e'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
+                                <UML:Operation xmi.id = 'Idbab83m1027b5b20fcmm1132' name = 'findByName'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.stereotype>
+                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
+                                  </UML:ModelElement.stereotype>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idbab83m1027b5b20fcmmfd5' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>from ArrayDesignImpl a where a.name=?</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idbab83m1027b5b20fcmmfd4' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idbab83m1027b5b20fcmmfd3' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idbab83m1027b5b20fcmmfd2' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idbab83m1027b5b20fcmmfd1' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'Idbab83m1027b5b20fcmm112f' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                    <UML:Parameter xmi.id = 'Idbab83m1027b5b20fcmm10ae' name = 'name' isSpecification = 'false'
+                                      kind = 'in'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'Idbab83m1027b5b20fcmm1130' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'Idbab83m1027b5b20fcmm1131' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'Idbab83m1027b5b20fcmm1132'/>
                                   </UML:Method.specification>
                                 </UML:Method>
                               </UML:Classifier.feature>
@@ -4208,7 +4301,7 @@ one class.
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
-                            <UML:Association xmi.id = 'I5acf13m101bacaf829mm6e59' name = 'Treatments'
+                            <UML:Association xmi.id = 'I5acf13m101bacaf829mm6e59' name = 'BioMaterialTreatments'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e61' visibility = 'public'
@@ -6880,6 +6973,12 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                         <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
                                       </UML:TaggedValue.type>
                                     </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idbab83m1027b5b20fcmme56' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>FULL_TEXT_URI</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Idbab83m1027b5b20fcmme59'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
                                   </UML:ModelElement.taggedValue>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
@@ -6937,7 +7036,7 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                       </UML:TaggedValue.type>
                                     </UML:TaggedValue>
                                     <UML:TaggedValue xmi.id = 'I13781e7m10262b02639mm213a' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from BibliographicReferenceImpl b where b.externalId=?</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from BibliographicReferenceImpl b where b.pubAccession=?</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
@@ -7270,6 +7369,72 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                   </UML:AssociationEnd.multiplicity>
                                   <UML:AssociationEnd.participant>
                                     <UML:Class xmi.idref = 'Ic0335dm101e946dc8cmm392b'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                              </UML:Association.connection>
+                            </UML:Association>
+                            <UML:Association xmi.id = 'Idbab83m1027b5b20fcmme76' name = 'SeeAlso' isSpecification = 'false'
+                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:Association.connection>
+                                <UML:AssociationEnd xmi.id = 'Idbab83m1027b5b20fcmme7c' visibility = 'public'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'Idbab83m1027b5b20fcmme55'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'Idbab83m1027b5b20fcmme54' lower = '0' upper = '-1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ace'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                                <UML:AssociationEnd xmi.id = 'Idbab83m1027b5b20fcmme79' name = 'seeAlso'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'Idbab83m1027b5b20fcmme53'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'Idbab83m1027b5b20fcmme52' lower = '0' upper = '-1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ace'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                              </UML:Association.connection>
+                            </UML:Association>
+                            <UML:Association xmi.id = 'Idbab83m1027b5b20fcmmdf0' name = 'CitedReferences'
+                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:Association.connection>
+                                <UML:AssociationEnd xmi.id = 'Idbab83m1027b5b20fcmmdf6' visibility = 'public'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'Idbab83m1027b5b20fcmmdd3'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'Idbab83m1027b5b20fcmmdd2' lower = '0' upper = '-1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ace'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                                <UML:AssociationEnd xmi.id = 'Idbab83m1027b5b20fcmmdf3' name = 'citedReferences'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'Idbab83m1027b5b20fcmmdd1'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'Idbab83m1027b5b20fcmmdd0' lower = '0' upper = '-1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ace'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
@@ -14601,7 +14766,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
-                            <UML:Association xmi.id = 'I8fcfaem101dcbbe403mm3e66' name = 'Citations'
+                            <UML:Association xmi.id = 'I8fcfaem101dcbbe403mm3e66' name = 'GeneCitations'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'I8fcfaem101dcbbe403mm3e6c' visibility = 'public'
@@ -14961,41 +15126,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7910'/>
                               </UML:Generalization.parent>
                             </UML:Generalization>
-                            <UML:Association xmi.id = 'Id2a49dm1025ed2a6cbmm79be' name = 'BibliographicReferences'
-                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-                              <UML:Association.connection>
-                                <UML:AssociationEnd xmi.id = 'Id2a49dm1025ed2a6cbmm79c4' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
-                                  targetScope = 'instance' changeability = 'changeable'>
-                                  <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'Id2a49dm1025ed2a6cbmm79c2'>
-                                      <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'Id2a49dm1025ed2a6cbmm79c3' lower = '1'
-                                          upper = '1'/>
-                                      </UML:Multiplicity.range>
-                                    </UML:Multiplicity>
-                                  </UML:AssociationEnd.multiplicity>
-                                  <UML:AssociationEnd.participant>
-                                    <UML:Class xmi.idref = 'Id2a49dm1025ed2a6cbmm7a00'/>
-                                  </UML:AssociationEnd.participant>
-                                </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'Id2a49dm1025ed2a6cbmm79c1' name = 'bibiographicReferences'
-                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
-                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
-                                  <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'Id2a49dm1025ed2a6cbmm7227'>
-                                      <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'Id2a49dm1025ed2a6cbmm7226' lower = '0'
-                                          upper = '-1'/>
-                                      </UML:Multiplicity.range>
-                                    </UML:Multiplicity>
-                                  </UML:AssociationEnd.multiplicity>
-                                  <UML:AssociationEnd.participant>
-                                    <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ace'/>
-                                  </UML:AssociationEnd.participant>
-                                </UML:AssociationEnd>
-                              </UML:Association.connection>
-                            </UML:Association>
                             <UML:Association xmi.id = 'Ib6efb2m10268bb2e8am3006' name = 'MappingResults'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
@@ -15957,7 +16087,7 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                             </UML:AssociationEnd>
                           </UML:Association.connection>
                         </UML:Association>
-                        <UML:Association xmi.id = 'I1140071m101d462efa4mm4e2a' name = 'Experiments'
+                        <UML:Association xmi.id = 'I1140071m101d462efa4mm4e2a' name = 'AnalyzedExperiments'
                           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                           <UML:ModelElement.taggedValue>
                             <UML:TaggedValue xmi.id = 'I1140071m101d462efa4mm42c6' isSpecification = 'false'>
@@ -16386,6 +16516,16 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
             </UML:Package>
           </UML:Namespace.ownedElement>
         </UML:Package>
+        <UML:TagDefinition xmi.id = 'Idbab83m1027b5b20fcmme59' name = ' @andromda.persistence.column'
+          isSpecification = 'false'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = 'Idbab83m1027b5b20fcmme58'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = 'Idbab83m1027b5b20fcmme57' lower = '1' upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
       </UML:Namespace.ownedElement>
     </UML:Model>
   </XMI.content>
