@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Writer;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -17,7 +16,6 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.loader.sequence.gene.BlatResultParser;
 import edu.columbia.gemma.sequence.gene.Gene;
-import edu.columbia.gemma.sequence.sequenceAnalysis.BlatResult;
 import edu.columbia.gemma.sequence.sequenceAnalysis.BlatResultImpl;
 import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
 
@@ -51,6 +49,11 @@ public class ProbeThreePrimeLocator {
 
             String qName = blatRes.getQueryName();
 
+            String[] sa = qName.split( ":" );
+            if ( sa.length < 2 ) throw new IllegalArgumentException( "Expected query name in format 'xxx:xxx'" );
+            String probeName = sa[0];
+            String arrayName = sa[1];
+
             List tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(), blatRes
                     .getTargetEnd() );
 
@@ -64,8 +67,9 @@ public class ProbeThreePrimeLocator {
 
                 String geneName = gene.getSymbol();
 
-                output.write( qName + "\t" + blatRes.getMatches() + "\t" + blatRes.getQuerySize() + "\t" + score + "\t"
-                        + geneName + "\t" + gene.getName() + "\t" + tpd.getDistance() + "\n" );
+                output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
+                        + blatRes.getQuerySize() + "\t" + score + "\t" + geneName + "\t" + gene.getName() + "\t"
+                        + tpd.getDistance() + "\n" );
 
                 count++;
                 if ( count % 100 == 0 ) log.info( "Three-prime locations computed for " + count + " probes" );
@@ -73,6 +77,8 @@ public class ProbeThreePrimeLocator {
             }
 
         }
+        input.close();
+        output.close();
     }
 
     public static void main( String[] args ) {
@@ -89,6 +95,7 @@ public class ProbeThreePrimeLocator {
 
             ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
             ptpl.run( new FileInputStream( f ), new BufferedWriter( new FileWriter( o ) ) );
+
         } catch ( IOException e ) {
             log.error( e, e );
         } catch ( SQLException e ) {
