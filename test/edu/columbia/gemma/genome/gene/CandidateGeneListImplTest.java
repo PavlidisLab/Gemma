@@ -7,8 +7,6 @@ import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.Gene;
 
 /**
- *
- *
  * <hr>
  * <p>Copyright (c) 2004, 2005 Columbia University
  * @author daq2101
@@ -63,6 +61,24 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
         cg3.setDescription("Candidate Three Described");
        
         assertTrue( cgl.getCandidates().size()==3);
+        
+        // original ranking is cg1, cg2, cg3
+        cgl.decreaseRanking(cg1);
+        cgl.increaseRanking(cg3);
+        // now ranking should be cg2, cg3, cg1
+        assertTrue( cg1.getRank().intValue() > cg2.getRank().intValue() && 
+                cg1.getRank().intValue() > cg3.getRank().intValue());
+        assertTrue( cg2.getRank().intValue() < cg1.getRank().intValue() && 
+                cg2.getRank().intValue() < cg3.getRank().intValue());
+        
+        // these should have no effect, since the cgs are at the top/bottom
+        cgl.increaseRanking(cg2);
+        cgl.decreaseRanking(cg1);
+        assertTrue( cg1.getRank().intValue() > cg2.getRank().intValue() && 
+                cg1.getRank().intValue() > cg3.getRank().intValue());
+        assertTrue( cg2.getRank().intValue() < cg1.getRank().intValue() && 
+                cg2.getRank().intValue() < cg3.getRank().intValue());
+        
         
         cgl.removeCandidate(cg1);
         cgl.removeCandidate(cg2);
