@@ -27,6 +27,7 @@ public class MageMLParserTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         mlp = new MageMLParser();
+
         istBioSequence = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biosequence.xml" );
         istExperiment = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Experiment.xml" );
         istArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-ArrayDesign.xml" );
@@ -41,6 +42,7 @@ public class MageMLParserTest extends TestCase {
 
     // todo these tests are lame.
     public void testGetData() throws Exception {
+
         mlp.parse( istBioSequence );
         Object result = mlp.getData( BioSequence.class );
         assertTrue( result instanceof Collection );
@@ -71,10 +73,11 @@ public class MageMLParserTest extends TestCase {
 
     public void testGetAllConvertedData() throws Exception {
         System.err.println( "converting all" );
+        
         mlp.parse( istBioSequence );
         Object result = mlp.getConvertedData();
         assertTrue( result instanceof Collection );
-
+        
         mlp.parse( istQuantitationType );
         result = mlp.getConvertedData();
         assertTrue( result instanceof Collection );
