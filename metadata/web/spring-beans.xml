@@ -1,0 +1,46 @@
+<bean id="sessionFactoryHg17" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
+        <property name="dataSource"><ref bean="dataSourceHg17"/></property>
+        <property name="mappingResources">
+            <list>
+                
+            </list>
+        </property>
+		<property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">net.sf.hibernate.dialect.MySQLDialect</prop>
+                <prop key="hibernate.cache.use_query_cache">false</prop>
+                <prop key="hibernate.cache.provider_class">net.sf.hibernate.cache.EhCacheProvider</prop>
+                <prop key="hibernate.cache.query_cache_factory">net.sf.hibernate.cache.StandardQueryCacheFactory</prop>
+                <prop key="hibernate.show_sql">true</prop>				
+            </props>
+        </property>
+	</bean>	
+	
+	<bean id="dataSourceHg17" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName"><value>com.mysql.jdbc.Driver</value></property>
+        <property name="username"><value>pavlidis</value></property>
+        <property name="password"><value>toast</value></property>
+        <property name="url"><value>jdbc:mysql://localhost:3306/hg17</value></property>
+    </bean>
+		
+    <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+                <!-- Add additional URL mappings here -->			
+				<prop key="/bulkLoadForm.htm">loaderController</prop>
+            </props>
+        </property>
+    </bean>
+	
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <!-- The default place for this is in WEB-INF/classes -->
+		<property name="basename"><value>messages</value></property>
+    </bean>
+	
+	<!-- View Resolver for JSPs -->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="requestContextAttribute"><value>rc</value></property>
+        <property name="viewClass"><value>org.springframework.web.servlet.view.JstlView</value></property>
+        <property name="prefix"><value>/WEB-INF/pages/</value></property>
+        <property name="suffix"><value>.jsp</value></property>
+    </bean>
