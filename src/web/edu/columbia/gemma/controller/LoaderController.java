@@ -37,8 +37,6 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  */
 public class LoaderController extends SimpleFormController {
     private Configuration conf;
-    private String ioError;
-    private String numberFormatError;
     /** Logger for this class and subclasses */
     protected final Log logger = LogFactory.getLog( getClass() );
 
@@ -47,8 +45,6 @@ public class LoaderController extends SimpleFormController {
      */
     public LoaderController() throws ConfigurationException {
         conf = new PropertiesConfiguration( "loader.properties" );
-        ioError = conf.getString( "loader.ioError.view" );
-        numberFormatError = conf.getString( "loader.numberFormatError.view" );
     }
 
     /**
