@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 21 14:08:31 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 21 14:56:43 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -14310,9 +14310,9 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Attribute xmi.id = 'I71edc8m102c5950a2emm4a5' name = 'exonEnds' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
                                   <UML:StructuralFeature.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2em1f'>
+                                    <UML:Multiplicity xmi.id = 'I71edc8m102c5950a2emb7'>
                                       <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2em20' lower = '0' upper = '1'/>
+                                        <UML:MultiplicityRange xmi.id = 'I71edc8m102c5950a2emb8' lower = '0' upper = '1'/>
                                       </UML:Multiplicity.range>
                                     </UML:Multiplicity>
                                   </UML:StructuralFeature.multiplicity>
