@@ -1,0 +1,30 @@
+<cruisecontrol>
+    <project name="Gemma" buildafterfailed="true" >
+        <listeners>
+            <currentbuildstatuslistener file="logs/Gemma/buildstatus.txt"/>
+        </listeners>
+        <bootstrappers>
+            <cvsbootstrapper localworkingcopy="checkout/Gemma" />
+        </bootstrappers>
+        <modificationset quietperiod="10">
+            <cvs 
+                cvsroot=":ext:pavlidis@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab"/>
+        </modificationset>
+        <schedule interval="600">
+            <maven mavenscript="/usr/local/bin/maven" 
+                projectfile="checkout/Gemma/project.xml" goal="cc-build"/>
+        </schedule>
+        <log dir="logs/Gemma"/>
+        <publishers>
+            <email mailhost="localhost" 
+                returnaddress="pavlidise@dbmi.columbia.edu" 
+                buildresultsurl="http://microarray.cu-genome.org/cruisecontrol/buildresults/Gemma" 
+                skipusers="true" spamwhilebroken="true">
+                <always address="pavlidis@dbmi.columbia.edu"/>
+                <failure address="pavlidis@dbmi.columbia.edu"/>
+            </email>
+            <artifactspublisher dir="checkout/Gemma/target" 
+                dest="artifacts/Gemma"/>
+        </publishers>
+    </project>
+</cruisecontrol>
