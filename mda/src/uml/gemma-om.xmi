@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Mar 14 23:40:31 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 15 00:18:26 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -4820,6 +4820,84 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                               </UML:StructuralFeature.type>
                             </UML:Attribute>
+                            <UML:Operation xmi.id = 'I188faam102a46b16a1mm789' name = 'equals' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
+                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:BehavioralFeature.parameter>
+                                <UML:Parameter xmi.id = 'I188faam102a46b16a1mm786' name = 'return' isSpecification = 'false'
+                                  kind = 'return'>
+                                  <UML:Parameter.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e28'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                                <UML:Parameter xmi.id = 'I188faam102a46b16a1mm765' name = 'identifier' isSpecification = 'false'
+                                  kind = 'in'>
+                                  <UML:Parameter.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                              </UML:BehavioralFeature.parameter>
+                            </UML:Operation>
+                            <UML:Method xmi.id = 'I188faam102a46b16a1mm787' isSpecification = 'false'
+                              isQuery = 'false'>
+                              <UML:Method.body>
+                                <UML:ProcedureExpression xmi.id = 'I188faam102a46b16a1mm788' language = 'java'
+                                  body = ''/>
+                              </UML:Method.body>
+                              <UML:Method.specification>
+                                <UML:Operation xmi.idref = 'I188faam102a46b16a1mm789'/>
+                              </UML:Method.specification>
+                            </UML:Method>
+                            <UML:Operation xmi.id = 'I188faam102a46b16a1mm738' name = 'compareTo' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
+                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:BehavioralFeature.parameter>
+                                <UML:Parameter xmi.id = 'I188faam102a46b16a1mm735' name = 'return' isSpecification = 'false'
+                                  kind = 'return'>
+                                  <UML:Parameter.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                                <UML:Parameter xmi.id = 'I188faam102a46b16a1mm714' name = 'identifier' isSpecification = 'false'
+                                  kind = 'in'>
+                                  <UML:Parameter.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                              </UML:BehavioralFeature.parameter>
+                            </UML:Operation>
+                            <UML:Method xmi.id = 'I188faam102a46b16a1mm736' isSpecification = 'false'
+                              isQuery = 'false'>
+                              <UML:Method.body>
+                                <UML:ProcedureExpression xmi.id = 'I188faam102a46b16a1mm737' language = 'java'
+                                  body = ''/>
+                              </UML:Method.body>
+                              <UML:Method.specification>
+                                <UML:Operation xmi.idref = 'I188faam102a46b16a1mm738'/>
+                              </UML:Method.specification>
+                            </UML:Method>
+                            <UML:Operation xmi.id = 'I188faam102a46b16a1mm6c3' name = 'toString' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
+                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:BehavioralFeature.parameter>
+                                <UML:Parameter xmi.id = 'I188faam102a46b16a1mm6c0' name = 'return' isSpecification = 'false'
+                                  kind = 'return'>
+                                  <UML:Parameter.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:Parameter.type>
+                                </UML:Parameter>
+                              </UML:BehavioralFeature.parameter>
+                            </UML:Operation>
+                            <UML:Method xmi.id = 'I188faam102a46b16a1mm6c1' isSpecification = 'false'
+                              isQuery = 'false'>
+                              <UML:Method.body>
+                                <UML:ProcedureExpression xmi.id = 'I188faam102a46b16a1mm6c2' language = 'java'
+                                  body = ''/>
+                              </UML:Method.body>
+                              <UML:Method.specification>
+                                <UML:Operation xmi.idref = 'I188faam102a46b16a1mm6c3'/>
+                              </UML:Method.specification>
+                            </UML:Method>
                           </UML:Classifier.feature>
                         </UML:Class>
                         <UML:Generalization xmi.id = 'I830624m101c472e35bmm62b6' isSpecification = 'false'>
