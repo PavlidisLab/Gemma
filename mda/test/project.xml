@@ -35,9 +35,11 @@
 			<groupId>andromda</groupId>
 			<artifactId>andromda-spring-cartridge</artifactId>
 			<version>3.0-RC1-SNAPSHOT</version>
-			<properties><!--
-				<mergeLocation>${maven.andromda.spring.merge.custom}</mergeLocation>
-				<mergeMappingsUri>file:${maven.andromda.merge.mappings}</mergeMappingsUri>-->
+			<properties>   
+                <mergeLocation> 
+                    ${maven.andromda.spring.merge.custom}</mergeLocation>
+                <mergeMappingsUri> 
+                    file:${maven.andromda.merge.mappings}</mergeMappingsUri>
 				<hibernateInheritanceStrategy>concrete</hibernateInheritanceStrategy>
 				<driver>com.mysql.jdbc.Driver</driver>
 				<username>pavlidis</username>
@@ -49,11 +51,11 @@
 				<daos>${maven.andromda.spring.daos.dir}</daos>
 				<dao-impls>${maven.andromda.spring.dao.impls.dir}</dao-impls>
 				<spring-configuration>${maven.andromda.spring.spring.configuration.dir}</spring-configuration>
-				<!--<services>${maven.andromda.spring.services.dir}</services>
+				 <services>${maven.andromda.spring.services.dir}</services>
 				<service-impls>${maven.andromda.spring.service.impls.dir}</service-impls>
 				<service-locator>${maven.andromda.spring.service.locator.dir}</service-locator>
 				<springTypesPackage>edu.columbia.spring</springTypesPackage>
-				<applicationContext>applicationContext-hibernate.xml</applicationContext>-->
+				<applicationContext>applicationContext-hibernate.xml</applicationContext>
 			</properties>
 		</dependency>
 	 
