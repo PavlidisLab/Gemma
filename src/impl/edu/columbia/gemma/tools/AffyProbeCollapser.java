@@ -9,10 +9,9 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.util.Iterator;
 
-import org.biojava.bio.seq.Sequence;
-
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReader;
-import edu.columbia.gemma.loader.arraydesign.AffymetrixProbeSet;
+import edu.columbia.gemma.sequence.biosequence.BioSequence;
 
 /**
  * Given an Affymetrix array design, "collapse" the probes into sequences that include all probe sequence.
@@ -36,10 +35,10 @@ public class AffyProbeCollapser {
 
         for ( Iterator iter = apr.iterator(); iter.hasNext(); ) {
             String probeSetname = ( String ) iter.next();
-            AffymetrixProbeSet apset = ( AffymetrixProbeSet ) apr.get( probeSetname );
+            CompositeSequence apset = ( CompositeSequence ) apr.get( probeSetname );
 
-            Sequence m = apset.collapse();
-            writer.write( ">target:" + arrayName + ":" + probeSetname + ";\n" + m.seqString() + "\n" );
+            BioSequence m = SequenceManipulation.collapse( apset );
+            writer.write( ">target:" + arrayName + ":" + probeSetname + ";\n" + m.getSequence() + "\n" );
         }
     }
 
