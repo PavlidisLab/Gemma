@@ -126,7 +126,7 @@
 			<value>taxon</value>
 		</property>
 		<property name="commandClass">
-			<value>edu.columbia.gemma.sequence.gene.TaxonImpl</value>
+			<value>edu.columbia.gemma.loader.sequence.gene.FileName</value>
 		</property><!--
 		<property name="validator">
 			<ref bean="userNameValidator"/>
