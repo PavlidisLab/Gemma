@@ -36,7 +36,7 @@ import org.apache.commons.lang.RandomStringUtils;
  * <hr>
  * <p>Copyright (c) 2004 Columbia University
  * @author keshav
- * @version $Id keshav$
+ * @version $Id$
  * @see edu.columbia.gemma.common.auditAndSecurity.PersonService
  */
 public class PersonServiceDummyImpl
