@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 15 22:34:58 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Mar 16 09:43:18 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -4805,20 +4805,6 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                                   </UML:TaggedValue.type>
                                 </UML:TaggedValue>
                               </UML:ModelElement.taggedValue>
-                              <UML:StructuralFeature.type>
-                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
-                              </UML:StructuralFeature.type>
-                            </UML:Attribute>
-                            <UML:Attribute xmi.id = 'I767237m101c440f114mm6666' name = 'name' visibility = 'public'
-                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
-                              <UML:StructuralFeature.multiplicity>
-                                <UML:Multiplicity xmi.id = 'Ic0335dm101e946dc8cmm36ad'>
-                                  <UML:Multiplicity.range>
-                                    <UML:MultiplicityRange xmi.id = 'Ic0335dm101e946dc8cmm36ac' lower = '0'
-                                      upper = '1'/>
-                                  </UML:Multiplicity.range>
-                                </UML:Multiplicity>
-                              </UML:StructuralFeature.multiplicity>
                               <UML:StructuralFeature.type>
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                               </UML:StructuralFeature.type>
@@ -10700,6 +10686,22 @@ also has a potentially ambiguous name.&lt;/p&gt;</UML:TaggedValue.dataValue>
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                           </UML:ModelElement.taggedValue>
+                          <UML:Classifier.feature>
+                            <UML:Attribute xmi.id = 'I1846044m102a96b1075m6f48' name = 'name' visibility = 'public'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.multiplicity>
+                                <UML:Multiplicity xmi.id = 'I1846044m102a96b1075m6f47'>
+                                  <UML:Multiplicity.range>
+                                    <UML:MultiplicityRange xmi.id = 'I1846044m102a96b1075m6f46' lower = '0'
+                                      upper = '1'/>
+                                  </UML:Multiplicity.range>
+                                </UML:Multiplicity>
+                              </UML:StructuralFeature.multiplicity>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                          </UML:Classifier.feature>
                         </UML:Class>
                         <UML:Generalization xmi.id = 'I10f93f9m102a7804758mm6e2' isSpecification = 'false'>
                           <UML:Generalization.child>
@@ -15861,7 +15863,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                           </UML:Association.connection>
                         </UML:Association>
                         <UML:Class xmi.id = 'Iff6185m1029346d98fmmb52' name = 'Qtl' visibility = 'public'
-                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'true'
+                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                           isActive = 'false'>
                           <UML:ModelElement.stereotype>
                             <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmfbc'/>
@@ -15959,7 +15961,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e00'/>
                               </UML:StructuralFeature.type>
                             </UML:Attribute>
-                            <UML:Operation xmi.id = 'Iff6185m1029346d98fmm10c' name = 'findByLocation'
+                            <UML:Operation xmi.id = 'Iff6185m1029346d98fmm10c' name = 'findByPhysicalMarkers'
                               visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                               isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
                               isAbstract = 'false'>
@@ -16101,7 +16103,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                             <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
                           </UML:Generalization.parent>
                         </UML:Generalization>
-                        <UML:Class xmi.id = 'Iff6185m1029346d98fmm458' name = 'Marker' visibility = 'public'
+                        <UML:Class xmi.id = 'Iff6185m1029346d98fmm458' name = 'PhysicalMarker' visibility = 'public'
                           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                           isActive = 'false'>
                           <UML:ModelElement.stereotype>
