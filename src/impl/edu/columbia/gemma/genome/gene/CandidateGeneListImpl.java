@@ -30,21 +30,49 @@ package edu.columbia.gemma.genome.gene;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+
+import edu.columbia.gemma.genome.Gene;
 
  
 public class CandidateGeneListImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneList
 {
-    public void addCandidate(CandidateGene candidateGene){
+    public void addCandidate(Gene gene){
+        
+        Collection candidates = this.getCandidates();
+        
+        // figure out the highest rank in this candidate list 
+        // note that if the list is empty the first item has rank of 0
+        int maxRank=-1;
+        if(candidates!=null){
+            Iterator iter = candidates.iterator();
+            while(iter.hasNext()){
+                CandidateGene cg = (CandidateGene) iter.next();
+                if(cg.getRank().intValue()>maxRank)
+                    maxRank=cg.getRank().intValue();
+            }
+        }
+    
+        // new candidate gene comes at end of list
+        maxRank = maxRank+1;
+        
+        // create new candidate gene and set rank accordingly
+        CandidateGene cgNew = CandidateGene.Factory.newInstance();
+        cgNew.setGene(gene);
+        cgNew.setRank(new Integer(maxRank));
+     //   this.getCandidateGeneDao.create(cgNew);
+    // TODO: Fix this section; is the above line needed?
+        
         if(this.getCandidates()==null)
             this.setCandidates(new HashSet());
-        this.getCandidates().add(candidateGene);
-        
+        this.getCandidates().add(cgNew);
     }
     public void removeCandidate(CandidateGene candidateGene){
         Collection c = this.getCandidates();
         if(c != null && c.contains(candidateGene))
             c.remove(candidateGene);
+        // TODO: Need to delete from database as well, no?
     }
 
     /**

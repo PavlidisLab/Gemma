@@ -29,10 +29,10 @@
 package edu.columbia.gemma.genome.gene;
 
 
-import java.util.Iterator;
+
 import java.util.Collection;
 
-import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
  * @see edu.columbia.gemma.genome.gene.CandidateGeneListService
@@ -40,44 +40,20 @@ import edu.columbia.gemma.genome.Gene;
 public class CandidateGeneListServiceImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase
 {
-    private CandidateGeneDao candidateGeneDao;
-    private CandidateGeneListDao candidateGeneListDao;
     
-    protected CandidateGene handleAddCandidateToList(CandidateGeneList candidateGeneList, Gene gene){
-        Collection candidates = candidateGeneList.getCandidates();
-        
-        // figure out the highest rank in this candidate list 
-        // note that if the list is empty the first item has rank of 0
-        int maxRank=-1;
-        if(candidates!=null){
-            Iterator iter = candidates.iterator();
-            while(iter.hasNext()){
-                CandidateGene cg = (CandidateGene) iter.next();
-                if(cg.getRank().intValue()>maxRank)
-                    maxRank=cg.getRank().intValue();
-            }
-        }
-    
-        // new candidate gene comes at end of list
-        maxRank = maxRank+1;
-        
-        // create new candidate gene and set rank accordingly
-        CandidateGene cgNew = CandidateGene.Factory.newInstance();
-        cgNew.setGene(gene);
-        cgNew.setRank(new Integer(maxRank));
-               
-        candidateGeneDao.create(cgNew);
-        
-        // add newly created candidate gene to candidateGeneList and update
-        candidateGeneList.addCandidate(cgNew);
-        candidateGeneListDao.update(candidateGeneList);
-        
-        return cgNew;
+    protected Collection handleGetCandidateGeneListsByContributer(Person person) throws java.lang.Exception
+    {
+        //@todo implement protected void handleGetCandidateGeneListsByContributer(Person person) throws java.lang.Exception
+        return null;
+
+    }
+    protected void handleSaveCandidateGeneList(CandidateGeneList candidateGeneList)throws java.lang.Exception
+    {
+        //@todo implement protected void handleSaveCandidateGeneList(edu.columbia.gemma.genome.CandidateGeneList candidateGeneList)
+
     }
     protected void handleRemoveCandidateFromList(CandidateGeneList candidateGeneList, CandidateGene candidateGene){
         candidateGeneList.removeCandidate(candidateGene);
-        getCandidateGeneListDao().update(candidateGeneList);
-        getCandidateGeneDao().remove(candidateGene);
     }
     /**
      * @see edu.columbia.gemma.genome.gene.CandidateGeneListService#FindByGeneOfficialName(edu.columbia.gemma.genome.Gene)
@@ -97,12 +73,5 @@ public class CandidateGeneListServiceImpl
     {
         //@todo implement protected java.util.Collection handleFindByContributer(edu.columbia.gemma.common.auditAndSecurity.Person person)
         return null;
-    }
-
-    public void setDaoCG( CandidateGeneDao daoCG ) {
-        this.candidateGeneDao = daoCG;
-    }
-    public void setDaoCGL( CandidateGeneListDao daoCGL ) {
-        this.candidateGeneListDao = daoCGL;
     }
 }
