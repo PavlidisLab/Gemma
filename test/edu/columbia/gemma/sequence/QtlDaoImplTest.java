@@ -29,10 +29,18 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
     TaxonDao taxonDao = null;
     SessionFactory sf = null;
 
-    PhysicalMarker[] pms = new PhysicalMarker[10];
-    PhysicalLocation[] pls = new PhysicalLocation[10];
-    Qtl[] qtls = new Qtl[5];
+    private static final int NUM_LOCS = 10;
+    private static final int LOC_SPACING = 1000;
+    private static final String CHROM_NAME = "12";
+    private static final String TAXON = "mouse";
+    private static final int LEFT_TEST_MARKER = 2;
+    private static final int RIGHT_TEST_MARKER = 5;
 
+    PhysicalMarker[] pms = new PhysicalMarker[NUM_LOCS];
+    PhysicalLocation[] pls = new PhysicalLocation[NUM_LOCS];
+    Qtl[] qtls = new Qtl[NUM_LOCS / 2];
+
+    Taxon tx;
     Chromosome chrom;
 
     protected void setUp() throws Exception {
@@ -45,8 +53,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         plDao = ( PhysicalLocationDao ) ctx.getBean( "physicalLocationDao" );
         sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
 
-        // set up some dummy data. FIXME this should be put elsewhere.
-        Taxon tx = taxonDao.findByCommonName( "mouse" );
+        tx = taxonDao.findByCommonName( TAXON );
         if ( tx == null ) {
             tx = Taxon.Factory.newInstance();
             tx.setCommonName( "mouse" );
@@ -56,28 +63,25 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
 
         // need a chromosome
         chrom = Chromosome.Factory.newInstance();
-        chrom.setName( "12" );
+        chrom.setName( CHROM_NAME );
         chrom.setTaxon( tx );
         chrom = chromosomeDao.create( chrom );
 
         // need physical locations
-        for ( int i = 0; i < pls.length; i++ ) {
+        for ( int i = 0; i < NUM_LOCS; i++ ) {
             pls[i] = PhysicalLocation.Factory.newInstance();
             pls[i].setChromosome( chrom );
-            pls[i].setNucleotide( new Integer( 1000 * i ) );
+            pls[i].setNucleotide( new Integer( LOC_SPACING * i ) );
 
             pls[i] = ( PhysicalLocation ) plDao.create( pls[i] );
-        }
 
-        // create some markers.
-        for ( int i = 0; i < pms.length; i++ ) {
             pms[i] = PhysicalMarker.Factory.newInstance();
             pms[i].setPhysicalLocation( pls[i] );
             pms[i] = ( PhysicalMarker ) pmDao.create( pms[i] );
         }
 
-        // create qtls
-        for ( int i = 0, j = 0; j < pms.length - 1; i++, j += 2 ) {
+        // create qtls - one for every two locations, so they might be 2000-4000, 4000-6000 etc.
+        for ( int i = 0, j = 0; j < NUM_LOCS - 1; i++, j += 2 ) {
             Qtl q = Qtl.Factory.newInstance();
             q.setName( "qtl-" + i );
             q.setStartMarker( pms[j] );
@@ -87,57 +91,80 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
 
     }
 
-    public final void testFindByPhysicalLocation() {
+    protected void tearDown() throws Exception {
+        super.tearDown();
 
-        PhysicalLocation p1 = PhysicalLocation.Factory.newInstance();
+        chromosomeDao.remove( chrom );
+        taxonDao.remove( tx );
+        for ( int i = 0; i < NUM_LOCS; i++ ) {
+            pmDao.remove( pms[i] ); // cascade will delete physical location.
+            // plDao.remove( pls[i] );
+        }
 
-        PhysicalLocation p2 = PhysicalLocation.Factory.newInstance();
-        p2.setChromosome( chrom );
-        p2.setNucleotide( new Integer( 10000 ) );
-
-        PhysicalMarker m1 = PhysicalMarker.Factory.newInstance();
-        m1.setPhysicalLocation( p1 );
-
-        PhysicalMarker m2 = PhysicalMarker.Factory.newInstance();
-        m2.setPhysicalLocation( p2 );
-
-        Collection qs = qtlDao.findByPhysicalLocation( p1 );
-
-        assertTrue( qs.size() != 0 );
-
-        qs = qtlDao.findByPhysicalMarkers( m1, m2 );
-
-        assertTrue( qs.size() != 0 );
+        for ( int i = 0, j = 0; j < NUM_LOCS - 1; i++, j += 2 ) {
+            qtlDao.remove( qtls[i] );
+        }
 
     }
 
     /**
+     * Deferences the nucleotides for direct comparisons.
+     * 
      * @throws Exception
      */
-    public final void testFindByPhysicalLocationQuery() throws Exception {
+    public final void testFindByPhysicalLocationNucleotideQuery() throws Exception {
 
-        // String query = "from QtlImpl qtl where qtl.startMarker.physicalLocation.chromosome ="
-        // + " :chrom and qtl.startMarker.physicalLocation.nucleotide >"
-        // + " :start and qtl.endMarker.physicalLocation.nucleotide < :end";
-
-        String query = "from QtlImpl qtl where qtl.startMarker.physicalLocation.chromosome = :chrom ";
+        String query = "from QtlImpl qtl where qtl.startMarker.physicalLocation.chromosome ="
+                + " :chrom and qtl.startMarker.physicalLocation.nucleotide >= "
+                + " :start and qtl.endMarker.physicalLocation.nucleotide <= :end";
 
         Session sess = sf.openSession();
         Transaction trans = sess.beginTransaction();
 
         Query q = sess.createQuery( query );
 
-        q.setParameter( "chrom", pms[1].getPhysicalLocation().getChromosome() );
-        // q.setParameter( "start", pms[1].getPhysicalLocation().getNucleotide() );
-        // q.setParameter( "end", pms[3].getPhysicalLocation().getNucleotide() );
-        // q.setParameter( "start", pms[1] );
-        // q.setParameter( "end", pms[3] );
+        q.setParameter( "chrom", pms[LEFT_TEST_MARKER].getPhysicalLocation().getChromosome() );
+        q.setParameter( "start", pms[LEFT_TEST_MARKER].getPhysicalLocation().getNucleotide() );
+        q.setParameter( "end", pms[RIGHT_TEST_MARKER].getPhysicalLocation().getNucleotide() );
 
         for ( Iterator it = q.iterate(); it.hasNext(); ) {
             Qtl qtl = ( Qtl ) it.next();
-            log.debug( "Qtl found: " + qtl.getName() );
+            log.debug( "Qtl found by nucleotide: " + qtl.getName() + " with start location "
+                    + qtl.getStartMarker().getPhysicalLocation().getNucleotide() );
         }
+        sess.flush();
         trans.commit();
+        sess.close();
     }
 
+    /**
+     * Query uses the physical locations of the markers without dereferencing the nucleotides.
+     * 
+     * @throws Exception
+     */
+    public final void testFindByPhysicalLocationQuery() throws Exception {
+
+        String query = "from QtlImpl qtl where qtl.startMarker.physicalLocation.chromosome ="
+                + " :chrom and qtl.startMarker.physicalLocation >= "
+                + " :start and qtl.endMarker.physicalLocation <= :end";
+
+        Session sess = sf.openSession();
+        Transaction trans = sess.beginTransaction();
+
+        Query q = sess.createQuery( query );
+
+        q.setParameter( "chrom", pms[LEFT_TEST_MARKER].getPhysicalLocation().getChromosome() );
+        q.setParameter( "start", pms[LEFT_TEST_MARKER].getPhysicalLocation() );
+        q.setParameter( "end", pms[RIGHT_TEST_MARKER].getPhysicalLocation() );
+
+        for ( Iterator it = q.iterate(); it.hasNext(); ) {
+            Qtl qtl = ( Qtl ) it.next();
+            log.debug( "Qtl found: " + qtl.getName() + " with start location "
+                    + qtl.getStartMarker().getPhysicalLocation().getNucleotide() );
+        }
+        sess.flush();
+        trans.commit();
+        sess.close();
+
+    }
 }
