@@ -20,28 +20,45 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
     private BibliographicReferenceDao dao = null;
     private DatabaseEntryDao dedao = null;
-
+private ExternalDatabaseDao exdbdao = null;
     protected void setUp() throws Exception {
+        super.setUp();
         Log log = LogFactory.getLog( BibliographicReferenceDaoImplTest.class );
         dao = ( BibliographicReferenceDao ) ctx.getBean( "bibliographicReferenceDao" );
         dedao = ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" );
+        exdbdao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
     }
 
     protected void tearDown() throws Exception {
         dao = null;
+        dedao = null;
+        exdbdao = null;
     }
 
     /*
      * Class under test for Object findByExternalId(int, java.lang.String)
      */
-    public final void testFindByExternalIdintString() {
+    public final void testFindByExternalIdentString() {
 
         BibliographicReference f = BibliographicReference.Factory.newInstance();
 
         String random = ( new Date() ).toString();
 
-        DatabaseEntry de = dedao.create( "", ( new Date() ).toString(), "foo" );
-        DatabaseEntry deb = dedao.create( "", ( new Date() ).toString(), "foo" );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+        DatabaseEntry deb = DatabaseEntry.Factory.newInstance();
+
+        de.setAccession( "foo" );
+        deb.setAccession( "bar" );
+
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setLocalInstallDBName( "database" );
+        ed.setIdentifier("fooblydoobly");
+        exdbdao.create(ed);
+        
+        de.setExternalDatabase( ed );
+        deb.setExternalDatabase( ed );
+        dedao.create( de );
+        dedao.create( deb );
 
         f.setPubAccession( de );
         f.setIdentifier( random );
