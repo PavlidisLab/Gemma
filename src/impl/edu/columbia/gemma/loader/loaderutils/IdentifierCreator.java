@@ -49,18 +49,19 @@ public class IdentifierCreator {
         if ( gemmaObj == null ) return null;
 
         try {
-            
+
             // fixme: what if it already has an identifier?
 
             String candidateIdentifier = constructIdentifier( gemmaObj );
 
-            log.debug( "Identifier constructed: " + candidateIdentifier );
+         //   log.debug( "Identifier constructed: " + candidateIdentifier );
 
             if ( ctx == null ) return candidateIdentifier; // no way to check.
 
             checkForDuplicate( gemmaObj, ctx, candidateIdentifier.toString() );
 
             return candidateIdentifier.toString();
+
         } catch ( Exception e ) {
             log.error( e, e );
         }
@@ -82,7 +83,7 @@ public class IdentifierCreator {
         Class clazz = gemmaObj.getClass();
         BeanInfo beanInfo = Introspector.getBeanInfo( clazz );
 
-        String baseName = ReflectionUtil.classToTypeName( clazz );
+        String baseName =  ReflectionUtil.getSimpleName(ReflectionUtil.getBaseForImpl( gemmaObj ) );
 
         StringBuffer identBuf = new StringBuffer( baseName );
 
@@ -131,6 +132,7 @@ public class IdentifierCreator {
         Method finder = dao.getClass().getMethod( FINDBYIDENTIFIER_METHOD_NAME, new Class[] { String.class } );
         Identifiable existing = ( Identifiable ) finder.invoke( dao, new Object[] { candidateIdentifier.toString() } );
         if ( existing != null ) {
+            log.debug("Exists already");
             throw new IllegalArgumentException( "Identifiable with id " + candidateIdentifier.toString()
                     + " exists already" ); // probably a better exception could be used.
         }

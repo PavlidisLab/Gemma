@@ -177,7 +177,7 @@ public class MageMLConverter {
      */
     public Object convert( Object mageObj ) {
         assert identifiableDao != null;
-        log.debug( "Converting " + mageObj.getClass().getSimpleName() );
+        log.debug( "Converting " + ReflectionUtil.getSimpleName( mageObj.getClass() ) );
         return findAndInvokeConverter( mageObj );
     }
 
@@ -245,7 +245,8 @@ public class MageMLConverter {
         if ( actualGemmaAssociationName != null ) {
             inferredGemmaAssociationName = actualGemmaAssociationName;
         } else {
-            inferredGemmaAssociationName = ReflectionUtil.getBaseForImpl( gemmaAssociatedObj ).getSimpleName();
+            inferredGemmaAssociationName = ReflectionUtil.getSimpleName( ReflectionUtil
+                    .getBaseForImpl( gemmaAssociatedObj ) );
         }
         return inferredGemmaAssociationName;
     }
@@ -258,8 +259,8 @@ public class MageMLConverter {
      * @param gemmaObj
      */
     public void convertAssociations( Object mageObj, Object gemmaObj ) {
-        log.debug( "Converting associations of " + mageObj.getClass().getSimpleName() + " into associations for Gemma "
-                + gemmaObj.getClass().getSimpleName() );
+        log.debug( "Converting associations of " + ReflectionUtil.getSimpleName( mageObj.getClass() )
+                + " into associations for Gemma " + ReflectionUtil.getSimpleName( gemmaObj.getClass() ) );
         convertAssociations( mageObj.getClass(), mageObj, gemmaObj );
     }
 
@@ -1944,7 +1945,7 @@ public class MageMLConverter {
         if ( mageObj == null || gemmaObj == null ) return;
 
         Class classToSeek = ReflectionUtil.getBaseForImpl( gemmaObj );
-        String gemmaObjName = classToSeek.getSimpleName();
+        String gemmaObjName = ReflectionUtil.getSimpleName( classToSeek );
 
         try {
             Class[] interfaces = mageClass.getInterfaces();
@@ -1953,7 +1954,7 @@ public class MageMLConverter {
 
             for ( int i = 0; i < interfaces.length; i++ ) {
                 Class infc = interfaces[i];
-                String infcName = infc.getSimpleName();
+                String infcName = ReflectionUtil.getSimpleName( infc );
 
                 if ( !infcName.startsWith( "Has" ) ) continue;
 
@@ -2263,7 +2264,8 @@ public class MageMLConverter {
         // This could be refactored to share more code with the other simpleFillIn methods.
         String associationName = actualGemmaAssociationName;
 
-        if ( associationName == null ) associationName = associatedList.get( 0 ).getClass().getSimpleName();
+        if ( associationName == null )
+            associationName = ReflectionUtil.getSimpleName( associatedList.get( 0 ).getClass() );
 
         try {
             if ( onlyTakeOne ) {
@@ -2271,7 +2273,8 @@ public class MageMLConverter {
                 Object convertedGemmaObj = findAndInvokeConverter( mageObj );
                 if ( convertedGemmaObj == null ) return; // not supported.
                 Class convertedGemmaClass = ReflectionUtil.getBaseForImpl( convertedGemmaObj );
-                log.debug( "Converting a MAGE list to a single instance of " + convertedGemmaClass.getSimpleName() );
+                log.debug( "Converting a MAGE list to a single instance of "
+                        + ReflectionUtil.getSimpleName( convertedGemmaClass ) );
                 findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, associationName );
             } else {
                 Collection gemmaObjList = new ArrayList();
