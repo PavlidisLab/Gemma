@@ -11,8 +11,10 @@
   </organization>
   <inceptionYear>2005</inceptionYear>
   <logo>web/images/logo/gemOnlySmall.gif</logo>
-  <description>Large-scale integrative meta-analysis of gene expression data</description>
+  <description>Large-scale integrative meta-analysis of gene expression 
+		data</description>
   <url>http://microarray.cu-genome.org</url>
+  <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/enter_bug.cgi?product=Gemma</issueTrackingUrl>
   <siteAddress>microarray</siteAddress>
   <siteDirectory>/proj/pavlidis/protected</siteDirectory>
   <distributionSite>microarray</distributionSite>
@@ -74,9 +76,9 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>jmock</groupId>
-      <artifactId>jmock</artifactId>
-      <version>1.0.1</version>
+      <groupId>easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>1.1</version>
       <type>jar</type>
     </dependency>
     <dependency>
@@ -187,14 +189,18 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>cglib</groupId>
-      <artifactId>cglib-full</artifactId>
-      <version>2.0.2</version>
-      <jar>cglib-full-2.0.2.jar</jar>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <jar>junit-3.8.1.jar</jar>
       <type>jar</type>
-      <properties>
-        <war.bundle>true</war.bundle>
-      </properties>
+    </dependency>
+    <dependency>
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+      <jar>colt-1.2.0.jar</jar>
+      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>xdoclet</groupId>
@@ -205,8 +211,14 @@
     <dependency>
       <groupId>xdoclet</groupId>
       <artifactId>maven-xdoclet-plugin</artifactId>
-      <version>1.2</version>
+      <version>1.2.1</version>
       <type>plugin</type>
+    </dependency>
+    <dependency>
+      <groupId>xdoclet</groupId>
+      <artifactId>xdoclet-hibernate-module</artifactId>
+      <version>1.2</version>
+      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>cglib</groupId>
@@ -216,40 +228,32 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>hibernate</groupId>
-      <artifactId>hibernate2</artifactId>
-      <jar>hibernate2.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
       <groupId>xmlapis</groupId>
       <artifactId>xml-apis</artifactId>
       <jar>xml-apis.jar</jar>
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <jar>junit-3.8.1.jar</jar>
+      <groupId>mage</groupId>
+      <artifactId>magestk-1.1</artifactId>
+      <jar>MAGEstk-2004-11-29-v1.1-compatible.jar</jar>
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <jar>mysql-connector-java-3.1.6-bin.jar</jar>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>colt</groupId>
-      <artifactId>colt</artifactId>
-      <version>1.2.0</version>
-      <jar>colt-1.2.0.jar</jar>
+      <groupId>mage</groupId>
+      <artifactId>mage-ontologyentry</artifactId>
+      <jar>MGEDOntologyEntry-2004-11-29.jar</jar>
       <type>jar</type>
     </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <unitTestSourceDirectory>test</unitTestSourceDirectory>
+    <unitTest>
+      <includes>
+        <include>**/*Test.java</include>
+      </includes>
+    </unitTest>
     <resources>
       <resource>
         <directory>${basedir}/web/WEB-INF/classes</directory>
