@@ -6,6 +6,7 @@
                Compiles
          ================================================================== -->
     <preGoal name="java:compile">
+    	<attainGoal name="clean" />
     	<ant:delete quiet="false" failonerror="false" >
 	    	<fileset dir="${maven.build.dest}" includes="**/*.class,**/*.hbm.xml" />
     	</ant:delete>
