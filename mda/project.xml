@@ -31,11 +31,11 @@
             <artifactId>andromda-spring-cartridge</artifactId>
             <version>3.0-RC1-SNAPSHOT</version>
             <properties>
-                <mergeLocation>
+                <mergeLocation> 
                     ${maven.andromda.spring.merge.custom}</mergeLocation>
-                <mergeMappingsUri>
+                <mergeMappingsUri> 
                     file:${maven.andromda.merge.mappings}</mergeMappingsUri>
-                <hibernateInheritanceStrategy>
+                <hibernateInheritanceStrategy> 
                     subclass</hibernateInheritanceStrategy>
                 <driver>com.mysql.jdbc.Driver</driver>
                 <username>pavlidis</username>
@@ -43,18 +43,20 @@
                 <connectionUrl>jdbc:mysql://localhost:3306/gemd</connectionUrl>
                 <hibernateDialect> 
                     net.sf.hibernate.dialect.MySQLDialect</hibernateDialect>
-                <spring-configuration>
+                <hibernateQueryNamedParameters> 
+                    true</hibernateQueryNamedParameters>
+                <spring-configuration> 
                     ${maven.andromda.spring.spring.configuration.dir}</spring-configuration>
-                <springTypesPackage>
+                <springTypesPackage> 
                     edu.columbia.gemma.spring</springTypesPackage>
                 <daos>${maven.andromda.spring.daos.dir}</daos>
                 <dao-impls>${maven.andromda.spring.dao.impls.dir}</dao-impls>
                 <services>${maven.andromda.spring.services.dir}</services>
-                <service-impls>
+                <service-impls> 
                     ${maven.andromda.spring.service.impls.dir}</service-impls>
-                <service-locator>
+                <service-locator> 
                     ${maven.andromda.spring.service.locator.dir}</service-locator>
-                <applicationContext>
+                <applicationContext> 
                     applicationContext-hibernate.xml</applicationContext>
             </properties>
         </dependency>
