@@ -18,7 +18,8 @@ import org.xml.sax.SAXException;
 import edu.columbia.gemma.common.description.BibliographicReference;
 
 /**
- * Simple class to parse XML in the format defined by http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd.
+ * Simple class to parse XML in the format defined by
+ * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}.
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
@@ -93,7 +94,7 @@ public class PubMedXMLParser {
                 .item( 0 ) ) );
 
         bibRef.setAuthorList( extractAuthorList( doc ) );
-       // bibRef.setYear( extractPublicationYear( doc ) );
+        // bibRef.setYear( extractPublicationYear( doc ) );
         bibRef.setPublicationDate( extractPublicationDate( doc ) );
         return bibRef;
     }
@@ -194,22 +195,6 @@ public class PubMedXMLParser {
         c.set( year, month, day, hour, minute );
 
         return c.getTime();
-    }
-
-    /**
-     * @param doc
-     * @return
-     * @throws IOException
-     */
-    private String extractPublicationYear( Document doc ) throws IOException {
-        NodeList dateList = doc.getElementsByTagName( "PubDate" ).item( 0 ).getChildNodes();
-        for ( int i = 0; i < dateList.getLength(); i++ ) {
-            Node item = dateList.item( i );
-            if ( item instanceof Element && item.getNodeName().equals( "Year" ) ) {
-                return getTextValue( ( Element ) item );
-            }
-        }
-        return null;
     }
 
     /**
