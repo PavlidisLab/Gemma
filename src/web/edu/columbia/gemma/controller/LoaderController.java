@@ -23,11 +23,10 @@ import org.springframework.web.servlet.view.RedirectView;
 import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 
 /**
+ * Generic Controller used to decipher which LoaderService is called.
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University 
- * 
- * Generic Controller used to decipher which LoaderService is called.
+ * Copyright (c) 2004 Columbia University
  * 
  * @author keshav
  * @version $Id$
