@@ -4,14 +4,23 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head><title><fmt:message key="title"/></title><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></head>
-<body bgcolor="#CCCC99">
+<body bgcolor="#ffffff">
 <%--<img src="bigicon.gif" width="88" height="97"> <br>--%>
 <h1><fmt:message key="taxonLoader.heading"/></h1>
 <form method="post">
 <form name="form1" method="post" action="">
-<table width="604" height="271" border="0" cellpadding="0" cellspacing="5" bgcolor="#CCCC99">
+      <td alignment="right" width="31%"><strong>Filename:</strong></td>
+      <spring:bind path="fileName.fileName">
+        <td width="38%">
+          <input name="fileName" type="text" value="<c:out value="${status.value}"/>
+          ">
+        </td>
+        <td width="31%">
+          <font color="red"><c:out value="${status.errorMessage}"/></font>
+        </td>
+      </spring:bind>
+<br></br>
 <input type="submit" alignment="center" value="Execute">       
-</table>  
 </form>
 <a href="<c:url value="welcome.jsp"/>">Home</a>
 </body>
