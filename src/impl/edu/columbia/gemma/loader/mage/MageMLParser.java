@@ -50,8 +50,7 @@ public class MageMLParser {
         try {
             parser = XMLReaderFactory.createXMLReader( "org.apache.xerces.parsers.SAXParser" );
         } catch ( SAXException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e );
         }
 
         cHandler = new MAGEContentHandler();
@@ -82,22 +81,27 @@ public class MageMLParser {
 
         Collection result = new ArrayList();
 
+        // todo: this is still a bit inefficient because it tries every possible package and class.
         for ( int i = 0; i < allPackages.length; i++ ) {
-
+            
             String name = allPackages[i].getName();
             if ( !name.startsWith( "org.biomage." ) || name.startsWith( "org.biomage.tools." )
                     || name.startsWith( "org.biomage.Interface" ) ) continue;
-            // todo: this is a little inefficient because it tries every possible class.
+
             for ( int j = 0; j < mageClasses.length; j++ ) {
                 Class c = null;
                 try {
                     c = Class.forName( name + "." + mageClasses[j] );
                     Collection d = getConvertedData( c );
-                    if ( d != null ) result.addAll( d );
+                    if ( d != null ) {
+                        result.addAll( d );
+                        break;
+                    }
                 } catch ( ClassNotFoundException e ) {
                     ;
                 }
             }
+            if (result != null) break; // we found it.
         }
         return result;
     }
@@ -106,8 +110,6 @@ public class MageMLParser {
      * Generic method to extract the desired MAGE objects. This is based on the assumption that each MAGE domain
      * packages has a "getXXXX_package" method, which in turn has a "getXXX_list" method for each class it contains.
      * <p>
-     * The alternative pattern is where an accessor is found in the class (e.g. Experiment) not the _package (e.g.
-     * Experiment_package).
      * 
      * @param type
      * @return
@@ -142,7 +144,8 @@ public class MageMLParser {
             try {
                 secondMethod = packageOb.getClass().getMethod( secondMethodName, new Class[] {} );
             } catch ( NoSuchMethodException e ) {
-                log.debug( "No such method: " + secondMethodName );
+                // log.debug( "No such method: " + secondMethodName ); // that's okay, it isn't the kind of object we
+                // get by list.
                 return null;
             }
 
@@ -151,21 +154,24 @@ public class MageMLParser {
             return ( Collection ) result;
 
         } catch ( SecurityException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e );
         } catch ( NoSuchMethodException e ) {
-            ;
+            log.error( e );
         } catch ( IllegalArgumentException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e );
         } catch ( IllegalAccessException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e );
         } catch ( InvocationTargetException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e );
         }
         return null;
+    }
+
+    /**
+     * @param obj
+     */
+    public void getAssociations( Object obj ) {
+
     }
 
     private boolean isParsed() {
@@ -191,94 +197,5 @@ public class MageMLParser {
         }
         return result;
     }
-    // /**
-    // * @return
-    // */
-    // public List getArrayDesigns( List dataToConvert ) {
-    //
-    // List result = new ArrayList();
-    // for ( Iterator iter = dataToConvert.iterator(); iter.hasNext(); ) {
-    // ArrayDesign fromObj = ( ArrayDesign ) iter.next();
-    //
-    // edu.columbia.gemma.expression.arrayDesign.ArrayDesign toOjb = mlc.convertArrayDesign( fromObj );
-    // result.add( toOjb );
-    // }
-    // return result;
-    // }
-    //
-
-    //
-    // /**
-    // * @return
-    // */
-    // public List getBioSequences() {
-    // BioSequence_package pkg = mageJava.getBioSequence_package();
-    //
-    // if ( pkg == null ) return null;
-    //
-    // List fromList = pkg.getBioSequence_list();
-    //
-    // List result = new ArrayList( fromList.size() );
-    // for ( Iterator iter = fromList.iterator(); iter.hasNext(); ) {
-    // org.biomage.BioSequence.BioSequence fromObj = ( org.biomage.BioSequence.BioSequence ) iter.next();
-    //
-    // edu.columbia.gemma.sequence.biosequence.BioSequence toOjb = mlc.convertBioSequence( fromObj );
-    // result.add( toOjb );
-    //
-    // }
-    // return result;
-    // }
-    //
-
-    //
-    // /**
-    // * @return
-    // */
-    // public List getCompositeSequences() {
-    // DesignElement_package pkg = this.mageJava.getDesignElement_package();
-    // if ( pkg == null ) return null;
-    // List fromList = pkg.getCompositeSequence_list();
-    // List result = new ArrayList( fromList.size() );
-    //
-    // List rcmap = pkg.getReporterCompositeMap_list(); // fixme
-    //
-    // for ( Iterator iter = fromList.iterator(); iter.hasNext(); ) {
-    // org.biomage.DesignElement.CompositeSequence fromObj = ( org.biomage.DesignElement.CompositeSequence ) iter
-    // .next();
-    //
-    // edu.columbia.gemma.expression.designElement.CompositeSequence toOjb = mlc
-    // .convertCompositeSequence( fromObj );
-    // result.add( toOjb );
-    //
-    // }
-    // return result;
-    // }
-    //
-    // /**
-    // * @return
-    // */
-    // public List getReporters() {
-    //
-    // DesignElement_package pkg = this.mageJava.getDesignElement_package();
-    // if ( pkg == null ) return null;
-    // List fromList = pkg.getReporter_list();
-    //
-    // if ( fromList == null ) return null;
-    //
-    // List result = new ArrayList( fromList.size() );
-    //
-    // List frmap = pkg.getFeatureReporterMap_list();
-    //
-    // for ( Iterator iter = fromList.iterator(); iter.hasNext(); ) {
-    // org.biomage.DesignElement.Reporter fromObj = ( org.biomage.DesignElement.Reporter ) iter.next();
-    //
-    // DesignElement toOjb = mlc.convertReporter( fromObj );
-    // result.add( toOjb );
-    //
-    // }
-    // return result;
-    //
-    // }
-    //
 
 }
