@@ -13,18 +13,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.SimpleFormController;
 import org.springframework.web.servlet.view.RedirectView;
 
-import controller.edu.columbia.gemma.BaseFormController;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonImpl;
 import edu.columbia.gemma.common.auditAndSecurity.PersonService;
-import edu.columbia.gemma.loader.sequence.gene.GeneLoaderService;
 
 /**
  * <hr>
@@ -35,7 +33,7 @@ import edu.columbia.gemma.loader.sequence.gene.GeneLoaderService;
  * @version $Id keshav$
  */
 
-public class PersonFormController extends BaseFormController {
+public class PersonFormController extends SimpleFormController {
    protected static final Log log = LogFactory.getLog( PersonFormController.class );
    private PersonService mgr = null;
    //    protected Object formBackingObject(HttpServletRequest request)
