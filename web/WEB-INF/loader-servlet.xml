@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" 
+    "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+	<bean id="loaderController" class="edu.columbia.gemma.controller.LoaderController">
+		<property name="sessionForm">
+			<value>true</value>
+		</property><!--
+		<property name="commandName">
+			<value>fileName</value>
+		</property>
+		<property name="commandClass">
+			<value>edu.columbia.gemma.loader.FileName</value>
+		</property>
+		<property name="validator">
+			<ref bean="fileNameValidator"/>
+		</property>-->	
+		<property name="formView">
+			<value>bulkLoadForm</value>
+		</property>
+		<property name="successView">
+			<value>home.jsp</value>
+		</property>
+	</bean>
+   <bean id="geneLoaderService" class="edu.columbia.gemma.loader.genome.GeneLoaderService">
+		<property name="geneDao">
+			<ref bean="geneDao"/>
+		</property>
+		<property name="taxonDao">
+			<ref bean="taxonDao"/>
+		</property>
+	</bean>
+	<bean id="taxonLoaderService" class="edu.columbia.gemma.loader.genome.TaxonLoaderService">
+		<property name="taxonDao">
+			<ref bean="taxonDao"/>
+		</property>
+	</bean>	
+	
+    <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+                <!-- Add additional URL mappings here -->			
+				<prop key="/bulkLoadForm.htm">loaderController</prop>
+            </props>
+        </property>
+    </bean>
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <!-- The default place for this is in WEB-INF/classes -->
+		<property name="basename"><value>messages</value></property>
+    </bean>
+	<!-- View Resolver for JSPs -->
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="requestContextAttribute"><value>rc</value></property>
+        <property name="viewClass"><value>org.springframework.web.servlet.view.JstlView</value></property>
+        <property name="prefix"><value>/WEB-INF/pages/</value></property>
+        <property name="suffix"><value>.jsp</value></property>
+    </bean>
+</beans>
