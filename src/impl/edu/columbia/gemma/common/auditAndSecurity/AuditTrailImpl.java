@@ -57,4 +57,40 @@ public class AuditTrailImpl
         return null;
     }
 
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start()
+     */
+    public void start()
+    {
+        //@todo implement public void start()
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.AuditTrail.start() Not implemented!");
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start(java.lang.String)
+     */
+    public void start(java.lang.String note)
+    {
+        //@todo implement public void start(java.lang.String note)
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.AuditTrail.start(java.lang.String note) Not implemented!");
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update()
+     */
+    public void update()
+    {
+        //@todo implement public void update()
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.AuditTrail.update() Not implemented!");
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update(java.lang.String)
+     */
+    public void update(java.lang.String note)
+    {
+        //@todo implement public void update(java.lang.String note)
+        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.auditAndSecurity.AuditTrail.update(java.lang.String note) Not implemented!");
+    }
+
 }
