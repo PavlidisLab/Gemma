@@ -85,17 +85,15 @@ public class PubMedXMLParser {
                         + getTextValue( ( Element ) doc.getElementsByTagName( PMID_ELEMENT ).item( 0 ) ) );
         bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
 
-        bibRef
-                .setVolume( Integer
-                        .parseInt( getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) ) );
+        bibRef.setVolume( getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );
 
-        bibRef.setIssue( Integer.parseInt( getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ) ) );
+        bibRef.setIssue( getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ) );
 
         bibRef.setPublication( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT )
                 .item( 0 ) ) );
 
         bibRef.setAuthorList( extractAuthorList( doc ) );
-        bibRef.setYear( extractPublicationYear( doc ) );
+       // bibRef.setYear( extractPublicationYear( doc ) );
         bibRef.setPublicationDate( extractPublicationDate( doc ) );
         return bibRef;
     }
