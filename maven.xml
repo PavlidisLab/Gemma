@@ -1,11 +1,43 @@
 <project xmlns:ant="jelly:ant"
-         xmlns:maven="jelly:maven">
+         xmlns:maven="jelly:maven"> 
 
- <preGoal name="java:compile">
-    <mkdir dir="${maven.xdoclet.hibernatedoclet.destDir}"/>
-    <attainGoal name="xdoclet:hibernatedoclet"/>
-  </preGoal>
+
+ 
+<goal name="dll" description="Create database">
+	<attainGoal name="hibernate:schema-export" />
+
+
+</goal>  
   
+ <goal name="dll-test" description="Create test database">
+ 	<!--  run the schema through "mysql gemdtest" todo, refactor -->
+	<ant:exec dir="${src}" executable="C:/mysql/bin/mysql" os="Windows XP" input="${basedir}/target/schema/Gemma-0.1-schema.sql">
+  <arg line="-upavlidis -ptoast -P3306 gemdtest" />   
+  </ant:exec>
+ </goal> 
+  
+<postGoal name="site:generate">
+<attainGoal name="copydocs" />
+<attainGoal name="zipsite" />
+</postGoal>
+
+<goal name="copydocs" description="Copy javadocs and UML docs to the site directory">
+	<ant:copy todir="${basedir}/target/docs/apidocs">
+    	<fileset dir="${basedir}/docs/java/api" />
+  	</ant:copy>
+  	<ant:mkdir dir="${basedir}/target/docs/uml" />
+  	
+	<ant:copy todir="${basedir}/target/docs/uml">
+    	<fileset dir="${basedir}/docs/uml" />
+  	</ant:copy>
+</goal>
+
+<goal name="zipsite" description="Zip the web site">
+<ant:tar tarfile="${basedir}/target/site.tar" basedir="${basedir}/target/docs"/>
+  <ant:gzip zipfile="${basedir}/target/site.tar.gz" src="${basedir}/target/site.tar"/>
+</goal>
+
+
 <preGoal name="java:jar-resources">
     <echo message="${maven.build.dest}"/>
     <copy todir="${maven.build.dest}">
@@ -22,6 +54,15 @@
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run"/>
 </goal>	
+
+<goal name="test-mda" >
+		<maven:maven descriptor="${basedir}/mda/test/project.xml"
+			goals="andromda:run"/>
+</goal>	
+
+<preGoal name="test-mda">
+	<attainGoal name="mda-remove-logs" />
+</preGoal>
 
 <goal name="mda-clean" description="Remove all Andromda-generated files (except permanent impl classes)" >
 	 <ant:delete>
@@ -41,5 +82,15 @@
 <fileset dir="${basedir}" includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log" />
 </ant:delete>
 </goal>
+
+<goal name="hib-console" description="Run the hibernate console">
+     <ant:java classname="Ide"
+          fork="true">
+      <!--<classpath refid="classpath.ide" /> -->
+      <arg value="${basedir}/web/WEB-INF/classes" />
+<!--      <sysproperty key="log4j.configuration" value="${LOG4J_OUT}" /> -->
+    </ant:java>
+</goal>
+
 
 </project>
