@@ -11,8 +11,7 @@
   </organization>
   <inceptionYear>2005</inceptionYear>
   <logo>web/images/logo/gemOnlySmall.gif</logo>
-  <description>Large-scale integrative meta-analysis of gene expression 
-		data</description>
+  <shortDescription>Large-scale integrative meta-analysis of gene expression data</shortDescription>
   <url>http://microarray.cu-genome.org</url>
   <issueTrackingUrl>http://microarray.cu-genome.org/bugzilla/enter_bug.cgi?product=Gemma</issueTrackingUrl>
   <siteAddress>microarray</siteAddress>
@@ -209,18 +208,6 @@
       <type>jar</type>
     </dependency>
     <dependency>
-      <groupId>xdoclet</groupId>
-      <artifactId>maven-xdoclet-plugin</artifactId>
-      <version>1.2.1</version>
-      <type>plugin</type>
-    </dependency>
-    <dependency>
-      <groupId>xdoclet</groupId>
-      <artifactId>xdoclet-hibernate-module</artifactId>
-      <version>1.2</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib-full</artifactId>
       <version>2.0.2</version>
@@ -247,6 +234,7 @@
     </dependency>
   </dependencies>
   <build>
+    <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
     <sourceDirectory>src</sourceDirectory>
     <unitTestSourceDirectory>test</unitTestSourceDirectory>
     <unitTest>
@@ -260,10 +248,22 @@
         <includes>
           <include>log4j.properties</include>
           <include>messages.properties</include>
+          <include>*.propertes</include>
         </includes>
         <filtering>false</filtering>
       </resource>
     </resources>
   </build>
+  <reports>
+    <report>maven-jdepend-plugin</report>
+    <report>maven-pmd-plugin</report>
+    <report>maven-changelog-plugin</report>
+    <report>maven-file-activity-plugin</report>
+    <report>maven-developer-activity-plugin</report>
+    <report>maven-javadoc-plugin</report>
+    <report>maven-jxr-plugin</report>
+    <report>maven-junit-report-plugin</report>
+    <report>maven-tasklist-plugin</report>
+  </reports>
 </project>
 
