@@ -24,5 +24,5 @@ public interface BulkCreator {
      * @param hasHeader Indicate if the stream is from a file that has a one-line header
      * @throws IOException
      */
-    public abstract void bulkCreate( String filename, boolean hasHeader ) throws IOException;
+    public abstract String bulkCreate( String filename, boolean hasHeader ) throws IOException;
 }
