@@ -1,8 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ include file="include.jsp" %>
 
-<title><fmt:message key="personDetail.title"/></title>
-<content tag="heading"><h1><fmt:message key="personDetail.heading"/></h1></content>
+<title><fmt:message key="geneForm.title"/></title>
+<content tag="heading"><h1><fmt:message key="geneForm.heading"/></h1></content>
 <%--
 <spring:bind path="person.*">
     <c:if test="${not empty status.errorMessages}">
@@ -23,29 +23,61 @@
 <table class="detail">
     <tr>
         <th>
-            <fusedWebApp:label key="person.firstName"/>
+            <fusedWebApp:label key="gene.officialName"/>
         </th>
               
-        <td alignment="right" width="31%"><strong>First Name</strong></td>
+        <td alignment="right" width="31%"><strong>Official Name</strong></td>
         <td>
-            <spring:bind path="person.firstName">
+            <spring:bind path="gene.officialName">
             <%--
                 <input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>" 
                     value="<c:out value="${status.value}"/>" />
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             --%>    
-            <input type="text" name="firstName" id="<c:out value="${status.expression}"/>" 
+            <input type="text" name="officialName" id="<c:out value="${status.expression}"/>" 
                     value="<c:out value="${status.value}"/>" />
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             </spring:bind>
         </td>
     </tr>
+<%--    
+    <tr>
+        <th>
+            <fusedWebApp:label key="gene.physicalMapLocation"/>
+        </th>
+              
+        <td alignment="right" width="31%"><strong>Physical Map Location</strong></td>
+        <td>
+            <spring:bind path="gene.physicalMapLocation">
+--%>            
+            <%--
+                <input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>" 
+                    value="<c:out value="${status.value}"/>" />
+                <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
+            --%>    
+<%--            
+            <input type="text" name="physicalMapLocation" id="<c:out value="${status.expression}"/>" 
+                    value="<c:out value="${status.value}"/>" />
+                <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
+            </spring:bind>
+        </td>
+    </tr>
+--%>    
+  </table>
+     <br><br>
+     <input type="submit" alignment="center" value="Execute">
+</form>
+<a href="<c:url value="welcome.jsp"/>">Home</a>
+
+
+
+
 <%--
 <spring:bind path="person.id">
 <input type="hidden" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/> 
 </spring:bind>
 --%>
-
+<%--
     <tr>
         <th>
             <fusedWebApp:label key="person.middleName"/>
@@ -54,11 +86,13 @@
         <td alignment="right" width="31%"><strong>Middle Name:</strong></td>
         <td>
             <spring:bind path="person.middleName">
+--%>            
             <%--
                 <input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>" 
                     value="<c:out value="${status.value}"/>" />
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             --%>    
+<%--            
             <input type="text" name="middleName" id="<c:out value="${status.expression}"/>" 
                     value="<c:out value="${status.value}"/>" />
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
@@ -75,11 +109,13 @@
         <td alignment="right" width="31%"><strong>Last Name:</strong></td>
         <td>
             <spring:bind path="person.lastName">
+--%>            
             <%--
                 <input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>" 
                     value="<c:out value="${status.value}"/>" />
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             --%>    
+<%--            
             <input type="text" name="lastName" id="<c:out value="${status.expression}"/>" 
                     value="<c:out value="${status.value}"/>" />
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
@@ -101,9 +137,9 @@
                 value="<fmt:message key="button.cancel"/>" />        
         </td>
     </tr>
+  
 </table>
 </form>
-
 
 <html:javascript formName="person" cdata="false"
     dynamicJavascript="true" staticJavascript="false"/>  
@@ -112,3 +148,4 @@
 <script type="text/javascript">
     document.forms["person"].elements["firstName"].focus();
 </script>    
+--%>

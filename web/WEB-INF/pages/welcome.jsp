@@ -10,6 +10,7 @@
 <form method="post">
 <form name="form1" method="post" action="">
 <a href="<c:url value="geneLoad.htm"/>">Load Database With Genes</a><br><br>
+<a href="<c:url value="geneFormSearch.htm"/>">Search For QTL By Gene</a><br><br>
 <a href="<c:url value="arraydesignmanload.htm"/>">Submit Array Design Information</a><br><br>
 <a href="<c:url value="arraydesignmandelete.htm"/>">Delete Array Design Information</a><br><br>
 <a href="<c:url value="taxonmanload.htm"/>">Submit Taxon Information</a><br><br>
