@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 11 21:05:24 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Mar 11 21:13:29 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -17644,7 +17644,7 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                                 <UML:Class xmi.idref = 'Iff6185m1029346d98fmmae8'/>
                               </UML:AssociationEnd.participant>
                             </UML:AssociationEnd>
-                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmm5f4' name = 'eQtlAnalysisResult'
+                            <UML:AssociationEnd xmi.id = 'Iff6185m1029346d98fmm5f4' name = 'eqtlAnalysisResult'
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
