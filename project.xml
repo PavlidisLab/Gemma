@@ -311,6 +311,7 @@
         <includes>
           <include>**/*.hbm.xml</include>
           <include>ehcache.xml</include>
+          <include>hibernate.cfg.xml</include>
         </includes>
         <filtering>false</filtering>
       </resource>
