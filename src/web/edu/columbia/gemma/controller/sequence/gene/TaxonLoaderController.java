@@ -7,14 +7,11 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
-import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.PersonImpl;
 import edu.columbia.gemma.loader.sequence.gene.FileName;
 import edu.columbia.gemma.loader.sequence.gene.TaxonLoaderService;
 
@@ -49,8 +46,7 @@ public class TaxonLoaderController extends SimpleFormController {
     * @param
     * @return
     */
-   public ModelAndView onSubmit(Object command) throws IOException, ServletException {
-      //String filename = null; 
+   public ModelAndView onSubmit(Object command) throws IOException {
       String filename = ( ( FileName ) command ).getFileName();
       Map myModel = new HashMap();
       getTaxonLoaderService().bulkCreate(filename,true);
