@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -15,8 +17,10 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.genome.TaxonImpl;
 import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 
 /**
@@ -27,10 +31,11 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * @author keshav
  * @version $Id$
  * @spring.bean id="geneLoaderService"
- * @spring.property name="geneDao" ref="geneDao" 
+ * @spring.property name="geneDao" ref="geneDao"
  * @spring.property name="taxonDao" ref="taxonDao"
  */
 public class GeneLoaderService implements BulkCreator {
+    private static boolean alreadyRetreivedTaxa;
     protected static final Log log = LogFactory.getLog( GeneLoaderService.class );
     private edu.columbia.gemma.genome.Gene gene;
     private edu.columbia.gemma.genome.GeneDao geneDao;
@@ -41,10 +46,8 @@ public class GeneLoaderService implements BulkCreator {
     private int taxonCol;
     private TaxonDao taxonDao;
     private String view;
-    Collection col;
     Configuration conf;
-    Object first = new Object();
-    Iterator i;
+    Map taxaMap;
 
     /**
      * @throws ConfigurationException
@@ -56,6 +59,7 @@ public class GeneLoaderService implements BulkCreator {
         refIdCol = conf.getInt( "gene.refIdCol" );
         ncbiIdCol = conf.getInt( "gene.ncbiIdCol" );
         taxonCol = conf.getInt( "gene.taxonCol" );
+        alreadyRetreivedTaxa = false;
         view = "gene";
     }
 
@@ -84,8 +88,26 @@ public class GeneLoaderService implements BulkCreator {
     public String bulkCreate( String filename, boolean hasHeader ) throws IOException {
         log.info( "Reading from " + filename );
         bulkCreate( openFileAsStream( filename ), hasHeader );
-        
+
         return view;
+    }
+
+    /**
+     * @return Map TODO put in taxonutils after making taxaMap in createFromRow static
+     */
+    private Map findAllTaxa() {
+        Collection taxa = this.taxonDao.findAllTaxa();
+        Map taxaMap = new HashMap();
+        Iterator iter = taxa.iterator();
+        int id = 1;
+        while ( iter.hasNext() ) {
+            Integer Id = new Integer( id );
+            taxaMap.put( Id, iter.next() );
+            System.err.println( "taxaMap: " + taxaMap.get( Id ) );
+            id++;
+        }
+        alreadyRetreivedTaxa = true;
+        return taxaMap;
     }
 
     /**
@@ -107,6 +129,31 @@ public class GeneLoaderService implements BulkCreator {
      */
     public edu.columbia.gemma.genome.TaxonDao getTaxonDao() {
         return taxonDao;
+    }
+
+    /**
+     * @param br
+     * @throws IOException TODO put in loaderutils
+     */
+    public void handleHeader( BufferedReader br ) throws IOException {
+        br.readLine();
+    }
+
+    /**
+     * @param taxaMap
+     * @param id
+     * @param s
+     * @return Taxon TODO put in taxonutils after making taxaMap in createFromRow static
+     */
+    private Taxon loadOrCreateTaxon( Map taxaMap, int id, Taxon taxon ) {
+        Taxon t;
+        Integer Id = new Integer( id );
+        if ( taxaMap.containsKey( Id ) )
+            t = ( TaxonImpl ) taxaMap.get( Id );
+        else {
+            t = taxon;
+        }
+        return t;
     }
 
     /**
@@ -136,14 +183,15 @@ public class GeneLoaderService implements BulkCreator {
      */
     private boolean createFromRow( String line ) throws NumberFormatException {
         String[] sArray = line.split( "\t" );
-        edu.columbia.gemma.genome.Gene g = edu.columbia.gemma.genome.Gene.Factory.newInstance();
-        g.setSymbol( sArray[symbolCol] );
+        Gene g = Gene.Factory.newInstance();
+        g.setOfficialSymbol( sArray[symbolCol] );
         g.setOfficialName( sArray[officialNameCol] );
-        if ( sArray[refIdCol].equals( "LocusLink" ) ) g.setNcbiId( Integer.parseInt( sArray[ncbiIdCol] ) );
-        if ( Long.parseLong( sArray[taxonCol] ) == 0 || Long.parseLong( sArray[taxonCol] ) > 4 )
-                sArray[taxonCol] = "1";
-        g.setTaxon( mapTaxon( Long.parseLong( sArray[taxonCol] ) ) );
-        Collection geneCol = this.geneDao.findByOfficalName( g.getOfficialName() );
+        if ( sArray[refIdCol].equals( "LocusLink" ) ) g.setNcbiId( sArray[ncbiIdCol] );
+
+        if ( !alreadyRetreivedTaxa ) taxaMap = findAllTaxa();
+
+        g.setTaxon( loadOrCreateTaxon( taxaMap, Integer.parseInt( sArray[taxonCol] ), null ) );
+        Collection geneCol = this.geneDao.findByOfficalSymbol( g.getOfficialName() );
         if ( geneCol.size() > 0 ) {
             log.info( "Gene with name: " + g.getOfficialName() + " already exists, skipping." );
             return false;
@@ -151,24 +199,6 @@ public class GeneLoaderService implements BulkCreator {
         this.geneDao.create( g );
         return true;
 
-    }
-
-    /**
-     * @param br
-     * @throws IOException
-     */
-    private void handleHeader( BufferedReader br ) throws IOException {
-        br.readLine();
-    }
-
-    /**
-     * @return
-     */
-    private Taxon mapTaxon( long taxonValue ) {
-        Taxon t = Taxon.Factory.newInstance();
-        Long taxonValueL = new Long( taxonValue );
-        t = getTaxonDao().load( taxonValueL );
-        return t;
     }
 
     /**
