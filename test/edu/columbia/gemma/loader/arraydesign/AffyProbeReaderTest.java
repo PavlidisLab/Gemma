@@ -33,6 +33,7 @@ public class AffyProbeReaderTest extends TestCase {
         apr = new AffyProbeReader();
         apr.setSequenceField( 5 );
         is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-probes-test.txt" );
+        
     }
 
     /*
@@ -48,6 +49,9 @@ public class AffyProbeReaderTest extends TestCase {
      * Class under test for Map read(InputStream)
      */
     public final void testReadInputStream() throws Exception {
+        
+        assertTrue("InputStream was null", is != null );
+        
         apr.parse( is );
 
         String expectedValue = "TCACGGCAGGACAACGAGAAAGCCC"; // 10

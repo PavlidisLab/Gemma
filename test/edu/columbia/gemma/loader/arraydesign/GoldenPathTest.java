@@ -32,7 +32,7 @@ public class GoldenPathTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        gp = new GoldenPath( 3307, "hg17", "localhost", "pavlidis", "toast" );
+        gp = new GoldenPath( 3306, "hg17", "localhost", "pavlidis", "toast" );
     }
 
     /*

@@ -30,21 +30,26 @@ public class IlluminaProbeReader extends BasicLineMapParser {
         if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );
 
         String probeSetId = sArray[0];
+
+        if ( probeSetId == null || probeSetId.length() == 0 ) throw new IllegalArgumentException( "Probe id invalid" );
+
         if ( probeSetId.startsWith( "Search" ) ) return null;
 
         if ( sArray.length < 10 ) throw new IllegalArgumentException( "Line format is not valid" );
 
         String sequence = sArray[9];
+        if ( sequence == null || sequence.length() == 0 ) throw new IllegalArgumentException( "Sequence is invalid" );
 
         Reporter ap = Reporter.Factory.newInstance();
+        ap.setIdentifier( probeSetId );
 
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
         immobChar.setIdentifier( probeSetId );
 
         ap.setImmobilizedCharacteristic( immobChar );
-        return ap;
 
+        return ap;
     }
 
     /*

@@ -1,16 +1,15 @@
 package edu.columbia.gemma.loader.arraydesign;
 
 import java.io.InputStream;
-import java.util.Map;
+
+import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.designElement.Reporter;
-
-import baseCode.io.reader.BasicLineMapParser;
-
-import junit.framework.TestCase;
+import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
+import edu.columbia.gemma.sequence.biosequence.BioSequence;
 
 /**
  * <hr>
@@ -45,14 +44,24 @@ public class IlluminaProbeReaderTest extends TestCase {
      * Class under test for Map read(InputStream)
      */
     public final void testReadInputStream() throws Exception {
+
+        assertTrue( apr != null );
+
         apr.parse( is );
 
         String expectedValue = "GTGGCTGCCTTCCCAGCAGTCTCTACTTCAGCATATCTGGGAGCCAGAAG";
 
-        String actualValue = ( ( Reporter ) apr.get( "GI_42655756-S" ) ).getImmobilizedCharacteristic().getSequence()
-                .toUpperCase();
+        Reporter r = ( Reporter ) apr.get( "GI_42655756-S" );
 
-        assertEquals( expectedValue, actualValue );
+        assertFalse("Reporter not found",  r == null );
+
+        BioSequence bs = r.getImmobilizedCharacteristic();
+        
+        assertFalse("Immobilized characteristic was null", bs == null);
+        
+        String actualValue = bs.getSequence().toUpperCase();
+
+        assertEquals("Wrong sequence returned",  expectedValue, actualValue );
 
     }
 
