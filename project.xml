@@ -293,7 +293,7 @@
     </unitTest>
     <resources>
       <resource>
-        <directory>${basedir}/../web/WEB-INF</directory>
+        <directory>${basedir}/web/WEB-INF</directory>
         <includes>
           <include>**/*.xml</include>
         </includes>
