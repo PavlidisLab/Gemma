@@ -257,67 +257,60 @@
       <type>jar</type>
     </dependency>
   </dependencies>
-  <build>
-    <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
-    <sourceDirectory>src/gen</sourceDirectory>
-    <unitTestSourceDirectory>${basedir}/test</unitTestSourceDirectory>
-    <unitTest>
-      <includes>
-        <include>**/*Test.java</include>
-      </includes>
-      <resources>
-        <resource>
-          <directory>${basedir}/test</directory>
-          <includes>
-            <include>**/*.xml</include>
-            <include>**/*.txt</include>
-            <include>**/*.probes</include>
-          </includes>
-          <filtering>false</filtering>
-        </resource>
-        <resource>
-            
-          <directory>${basedir}/web/WEB-INF</directory>
-          <includes>
-            <include>**/*.xml</include>
-          </includes>
-          <filtering>false</filtering>
-        </resource>
-        <resource>
-          <directory>${basedir}/metadata/webproperties</directory>
-          <includes>
-            <include>**/*.properties</include>
-          </includes>
-          <filtering>false</filtering>
-        </resource>
-      </resources>
-    </unitTest>
-    <resources>
-    <!--   <resource>
-       <directory>${basedir}/web/WEB-INF</directory>
-        <includes>
-          <include>**/*.xml</include>
-        </includes>
-        <filtering>false</filtering>
-      </resource> -->
-      <resource>
-        <directory>${basedir}/metadata/webproperties</directory>
-        
-        <includes>
-          <include>**/*.properties</include>
-        </includes>
-        <filtering>false</filtering>
-      </resource>
-      <resource>
-        <directory>${basedir}/src/gen</directory>
-        <includes>
-            <include>**/*.hbm.xml</include>
-            <include>ehcache.xml</include>
-             <include>hibernate.cfg.xml</include>
-        </includes>
-        <filtering>false</filtering>
-      </resource>
-    </resources>
-  </build>
+ <build>
+        <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
+        <sourceDirectory>src/gen</sourceDirectory>
+        <unitTestSourceDirectory>${basedir}/test</unitTestSourceDirectory>
+        <unitTest>
+            <includes>
+                <include>**/*Test.java</include>
+            </includes>
+            <resources>
+                <resource>
+                    <directory>${basedir}/test</directory>
+                    <includes>
+                        <include>**/*.xml</include>
+                        <include>**/*.txt</include>
+                        <include>**/*.probes</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+                <resource>
+                    <directory>${basedir}/web/WEB-INF</directory>
+                    <includes>
+                        <include>**/*.xml</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+                <resource>
+                    <directory>${basedir}/metadata/webproperties</directory>
+                    <includes>
+                        <include>**/*.properties</include>
+                    </includes>
+                    <filtering>false</filtering>
+                </resource>
+            </resources>
+        </unitTest>
+        <resources>
+            <resource>
+                <directory>${basedir}/metadata/webproperties</directory>
+               
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>${basedir}/src/gen</directory>
+                
+                <includes>
+                    <include>**/*.hbm.xml</include>
+                    <include>ehcache.xml</include>
+                    <include>hibernate.cfg.xml</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+    </build>
 </project>
 
