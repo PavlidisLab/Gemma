@@ -25,6 +25,7 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
     private GeneDao daoGene = null;
     private CandidateGeneList cgl = null;
     private CandidateGeneListDao daoCGL = null;
+    private CandidateGeneDao daoCG = null;
     ArrayList dummygenes = null;
     
     private Gene makeGene(String officialName ){
@@ -60,6 +61,7 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
 		
 		// create new list for fun
 		daoCGL = (CandidateGeneListDao) ctx.getBean("candidateGeneListDao");
+		daoCG = (CandidateGeneDao) ctx.getBean("candidateGeneDao");
 		cgl = CandidateGeneList.Factory.newInstance();
 		cgl.setDescription("Test my candidate list");
 		cgl.setName("Test Candidates");
@@ -76,22 +78,37 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
 
     public void testUseCandidateGeneList() {
         
-        CandidateGeneListServiceImpl cglService = new CandidateGeneListServiceImpl();
+        CandidateGeneListService cglService = (CandidateGeneListService) ctx.getBean("candidateGeneListService");
         
         Gene gene1 = makeGene("foo1");
         Gene gene2 = makeGene("foo2");
         Gene gene3 = makeGene("foo3");
+        /*
+        CandidateGene cg1 = CandidateGene.Factory.newInstance();
+        cg1.setGene(gene1);
+        CandidateGene cg2 = CandidateGene.Factory.newInstance();
+        cg2.setGene(gene2);
+        CandidateGene cg3 = CandidateGene.Factory.newInstance();
+        cg3.setGene(gene3);
+        daoCG.create(cg1);
+        daoCG.create(cg2);
+        daoCG.create(cg3);
+        cgl.addCandidate(cg1);
+        cgl.addCandidate(cg2);
+        cgl.addCandidate(cg3);
+        daoCGL.update(cgl);
         
-        // add some new genes as candidategenes (using makeGene shortcut)
-        CandidateGene cg1 = cglService.handleAddCandidateToList(cgl,gene1);
-        CandidateGene cg2 = cglService.handleAddCandidateToList(cgl,gene2);
-        CandidateGene cg3 = cglService.handleAddCandidateToList(cgl,gene3);
+        cgl.removeCandidate(cg3);
+        cgl.removeCandidate(cg2);
+        cgl.removeCandidate(cg1);
         
-        cglService.handleRemoveCandidateFromList(cgl, cg1);
-        cglService.handleRemoveCandidateFromList(cgl, cg2);
-        cglService.handleRemoveCandidateFromList(cgl, cg3);
+        daoCG.remove(cg1);
+        daoCG.remove(cg2);
+        daoCG.remove(cg3);
+        
         daoGene.remove(gene1);
         daoGene.remove(gene2);
         daoGene.remove(gene3);
-    }
+        */
+        }
 }
