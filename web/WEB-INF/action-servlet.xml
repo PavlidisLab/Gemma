@@ -86,11 +86,6 @@
 		<property name="successView"><!--cannot be resolved by the view resolver-->
 			<value>welcome.jsp</value>
 		</property>
-		<!--
-		<property name="personService">
-			<ref bean="personService"/>
-		</property>
-		-->
 		<property name="personService">
 			<ref bean="personService"/>
 		</property>
@@ -122,12 +117,38 @@
 			<ref bean="geneLoaderService"/>
 		</property>
 	</bean>
+	<!--<bean id="manualLoadValidator" class="bus.UserNameValidator"/>-->
+	<bean id="geneFormSearchController" class="controller.edu.columbia.gemma.sequence.gene.GeneFormSearchController">
+		<property name="sessionForm">
+			<value>true</value>
+		</property>
+		<property name="commandName">
+			<value>gene</value>
+		</property>
+		<property name="commandClass">
+			<value>edu.columbia.gemma.sequence.gene.GeneImpl</value>
+		</property><!--
+		<property name="validator">
+			<ref bean="userNameValidator"/>
+		</property>-->
+		<property name="formView"><!--resolved by the viewResolver below -->
+			<value>geneFormSearch</value>
+		</property>
+		<!--
+		<property name="successView">
+			<value>gene.htm</value>
+		</property>
+		-->
+		<property name="geneService">
+			<ref bean="geneService"/>
+		</property>
+	</bean>
+	
+	
+	
 	
 	<!-- Added these Dummy Services so I do not have to coding in the Impl classes ... yet -->
 	<!-- PersonService Service Implementation  -->
-    <bean id="personServiceDummyImpl" class="edu.columbia.gemma.dummy.common.auditAndSecurity.PersonServiceDummyImpl">
-        <property name="person"><ref bean="personDao"/></property>
-    </bean>
 	<!-- PersonService Service Proxy  -->
     <bean id="personService" class="org.springframework.aop.framework.ProxyFactoryBean">
          <property name="target"><ref bean="personServiceDummyImpl"/></property>
@@ -141,7 +162,28 @@
              </list>
          </property>
      </bean>
+	 <bean id="personServiceDummyImpl" class="edu.columbia.gemma.dummy.common.auditAndSecurity.PersonServiceDummyImpl">
+        <property name="person"><ref bean="personDao"/></property>
+    </bean>
 	
+	<!-- GeneService Service Proxy  -->
+    <bean id="geneService" class="org.springframework.aop.framework.ProxyFactoryBean">
+         <property name="target"><ref bean="geneServiceDummyImpl"/></property>
+         <property name="proxyInterfaces">
+             <value>edu.columbia.gemma.sequence.gene.GeneService</value>
+         </property>
+         <property name="interceptorNames">
+             <list>
+                 <value>serviceTransactionInterceptor</value>
+                 <value>hibernateInterceptor</value>
+             </list>
+         </property>
+     </bean>
+	 <bean id="geneServiceDummyImpl" class="edu.columbia.gemma.dummy.sequence.gene.GeneServiceDummyImpl">
+        <property name="gene"><ref bean="geneDao"/></property>
+		<property name="genomicRoi"><ref bean="genomicRoiDao"/></property>
+    </bean>
+	<!-- ***************************** End Dummy Service ******************************************* -->
 	
 	<bean id="geneLoaderService" class="edu.columbia.gemma.loader.sequence.gene.GeneLoaderService">
 		<property name="geneDao">
@@ -168,6 +210,7 @@
 -->
                 <!-- Add additional URL mappings here -->			
 				<prop key="/geneLoad.htm">geneLoaderController</prop>
+				<prop key="/geneFormSearch.htm">geneFormSearchController</prop>
 				<prop key="/editPerson.htm">personFormController</prop>			
             </props>
         </property>
