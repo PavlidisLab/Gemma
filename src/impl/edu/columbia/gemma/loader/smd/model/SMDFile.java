@@ -1,8 +1,8 @@
 package edu.columbia.gemma.loader.smd.model;
 
-import edu.columbia.gemma.common.description.File;
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.FileFormat;
-import edu.columbia.gemma.common.description.FileImpl;
+import edu.columbia.gemma.common.description.LocalFileImpl;
 
 /**
  * <hr>
@@ -19,8 +19,8 @@ public class SMDFile {
    private String localPath;
    private long size;
 
-   public File toFile( FileFormat form ) {
-      File f = new FileImpl();
+   public LocalFile toFile( FileFormat form ) {
+      LocalFile f = new LocalFileImpl();
 
       f.setSize( ( int ) this.size );
       f.setFileFormat( form );

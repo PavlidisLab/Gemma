@@ -25,9 +25,9 @@
 package edu.columbia.gemma.common.description;
 
 /**
- * @see edu.columbia.gemma.common.description.FileFormat
+ * @see edu.columbia.gemma.common.description.LocalFile
  */
-public class FileFormatDaoImpl
-    extends edu.columbia.gemma.common.description.FileFormatDaoBase
+public class LocalFileDaoImpl
+    extends edu.columbia.gemma.common.description.LocalFileDaoBase
 {
 }

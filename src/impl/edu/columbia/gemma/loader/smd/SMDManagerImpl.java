@@ -12,8 +12,8 @@ import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceDao;
 import edu.columbia.gemma.common.description.DescriptionDao;
-import edu.columbia.gemma.common.description.File;
-import edu.columbia.gemma.common.description.FileDao;
+import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.FileFormatDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
@@ -36,7 +36,7 @@ public class SMDManagerImpl implements SMDManager {
    private BibliographicReferenceDao bibliographicReferenceDAO;
    private ExpressionExperimentDao experimentDAO;
    private FileFormatDao fileFormtDAO;
-   private FileDao fileDAO;
+   private LocalFileDao fileDAO;
    private PersonDao personDAO;
    private BioAssayDao bioAssayDAO;
    private DescriptionDao descriptionDAO;
@@ -53,7 +53,7 @@ public class SMDManagerImpl implements SMDManager {
    public void setExperimentDAO( ExpressionExperimentDao experimentDAO ) {
       this.experimentDAO = experimentDAO;
    }
-   public void setFileDAO( FileDao fileDAO ) {
+   public void setFileDAO( LocalFileDao fileDAO ) {
       this.fileDAO = fileDAO;
    }
    public void setFileFormtDAO( FileFormatDao fileFormtDAO ) {
@@ -256,7 +256,7 @@ public class SMDManagerImpl implements SMDManager {
     * 
     * @see edu.columbia.gemma.loader.smd.SMDManager#getDataFile(int)
     */
-   public File fetchSMDDataFile( int bioAssayAccessionNumber ) {
+   public LocalFile fetchSMDDataFile( int bioAssayAccessionNumber ) {
       // TODO Auto-generated method stub
       return null;
    }
@@ -375,7 +375,7 @@ public class SMDManagerImpl implements SMDManager {
    /* (non-Javadoc)
     * @see edu.columbia.gemma.loader.smd.SMDManager#fetchDataFile(int)
     */
-   public File fetchDataFile( int bioAssayAccessionNumber ) {
+   public LocalFile fetchDataFile( int bioAssayAccessionNumber ) {
       // TODO Auto-generated method stub
       return null;
    }

@@ -179,6 +179,6 @@ public interface SMDManager {
     * @param bioAssayAccessionNumber
     * @return
     */
-   public edu.columbia.gemma.common.description.File fetchDataFile( int bioAssayAccessionNumber );
+   public edu.columbia.gemma.common.description.LocalFile fetchDataFile( int bioAssayAccessionNumber );
 
 }
