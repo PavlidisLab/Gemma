@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sat Mar 12 05:58:49 EST 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sat Mar 12 06:20:21 EST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -15767,7 +15767,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                               </UML:TaggedValue.type>
                             </UML:TaggedValue>
                             <UML:TaggedValue xmi.id = 'Iff6185m1029346d98fmmb03' isSpecification = 'false'>
-                              <UML:TaggedValue.dataValue>class</UML:TaggedValue.dataValue>
+                              <UML:TaggedValue.dataValue>subclass</UML:TaggedValue.dataValue>
                               <UML:TaggedValue.type>
                                 <UML:TagDefinition xmi.idref = 'Idbfe9cm1025f34ddd2mm2170'/>
                               </UML:TaggedValue.type>
@@ -16464,9 +16464,9 @@ of nucleotides associated with a gene product.  This class only represents the s
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
-                                <UML:Multiplicity xmi.id = 'Iff6185m1029346d98fmm930'>
+                                <UML:Multiplicity xmi.id = 'I1ec49dbm1029662c261m22c'>
                                   <UML:Multiplicity.range>
-                                    <UML:MultiplicityRange xmi.id = 'Iff6185m1029346d98fmm931' lower = '1' upper = '1'/>
+                                    <UML:MultiplicityRange xmi.id = 'I1ec49dbm1029662c261m22d' lower = '1' upper = '1'/>
                                   </UML:Multiplicity.range>
                                 </UML:Multiplicity>
                               </UML:AssociationEnd.multiplicity>
@@ -17466,9 +17466,9 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
-                                <UML:Multiplicity xmi.id = 'Iff6185m1029346d98fmm5f2'>
+                                <UML:Multiplicity xmi.id = 'I1ec49dbm1029662c261m22e'>
                                   <UML:Multiplicity.range>
-                                    <UML:MultiplicityRange xmi.id = 'Iff6185m1029346d98fmm5f3' lower = '1' upper = '1'/>
+                                    <UML:MultiplicityRange xmi.id = 'I1ec49dbm1029662c261m22f' lower = '1' upper = '1'/>
                                   </UML:Multiplicity.range>
                                 </UML:Multiplicity>
                               </UML:AssociationEnd.multiplicity>
