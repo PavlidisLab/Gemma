@@ -67,8 +67,6 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
     protected void tearDown() throws Exception {
         dao.remove( testBibRef );
         exdbdao.remove( ed );
-        dedao.remove( de );
-        dedao.remove( deb );
         dao = null;
         dedao = null;
         exdbdao = null;
