@@ -31,7 +31,7 @@ package edu.columbia.gemma.genome.gene;
 
 
 import java.util.Collection;
-
+import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
@@ -40,38 +40,54 @@ import edu.columbia.gemma.common.auditAndSecurity.Person;
 public class CandidateGeneListServiceImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase
 {
+    // CandidateGeneList manipulation
     
-    protected Collection handleGetCandidateGeneListsByContributer(Person person) throws java.lang.Exception
-    {
-        //@todo implement protected void handleGetCandidateGeneListsByContributer(Person person) throws java.lang.Exception
-        return null;
-
+    protected void  handleCreateCandidateGeneList(CandidateGeneList candidateGeneList) throws java.lang.Exception{
+        this.getCandidateGeneListDao().create(candidateGeneList);
     }
-    protected void handleSaveCandidateGeneList(CandidateGeneList candidateGeneList)throws java.lang.Exception
-    {
-        //@todo implement protected void handleSaveCandidateGeneList(edu.columbia.gemma.genome.CandidateGeneList candidateGeneList)
-
+    
+    protected void  handleRemoveCandidateGeneList(CandidateGeneList candidateGeneList) throws java.lang.Exception{
+        this.getCandidateGeneListDao().remove(candidateGeneList);
     }
-    protected void handleRemoveCandidateFromList(CandidateGeneList candidateGeneList, CandidateGene candidateGene){
+    
+    protected void handleSaveCandidateGeneList(CandidateGeneList candidateGeneList)throws java.lang.Exception{
+        this.getCandidateGeneListDao().update(candidateGeneList);   
+    }
+    
+    // Manipulate CandidateGenes in a list
+    
+    protected void  handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, Gene gene) throws java.lang.Exception{
+
+        CandidateGene cg = candidateGeneList.addCandidate(gene);
+        this.getCandidateGeneDao().create(cg);
+        this.getCandidateGeneListDao().update(candidateGeneList);
+    }
+        
+    protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
         candidateGeneList.removeCandidate(candidateGene);
+        this.getCandidateGeneListDao().update(candidateGeneList);
+    } 
+    
+    protected void  handleDecreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
+        candidateGeneList.decreaseRanking(candidateGene);
+        this.getCandidateGeneListDao().update(candidateGeneList); 
     }
-    /**
-     * @see edu.columbia.gemma.genome.gene.CandidateGeneListService#FindByGeneOfficialName(edu.columbia.gemma.genome.Gene)
-     */
-    protected java.util.Collection handleFindByGeneOfficialName(edu.columbia.gemma.genome.Gene gene)
-        throws java.lang.Exception
+    
+    protected void  handleIncreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
+        candidateGeneList.increaseRanking(candidateGene);
+        this.getCandidateGeneListDao().update(candidateGeneList); 
+    }    
+    
+    // Finder methods
+    
+    public java.util.Collection handleFindByGeneOfficialName(String geneName)
     {
         //@todo implement protected java.util.Collection handleFindByGeneOfficialName(edu.columbia.gemma.genome.Gene gene)
-        return null;
+        return this.getCandidateGeneListDao().findByGeneOfficialName(geneName);
     }
-
-    /**
-     * @see edu.columbia.gemma.genome.gene.CandidateGeneListService#FindByContributer(edu.columbia.gemma.common.auditAndSecurity.Person)
-     */
-    protected java.util.Collection handleFindByContributer(edu.columbia.gemma.common.auditAndSecurity.Person person)
-        throws java.lang.Exception
-    {
-        //@todo implement protected java.util.Collection handleFindByContributer(edu.columbia.gemma.common.auditAndSecurity.Person person)
-        return null;
+    
+    public Collection handleFindByContributer(Person person){
+        //@todo implement protected void handleGetCandidateGeneListsByContributer(Person person) throws java.lang.Exception
+        return this.getCandidateGeneListDao().findByContributer(person);
     }
 }

@@ -28,17 +28,20 @@
 */
 package edu.columbia.gemma.genome.gene;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+
 import java.util.Iterator;
 
 import edu.columbia.gemma.genome.Gene;
 
- 
 public class CandidateGeneListImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneList
 {
-    public void addCandidate(Gene gene){
+    public CandidateGene addCandidate(Gene gene){
+        
+        if ( gene == null ) throw new IllegalArgumentException( "Parameter gene cannot be null" );
+        assert this.getCandidates() != null;
         
         Collection candidates = this.getCandidates();
         
@@ -61,18 +64,22 @@ public class CandidateGeneListImpl
         CandidateGene cgNew = CandidateGene.Factory.newInstance();
         cgNew.setGene(gene);
         cgNew.setRank(new Integer(maxRank));
-     //   this.getCandidateGeneDao.create(cgNew);
-    // TODO: Fix this section; is the above line needed?
         
         if(this.getCandidates()==null)
-            this.setCandidates(new HashSet());
+            this.setCandidates(new ArrayList());
         this.getCandidates().add(cgNew);
+        
+        return cgNew;
+        
     }
+    
     public void removeCandidate(CandidateGene candidateGene){
+        if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidateGene cannot be null" );
+        assert this.getCandidates() != null;
+        
         Collection c = this.getCandidates();
         if(c != null && c.contains(candidateGene))
             c.remove(candidateGene);
-        // TODO: Need to delete from database as well, no?
     }
 
     /**
@@ -81,6 +88,8 @@ public class CandidateGeneListImpl
     public void increaseRanking(CandidateGene candidate)
     {
         //@todo implement public void increaseRanking(CandidateGene candidate)
+        if ( candidate == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
+        assert this.getCandidates() != null;
         throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.CandidateGeneList.increaseRanking(CandidateGene candidate) Not implemented!");
     }
 
@@ -90,6 +99,8 @@ public class CandidateGeneListImpl
     public void decreaseRanking(edu.columbia.gemma.genome.gene.CandidateGene candidateGene)
     {
         //@todo implement public void decreaseRanking(edu.columbia.gemma.genome.gene.CandidateGene candidateGene)
+        if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidateGene cannot be null" );
+        assert this.getCandidates() != null;
         throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.CandidateGeneList.decreaseRanking(edu.columbia.gemma.genome.gene.CandidateGene candidateGene) Not implemented!");
     }
 
