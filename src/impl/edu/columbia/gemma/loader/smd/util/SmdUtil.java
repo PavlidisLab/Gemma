@@ -32,8 +32,7 @@ public class SmdUtil {
         try {
             config = new PropertiesConfiguration( "smd.properties" );
         } catch ( ConfigurationException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error(e);
         }
         host = ( String ) config.getProperty( "smd.host" );
         login = ( String ) config.getProperty( "smd.login" );
