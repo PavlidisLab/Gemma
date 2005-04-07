@@ -9,8 +9,8 @@
             alt="Valid XHTML 1.0!" class="badge" /></a>
 </div>
 
-Version @APPVERSION@
-&middot; Copyright &copy; @COPYRIGHT-YEAR@ 
+Version 0.1
+&middot; Copyright &copy; 2004 - 2005 
 &middot; <a href="http://microarray.cu-genome.org/">Columbia Microarray</a><br />
 
 <!--Style respectfully borrowed from Blue Robot's
