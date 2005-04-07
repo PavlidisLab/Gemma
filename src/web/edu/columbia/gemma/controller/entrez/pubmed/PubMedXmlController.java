@@ -58,7 +58,7 @@ public class PubMedXmlController extends SimpleFormController {
     }
 
     /**
-     * Useful for debugging.
+     * Useful for debugging, specifically with Tomcat security issues.
      * 
      * @param request
      * @param response TODO put in an mvcUtils class if you used elsewhere. I found this helpful when working with
@@ -75,7 +75,9 @@ public class PubMedXmlController extends SimpleFormController {
      * 
      * @param command
      * @return ModelAndView
-     * @throws Exception
+     * @throws Exception TODO Review the way you are handling the "view within a view" ie. using InternalResourceView
+     *         TODO ... I started off using the RequestDispatcher.forward(request,response), but I don't need TODO ...
+     *         this as Spring provides an InternalResourceView.
      */
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -114,10 +116,12 @@ public class PubMedXmlController extends SimpleFormController {
     }
 
     /**
+     * Check to see if the InternalResourceView has already been viewed.
+     * 
      * @param request
      * @param response
      * @param myModel
-     * @throws Exception
+     * @throws Exception TODO there must be a better (Springish) way to do this.
      */
     private void useInternalResourceView( HttpServletRequest request, HttpServletResponse response, Object object,
             Map model ) throws Exception {
