@@ -18,24 +18,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-/**
-*
-*
-* <hr>
-* <p>Copyright (c) 2004, 2005 Columbia University
-* @author daq2101
-* @version $Id$
-*/
+
 package edu.columbia.gemma.genome.gene;
-
-
-
 import java.util.Collection;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
- * @see edu.columbia.gemma.genome.gene.CandidateGeneListService
+ *
+ * <hr>
+ * <p>Copyright (c) 2004, 2005 Columbia University
+ * @author daq2101
+ * @version $Id$
  */
 public class CandidateGeneListServiceImpl
     extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase
