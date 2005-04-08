@@ -19,14 +19,12 @@ import edu.columbia.gemma.BaseControllerTestCase;
 public class PubMedXmlControllerTest extends BaseControllerTestCase {
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
-    private View returnedView;
     PubMedXmlController pubMedXmlController;
 
     public void setUp() throws Exception {
         pubMedXmlController = ( PubMedXmlController ) ctx.getBean( "pubMedXmlController" );
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
-        //returnedView = new RedirectView( "home.jsp" );
     }
 
     public void tearDown() {
