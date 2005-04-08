@@ -27,7 +27,7 @@ package edu.columbia.gemma.common.description;
 import java.util.Collection;
 
 /**
- * Allows user to view the results of a pubMed search, with the option of submitting the results.
+ * Implementation of BibliographicReferenceService.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
