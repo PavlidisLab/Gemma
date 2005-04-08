@@ -27,7 +27,12 @@ package edu.columbia.gemma.common.description;
 import java.util.Collection;
 
 /**
- * @author $Id$ keshav
+ * Allows user to view the results of a pubMed search, with the option of submitting the results.
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
+ * @author $Id$
  * @see edu.columbia.gemma.common.description.BibliographicReferenceService
  */
 public class BibliographicReferenceServiceImpl extends
