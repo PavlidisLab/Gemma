@@ -27,6 +27,7 @@ package edu.columbia.gemma.common.description;
 import java.util.Collection;
 
 /**
+ * @author $Id$ keshav
  * @see edu.columbia.gemma.common.description.BibliographicReferenceService
  */
 public class BibliographicReferenceServiceImpl extends
