@@ -4,6 +4,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.controller.LoaderControllerTest;
+import edu.columbia.gemma.controller.entrez.pubmed.PubMedXmlControllerTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
@@ -41,6 +42,7 @@ public class AllTests {
         suite.addTestSuite(MageMLParserTest.class);
         
         suite.addTestSuite(LoaderControllerTest.class);
+        suite.addTestSuite(PubMedXmlControllerTest.class);
         
         suite.addTestSuite(TaxonLoaderServiceTest.class);
         
