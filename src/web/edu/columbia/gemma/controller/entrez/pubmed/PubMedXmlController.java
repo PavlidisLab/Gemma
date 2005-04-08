@@ -6,6 +6,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
@@ -35,13 +38,27 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  */
 public class PubMedXmlController extends SimpleFormController {
+    private String alreadyExists;
     private boolean alreadyViewed = false;
     private BibliographicReferenceService bibliographicReferenceService;
+    private String bibRef;
+    private Configuration conf;
     private String pubMedId = null;
     private PubMedXMLFetcher pubMedXmlFetcher;
+    private String requestPubMedId;
 
     /** Logger for this class and subclasses */
     protected final Log log = LogFactory.getLog( getClass() );
+
+    /**
+     * @throws ConfigurationException
+     */
+    public PubMedXmlController() throws ConfigurationException {
+        conf = new PropertiesConfiguration( "entrez.properties" );
+        alreadyExists = conf.getString( "entrez.pubmed.alreadyExists" );
+        bibRef = conf.getString( "entrez.pubmed.bibRef" );
+        requestPubMedId = conf.getString( "entrez.pubmed.pubMedId" );
+    }
 
     /**
      * @return Returns the bibliographicReferenceService.
@@ -61,9 +78,10 @@ public class PubMedXmlController extends SimpleFormController {
      * Useful for debugging, specifically with Tomcat security issues.
      * 
      * @param request
-     * @param response TODO put in an mvcUtils class if you used elsewhere. I found this helpful when working with
-     *        Spring's MVC.
+     * @param response
      */
+
+    // TODO put in an mvcUtils class if used elsewhere. I found this helpful when working with Spring's MVC.
     public void logHttp( HttpServletRequest request, HttpServletResponse response ) {
         log.info( "Context Path: " + request.getContextPath() );
         log.info( "Requested Uri: " + request.getRequestURI() );
@@ -75,29 +93,30 @@ public class PubMedXmlController extends SimpleFormController {
      * 
      * @param command
      * @return ModelAndView
-     * @throws Exception TODO Review the way you are handling the "view within a view" ie. using InternalResourceView
-     *         TODO ... I started off using the RequestDispatcher.forward(request,response), but I don't need TODO ...
-     *         this as Spring provides an InternalResourceView.
+     * @throws Exception
      */
+
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+        String view = null;
 
         logHttp( request, response );
 
-        if ( pubMedId == null )
-            pubMedId = RequestUtils.getStringParameter( request, "pubMedId", null );
-        else {
-            request.setAttribute( "pubMedId", pubMedId );
+        pubMedIdState( request, response );
+
+        try {
+            BibliographicReference br = pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            Map myModel = new HashMap();
+            myModel.put( "bibRef", br );
+            request.setAttribute( "model", myModel );
+            view = resolveView( request, response, br, myModel );
+        } catch ( NullPointerException e ) {
+            alreadyViewed = false;
+            pubMedId = null;
+            throw new NullPointerException();
         }
 
-        BibliographicReference br = pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-        Map myModel = new HashMap();
-        myModel.put( "bibRef", br );
-        request.setAttribute( "model", myModel );
-
-        useInternalResourceView( request, response, br, myModel );
-
-        return new ModelAndView( "bibRef" );
+        return new ModelAndView( view );
 
     }
 
@@ -116,23 +135,57 @@ public class PubMedXmlController extends SimpleFormController {
     }
 
     /**
-     * Check to see if the InternalResourceView has already been viewed.
+     * @param request
+     * @param response
+     */
+    private void pubMedIdState( HttpServletRequest request, HttpServletResponse response ) {
+        if ( pubMedId == null )
+            try {
+                pubMedId = RequestUtils.getStringParameter( request, requestPubMedId, null );
+            } catch ( NumberFormatException e ) {
+                alreadyViewed = false;
+                pubMedId = null;
+                response.reset();
+                throw new NumberFormatException();
+            }
+        else {
+            request.setAttribute( requestPubMedId, pubMedId );
+        }
+
+    }
+
+    /**
+     * Check to see if the InternalResourceView has already been viewed. Sets the return view.
      * 
      * @param request
      * @param response
      * @param myModel
-     * @throws Exception TODO there must be a better (Springish) way to do this.
+     * @throws Exception
      */
-    private void useInternalResourceView( HttpServletRequest request, HttpServletResponse response, Object object,
-            Map model ) throws Exception {
+
+    //    TODO there must be a better (Springish) way to do this. This uses global variables.
+    private String resolveView( HttpServletRequest request, HttpServletResponse response, Object object, Map model )
+            throws Exception {
+
+        String view = null;
+
         if ( !alreadyViewed ) {
             alreadyViewed = true;
+            //TODO cannot make use of view Resolver. Can I define this view declaritively
+            //in the context and the access the viewResolver?
             View v = new InternalResourceView( "/WEB-INF/pages/pubMedSuccess.jsp" );
             v.render( model, request, response );
         } else {
             alreadyViewed = false;
-            getBibliographicReferenceService().saveBibliographicReference( ( BibliographicReference ) object );
+            pubMedId = null;
+            if ( getBibliographicReferenceService().alreadyExists( ( BibliographicReference ) object ) )
+                view = alreadyExists;
+            else {
+                getBibliographicReferenceService().saveBibliographicReference( ( BibliographicReference ) object );
+                view = bibRef;
+            }
         }
+        return view;
     }
 
     /**
