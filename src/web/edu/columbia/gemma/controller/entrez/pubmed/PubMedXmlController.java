@@ -46,6 +46,7 @@ public class PubMedXmlController extends SimpleFormController {
     private String pubMedId = null;
     private PubMedXMLFetcher pubMedXmlFetcher;
     private String requestPubMedId;
+    private String sessionViewOne = null;
 
     /** Logger for this class and subclasses */
     protected final Log log = LogFactory.getLog( getClass() );
@@ -58,6 +59,7 @@ public class PubMedXmlController extends SimpleFormController {
         alreadyExists = conf.getString( "entrez.pubmed.alreadyExists" );
         bibRef = conf.getString( "entrez.pubmed.bibRef" );
         requestPubMedId = conf.getString( "entrez.pubmed.pubMedId" );
+        sessionViewOne = conf.getString( "entrez.pubmed.sessionViewOne" );
     }
 
     /**
@@ -167,7 +169,7 @@ public class PubMedXmlController extends SimpleFormController {
     private String resolveView( HttpServletRequest request, HttpServletResponse response, Object object, Map model )
             throws Exception {
 
-        String view = null;
+        String view = sessionViewOne;
 
         if ( !alreadyViewed ) {
             alreadyViewed = true;
