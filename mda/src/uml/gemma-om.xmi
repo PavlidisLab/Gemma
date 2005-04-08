@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Apr 06 16:05:09 EDT 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Apr 08 15:29:02 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -7920,7 +7920,7 @@ one class.
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2e'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
-                                <UML:Operation xmi.id = 'Ifea539m10312e26939mm960' name = 'findByTitle'
+                                <UML:Operation xmi.id = 'Ifea539m10312e26939mm960' name = 'findByTitlePublicationDate'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
                                   isAbstract = 'false'>
@@ -8173,6 +8173,72 @@ one class.
                                   </UML:Method.body>
                                   <UML:Method.specification>
                                     <UML:Operation xmi.idref = 'If5b94bm1026e0fa944mmd50'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
+                                <UML:Operation xmi.id = 'I1708593m1032197fff2mm68b' name = 'alreadyExists'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'I1708593m1032197fff2mm673' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>check to see if the object already exists</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'I1708593m1032197fff2mm688' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e28'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                    <UML:Parameter xmi.id = 'I1708593m1032197fff2mm5d2' name = 'bibliographicReference'
+                                      isSpecification = 'false' kind = 'in'>
+                                      <UML:Parameter.type>
+                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ace'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'I1708593m1032197fff2mm689' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'I1708593m1032197fff2mm68a' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'I1708593m1032197fff2mm68b'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
+                                <UML:Operation xmi.id = 'I1708593m1032197fff2mm5a5' name = 'getAllBibliographicReferences'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'I1708593m1032197fff2mm5a2' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                    <UML:Parameter xmi.id = 'I1708593m1032197fff2mm581' name = 'maxResults'
+                                      isSpecification = 'false' kind = 'in'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'I1708593m1032197fff2mm5a3' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'I1708593m1032197fff2mm5a4' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'I1708593m1032197fff2mm5a5'/>
                                   </UML:Method.specification>
                                 </UML:Method>
                               </UML:Classifier.feature>
