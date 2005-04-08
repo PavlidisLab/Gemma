@@ -29,16 +29,13 @@ import java.util.Collection;
 /**
  * @see edu.columbia.gemma.common.description.BibliographicReferenceService
  */
-public class BibliographicReferenceServiceImpl
-    extends edu.columbia.gemma.common.description.BibliographicReferenceServiceBase
-{
+public class BibliographicReferenceServiceImpl extends
+        edu.columbia.gemma.common.description.BibliographicReferenceServiceBase {
 
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
      */
-    protected java.util.Collection handleGetAllBibliographicReferences()
-        throws java.lang.Exception
-    {
+    protected java.util.Collection handleGetAllBibliographicReferences() throws java.lang.Exception {
         //@todo implement protected java.util.Collection handleGetAllBibliographicReferences()
         return null;
     }
@@ -46,32 +43,46 @@ public class BibliographicReferenceServiceImpl
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
      */
-    protected void handleSaveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference BibliographicReference)
-        throws java.lang.Exception
-    {   
-        Collection col = getBibliographicReferenceDao().findByTitle(BibliographicReference.getTitle());
-        if (col.size()==0)
-        getBibliographicReferenceDao().create(BibliographicReference);
+    protected void handleSaveBibliographicReference(
+            edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
+            throws java.lang.Exception {
+        getBibliographicReferenceDao().create( BibliographicReference );
     }
 
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#findByExternalId(java.lang.String)
      */
-    protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id)
+    protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
+            throws java.lang.Exception {
+        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference
+        // handleFindByExternalId(java.lang.String id)
         return null;
     }
 
     /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#findByExternalId(java.lang.String, java.lang.String)
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#findByExternalId(java.lang.String,
+     *      java.lang.String)
      */
-    protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id, java.lang.String databaseName)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId(java.lang.String id, java.lang.String databaseName)
+    protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id,
+            java.lang.String databaseName ) throws java.lang.Exception {
+        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference
+        // handleFindByExternalId(java.lang.String id, java.lang.String databaseName)
         return null;
+    }
+
+    /**
+     * Check to see if the reference already exists
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#alreadyExists(edu.columbia.gemma.common.description.BibliographicReference)
+     */
+    protected boolean handleAlreadyExists(
+            edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
+            throws java.lang.Exception {
+        boolean exists = false;
+        Collection col = getBibliographicReferenceDao().findByTitlePublicationDate( bibliographicReference.getTitle() );
+        
+        if ( col.size() > 0 ) exists = true;
+
+        return exists;
     }
 
 }
