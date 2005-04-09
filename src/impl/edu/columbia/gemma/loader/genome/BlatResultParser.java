@@ -38,7 +38,7 @@ public class BlatResultParser extends BasicLineParser {
     private static final int BLOCKCOUNT_FIELD = 17;
     private static final int BLOCKSIZES_FIELD = 18;
     private static final int QSTARTS_FIELD = 19;
-    private static final int TSTARTS_FIELD = 21;
+    private static final int TSTARTS_FIELD = 20;
 
     /*
      * (non-Javadoc)
@@ -56,8 +56,7 @@ public class BlatResultParser extends BasicLineParser {
             // BlatResult result = BlatResult.Factory.newInstance();
             BlatResultImpl result = new BlatResultImpl(); // FIXME this should not be an Impl.
 
-            String name = ( "BlatResult:" + f[QNAME_FIELD] + ":" + f[QSTART_FIELD] + ":" + f[TSTART_FIELD] + ":"
-                    + f[TNAME_FIELD] );
+            String name = ( "BlatResult:" + f[QNAME_FIELD] + ":" + f[QSTART_FIELD] + ":" + f[TSTART_FIELD] + ":" + f[TNAME_FIELD] );
             result.setId( new Long( name.hashCode() ) );
             result.setQuerySize( Integer.parseInt( f[QSIZE_FIELD] ) );
             result.setMatches( Integer.parseInt( f[MATCHES_FIELD] ) );
@@ -76,9 +75,9 @@ public class BlatResultParser extends BasicLineParser {
             result.setTargetStart( Integer.parseInt( f[TSTART_FIELD] ) );
             result.setTargetEnd( Integer.parseInt( f[TEND_FIELD] ) );
             result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
-            // result.setBlockSizes( f[BLOCKSIZES_FIELD] ); // FIXME
-            // result.setQueryStarts( f[QSTARTS_FIELD] );
-            // result.setTargetStarts( f[TSTARTS_FIELD] );
+            result.setBlockSizes( f[BLOCKSIZES_FIELD] ); // FIXME
+            result.setQueryStarts( f[QSTARTS_FIELD] );
+            result.setTargetStarts( f[TSTARTS_FIELD] );
 
             result.setQueryName( f[QNAME_FIELD] );
 

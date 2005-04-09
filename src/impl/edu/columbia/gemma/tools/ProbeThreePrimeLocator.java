@@ -31,12 +31,12 @@ import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
 public class ProbeThreePrimeLocator {
     protected static final Log log = LogFactory.getLog( ProbeThreePrimeLocator.class );
     private String dbName = "hg17";
-    private double scoreThreshold = 0.96;
+    private double scoreThreshold = 0.90;
 
     public void run( InputStream input, Writer output ) throws IOException, SQLException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
 
-        GoldenPath bp = new GoldenPath( 3307, dbName, "localhost", "pavlidis", "toast" );
+        GoldenPath bp = new GoldenPath( 3306, dbName, "localhost", "pavlidis", "toast" );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( input );
@@ -55,7 +55,7 @@ public class ProbeThreePrimeLocator {
             String arrayName = sa[1];
 
             List tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(), blatRes
-                    .getTargetEnd() );
+                    .getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes() );
 
             if ( tpds == null ) continue;
 
@@ -68,8 +68,9 @@ public class ProbeThreePrimeLocator {
                 String geneName = gene.getOfficialSymbol();
 
                 output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
-                        + blatRes.getQuerySize() + "\t" + score + "\t" + geneName + "\t" + gene.getName() + "\t"
-                        + tpd.getDistance() + "\n" );
+                        + blatRes.getQuerySize() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t"
+                        + score + "\t" + geneName + "\t" + gene.getNcbiId() + "\t" + tpd.getDistance() + "\t"
+                        + tpd.getExonOverlap() + "\n" );
 
                 count++;
                 if ( count % 100 == 0 ) log.info( "Three-prime locations computed for " + count + " probes" );

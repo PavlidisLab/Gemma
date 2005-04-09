@@ -1,11 +1,13 @@
 package edu.columbia.gemma.tools;
 
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -14,8 +16,10 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import baseCode.io.ByteArrayConverter;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.PhysicalLocation;
+import edu.columbia.gemma.genome.gene.GeneProduct;
 
 /**
  * This is temporary, until we have this in our own database.
@@ -74,7 +78,7 @@ public class GoldenPath {
             return ( List ) qr
                     .query(
                             conn,
-                            "SELECT name, geneName, txStart, txEnd, strand FROM refFlat WHERE "
+                            "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
                                     + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
                                     + "(txStart > ?  AND txStart < ?) OR  (txEnd > ? AND  txEnd < ? )) and chrom = ? order by txStart ",
                             new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom },
@@ -101,8 +105,54 @@ public class GoldenPath {
                                         gene.setPhysicalLocation( pl );
                                         r.add( gene );
 
+                                        Blob exonStarts = rs.getBlob( "exonStarts" );
+                                        Blob exonEnds = rs.getBlob( "exonEnds" );
+
+                                        setExons( gene, exonStarts, exonEnds );
                                     }
                                     return r;
+                                }
+
+                                /**
+                                 * @param gene
+                                 * @param exonStarts
+                                 * @param exonEnds
+                                 * @throws SQLException
+                                 */
+                                private void setExons( Gene gene, Blob exonStarts, Blob exonEnds ) throws SQLException {
+
+                                    String exonStartLocations = blobToString( exonStarts );
+                                    String exonEndLocations = blobToString( exonEnds );
+
+                                    int[] exonStartsInts = SequenceManipulation
+                                            .blatLocationsToIntArray( exonStartLocations );
+                                    int[] exonEndsInts = SequenceManipulation
+                                            .blatLocationsToIntArray( exonEndLocations );
+
+                                    assert exonStartsInts.length == exonEndsInts.length;
+
+                                    GeneProduct gp = GeneProduct.Factory.newInstance();
+                                    Collection exons = new ArrayList();
+                                    for ( int i = 0; i < exonEndsInts.length; i++ ) {
+                                        int exonStart = exonStartsInts[i];
+                                        int exonEnd = exonEndsInts[i];
+                                        PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
+                                        // FIXME set the chromosome for the location.
+                                        exon.setNucleotide( new Integer( exonStart ) );
+                                        exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
+                                        exons.add( exon );
+                                    }
+                                    gp.setExons( exons );
+                                    gp.setName( gene.getNcbiId() );
+                                    Collection products = new HashSet();
+                                    products.add( gp );
+                                    gene.setProducts( products );
+                                }
+
+                                private String blobToString( Blob exonStarts ) throws SQLException {
+                                    byte[] bytes = exonStarts.getBytes( 1L, ( int ) exonStarts.length() );
+                                    ByteArrayConverter bac = new ByteArrayConverter();
+                                    return bac.byteArrayToAsciiString( bytes );
                                 }
                             } );
 
@@ -122,18 +172,20 @@ public class GoldenPath {
     }
 
     /**
-     * Given a physical location, find how close it is to the 3' end of a gene it is in. todo test whether we're in an
-     * intron.
+     * Given a physical location, find how close it is to the 3' end of a gene it is in.
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)
      * @param start The start base of the region to query.
      * @param end The end base of the region to query.
+     * @param starts Locations of alignment starts. (comma-delimited from blat)
+     * @param sizes Sizes of alignment blocks (comma-delimited from blat)
      * @return A list of ThreePrimeData objects. The distance stored by a ThreePrimeData will be 0 if the sequence
-     *         overhangs (rather than providing a negative distance). If not genes are foud, the result is null;
+     *         overhangs (rather than providing a negative distance). If no genes are found, the result is null;
      */
-    public List getThreePrimeDistances( String chromosome, int start, int end ) {
-        Collection genes = findRefGenesByLocation( chromosome, start, end );
+    public List getThreePrimeDistances( String chromosome, int start, int end, String starts, String sizes ) {
+        if ( end < start ) throw new IllegalArgumentException( "End must not be less than start" );
 
+        Collection genes = findRefGenesByLocation( chromosome, start, end );
         if ( genes.size() == 0 ) return null;
 
         List results = new ArrayList();
@@ -144,6 +196,12 @@ public class GoldenPath {
             PhysicalLocation geneLoc = gene.getPhysicalLocation();
             int geneStart = geneLoc.getNucleotide().intValue();
             int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
+            int exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, gene );
+
+            assert exonOverlap <= end - start;
+
+            tpd.setExonOverlap( exonOverlap );
+            tpd.setInIntron( exonOverlap == 0 );
 
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
@@ -167,6 +225,7 @@ public class GoldenPath {
     public class ThreePrimeData {
 
         private boolean inIntron = false;
+        private int exonOverlap = 0;
         private int distance;
         private Gene gene;
 
@@ -192,6 +251,20 @@ public class GoldenPath {
 
         public void setInIntron( boolean inIntron ) {
             this.inIntron = inIntron;
+        }
+
+        /**
+         * @return Returns the exonOverlap.
+         */
+        public int getExonOverlap() {
+            return this.exonOverlap;
+        }
+
+        /**
+         * @param exonOverlap The exonOverlap to set.
+         */
+        public void setExonOverlap( int exonOverlap ) {
+            this.exonOverlap = exonOverlap;
         }
 
     }

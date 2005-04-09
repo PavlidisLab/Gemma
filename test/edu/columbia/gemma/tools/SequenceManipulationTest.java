@@ -146,4 +146,8 @@ public class SequenceManipulationTest extends TestCase {
 
     }
 
+    public final void testExonOverlap() throws Exception {
+        
+    }
+    
 }
