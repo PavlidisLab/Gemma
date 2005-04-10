@@ -39,7 +39,7 @@ public class PubMedArticleListControllerTest extends BaseControllerTestCase {
         
         ModelAndView mav = pubMedArticleListController.onSubmit( request, response, ( Object ) null, ( BindException ) null );
 
-        assertEquals( null, mav.getViewName() );
+        assertEquals( "pubMedList", mav.getViewName() );
 
         //
     }
