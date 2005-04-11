@@ -42,7 +42,12 @@ public class BibliographicReferenceServiceImpl extends
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
      */
     protected java.util.Collection handleGetAllBibliographicReferences() throws java.lang.Exception {
-        //@todo implement protected java.util.Collection handleGetAllBibliographicReferences()
+        return getBibliographicReferenceDao().findAllBibliographicReferences();
+    }
+    
+    protected java.util.Collection handleGetAllBibliographicReferences(int maxResults)
+    throws java.lang.Exception{
+        //getBibliographicReferenceDao().
         return null;
     }
 
