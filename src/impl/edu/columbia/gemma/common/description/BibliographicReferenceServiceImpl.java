@@ -44,7 +44,12 @@ public class BibliographicReferenceServiceImpl extends
     protected java.util.Collection handleGetAllBibliographicReferences() throws java.lang.Exception {
         return getBibliographicReferenceDao().findAllBibliographicReferences();
     }
-    
+    /**
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences(int maxResults)
+     */
+    //TODO can you create a finder method for this where the parameter maxResults 
+    //does not end up as a named parameter.  I want to use Hibernate's maxResults(int max)
+    //method.
     protected java.util.Collection handleGetAllBibliographicReferences(int maxResults)
     throws java.lang.Exception{
         //getBibliographicReferenceDao().
