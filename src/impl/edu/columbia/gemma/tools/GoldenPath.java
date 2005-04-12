@@ -31,8 +31,7 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
  * @version $Id$
  */
 public class GoldenPath {
-
-    protected static final Log log = LogFactory.getLog( GoldenPath.class );
+    private static final Log log = LogFactory.getLog( GoldenPath.class );
 
     private QueryRunner qr;
     private Connection conn;
@@ -183,6 +182,7 @@ public class GoldenPath {
      *         overhangs (rather than providing a negative distance). If no genes are found, the result is null;
      */
     public List getThreePrimeDistances( String chromosome, int start, int end, String starts, String sizes ) {
+
         if ( end < start ) throw new IllegalArgumentException( "End must not be less than start" );
 
         Collection genes = findRefGenesByLocation( chromosome, start, end );
@@ -196,7 +196,11 @@ public class GoldenPath {
             PhysicalLocation geneLoc = gene.getPhysicalLocation();
             int geneStart = geneLoc.getNucleotide().intValue();
             int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
-            int exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, gene );
+
+            int exonOverlap = 0;
+            if ( starts != null & sizes != null ) {
+                exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, gene );
+            }
 
             assert exonOverlap <= end - start;
 

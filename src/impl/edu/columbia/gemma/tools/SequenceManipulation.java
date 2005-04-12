@@ -156,29 +156,16 @@ public class SequenceManipulation {
      * @return
      */
     public static BioSequence collapse( CompositeSequence compositeSequence ) {
-
         Set copyOfProbes = copyCompositeSequenceReporters( compositeSequence );
-
         BioSequence collapsed = BioSequence.Factory.newInstance();
         collapsed.setSequence( "" );
-
         while ( !copyOfProbes.isEmpty() ) {
-
             Reporter next = findLeftMostProbe( copyOfProbes );
-
             int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
-
             String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
+            collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
             copyOfProbes.remove( next );
-
-            String newSeq = null;
-            if ( ol == 0 ) // just tack it on.
-                newSeq = collapsed.getSequence() + nextSeqStr;
-            else
-                // add just the non-overlapping part.
-                collapsed.setSequence( newSeq );
         }
-
         return collapsed;
     }
 
