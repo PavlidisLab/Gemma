@@ -212,8 +212,7 @@
     <dependency>
       <groupId>baseCode</groupId>
       <artifactId>baseCode</artifactId>
-      <jar>baseCode-0.2.5.jar</jar>
-      <type>jar</type>
+   <version>SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>xdoclet</groupId>
