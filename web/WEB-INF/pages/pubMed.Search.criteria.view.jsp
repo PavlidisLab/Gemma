@@ -46,5 +46,5 @@
 			</FORM>
 		</DIV>
 	</BODY>
-	<A href="home.jsp">Home</A>
+	<A HREF="home.jsp">Home</A>
 </HTML>
