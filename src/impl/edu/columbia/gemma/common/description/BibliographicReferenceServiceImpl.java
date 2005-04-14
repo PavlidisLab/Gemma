@@ -24,8 +24,6 @@
  */
 package edu.columbia.gemma.common.description;
 
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -40,30 +38,21 @@ public class BibliographicReferenceServiceImpl extends
         edu.columbia.gemma.common.description.BibliographicReferenceServiceBase {
 
     /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
+     * Check to see if the reference already exists
+     * 
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#alreadyExists(edu.columbia.gemma.common.description.BibliographicReference)
      */
-    protected java.util.Collection handleGetAllBibliographicReferences() throws java.lang.Exception {
-        return getBibliographicReferenceDao().findAllBibliographicReferences();
-    }
-    /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences(int maxResults)
-     */
-    //TODO can you create a finder method for this where the parameter maxResults 
-    //does not end up as a named parameter.  I want to use Hibernate's maxResults(int max)
-    //method.
-    protected java.util.Collection handleGetAllBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference BibliographicReference)
-    throws java.lang.Exception{
-        System.err.println("In Service: " + BibliographicReference.toString());
-        return getBibliographicReferenceDao().findAllBibliographicReferences();
-    }
-
-    /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
-     */
-    protected void handleSaveBibliographicReference(
-            edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
+    protected boolean handleAlreadyExists(
+            edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
-        getBibliographicReferenceDao().create( BibliographicReference );
+
+        boolean exists = false;
+        //Collection col = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
+        //if ( col.size() > 0 ) exists = true;
+        BibliographicReference br = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
+        if ( br != null ) exists = true;
+
+        return exists;
     }
 
     /**
@@ -88,31 +77,52 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     /**
-     * Check to see if the reference already exists
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#alreadyExists(edu.columbia.gemma.common.description.BibliographicReference)
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
      */
-    protected boolean handleAlreadyExists(
-            edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
-            throws java.lang.Exception {
-        boolean exists = false;
-        Collection col = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
-        
-        if ( col.size() > 0 ) exists = true;
+    protected java.util.Collection handleGetAllBibliographicReferences() throws java.lang.Exception {
+        return getBibliographicReferenceDao().findAllBibliographicReferences();
+    }
 
-        return exists;
-    }
-    /* (non-Javadoc)
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang.Long)
+    /**
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences(int
+     *      maxResults)
      */
-    protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
-        return (BibliographicReference) getBibliographicReferenceDao().load(id);
+    //TODO can you create a finder method for this where the parameter maxResults
+    //does not end up as a named parameter. I want to use Hibernate's maxResults(int max)
+    //method.
+    protected java.util.Collection handleGetAllBibliographicReferences(
+            edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
+            throws java.lang.Exception {
+        System.err.println( "In Service: " + BibliographicReference.toString() );
+        return getBibliographicReferenceDao().findAllBibliographicReferences();
     }
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(java.lang.String)
      */
     protected BibliographicReference handleGetBibliographicReferenceByTitle( String title ) throws Exception {
-        
-        return (BibliographicReference) getBibliographicReferenceDao().findByTitle(title);
+
+        return getBibliographicReferenceDao().findByTitle( title );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang.Long)
+     */
+    protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
+        return ( BibliographicReference ) getBibliographicReferenceDao().load( id );
+    }
+
+    /**
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
+     */
+    protected void handleSaveBibliographicReference(
+            edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
+            throws java.lang.Exception {
+        getBibliographicReferenceDao().create( BibliographicReference );
     }
 
 }
