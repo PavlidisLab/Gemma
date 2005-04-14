@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="pubMed.Detail" start-state="detail.get">
+
+	<action-state id="detail.get">
+		<action class="edu.columbia.gemma.controller.flow.action.GetPubMedAction"/>	
+		<transition on="success" to="detail.view"/>
+		<transition on="error" to="error"/>
+	</action-state>
+
+	<view-state id="detail.view" view="pubMed.Detail.view">
+		<transition on="back" to="finish"/>
+<!--		<transition on="select" to="colleagueId.set"/> -->
+	</view-state>
+<!--
+	<action-state id="colleagueId.set">
+		<action bean="person.Detail.colleagueId.set"/>
+		<transition on="success" to="colleague.Detail"/>
+		<transition on="error" to="error"/>
+	</action-state>
+	
+	<subflow-state id="colleague.Detail" flow="person.Detail">
+		<attribute-mapper bean="colleagueId.attributeMapper"/>
+		<transition on="finish" to="detail.get"/>
+		<transition on="error" to="error"/>
+	</subflow-state>
+-->	
+	<end-state id="finish"/>
+	
+	<end-state id="error" view="error.view"/>
+	
+</webflow>

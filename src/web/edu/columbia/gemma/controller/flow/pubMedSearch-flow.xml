@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="pubMed.Search" start-state="criteria.view">
+
+	<view-state id="criteria.view" view="pubMed.Search.criteria.view">
+		<transition on="submit" to="bindAndValidate"/> 
+	</view-state>
+
+	<action-state id="bindAndValidate">
+		<action bean="pubMed.Search.criteria.formAction"/>
+		<transition on="success" to="executeQuery"/>
+		<transition on="error" to="criteria.view"/>
+	</action-state>
+
+	<action-state id="executeQuery">
+		<action bean="pubMed.Search.executeQuery"/>
+		<transition on="success" to="results.view"/>
+	</action-state>
+	
+	<view-state id="results.view" view="pubMed.Search.results.view">
+		<transition on="newSearch" to="criteria.view"/>
+	    <transition on="select" to="pubMedId.set"/>
+	</view-state>
+	
+	<action-state id="pubMedId.set">
+		<action bean="pubMed.Search.id.set"/> 
+		<transition on="success" to="pubMed.Detail"/>
+		<transition on="error" to="error"/>
+	</action-state>
+
+	<subflow-state id="pubMed.Detail" flow="pubMed.Detail">
+		<attribute-mapper bean="id.attributeMapper"/> 
+		<transition on="finish" to="executeQuery"/>
+		<transition on="error" to="error"/>
+	</subflow-state>
+
+	
+	<end-state id="error" view="error.view"/>
+	
+</webflow>
