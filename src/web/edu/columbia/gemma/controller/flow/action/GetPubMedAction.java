@@ -34,6 +34,7 @@ public class GetPubMedAction extends AbstractAction {
     }
 
     protected Event doExecuteAction( RequestContext context ) throws Exception {
+        System.err.println(context.getFlowScope().containsAttribute("title"));
         String title = ( String ) context.getFlowScope().getRequiredAttribute( "title", String.class );
         BibliographicReference br = getBibliographicReferenceService().getBibliographicReferenceByTitle( title );
         if ( br != null ) {
