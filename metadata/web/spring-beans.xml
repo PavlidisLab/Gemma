@@ -94,6 +94,13 @@
 		</property>
 	</bean>
 	
+	<!-- equivalent to the pubMed.Search.executeQuery defined above -->
+	<bean id="pubMed.Detail.criteria.formAction.getFormAction" class="edu.columbia.gemma.controller.flow.action.GetPubMedAction">
+		<property name="bibliographicReferenceService">
+			<ref bean="bibliographicReferenceService"/>
+		</property>
+	</bean>	
+	
 	<!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 	<bean id="conversion.service" class="org.springframework.binding.convert.support.DefaultConversionService" autowire="byType"/>
 
@@ -102,7 +109,7 @@
 
 	<!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
 	<bean id="thread.cleanupBroadcaster" class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster"/>
-	<!--	
+		
     <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
             <props>		
@@ -112,7 +119,7 @@
             </props>
         </property>
     </bean>
-	-->
+	
 	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
         <!-- The default place for this is in WEB-INF/classes -->
 		<property name="basename"><value>messages</value></property>
