@@ -30,7 +30,7 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="loaderController" name="/bulkLoadForm.htm"
+ * @spring.bean id="loaderController"  
  * @spring.property name="sessionForm" value="true"
  * @spring.property name="formView" value="bulkLoadForm"
  * @spring.property name="successView" value="home.jsp"
