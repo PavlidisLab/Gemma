@@ -33,7 +33,8 @@
 
 	<subflow-state id="pubMed.Detail" flow="pubMed.Detail">
 		<attribute-mapper bean="id.attributeMapper"/> 
-		<transition on="finish" to="executeQuery"/>
+		<!--<transition on="finish" to="executeQuery"/>-->
+		<transition on="finish" to="criteria.view"/>
 		<transition on="error" to="error"/>
 	</subflow-state>
 

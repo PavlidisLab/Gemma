@@ -13,7 +13,9 @@
 
 	<view-state id="detail.view" view="pubMed.Detail.view">
 		<transition on="back" to="finish"/>
-<!--		<transition on="select" to="colleagueId.set"/> -->
+<!--		
+		<transition on="back" to="finish"/>
+		<transition on="select" to="colleagueId.set"/> -->
 	</view-state>
 <!--
 	<action-state id="colleagueId.set">

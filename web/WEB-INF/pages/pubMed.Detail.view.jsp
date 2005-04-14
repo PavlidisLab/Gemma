@@ -3,7 +3,7 @@
 <%@ page import="java.util.*" %>
 <%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
 
-<jsp:useBean id="bibRef" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
+<jsp:useBean id="bibliographicReference" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
@@ -22,31 +22,31 @@
 			</TR>
 			<TR>
 				<TD><B>Author List</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="authorList"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="authorList"/></TD>
 			</TR>
 			<TR>
 				<TD><B>Title</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="title"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="title"/></TD>
 			</TR>
 			<TR>
 				<TD><B>Volume</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="volume"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="volume"/></TD>
 			</TR>
 			<TR>
 				<TD><B>Issue</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="issue"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="issue"/></TD>
 			</TR>
 			<TR>
 				<TD><B>Publication</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="publication"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="publication"/></TD>
 			</TR>
 			<TR>
 				<TD><B>Abstract Text</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="abstractText"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="abstractText"/></TD>
 			</TR>
 			<TR>
 				<TD><B>Publication Data</B></TD>
-				<TD><jsp:getProperty name="bibRef" property="publicationDate"/></TD>
+				<TD><jsp:getProperty name="bibliographicReference" property="publicationDate"/></TD>
 			</TR>
 
 			<TR>
