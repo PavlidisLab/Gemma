@@ -6,7 +6,7 @@
 <webflow id="pubMed.Detail" start-state="detail.get">
 
 	<action-state id="detail.get">
-		<action class="edu.columbia.gemma.controller.flow.action.GetPubMedAction"/>	
+		<action bean="pubMed.Detail.criteria.formAction.getFormAction"/>
 		<transition on="success" to="detail.view"/>
 		<transition on="error" to="error"/>
 	</action-state>
