@@ -25,6 +25,7 @@
 package edu.columbia.gemma.common.description;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -50,10 +51,10 @@ public class BibliographicReferenceServiceImpl extends
     //TODO can you create a finder method for this where the parameter maxResults 
     //does not end up as a named parameter.  I want to use Hibernate's maxResults(int max)
     //method.
-    protected java.util.Collection handleGetAllBibliographicReferences(int maxResults)
+    protected java.util.Collection handleGetAllBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference BibliographicReference)
     throws java.lang.Exception{
-        //getBibliographicReferenceDao().
-        return null;
+        System.err.println("In Service: " + BibliographicReference.toString());
+        return getBibliographicReferenceDao().findAllBibliographicReferences();
     }
 
     /**
@@ -94,11 +95,24 @@ public class BibliographicReferenceServiceImpl extends
             edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
         boolean exists = false;
-        Collection col = getBibliographicReferenceDao().findByTitlePublicationDate( bibliographicReference.getTitle() );
+        Collection col = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
         
         if ( col.size() > 0 ) exists = true;
 
         return exists;
+    }
+    /* (non-Javadoc)
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang.Long)
+     */
+    protected BibliographicReference handleLoadBibliographicReference( Long id ) throws Exception {
+        return (BibliographicReference) getBibliographicReferenceDao().load(id);
+    }
+    /* (non-Javadoc)
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(java.lang.String)
+     */
+    protected BibliographicReference handleGetBibliographicReferenceByTitle( String title ) throws Exception {
+        
+        return (BibliographicReference) getBibliographicReferenceDao().findByTitle(title);
     }
 
 }
