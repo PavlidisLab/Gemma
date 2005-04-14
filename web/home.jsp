@@ -12,5 +12,6 @@
 <a href="<c:url value="bulkLoadForm.htm"/>">Load Database</a><br><br>
 <a href="<c:url value="pubMedForm.htm"/>">Search PubMed By Id</a><br><br>
 <a href="<c:url value="pubMedArticleListForm.htm"/>">List Articles</a><br><br>
+<a href="<c:url value="pubMedSearch.htm"/>">PubMed Search</a><br><br>
 </body>
 </html>
