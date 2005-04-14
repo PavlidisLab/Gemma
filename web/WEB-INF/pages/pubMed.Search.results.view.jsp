@@ -41,7 +41,7 @@
 							%>
 								<TR>
 									<TD>
-										<A href="pubMedSearch.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_eventId=select&id=<%=bibliographicReference.getTitle() %>">
+										<A href="pubMedSearch.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_eventId=select&title=<%=bibliographicReference.getTitle() %>">
 										<%=bibliographicReference.getTitle() %>
 									    </A>
 									</TD>
