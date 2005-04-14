@@ -109,7 +109,7 @@
 
 	<!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
 	<bean id="thread.cleanupBroadcaster" class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster"/>
-		
+<!--		
     <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
             <props>		
@@ -119,7 +119,7 @@
             </props>
         </property>
     </bean>
-	
+-->	
 	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
         <!-- The default place for this is in WEB-INF/classes -->
 		<property name="basename"><value>messages</value></property>
