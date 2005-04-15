@@ -13,9 +13,9 @@ Version 0.1
 &middot; Copyright &copy; 2004 - 2005 
 &middot; <a href="http://microarray.cu-genome.org/">Columbia Microarray</a><br />
 
-<!--Style respectfully borrowed from Blue Robot's
+Style respectfully borrowed from Blue Robot's
 <a href="http://www.bluerobot.com/web/layouts/">Layout Reservoir</a>
--->
+
 
 <%--
 <%@ include file="/WEB-INF/classes/build.properties"%>
