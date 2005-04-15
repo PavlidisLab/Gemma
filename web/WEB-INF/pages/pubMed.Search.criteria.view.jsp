@@ -1,11 +1,12 @@
 <%@ page session="false" %>
-
+<%@ include file="/common/taglibs.jsp"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 
 <%--<jsp:useBean id="query" scope="request" class="edu.columbia.gemma.controller.domain.BibliographicReferenceQuery"/>--%>
 <jsp:useBean id="query" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<page:applyDecorator name="default">
 <HTML>
 	<HEAD>
 	</HEAD>
@@ -17,7 +18,7 @@
 				<TABLE width="100%">
 					<TR>
 						<TD>
-							<DIV align="left">Search Criteria</DIV>
+							<DIV align="left"><b>Search Criteria</b></DIV>
 						</TD>
 					</TR>
 					<TR>
@@ -48,3 +49,4 @@
 	</BODY>
 	<A HREF="home.jsp">Home</A>
 </HTML>
+</page:applyDecorator>

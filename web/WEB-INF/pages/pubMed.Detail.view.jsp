@@ -1,11 +1,12 @@
 <%@ page session="false" %>
-
+<%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*" %>
 <%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
 
 <jsp:useBean id="bibliographicReference" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<page:applyDecorator name="default">
 <HTML>
 	<HEAD></HEAD>
 	<BODY>
@@ -15,7 +16,7 @@
 		</FORM>
 		<TABLE width="100%">
 			<TR>
-				<TD>Bibliographic Reference Details</TD>
+				<TD><b>Bibliographic Reference Details</b></TD>
 			</TR>
 			<TR>
 				<TD COLSPAN="2"><HR></TD>
@@ -62,3 +63,4 @@
 		</TABLE>
 	</BODY>
 </HTML>
+</page:applyDecorator>

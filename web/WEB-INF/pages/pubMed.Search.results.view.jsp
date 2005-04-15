@@ -1,9 +1,10 @@
 <%@ page session="false" %>
-
+<%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*" %>
 <%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<page:applyDecorator name="default">
 <HTML>
 	<HEAD>
 	</HEAD>
@@ -17,7 +18,7 @@
 				<TABLE width="100%">
 					<TR>
 						<TD>
-							<DIV align="left">Search Results</DIV>
+							<DIV align="left"><b>Search Results</b></DIV>
 						</TD>
 					</TR>
 					<TR>
@@ -70,3 +71,4 @@
 		</DIV>
 	</BODY>
 </HTML>
+</page:applyDecorator>

@@ -4,11 +4,9 @@
 
 <title><fmt:message key="404.title"/></title>
 <content tag="heading"><fmt:message key="404.title"/></content>
-
-
     <p>
         <fmt:message key="404.message">
-            <fmt:param><c:url value="/mainMenu.html"/></fmt:param>
+            <fmt:param><c:url value="/home.jsp"/></fmt:param>
         </fmt:message>
     </p>
     <p style="text-align: center; margin-top: 20px">
