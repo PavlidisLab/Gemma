@@ -50,11 +50,11 @@ public class CandidateGeneListServiceImpl
     
     // Manipulate CandidateGenes in a list
     
-    protected void  handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, Gene gene) throws java.lang.Exception{
-
+    protected CandidateGene handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, Gene gene) throws java.lang.Exception{
         CandidateGene cg = candidateGeneList.addCandidate(gene);
         this.getCandidateGeneDao().create(cg);
         this.getCandidateGeneListDao().update(candidateGeneList);
+        return cg;
     }
         
     protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
@@ -74,14 +74,15 @@ public class CandidateGeneListServiceImpl
     
     // Finder methods
     
-    public java.util.Collection handleFindByGeneOfficialName(String geneName)
-    {
-        //@todo implement protected java.util.Collection handleFindByGeneOfficialName(edu.columbia.gemma.genome.Gene gene)
-        return this.getCandidateGeneListDao().findByGeneOfficialName(geneName);
+    public Collection handleFindByGeneOfficialName(String geneName){
+       return this.getCandidateGeneListDao().findByGeneOfficialName(geneName);
     }
     
     public Collection handleFindByContributer(Person person){
-        //@todo implement protected void handleGetCandidateGeneListsByContributer(Person person) throws java.lang.Exception
         return this.getCandidateGeneListDao().findByContributer(person);
+    }
+   
+    public Collection handleGetAll(){
+        return this.getCandidateGeneListDao().findAll();
     }
 }
