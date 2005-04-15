@@ -55,106 +55,156 @@ public class GoldenPath {
     }
 
     /**
-     * Find genes contained in or overlapping a region.
+     * Find "Known" genes contained in or overlapping a region. Note that the NCBI symbol may be blank, when the gene is
+     * not a refSeq gene.
      * 
      * @param chromosome
      * @param start
      * @param end
+     * @param strand
+     * @return
      */
-    public List findRefGenesByLocation( String chromosome, int start, int end ) {
+    public List findKnownGenesByLocation( String chromosome, int start, int end, String strand ) {
         Integer starti = new Integer( start );
         Integer endi = new Integer( end );
         String searchChrom = trimChromosomeName( chromosome );
+        String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds "
+                + " FROM knownGene as kg INNER JOIN"
+                + " kgXref AS kgxr ON kg.name=kgxr.kgID WHERE "
+                + "((kg.txStart > ? AND kg.txEnd < ?) OR (kg.txStart < ? AND kg.txEnd > ?) OR "
+                + "(kg.txStart > ?  AND kg.txStart < ?) OR  (kg.txEnd > ? AND  kg.txEnd < ? )) and kg.chrom = ? ";
 
+        if ( strand != null ) {
+            query = query + " AND strand = ? order by txStart ";
+        } else {
+            query = query + " order by txStart ";
+        }
+
+        return findGenesByQuery( starti, endi, searchChrom, strand, query );
+    }
+
+    /**
+     * Find RefSeq genes contained in or overlapping a region.
+     * 
+     * @param chromosome
+     * @param start
+     * @param strand
+     * @param end
+     */
+    public List findRefGenesByLocation( String chromosome, int start, int end, String strand ) {
+        Integer starti = new Integer( start );
+        Integer endi = new Integer( end );
+        String searchChrom = trimChromosomeName( chromosome );
+        String query = "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
+                + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
+                + "(txStart > ?  AND txStart < ?) OR  (txEnd > ? AND  txEnd < ? )) and chrom = ? ";
+
+        if ( strand != null ) {
+            query = query + " AND strand = ? order by txStart ";
+        } else {
+            query = query + " order by txStart ";
+        }
+
+        return findGenesByQuery( starti, endi, searchChrom, strand, query );
+
+    }
+
+    /**
+     * @param query Generic method to retrive Genes from the GoldenPath database. The query given must have the
+     *        appropriate form.
+     * @param starti
+     * @param endi
+     * @param searchChrom
+     * @param query
+     * @return List of Genes.
+     * @throws SQLException
+     */
+    private List findGenesByQuery( Integer starti, Integer endi, String searchChrom, String strand, String query ) {
+        // Cases:
+        // 1. gene is contained within the region: txStart > start & txEnd < end;
+        // 2. region is conained within the gene: txStart < start & txEnd > end;
+        // 3. region overlaps start of gene: txStart > start & txStart < end.
+        // 4. region overlaps end of gene: txEnd > start & txEnd < end
+        //           
         try {
 
-            // Cases:
-            // 1. gene is contained within the region: txStart > start & txEnd < end;
-            // 2. region is conained within the gene: txStart < start & txEnd > end;
-            // 3. region overlaps start of gene: txStart > start & txStart < end.
-            // 4. region overlaps end of gene: txEnd > start & txEnd < end
-            //           
-            return ( List ) qr
-                    .query(
-                            conn,
-                            "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
-                                    + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
-                                    + "(txStart > ?  AND txStart < ?) OR  (txEnd > ? AND  txEnd < ? )) and chrom = ? order by txStart ",
-                            new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom },
-                            new ResultSetHandler() {
+            Object[] params;
+            if ( strand != null ) {
+                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom, strand };
+            } else {
+                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom };
+            }
 
-                                public Object handle( ResultSet rs ) throws SQLException {
-                                    Collection r = new ArrayList();
-                                    while ( rs.next() ) {
+            return ( List ) qr.query( conn, query, params, new ResultSetHandler() {
 
-                                        Gene gene = Gene.Factory.newInstance();
+                public Object handle( ResultSet rs ) throws SQLException {
+                    Collection r = new ArrayList();
+                    while ( rs.next() ) {
 
-                                        gene.setNcbiId( rs.getString( "name" ) );
+                        Gene gene = Gene.Factory.newInstance();
 
-                                        gene.setOfficialSymbol( rs.getString( "geneName" ) );
-                                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
+                        gene.setNcbiId( rs.getString( 1 ) );
 
-                                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                                        pl.setNucleotide( new Integer( rs.getInt( "txStart" ) ) );
-                                        pl.setNucleotideLength( new Integer( rs.getInt( "txEnd" )
-                                                - rs.getInt( "txStart" ) ) );
-                                        pl.setStrand( rs.getString( "strand" ) );
+                        gene.setOfficialSymbol( rs.getString( 2 ) );
+                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
 
-                                        // note that we aren't setting the chromosome here; we already know that.
-                                        gene.setPhysicalLocation( pl );
-                                        r.add( gene );
+                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                        pl.setNucleotide( new Integer( rs.getInt( 3 ) ) );
+                        pl.setNucleotideLength( new Integer( rs.getInt( 4 ) - rs.getInt( 3 ) ) );
+                        pl.setStrand( rs.getString( 5 ) );
 
-                                        Blob exonStarts = rs.getBlob( "exonStarts" );
-                                        Blob exonEnds = rs.getBlob( "exonEnds" );
+                        // note that we aren't setting the chromosome here; we already know that.
+                        gene.setPhysicalLocation( pl );
+                        r.add( gene );
 
-                                        setExons( gene, exonStarts, exonEnds );
-                                    }
-                                    return r;
-                                }
+                        Blob exonStarts = rs.getBlob( 6 );
+                        Blob exonEnds = rs.getBlob( 7 );
 
-                                /**
-                                 * @param gene
-                                 * @param exonStarts
-                                 * @param exonEnds
-                                 * @throws SQLException
-                                 */
-                                private void setExons( Gene gene, Blob exonStarts, Blob exonEnds ) throws SQLException {
+                        setExons( gene, exonStarts, exonEnds );
+                    }
+                    return r;
+                }
 
-                                    String exonStartLocations = blobToString( exonStarts );
-                                    String exonEndLocations = blobToString( exonEnds );
+                /**
+                 * @param gene
+                 * @param exonStarts
+                 * @param exonEnds
+                 * @throws SQLException
+                 */
+                private void setExons( Gene gene, Blob exonStarts, Blob exonEnds ) throws SQLException {
 
-                                    int[] exonStartsInts = SequenceManipulation
-                                            .blatLocationsToIntArray( exonStartLocations );
-                                    int[] exonEndsInts = SequenceManipulation
-                                            .blatLocationsToIntArray( exonEndLocations );
+                    String exonStartLocations = blobToString( exonStarts );
+                    String exonEndLocations = blobToString( exonEnds );
 
-                                    assert exonStartsInts.length == exonEndsInts.length;
+                    int[] exonStartsInts = SequenceManipulation.blatLocationsToIntArray( exonStartLocations );
+                    int[] exonEndsInts = SequenceManipulation.blatLocationsToIntArray( exonEndLocations );
 
-                                    GeneProduct gp = GeneProduct.Factory.newInstance();
-                                    Collection exons = new ArrayList();
-                                    for ( int i = 0; i < exonEndsInts.length; i++ ) {
-                                        int exonStart = exonStartsInts[i];
-                                        int exonEnd = exonEndsInts[i];
-                                        PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
-                                        // FIXME set the chromosome for the location.
-                                        exon.setNucleotide( new Integer( exonStart ) );
-                                        exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
-                                        exons.add( exon );
-                                    }
-                                    gp.setExons( exons );
-                                    gp.setName( gene.getNcbiId() );
-                                    Collection products = new HashSet();
-                                    products.add( gp );
-                                    gene.setProducts( products );
-                                }
+                    assert exonStartsInts.length == exonEndsInts.length;
 
-                                private String blobToString( Blob exonStarts ) throws SQLException {
-                                    byte[] bytes = exonStarts.getBytes( 1L, ( int ) exonStarts.length() );
-                                    ByteArrayConverter bac = new ByteArrayConverter();
-                                    return bac.byteArrayToAsciiString( bytes );
-                                }
-                            } );
+                    GeneProduct gp = GeneProduct.Factory.newInstance();
+                    Collection exons = new ArrayList();
+                    for ( int i = 0; i < exonEndsInts.length; i++ ) {
+                        int exonStart = exonStartsInts[i];
+                        int exonEnd = exonEndsInts[i];
+                        PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
+                        // FIXME set the chromosome for the location.
+                        exon.setNucleotide( new Integer( exonStart ) );
+                        exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
+                        exons.add( exon );
+                    }
+                    gp.setExons( exons );
+                    gp.setName( gene.getNcbiId() );
+                    Collection products = new HashSet();
+                    products.add( gp );
+                    gene.setProducts( products );
+                }
 
+                private String blobToString( Blob exonStarts ) throws SQLException {
+                    byte[] bytes = exonStarts.getBytes( 1L, ( int ) exonStarts.length() );
+                    ByteArrayConverter bac = new ByteArrayConverter();
+                    return bac.byteArrayToAsciiString( bytes );
+                }
+            } );
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
@@ -171,21 +221,29 @@ public class GoldenPath {
     }
 
     /**
-     * Given a physical location, find how close it is to the 3' end of a gene it is in.
+     * Given a physical location, find how close it is to the 3' end of a gene it is in. Refseq is searched first; if
+     * there are no hits, we search "Known genes".
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)
      * @param start The start base of the region to query.
      * @param end The end base of the region to query.
      * @param starts Locations of alignment starts. (comma-delimited from blat)
      * @param sizes Sizes of alignment blocks (comma-delimited from blat)
+     * @param strand Either + or - indicating the strand to look on, or null to search both strands.
      * @return A list of ThreePrimeData objects. The distance stored by a ThreePrimeData will be 0 if the sequence
      *         overhangs (rather than providing a negative distance). If no genes are found, the result is null;
      */
-    public List getThreePrimeDistances( String chromosome, int start, int end, String starts, String sizes ) {
+    public List getThreePrimeDistances( String chromosome, int start, int end, String starts, String sizes,
+            String strand ) {
 
         if ( end < start ) throw new IllegalArgumentException( "End must not be less than start" );
 
-        Collection genes = findRefGenesByLocation( chromosome, start, end );
+        // starting with refgene means we can get the correct transcript name etc.
+        Collection genes = findRefGenesByLocation( chromosome, start, end, strand );
+
+        // Fill in the gap in case it isn't in refseq.
+        if ( genes.size() == 0 ) genes = findKnownGenesByLocation( chromosome, start, end, strand );
+
         if ( genes.size() == 0 ) return null;
 
         List results = new ArrayList();

@@ -74,7 +74,7 @@ public class SequenceManipulation {
         Collection products = gene.getProducts();
         for ( Iterator iter = products.iterator(); iter.hasNext(); ) {
             GeneProduct geneProduct = ( GeneProduct ) iter.next();
-            return getGeneProductExonOverlap( starts, sizes, geneProduct );
+            return getGeneProductExonOverlap( starts, sizes, null, geneProduct );
         }
         return 0;
     }
@@ -84,14 +84,18 @@ public class SequenceManipulation {
      * 
      * @param starts of the locations we are testing.
      * @param sizes of the locations we are testing.
-     * @param geneProduct GeneProduct we are testing
+     * @param strand the strand to look on. If null, strand is ignored.
+     * @param geneProduct GeneProduct we are testing. If strand of PhysicalLocation is null, we ignore strand.
      * @return Total number of bases which overlap with exons of the transcript. A value of zero indicates that the
      *         location is entirely within an intron.
      */
-    private static int getGeneProductExonOverlap( String starts, String sizes, GeneProduct geneProduct ) {
+    public static int getGeneProductExonOverlap( String starts, String sizes, String strand, GeneProduct geneProduct ) {
 
         if ( starts == null || sizes == null || geneProduct == null )
             throw new IllegalArgumentException( "Null data" );
+
+        if ( strand != null && geneProduct.getPhysicalLocation().getStrand() != null
+                && geneProduct.getPhysicalLocation().getStrand() != strand ) return 0;
 
         Collection exons = geneProduct.getExons();
 

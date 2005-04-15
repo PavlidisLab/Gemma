@@ -1,6 +1,8 @@
 package edu.columbia.gemma.tools;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
@@ -11,7 +13,9 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReader;
+import edu.columbia.gemma.genome.PhysicalLocation;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
+import edu.columbia.gemma.genome.gene.GeneProduct;
 
 /**
  * <hr>
@@ -30,7 +34,8 @@ public class SequenceManipulationTest extends TestCase {
     Reporter[] testProbes;
     int[] expectedResults;
 
-    BioSequence seq;
+    BioSequence seq = null;
+    GeneProduct gp = null;
 
     /*
      * @see TestCase#setUp()
@@ -109,6 +114,30 @@ public class SequenceManipulationTest extends TestCase {
         seq = BioSequence.Factory.newInstance();
         seq.setSequence( "ccccccgccccc" );
 
+        // this is human APRIN, NM_015032 (the shorter transcript)
+        gp = GeneProduct.Factory.newInstance();
+
+        int[] exonStarts = new int[] { 32058623, 32120890, 32123940, 32130375, 32130570, 32131290, 32139900, 32145352,
+                32147980, 32150971, 32156014, 32159270, 32160592, 32166359, 32168990, 32171866, 32173459, 32179070,
+                32182082, 32204237, 32207308, 32213217, 32214728, 32218114, 32225469, 32227979, 32230224, 32230671,
+                32231765, 32232712, 32236626, 32242258, 32242791, 32245326, 32247154 };
+        int[] exonEnds = new int[] { 32058730, 32121017, 32124144, 32130462, 32130668, 32131417, 32139981, 32145493,
+                32148096, 32151066, 32156160, 32159422, 32160706, 32166441, 32169039, 32172006, 32173575, 32179176,
+                32182243, 32204361, 32207467, 32213286, 32214865, 32218238, 32225674, 32228094, 32230357, 32230791,
+                32231828, 32232858, 32236732, 32242698, 32242899, 32245462, 32250157 };
+
+        Collection exons = new ArrayList();
+
+        for ( int i = 0; i < exonStarts.length; i++ ) {
+            PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+            pl.setStrand( "+" );
+            pl.setNucleotide( new Integer( exonStarts[i] ) );
+            pl.setNucleotideLength( new Integer( exonEnds[i] - exonStarts[i] ) );
+            exons.add( pl );
+        }
+        gp.setPhysicalLocation( PhysicalLocation.Factory.newInstance() );
+        gp.setExons( exons );
+
     }
 
     /*
@@ -146,8 +175,40 @@ public class SequenceManipulationTest extends TestCase {
 
     }
 
-    public final void testExonOverlap() throws Exception {
-        
+    public final void testExonOverlapA() throws Exception {
+
+        String starts = "32242963,"; // should have zero overlap with the gp.
+        String sizes = "50,";
+        String strand = "+";
+
+        int actualReturn = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, strand, gp );
+        int expectedReturn = 0;
+
+        assertEquals( expectedReturn, actualReturn );
+    }
+    
+    public final void testExonOverlapB() throws Exception {
+
+        String starts = "32247695,";
+        String sizes = "50,";
+        String strand = "+";
+
+        int actualReturn = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, strand, gp );
+        int expectedReturn = 50;
+
+        assertEquals( expectedReturn, actualReturn );
+    }
+    
+    public final void testExonOverlapC() throws Exception {
+
+        String starts = "32242893,"; // partly in an inton.
+        String sizes = "50,";
+        String strand = "+";
+
+        int actualReturn = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, strand, gp );
+        int expectedReturn = 6;
+
+        assertEquals( expectedReturn, actualReturn );
     }
     
 }

@@ -55,7 +55,7 @@ public class ProbeThreePrimeLocator {
             String arrayName = sa[1];
 
             List tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(), blatRes
-                    .getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes() );
+                    .getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(), blatRes.getStrand() );
 
             if ( tpds == null ) continue;
 
