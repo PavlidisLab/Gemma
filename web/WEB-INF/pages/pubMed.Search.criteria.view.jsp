@@ -14,6 +14,7 @@
 		<DIV align="left">
 			<FORM name="searchForm" action="pubMedSearch.htm">
 				<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
+				<INPUT type="hidden" name="_currentStateId" value="criteria.view">
 				<INPUT type="hidden" name="_eventId" value="submit">
 				<TABLE width="100%">
 					<TR>
