@@ -21,8 +21,9 @@
 
 package edu.columbia.gemma.genome.gene;
 
-import java.util.ArrayList;
+
 import java.util.Collection;
+import java.util.HashSet;
 
 import java.util.Iterator;
 
@@ -77,7 +78,7 @@ public class CandidateGeneListImpl
         cgNew.setRank(new Integer(maxRank));
         
         if(this.getCandidates()==null)
-            this.setCandidates(new ArrayList());
+            this.setCandidates(new HashSet());
         this.getCandidates().add(cgNew);
         
         return cgNew;
