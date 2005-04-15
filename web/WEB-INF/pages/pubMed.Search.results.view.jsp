@@ -10,7 +10,7 @@
 	</HEAD>
 	<BODY>
 		<FORM name="newSearchForm" action="pubMedSearch.htm">
-			<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
+			<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">			
 			<INPUT type="hidden" name="_eventId" value="newSearch">
 		</FORM>
 		<DIV align="left">
