@@ -42,7 +42,7 @@ public class SearchPubMedFlowTests extends AbstractFlowExecutionTests {
         startFlow();
         Map properties = new HashMap();
         properties.put( "pubMedId", "15173114" );
-        ViewDescriptor view = signalEvent( new SimpleEvent( this, "submit", properties ) );
+        ViewDescriptor view = signalEvent( new SimpleEvent( this, "submitPubMed", properties ) );
         assertCurrentStateEquals( "results.view" );
         asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 1 );
     }
