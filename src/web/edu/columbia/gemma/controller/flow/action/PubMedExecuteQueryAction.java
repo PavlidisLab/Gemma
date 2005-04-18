@@ -73,6 +73,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
         try {
             int pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "pubMedId" ) );
             BibliographicReference br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
+       
             List list = new ArrayList();
             list.add( br );
             //TODO Ask user for their choice.(like I did before).
