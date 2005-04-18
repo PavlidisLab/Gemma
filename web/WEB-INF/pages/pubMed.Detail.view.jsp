@@ -46,7 +46,7 @@
 				<TD><jsp:getProperty name="bibliographicReference" property="abstractText"/></TD>
 			</TR>
 			<TR>
-				<TD><B>Publication Data</B></TD>
+				<TD><B>Publication Date</B></TD>
 				<TD><jsp:getProperty name="bibliographicReference" property="publicationDate"/></TD>
 			</TR>
 
