@@ -1,6 +1,12 @@
 <!--
+This document is a "merge file" used by XDoclet to automagically generate a web-context
+for the application.  The generated web-context will have the name xxx-servlet.xml and is
+located in web/WEB-INF/.	
+
 $Id$
 -->
+ 
+<!-- EXTERNAL DATABASE SESSION FACTORY -->
   <bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
         <property name="dataSource"><ref bean="dataSourceGoldenPathHuman"/></property>
         <property name="mappingResources">
@@ -18,6 +24,7 @@ $Id$
         </property>
 	</bean>	
 	
+<!-- DATASOURCE USED BY SESSION FACTORY ABOVE -->	
 	<bean id="dataSourceGoldenPathHuman" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName"><value>com.mysql.jdbc.Driver</value></property>
         <property name="username"><value>pavlidis</value></property>
@@ -25,7 +32,15 @@ $Id$
         <property name="url"><value>jdbc:mysql://localhost:3306/hg17</value></property>
     </bean>
 
-   <!-- controller for the application -->
+<!-- SPRING WEBFLOWS -->
+<!-- These entries are used with the xxx-flow.xml file.  The location of this file is defined
+	 in the FlowFactoryBean (ie. see pubMed.Search below).
+-->	
+
+<!-- Controller for the entire application.  This can be parameterized by adding the  
+	_flowId to the client view (ie. jsp).  If this is not specified, you must specify
+	an HttpServletFlowExecutionManager (ie. see pubMedSearchFrontController).
+-->
     <bean id="frontController" name="/search.htm" class="org.springframework.web.flow.mvc.FlowController">
 	   <property name="flowExecutionManager">
 		   <bean class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager"/>
