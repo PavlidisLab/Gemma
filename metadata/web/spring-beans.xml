@@ -1,3 +1,6 @@
+<!--
+$Id$
+-->
   <bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
         <property name="dataSource"><ref bean="dataSourceGoldenPathHuman"/></property>
         <property name="mappingResources">
