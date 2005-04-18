@@ -1,8 +1,7 @@
-<bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
+  <bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
         <property name="dataSource"><ref bean="dataSourceGoldenPathHuman"/></property>
         <property name="mappingResources">
             <list>
-                
             </list>
         </property>
 		<property name="hibernateProperties">
@@ -22,9 +21,14 @@
         <property name="password"><value>toast</value></property>
         <property name="url"><value>jdbc:mysql://localhost:3306/hg17</value></property>
     </bean>
-	
+
+   <!-- controller for the application -->
+    <bean id="frontController" name="/search.htm" class="org.springframework.web.flow.mvc.FlowController">
+	   <property name="flowExecutionManager">
+		   <bean class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager"/>
+	   </property>
+    </bean>	
 	<!-- search flow beans -->
-	
 	<bean id="pubMedSearchFrontController" name="/pubMedSearch.htm" class="org.springframework.web.flow.mvc.FlowController">
 		<property name="flowExecutionManager">
 			<bean class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
@@ -62,6 +66,12 @@
 		</property>
 	</bean>	
 
+    <bean id="pubMed.Search.getAllBibRef" class="edu.columbia.gemma.controller.flow.action.BibRefExecuteQueryAction">
+		<property name="bibliographicReferenceService">
+			<ref bean="bibliographicReferenceService"/>
+		</property>
+	</bean>	
+	
     <bean id="pubMed.Search.id.set" class="org.springframework.web.flow.action.EventParameterMapperAction">			
 		<property name="mapping" value="title"/><!--,java.lang.String"/>-->
 		<property name="targetScopeAsString"><value>flow</value></property>	
