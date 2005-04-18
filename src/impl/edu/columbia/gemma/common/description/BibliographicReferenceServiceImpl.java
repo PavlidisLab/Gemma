@@ -31,7 +31,8 @@ package edu.columbia.gemma.common.description;
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
- * @author $Id$
+ * @author keshav
+ * @version $Id$
  * @see edu.columbia.gemma.common.description.BibliographicReferenceService
  */
 public class BibliographicReferenceServiceImpl extends
