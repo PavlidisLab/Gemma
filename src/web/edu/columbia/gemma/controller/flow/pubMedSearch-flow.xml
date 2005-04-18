@@ -6,7 +6,8 @@
 <webflow id="pubMed.Search" start-state="criteria.view">
 
 	<view-state id="criteria.view" view="pubMed.Search.criteria.view">
-		<transition on="submit" to="bindAndValidate"/> 
+		<transition on="submitPubMed" to="bindAndValidate"/> 
+		<transition on="getBibRef" to="getAllBibRef"/> 
 	</view-state>
 
 	<action-state id="bindAndValidate">
@@ -14,13 +15,24 @@
 		<transition on="success" to="executeQuery"/>
 		<transition on="error" to="criteria.view"/>
 	</action-state>
+	
+	<action-state id="getAllBibRef">
+		<action bean="pubMed.Search.getAllBibRef"/>
+		<transition on="success" to="bibRef.results.view"/>
+	</action-state>
 
 	<action-state id="executeQuery">
 		<action bean="pubMed.Search.executeQuery"/>
 		<transition on="success" to="results.view"/>
+		<transition on="error" to="criteria.view"/>
 	</action-state>
 	
 	<view-state id="results.view" view="pubMed.Search.results.view">
+		<transition on="newSearch" to="criteria.view"/>
+	    <transition on="select" to="pubMedId.set"/>
+	</view-state>
+	
+	<view-state id="bibRef.results.view" view="bibRef.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view"/>
 	    <transition on="select" to="pubMedId.set"/>
 	</view-state>
