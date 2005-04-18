@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.web.flow.Event;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
-import org.springframework.web.flow.execution.servlet.HttpServletRequestEvent;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
@@ -59,7 +58,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
     public void setPubMedXmlFetcher( PubMedXMLFetcher pubMedXmlFetcher ) {
         this.pubMedXmlFetcher = pubMedXmlFetcher;
     }
-    
+
     /**
      * This is the equivalent of writing the onSubmit method in a Spring Controller,
      * or a doGet (doPost) method in a Java Servlet.
@@ -68,20 +67,24 @@ public class PubMedExecuteQueryAction extends AbstractAction {
      * @exception Exception 
      */
     protected Event doExecuteAction( RequestContext context ) throws Exception {
-        
-//        int pubMedId = Integer.parseInt( ( ( HttpServletRequestEvent ) context.getOriginatingEvent() ).getRequest()
-//                .getParameter( "pubMedId" ) );
-        int pubMedId = Integer.parseInt((String)context.getOriginatingEvent().getParameter("pubMedId"));
-        
-        BibliographicReference br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
-        List list = new ArrayList();
-        list.add( br );
-        //TODO Ask user for their choice.(like I did before).
-        //TODO When you persist the bibRef, persist the DatabaseEntry.
-        if ( ! getBibliographicReferenceService().alreadyExists( br ))
-            getBibliographicReferenceService().saveBibliographicReference( br );
-      
-        context.getRequestScope().setAttribute( "bibliographicReferences", list );
-        return success();
+
+        //        int pubMedId = Integer.parseInt( ( ( HttpServletRequestEvent ) context.getOriginatingEvent() ).getRequest()
+        //                .getParameter( "pubMedId" ) );
+        try {
+            int pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "pubMedId" ) );
+            BibliographicReference br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
+            List list = new ArrayList();
+            list.add( br );
+            //TODO Ask user for their choice.(like I did before).
+            //TODO When you persist the bibRef, persist the DatabaseEntry.
+            if ( !getBibliographicReferenceService().alreadyExists( br ) )
+                    getBibliographicReferenceService().saveBibliographicReference( br );
+
+            context.getRequestScope().setAttribute( "bibliographicReferences", list );
+            return success();
+        //TODO When you start using value objects, do the pubMed validation in the validator.    
+        } catch ( Exception e ) {
+            return error();
+        }
     }
 }
