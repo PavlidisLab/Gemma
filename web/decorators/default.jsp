@@ -30,7 +30,6 @@
     </div>
 
     <div id="screen">
-
         <div id="header">
             <% if (request.getRequestURL().indexOf("login.jsp") == -1) { %>
             <c:if test="${sessionScope.currentUserForm != null}">
@@ -54,7 +53,11 @@
             <%@ include file="/common/messages.jsp" %>
             <decorator:body/>
         </div>
-        
+		
+		<%if (!request.getServletPath().equals("/home.jsp")){%>
+			<a href="<c:url value="home.jsp"/>">Home</a><br><br>    
+		<%}%>
+
         <div id="footer">
             <c:import url="/common/footer.jsp"/>
         </div>
