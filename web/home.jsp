@@ -18,7 +18,7 @@
 <a href="<c:url value=""/>">Load Database</a><br><br>
 <a href="<c:url value=""/>">Search PubMed By Id</a><br><br>
 <a href="<c:url value=""/>">List Articles</a><br><br>
-
 <a href="<c:url value="pubMedSearch.htm"/>">PubMed Search</a><br><br>
+<%--<a href="<c:url value="search.htm?&_flowId=bibRef.GetAll"/>">PubMed Search</a><br><br>--%>
 </body>
 </html>
