@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+A Spring WebFlow.  Flows can be in 1 of 4 states:	
+view-state: displays associated view
+action-state:  can be used to execute bean defined in bean-factory.xml
+subflow-state: execute another flow
+end-state: end flow sequence
 
+Allows you to select pubMed details.  This is a subflow of pubMed.Search.   
+
+$Id$	
+-->
 <!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
 	"http://www.springframework.org/dtd/spring-webflow.dtd">
 

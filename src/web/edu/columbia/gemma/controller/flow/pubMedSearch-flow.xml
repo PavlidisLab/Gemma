@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+A Spring WebFlow.  Flows can be in 1 of 4 states:	
+view-state: displays associated view
+action-state:  can be used to execute bean defined in bean-factory.xml
+subflow-state: execute another flow
+end-state: end flow sequence
+
+This flow is used to search for pubMed Id's.  The flow has a subflow "pubMed.Detail" 
+
+$Id$	
+-->
 
 <!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
 	"http://www.springframework.org/dtd/spring-webflow.dtd">
@@ -44,7 +55,7 @@
 	</action-state>
 
 	<subflow-state id="pubMed.Detail" flow="pubMed.Detail">
-		<attribute-mapper bean="id.attributeMapper"/> 
+		<attribute-mapper bean="pubMed.id.attributeMapper"/> 
 		<!--<transition on="finish" to="executeQuery"/>-->
 		<transition on="finish" to="criteria.view"/>
 		<transition on="error" to="error"/>
