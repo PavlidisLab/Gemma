@@ -2,6 +2,7 @@ package edu.columbia.gemma.controller.flow;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import org.springframework.test.web.flow.AbstractFlowExecutionTests;
 import org.springframework.web.flow.SimpleEvent;
@@ -57,8 +58,14 @@ public class SearchPubMedFlowTests extends AbstractFlowExecutionTests {
     }
 
     protected String[] getConfigLocations() {
-        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-hibernate.xml",
-                "loader-servlet.xml" };
+
+        ResourceBundle db = ResourceBundle.getBundle( "testResources" );
+        String daoType = db.getString( "dao.type" );
+        String servletContext = db.getString( "servlet.name.0" );
+        // Make sure you have the /web on the junit classpath.
+        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml",
+                servletContext + "-servlet.xml" };
+
         return paths;
     }
 
