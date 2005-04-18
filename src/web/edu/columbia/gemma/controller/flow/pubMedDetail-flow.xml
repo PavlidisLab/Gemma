@@ -7,8 +7,8 @@ subflow-state: execute another flow
 end-state: end flow sequence
 
 Allows you to select pubMed details.  This is a subflow of pubMed.Search.   
-
-$Id$	
+author: keshav
+version: $Id$	
 -->
 <!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
 	"http://www.springframework.org/dtd/spring-webflow.dtd">

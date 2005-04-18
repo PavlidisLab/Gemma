@@ -24,7 +24,6 @@
  */
 package edu.columbia.gemma.common.description;
 
-
 /**
  * Implementation of BibliographicReferenceService.
  * <hr>

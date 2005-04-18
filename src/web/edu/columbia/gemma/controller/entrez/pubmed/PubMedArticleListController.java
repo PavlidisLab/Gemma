@@ -14,10 +14,9 @@ import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 
 /**
- * 
- *
  * <hr>
  * <p>Copyright (c) 2004 - 2005 Columbia University
+ * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="pubMedArticleListController"
