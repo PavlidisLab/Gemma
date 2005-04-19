@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.flow.Event;
+import org.springframework.web.flow.InternalRequestContext;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
 
@@ -67,7 +68,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
      * @exception Exception 
      */
     protected Event doExecuteAction( RequestContext context ) throws Exception {
-
+  
         //        int pubMedId = Integer.parseInt( ( ( HttpServletRequestEvent ) context.getOriginatingEvent() ).getRequest()
         //                .getParameter( "pubMedId" ) );
         try {

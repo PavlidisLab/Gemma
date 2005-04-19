@@ -91,6 +91,5 @@
 				</TABLE>
 		</DIV>	
 	</BODY>
-	<A HREF="home.jsp">Home</A>
 </HTML>
 </page:applyDecorator>

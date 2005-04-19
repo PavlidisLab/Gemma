@@ -24,6 +24,7 @@
 				for (int i=0; i<results.size(); i++) {
 					BibliographicReference bibliographicReference=(BibliographicReference)results.get(i);
 			%>
+
 			<TR>
 				<TD><B>Author List</B></TD>
 				<TD><%=bibliographicReference.getAuthorList() %></TD>
@@ -51,7 +52,7 @@
 			<TR>
 				<TD><B>Publication Date</B></TD>
 				<TD><%=bibliographicReference.getPublicationDate() %></TD>
-			</TR>
+			</TR>		
 			<%
 				}
 			%>
