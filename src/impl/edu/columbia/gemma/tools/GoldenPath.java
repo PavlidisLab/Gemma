@@ -241,8 +241,8 @@ public class GoldenPath {
         // starting with refgene means we can get the correct transcript name etc.
         Collection genes = findRefGenesByLocation( chromosome, start, end, strand );
 
-        // Fill in the gap in case it isn't in refseq.
-        if ( genes.size() == 0 ) genes = findKnownGenesByLocation( chromosome, start, end, strand );
+        // get known genes as well, in case all we got was an intron.
+        genes.addAll( findKnownGenesByLocation( chromosome, start, end, strand ) );
 
         if ( genes.size() == 0 ) return null;
 

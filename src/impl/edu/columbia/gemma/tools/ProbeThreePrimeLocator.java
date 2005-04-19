@@ -42,13 +42,16 @@ public class ProbeThreePrimeLocator {
         brp.parse( input );
 
         int count = 0;
+        int skipped = 0;
         for ( Iterator iter = brp.iterator(); iter.hasNext(); ) {
             BlatResultImpl blatRes = ( BlatResultImpl ) iter.next(); // fixme, this should not be an impl
             double score = blatRes.score();
-            if ( score < scoreThreshold ) continue;
+            if ( score < scoreThreshold ) {
+                skipped++;
+                continue;
+            }
 
             String qName = blatRes.getQueryName();
-
             String[] sa = qName.split( ":" );
             if ( sa.length < 2 ) throw new IllegalArgumentException( "Expected query name in format 'xxx:xxx'" );
             String probeName = sa[0];
@@ -74,10 +77,9 @@ public class ProbeThreePrimeLocator {
 
                 count++;
                 if ( count % 100 == 0 ) log.info( "Three-prime locations computed for " + count + " probes" );
-
             }
-
         }
+        log.info("Skipped " + skipped + " results that didn't meet criteria");
         input.close();
         output.close();
     }
