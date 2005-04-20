@@ -22,8 +22,8 @@ public class BlatResultParser extends BasicLineParser {
     private static final int MISMATCHES_FIELD = 1;
     private static final int REPMATCHES_FIELD = 2;
     private static final int NS_FIELD = 3;
-    private static final int QGAPBASES_FIELD = 4;
-    private static final int QGAPCOUNT_FIELD = 5;
+    private static final int QGAPCOUNT_FIELD = 4;
+    private static final int QGAPBASES_FIELD = 5;
     private static final int TGAPCOUNT_FIELD = 6;
     private static final int TGAPBASES_FIELD = 7;
     private static final int STRAND_FIELD = 8;
@@ -63,10 +63,10 @@ public class BlatResultParser extends BasicLineParser {
             result.setMismatches( Integer.parseInt( f[MISMATCHES_FIELD] ) );
             result.setRepMatches( Integer.parseInt( f[REPMATCHES_FIELD] ) );
             result.setNs( Integer.parseInt( f[NS_FIELD] ) );
+            result.setQueryGapCount( Integer.parseInt( f[QGAPCOUNT_FIELD] ) );
             result.setQueryGapBases( Integer.parseInt( f[QGAPBASES_FIELD] ) );
-            // result.setQuery( Integer.parseInt( f[QGAPCOUNT_FIELD] ) );
-            result.setQueryGapCount( Integer.parseInt( f[TGAPCOUNT_FIELD] ) );
             result.setTargetGapBases( Integer.parseInt( f[TGAPBASES_FIELD] ) );
+            result.setTargetGapCount( Integer.parseInt( f[TGAPCOUNT_FIELD] ) );
             result.setStrand( f[STRAND_FIELD] );
             // result.setTargetChromosome( // ); // FIXME
             result.setQueryStart( Integer.parseInt( f[QSTART_FIELD] ) );

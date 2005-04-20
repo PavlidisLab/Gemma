@@ -274,10 +274,8 @@ public class GoldenPath {
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
-
             results.add( tpd );
         }
-
         return results;
     }
 

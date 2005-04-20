@@ -67,13 +67,42 @@ public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.B
         this.targetName = targetName;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Based on the JKSrc method in psl.c. However, we do not double-penalize for mismatches (they are not subtracted
+     * from the matches). The gap penalties are implemented as in psl.c.
      * 
+     * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
      * @see edu.columbia.gemma.sequence.sequenceAnalysis.BlatResult#score()
      */
     public double score() {
-        return ( double ) this.getMatches() / ( double ) this.getQuerySize();
+        return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
+                / this.getQuerySize();
+    }
+
+    /**
+     * Fraction identity computation, as in psl.c.
+     * 
+     * @return Value between 0 and 1.
+     * @see http:// genome.ucsc.edu/FAQ/FAQblat#blat5
+     */
+    public double identity() {
+        int sizeMul = 1; // assuming DNA; use 3 for protein.
+        int qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
+        int tAliSize = this.getTargetEnd() - this.getTargetStart();
+        int aliSize = Math.min( qAliSize, tAliSize );
+
+        if ( aliSize <= 0 ) return 0.0;
+
+        int sizeDif = qAliSize = tAliSize;
+        if ( sizeDif < 0 ) {
+            sizeDif = -sizeDif; // here assuming "isMrna" is false;
+        }
+        int insertFactor = this.getQueryGapCount();
+        int milliBad = ( 1000 * ( this.getMismatches() * sizeMul + insertFactor + ( int ) Math.round( 3 * Math
+                .log( 1.0 + sizeDif ) ) ) )
+                / ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
+        assert milliBad >= 0 && milliBad <= 1000;
+        return 100.0 - milliBad * 0.1;
     }
 
     /**

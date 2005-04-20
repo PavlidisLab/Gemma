@@ -20,7 +20,7 @@ import edu.columbia.gemma.loader.genome.BlatResultParser;
 import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
 
 /**
- * Given a blat result set for an array design, find the 3' locations for all the really good hits.
+ * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -32,6 +32,7 @@ public class ProbeThreePrimeLocator {
     protected static final Log log = LogFactory.getLog( ProbeThreePrimeLocator.class );
     private String dbName = "hg17";
     private double scoreThreshold = 0.90;
+    private double identityThreshold = 0.90;
 
     public void run( InputStream input, Writer output ) throws IOException, SQLException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
@@ -46,7 +47,8 @@ public class ProbeThreePrimeLocator {
         for ( Iterator iter = brp.iterator(); iter.hasNext(); ) {
             BlatResultImpl blatRes = ( BlatResultImpl ) iter.next(); // fixme, this should not be an impl
             double score = blatRes.score();
-            if ( score < scoreThreshold ) {
+            double identity = blatRes.identity();
+            if ( score < scoreThreshold || identity < identityThreshold ) {
                 skipped++;
                 continue;
             }
@@ -79,7 +81,7 @@ public class ProbeThreePrimeLocator {
                 if ( count % 100 == 0 ) log.info( "Three-prime locations computed for " + count + " probes" );
             }
         }
-        log.info("Skipped " + skipped + " results that didn't meet criteria");
+        log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         input.close();
         output.close();
     }
