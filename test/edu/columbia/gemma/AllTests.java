@@ -5,6 +5,7 @@ import junit.framework.TestSuite;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.controller.LoaderControllerTest;
 import edu.columbia.gemma.controller.entrez.pubmed.PubMedXmlControllerTest;
+import edu.columbia.gemma.controller.flow.DetailBibRefFlowTests;
 import edu.columbia.gemma.controller.flow.SearchPubMedFlowTests;
 import edu.columbia.gemma.controller.flow.action.GetPubMedActionTests;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
@@ -55,6 +56,7 @@ public class AllTests {
         
         suite.addTestSuite(SearchPubMedFlowTests.class);
         suite.addTestSuite(GetPubMedActionTests.class);
+        suite.addTestSuite(DetailBibRefFlowTests.class);
         
         suite.addTestSuite(BlatResultImplTest.class);
         //$JUnit-END$
