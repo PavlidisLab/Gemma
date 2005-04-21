@@ -62,11 +62,11 @@ version: $Id$
 	-->	
 	<bean id="flowExecutionManager" class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
 		<!-- Choose 0 or 1 flowExecutionStorage (to resolve back button issue) Strategy-->
-		<!--
+		
 		<property name="flowExecutionStorage">
 			<bean class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage"/>
 		</property>
-		
+		<!--
 		<property name="flowExecutionStorage">
 			<bean class="org.springframework.web.flow.execution.servlet.HttpSessionFlowExecutionStorage"/>
 		</property>
@@ -137,12 +137,24 @@ version: $Id$
 
 	<!-- Subflow (detail flow) -->
 	<bean id="pubMedDetailController" name="/pubMedDetail.htm" class="org.springframework.web.flow.mvc.FlowController">
-		<property name="flowExecutionManager">
-			<bean class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
-				<property name="flow" ref="pubMed.Detail"/>
-			</bean>
-		</property>
+		<property name="flowExecutionManager" ref="flowExecutionManagerDetail" />
 	</bean>
+	
+	<!--
+		CONTINUATIONS
+		Custom configuration of the HTTP request flow execution manager.
+		Note how you can just change the flow execution storage strategy without any impact
+		on the views (see teh flowExecutionManager above for other variants).
+		NOTE:  The Storage mechanism used in a subflow must be equivalent to that of the 
+		parent flow
+	-->	
+	<bean id="flowExecutionManagerDetail" class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
+		<property name="flowExecutionStorage">
+			<bean class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage"/>
+		</property>
+
+		<property name="flow" ref="pubMed.Detail"/>
+	</bean>	
 
 	<!-- xml FlowBuilder definition for the detail flow -->
 	<bean id="pubMed.Detail" class="org.springframework.web.flow.config.FlowFactoryBean">
