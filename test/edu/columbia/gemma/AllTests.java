@@ -9,8 +9,8 @@ import edu.columbia.gemma.controller.flow.SearchPubMedFlowTests;
 import edu.columbia.gemma.controller.flow.action.GetPubMedActionTests;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
+import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImplTest;
 import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
-import edu.columbia.gemma.loader.arraydesign.GoldenPathTest;
 import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
@@ -19,6 +19,7 @@ import edu.columbia.gemma.loader.loaderutils.IdentifierCreatorTest;
 import edu.columbia.gemma.loader.mage.MageMLConverterTest;
 import edu.columbia.gemma.loader.mage.MageMLParserTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
+import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 
 public class AllTests {
@@ -26,7 +27,7 @@ public class AllTests {
     public static Test suite() {
         
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
-        // $JUnit-BEGIN$
+        //$JUnit-BEGIN$
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );
@@ -54,7 +55,9 @@ public class AllTests {
         
         suite.addTestSuite(SearchPubMedFlowTests.class);
         suite.addTestSuite(GetPubMedActionTests.class);
-        // $JUnit-END$
+        
+        suite.addTestSuite(BlatResultImplTest.class);
+        //$JUnit-END$
         
         return suite;
     }
