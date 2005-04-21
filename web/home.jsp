@@ -1,11 +1,10 @@
-<%@ include file="WEB-INF/pages/include.jsp" %>
 <%@ include file="/common/taglibs.jsp"%>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-
+<page:applyDecorator name="default">
 <html>
-<head><title>Gemma</title><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></head>
-<body bgcolor="#CCCC99">
+<head><title>Gemma</title></head>
+<body>
 <%--<img src="bigicon.gif" width="88" height="97"> <br>--%>
 <h1>Options</h1>
 <form method="post">
@@ -20,3 +19,4 @@
 <%--<a href="<c:url value="search.htm?&_flowId=bibRef.GetAll"/>">PubMed Search</a><br><br>--%>
 </body>
 </html>
+</page:applyDecorator>
