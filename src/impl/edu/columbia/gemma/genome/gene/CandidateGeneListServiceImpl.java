@@ -52,30 +52,25 @@ public class CandidateGeneListServiceImpl
     
     protected CandidateGene handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, Gene gene) throws java.lang.Exception{
         CandidateGene cg = candidateGeneList.addCandidate(gene);
-        this.getCandidateGeneDao().create(cg);
-        this.getCandidateGeneListDao().update(candidateGeneList);
         return cg;
     }
         
     protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
         candidateGeneList.removeCandidate(candidateGene);
-        this.getCandidateGeneListDao().update(candidateGeneList);
     } 
     
     protected void  handleDecreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
         candidateGeneList.decreaseRanking(candidateGene);
-        this.getCandidateGeneListDao().update(candidateGeneList); 
     }
     
     protected void  handleIncreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
         candidateGeneList.increaseRanking(candidateGene);
-        this.getCandidateGeneListDao().update(candidateGeneList); 
     }    
     
     // Finder methods
     
-    public Collection handleFindByGeneOfficialName(String geneName){
-       return this.getCandidateGeneListDao().findByGeneOfficialName(geneName);
+    public Collection handleFindByGeneOfficialName(String officialName){
+       return this.getCandidateGeneListDao().findByGeneOfficialName(officialName);
     }
     
     public Collection handleFindByContributer(Person person){
