@@ -2,7 +2,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" 
     "http://www.springframework.org/dtd/spring-beans.dtd">
 
-<beans>
+<beans><!--
     <bean id="validatorFactory" class="org.springframework.validation.commons.DefaultValidatorFactory"
         init-method="init">
         <property name="resources">
@@ -16,5 +16,5 @@
 
     <bean id="beanValidator" class="org.springframework.validation.commons.BeanValidator">
         <property name="validatorFactory"><ref bean="validatorFactory"/></property>
-    </bean>
+    </bean>-->
 </beans>
