@@ -1,6 +1,4 @@
-<%@ page session="false" %>
 <%@ include file="/common/taglibs.jsp"%>
-<%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 
 <%--<jsp:useBean id="query" scope="request" class="edu.columbia.gemma.controller.domain.BibliographicReferenceQuery"/>--%>
 <jsp:useBean id="query" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
@@ -41,7 +39,7 @@
 				<TABLE width="100%">
 					<TR>
 						<TD>
-							<DIV align="left"><b>Search Criteria</b></DIV>
+							<DIV align="left"><b>Search External Databases For PubMed ID</b></DIV>
 						</TD>
 					</TR>
 					<TR>
@@ -53,7 +51,7 @@
 						</TR>
 					</spring:hasBindErrors>
 					<TR>
-						<TD>PubMed Id</TD>
+						<TD>PubMed ID</TD>
 						<TD><INPUT type="text" name="pubMedId" value=""></TD>
 					</TR>
 					<TR>
@@ -70,7 +68,7 @@
 
 					<TR>
 						<TD>
-							<DIV align="left"><b>View Bibliographic References</b></DIV>
+							<DIV align="left"><b>View All Gemma Bibliographic References</b></DIV>
 						</TD>
 					</TR>
 					<TR>

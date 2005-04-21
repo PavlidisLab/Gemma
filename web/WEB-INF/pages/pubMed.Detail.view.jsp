@@ -1,4 +1,3 @@
-<%@ page session="false" %>
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*" %>
 <%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
