@@ -1,5 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
-
+<!--
+version: $Id$
+author: keshav
+-->
 <%--<jsp:useBean id="query" scope="request" class="edu.columbia.gemma.controller.domain.BibliographicReferenceQuery"/>--%>
 <jsp:useBean id="query" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
 
