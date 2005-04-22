@@ -321,6 +321,7 @@
       <resource>
         <directory>${basedir}/src/gen</directory>
         <includes>
+          <include>**/*-flow.xml</include>
           <include>**/*.hbm.xml</include>
           <include>ehcache.xml</include>
           <include>hibernate.cfg.xml</include>
