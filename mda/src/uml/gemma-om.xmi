@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Apr 15 19:40:53 EDT 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Apr 21 14:50:46 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -18629,7 +18629,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'Im3993ed8m1030b26df71mm7d7' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from CandidateGeneListImpl cgl inner join CandidateGene where cg.Owner=:owner</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list inner join list.candidates c where c.owner=:owner</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
@@ -18660,13 +18660,13 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     </UML:TaggedValue>
                                   </UML:ModelElement.taggedValue>
                                   <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mm8cc' name = 'person' isSpecification = 'false'
+                                    <UML:Parameter xmi.id = 'Im4803d2m1036614ed1emm7ef' name = 'owner' isSpecification = 'false'
                                       kind = 'in'>
                                       <UML:Parameter.type>
                                         <UML:Class xmi.idref = 'I2863e477m101683735a4mm7341'/>
                                       </UML:Parameter.type>
                                     </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mm8cb' name = 'return' isSpecification = 'false'
+                                    <UML:Parameter xmi.id = 'Im4803d2m1036614ed1emm7ee' name = 'return' isSpecification = 'false'
                                       kind = 'return'>
                                       <UML:Parameter.type>
                                         <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
@@ -18693,7 +18693,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'Im3993ed8m1030b26df71mm7f0' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from CandidateGeneListImpl cgl inner join CandidateGeneImpl where cg.OfficialName=:officialName</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list inner join list.candidates as c inner join c.gene as g where g.officialName=:officialName</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
@@ -18724,8 +18724,8 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     </UML:TaggedValue>
                                   </UML:ModelElement.taggedValue>
                                   <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mm852' name = 'geneName' isSpecification = 'false'
-                                      kind = 'in'>
+                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mm852' name = 'officialName'
+                                      isSpecification = 'false' kind = 'in'>
                                       <UML:Parameter.type>
                                         <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                       </UML:Parameter.type>
