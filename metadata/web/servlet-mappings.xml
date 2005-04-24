@@ -4,6 +4,7 @@
 	<servlet-name>action</servlet-name>
 	<url-pattern>*.htm</url-pattern>
 	</servlet-mapping>-->
+
 <servlet-mapping>
 	<servlet-name>action</servlet-name>
 	<url-pattern>*.htm</url-pattern>
@@ -14,3 +15,9 @@
 	<url-pattern>*.html</url-pattern>
 </servlet-mapping>
 
+<servlet-mapping>
+      <servlet-name>login</servlet-name>
+      <url-pattern>/authorize/*</url-pattern>
+</servlet-mapping>
+	
+	

@@ -1,6 +1,6 @@
      <display-name>Gemma</display-name>
     <!-- You may experience issues in Mozilla < version 1.2 if you use  -->
-    <!-- ports other than 80 and 8443, it seems to work fine with v1.2.  -->
+    <!-- ports other than 80 and 443, it seems to work fine with v1.2.  -->
     <!-- For further information see the following article:             -->
     <!-- http://www.javaworld.com/javaworld/jw-02-2002/jw-0215-ssl.html -->
     <context-param>
@@ -9,7 +9,7 @@
     </context-param>
     <context-param>
         <param-name>listenPort_https</param-name>
-        <param-value>8443</param-value>
+        <param-value>443</param-value>
     </context-param>
     <!-- Possible values: hibernate (might be more in the future) -->
     <context-param>

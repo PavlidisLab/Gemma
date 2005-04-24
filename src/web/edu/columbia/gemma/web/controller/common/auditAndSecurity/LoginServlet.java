@@ -28,8 +28,10 @@ import edu.columbia.gemma.web.Constants;
  * @author pavlidis
  * @version $Id$
  * @web.servlet display-name="Login Servlet" load-on-startup="1" name="login"
- * @web.servlet-init-param name="authURL" value="j_security_check" Change the following value to false if you don't
- *                         require SSL for login
+ * @web.servlet-init-param name="authURL" value="j_security_check"
+ *                         <p>
+ *                         Change the following value to false if you don't require SSL for login
+ *                         </p>
  * @web.servlet-init-param name="isSecure" value="false" If you're not using Tomcat, change encrypt-password to true
  * @web.servlet-init-param name="encrypt-password" value="true"
  * @web.servlet-init-param name="algorithm" value="SHA"
@@ -79,20 +81,16 @@ public final class LoginServlet extends HttpServlet {
         /* This determines if the password should be encrypted programmatically */
         encrypt = Boolean.valueOf( getInitParameter( "encrypt-password" ) );
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Authentication URL: " + authURL );
-            log.debug( "Use SSL for login? " + secure );
-            log.debug( "Programmatic encryption of password? " + encrypt );
-            log.debug( "Encryption algorithm: " + algorithm );
-        }
+        log.debug( "Authentication URL: " + authURL );
+        log.debug( "Use SSL for login? " + secure );
+        log.debug( "Programmatic encryption of password? " + encrypt );
+        log.debug( "Encryption algorithm: " + algorithm );
 
         ServletContext ctx = getServletContext();
         initializeSchemePorts( ctx );
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "HTTP Port: " + httpPort );
-            log.debug( "HTTPS Port: " + httpsPort );
-        }
+        log.debug( "HTTP Port: " + httpPort );
+        log.debug( "HTTPS Port: " + httpsPort );
 
         // Orion starts Servlets before Listeners, so check if the config
         // object already exists
@@ -144,18 +142,16 @@ public final class LoginServlet extends HttpServlet {
      * @exception IOException if an input/output error occurs
      * @exception ServletException if a servlet exception occurs
      */
-    public void execute( HttpServletRequest request, HttpServletResponse response ) throws IOException,
-            ServletException {
-        // if user is already authenticated, it means they probably bookmarked
+    public void execute( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+
+        // If user is already authenticated, it means they probably bookmarked
         // or typed in the URL to login.jsp directly, route them to the main
         // menu is this is the case
         if ( request.getRemoteUser() != null ) {
             if ( log.isDebugEnabled() ) {
                 log.debug( "User '" + request.getRemoteUser() + "' already logged in, routing to mainMenu" );
             }
-
             response.sendRedirect( request.getContextPath() + "/mainMenu.html" );
-
             return;
         }
 
@@ -164,10 +160,7 @@ public final class LoginServlet extends HttpServlet {
         if ( redirectString != null ) {
             // Redirect the page to the desired URL
             response.sendRedirect( response.encodeRedirectURL( redirectString ) );
-
-            if ( log.isDebugEnabled() ) {
-                log.debug( "switching protocols, redirecting user" );
-            }
+            log.debug( "Switching protocols, redirecting user to " + response.encodeRedirectURL( redirectString ) );
         }
 
         // Extract attributes we will need
@@ -181,24 +174,20 @@ public final class LoginServlet extends HttpServlet {
         String encryptedPassword = "";
 
         if ( encrypt.booleanValue() && ( request.getAttribute( "encrypt" ) == null ) ) {
-            if ( log.isDebugEnabled() ) {
-                log.debug( "Encrypting password for user '" + username + "'" );
-            }
-
+            log.debug( "Encrypting password for user '" + username + "'" );
             encryptedPassword = StringUtil.encodePassword( password, algorithm );
+            log.debug( "Encrypted" );
         } else {
             encryptedPassword = password;
         }
 
         if ( redirectString == null ) {
-            // signifies already correct protocol
-            if ( log.isDebugEnabled() ) {
-                log.debug( "Authenticating user '" + username + "'" );
-            }
-
+            // signifies already in correct protocol
+            log.debug( "Authenticating..." );
+            String uri = request.getParameter( "j_uri" );
             String req = request.getContextPath() + "/" + authURL + "?j_username=" + username + "&j_password="
-                    + encryptedPassword + "&j_uri=" + request.getParameter( "j_uri" );
-
+                    + encryptedPassword + "&j_uri=" + uri;
+            log.debug( "Authenticating user '" + username + "', redirecting to " + response.encodeRedirectURL( req ) );
             response.sendRedirect( response.encodeRedirectURL( req ) );
         }
     }

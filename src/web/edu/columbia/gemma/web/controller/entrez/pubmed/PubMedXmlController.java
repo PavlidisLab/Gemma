@@ -107,11 +107,15 @@ public class PubMedXmlController extends SimpleFormController {
         pubMedIdState( request, response );
 
         try {
-            BibliographicReference br = pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            pubMedId = pubMedId.trim();
+            int pubMedIdNumber = Integer.parseInt( pubMedId );
+            BibliographicReference br = pubMedXmlFetcher.retrieveByHTTP( pubMedIdNumber );
             Map myModel = new HashMap();
             myModel.put( "bibRef", br );
             request.setAttribute( "model", myModel );
             view = resolveView( request, response, br, myModel );
+        } catch ( NumberFormatException e ) {
+            throw new NumberFormatException(); // FIXME - user gets an error page because they didn't input a valid integer.
         } catch ( NullPointerException e ) {
             alreadyViewed = false;
             pubMedId = null;
