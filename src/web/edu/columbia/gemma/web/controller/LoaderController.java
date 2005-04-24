@@ -1,4 +1,4 @@
-package edu.columbia.gemma.controller;
+package edu.columbia.gemma.web.controller;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="loaderController"  
+ * @spring.bean id="loaderController"
  * @spring.property name="sessionForm" value="true"
  * @spring.property name="formView" value="bulkLoadForm"
  * @spring.property name="successView" value="home.jsp"
@@ -81,7 +81,7 @@ public class LoaderController extends SimpleFormController {
         else if ( typeOfLoader.equals( "chromosomeLoaderService" ) )
             filename = conf.getString( "loader.filename.chromosome" );
         else if ( typeOfLoader.equals( "arrayDesignLoaderService" ) )
-                filename = conf.getString( "loader.filename.arrayDesign" );
+            filename = conf.getString( "loader.filename.arrayDesign" );
 
         return filename;
     }

@@ -1,12 +1,10 @@
-package edu.columbia.gemma.controller.flow.action;
-
-import java.util.Collection;
+package edu.columbia.gemma.web.controller.flow.action;
 
 import org.springframework.web.flow.Event;
-import org.springframework.web.flow.InternalRequestContext;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
 
+import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 
 /**
@@ -17,16 +15,9 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
  * @author keshav
  * @version $Id$
  */
-public class BibRefExecuteQueryAction extends AbstractAction {
+public class GetPubMedAction extends AbstractAction {
 
     private BibliographicReferenceService bibliographicReferenceService;
-
-    /**
-     * 
-     */
-    public BibRefExecuteQueryAction() {
-
-    }
 
     /**
      * @return Returns the bibliographicReferenceService.
@@ -42,18 +33,14 @@ public class BibRefExecuteQueryAction extends AbstractAction {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    /**
-     * This is the equivalent of writing the onSubmit method in a Spring Controller, or a doGet (doPost) method in a
-     * Java Servlet.
-     * 
-     * @param context
-     * @return Event
-     * @exception Exception
-     */
     protected Event doExecuteAction( RequestContext context ) throws Exception {
-        Collection col = getBibliographicReferenceService().getAllBibliographicReferences();
-        context.getRequestScope().setAttribute( "bibliographicReferences", col );
-
-        return success();
+        String title = ( String ) context.getFlowScope().getRequiredAttribute( "title", String.class );
+        BibliographicReference br = getBibliographicReferenceService().getBibliographicReferenceByTitle( title );
+        if ( br != null ) {
+            context.getRequestScope().setAttribute( "bibliographicReference", br );
+            return success();
+        } else {
+            return error();
+        }
     }
 }

@@ -1,4 +1,4 @@
-package edu.columbia.gemma.controller.entrez.pubmed;
+package edu.columbia.gemma.web.controller.entrez.pubmed;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -165,7 +165,7 @@ public class PubMedXmlController extends SimpleFormController {
      * @throws Exception
      */
 
-    //    TODO there must be a better (Springish) way to do this. This uses global variables.
+    // TODO there must be a better (Springish) way to do this. This uses global variables.
     private String resolveView( HttpServletRequest request, HttpServletResponse response, Object object, Map model )
             throws Exception {
 
@@ -173,8 +173,8 @@ public class PubMedXmlController extends SimpleFormController {
 
         if ( !alreadyViewed ) {
             alreadyViewed = true;
-            //TODO cannot make use of view Resolver. Can I define this view declaritively
-            //in the context and the access the viewResolver?
+            // TODO cannot make use of view Resolver. Can I define this view declaritively
+            // in the context and the access the viewResolver?
             View v = new InternalResourceView( "/WEB-INF/pages/pubMedSuccess.jsp" );
             v.render( model, request, response );
         } else {

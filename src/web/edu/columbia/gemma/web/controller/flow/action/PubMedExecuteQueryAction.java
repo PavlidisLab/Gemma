@@ -1,4 +1,4 @@
-package edu.columbia.gemma.controller.flow.action;
+package edu.columbia.gemma.web.controller.flow.action;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,30 +61,31 @@ public class PubMedExecuteQueryAction extends AbstractAction {
     }
 
     /**
-     * This is the equivalent of writing the onSubmit method in a Spring Controller,
-     * or a doGet (doPost) method in a Java Servlet.
+     * This is the equivalent of writing the onSubmit method in a Spring Controller, or a doGet (doPost) method in a
+     * Java Servlet.
+     * 
      * @param context
      * @return Event
-     * @exception Exception 
+     * @exception Exception
      */
     protected Event doExecuteAction( RequestContext context ) throws Exception {
-  
-        //        int pubMedId = Integer.parseInt( ( ( HttpServletRequestEvent ) context.getOriginatingEvent() ).getRequest()
-        //                .getParameter( "pubMedId" ) );
+
+        // int pubMedId = Integer.parseInt( ( ( HttpServletRequestEvent ) context.getOriginatingEvent() ).getRequest()
+        // .getParameter( "pubMedId" ) );
         try {
             int pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "pubMedId" ) );
             BibliographicReference br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
-       
+
             List list = new ArrayList();
             list.add( br );
-            //TODO Ask user for their choice.(like I did before).
-            //TODO When you persist the bibRef, persist the DatabaseEntry.
+            // TODO Ask user for their choice.(like I did before).
+            // TODO When you persist the bibRef, persist the DatabaseEntry.
             if ( !getBibliographicReferenceService().alreadyExists( br ) )
-                    getBibliographicReferenceService().saveBibliographicReference( br );
+                getBibliographicReferenceService().saveBibliographicReference( br );
 
             context.getRequestScope().setAttribute( "bibliographicReferences", list );
             return success();
-        //TODO When you start using value objects, do the pubMed validation in the validator.    
+            // TODO When you start using value objects, do the pubMed validation in the validator.
         } catch ( Exception e ) {
             return error();
         }
