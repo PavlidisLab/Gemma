@@ -3,7 +3,6 @@
 <%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<page:applyDecorator name="default">
 <HTML>
 	<HEAD></HEAD>
 	<BODY>
@@ -69,4 +68,3 @@
 		</TABLE>
 	</BODY>
 </HTML>
-</page:applyDecorator>

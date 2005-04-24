@@ -4,7 +4,6 @@
 <jsp:useBean id="query" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<page:applyDecorator name="default">
 <HTML>
 	<SCRIPT LANGUAGE = "JavaScript">
 	function selectButton(target){
@@ -90,4 +89,3 @@
 		</DIV>	
 	</BODY>
 </HTML>
-</page:applyDecorator>
