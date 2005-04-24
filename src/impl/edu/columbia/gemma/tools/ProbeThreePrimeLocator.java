@@ -8,8 +8,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +38,7 @@ public class ProbeThreePrimeLocator {
     private String dbName = "hg17";
     private double scoreThreshold = 0.90;
     private double identityThreshold = 0.90;
+    private double exonOverlapThreshold = 0.50;
 
     public void run( InputStream input, Writer output ) throws IOException, SQLException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
@@ -46,9 +52,8 @@ public class ProbeThreePrimeLocator {
         int skipped = 0;
         for ( Iterator iter = brp.iterator(); iter.hasNext(); ) {
             BlatResultImpl blatRes = ( BlatResultImpl ) iter.next(); // fixme, this should not be an impl
-            double score = blatRes.score();
-            double identity = blatRes.identity();
-            if ( score < scoreThreshold || identity < identityThreshold ) {
+
+            if ( blatRes.score() < scoreThreshold || blatRes.identity() < identityThreshold ) {
                 skipped++;
                 continue;
             }
@@ -64,26 +69,63 @@ public class ProbeThreePrimeLocator {
 
             if ( tpds == null ) continue;
 
+            Set hitTranscripts = new TreeSet();
+            Set hitGenes = new TreeSet();
             for ( Iterator iterator = tpds.iterator(); iterator.hasNext(); ) {
                 ThreePrimeData tpd = ( ThreePrimeData ) iterator.next();
-                Gene gene = tpd.getGene();
 
+                if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
+
+                Gene gene = tpd.getGene();
                 assert gene != null : "Null gene";
 
-                String geneName = gene.getOfficialSymbol();
-
-                output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
-                        + blatRes.getQuerySize() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t"
-                        + score + "\t" + geneName + "\t" + gene.getNcbiId() + "\t" + tpd.getDistance() + "\t"
-                        + tpd.getExonOverlap() + "\n" );
+                hitTranscripts.add( gene.getNcbiId() );
+                hitGenes.add( gene.getOfficialSymbol() );
+                // output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
+                // + blatRes.getQuerySize() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t"
+                // + blatRes.score() + "\t" + gene.getOfficialSymbol() + "\t" + gene.getNcbiId() + "\t"
+                // + tpd.getDistance() + "\t" + tpd.getExonOverlap() + "\n" );
 
                 count++;
-                if ( count % 100 == 0 ) log.info( "Three-prime locations computed for " + count + " probes" );
+                if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " probes" );
             }
+
+            String transcriptSignature = createTranscriptSignature( hitTranscripts, hitGenes );
+            output.write( probeName + "\t" + transcriptSignature + "\n" );
+
         }
         log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         input.close();
         output.close();
+    }
+
+    /**
+     * @param hitGenes
+     * @param hitTranscripts
+     */
+    private String createTranscriptSignature( Set hitTranscripts, Set hitGenes ) {
+        List sortedTranscripts = new ArrayList();
+        sortedTranscripts.addAll( hitTranscripts );
+        Collections.sort( sortedTranscripts );
+
+        List sortedGenes = new ArrayList();
+        sortedGenes.addAll( hitGenes );
+        Collections.sort( sortedGenes );
+
+        StringBuffer transcriptSignatureBuf = new StringBuffer();
+        for ( Iterator iterator = sortedTranscripts.iterator(); iterator.hasNext(); ) {
+            String transcript = ( String ) iterator.next();
+            if ( transcript.length() == 0 ) continue;
+            transcriptSignatureBuf.append( transcript );
+            transcriptSignatureBuf.append( "__" );
+        }
+        for ( Iterator iter = sortedGenes.iterator(); iter.hasNext(); ) {
+            String gene = ( String ) iter.next();
+            if ( gene.length() == 0 ) continue;
+            transcriptSignatureBuf.append( gene );
+            transcriptSignatureBuf.append( "__" );
+        }
+        return transcriptSignatureBuf.toString();
     }
 
     public static void main( String[] args ) {

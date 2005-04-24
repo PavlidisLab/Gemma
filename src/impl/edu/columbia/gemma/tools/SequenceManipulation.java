@@ -204,7 +204,6 @@ public class SequenceManipulation {
             Reporter next = ( Reporter ) iter.next();
 
             Reporter copy = Reporter.Factory.newInstance();
-            copy.setIdentifier( "copy:" + next.getIdentifier() );
             copy.setImmobilizedCharacteristic( next.getImmobilizedCharacteristic() );
             copy.setStartInBioChar( next.getStartInBioChar() );
             copyOfProbes.add( copy );
