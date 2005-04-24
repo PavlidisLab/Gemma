@@ -9,6 +9,7 @@ import org.springframework.web.flow.Event;
 
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
+import edu.columbia.gemma.web.controller.flow.action.GetPubMedAction;
 
 /**
  * Test the PubMedAction used in the flow pubMed.Search

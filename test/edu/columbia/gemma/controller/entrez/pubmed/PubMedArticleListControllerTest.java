@@ -6,6 +6,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.web.controller.entrez.pubmed.PubMedArticleListController;
 
 /**
  * <hr>

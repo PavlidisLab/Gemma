@@ -45,7 +45,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
 
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign tad = ArrayDesign.Factory.newInstance();
-            tad.setIdentifier( ( new Date() ).toString() + i );
+            
             tad.setName( "Foo" + i );
             if ( !m.add( tad ) ) throw new IllegalStateException( "Couldn't add to the collection - check equals" );
         }
@@ -61,7 +61,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
 
     public void testSaveArrayDesign() throws Exception {
         ArrayDesign tad = ArrayDesign.Factory.newInstance();
-        tad.setIdentifier( ( new Date() ).toString() );
+        
         tad.setName( "Foo" );
 
         // The expected behavior

@@ -8,6 +8,7 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.web.controller.LoaderController;
 
 /**
  * This test makes use of Spring's MockHttpServletRequest and MockHttpServletResponse. I have used TaxonLoaderService as

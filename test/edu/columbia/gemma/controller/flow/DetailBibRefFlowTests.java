@@ -13,7 +13,7 @@ import org.springframework.web.flow.ViewDescriptor;
 
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
-import edu.columbia.gemma.controller.flow.action.GetPubMedAction;
+import edu.columbia.gemma.web.controller.flow.action.GetPubMedAction;
 
 /**
  * Tests the pubMedSearch-flow.
