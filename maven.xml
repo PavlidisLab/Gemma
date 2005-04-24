@@ -33,7 +33,7 @@
     	<attainGoal name="xdoclet" />
     </postGoal>
 
-	<goal name="xdoclet">
+	<goal name="xdoclet" >
 		<attainGoal name="xdoclet:webdoclet"/>
       	<attainGoal name="xdoclet:springdoclet"/>
 	</goal>
@@ -120,6 +120,16 @@
             goals="andromda:run"/>
     </goal>
     
+      <goal name="gp-human-reverse" >
+        <maven:maven descriptor="${basedir}/mda-external/goldenpath/human/project.xml" 
+            goals="andromda:schema2xmi"/>
+    </goal>
+    
+      <goal name="gp-human-mda" >
+        <maven:maven descriptor="${basedir}/mda-external/goldenpath/human/project.xml" 
+            goals="andromda:run"/>
+      </goal>
+    
     <preGoal name="mda">
         <attainGoal name="mda-clean" />
         <attainGoal name="mda-remove-logs" />
@@ -174,5 +184,11 @@
                 />
         </ant:delete>
     </goal>
-     
+    
+        <!-- ==================================================================
+               Webapp management
+         ================================================================== -->
+     <goal name="install-context-config">
+       <ant:copy  file="${basedir}/metadata/conf/Gemma.xml" failonerror="false" todir="${CATALINA_HOME}/conf/Catalina/localhost" />   
+     </goal>
 </project>
