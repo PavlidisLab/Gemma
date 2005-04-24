@@ -4,10 +4,10 @@
 <%@ taglib uri="http://jakarta.apache.org/taglibs/request-1.0" prefix="r" %>
 <%@ taglib uri="http://displaytag.sf.net/el" prefix="display" %>
 <%@ taglib uri="http://struts-menu.sf.net/tag-el" prefix="menu" %>
-<%@ taglib uri="http://java.sun.com/jstl/core_rt" prefix="c" %> <%-- note name change for servlet 2.4 spec, to core_rt --%>
-<%@ taglib uri="http://java.sun.com/jstl/fmt" prefix="fmt" %>
-<%@ taglib uri="http://java.sun.com/jstl/sql" prefix="sql" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/sql" prefix="sql" %>
 <%@ taglib uri="http://www.opensymphony.com/oscache" prefix="cache" %>
 <%@ taglib uri="http://www.opensymphony.com/sitemesh/decorator" prefix="decorator"%>
 <%@ taglib uri="http://www.opensymphony.com/sitemesh/page" prefix="page"%>
-<%--<%@ taglib uri="/WEB-INF/Gemma.tld" prefix="Gemma"%>--%>
+<%@ taglib uri="/WEB-INF/Gemma.tld" prefix="Gemma"%>
