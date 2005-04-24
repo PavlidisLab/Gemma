@@ -1,10 +1,16 @@
-    <!-- Front Controller Servlet Mapping -->
-	<!--
-    <servlet-mapping>
-        <servlet-name>action</servlet-name>
-        <url-pattern>*.htm</url-pattern>
-    </servlet-mapping>-->
-    <servlet-mapping>
-        <servlet-name>loader</servlet-name>
-        <url-pattern>*.htm</url-pattern>
-    </servlet-mapping>
+<!-- Front Controller Servlet Mapping -->
+<!--
+	<servlet-mapping>
+	<servlet-name>action</servlet-name>
+	<url-pattern>*.htm</url-pattern>
+	</servlet-mapping>-->
+<servlet-mapping>
+	<servlet-name>action</servlet-name>
+	<url-pattern>*.htm</url-pattern>
+</servlet-mapping>
+
+<servlet-mapping>
+	<servlet-name>action</servlet-name>
+	<url-pattern>*.html</url-pattern>
+</servlet-mapping>
+

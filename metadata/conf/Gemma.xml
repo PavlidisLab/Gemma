@@ -1,6 +1,5 @@
 <!-- ======================================================================= -->
-<!-- This file is deployed to Tomcat 4.1.x using the "setup-tomcat" ant      -->
-<!-- task. You can also manually copy it to Tomcat's webapps directory.      -->
+<!--  This should be placed in the tomcat conf directory -->
 <!-- ======================================================================= -->
 
 <!-- To use Tomcat's MemoryRealm (in $CATALINA_HOME/conf/tomcat-users.xml)
@@ -14,34 +13,30 @@
      
      jdbc/mysql: http://www.mysql.com/downloads/api-jdbc-stable.html
                  - JAR: mysql-connector-java-2.0.14-bin.jar
-     jdbc/postgresql: http://www.postgresql.org/
-                 - JAR: postgresql-jdbc3-7.3.jar
      jndi/ldap:  http://java.sun.com/products/jndi/index.html#download
                  - JAR: ldap.jar
      jaas:       http://free.tagish.net/jaas/index.jsp
                  - JAR: tagishauth.jar
 
-     NOTE: For the JAASRealm, you must also add the path to NTSystem.dll to
+     NOTE: For the JAASRealm under windows, you must also add the path to NTSystem.dll to
      your $PATH environment variable.
      
 -->
-
-<!-- AppFuse Application Context -->
-<Context path="/Gemma" docBase="Gemma" debug="99" reloadable="true">
+<Context path="/Gemma"  docBase="C:\java\workspace\Gemma\web" workDir="C:\java\workspace\Gemma\work" debug="99" reloadable="true">
     <Logger className="org.apache.catalina.logger.FileLogger" 
-        prefix="Gemma_log." suffix=".txt" timestamp="true"/>
+        prefix="gemma_log." suffix=".txt" timestamp="true"/>
 
     <!--
     <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
           driverName="com.mysql.jdbc.Driver"
-       connectionURL="jdbc:mysql://localhost:3306/Gemma?autoReconnect=true"
+       connectionURL="jdbc:mysql://localhost:3306/gemd?autoReconnect=true"
       connectionName="test" connectionPassword="test"
-           userTable="users" userNameCol="username" userCredCol="password"
-       userRoleTable="user_roles" roleNameCol="role_name" />
+           userTable="users" userNameCol="userName" userCredCol="password"
+       userRoleTable="roles" roleNameCol="name" />
     
     <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
           driverName="org.postgresql.Driver"
-       connectionURL="jdbc:postgresql://localhost/Gemma"
+       connectionURL="jdbc:postgresql://localhost/gemma-gemma-appfuse"
       connectionName="test" connectionPassword="test"
            userTable="users" userNameCol="username" userCredCol="password"
        userRoleTable="user_roles" roleNameCol="role_name" />
@@ -62,13 +57,16 @@
    -->
 
     <!-- NOTE: If you want to use a DataSourceRealm, the Resource must be a
-               global resource -->
-    <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
-          driverName="@DB-DRIVERNAME@"
-       connectionURL="@DB-URL@"
-      connectionName="@DB-USERNAME@" connectionPassword="@DB-PASSWORD@"
-           userTable="app_user" userNameCol="username" userCredCol="password"
-       userRoleTable="user_role" roleNameCol="role_name" />
+               global resource. Comment this section out if you are not using the jdbc realm. -->
+ <!--    <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
+          driverName="com.mysql.jdbc.Driver"
+       connectionURL="jdbc:mysql://localhost/gemd?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf-8"
+      connectionName="test" connectionPassword="test"
+           userTable="user" userNameCol="userName" userCredCol="password"
+       userRoleTable="role" roleNameCol="name" />
+    -->
+    
+    <!--  Define Gemd database as a resource -->   
     <Resource name="jdbc/gemd" auth="Container" type="javax.sql.DataSource"/>
     <ResourceParams name="jdbc/gemd">
         <parameter>
@@ -101,16 +99,16 @@
         <!-- MySQL dB username and password for dB connections  -->
         <parameter>
             <name>username</name>
-            <value>@DB-USERNAME@</value>
+            <value>pavlidis</value>
         </parameter>
         <parameter>
             <name>password</name>
-            <value>@DB-PASSWORD@</value>
+            <value>toast</value>
         </parameter>
         <!-- Class name for JDBC driver -->
         <parameter>
             <name>driverClassName</name>
-            <value>@DB-DRIVERNAME@</value>
+            <value>com.mysql.jdbc.Driver</value>
         </parameter>
         <!-- Autocommit setting.  This setting is required to make
              Hibernate work.  Or you can remove calls to commit(). -->
@@ -125,7 +123,7 @@
              -->
         <parameter>
             <name>url</name>
-            <value>@DB-URL@</value>
+            <value>jdbc:mysql://localhost/gemd?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf-8</value>
         </parameter>
         <!-- Recover abandoned connections -->
         <parameter>

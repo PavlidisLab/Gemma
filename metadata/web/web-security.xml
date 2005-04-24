@@ -1,75 +1,60 @@
-    <!-- All anyone to access passwordHint and signup -->
-<!--	
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Unrestricted</web-resource-name>
-            <description>All users can view</description>
-            <url-pattern>/passwordHint.html</url-pattern>
-            <url-pattern>/signup.html</url-pattern>
-            <http-method>POST</http-method>
-            <http-method>GET</http-method>
-        </web-resource-collection>
 
-        <user-data-constraint>
-            <transport-guarantee>NONE</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
+<!--  
+<security-constraint>
+	<web-resource-collection>
+		<web-resource-name>Unrestricted</web-resource-name>
+		<description>All users can view</description>
+		<url-pattern>/passwordHint.html</url-pattern>
+		<url-pattern>/signup.html</url-pattern>
+		<url-pattern>/index.html</url-pattern>
+		<url-pattern>/login.html</url-pattern>
+		<http-method>POST</http-method>
+		<http-method>GET</http-method>
+	</web-resource-collection>
+
+	<user-data-constraint>
+		<transport-guarantee>NONE</transport-guarantee>
+	</user-data-constraint>
+</security-constraint>
+<security-constraint>
+	<web-resource-collection>
+		<web-resource-name>Gemma</web-resource-name>
+		<description>Require users to authenticate</description>
+		<url-pattern>/*</url-pattern>
+		<http-method>POST</http-method>
+		<http-method>GET</http-method>
+	</web-resource-collection>
+
+	<auth-constraint>
+		<description>
+			Define who can access this url-pattern
+		</description>
+		<role-name>admin</role-name>
+		<role-name>user</role-name>
+	</auth-constraint>
+
+	<user-data-constraint>
+		<description>
+			Encryption is not required for the application in general.
+		</description>
+		<transport-guarantee>NONE</transport-guarantee>
+	</user-data-constraint>
+
+</security-constraint>
+<login-config>
+	<auth-method>FORM</auth-method>
+	<realm-name>MemoryRealm</realm-name>
+	<form-login-config>
+		<form-login-page>/login.jsp</form-login-page>
+		<form-error-page>/loginError.jsp</form-error-page>
+	</form-login-config>
+</login-config>
+<security-role>
+	<description>Administrator role (can edit Users)</description>
+	<role-name>admin</role-name>
+</security-role>
+<security-role>
+	<description>Default Role for All Users</description>
+	<role-name>user</role-name>
+</security-role>
 -->
-    <!-- Restrict all users from accessing *.html -->	
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Gemma</web-resource-name>
-            <description>Require users to authenticate</description>    
-            <url-pattern>/*</url-pattern>                    
-            <http-method>POST</http-method>
-            <http-method>GET</http-method>
-        </web-resource-collection>
-    
-        <auth-constraint>
-            <description>Define who can access this url-pattern</description>
-            <role-name>admin</role-name>
-            <role-name>tomcat</role-name>
-        </auth-constraint>
-        
-        <user-data-constraint>
-            <!-- Doesn't work on Resin 
-            <description>
-                Encryption is not required for the application in general.
-			</description>
-            -->
-            <transport-guarantee>NONE</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-    <login-config>
-        <auth-method>BASIC</auth-method>
-		<!-- Change this when getting closer to production (Use a JDBC or JNDI realm -->
-        <realm-name>MemoryRealm</realm-name>
-    </login-config>	
-	
-<!-- This first line goes above login-config but XDoclet does not like it	
-<XDtConfig:ifConfigParamEquals paramName="security" value="basic">  	
-</XDtConfig:ifConfigParamEquals>
-
-<XDtConfig:ifConfigParamEquals paramName="security" value="form">
-	<login-config>
-        <auth-method>FORM</auth-method>
-        <form-login-config>
-            <form-login-page>/login.jsp</form-login-page>
-            <form-error-page>/loginError.jsp</form-error-page>
-        </form-login-config>
-    </login-config>
-</XDtConfig:ifConfigParamEquals>
--->
-
-    <!-- These roles can be defined in the application (for portability) or in Tomcat directly.-->
-    <!-- The admin role -->
-    <security-role>
-        <description>Administrator role (can edit Users)</description>
-        <role-name>admin</role-name>
-    </security-role>
-    
-    <!-- The tomcat role -->
-    <security-role>
-        <description>Default Role for All Users</description>
-        <role-name>tomcat</role-name>
-    </security-role>
