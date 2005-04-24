@@ -1,3 +1,4 @@
+<!--  Sitemesh configuration -->
 <decorators defaultdir="/decorators">
     <excludes>
         <pattern>/demos/*</pattern>

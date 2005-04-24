@@ -1,7 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<page:applyDecorator name="default">
-
 <title><fmt:message key="404.title"/></title>
 <content tag="heading"><fmt:message key="404.title"/></content>
     <p>
@@ -16,4 +14,3 @@
             src="<c:url value="/images/404.jpg"/>" 
             alt="Emerald Lake - Western Canada" /></a>
     </p>
-</page:applyDecorator>

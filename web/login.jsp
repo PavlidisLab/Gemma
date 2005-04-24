@@ -1,7 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
-
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<head>
 <title><fmt:message key="login.title"/></title>
 <content tag="heading"><fmt:message key="login.heading"/></content>
+</head>
 <body id="login"/>
 
 <c:import url="/loginMenu.jsp"/>
@@ -12,11 +14,5 @@
 <c:import url="/WEB-INF/pages/loginForm.jsp"/>
 
 <p><fmt:message key="login.passwordHint"/></p>
+</body>
 
-<p><a href="#" 
-    onclick="toggleDisplay('readme'); return false">Toggle README</a></p>
-    
-<div id="readme" style="display: none">
-    <%-- Include the README.txt --%>
-    <pre><jsp:include page="/README.txt"/></pre>
-</div>
