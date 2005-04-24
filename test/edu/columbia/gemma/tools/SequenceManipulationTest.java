@@ -61,23 +61,11 @@ public class SequenceManipulationTest extends TestCase {
         d.setSequence( "GGGGCCCC" );
         e.setSequence( "CCCCTTTT" );
 
-        a.setIdentifier( "a" );
-        b.setIdentifier( "b" );
-        c.setIdentifier( "c" );
-        d.setIdentifier( "d" );
-        e.setIdentifier( "e" );
-
         ar.setImmobilizedCharacteristic( a );
         br.setImmobilizedCharacteristic( b );
         cr.setImmobilizedCharacteristic( c );
         dr.setImmobilizedCharacteristic( d );
         er.setImmobilizedCharacteristic( e );
-
-        ar.setIdentifier( "ar" );
-        br.setIdentifier( "br" );
-        cr.setIdentifier( "cr" );
-        dr.setIdentifier( "dr" );
-        er.setIdentifier( "er" );
 
         ar.setStartInBioChar( 1 );
         br.setStartInBioChar( 5 );
@@ -186,7 +174,7 @@ public class SequenceManipulationTest extends TestCase {
 
         assertEquals( expectedReturn, actualReturn );
     }
-    
+
     public final void testExonOverlapB() throws Exception {
 
         String starts = "32247695,";
@@ -198,7 +186,7 @@ public class SequenceManipulationTest extends TestCase {
 
         assertEquals( expectedReturn, actualReturn );
     }
-    
+
     public final void testExonOverlapC() throws Exception {
 
         String starts = "32242893,"; // partly in an inton.
@@ -210,5 +198,5 @@ public class SequenceManipulationTest extends TestCase {
 
         assertEquals( expectedReturn, actualReturn );
     }
-    
+
 }

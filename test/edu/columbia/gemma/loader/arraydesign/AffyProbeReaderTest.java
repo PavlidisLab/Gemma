@@ -63,7 +63,7 @@ public class AffyProbeReaderTest extends TestCase {
         for ( Iterator iter = cs.getReporters().iterator(); iter.hasNext(); ) {
             Reporter element = ( Reporter ) iter.next();
             //log.debug( element.getIdentifier() );
-            if ( element.getIdentifier().equals( "Reporter:1004_at:265:573" ) ) {
+            if ( element.getName().equals( "1004_at:265:573" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
 
                 assertEquals( expectedValue, actualValue );
