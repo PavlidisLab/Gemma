@@ -4,7 +4,7 @@
 <%-- If you don't want to encrypt passwords programmatically, or you don't
      care about using SSL for the login, you can change this form's action
      to "j_security_check" --%>
-<form method="post" id="loginForm" action="<c:url value="/authorize"/>" 
+<form method="post" id="loginForm" action="<c:url value="/j_security_check"/>" 
     onsubmit="saveUsername(this);return validateForm(this)">
 <table width="100%">
     <tr>
