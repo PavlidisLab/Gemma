@@ -119,7 +119,6 @@ public class ArrayDesignLoaderService implements BulkCreator {
     private boolean createFromRow( String line ) throws NumberFormatException {
         String[] sArray = line.split( "\t" );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setIdentifier( sArray[identifierCol] );
         ad.setName( sArray[nameCol] );
         ad.setNumberOfFeatures( Integer.parseInt( sArray[numOfFeaturesCol] ) );
         //ad.setNumberOfCompositeSequences( Integer.parseInt( sArray[numOfCompositeSequencesCol] ) );

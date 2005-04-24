@@ -41,11 +41,9 @@ public class IlluminaProbeReader extends BasicLineMapParser {
         if ( sequence == null || sequence.length() == 0 ) throw new IllegalArgumentException( "Sequence is invalid" );
 
         Reporter ap = Reporter.Factory.newInstance();
-        ap.setIdentifier( probeSetId );
 
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
-        immobChar.setIdentifier( probeSetId );
 
         ap.setImmobilizedCharacteristic( immobChar );
 
@@ -58,6 +56,6 @@ public class IlluminaProbeReader extends BasicLineMapParser {
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     protected String getKey( Object newItem ) {
-        return ( ( Reporter ) newItem ).getIdentifier();
+        return ( ( Reporter ) newItem ).getName();
     }
 }

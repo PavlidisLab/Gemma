@@ -81,9 +81,6 @@ public class PubMedXMLParser {
 
         bibRef.setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).item( 0 ) ) );
 
-        bibRef
-                .setIdentifier( "pubmed:"
-                        + getTextValue( ( Element ) doc.getElementsByTagName( PMID_ELEMENT ).item( 0 ) ) );
         bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
 
         bibRef.setVolume( getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );

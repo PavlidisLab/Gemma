@@ -9,6 +9,7 @@ import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
+
 /**
  * Reads Affymetrix Probe files.
  * <p>
@@ -52,18 +53,15 @@ public class AffyProbeReader extends BasicLineMapParser {
         ap.setRow( Integer.parseInt( xcoord ) );
         ap.setCol( Integer.parseInt( ycoord ) );
         ap.setStartInBioChar( locationInTarget );
-        ap.setIdentifier( "Reporter:" + probeSetId + ":" + xcoord + ":" + ycoord );
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
-        immobChar.setIdentifier( "BioSequence:" + probeSetId + ":" + xcoord + ":" + ycoord ); // FIXME
 
         ap.setImmobilizedCharacteristic( immobChar );
 
         CompositeSequence newps = ( CompositeSequence ) get( probeSetId );
 
         if ( newps == null ) newps = CompositeSequence.Factory.newInstance();
-        newps.setIdentifier( probeSetId );
-
+    
         if ( newps.getReporters() == null ) newps.setReporters( new HashSet() );
 
         newps.getReporters().add( ap );
@@ -78,7 +76,7 @@ public class AffyProbeReader extends BasicLineMapParser {
      */
     protected String getKey( Object newItem ) {
         assert newItem instanceof CompositeSequence;
-        return ( ( CompositeSequence ) newItem ).getIdentifier();
+        return ( ( CompositeSequence ) newItem ).getName();
     }
 
     /**

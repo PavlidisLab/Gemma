@@ -32,18 +32,20 @@ import edu.columbia.gemma.expression.bioAssay.BioAssayImpl;
  *                 
  *                  
  *                   
- *                    !SlideName=dtp2780
- *                    !Printname=10k_Print3
- *                    !Tip Configuration=Standard 4-tip
- *                    !Columns per Sector=50
- *                    !Rows per Sector=50
- *                    !Column Spacing=137                                                                                                                                                                                                                 
- *                    !Row Spacing=137                                                                                                                                                                                                                 
- *                    !Channel 1 Description=Reference_Pool                                                                                                                                                                                                                 
- *                    !Channel 2 Description=ADR-RES_CL5002_UNKNOWN                                                                                                                                                                                                                  
- *                    !Scanning Software=ScanAlyze                                                                                                                                                                                                                 
- *                    !Software version=2.44                                                                                                                                                                                                                 
- *                    !Scanning parameters=   
+ *                    
+ *                     !SlideName=dtp2780
+ *                     !Printname=10k_Print3
+ *                     !Tip Configuration=Standard 4-tip
+ *                     !Columns per Sector=50
+ *                     !Rows per Sector=50
+ *                     !Column Spacing=137                                                                                                                                                                                                                 
+ *                     !Row Spacing=137                                                                                                                                                                                                                 
+ *                     !Channel 1 Description=Reference_Pool                                                                                                                                                                                                                 
+ *                     !Channel 2 Description=ADR-RES_CL5002_UNKNOWN                                                                                                                                                                                                                  
+ *                     !Scanning Software=ScanAlyze                                                                                                                                                                                                                 
+ *                     !Software version=2.44                                                                                                                                                                                                                 
+ *                     !Scanning parameters=   
+ *                     
  *                    
  *                   
  *                  
@@ -96,13 +98,9 @@ public class SMDBioAssay {
         FileFormat f = new FileFormatImpl();
 
         f.setFormatIdentifier( scanningSoftware + " version " + softwareVersion );
-        
+
         return f;
     }
-
-    
-
-    
 
     /**
      * @param d
@@ -110,8 +108,6 @@ public class SMDBioAssay {
      */
     public BioAssay toBioAssay( String description ) {
         BioAssay result = new BioAssayImpl();
-
-        result.setIdentifier( "SMD:BioAssay:" + id );
         result.setName( name );
         result.setDescription( description );
         return result;

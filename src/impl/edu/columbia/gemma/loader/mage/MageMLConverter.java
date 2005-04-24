@@ -1100,24 +1100,24 @@ public class MageMLConverter {
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
 
         if ( isInCache( gemmaObj ) ) {
-            log.debug( "Object exists in cache: " + gemmaObj.getIdentifier() );
+            log.debug( "Object exists in cache: " + mageObj.getIdentifier() );
             gemmaObj = ( edu.columbia.gemma.common.Identifiable ) identifiableCache.get( mageObj );
             return true;
         }
 
-        Identifiable k = fetchExistingIdentifiable( IdentifierCreator.create( gemmaObj ), gemmaObj.getClass() );
-        if ( k != null ) {
-            gemmaObj = k;
-            log.debug( "Object is already persistent: " + gemmaObj.getIdentifier() );
-        } else {
-            gemmaObj.setIdentifier( mageObj.getIdentifier() );
-        }
+//        Identifiable k = fetchExistingIdentifiable( IdentifierCreator.create( gemmaObj ), gemmaObj.getClass() );
+//        if ( k != null ) {
+//            gemmaObj = k;
+//            log.debug( "Object is already persistent: " + gemmaObj.getIdentifier() );
+//        } else {
+//            gemmaObj.setIdentifier( mageObj.getIdentifier() );
+//        }
 
         // we do this here because Mage names go with Identifiable, not
         // describable.
         gemmaObj.setName( mageObj.getName() );
 
-        identifiableCache.put( gemmaObj.getIdentifier(), gemmaObj );
+        identifiableCache.put( mageObj.getIdentifier(), gemmaObj );
         convertDescribable( mageObj, gemmaObj );
         return false;
     }
@@ -1878,7 +1878,7 @@ public class MageMLConverter {
             FeatureReporterMap rcp = ( FeatureReporterMap ) iter.next();
             List rcpps = rcp.getFeatureInformationSources();
             for ( Iterator iterator = rcpps.iterator(); iterator.hasNext(); ) {
-                log.debug( "Found feature information for reporter: " + rep.getIdentifier() );
+                log.debug( "Found feature information for reporter: " + rep.getName() );
                 FeatureInformation rps = ( FeatureInformation ) iterator.next();
                 org.biomage.DesignElement.Feature repr = rps.getFeature();
                 rep.setCol( repr.getPosition().getX().intValue() );
@@ -2237,7 +2237,9 @@ public class MageMLConverter {
      * @return boolean True if the object is alreay in the cache and should not be created anew.
      */
     private boolean isInCache( edu.columbia.gemma.common.Identifiable gemmaObj ) {
-        return identifiableCache.containsKey( gemmaObj.getIdentifier() );
+      //  return identifiableCache.containsKey( gemmaObj.getIdentifier() );
+        return false;
+        // FIXME
     }
 
     /**
