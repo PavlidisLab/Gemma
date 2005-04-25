@@ -26,10 +26,10 @@
 	name="signupForm" onsubmit="return validateUser(this)">
 <table class="detail">
 	<tr>
-		<th><Gemma:label key="user.username" /></th>
+		<th><Gemma:label key="user.userName" /></th>
 		<td><spring:bind path="user.userName">
 			<input type="text" name="<c:out value="${status.expression}"/>"
-				value="<c:out value="${status.value}"/>" id="username" />
+				value="<c:out value="${status.value}"/>" id="userName" />
 
 
 		</spring:bind></td>
@@ -66,7 +66,7 @@
 			<span class="fieldError"><c:out value="${status.errorMessage}" /></span>
 		</spring:bind></td>
 	</tr>
-<!--	<tr>
+<%--	<tr>
 		<th><Gemma:label key="user.address.address" /></th>
 		<td><spring:bind path="user.address.address">
 			<input type="text" name="address.address"
@@ -109,7 +109,7 @@
 			<span class="fieldError"><c:out value="${status.errorMessage}" /></span>
 		</spring:bind></td>
 	</tr>
-	-->
+	--%>
 	<tr>
 		<th><Gemma:label key="user.email" /></th>
 		<td><spring:bind path="user.email">
@@ -118,6 +118,7 @@
 			<span class="fieldError"><c:out value="${status.errorMessage}" /></span>
 		</spring:bind></td>
 	</tr>
+	<%--
 	<tr>
 		<th><Gemma:label key="user.phoneNumber" /></th>
 		<td><spring:bind path="user.phoneNumber">
@@ -127,7 +128,6 @@
 		</spring:bind></td>
 	</tr>
 	
-	<!--
 	<tr>
 		<th><Gemma:label key="user.website" /></th>
 		<td><spring:bind path="user.website">
@@ -139,7 +139,7 @@
 				key="user.visitWebsite" /></a>
 		</c:if></td>
 	</tr>
-	-->
+	--%>
 	<tr>
 		<th><Gemma:label key="user.passwordHint" /></th>
 		<td><spring:bind path="user.passwordHint">
@@ -162,7 +162,7 @@
 
 <script type="text/javascript">
 highlightFormElements();
-document.forms["signupForm"].username.focus();
+document.forms["signupForm"].userName.focus();
 </script>
 
 <html:javascript formName="user" staticJavascript="false" />

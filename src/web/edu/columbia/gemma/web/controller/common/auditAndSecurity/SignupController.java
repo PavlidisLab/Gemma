@@ -26,7 +26,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @version $Id$
  * @spring.bean id="signupController"
  * @spring.property name="formView" value="signup"
- * @spring.property name="validator" ref="beanValidator"
+ * @spring.property name="validator" ref="userValidator"
  * @spring.property name="successView" value="redirect:mainMenu.html"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
@@ -92,7 +92,7 @@ public class SignupController extends BaseFormController {
 
         return new ModelAndView( getSuccessView() );
     }
-
+    
     /**
      * @param roleManager The roleManager to set.
      */

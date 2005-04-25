@@ -10,50 +10,50 @@
 </filter>
 
 <!--  Uncomment these as they come into use -->
-<!-- 
-	<filter>
+
+<filter>
 	<filter-name>cacheFilter</filter-name>
 	<filter-class>
-	com.opensymphony.oscache.web.filter.CacheFilter
+		com.opensymphony.oscache.web.filter.CacheFilter
 	</filter-class>
-	</filter>
-	<filter>
+</filter>
+<filter>
 	<filter-name>clickstreamFilter</filter-name>
 	<filter-class>
-	com.opensymphony.clickstream.ClickstreamFilter
+		com.opensymphony.clickstream.ClickstreamFilter
 	</filter-class>
-	</filter>
-	<filter>
+</filter>
+<filter>
 	<filter-name>encodingFilter</filter-name>
 	<filter-class>
-	org.springframework.web.filter.CharacterEncodingFilter
+		org.springframework.web.filter.CharacterEncodingFilter
 	</filter-class>
 	<init-param>
-	<param-name>encoding</param-name>
-	<param-value>UTF-8</param-value>
+		<param-name>encoding</param-name>
+		<param-value>UTF-8</param-value>
 	</init-param>
 	<init-param>
-	<param-name>forceEncoding</param-name>
-	<param-value>true</param-value>
+		<param-name>forceEncoding</param-name>
+		<param-value>true</param-value>
 	</init-param>
-	</filter>
-	<filter>
+</filter>
+<filter>
 	<filter-name>hibernateFilter</filter-name>
 	<filter-class>
-	org.springframework.orm.hibernate.support.OpenSessionInViewFilter
+		org.springframework.orm.hibernate.support.OpenSessionInViewFilter
 	</filter-class>
-	</filter>
-	<filter>
+</filter>
+<filter>
 	<filter-name>rewriteFilter</filter-name>
 	<filter-class>
-	org.tuckey.web.filters.urlrewrite.UrlRewriteFilter
+		org.tuckey.web.filters.urlrewrite.UrlRewriteFilter
 	</filter-class>
-	</filter>
-	
-	<filter>
+</filter>
+
+<filter>
 	<filter-name>exportFilter</filter-name>
 	<filter-class>
-	org.displaytag.filter.ResponseOverrideFilter
+		org.displaytag.filter.ResponseOverrideFilter
 	</filter-class>
-	</filter>
--->
+</filter>
+

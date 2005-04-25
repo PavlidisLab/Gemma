@@ -60,7 +60,6 @@ public class BaseFormController extends SimpleFormController {
         if ( config == null ) {
             return new HashMap();
         }
-
         return config;
     }
 

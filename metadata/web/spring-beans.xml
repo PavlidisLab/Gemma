@@ -127,7 +127,7 @@
 	class="org.springframework.context.support.ResourceBundleMessageSource">
 	<!-- The default place for this is in WEB-INF/classes -->
 	<property name="basename">
-		<value>messages</value>
+		<value>ApplicationResources</value>
 	</property>
 </bean>
 
@@ -147,6 +147,40 @@
 		<value>.jsp</value>
 	</property>
 </bean>
+
+<!-- ==================================================== -->
+<!--  Validation settings. -->
+<!-- ==================================================== -->
+<bean id="validatorFactory"
+	class="org.springframework.validation.commons.DefaultValidatorFactory"
+	init-method="init">
+	<property name="resources">
+		<list>
+			<value>/WEB-INF/validator-rules.xml</value>
+			<value>/WEB-INF/validation.xml</value>
+		</list>
+	</property>
+</bean>
+
+<!--  Use this if the command class is not _actually_ an "Impl" -->
+<bean id="genericBeanValidator"
+	class="org.springframework.validation.commons.BeanValidator">
+	<property name="validatorFactory">
+		<ref local="validatorFactory" />
+	</property>
+</bean>
+
+<!-- Use this type of validator if you use a data model object as the command object -->
+<bean id="userValidator"
+	class="org.springframework.validation.commons.NamedBeanValidator">
+	<property name="validatorFactory">
+		<ref local="validatorFactory" />
+	</property>
+	<property name="beanName">
+		<value>user</value>
+	</property>
+</bean>
+<!--  add more NamedBeanValidators here -->
 
 
 <!-- ==================================================== -->

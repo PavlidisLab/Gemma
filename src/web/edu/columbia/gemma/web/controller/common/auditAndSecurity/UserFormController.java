@@ -36,7 +36,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.bean name="userFormController"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
- * @spring.property name="validator" ref="beanValidator"
+ * @spring.property name="validator" ref="userValidator"
  * @spring.property name="formView" value="userProfile"
  * @spring.property name="successView" value="redirect:users.html"
  * @spring.property name="userRoleService" ref="userRoleService"
