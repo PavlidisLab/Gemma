@@ -44,7 +44,7 @@
 	<global>
 
 		<validator name="twofields"
-			classname="org.appfuse.webapp.util.ValidationUtil"
+			classname="edu.columbia.gemma.web.util.ValidationUtil"
 			method="validateTwoFields"
 			methodParams="java.lang.Object,
                   org.apache.commons.validator.ValidatorAction,
