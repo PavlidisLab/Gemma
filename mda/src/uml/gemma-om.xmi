@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sun Apr 24 20:07:22 EDT 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Apr 25 11:04:08 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -11450,6 +11450,7 @@ one class.
                               <UML:ModelElement.clientDependency>
                                 <UML:Dependency xmi.idref = 'Idd3147m1036b562585mm4c8'/>
                                 <UML:Dependency xmi.idref = 'Idd3147m1036b562585m9b6'/>
+                                <UML:Dependency xmi.idref = 'Idd3147m1036b562585me5e'/>
                               </UML:ModelElement.clientDependency>
                               <UML:ModelElement.stereotype>
                                 <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf44'/>
@@ -11561,7 +11562,7 @@ one class.
                                     <UML:Parameter xmi.id = 'Idd3147m1036b562585mm2c7' name = 'return' isSpecification = 'false'
                                       kind = 'return'>
                                       <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
+                                        <UML:Class xmi.idref = 'Ibaaea8m10259547663mm2a31'/>
                                       </UML:Parameter.type>
                                     </UML:Parameter>
                                     <UML:Parameter xmi.id = 'Idd3147m1036b562585mmd0' name = 'user' isSpecification = 'false'
@@ -11873,7 +11874,7 @@ one class.
                                     <UML:Parameter xmi.id = 'Idd3147m1036b562585m2ef' name = 'return' isSpecification = 'false'
                                       kind = 'return'>
                                       <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
+                                        <UML:Class xmi.idref = 'Idd3147m1036b562585m36b'/>
                                       </UML:Parameter.type>
                                     </UML:Parameter>
                                     <UML:Parameter xmi.id = 'Idd3147m1036b562585m4ff' name = 'role' isSpecification = 'false'
@@ -12181,7 +12182,7 @@ one class.
                                   </UML:ModelElement.stereotype>
                                   <UML:ModelElement.taggedValue>
                                     <UML:TaggedValue xmi.id = 'Idd3147m1036b562585me21' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>from UserRoleImpl u where u:name=:name</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.dataValue>from UserRoleImpl u where u.name=:name</UML:TaggedValue.dataValue>
                                       <UML:TaggedValue.type>
                                         <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
                                       </UML:TaggedValue.type>
@@ -12294,6 +12295,14 @@ one class.
                             <UML:Class xmi.id = 'Idd3147m1036b562585mda6' name = 'String name' visibility = 'public'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                               isActive = 'false'/>
+                            <UML:Dependency xmi.id = 'Idd3147m1036b562585me5e' isSpecification = 'false'>
+                              <UML:Dependency.client>
+                                <UML:Class xmi.idref = 'Idd3147m1036b562585mm4e7'/>
+                              </UML:Dependency.client>
+                              <UML:Dependency.supplier>
+                                <UML:Class xmi.idref = 'Idd3147m1036b562585m11b'/>
+                              </UML:Dependency.supplier>
+                            </UML:Dependency>
                           </UML:Namespace.ownedElement>
                         </UML:Package>
                         <UML:Package xmi.id = 'I1140071m101d462efa4mm4a20' name = 'measurement'

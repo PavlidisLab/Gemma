@@ -60,10 +60,10 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#saveUser(edu.columbia.gemma.common.auditAndSecurity.User)
      */
-    protected void handleSaveUser( edu.columbia.gemma.common.auditAndSecurity.User user ) throws UserExistsException {
+    protected User handleSaveUser( edu.columbia.gemma.common.auditAndSecurity.User user ) throws UserExistsException {
 
         try {
-            this.getUserDao().create( user );
+            return (User)this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
@@ -135,7 +135,11 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
      * @see edu.columbia.gemma.common.auditAndSecurity.UserServiceBase#handleAddRole(edu.columbia.gemma.common.auditAndSecurity.Role)
      */
     protected void handleAddRole( User user, UserRole role ) throws Exception {
-        user.getRoles().add( role );
+        UserRole newRole = UserRole.Factory.newInstance();
+        newRole.setName(role.getName()  );
+        newRole.setUserName(user.getUserName());
+        newRole = this.getUserRoleService().saveRole(newRole);
+        user.getRoles().add( newRole );
     }
 
     /**
