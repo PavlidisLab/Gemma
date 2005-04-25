@@ -51,7 +51,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         String random = ( new Date() ).toString();
         ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDbName( "database" );
-        ed.setIdentifier( "fooblydoobly" + random );
+       
         exdbdao.create( ed );
 
         de.setExternalDatabase( ed );
@@ -60,7 +60,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         dedao.create( deb );
 
         testBibRef.setPubAccession( de );
-        testBibRef.setIdentifier( random );
+       
         dao.create( testBibRef );
     }
 

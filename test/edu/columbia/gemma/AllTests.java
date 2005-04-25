@@ -2,6 +2,8 @@ package edu.columbia.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
+import edu.columbia.gemma.common.auditAndSecurity.UserServiceImplTest;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.controller.LoaderControllerTest;
 import edu.columbia.gemma.controller.entrez.pubmed.PubMedXmlControllerTest;
@@ -26,9 +28,9 @@ import edu.columbia.gemma.tools.SequenceManipulationTest;
 public class AllTests {
 
     public static Test suite() {
-        
+
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
-        //$JUnit-BEGIN$
+        // $JUnit-BEGIN$
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );
@@ -36,31 +38,34 @@ public class AllTests {
         suite.addTestSuite( SequenceManipulationTest.class );
         suite.addTestSuite( AffyProbeReaderTest.class );
         suite.addTestSuite( IlluminaProbeReaderTest.class );
-        
-        suite.addTestSuite( IdentifierCreatorTest.class);
-        
-        suite.addTestSuite(PubMedXMLFetcherTest.class);
-        suite.addTestSuite(PubMedXMLParserTest.class);
-        
-        suite.addTestSuite(MageMLConverterTest.class);
-        suite.addTestSuite(MageMLParserTest.class);
-        
-        suite.addTestSuite(LoaderControllerTest.class);
-        suite.addTestSuite(PubMedXmlControllerTest.class);
-        
-        suite.addTestSuite(TaxonLoaderServiceTest.class);
-        
-        suite.addTestSuite(ExternalDatabaseTest.class);
-        
-        suite.addTestSuite(GoldenPathTest.class);
-        
-        suite.addTestSuite(SearchPubMedFlowTests.class);
-        suite.addTestSuite(GetPubMedActionTests.class);
-        suite.addTestSuite(DetailBibRefFlowTests.class);
-        
-        suite.addTestSuite(BlatResultImplTest.class);
-        //$JUnit-END$
-        
+
+        suite.addTestSuite( IdentifierCreatorTest.class );
+
+        suite.addTestSuite( PubMedXMLFetcherTest.class );
+        suite.addTestSuite( PubMedXMLParserTest.class );
+
+        suite.addTestSuite( MageMLConverterTest.class );
+        suite.addTestSuite( MageMLParserTest.class );
+
+        suite.addTestSuite( LoaderControllerTest.class );
+        suite.addTestSuite( PubMedXmlControllerTest.class );
+
+        suite.addTestSuite( TaxonLoaderServiceTest.class );
+
+        suite.addTestSuite( ExternalDatabaseTest.class );
+
+        suite.addTestSuite( GoldenPathTest.class );
+
+        suite.addTestSuite( SearchPubMedFlowTests.class );
+        suite.addTestSuite( GetPubMedActionTests.class );
+        suite.addTestSuite( DetailBibRefFlowTests.class );
+
+        suite.addTestSuite( BlatResultImplTest.class );
+
+        suite.addTestSuite( UserRoleServiceImplTest.class );
+        suite.addTestSuite( UserServiceImplTest.class );
+        // $JUnit-END$
+
         return suite;
     }
 }
