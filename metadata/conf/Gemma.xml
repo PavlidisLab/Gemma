@@ -62,7 +62,7 @@
           driverName="com.mysql.jdbc.Driver"
        connectionURL="jdbc:mysql://localhost/gemd?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf-8"
       connectionName="pavlidis" connectionPassword="toast"
-           userTable="contact" userNameCol="userName" userCredCol="password"
+           userTable="contact" userNameCol="user_name" userCredCol="password"
        userRoleTable="user_role" roleNameCol="name" />
  
     
