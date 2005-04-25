@@ -19,5 +19,3 @@
       <servlet-name>login</servlet-name>
       <url-pattern>/authorize/*</url-pattern>
 </servlet-mapping>
-	
-	

@@ -114,6 +114,7 @@
 			<prop key="/passwordHint.html">passwordHintController</prop>
 			<prop key="/signup.html">signupController</prop>
 			<prop key="/pubMedSearch.htm">pubMedSearchController</prop>
+			<!--  add more here -->
 		</props>
 	</property>
 </bean>
