@@ -8,9 +8,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import edu.columbia.gemma.common.auditAndSecurity.RoleService;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserExistsException;
+import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.util.RequestUtil;
 import edu.columbia.gemma.util.StringUtil;
 import edu.columbia.gemma.web.Constants;
@@ -26,10 +26,12 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @version $Id$
  * @spring.bean id="signupController"
  * @spring.property name="formView" value="signup"
+ * @spring.property name="validator" ref="beanValidator"
  * @spring.property name="successView" value="redirect:mainMenu.html"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
  * @spring.property name="userService" ref="userService"
+ * @spring.property name="userRoleService" ref="userRoleService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="message" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
@@ -38,7 +40,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @version $Id$
  */
 public class SignupController extends BaseFormController {
-    private RoleService roleService;
+    private UserRoleService userRoleService;
 
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -58,7 +60,7 @@ public class SignupController extends BaseFormController {
         user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
 
         // Set the default user role on this new user
-        userService.addRole( user, roleService.getRole( Constants.USER_ROLE ) );
+        userService.addRole( user, userRoleService.getRole( Constants.USER_ROLE ) );
 
         try {
             userService.saveUser( user );
@@ -94,8 +96,8 @@ public class SignupController extends BaseFormController {
     /**
      * @param roleManager The roleManager to set.
      */
-    public void setRoleService( RoleService roleService ) {
-        this.roleService = roleService;
+    public void setUserRoleService( UserRoleService userRoleService ) {
+        this.userRoleService = userRoleService;
     }
 
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {

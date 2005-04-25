@@ -12,8 +12,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import edu.columbia.gemma.common.auditAndSecurity.Role;
-import edu.columbia.gemma.common.auditAndSecurity.RoleService;
+import edu.columbia.gemma.common.auditAndSecurity.UserRole;
+import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserExistsException;
 import edu.columbia.gemma.util.RequestUtil;
@@ -36,16 +36,17 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.bean name="userFormController"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
+ * @spring.property name="validator" ref="beanValidator"
  * @spring.property name="formView" value="userProfile"
  * @spring.property name="successView" value="redirect:users.html"
- * @spring.property name="roleService" ref="roleService"
+ * @spring.property name="userRoleService" ref="userRoleService"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="message" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
  */
 public class UserFormController extends BaseFormController {
-    private RoleService roleService;
+    private UserRoleService userRoleService;
 
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -85,7 +86,7 @@ public class UserFormController extends BaseFormController {
             user.getRoles().clear();
             for ( int i = 0; i < userRoles.length; i++ ) {
                 String roleName = userRoles[i];
-                userService.addRole( user, roleService.getRole( roleName ) );
+                userService.addRole( user, userRoleService.getRole( roleName ) );
             }
         }
 
@@ -156,8 +157,8 @@ public class UserFormController extends BaseFormController {
     /**
      * @param roleManager The roleManager to set.
      */
-    public void setRoleService( RoleService roleService ) {
-        this.roleService = roleService;
+    public void setUserRoleService( UserRoleService userRoleService ) {
+        this.userRoleService = userRoleService;
     }
 
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
@@ -171,12 +172,17 @@ public class UserFormController extends BaseFormController {
 
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
             user = userService.getUser( getUser( request ).getUserName() );
-        } else if ( !StringUtils.isBlank( username ) && !"".equals( request.getParameter( "version" ) ) ) {
+        } else if ( !StringUtils.isBlank( username ) /* && !"".equals( request.getParameter( "version" ) ) */) { // we
+                                                                                                                    // don't
+                                                                                                                    // have
+                                                                                                                    // 'version'.
             user = userService.getUser( username );
         } else {
             user = User.Factory.newInstance();
-            Role newRole = Role.Factory.newInstance();
+            UserRole newRole = UserRole.Factory.newInstance();
+            // user.setUserName( username );
             newRole.setName( Constants.USER_ROLE );
+            // newRole.setUserName( username );
             userService.addRole( user, newRole );
         }
 
