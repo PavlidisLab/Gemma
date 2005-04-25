@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Apr 22 20:57:05 EDT 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sun Apr 24 20:07:22 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -11792,7 +11792,7 @@ one class.
                                 <UML:Class xmi.idref = 'Idd3147m1036b562585mma5'/>
                               </UML:Dependency.supplier>
                             </UML:Dependency>
-                            <UML:Class xmi.id = 'Idd3147m1036b562585m11b' name = 'RoleService' visibility = 'public'
+                            <UML:Class xmi.id = 'Idd3147m1036b562585m11b' name = 'UserRoleService' visibility = 'public'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                               isActive = 'false'>
                               <UML:ModelElement.clientDependency>
@@ -11924,7 +11924,7 @@ one class.
                                 </UML:Method>
                               </UML:Classifier.feature>
                             </UML:Class>
-                            <UML:Class xmi.id = 'Idd3147m1036b562585m36b' name = 'Role' visibility = 'public'
+                            <UML:Class xmi.id = 'Idd3147m1036b562585m36b' name = 'UserRole' visibility = 'public'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
                               isActive = 'false'>
                               <UML:ModelElement.stereotype>
@@ -12038,9 +12038,51 @@ one class.
                                 <UML:Generalization xmi.idref = 'Idd3147m1036b562585m462'/>
                               </UML:GeneralizableElement.generalization>
                               <UML:Classifier.feature>
-                                <UML:Operation xmi.id = 'Idd3147m1036b562585m58d' name = 'findRoles' visibility = 'public'
-                                  isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
-                                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                                <UML:Operation xmi.id = 'Idd3147m1036b562585m58d' name = 'findRolesByUserName'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.stereotype>
+                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
+                                  </UML:ModelElement.stereotype>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mc12' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>from RoleImpl r where r.userName=:userName</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mc13' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mc14' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mc15' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mc16' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mc17' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>Return all roles</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
                                   <UML:BehavioralFeature.parameter>
                                     <UML:Parameter xmi.id = 'Idd3147m1036b562585m590' name = 'return' isSpecification = 'false'
                                       kind = 'return'>
@@ -12048,10 +12090,10 @@ one class.
                                         <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
                                       </UML:Parameter.type>
                                     </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Idd3147m1036b562585m601' name = 'role' isSpecification = 'false'
+                                    <UML:Parameter xmi.id = 'Idd3147m1036b562585m601' name = 'userName' isSpecification = 'false'
                                       kind = 'in'>
                                       <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Idd3147m1036b562585m36b'/>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                       </UML:Parameter.type>
                                     </UML:Parameter>
                                   </UML:BehavioralFeature.parameter>
@@ -12066,14 +12108,142 @@ one class.
                                     <UML:Operation xmi.idref = 'Idd3147m1036b562585m58d'/>
                                   </UML:Method.specification>
                                 </UML:Method>
+                                <UML:Attribute xmi.id = 'Idd3147m1036b562585mbbc' name = 'userName' visibility = 'public'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Operation xmi.id = 'Idd3147m1036b562585mc38' name = 'findAllRoles'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.stereotype>
+                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
+                                  </UML:ModelElement.stereotype>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mcf1' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>from UserRoleImpl</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mcf2' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mcf3' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mcf4' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585mcf5' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'Idd3147m1036b562585mc94' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'Idd3147m1036b562585mc3a' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'Idd3147m1036b562585mc39' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'Idd3147m1036b562585mc38'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
+                                <UML:Operation xmi.id = 'Idd3147m1036b562585md4a' name = 'findRolesByRoleName'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.stereotype>
+                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
+                                  </UML:ModelElement.stereotype>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585me21' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>from UserRoleImpl u where u:name=:name</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585me22' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585me23' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585me24' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'Idd3147m1036b562585me25' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'Idd3147m1036b562585mda7' name = 'name' isSpecification = 'false'
+                                      kind = 'in'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                    <UML:Parameter xmi.id = 'Idd3147m1036b562585mda8' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'Idd3147m1036b562585md4c' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'Idd3147m1036b562585md4b' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'Idd3147m1036b562585md4a'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
                               </UML:Classifier.feature>
                             </UML:Class>
-                            <UML:Association xmi.id = 'Idd3147m1036b562585m46f' name = 'RoleUsers' isSpecification = 'false'
+                            <UML:Association xmi.id = 'Idd3147m1036b562585m46f' name = 'UserRoles' isSpecification = 'false'
                               isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
-                                <UML:AssociationEnd xmi.id = 'Idd3147m1036b562585m469' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
-                                  targetScope = 'instance' changeability = 'changeable'>
+                                <UML:AssociationEnd xmi.id = 'Idd3147m1036b562585m469' name = 'userRoles'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Idd3147m1036b562585m48e'>
                                       <UML:Multiplicity.range>
@@ -12086,12 +12256,12 @@ one class.
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                                 <UML:AssociationEnd xmi.id = 'Idd3147m1036b562585m46c' name = 'users' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'composite'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'Idd3147m1036b562585m48c'>
+                                    <UML:Multiplicity xmi.id = 'Idd3147m1036b562585mc36'>
                                       <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'Idd3147m1036b562585m48d' lower = '0' upper = '-1'/>
+                                        <UML:MultiplicityRange xmi.id = 'Idd3147m1036b562585mc37' lower = '0' upper = '1'/>
                                       </UML:Multiplicity.range>
                                     </UML:Multiplicity>
                                   </UML:AssociationEnd.multiplicity>
@@ -12119,6 +12289,11 @@ one class.
                                 <UML:Class xmi.idref = 'Idd3147m1036b562585mm68f'/>
                               </UML:Dependency.supplier>
                             </UML:Dependency>
+                            <UML:Comment xmi.id = 'Idd3147m1036b562585mbdd' name = '' visibility = 'public'
+                              isSpecification = 'false' body = 'userName appears in both&#10;the user and userole table to satisfy&#10;the requirements of the tomcat realm&#10;configuration.'/>
+                            <UML:Class xmi.id = 'Idd3147m1036b562585mda6' name = 'String name' visibility = 'public'
+                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+                              isActive = 'false'/>
                           </UML:Namespace.ownedElement>
                         </UML:Package>
                         <UML:Package xmi.id = 'I1140071m101d462efa4mm4a20' name = 'measurement'
