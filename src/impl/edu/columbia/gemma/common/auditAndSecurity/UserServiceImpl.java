@@ -65,6 +65,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     protected User handleSaveUser( edu.columbia.gemma.common.auditAndSecurity.User user ) throws UserExistsException {
 
         try {
+            user.setConfirmPassword(user.getPassword());
             return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );

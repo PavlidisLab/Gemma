@@ -76,6 +76,7 @@ public class UserFormController extends BaseFormController {
             }
 
             user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
+            user.setConfirmPassword( StringUtil.encodePassword( user.getConfirmPassword(), algorithm ) ); // this was not included in appfuse -- probably not persisted.
         }
 
         String[] userRoles = request.getParameterValues( "userRoles" );
@@ -173,9 +174,9 @@ public class UserFormController extends BaseFormController {
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
             user = userService.getUser( getUser( request ).getUserName() );
         } else if ( !StringUtils.isBlank( username ) /* && !"".equals( request.getParameter( "version" ) ) */) { // we
-                                                                                                                    // don't
-                                                                                                                    // have
-                                                                                                                    // 'version'.
+            // don't
+            // have
+            // 'version'.
             user = userService.getUser( username );
         } else {
             user = User.Factory.newInstance();
