@@ -42,15 +42,18 @@ public class UserRoleServiceImpl extends edu.columbia.gemma.common.auditAndSecur
     }
 
     /**
-     * Because there are multiple users with the same role, we return the first one found.
+     * Just send back an object with the right role set.
      * 
      * @see edu.columbia.gemma.common.auditAndSecurity.UserRoleService#getRole(java.lang.String)
      */
     protected edu.columbia.gemma.common.auditAndSecurity.UserRole handleGetRole( java.lang.String roleName )
             throws java.lang.Exception {
-        Collection roles = this.getUserRoleDao().findRolesByRoleName( roleName );
-        if (roles.size() == 0) throw new NoSuchElementException("No such UserRole: " + roleName);
-        return ( UserRole ) roles.iterator().next();
+//        Collection roles = this.getUserRoleDao().findRolesByRoleName( roleName );
+//        if (roles.size() == 0) throw new NoSuchElementException("No such UserRole: " + roleName);
+//        return ( UserRole ) roles.iterator().next();
+        UserRole newRole = UserRole.Factory.newInstance();
+        newRole.setName(roleName);
+        return newRole;
     }
 
     /**

@@ -132,6 +132,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     }
 
     /**
+     * FIXME - this should just take the role name, not the role, because we have to make a new instance anyway.
      * @see edu.columbia.gemma.common.auditAndSecurity.UserServiceBase#handleAddRole(edu.columbia.gemma.common.auditAndSecurity.Role)
      */
     protected void handleAddRole( User user, UserRole role ) throws Exception {
