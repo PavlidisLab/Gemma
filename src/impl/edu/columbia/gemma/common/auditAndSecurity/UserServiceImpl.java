@@ -20,6 +20,9 @@
  */
 package edu.columbia.gemma.common.auditAndSecurity;
 
+import java.util.Date;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,7 +30,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.util.RandomGUID;
 import edu.columbia.gemma.util.StringUtil;
-import edu.columbia.gemma.web.filter.ActionFilter;
 
 /**
  * <hr>
@@ -63,7 +65,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     protected User handleSaveUser( edu.columbia.gemma.common.auditAndSecurity.User user ) throws UserExistsException {
 
         try {
-            return (User)this.getUserDao().create( user );
+            return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
@@ -133,13 +135,17 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
 
     /**
      * FIXME - this should just take the role name, not the role, because we have to make a new instance anyway.
+     * 
      * @see edu.columbia.gemma.common.auditAndSecurity.UserServiceBase#handleAddRole(edu.columbia.gemma.common.auditAndSecurity.Role)
      */
     protected void handleAddRole( User user, UserRole role ) throws Exception {
+        if ( role == null ) throw new IllegalArgumentException( "Got passed null role!" );
+        if ( user == null ) throw new IllegalArgumentException( "Got passed null user" );
         UserRole newRole = UserRole.Factory.newInstance();
-        newRole.setName(role.getName()  );
-        newRole.setUserName(user.getUserName());
-        newRole = this.getUserRoleService().saveRole(newRole);
+        newRole.setName( role.getName() );
+        newRole.setUserName( user.getUserName() );
+        newRole = this.getUserRoleService().saveRole( newRole );
+        if ( user.getRoles() == null ) user.setRoles( new HashSet() );
         user.getRoles().add( newRole );
     }
 
@@ -151,6 +157,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
      */
     private String saveLoginCookie( UserSession cookie ) {
         cookie.setCookie( new RandomGUID().toString() );
+        cookie.setCreateDate( new Date() );
         this.getUserSessionDao().create( cookie );
 
         return StringUtil.encodeString( cookie.getUser().getUserName() + "|" + cookie.getCookie() );
