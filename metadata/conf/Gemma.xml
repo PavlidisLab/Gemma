@@ -58,13 +58,13 @@
 
     <!-- NOTE: If you want to use a DataSourceRealm, the Resource must be a
                global resource. Comment this section out if you are not using the jdbc realm. -->
- <!--    <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
+    <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
           driverName="com.mysql.jdbc.Driver"
        connectionURL="jdbc:mysql://localhost/gemd?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf-8"
-      connectionName="test" connectionPassword="test"
-           userTable="user" userNameCol="userName" userCredCol="password"
-       userRoleTable="role" roleNameCol="name" />
-    -->
+      connectionName="pavlidis" connectionPassword="toast"
+           userTable="contact" userNameCol="userName" userCredCol="password"
+       userRoleTable="user_role" roleNameCol="name" />
+ 
     
     <!--  Define Gemd database as a resource -->   
     <Resource name="jdbc/gemd" auth="Container" type="javax.sql.DataSource"/>
