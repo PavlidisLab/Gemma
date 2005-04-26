@@ -33,7 +33,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="userFormController"
+ * @spring.bean id="userFormController" name="/editProfile.html"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
  * @spring.property name="validator" ref="userValidator"
