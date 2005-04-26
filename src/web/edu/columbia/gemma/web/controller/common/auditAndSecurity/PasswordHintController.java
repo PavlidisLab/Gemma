@@ -28,8 +28,9 @@ import edu.columbia.gemma.common.auditAndSecurity.UserService;
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
+ * @author keshav
  * @version $Id$
- * @spring.bean name="passwordHintController"
+ * @spring.bean id="passwordHintController" name="/passwordHint.html" 
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="message" ref="mailMessage"
