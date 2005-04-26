@@ -1,4 +1,14 @@
-<%@ include file="/WEB-INF/pages/include.jsp" %>
+<%@ include file="/common/taglibs.jsp"%>
 
-<%-- Redirected because we can't set the welcome page to a virtual URL. --%>
-<c:redirect url="/home.htm"/>
+<%-- 
+You can use this logic if you're running your app on 80 & 443,
+but IE seems to have issues when running on non-standard ports
+and spits up a Server Not Found error 
+--%>
+
+<c:if test="${applicationScope.secureLogin == 'true'}">
+    <appfuse:secure/>
+</c:if>
+
+<c:redirect url="/mainMenu.html"/>
+
