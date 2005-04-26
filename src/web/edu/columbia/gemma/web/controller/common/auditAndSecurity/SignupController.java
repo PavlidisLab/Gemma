@@ -27,6 +27,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.bean id="signupController"
  * @spring.property name="formView" value="signup"
  * @spring.property name="validator" ref="userValidator"
+ * @spring.property name="name" value="/signup.html"
  * @spring.property name="successView" value="redirect:mainMenu.html"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
