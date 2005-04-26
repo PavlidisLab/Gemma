@@ -22,7 +22,7 @@
      your $PATH environment variable.
      
 -->
-<Context path="/Gemma"  docBase="C:\java\workspace\Gemma\web" workDir="C:\java\workspace\Gemma\work" debug="99" reloadable="true">
+<Context path="/Gemma"  docBase="C:\java\apps\EclipseDevelopment\workspace\Gemma\web" workDir="C:\java\apps\EclipseDevelopment\workspace\Gemma\work" debug="99" reloadable="true">
     <Logger className="org.apache.catalina.logger.FileLogger" 
         prefix="gemma_log." suffix=".txt" timestamp="true"/>
 
@@ -58,6 +58,7 @@
 
     <!-- NOTE: If you want to use a DataSourceRealm, the Resource must be a
                global resource. Comment this section out if you are not using the jdbc realm. -->
+    <!-- NOTE: You MUST insert data into the userNameCol="user_name" for the userRoleTable. -->           
     <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
           driverName="com.mysql.jdbc.Driver"
        connectionURL="jdbc:mysql://localhost/gemd?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf-8"
