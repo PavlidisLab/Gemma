@@ -23,11 +23,11 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
- * @spring.bean id="signupController"
+ * @spring.bean id="signupController" name="/signup.html"
  * @spring.property name="formView" value="signup"
  * @spring.property name="validator" ref="userValidator"
- * @spring.property name="name" value="/signup.html"
  * @spring.property name="successView" value="redirect:mainMenu.html"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"

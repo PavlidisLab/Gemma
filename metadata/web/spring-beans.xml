@@ -121,7 +121,9 @@
 -->
 
 <bean id="filenameController"
-	class="org.springframework.web.servlet.mvc.UrlFilenameViewController" />
+	class="org.springframework.web.servlet.mvc.UrlFilenameViewController" 
+	name="/mainMenu.html"	
+	/>
 
 
 <bean id="messageSource"
