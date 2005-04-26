@@ -180,7 +180,7 @@
 			msg="errors.required">
 		</validator>
 
-		<validator name="minlength"
+		<validator name="minLength"
 			classname="org.springframework.validation.commons.FieldChecks"
 			method="validateMinLength"
 			methodParams="java.lang.Object,
@@ -224,7 +224,7 @@
 		</validator>
 
 
-		<validator name="maxlength"
+		<validator name="maxLength"
 			classname="org.springframework.validation.commons.FieldChecks"
 			method="validateMaxLength"
 			methodParams="java.lang.Object,
