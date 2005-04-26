@@ -101,9 +101,10 @@
 <!-- ==================================================== -->
 
 <!--  Mapping urls to services. Note that not all of the controllers will be listed here: some of them will be created by XDoclet. -->
+<!--  NOTE: You cannot use this AND specify name="urlpattern.htm" in bean tags ... choose one.  -->
 
 <!-- ==================================================== -->
-
+<!-- 
 <bean id="urlMapping"
 	class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
 	<property name="mappings">
@@ -114,10 +115,10 @@
 			<prop key="/passwordHint.html">passwordHintController</prop>
 			<prop key="/signup.html">signupController</prop>
 			<prop key="/pubMedSearch.htm">pubMedSearchController</prop>
-			<!--  add more here -->
 		</props>
 	</property>
 </bean>
+-->
 
 <bean id="filenameController"
 	class="org.springframework.web.servlet.mvc.UrlFilenameViewController" />
