@@ -214,6 +214,7 @@
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
             <version>SNAPSHOT</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>xdoclet</groupId>
@@ -286,13 +287,43 @@
         <dependency>
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
-           <version>1.1.4</version>
+            <version>1.1.4</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>displaytag</groupId>
             <artifactId>displaytag</artifactId>
             <version>1.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>opensymphony</groupId>
+            <artifactId>clickstream</artifactId>
+            <jar>clickstream-1.0.3.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>urlrewritefilter</groupId>
+            <artifactId>urlrewrite</artifactId>
+            <jar>urlrewrite-2.3.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>urlrewritefilter</groupId>
+            <artifactId>jakarta-oro</artifactId>
+            <jar>jakarta-oro-2.0.8.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>javamail</groupId>
+            <artifactId>mail</artifactId>
+            <jar>mail.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>javamail</groupId>
+            <artifactId>activation</artifactId>
+            <jar>activation.jar</jar>
             <type>jar</type>
         </dependency>
     </dependencies>
