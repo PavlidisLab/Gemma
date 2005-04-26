@@ -221,8 +221,7 @@ public class GoldenPath {
     }
 
     /**
-     * Given a physical location, find how close it is to the 3' end of a gene it is in. Refseq is searched first; if
-     * there are no hits, we search "Known genes".
+     * Given a physical location, find how close it is to the 3' end of a gene it is in.
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)
      * @param start The start base of the region to query.
