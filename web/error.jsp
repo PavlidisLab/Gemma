@@ -1,14 +1,16 @@
 <%@ page language="java" isErrorPage="true" %>
 <%@ include file="/common/taglibs.jsp"%>
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%--<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">--%>
 <html>
+<%--
 <head>
     <title><fmt:message key="errorPage.title"/></title>
     <link rel="stylesheet" type="text/css" media="all" 
         href="<c:url value="/styles/default.css"/>" /> 
 </head>
-
+--%>
+<page:applyDecorator name="default">
 <body>
 <div id="screen">
     <div id="content">
@@ -23,4 +25,5 @@
     </div>
 </body>
 <a href="<c:url value="home.jsp"/>">Home</a>
+</page:applyDecorator>
 </html>
