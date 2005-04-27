@@ -47,6 +47,7 @@ public class UserDaoImplTest extends BaseDAOTestCase {
         String rand = ( new Date() ).toString();
 
         String adminName = "admin";
+        String userName = "user";
         User checkUser = dao.findByUserName( adminName );
 
         if ( ( checkUser == null ) ) {
@@ -59,6 +60,7 @@ public class UserDaoImplTest extends BaseDAOTestCase {
             testUser.setUserName( rand );
             log.info( rand );
             ur.setUserName( rand );
+            ur.setName( userName );
         }
 
         Collection set = new HashSet();
