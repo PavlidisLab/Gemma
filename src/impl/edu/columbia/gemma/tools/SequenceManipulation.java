@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.genome.Gene;
@@ -22,6 +25,7 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
  * @version $Id$
  */
 public class SequenceManipulation {
+    protected static final Log log = LogFactory.getLog( SequenceManipulation.class );
 
     /**
      * Compute just any overlap the compare sequence has with the target on the right side.
@@ -105,6 +109,7 @@ public class SequenceManipulation {
         assert startArray.length == sizesArray.length;
 
         int totalOverlap = 0;
+        int totalLength = 0;
         for ( int i = 0; i < sizesArray.length; i++ ) {
             int start = startArray[i];
             int end = start + sizesArray[i];
@@ -114,7 +119,13 @@ public class SequenceManipulation {
                 int exonEnd = exonLocation.getNucleotide().intValue() + exonLocation.getNucleotideLength().intValue();
                 totalOverlap += computeOverlap( start, end, exonStart, exonEnd );
             }
+            totalLength += end - start;
         }
+
+        if ( totalOverlap > totalLength )
+            log.warn( "More overlap than length of sequence, trimming because " + totalOverlap + " > " + totalLength );
+        totalOverlap = Math.min( totalOverlap, totalLength );
+
         return totalOverlap;
     }
 
@@ -138,19 +149,29 @@ public class SequenceManipulation {
         if ( exonStart > exonEnd ) throw new IllegalArgumentException( "Exon start must be before end" );
         if ( start > end ) throw new IllegalArgumentException( "Start must be before end" );
 
+        log.debug( "Comparing query length " + ( end - start ) + ", location: " + start + "-->" + end
+                + " to exon length " + ( exonEnd - exonStart ) + ", location: " + exonStart + "--->" + exonEnd );
+
+        int overlap = 0;
         if ( exonEnd < start || end < exonStart ) {
-            return 0;
-        }
-        if ( start <= exonStart ) {
+            log.debug( "Exon doesn't overlap" );
+            overlap = 0;
+        } else if ( start <= exonStart ) {
             if ( end < exonEnd ) {
-                return end - exonStart; // overhang on the left
+                overlap = end - exonStart; // overhang on the left
+            } else {
+                overlap = exonEnd - exonStart; // includes entire exon
             }
-            return exonEnd - exonStart; // includes entire exon
+        } else if ( end < exonEnd ) { // entirely contained within exon.
+            overlap = end - start; // length of our test sequence.
+        } else {
+            overlap = exonEnd - start; // overhang on the right
         }
-        if ( end < exonEnd ) { // entirely contained within exon.
-            return end - start;
-        }
-        return exonEnd - start; // overhang on the right
+
+        assert overlap >= 0 : "Negative overlap";
+        assert ( double ) overlap / ( double ) ( end - start ) <= 1.0 : "Overlap longer than sequence";
+        log.debug( "Overlap=" + overlap );
+        return overlap;
     }
 
     /**

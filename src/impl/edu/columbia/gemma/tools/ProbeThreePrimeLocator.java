@@ -77,7 +77,7 @@ public class ProbeThreePrimeLocator {
             for ( Iterator iterator = tpds.iterator(); iterator.hasNext(); ) {
                 ThreePrimeData tpd = ( ThreePrimeData ) iterator.next();
 
-                if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
+              //  if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
 
                 Gene gene = tpd.getGene();
                 assert gene != null : "Null gene";
@@ -154,8 +154,8 @@ public class ProbeThreePrimeLocator {
             for ( Iterator iterator = probeResults.iterator(); iterator.hasNext(); ) {
                 LocationData ld = ( LocationData ) iterator.next();
                 double blatScore = ld.getBr().score();
-                double overlap = ld.getTpd().getExonOverlap()
-                        / ( ld.getBr().getTargetEnd() - ld.getBr().getTargetStart() );
+                double overlap = (double)ld.getTpd().getExonOverlap()
+                        / (double)( ld.getBr().getQuerySize() );
                 double score = blatScore * overlap;
                 if ( score >= maxScore ) {
                     maxScore = score;
@@ -168,7 +168,6 @@ public class ProbeThreePrimeLocator {
             best.setBestOverlap( maxOverlap );
             best.setNumHits( probeResults.size() );
             writer.write( best.toString() );
-
         }
 
     }
