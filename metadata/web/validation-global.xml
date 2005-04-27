@@ -48,8 +48,8 @@
 			</var>
 		</field>
 
-		<!--  Validation of userpassword -->
-		<field property="userPassword"
+		<!--  Validation of user password -->
+		<field property="password"
 			depends="required,minLength,twofields">
 			<arg0 key="user.password" />
 			<arg1 name="minlength" key="${var:minlength}"
@@ -63,7 +63,7 @@
 				<var-value>user.confirmPassword</var-value>
 			</var>
 		</field>
-		<field property="userPassword" depends="required,maxLength">
+		<field property="password" depends="required,maxLength">
 			<arg0 key="user.password" />
 			<arg1 name="maxlength" key="${var:maxlength}"
 				resource="false" />
