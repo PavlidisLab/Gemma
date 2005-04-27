@@ -16,7 +16,8 @@
 
 <c:out value="${buttons}" escapeXml="false" />
 
-<display:table name="${userList}" cellspacing="0" cellpadding="0"
+<%-- <display:table name="${userList}" cellspacing="0" cellpadding="0" --%>
+<display:table name="userList" cellspacing="0" cellpadding="0"
     requestURI="" defaultsort="1" id="users"
     pagesize="25" styleClass="list userList" export="true">
   
@@ -35,7 +36,7 @@
     <display:column property="email" sort="true" headerClass="sortable" 
     	width="26%" autolink="true"
         titleKey="user.email" />
-        
+    
     <display:setProperty name="paging.banner.item_name" value="user"/>
     <display:setProperty name="paging.banner.items_name" value="users"/>
 
