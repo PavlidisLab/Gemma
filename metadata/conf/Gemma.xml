@@ -22,7 +22,7 @@
      your $PATH environment variable.
      
 -->
-<Context path="/Gemma"  docBase="C:\java\apps\EclipseDevelopment\workspace\Gemma\web" workDir="C:\java\apps\EclipseDevelopment\workspace\Gemma\work" debug="99" reloadable="true">
+<Context path="/Gemma"  docBase="@WEB-APP-ROOT@" workDir="@WEB-APP-WORK@" debug="99" reloadable="true">
     <Logger className="org.apache.catalina.logger.FileLogger" 
         prefix="gemma_log." suffix=".txt" timestamp="true"/>
 

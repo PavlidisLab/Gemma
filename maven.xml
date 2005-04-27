@@ -189,6 +189,18 @@
                Webapp management
          ================================================================== -->
      <goal name="install-context-config">
-       <ant:copy  file="${basedir}/metadata/conf/Gemma.xml" failonerror="false" todir="${catalina.home}/conf/Catalina/localhost" /> 
+       <ant:copy  file="${basedir}/metadata/conf/Gemma.xml" failonerror="false" todir="${catalina.home}/conf/Catalina/localhost" >
+       <filterset refid="web.variables"/>
+       </ant:copy> 
      </goal>
+     
+     
+      <ant:filterset id="web.variables">
+        <filter token="WEB-APP-ROOT" value="${maven.war.src}"/>
+        <filter token="WEB-APP-WORK" value="${basedir}/work"/>
+     </ant:filterset>
+    
+     
+     
+     
 </project>
