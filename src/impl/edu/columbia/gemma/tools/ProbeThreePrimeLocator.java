@@ -321,7 +321,8 @@ public class ProbeThreePrimeLocator {
             String arrayName = sa[1];
             buf.append( probeName + "\t" + arrayName + "\t" + tpd.getGene().getOfficialSymbol() + "\t"
                     + tpd.getGene().getNcbiId() + "\t" );
-            buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap() );
+            buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap()   );
+            buf.append("\t" + tpd.getDistance());
             buf.append("\n");
             return buf.toString();
         }
