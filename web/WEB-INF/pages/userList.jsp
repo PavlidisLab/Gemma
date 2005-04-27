@@ -21,11 +21,11 @@
     pagesize="25" styleClass="list userList" export="true">
   
     <%-- Table columns --%>
-    <display:column property="username" sort="true" 
+    <display:column property="userName" sort="true" 
     	headerClass="sortable" width="17%"
         url="/editUser.html?from=list" 
-        paramId="username" paramProperty="username"
-        titleKey="user.username"/>
+        paramId="userName" paramProperty="userName"
+        titleKey="user.userName"/>
     <display:column property="firstName" sort="true" 
     	headerClass="sortable" width="20%"
         titleKey="user.firstName" />
