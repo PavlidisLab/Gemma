@@ -11,13 +11,14 @@
 <button type="button" onclick="location.href='mainMenu.html'">
     <fmt:message key="button.cancel"/>
 </button>
-    
-<display:table name="${userNames}" id="user" cellspacing="0" cellpadding="0"
+
+<%-- <display:table name="${userNames}" id="user" cellspacing="0" cellpadding="0" --%>    
+<display:table name="userNames" id="user" cellspacing="0" cellpadding="0"
     defaultsort="1" styleClass="list activeUserList" pagesize="50" requestURI="">
   
     <%-- Table columns --%>
-    <display:column property="username" width="30%" headerClass="sortable"
-        titleKey="user.username" sort="true"/>
+    <display:column property="userName" width="30%" headerClass="sortable"
+        titleKey="user.userName" sort="true"/>
     <display:column titleKey="activeUsers.fullName" headerClass="sortable"
         sort="true">
         <c:out value="${user.firstName} ${user.lastName}"/>
