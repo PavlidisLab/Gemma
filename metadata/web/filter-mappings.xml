@@ -1,20 +1,18 @@
-<!-- {Gemma Project: Some filters are commented out because we are not using 
-      them yet, April 28 2005.  My commented code is wrapped in {} ... all 
-      other commented out code was done previously by appfuse.} -->
-
- 
-<!--{ <filter-mapping>
+<!--  Requests/responses with url pattern /login.jsp
+      are preprocessed/postprocessed through the loginFilter.  --> 
+<filter-mapping>
 	<filter-name>loginFilter</filter-name>
 	<url-pattern>/login.jsp</url-pattern>
 	<dispatcher>REQUEST</dispatcher>
 	<dispatcher>FORWARD</dispatcher>
-	</filter-mapping>} -->
+</filter-mapping>
 
-<!--  All requests/responses are preprocessed/postprocessed through the loginFilter.  -->	
-	<filter-mapping>
+<!--  Requests/responses with url pattern /logout.jsp
+      are preprocessed/postprocessed through the loginFilter.  -->	
+<filter-mapping>
 	<filter-name>loginFilter</filter-name>
 	<url-pattern>/logout.jsp</url-pattern>
-	</filter-mapping>
+</filter-mapping>
 
 <!-- All requests are decorated with sitemesh -->	
 <filter-mapping>
