@@ -1,24 +1,22 @@
-<!-- Gemma Project: Comment out because we are not using this yet, March 23 2005
-	My commented out code is left-justified ... all other commented out code was
-	done previously by appfuse. -->
+<!-- {Gemma Project: Some filters are commented out because we are not using 
+      them yet, April 28 2005.  My commented code is wrapped in {} ... all 
+      other commented out code was done previously by appfuse.} -->
 
-<!-- 
-	<filter-mapping>
+ 
+<!--{ <filter-mapping>
 	<filter-name>loginFilter</filter-name>
 	<url-pattern>/login.jsp</url-pattern>
 	<dispatcher>REQUEST</dispatcher>
 	<dispatcher>FORWARD</dispatcher>
-	</filter-mapping>
-	
-	
+	</filter-mapping>} -->
+
+<!--  All requests/responses are preprocessed/postprocessed through the loginFilter.  -->	
 	<filter-mapping>
 	<filter-name>loginFilter</filter-name>
 	<url-pattern>/logout.jsp</url-pattern>
 	</filter-mapping>
-	
--->
 
-<!--  This means that all requests are filtered through the sitemesh filter -->
+<!-- All requests are decorated with sitemesh -->	
 <filter-mapping>
 	<filter-name>sitemesh</filter-name>
 	<url-pattern>/*</url-pattern>
@@ -26,9 +24,6 @@
 	<dispatcher>REQUEST</dispatcher>
 	<dispatcher>FORWARD</dispatcher>
 </filter-mapping>
-
-
-<!-- Gemma Project Comment out because we are not using this yet, March 23 2005-->
 
 <!-- Commented out for 2 reasons: 1) it's a pain when developing JSPs, and
 	2) it causes the Signup webtest to fail -->
@@ -64,12 +59,10 @@
 	<filter-name>exportFilter</filter-name>
 	<url-pattern>*.html</url-pattern>
 </filter-mapping>
-<!-- 
-<filter-mapping>
+<!--{ <filter-mapping>
 	<filter-name>compressionFilter</filter-name>
 	<url-pattern>*.html</url-pattern>
-</filter-mapping>
--->
+</filter-mapping>} -->
 <filter-mapping>
 	<filter-name>rewriteFilter</filter-name>
 	<url-pattern>/*</url-pattern>
