@@ -76,48 +76,69 @@
             <groupId>mysql</groupId>
             <artifactId>mysql</artifactId>
             <jar>mysql-connector-java-3.1.6-bin.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>aopalliance</groupId>
             <artifactId>aopalliance</artifactId>
             <jar>aopalliance.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
             <version>1.7.0</version>
             <jar>commons-beanutils-1.7.0.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
             <version>1.1</version>
             <jar>commons-configuration-1.1.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>2.0</version>
             <jar>commons-lang-2.0.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.0.4</version>
             <jar>commons-logging-1.0.4.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>1.1.0</version>
             <jar>commons-net-1.1.0.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>dom4j</groupId>
@@ -125,44 +146,57 @@
             <version>1.4</version>
             <jar>dom4j-1.4.jar</jar>
             <type>jar</type>
+             <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>ehcache</groupId>
             <artifactId>ehcache</artifactId>
             <version>0.9</version>
             <jar>ehcache-0.9.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>jstl</groupId>
             <artifactId>jstl</artifactId>
             <jar>jstl.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>jstl</groupId>
             <artifactId>standard</artifactId>
             <jar>standard.jar</jar>
             <type>jar</type>
+             <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>jta</groupId>
             <artifactId>jta</artifactId>
             <jar>jta.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>servlet</groupId>
             <artifactId>servlet</artifactId>
             <jar>servlet.jar</jar>
-            <type>jar</type>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
-        <dependency>
-            <groupId>spring</groupId>
-            <artifactId>spring</artifactId>
-            <jar>spring.jar</jar>
-            <type>jar</type>
-        </dependency>
+      
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -175,14 +209,20 @@
             <artifactId>colt</artifactId>
             <version>1.2.0</version>
             <jar>colt-1.2.0.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-dbutils</groupId>
             <artifactId>commons-dbutils</artifactId>
             <version>1.0</version>
             <jar>commons-dbutils-1.0.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
                 <dependency>
             <groupId>easymock</groupId>
@@ -195,19 +235,28 @@
             <artifactId>commons-collections</artifactId>
             <version>3.1</version>
             <jar>commons-collections-3.1.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>odmg</groupId>
             <artifactId>odmg</artifactId>
             <version>3.0</version>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>baseCode</groupId>
             <artifactId>baseCode</artifactId>
             <version>SNAPSHOT</version>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>xdoclet</groupId>
@@ -232,13 +281,19 @@
             <artifactId>cglib-full</artifactId>
             <version>2.0.2</version>
             <jar>cglib-full-2.0.2.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>xmlapis</groupId>
             <artifactId>xml-apis</artifactId>
             <jar>xml-apis.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>mage</groupId>
@@ -246,78 +301,123 @@
             <jar>MAGEstk-2004-11-29-v1.1-compatible.jar</jar>
             <type>jar</type>
         </dependency>
+          <dependency>
+            <groupId>spring</groupId>
+            <artifactId>spring</artifactId>
+            <jar>spring.jar</jar>
+            <type>jar</type> 
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
+        </dependency>
         <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-mock</artifactId>
             <jar>spring-mock.jar</jar>
             <type>jar</type>
+              <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-sandbox</artifactId>
             <jar>spring-sandbox.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-webflow</artifactId>
             <jar>spring-webflow.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-webflow-support</artifactId>
             <jar>spring-webflow-support.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>velocity</groupId>
             <artifactId>velocity</artifactId>
             <version>1.4</version>
             <jar>velocity-1.4.jar</jar>
-            <type>jar</type>
+            <type>jar</type>  
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
             <version>1.1.4</version>
             <type>jar</type>
+<properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>displaytag</groupId>
             <artifactId>displaytag</artifactId>
             <version>1.0</version>
             <type>jar</type>
+            <properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>opensymphony</groupId>
             <artifactId>clickstream</artifactId>
             <jar>clickstream-1.0.3.jar</jar>
             <type>jar</type>
+<properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>urlrewritefilter</groupId>
             <artifactId>urlrewrite</artifactId>
             <jar>urlrewrite-2.3.jar</jar>
             <type>jar</type>
+<properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>urlrewritefilter</groupId>
             <artifactId>jakarta-oro</artifactId>
             <jar>jakarta-oro-2.0.8.jar</jar>
             <type>jar</type>
+<properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>javamail</groupId>
             <artifactId>mail</artifactId>
             <jar>mail.jar</jar>
             <type>jar</type>
+<properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
         <dependency>
             <groupId>javamail</groupId>
             <artifactId>activation</artifactId>
             <jar>activation.jar</jar>
             <type>jar</type>
+<properties>
+      <war.bundle>true</war.bundle>
+    </properties>
         </dependency>
     </dependencies>
     <build>
@@ -379,6 +479,7 @@
                 </includes>
                 <filtering>false</filtering>
             </resource>
+            </resources>
     </build>
     <reports>
         <report>maven-clover-plugin</report>
