@@ -31,7 +31,7 @@
 
 <div id="screen">
 
-<div id="header">
+	<div id="header">
 		<%if ( request.getRequestURL().indexOf( "/login.jsp" ) == -1 ) {%> 
 		<c:if test="${sessionScope.currentUserForm != null}">
 			<div id="userStatus">
@@ -43,8 +43,10 @@
 		</c:if> 
 		<% } %> 
 		<c:import url="/common/header.jsp" />
-</div>
+	</div>
+	
 <img src="<%=request.getContextPath()%>/images/logo/gemOnlySmall.gif" />
+
 <c:if test="${sessionScope.currentUserForm != null}">
 	<c:import url="/WEB-INF/pages/menu.jsp" />
 </c:if>
