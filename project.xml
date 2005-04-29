@@ -134,7 +134,7 @@
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>1.1.0</version>
-            <jar>commons-net-1.1.0.jar</jar>
+     
             <type>jar</type> 
             <properties>
       <war.bundle>true</war.bundle>
@@ -144,7 +144,7 @@
             <groupId>dom4j</groupId>
             <artifactId>dom4j</artifactId>
             <version>1.4</version>
-            <jar>dom4j-1.4.jar</jar>
+            
             <type>jar</type>
              <properties>
       <war.bundle>true</war.bundle>
@@ -154,7 +154,7 @@
             <groupId>ehcache</groupId>
             <artifactId>ehcache</artifactId>
             <version>0.9</version>
-            <jar>ehcache-0.9.jar</jar>
+         
             <type>jar</type> 
             <properties>
       <war.bundle>true</war.bundle>
@@ -187,28 +187,35 @@
       <war.bundle>true</war.bundle>
     </properties>
         </dependency>
-        <dependency>
+      <!--   <dependency>
             <groupId>servlet</groupId>
             <artifactId>servlet</artifactId>
-            <jar>servlet.jar</jar>
+            <version>2.4</version>
             <type>jar</type> 
             <properties>
       <war.bundle>true</war.bundle>
     </properties>
-        </dependency>
-      
+        </dependency> -->
+      <dependency>
+      <groupId>struts-menu</groupId>
+      <artifactId>struts-menu</artifactId>
+      <version>2.3
+      </version>
+      <type>jar</type>
+       <properties><war.bundle>true</war.bundle></properties>
+      </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
-            <jar>junit-3.8.1.jar</jar>
+            
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>colt</groupId>
             <artifactId>colt</artifactId>
             <version>1.2.0</version>
-            <jar>colt-1.2.0.jar</jar>
+           
             <type>jar</type>  
             <properties>
       <war.bundle>true</war.bundle>
@@ -218,7 +225,7 @@
             <groupId>commons-dbutils</groupId>
             <artifactId>commons-dbutils</artifactId>
             <version>1.0</version>
-            <jar>commons-dbutils-1.0.jar</jar>
+         
             <type>jar</type>  
             <properties>
       <war.bundle>true</war.bundle>
@@ -234,7 +241,7 @@
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
             <version>3.1</version>
-            <jar>commons-collections-3.1.jar</jar>
+            
             <type>jar</type>  
             <properties>
       <war.bundle>true</war.bundle>
