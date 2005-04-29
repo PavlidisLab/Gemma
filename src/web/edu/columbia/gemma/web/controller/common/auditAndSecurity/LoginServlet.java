@@ -27,7 +27,7 @@ import edu.columbia.gemma.web.Constants;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @web.servlet display-name="Login Servlet" load-on-startup="1" name="login"
+ * @web.servlet name="login" display-name="Login Servlet" load-on-startup="1" 
  * @web.servlet-init-param name="authURL" value="j_security_check"
  *                         <p>
  *                         Change the following value to false if you don't require SSL for login
