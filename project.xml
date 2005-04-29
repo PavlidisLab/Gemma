@@ -423,9 +423,6 @@
             <artifactId>servlet</artifactId>
             <jar>servlet.jar</jar>
             <type>jar</type>
-			<properties>
-      			<war.bundle>true</war.bundle>
-    		</properties>
         </dependency>
       
         <dependency>
