@@ -409,14 +409,25 @@
     </properties>
         </dependency>
         <dependency>
-            <groupId>opensymphony</groupId>
+            <groupId>oscache</groupId>
             <artifactId>oscache</artifactId>
             <version>2.0.1</version>
+            <jar>oscache-gemma-2.0.1.jar</jar>
             <type>jar</type>
 			<properties>
       			<war.bundle>true</war.bundle>
     		</properties>
         </dependency>
+        <dependency>
+            <groupId>servlet</groupId>
+            <artifactId>servlet</artifactId>
+            <jar>servlet.jar</jar>
+            <type>jar</type>
+			<properties>
+      			<war.bundle>true</war.bundle>
+    		</properties>
+        </dependency>
+      
         <dependency>
             <groupId>urlrewritefilter</groupId>
             <artifactId>urlrewrite</artifactId>
