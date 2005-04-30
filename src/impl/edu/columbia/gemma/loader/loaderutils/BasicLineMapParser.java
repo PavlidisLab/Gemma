@@ -29,8 +29,18 @@ public abstract class BasicLineMapParser extends BasicLineParser {
      * @param probeSetId
      * @see Map
      */
-    public Object get( String probeSetId ) {
+    public Object get( Object probeSetId ) {
         return results.get( probeSetId );
+    }
+
+    /**
+     * 
+     * @param key
+     * @return
+     * @see Map
+     */
+    public boolean containsKey( Object key ) {
+        return results.containsKey( key );
     }
 
     /**
@@ -46,6 +56,8 @@ public abstract class BasicLineMapParser extends BasicLineParser {
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
+
+        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
         String line = null;
@@ -54,20 +66,18 @@ public abstract class BasicLineMapParser extends BasicLineParser {
             Object newItem = parseOneLine( line );
 
             if ( newItem != null ) {
-                String key = getKey( newItem );
-
+                Object key = getKey( newItem );
                 assert key != null;
-
                 results.put( key, newItem );
                 count++;
-                if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..." );
+                if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..., last had key " + key );
 
             } else {
-                log.debug( "Null object returned" ); // this could be a header
+                log.debug( "Null object returned" ); // this could be a header or a tolerated parse error.
             }
 
         }
-        log.info( "Read in " + count + " items..." );
+        log.info( "Read in " + count + " items." );
         br.close();
     }
 
@@ -82,6 +92,6 @@ public abstract class BasicLineMapParser extends BasicLineParser {
      * @param newItem
      * @return
      */
-    protected abstract String getKey( Object newItem );
+    protected abstract Object getKey( Object newItem );
 
 }
