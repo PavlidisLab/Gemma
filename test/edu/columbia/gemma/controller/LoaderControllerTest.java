@@ -38,21 +38,21 @@ public class LoaderControllerTest extends BaseControllerTestCase {
         c = null;
     }
 
-    /**
-     * hasHeader = true The View returned by the onSubmit method ( a RedirectView(String view) ) will obviously not
-     * point to the same place on the heap as returnedView defined in setUp(). Calling toString on both will, however
-     * yield the same String value: org.springframework.web.servlet.view.RedirectView: unnamed; URL [home.jsp]
-     * 
-     * @throws Exception
-     */
-    public void testOnSubmitHeaderIsTrue() throws Exception {
-        request.addParameter( "hasHeader", "true" );
-        request.addParameter( "typeOfLoader", "taxonLoaderService" );
-        ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
-        assertEquals( returnedView.toString(), mav.getView().toString() );
-
-        //
-    }
+//    /**
+//     * hasHeader = true The View returned by the onSubmit method ( a RedirectView(String view) ) will obviously not
+//     * point to the same place on the heap as returnedView defined in setUp(). Calling toString on both will, however
+//     * yield the same String value: org.springframework.web.servlet.view.RedirectView: unnamed; URL [home.jsp]
+//     * 
+//     * @throws Exception
+//     */
+//    public void testOnSubmitHeaderIsTrue() throws Exception {
+//        request.addParameter( "hasHeader", "true" );
+//        request.addParameter( "typeOfLoader", "taxonLoaderService" );
+//        ModelAndView mav = c.onSubmit( request, response, ( Object ) null, ( BindException ) null );
+//        assertEquals( returnedView.toString(), mav.getView().toString() );
+//
+//        //
+//    } // commented out by pp
 
     /**
      * hasHeader = false Calling onSubmit with hasHeader = false will cause a NumberFormatException, as expected. This
