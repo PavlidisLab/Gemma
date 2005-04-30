@@ -221,6 +221,8 @@ public class SequenceManipulation {
      */
     private static Set copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
         Set copyOfProbes = new HashSet();
+        if (compositeSequence == null ) throw new IllegalArgumentException("CompositeSequence cannot be null");
+        assert compositeSequence.getReporters() != null : "Null reporters for composite sequence";
         for ( Iterator iter = compositeSequence.getReporters().iterator(); iter.hasNext(); ) {
             Reporter next = ( Reporter ) iter.next();
 
