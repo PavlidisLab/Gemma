@@ -139,10 +139,10 @@ public class SequenceManipulationTest extends TestCase {
         AffyProbeReader apr = new AffyProbeReader();
         apr.setSequenceField( 5 );
         apr.parse( iotest );
+        assertTrue( "Not found", apr.containsKey( "100470_at" ) );
         CompositeSequence t = ( CompositeSequence ) apr.get( "100470_at" );
-
+        assertTrue("Null", t != null );
         BioSequence m = SequenceManipulation.collapse( t );
-        log.debug( m.getSequence() );
     }
 
     public final void testCollapse() throws Exception {

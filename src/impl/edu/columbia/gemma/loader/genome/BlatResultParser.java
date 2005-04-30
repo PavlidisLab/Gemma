@@ -1,5 +1,8 @@
 package edu.columbia.gemma.loader.genome;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImpl;
 import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
@@ -15,7 +18,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
  * @version $Id$
  */
 public class BlatResultParser extends BasicLineParser {
-
+    protected static final Log log = LogFactory.getLog( BlatResultParser.class );
     private static final int NUM_BLAT_FIELDS = 21;
 
     private static final int MATCHES_FIELD = 0;
@@ -71,7 +74,6 @@ public class BlatResultParser extends BasicLineParser {
             // result.setTargetChromosome( // ); // FIXME
             result.setQueryStart( Integer.parseInt( f[QSTART_FIELD] ) );
             result.setQueryEnd( Integer.parseInt( f[QEND_FIELD] ) );
-
             result.setTargetStart( Integer.parseInt( f[TSTART_FIELD] ) );
             result.setTargetEnd( Integer.parseInt( f[TEND_FIELD] ) );
             result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
@@ -84,7 +86,6 @@ public class BlatResultParser extends BasicLineParser {
             String chrom = f[TNAME_FIELD];
             if ( chrom.startsWith( "chr" ) ) chrom = chrom.substring( chrom.indexOf( "chr" ) + 3 );
             result.setTargetName( chrom );
-
             return result;
         } catch ( NumberFormatException e ) {
             log.error( "Invalid number format", e );

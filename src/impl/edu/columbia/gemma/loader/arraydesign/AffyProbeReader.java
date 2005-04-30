@@ -40,28 +40,30 @@ public class AffyProbeReader extends BasicLineMapParser {
 
         String probeSetId = sArray[0];
         if ( probeSetId.startsWith( "Probe" ) ) return null;
-
-        // if ( sArray.length < 5 ) throw new IOException( "File format is not valid" );
-
         String sequence = sArray[sequenceField];
-        int locationInTarget = Integer.parseInt( sArray[sequenceField - 1] ); // unfortunately this depends on the
+
         String xcoord = sArray[sequenceField - 3];
         String ycoord = sArray[sequenceField - 2];
-        // file.
 
         Reporter ap = Reporter.Factory.newInstance();
-        ap.setRow( Integer.parseInt( xcoord ) );
-        ap.setCol( Integer.parseInt( ycoord ) );
-        ap.setStartInBioChar( locationInTarget );
+
+        try {
+            ap.setRow( Integer.parseInt( xcoord ) );
+            ap.setCol( Integer.parseInt( ycoord ) );
+            ap.setStartInBioChar( Integer.parseInt( sArray[sequenceField - 1] ) );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid row: could not parse coordinates." );
+            return null;
+        }
+
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
-
         ap.setImmobilizedCharacteristic( immobChar );
 
         CompositeSequence newps = ( CompositeSequence ) get( probeSetId );
 
         if ( newps == null ) newps = CompositeSequence.Factory.newInstance();
-    
+        newps.setName( probeSetId );
         if ( newps.getReporters() == null ) newps.setReporters( new HashSet() );
 
         newps.getReporters().add( ap );
@@ -74,7 +76,7 @@ public class AffyProbeReader extends BasicLineMapParser {
      * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
-    protected String getKey( Object newItem ) {
+    protected Object getKey( Object newItem ) {
         assert newItem instanceof CompositeSequence;
         return ( ( CompositeSequence ) newItem ).getName();
     }

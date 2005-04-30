@@ -29,11 +29,11 @@ public class IlluminaProbeReader extends BasicLineMapParser {
         String[] sArray = line.split( "\t" );
         if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );
 
-        String probeSetId = sArray[0];
+        String probeId = sArray[0];
 
-        if ( probeSetId == null || probeSetId.length() == 0 ) throw new IllegalArgumentException( "Probe id invalid" );
+        if ( probeId == null || probeId.length() == 0 ) throw new IllegalArgumentException( "Probe id invalid" );
 
-        if ( probeSetId.startsWith( "Search" ) ) return null;
+        if ( probeId.startsWith( "Search" ) ) return null;
 
         if ( sArray.length < 10 ) throw new IllegalArgumentException( "Line format is not valid" );
 
@@ -44,7 +44,7 @@ public class IlluminaProbeReader extends BasicLineMapParser {
 
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
-
+        ap.setName( probeId );
         ap.setImmobilizedCharacteristic( immobChar );
 
         return ap;
@@ -55,7 +55,7 @@ public class IlluminaProbeReader extends BasicLineMapParser {
      * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
-    protected String getKey( Object newItem ) {
+    protected Object getKey( Object newItem ) {
         return ( ( Reporter ) newItem ).getName();
     }
 }
