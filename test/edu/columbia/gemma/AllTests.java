@@ -47,7 +47,7 @@ public class AllTests {
         suite.addTestSuite( MageMLConverterTest.class );
         suite.addTestSuite( MageMLParserTest.class );
 
-        suite.addTestSuite( LoaderControllerTest.class );
+      //  suite.addTestSuite( LoaderControllerTest.class );
         suite.addTestSuite( PubMedXmlControllerTest.class );
 
         suite.addTestSuite( TaxonLoaderServiceTest.class );
