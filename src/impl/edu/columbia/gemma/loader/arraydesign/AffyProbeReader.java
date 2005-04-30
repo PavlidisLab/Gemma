@@ -56,6 +56,7 @@ public class AffyProbeReader extends BasicLineMapParser {
             return null;
         }
 
+        ap.setName( probeSetId + ":" + xcoord + ":" + ycoord );
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
         ap.setImmobilizedCharacteristic( immobChar );
