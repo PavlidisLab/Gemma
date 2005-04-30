@@ -57,19 +57,20 @@ public class UserRoleServiceImplTest extends BaseServiceTestCase {
         
     }
 
-    public void testHandleGetRole() {
-        UserRole ur = UserRole.Factory.newInstance();
-        ur.setName("admin");
-        ur.setUserName("paul");
-        Collection allRoles = new HashSet();
-        allRoles.add(ur);
-        userRoleDaoMock.findRolesByRoleName("admin");
-        control.setReturnValue(allRoles);
-        
-        control.replay();
-        userRoleService.getRole("admin");
-        control.verify();
-    }
+    // this commented out because the getRole method no longer calls the Dao.
+//    public void testHandleGetRole() {
+//        UserRole ur = UserRole.Factory.newInstance();
+//        ur.setName("admin");
+//   //     ur.setUserName("paul");
+//        Collection allRoles = new HashSet();
+//        allRoles.add(ur);
+//        userRoleDaoMock.findRolesByRoleName("admin");
+//        control.setReturnValue(allRoles);
+//        
+//        control.replay();
+//        userRoleService.getRole("admin");
+//        control.verify();
+//    }
 
     public void testHandleSaveRole() {
         UserRole ur = UserRole.Factory.newInstance();
