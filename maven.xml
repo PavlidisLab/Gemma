@@ -1,217 +1,236 @@
-<project  xmlns:j="jelly:core" xmlns:ant="jelly:ant" xmlns:maven="jelly:maven"  >
-    
-    <!-- $Id$ -->
-    
-    <goal name="set-source-dirs">
-    <ant:path id="impl" location="${basedir}/src/impl"/>
-        <maven:addPath id="maven.compile.src.set" refid="impl"/>
-        <ant:path id="gen" location="${basedir}/src/gen"/>
-        <maven:addPath id="maven.compile.src.set" refid="gen"/>
-        <ant:path id="web" location="${basedir}/src/web"/>
-        <maven:addPath id="maven.compile.src.set" refid="web"/>
-    </goal>
-    
-    <!-- ==================================================================
-               Compiles
-         ================================================================== -->
-    <preGoal name="java:compile">
-    	<ant:delete quiet="false" failonerror="false" >
-	    	<fileset dir="${maven.build.dest}" includes="**/*.class,**/*.hbm.xml" />
-    	</ant:delete>
-    	<ant:delete quiet="false" failonerror="false" >
-	    	<fileset dir="${basedir}/target/test-classes" includes="**/*.class,**/*.hbm.xml" />
-    	</ant:delete>
-    	<!-- <attainGoal name="mda" />  -->
-        <attainGoal name="set-source-dirs" />
-    </preGoal>
-    
-    <postGoal name="java:compile">
-    	<ant:copy toDir="${maven.build.dest}">
-    		<fileset dir="${basedir}/metadata/webproperties" includes="**/*.properties" />
-    	</ant:copy>
-    	<attainGoal name="dll" />
-    	<attainGoal name="xdoclet" />
-    </postGoal>
+<project xmlns:j="jelly:core" xmlns:ant="jelly:ant"
+	xmlns:maven="jelly:maven">
 
-	<goal name="xdoclet" >
-		<attainGoal name="xdoclet:webdoclet"/>
-      	<attainGoal name="xdoclet:springdoclet"/>
+	<!-- $Id$ -->
+
+	<goal name="set-source-dirs">
+		<ant:path id="impl" location="${basedir}/src/impl" />
+		<maven:addPath id="maven.compile.src.set" refid="impl" />
+		<ant:path id="gen" location="${basedir}/src/gen" />
+		<maven:addPath id="maven.compile.src.set" refid="gen" />
+		<ant:path id="web" location="${basedir}/src/web" />
+		<maven:addPath id="maven.compile.src.set" refid="web" />
 	</goal>
-	
-	<goal name="copy-hibconfig" description="Copy hibernate configuration files to the output directory">
+
+	<!-- ==================================================================
+		Compiles
+		================================================================== -->
+	<preGoal name="java:compile">
+		<ant:delete quiet="false" failonerror="false">
+			<fileset dir="${maven.build.dest}"
+				includes="**/*.class,**/*.hbm.xml" />
+		</ant:delete>
+		<ant:delete quiet="false" failonerror="false">
+			<fileset dir="${basedir}/target/test-classes"
+				includes="**/*.class,**/*.hbm.xml" />
+		</ant:delete>
+		<!-- <attainGoal name="mda" />  -->
+		<attainGoal name="set-source-dirs" />
+	</preGoal>
+
+	<postGoal name="java:compile">
+		<ant:copy toDir="${maven.build.dest}">
+			<fileset dir="${basedir}/metadata/webproperties"
+				includes="**/*.properties" />
+		</ant:copy>
+		<attainGoal name="dll" />
+		<attainGoal name="xdoclet" />
+	</postGoal>
+
+	<goal name="xdoclet">
+		<attainGoal name="xdoclet:webdoclet" />
+		<attainGoal name="xdoclet:springdoclet" />
+	</goal>
+
+	<goal name="copy-hibconfig"
+		description="Copy hibernate configuration files to the output directory">
 		<ant:copy todir="${maven.build.dest}">
-      		<fileset dir="${basedir}/src/gen" includes="**/*.hbm.xml,ehcache.xml,hibernate.cfg.xml" />
-      	</ant:copy>
+			<fileset dir="${basedir}/src/gen"
+				includes="**/*.hbm.xml,ehcache.xml,hibernate.cfg.xml" />
+		</ant:copy>
 	</goal>
-	
-	<goal name="cc-build" description="Special task for cruise control">      
+
+	<goal name="cc-build"
+		description="Special task for cruise control">
 		<attainGoal name="mda-clean" />
- 	  	<attainGoal name="mda-impl-clean" />
-   		<attainGoal name="scm:cvs-update-project" />
-     	<attainGoal name="site:generate" />
+		<attainGoal name="mda-impl-clean" />
+		<attainGoal name="scm:cvs-update-project" />
+		<attainGoal name="site:generate" />
 	</goal>
-	  
-    
-  <!-- ==================================================================
-           Build and export the database schema
-     ================================================================== -->
-    <goal name="dll" description="Create database">
-        <attainGoal name="hibernate:schema-export" />
-    </goal>
-     
-    <preGoal name="dll">
-    	<attainGoal name="copy-hibconfig" />
-    </preGoal>
-    
-     <!-- ==================================================================
-           Build and export the test database schema
-     ================================================================== -->
-    <goal name="dll-test" description="Create test database">
-        <!--  run the schema through "mysql gemdtest" todo, refactor -->
-        <ant:exec dir="${src}" executable="C:/mysql/bin/mysql" os="Windows XP" 
-            input="${basedir}/target/schema/Gemma-0.1-schema.sql">
-            <arg line="-upavlidis -ptoast -P3306 gemdtest" />
-        </ant:exec>
-    </goal>
-    
-    <!-- ==================================================================
-         Pre and Postgoals for website setup.
-     ================================================================== -->
-    <preGoal name="site:run-reports">
-    	<attainGoal name="mda" /> 
-    </preGoal>
-    
-    <postGoal name="site:generate">
-      <!--  <attainGoal name="copydocs" /> -->
-      <!--  <attainGoal name="zipsite" /> -->
-    </postGoal>
-    
-     <!-- ==================================================================
-         Supporting goals
-     ================================================================== -->
-    <goal name="copydocs" 
-        description="Copy javadocs and UML docs to the site directory">
-        <ant:copy  failonerror="false" todir="${basedir}/target/docs/apidocs">
-            <fileset dir="${basedir}/docs/java/api" />
-        </ant:copy>
-        <ant:mkdir dir="${basedir}/target/docs/uml" />
-        <ant:copy failonerror="false" todir="${basedir}/target/docs/uml">
-            <fileset dir="${basedir}/docs/uml" />
-        </ant:copy>
-    </goal>
-    
-    <goal name="zipsite" description="Zip the web site">
-        <ant:tar tarfile="${basedir}/target/site.tar" 
-            basedir="${basedir}/target/docs"/>
-        <ant:gzip zipfile="${basedir}/target/site.tar.gz" 
-            src="${basedir}/target/site.tar"/>
-    </goal>
-    
-      
-    <preGoal name="build:start">
-    	<attainGoal name="set-source-dirs" />    
-    </preGoal>
-   
-     <!-- ==================================================================
-         Run andromda
-     ================================================================== -->
-     <goal name="mda" >
-        <maven:maven descriptor="${basedir}/mda/project.xml" 
-            goals="andromda:run"/>
-    </goal>
-    
-      <goal name="gp-human-reverse" >
-        <maven:maven descriptor="${basedir}/mda-external/goldenpath/human/project.xml" 
-            goals="andromda:schema2xmi"/>
-    </goal>
-    
-      <goal name="gp-human-mda" >
-        <maven:maven descriptor="${basedir}/mda-external/goldenpath/human/project.xml" 
-            goals="andromda:run"/>
-      </goal>
-    
-    <preGoal name="mda">
-        <attainGoal name="mda-clean" />
-        <attainGoal name="mda-remove-logs" />
-    </preGoal>
-    
-   
-    
-     <!-- ==================================================================
-          Run andromda on test models (used for debugging Andromda)
-     ================================================================== -->
-    <goal name="test-mda" >
-        <maven:maven descriptor="${basedir}/mda/test/project.xml" 
-            goals="andromda:run"/>
-    </goal>
-    <preGoal name="test-mda">
-        <attainGoal name="mda-remove-logs" />
-    </preGoal>
-    
-     <!-- ==================================================================
-         Remove all Andromda-generated files (except permanent impl classes)
-     ================================================================== -->
-    <goal name="mda-clean" 
-        description="Remove all Andromda-generated files (except permanent impl classes)" 
-        >
-        <ant:delete quiet="false" failonerror="false" >
-            <fileset dir="${basedir}/src/gen/edu/columbia" 
-                includes="**/*.java,**/*.hbm.xml" 
-                excludes="${basedir}/src/impl/**/*.java" />
-        </ant:delete>
-    </goal>
-    
-     <!-- ==================================================================
-         Remove all Andromda-generated impl files
-     ================================================================== -->
-    <goal name="mda-impl-clean" 
-        description="Remove all Andromda-generated impl files" >
-        <ant:delete quiet="false" failonerror="false">
-            <fileset dir="${basedir}/src/impl/edu/columbia/gemma" 
-                includes="**/*Impl.java" 
-                excludes="**/util/*,**/loader/*,**/tools/*" 
-                />
-        </ant:delete>
-    </goal>
-    
-     <!-- ==================================================================
-         Remove the log files generated by Andromda
-     ================================================================== -->
-    <goal name="mda-remove-logs" description="Clear out old Andromda log files">
-        <ant:delete quiet="false" failonerror="false">
-            <fileset dir="${basedir}" 
-                includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log, andromda-java.log" 
-                />
-        </ant:delete>
-    </goal>
-    
-        <!-- ==================================================================
-               Webapp management
-         ================================================================== -->
-         <goal name="webapp-copy-deps" description="Copy dependencies to the WEB-INF/lib directory">
-  			<j:forEach var="lib" items="${pom.artifacts}">
-      			<j:set var="dep" value="${lib.dependency}"/>     
-      			<j:if test="${dep.getProperty('war.bundle')=='true'}">
-         <j:if test="${dep.type =='jar'}"> 
-           <ant:copy todir="${webapp.build.lib}" file="${lib.path}"/>  
-         </j:if> 
-         <j:if test="${dep.type =='tld'}"> 
-           <ant:copy todir="${webapp.build.tlds}" file="${lib.path}"/>  
-         </j:if> 
+
+
+	<!-- ==================================================================
+		Build and export the database schema
+		================================================================== -->
+	<goal name="dll" description="Create database">
+		<attainGoal name="hibernate:schema-export" />
+	</goal>
+
+	<preGoal name="dll">
+		<attainGoal name="copy-hibconfig" />
+	</preGoal>
+
+	<!-- ==================================================================
+		Build and export the test database schema
+		================================================================== -->
+	<goal name="dll-test" description="Create test database">
+		<!--  run the schema through "mysql gemdtest" todo, refactor -->
+		<ant:exec dir="${src}" executable="C:/mysql/bin/mysql"
+			os="Windows XP"
+			input="${basedir}/target/schema/Gemma-0.1-schema.sql">
+			<arg line="-upavlidis -ptoast -P3306 gemdtest" />
+		</ant:exec>
+	</goal>
+
+	<!-- ==================================================================
+		Pre and Postgoals for website setup.
+		================================================================== -->
+	<preGoal name="site:run-reports">
+		<attainGoal name="mda" />
+	</preGoal>
+
+	<postGoal name="site:generate">
+		<!--  <attainGoal name="copydocs" /> -->
+		<!--  <attainGoal name="zipsite" /> -->
+	</postGoal>
+
+	<!-- ==================================================================
+		Supporting goals
+		================================================================== -->
+	<goal name="copydocs"
+		description="Copy javadocs and UML docs to the site directory">
+		<ant:copy failonerror="false"
+			todir="${basedir}/target/docs/apidocs">
+			<fileset dir="${basedir}/docs/java/api" />
+		</ant:copy>
+		<ant:mkdir dir="${basedir}/target/docs/uml" />
+		<ant:copy failonerror="false"
+			todir="${basedir}/target/docs/uml">
+			<fileset dir="${basedir}/docs/uml" />
+		</ant:copy>
+	</goal>
+
+	<goal name="zipsite" description="Zip the web site">
+		<ant:tar tarfile="${basedir}/target/site.tar"
+			basedir="${basedir}/target/docs" />
+		<ant:gzip zipfile="${basedir}/target/site.tar.gz"
+			src="${basedir}/target/site.tar" />
+	</goal>
+
+
+	<preGoal name="build:start">
+		<attainGoal name="set-source-dirs" />
+	</preGoal>
+
+	<!-- ==================================================================
+		Run andromda
+		================================================================== -->
+	<goal name="mda">
+		<maven:maven descriptor="${basedir}/mda/project.xml"
+			goals="andromda:run" />
+	</goal>
+
+	<goal name="gp-human-reverse">
+		<maven:maven
+			descriptor="${basedir}/mda-external/goldenpath/human/project.xml"
+			goals="andromda:schema2xmi" />
+	</goal>
+
+	<goal name="gp-human-mda">
+		<maven:maven
+			descriptor="${basedir}/mda-external/goldenpath/human/project.xml"
+			goals="andromda:run" />
+	</goal>
+
+	<preGoal name="mda">
+		<attainGoal name="mda-clean" />
+		<attainGoal name="mda-remove-logs" />
+	</preGoal>
+
+
+
+	<!-- ==================================================================
+		Run andromda on test models (used for debugging Andromda)
+		================================================================== -->
+	<goal name="test-mda">
+		<maven:maven descriptor="${basedir}/mda/test/project.xml"
+			goals="andromda:run" />
+	</goal>
+	<preGoal name="test-mda">
+		<attainGoal name="mda-remove-logs" />
+	</preGoal>
+
+	<!-- ==================================================================
+		Remove all Andromda-generated files (except permanent impl classes)
+		================================================================== -->
+	<goal name="mda-clean"
+		description="Remove all Andromda-generated files (except permanent impl classes)">
+		<ant:delete quiet="false" failonerror="false">
+			<fileset dir="${basedir}/src/gen/edu/columbia"
+				includes="**/*.java,**/*.hbm.xml"
+				excludes="${basedir}/src/impl/**/*.java" />
+		</ant:delete>
+	</goal>
+
+	<!-- ==================================================================
+		Remove all Andromda-generated impl files
+		================================================================== -->
+	<goal name="mda-impl-clean"
+		description="Remove all Andromda-generated impl files">
+		<ant:delete quiet="false" failonerror="false">
+			<fileset dir="${basedir}/src/impl/edu/columbia/gemma"
+				includes="**/*Impl.java"
+				excludes="**/util/*,**/loader/*,**/tools/*" />
+		</ant:delete>
+	</goal>
+
+	<!-- ==================================================================
+		Remove the log files generated by Andromda
+		================================================================== -->
+	<goal name="mda-remove-logs"
+		description="Clear out old Andromda log files">
+		<ant:delete quiet="false" failonerror="false">
+			<fileset dir="${basedir}"
+				includes="andromda-hibernate.log, andromda.log, andromda-spring.log, mdr.log, andromda-java.log" />
+		</ant:delete>
+	</goal>
+
+	<!-- ==================================================================
+		Webapp management
+		================================================================== -->
+	<goal name="webapp-copy-deps"
+		description="Copy dependencies to the WEB-INF/lib directory">
+		<ant:delete quite="false" failonerror="false">
+			<fileset dir="${webapp.build.lib}" includes="*.jar" />
+			<fileset dir="${webapp.build.tlds}" includes="*.tld" />
+		</ant:delete>
+		<j:forEach var="lib" items="${pom.artifacts}">
+			<j:set var="dep" value="${lib.dependency}" />
+			<j:if test="${dep.getProperty('war.bundle')=='true'}">
+				<j:if test="${dep.type =='jar'}">
+					<ant:copy todir="${webapp.build.lib}"
+						file="${lib.path}" />
+				</j:if>
+				<j:if test="${dep.type =='tld'}">
+					<ant:copy todir="${webapp.build.tlds}"
+						file="${lib.path}" />
+				</j:if>
 			</j:if>
-			</j:forEach>
-         </goal>
-         
-     <goal name="install-context-config">
-       <ant:copy  file="${basedir}/metadata/conf/Gemma.xml" failonerror="false" todir="${catalina.home}/conf/Catalina/localhost" >
-       <filterset refid="web.variables"/>
-       </ant:copy> 
-     </goal>
-     
-     
-      <ant:filterset id="web.variables">
-        <filter token="WEB-APP-ROOT" value="${maven.war.src}"/>
-        <filter token="WEB-APP-WORK" value="${basedir}/work"/>
-     </ant:filterset>
+		</j:forEach>
+	</goal>
+
+	<goal name="install-context-config">
+		<ant:copy file="${basedir}/metadata/conf/Gemma.xml"
+			failonerror="false"
+			todir="${catalina.home}/conf/Catalina/localhost">
+			<filterset refid="web.variables" />
+		</ant:copy>
+	</goal>
+
+
+	<ant:filterset id="web.variables">
+		<filter token="WEB-APP-ROOT" value="${maven.war.src}" />
+		<filter token="WEB-APP-WORK" value="${basedir}/work" />
+	</ant:filterset>
 
 </project>
