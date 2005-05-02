@@ -62,9 +62,10 @@
 	<filter-name>compressionFilter</filter-name>
 	<url-pattern>*.html</url-pattern>
 </filter-mapping>} -->
-<filter-mapping>
+<!-- <filter-mapping>
 	<filter-name>rewriteFilter</filter-name>
 	<url-pattern>/*</url-pattern>
 	<dispatcher>REQUEST</dispatcher>
 	<dispatcher>FORWARD</dispatcher>
-</filter-mapping>
+</filter-mapping>-->
+
