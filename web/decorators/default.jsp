@@ -58,12 +58,6 @@
             <decorator:body/>
         </div>
         
-        <%-- Gemma --%>
-        <%if ( !(request.getServletPath().equals( "/login.jsp" ) || request.getServletPath().equals( "/mainMenu.html" )) ) {%> 
-        	<a href="<c:url value="/mainMenu.html"/>">Home</a><br>
-			<br>
-		<%}%>
-        
         <div id="footer">
             <c:import url="/common/footer.jsp"/>
         </div>
