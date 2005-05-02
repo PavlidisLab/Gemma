@@ -13,90 +13,85 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.displaytag.tags.TableTagParameters;
 
 /**
- * Filter that compresses output with gzip (assuming that browser supports gzip).
- * Code from <a href="http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html">
- * http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html</a>.
- *
- * &copy; 2003 Jayson Falkner You may freely use the code both commercially
- * and non-commercially.
- *
- * @author  Matt Raible
- *
- * @web.filter
- *     display-name="Compression Filter"
- *     name="compressionFilter"
+ * Filter that compresses output with gzip (assuming that browser supports gzip). Code from <a
+ * href="http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html">
+ * http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html</a>. &copy; 2003 Jayson Falkner You may freely use the
+ * code both commercially and non-commercially.
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
+ * @author Matt Raible
+ * @author keshav
+ * @version $Id$
+ * @web.filter display-name="Compression Filter" name="compressionFilter"
  */
 public class GZIPFilter implements Filter {
-    private final transient Log log = LogFactory.getLog(GZIPFilter.class);
+    private final transient Log log = LogFactory.getLog( GZIPFilter.class );
 
-    public void doFilter(ServletRequest req, ServletResponse res,
-                         FilterChain chain)
-    throws IOException, ServletException {
-        if (req instanceof HttpServletRequest) {
-            HttpServletRequest request = (HttpServletRequest) req;
-            HttpServletResponse response = (HttpServletResponse) res;
+    public void destroy() {
+    }
 
-            if (isGZIPSupported(request)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("GZIP supported, compressing response");
+    public void doFilter( ServletRequest req, ServletResponse res, FilterChain chain ) throws IOException,
+            ServletException {
+        if ( req instanceof HttpServletRequest ) {
+            HttpServletRequest request = ( HttpServletRequest ) req;
+            HttpServletResponse response = ( HttpServletResponse ) res;
+
+            if ( isGZIPSupported( request ) ) {
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "GZIP supported, compressing response" );
                 }
 
-                GZIPResponseWrapper wrappedResponse =
-                    new GZIPResponseWrapper(response);
+                GZIPResponseWrapper wrappedResponse = new GZIPResponseWrapper( response );
 
-                chain.doFilter(req, wrappedResponse);
+                chain.doFilter( req, wrappedResponse );
                 wrappedResponse.finishResponse();
 
                 return;
             }
 
-            chain.doFilter(req, res);
+            chain.doFilter( req, res );
         }
+    }
+
+    public void init( FilterConfig filterConfig ) {
     }
 
     /**
      * Convenience method to test for GZIP cababilities
+     * 
      * @param req The current user request
      * @return boolean indicating GZIP support
      */
-    private boolean isGZIPSupported(HttpServletRequest req) {
-        
+    private boolean isGZIPSupported( HttpServletRequest req ) {
+
         // disable gzip filter for exporting from displaytag
-        String exporting =
-            req.getParameter(TableTagParameters.PARAMETER_EXPORTING);
-        
-        if (exporting != null) {
-            if (log.isDebugEnabled()) {
-                log.debug("detected excel export, disabling filter...");
+        String exporting = req.getParameter( TableTagParameters.PARAMETER_EXPORTING );
+
+        if ( exporting != null ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug( "detected excel export, disabling filter..." );
             }
             return false;
         }
 
-        String browserEncodings = req.getHeader("accept-encoding");
-        boolean supported =
-            ((browserEncodings != null) &&
-            (browserEncodings.indexOf("gzip") != -1));
+        String browserEncodings = req.getHeader( "accept-encoding" );
+        boolean supported = ( ( browserEncodings != null ) && ( browserEncodings.indexOf( "gzip" ) != -1 ) );
 
-        String userAgent = req.getHeader("user-agent");
+        String userAgent = req.getHeader( "user-agent" );
 
-        if ((userAgent != null) && userAgent.startsWith("httpunit")) {
-            if (log.isDebugEnabled()) {
-                log.debug("httpunit detected, disabling filter...");
+        if ( ( userAgent != null ) && userAgent.startsWith( "httpunit" ) ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug( "httpunit detected, disabling filter..." );
             }
 
             return false;
         } else {
             return supported;
         }
-    }
-
-    public void init(FilterConfig filterConfig) {
-    }
-
-    public void destroy() {
     }
 }

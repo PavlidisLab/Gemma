@@ -11,18 +11,22 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * Wraps Response for GZipFilter
+ * 
  *
- * @author  Matt Raible, cmurphy@intechtual.com
+ * <hr>
+ * <p>Copyright (c) 2004 - 2005 Columbia University
+ * @author Matt Raible, cmurphy@intechtual.com 
+ * @author keshav
+ * @version $Id$
  */
 public class GZIPResponseWrapper extends HttpServletResponseWrapper {
     private transient final Log log = LogFactory.getLog(GZIPResponseWrapper.class);
+    protected int error = 0;
     protected HttpServletResponse origResponse = null;
     protected ServletOutputStream stream = null;
     protected PrintWriter writer = null;
-    protected int error = 0;
 
     public GZIPResponseWrapper(HttpServletResponse response) {
         super(response);
@@ -87,9 +91,6 @@ public class GZIPResponseWrapper extends HttpServletResponseWrapper {
         return (writer);
     }
 
-    public void setContentLength(int length) {
-    }
-
     /**
      * @see javax.servlet.http.HttpServletResponse#sendError(int, java.lang.String)
      */
@@ -100,5 +101,8 @@ public class GZIPResponseWrapper extends HttpServletResponseWrapper {
         if (log.isDebugEnabled()) {
             log.debug("sending error: " + error + " [" + message + "]");
         }
+    }
+
+    public void setContentLength(int length) {
     }
 }
