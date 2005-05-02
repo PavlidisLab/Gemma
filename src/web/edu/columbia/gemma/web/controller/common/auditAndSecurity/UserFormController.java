@@ -33,7 +33,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="userFormController" name="/editProfile.html"
+ * @spring.bean id="userFormController" name="/editProfile.html /editUser.html"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
  * @spring.property name="validator" ref="userValidator"
@@ -56,7 +56,7 @@ public class UserFormController extends BaseFormController {
 
         User user = ( User ) command;
         Locale locale = request.getLocale();
-
+   
         if ( request.getParameter( "delete" ) != null ) {
             userService.removeUser( user.getUserName() );
             saveMessage( request, getText( "user.deleted", user.getFullName(), locale ) );

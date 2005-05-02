@@ -22,7 +22,7 @@ import edu.columbia.gemma.web.Constants;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="userController"
+ * @spring.bean id="userController" name="/users.html"
  * @spring.property name="userService" ref="userService"
  */
 public class UserController implements Controller {
@@ -33,7 +33,7 @@ public class UserController implements Controller {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'handleRequest' method..." );
         }
-
+        
         return new ModelAndView( "userList", Constants.USER_LIST, userService.getUsers( User.Factory.newInstance() ) );
     }
 
