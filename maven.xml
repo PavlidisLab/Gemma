@@ -226,8 +226,11 @@
 			<filterset refid="web.variables" />
 		</ant:copy>
 	</goal>
-
-
+	
+	<goal name="remove-work-dir">
+		<ant:delete dir="${basedir}/work" quiet="false" failonerror="false"/> 
+	</goal>
+	
 	<ant:filterset id="web.variables">
 		<filter token="WEB-APP-ROOT" value="${maven.war.src}" />
 		<filter token="WEB-APP-WORK" value="${basedir}/work" />
