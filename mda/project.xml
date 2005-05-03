@@ -87,6 +87,8 @@
                 <session-impls.ignore/>
                 <hibernateQueryUseNamedParameters >
                     true</hibernateQueryUseNamedParameters>
+                <hibernateDefaultCascade >
+                    all</hibernateDefaultCascade>    
             </properties>
         </dependency>
          <dependency>
