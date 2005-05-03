@@ -10,7 +10,7 @@
         href="<c:url value="/styles/default.css"/>" /> 
 </head>
 --%>
-<page:applyDecorator name="default">
+<!--<page:applyDecorator name="default"> -->
 <body>
 <div id="screen">
     <div id="content">
@@ -25,5 +25,5 @@
     </div>
 </body>
 <a href="<c:url value="home.jsp"/>">Home</a>
-</page:applyDecorator>
+<!--</page:applyDecorator>-->
 </html>
