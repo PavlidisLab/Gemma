@@ -69,15 +69,6 @@
 			</properties>
 		</dependency>
 		<dependency>
-			<groupId>hessian</groupId>
-			<artifactId>hessian</artifactId>
-			<version>3.0.8</version>
-			<type>jar</type>
-			<properties>
-				<war.bundle>true</war.bundle>
-			</properties>
-		</dependency>
-		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql</artifactId>
 			<jar>mysql-connector-java-3.1.6-bin.jar</jar>
