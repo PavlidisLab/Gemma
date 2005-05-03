@@ -29,7 +29,7 @@
 </formset>
 <formset>
 	<form name="user">
-		<field property="userName" depends="required,minLength">
+		<field property="userName" depends="required,minlength">
 			<arg0 key="user.name" />
 			<arg1 name="minlength" key="${var:minlength}"
 				resource="false" />
@@ -38,7 +38,7 @@
 				<var-value>5</var-value>
 			</var>
 		</field>
-		<field property="userName" depends="required,maxLength">
+		<field property="userName" depends="required,maxlength">
 			<arg0 key="user.name" />
 			<arg1 name="maxlength" key="${var:maxlength}"
 				resource="false" />
@@ -53,7 +53,7 @@
 		<field property="password"
 			depends="required,minLength,twofields">-->
 		<field property="password"
-			depends="required,minLength">
+			depends="required,minlength">
 			<arg0 key="user.password" />
 			<arg1 name="minlength" key="${var:minlength}"
 				resource="false" />
@@ -66,7 +66,7 @@
 				<var-value>user.confirmPassword</var-value>
 			</var>
 		</field>
-		<field property="password" depends="required,maxLength">
+		<field property="password" depends="required,maxlength">
 			<arg0 key="user.password" />
 			<arg1 name="maxlength" key="${var:maxlength}"
 				resource="false" />
