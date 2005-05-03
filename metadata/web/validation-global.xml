@@ -49,8 +49,11 @@
 		</field>
 
 		<!--  Validation of user password -->
+		<!-- 
 		<field property="password"
-			depends="required,minLength,twofields">
+			depends="required,minLength,twofields">-->
+		<field property="password"
+			depends="required,minLength">
 			<arg0 key="user.password" />
 			<arg1 name="minlength" key="${var:minlength}"
 				resource="false" />
@@ -68,7 +71,8 @@
 			<arg1 name="maxlength" key="${var:maxlength}"
 				resource="false" />
 			<var>
-				<var-name>minlength</var-name>
+				<!-- <var-name>minlength</var-name>-->
+				<var-name>maxlength</var-name>
 				<var-value>15</var-value>
 			</var>
 		</field>
