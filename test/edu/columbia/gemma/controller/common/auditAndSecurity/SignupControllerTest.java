@@ -1,19 +1,14 @@
 package edu.columbia.gemma.controller.common.auditAndSecurity;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.servlet.ServletConfig;
+import java.util.Set;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.validation.BindException;
-import org.springframework.web.context.support.StaticWebApplicationContext;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
@@ -85,7 +80,7 @@ public class SignupControllerTest extends BaseControllerTestCase{
             ur.setName( userName );
         }
 
-        Collection set = new HashSet();
+        Set set = new HashSet();
         testUser.setUserRoles( set );
 
         testUser.setPassword( "root" );
