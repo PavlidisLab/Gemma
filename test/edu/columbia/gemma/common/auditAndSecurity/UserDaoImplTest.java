@@ -1,8 +1,8 @@
 package edu.columbia.gemma.common.auditAndSecurity;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 import net.sf.hibernate.SessionFactory;
 
@@ -63,7 +63,7 @@ public class UserDaoImplTest extends BaseDAOTestCase {
             ur.setName( userName );
         }
 
-        Collection set = new HashSet();
+        Set set = new HashSet();
         testUser.setUserRoles( set );
 
         testUser.setPassword( "root" );
