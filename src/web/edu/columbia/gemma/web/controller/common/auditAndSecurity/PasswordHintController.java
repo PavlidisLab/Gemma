@@ -34,6 +34,7 @@ import edu.columbia.gemma.common.auditAndSecurity.UserService;
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="message" ref="mailMessage"
+ * @spring.property name="messageSource" ref="messageSource"
  */
 public class PasswordHintController implements Controller {
     private transient final Log log = LogFactory.getLog( PasswordHintController.class );
@@ -46,7 +47,6 @@ public class PasswordHintController implements Controller {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'handleRequest' method..." );
         }
-
         String username = request.getParameter( "username" );
         MessageSourceAccessor text = new MessageSourceAccessor( messageSource, request.getLocale() );
 
