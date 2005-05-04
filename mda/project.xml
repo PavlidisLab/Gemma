@@ -87,9 +87,14 @@
                 <session-impls.ignore/>
                 <hibernateQueryUseNamedParameters >
                     true</hibernateQueryUseNamedParameters>
+                <!--     
                 <hibernateDefaultCascade >
-                    none</hibernateDefaultCascade>    
-            </properties>
+                    none</hibernateDefaultCascade> -->
+                <!-- 
+                <hibernateAssociationCollectionType> 
+                   	list</hibernateAssociationCollectionType>
+                -->
+            </properties> 
         </dependency>
          <dependency>
             <groupId>andromda</groupId>
