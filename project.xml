@@ -311,6 +311,9 @@
 			<artifactId>magestk-1.1</artifactId>
 			<jar>MAGEstk-2004-11-29-v1.1-compatible.jar</jar>
 			<type>jar</type>
+			<properties>
+				<war.bundle>true</war.bundle>
+			</properties>
 		</dependency>
 		<dependency>
 			<groupId>spring</groupId>
