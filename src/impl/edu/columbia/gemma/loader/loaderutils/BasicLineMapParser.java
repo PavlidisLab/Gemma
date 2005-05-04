@@ -29,8 +29,8 @@ public abstract class BasicLineMapParser extends BasicLineParser {
      * @param probeSetId
      * @see Map
      */
-    public Object get( Object probeSetId ) {
-        return results.get( probeSetId );
+    public Object get( Object key ) {
+        return results.get( key );
     }
 
     /**
