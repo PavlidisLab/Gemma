@@ -87,7 +87,10 @@
 	
 			   <session-beans.ignore/>
 			    <session-impls.ignore/>
-			 
+			    <!-- 
+			    <hibernateAssociationCollectionType>
+					list</hibernateAssociationCollectionType>
+			    -->
 			</properties>
 		</dependency>
 	 
