@@ -7,15 +7,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import edu.columbia.gemma.common.auditAndSecurity.UserRole;
-import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserExistsException;
+import edu.columbia.gemma.common.auditAndSecurity.UserRole;
+import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.util.RequestUtil;
 import edu.columbia.gemma.util.StringUtil;
 import edu.columbia.gemma.web.Constants;
@@ -32,6 +31,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @spring.bean id="userFormController" name="/editProfile.html /editUser.html"
  * @spring.property name="commandName" value="user"
@@ -56,7 +56,7 @@ public class UserFormController extends BaseFormController {
 
         User user = ( User ) command;
         Locale locale = request.getLocale();
-   
+
         if ( request.getParameter( "delete" ) != null ) {
             userService.removeUser( user.getUserName() );
             saveMessage( request, getText( "user.deleted", user.getFullName(), locale ) );
@@ -76,7 +76,15 @@ public class UserFormController extends BaseFormController {
             }
 
             user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
-            user.setConfirmPassword( StringUtil.encodePassword( user.getConfirmPassword(), algorithm ) ); // this was not included in appfuse -- probably not persisted.
+            user.setConfirmPassword( StringUtil.encodePassword( user.getConfirmPassword(), algorithm ) ); // this was
+            // not
+            // included
+            // in
+            // appfuse
+            // --
+            // probably
+            // not
+            // persisted.
         }
 
         String[] userRoles = request.getParameterValues( "userRoles" );
@@ -163,7 +171,7 @@ public class UserFormController extends BaseFormController {
     }
 
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        String username = request.getParameter( "username" );
+        String username = request.getParameter( "userName" );
 
         if ( request.getSession().getAttribute( "cookieLogin" ) != null ) {
             saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
@@ -181,9 +189,9 @@ public class UserFormController extends BaseFormController {
         } else {
             user = User.Factory.newInstance();
             UserRole newRole = UserRole.Factory.newInstance();
-            // user.setUserName( username );
+            user.setUserName( username );
             newRole.setName( Constants.USER_ROLE );
-            // newRole.setUserName( username );
+            newRole.setUserName( username );
             userService.addRole( user, newRole );
         }
 
