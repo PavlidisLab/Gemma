@@ -12,13 +12,13 @@
 <dependency>
 			<groupId>andromda</groupId>
 			<artifactId>andromda-profile</artifactId>
-			<version>3.0-RC1-SNAPSHOT</version>
+			<version>3.0-SNAPSHOT</version>
 			<type>xml.zip</type>
 		</dependency>
 		<dependency>
 			<groupId>andromda</groupId>
 			<artifactId>maven-andromda-plugin</artifactId>
-			<version>3.0-RC1-SNAPSHOT</version>
+			<version>3.0-SNAPSHOT</version>
 			<type>plugin</type>
 			<properties>
 				<languageMappingsUri>Java</languageMappingsUri>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>andromda</groupId>
 			<artifactId>andromda-spring-cartridge</artifactId>
-			<version>3.0-RC1-SNAPSHOT</version>
+			<version>3.0-SNAPSHOT</version>
 			<properties>   
                 <mergeLocation> 
                     ${maven.andromda.spring.merge.custom}</mergeLocation>
@@ -64,7 +64,7 @@
 		<dependency>
 			<groupId>andromda</groupId>
 			<artifactId>andromda-hibernate-cartridge</artifactId>
-			<version>3.0-RC1-SNAPSHOT</version>
+			<version>3.0-SNAPSHOT</version>
 			<properties>
 			
 		 	<!--<mergeLocation>${maven.andromda.hibernate.merge.custom}</mergeLocation>  
@@ -96,13 +96,13 @@
 			<dependency>
 			<groupId>andromda</groupId>
 			<artifactId>andromda-ocl-query-library</artifactId>
-			<version>3.0-RC1-SNAPSHOT</version>
+			<version>3.0-SNAPSHOT</version>
 		</dependency>
 		
 		<dependency>
 			<groupId>andromda</groupId>
 			<artifactId>andromda-ocl-validation-library</artifactId>
-			<version>3.0-RC1-SNAPSHOT</version>
+			<version>3.0-SNAPSHOT</version>
 		</dependency>
 		
 	</dependencies>
