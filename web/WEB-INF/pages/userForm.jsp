@@ -14,12 +14,12 @@
 
 <form method="post" action="<c:url value="/editUser.html"/>" id="userForm"
     onsubmit="return onFormSubmit(this)">
-    
+<%--    
 <spring:bind path="user.version">
 <input type="hidden" name="version" value="<c:out value="${status.value}"/>"/> 
 </spring:bind>
+--%>
 <input type="hidden" name="from" value="<c:out value="${param.from}"/>" />
-
 <c:if test="${cookieLogin == 'true'}">
     <spring:bind path="user.password">
     <input type="hidden" name="password" value="<c:out value="${status.value}"/>"/>
@@ -29,7 +29,7 @@
     </spring:bind>
 </c:if>
 
-<c:if test="${empty user.username}">
+<c:if test="${empty user.userName}">
     <input type="hidden" name="encryptPass" value="true" />
 </c:if>
 
@@ -54,18 +54,22 @@
 </c:set>
     <tr>
         <th>
-            <Gemma:label key="user.username"/>
+            <%--<Gemma:label key="user.username"/>--%>
+            <Gemma:label key="user.userName"/>
         </th>
         <td>
-        <spring:bind path="user.username">
+        <%--<spring:bind path="user.username">--%>
+        <spring:bind path="user.userName">
         <c:choose>
-            <c:when test="${empty user.username}">
-                <input type="text" name="username" value="<c:out value="${status.value}"/>" id="username"/>
+            <c:when test="${empty user.userName}">
+                <%--<input type="text" name="username" value="<c:out value="${status.value}"/>" id="username"/>--%>
+                <input type="text" name="userName" value="<c:out value="${status.value}"/>" id="userName"/>
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             </c:when>
             <c:otherwise>
-                <c:out value="${user.username}"/>
-                <input type="hidden" name="username" value="<c:out value="${status.value}"/>" id="username"/>
+                <c:out value="${user.userName}"/>
+                <%--<input type="hidden" name="username" value="<c:out value="${status.value}"/>" id="username"/>--%>
+                <input type="hidden" name="userName" value="<c:out value="${status.value}"/>" id="userName"/>
             </c:otherwise>
         </c:choose>
         </spring:bind>
@@ -119,6 +123,7 @@
             </spring:bind>
         </td>
     </tr>
+    <%--
     <tr>
         <th>
             <Gemma:label key="user.address.address"/>
@@ -174,6 +179,7 @@
             </spring:bind>
         </td>
     </tr>
+    --%>
     <tr>
         <th>
             <Gemma:label key="user.email"/>
@@ -185,6 +191,7 @@
             </spring:bind>
         </td>
     </tr>
+    <%--
     <tr>
         <th>
             <Gemma:label key="user.phoneNumber"/>
@@ -210,6 +217,7 @@
             </c:if>
         </td>
     </tr>
+    --%>
     <tr>
         <th>
             <Gemma:label key="user.passwordHint"/>
@@ -255,16 +263,20 @@
         </td>
     </tr>
     </c:when>
-    <c:when test="${not empty user.username}">
+    <c:when test="${not empty user.userName}">
     <tr>
         <th>
             <Gemma:label key="user.roles"/>
         </th>
         <td>
-        <c:forEach var="role" items="${user.roleList}" varStatus="status">
-            <c:out value="${role.label}"/><c:if test="${!status.last}">,</c:if>
-            <input type="hidden" name="userRoles" 
-                value="<c:out value="${role.label}"/>" />
+        <%--<c:forEach var="role" items="${user.roleList}" varStatus="status">--%>
+        <c:forEach var="role" items="${user.userRoles}" varStatus="status">
+            <%--<c:out value="${role.label}"/><c:if test="${!status.last}">,</c:if>--%>
+            <c:out value="${role.userName}"/><c:if test="${!status.last}">,</c:if>
+            <%--<input type="hidden" name="userRoles" --%>
+                <%--value="<c:out value="${role.label}"/>" />--%>
+            <input type="hidden" name="userRoles"     
+                value="<c:out value="${role.userName}"/>" />
         </c:forEach>
         </td>
     </tr>
@@ -282,7 +294,8 @@
 <!--
 highlightFormElements();
 <%-- if we're doing an add, change the focus --%>
-<c:choose><c:when test="${user.username == null}"><c:set var="focus" value="username"/></c:when>
+<%--<c:choose><c:when test="${user.username == null}"><c:set var="focus" value="username"/></c:when>--%>
+<c:choose><c:when test="${user.userName == null}"><c:set var="focus" value="userName"/></c:when>
 <c:when test="${cookieLogin == 'true'}"><c:set var="focus" value="firstName"/></c:when>
 <c:otherwise><c:set var="focus" value="password"/></c:otherwise></c:choose>
 
