@@ -99,31 +99,55 @@
 </bean>
 
 <!-- ==================================================== -->
+<!--    RESOURCES, namely the propertyConfigurer          -->
+<!--    propertyConfigurer allows you to read variables   -->
+<!--    stored in a .properties file from an xml file.    -->
+<!--    Looks like:  ${mail.host} 						  -->
+<!-- ==================================================== -->
+
+<!-- For mail settings and future properties files -->
+<bean id="propertyConfigurer"
+	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="locations">
+		<list>
+			<value>classpath:mail.properties</value>
+		</list>
+	</property>
+</bean>
+
+<!-- JNDI DataSource for J2EE environments -->
+<bean id="dataSource"
+	class="org.springframework.jndi.JndiObjectFactoryBean">
+	<property name="jndiName">
+		<value>java:comp/env/jdbc/gemd</value>
+	</property>
+</bean>
+
+<!-- ==================================================== -->
 
 <!--  Mapping urls to services. Note that not all of the controllers will be listed here: some of them will be created by XDoclet. -->
 <!--  NOTE: You cannot use this AND specify name="urlpattern.htm" in bean tags ... choose one.  -->
 
 <!-- ==================================================== -->
 <!-- 
-<bean id="urlMapping"
+	<bean id="urlMapping"
 	class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
 	<property name="mappings">
-		<props>
-			<prop key="/editProfile.html">userFormController</prop>
-			<prop key="/mainMenu.html">filenameController</prop>
-			<prop key="/editUser.html">userFormController</prop>
-			<prop key="/passwordHint.html">passwordHintController</prop>
-			<prop key="/signup.html">signupController</prop>
-			<prop key="/pubMedSearch.htm">pubMedSearchController</prop>
-		</props>
+	<props>
+	<prop key="/editProfile.html">userFormController</prop>
+	<prop key="/mainMenu.html">filenameController</prop>
+	<prop key="/editUser.html">userFormController</prop>
+	<prop key="/passwordHint.html">passwordHintController</prop>
+	<prop key="/signup.html">signupController</prop>
+	<prop key="/pubMedSearch.htm">pubMedSearchController</prop>
+	</props>
 	</property>
-</bean>
+	</bean>
 -->
 
 <bean id="filenameController"
-	class="org.springframework.web.servlet.mvc.UrlFilenameViewController" 
-	name="/mainMenu.html /activeUsers.html /flushCache.html"	
-	/>
+	class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
+	name="/mainMenu.html /activeUsers.html /flushCache.html" />
 
 
 <bean id="messageSource"
