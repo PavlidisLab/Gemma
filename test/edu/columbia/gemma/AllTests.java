@@ -2,10 +2,11 @@ package edu.columbia.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import edu.columbia.gemma.common.auditAndSecurity.UserDaoImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserServiceImplTest;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
-import edu.columbia.gemma.controller.LoaderControllerTest;
+import edu.columbia.gemma.controller.common.auditAndSecurity.SignupControllerTest;
 import edu.columbia.gemma.controller.entrez.pubmed.PubMedXmlControllerTest;
 import edu.columbia.gemma.controller.flow.DetailBibRefFlowTests;
 import edu.columbia.gemma.controller.flow.SearchPubMedFlowTests;
@@ -18,7 +19,6 @@ import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
 import edu.columbia.gemma.loader.genome.TaxonLoaderServiceTest;
-import edu.columbia.gemma.loader.loaderutils.IdentifierCreatorTest;
 import edu.columbia.gemma.loader.mage.MageMLConverterTest;
 import edu.columbia.gemma.loader.mage.MageMLParserTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
@@ -38,8 +38,6 @@ public class AllTests {
         suite.addTestSuite( SequenceManipulationTest.class );
         suite.addTestSuite( AffyProbeReaderTest.class );
         suite.addTestSuite( IlluminaProbeReaderTest.class );
-
-        suite.addTestSuite( IdentifierCreatorTest.class );
 
         suite.addTestSuite( PubMedXMLFetcherTest.class );
         suite.addTestSuite( PubMedXMLParserTest.class );
@@ -64,6 +62,9 @@ public class AllTests {
 
         suite.addTestSuite( UserRoleServiceImplTest.class );
         suite.addTestSuite( UserServiceImplTest.class );
+        suite.addTestSuite( UserDaoImplTest.class );
+        
+        suite.addTestSuite( SignupControllerTest.class );
         // $JUnit-END$
 
         return suite;
