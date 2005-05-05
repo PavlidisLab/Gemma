@@ -1,7 +1,6 @@
 package edu.columbia.gemma.web.controller;
 
 import java.text.NumberFormat;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,12 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import edu.columbia.gemma.common.auditAndSecurity.User;
-import edu.columbia.gemma.web.Constants;
-import edu.columbia.gemma.web.util.MailEngine;
-import edu.columbia.gemma.common.auditAndSecurity.UserService;
-
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.validation.BindException;
@@ -26,6 +19,11 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
+
+import edu.columbia.gemma.common.auditAndSecurity.User;
+import edu.columbia.gemma.common.auditAndSecurity.UserService;
+import edu.columbia.gemma.web.Constants;
+import edu.columbia.gemma.web.util.MailEngine;
 
 /**
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
@@ -174,7 +172,7 @@ public class BaseFormController extends SimpleFormController {
             log.debug( "sending e-mail to user [" + user.getEmail() + "]..." );
         }
 
-        // message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
+        message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
 
         Map model = new HashMap();
         model.put( "user", user );

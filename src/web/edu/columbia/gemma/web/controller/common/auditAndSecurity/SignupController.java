@@ -43,7 +43,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  */
 public class SignupController extends BaseFormController {
     private UserRoleService userRoleService;
-    
+
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -51,17 +51,17 @@ public class SignupController extends BaseFormController {
 
         User user = ( User ) command;
         Locale locale = request.getLocale();
-        
-        //TODO we need to get direct access to the ServletContext out of the controller.  It is making the 
-        //controller impossible to test!!
+
+        // TODO we need to get direct access to the ServletContext out of the controller. It is making the
+        // controller impossible to test!!
         String algorithm;
-        if (request.getServletPath() != "/test.signup.html")
+        if ( request.getServletPath() != "/test.signup.html" )
             algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
-        else{
+        else {
             algorithm = "SHA";
         }
-        //TODO when testing, you would never get to this point without my check above.  Again, we need to
-        //get the ServletContext access out of the controller.
+        // TODO when testing, you would never get to this point without my check above. Again, we need to
+        // get the ServletContext access out of the controller.
         if ( algorithm == null ) { // should only happen for test case
             log.debug( "assuming testcase, setting algorithm to 'SHA'" );
             algorithm = "SHA";
@@ -102,7 +102,7 @@ public class SignupController extends BaseFormController {
 
         return new ModelAndView( getSuccessView() );
     }
-    
+
     /**
      * @param roleManager The roleManager to set.
      */
