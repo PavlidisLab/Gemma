@@ -65,8 +65,6 @@ import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
 
-import edu.columbia.gemma.common.Identifiable;
-import edu.columbia.gemma.common.IdentifiableDao;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -87,7 +85,6 @@ import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.PolymerType;
 import edu.columbia.gemma.genome.biosequence.SequenceType;
-import edu.columbia.gemma.loader.loaderutils.IdentifierCreator;
 import edu.columbia.gemma.util.ReflectionUtil;
 
 /**
@@ -157,8 +154,6 @@ public class MageMLConverter {
      * Used to hold references to Identifiables, so we don't convert them over and over again.
      */
     private Map identifiableCache;
-
-    private IdentifiableDao identifiableDao;
     private TaxonDao taxonDao;
 
     /**
@@ -176,7 +171,6 @@ public class MageMLConverter {
      * @return
      */
     public Object convert( Object mageObj ) {
-        assert identifiableDao != null;
         log.debug( "Converting " + ReflectionUtil.getSimpleName( mageObj.getClass() ) );
         return findAndInvokeConverter( mageObj );
     }
@@ -1094,24 +1088,24 @@ public class MageMLConverter {
      * @return boolean True if the object is alreay in the cache and needs no further processing.
      */
     public boolean convertIdentifiable( org.biomage.Common.Identifiable mageObj,
-            edu.columbia.gemma.common.Identifiable gemmaObj ) {
+            edu.columbia.gemma.common.Describable gemmaObj ) {
 
         if ( mageObj == null ) return false;
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
 
-        if ( isInCache( gemmaObj ) ) {
-            log.debug( "Object exists in cache: " + mageObj.getIdentifier() );
-            gemmaObj = ( edu.columbia.gemma.common.Identifiable ) identifiableCache.get( mageObj );
-            return true;
-        }
+        // if ( isInCache( gemmaObj ) ) {
+        // log.debug( "Object exists in cache: " + mageObj.getIdentifier() );
+        // gemmaObj = ( edu.columbia.gemma.common.Identifiable ) identifiableCache.get( mageObj );
+        // return true;
+        // }
 
-//        Identifiable k = fetchExistingIdentifiable( IdentifierCreator.create( gemmaObj ), gemmaObj.getClass() );
-//        if ( k != null ) {
-//            gemmaObj = k;
-//            log.debug( "Object is already persistent: " + gemmaObj.getIdentifier() );
-//        } else {
-//            gemmaObj.setIdentifier( mageObj.getIdentifier() );
-//        }
+        // Identifiable k = fetchExistingIdentifiable( IdentifierCreator.create( gemmaObj ), gemmaObj.getClass() );
+        // if ( k != null ) {
+        // gemmaObj = k;
+        // log.debug( "Object is already persistent: " + gemmaObj.getIdentifier() );
+        // } else {
+        // gemmaObj.setIdentifier( mageObj.getIdentifier() );
+        // }
 
         // we do this here because Mage names go with Identifiable, not
         // describable.
@@ -1857,14 +1851,6 @@ public class MageMLConverter {
     }
 
     /**
-     * 
-     *
-     */
-    public void setIdentifiableDao( IdentifiableDao persistenceManager ) {
-        this.identifiableDao = persistenceManager;
-    }
-
-    /**
      * Special case: Convert a ReporterCompositeMaps (list) to a Collection of Reporters.
      * 
      * @param reporterCompositeMaps
@@ -1999,15 +1985,6 @@ public class MageMLConverter {
         } catch ( InvocationTargetException e ) {
             log.error( "InvocationTargetException For: " + gemmaObjName, e );
         }
-    }
-
-    /**
-     * @param gemmaObj
-     * @return
-     */
-    private Identifiable fetchExistingIdentifiable( String identifier, Class type ) {
-        // if ( identifiableDao != null ) return this.identifiableDao.findByIdentifier( identifier );
-        return null;
     }
 
     /**
@@ -2230,16 +2207,6 @@ public class MageMLConverter {
                     e );
         }
         return associatedObject;
-    }
-
-    /**
-     * @param gemmaObj - Identifiable
-     * @return boolean True if the object is alreay in the cache and should not be created anew.
-     */
-    private boolean isInCache( edu.columbia.gemma.common.Identifiable gemmaObj ) {
-      //  return identifiableCache.containsKey( gemmaObj.getIdentifier() );
-        return false;
-        // FIXME
     }
 
     /**
