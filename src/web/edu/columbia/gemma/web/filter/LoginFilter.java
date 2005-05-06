@@ -66,7 +66,6 @@ public class LoginFilter implements Filter {
                 if ( log.isDebugEnabled() ) {
                     log.debug( "logging out '" + request.getRemoteUser() + "'" );
                 }
-                request.getRemoteUser();
                 userService.removeLoginCookies( request.getRemoteUser() );
                 RequestUtil.deleteCookie( response, c, request.getContextPath() );
                 request.getSession().invalidate();
