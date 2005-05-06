@@ -5,7 +5,7 @@
 	<url-pattern>/login.jsp</url-pattern>
 	<!-- These are needed by Tomcat 5 since it does a forward to login.jsp -->
 	<dispatcher>REQUEST</dispatcher>
-<!-- 	<dispatcher>FORWARD</dispatcher>  -->
+ 	<dispatcher>FORWARD</dispatcher>  
 </filter-mapping>
 
 <!--  Requests/responses with url pattern /logout.jsp
