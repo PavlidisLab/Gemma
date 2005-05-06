@@ -94,6 +94,8 @@
                 <hibernateAssociationCollectionType> 
                    	list</hibernateAssociationCollectionType>
                 -->
+                <specificCollectionInterfaces>
+                false</specificCollectionInterfaces>
             </properties> 
         </dependency>
          <dependency>

@@ -87,10 +87,15 @@
 	
 			   <session-beans.ignore/>
 			    <session-impls.ignore/>
-			    <!-- 
-			    <hibernateAssociationCollectionType>
-					list</hibernateAssociationCollectionType>
-			    -->
+			    <!--     
+                <hibernateDefaultCascade >
+                    none</hibernateDefaultCascade> -->
+                <!-- 
+                <hibernateAssociationCollectionType> 
+                   	list</hibernateAssociationCollectionType>
+                -->
+                <specificCollectionInterfaces>
+                false</specificCollectionInterfaces>
 			</properties>
 		</dependency>
 	 
