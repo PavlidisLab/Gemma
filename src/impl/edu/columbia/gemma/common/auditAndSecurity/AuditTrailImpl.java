@@ -22,6 +22,7 @@ package edu.columbia.gemma.common.auditAndSecurity;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail
@@ -44,7 +45,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
      */
     public AuditEvent getCreationEvent() {
         assert this.getEvents() != null;
-        return ( AuditEvent ) this.getEvents().get( 0 );
+        return ( AuditEvent ) ((List)this.getEvents()).get( 0 );
     }
 
     /**
@@ -52,7 +53,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
      */
     public AuditEvent getLast() {
         assert this.getEvents() != null;
-        return ( AuditEvent ) this.getEvents().get( this.getEvents().size() - 1 );
+        return ( AuditEvent ) ((List)this.getEvents()).get( this.getEvents().size() - 1 );
     }
 
     /**
