@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.flow.Event;
-import org.springframework.web.flow.InternalRequestContext;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
 
@@ -70,23 +69,27 @@ public class PubMedExecuteQueryAction extends AbstractAction {
      */
     protected Event doExecuteAction( RequestContext context ) throws Exception {
 
-        // int pubMedId = Integer.parseInt( ( ( HttpServletRequestEvent ) context.getOriginatingEvent() ).getRequest()
-        // .getParameter( "pubMedId" ) );
+        String event = ( String ) context.getOriginatingEvent().getParameter( "_eventId" );
+        int pubMedId;
+        BibliographicReference br;
         try {
-            int pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "pubMedId" ) );
-            BibliographicReference br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
-
-            List list = new ArrayList();
-            list.add( br );
-            // TODO Ask user for their choice.(like I did before).
-            // TODO When you persist the bibRef, persist the DatabaseEntry.
-            if ( !getBibliographicReferenceService().alreadyExists( br ) )
-                getBibliographicReferenceService().saveBibliographicReference( br );
-
-            context.getRequestScope().setAttribute( "bibliographicReferences", list );
+            if ( event.equals( "submitPubMed" ) ) {
+                pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "pubMedId" ) );
+                br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
+                List list = new ArrayList();
+                list.add( br );
+                context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
+                context.getRequestScope().setAttribute( "bibliographicReferences", list );
+            } else if ( event.equals( "saveBibRef" ) ) {
+                pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "_pubMedId" ) );
+                br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
+                if ( !getBibliographicReferenceService().alreadyExists( br ) )
+                    getBibliographicReferenceService().saveBibliographicReference( br );
+            }
             return success();
-            // TODO When you start using value objects, do the pubMed validation in the validator.
-        } catch ( Exception e ) {
+        }
+        // TODO When you start using value objects, do the pubMed validation in the validator.
+        catch ( Exception e ) {
             return error();
         }
     }
