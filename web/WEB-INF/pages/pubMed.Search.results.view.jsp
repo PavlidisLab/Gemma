@@ -4,11 +4,18 @@
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
+<SCRIPT LANGUAGE = "JavaScript">
+	function selectAction(event){
+		document.newSearchForm._eventId.value=event;
+ 		document.newSearchForm.submit();
+	}
+</SCRIPT> 
 	<HEAD></HEAD>
 	<BODY>
 		<FORM name="newSearchForm" action="pubMedSearch.htm">
 				<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
-				<INPUT type="hidden" name="_eventId" value="newSearch">
+				<INPUT type="hidden" name="_eventId" value="">
+				<INPUT type="hidden" name="_pubMedId" value="<%=request.getAttribute("pubMedId") %>">
 		</FORM>
 		<TABLE width="100%">
 			<TR>
@@ -61,7 +68,12 @@
 			<TR>
 				<TD>
 					<DIV align="right">
-						<INPUT type="button" onclick="javascript:document.newSearchForm.submit()" value="New Search">
+						<INPUT type="button" onclick="javascript:selectAction('newSearch')" value="New Search">
+					</DIV>
+				</TD>
+				<TD>
+					<DIV align="right">
+						<INPUT type="button" onclick="javascript:selectAction('saveBibRef')" value="Save">
 					</DIV>
 				</TD>
 			</TR>
