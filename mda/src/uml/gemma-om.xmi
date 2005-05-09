@@ -1,5 +1,5 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri May 06 16:14:00 EDT 2005'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon May 09 12:57:27 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -11,9 +11,9 @@
       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
       <UML:ModelElement.taggedValue>
         <UML:TaggedValue xmi.id = 'Id2a49dm1025ed2a6cbmm7252' isSpecification = 'false'>
-          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
-          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>remove.by</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
           <UML:TaggedValue.type>
@@ -1281,50 +1281,6 @@ experiment, such as BioAssay and BioAssayData.</UML:TaggedValue.dataValue>
                                   </UML:AssociationEnd.multiplicity>
                                   <UML:AssociationEnd.participant>
                                     <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6f1f'/>
-                                  </UML:AssociationEnd.participant>
-                                </UML:AssociationEnd>
-                              </UML:Association.connection>
-                            </UML:Association>
-                            <UML:Association xmi.id = 'I5acf13m101bacaf829mm6e09' name = 'ExperimentDesigns'
-                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-                              <UML:Association.connection>
-                                <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e11' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'composite'
-                                  targetScope = 'instance' changeability = 'changeable'>
-                                  <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'I5acf13m101bacaf829mm6e13'>
-                                      <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'I5acf13m101bacaf829mm6e15' lower = '1'
-                                          upper = '1'/>
-                                      </UML:Multiplicity.range>
-                                    </UML:Multiplicity>
-                                  </UML:AssociationEnd.multiplicity>
-                                  <UML:AssociationEnd.participant>
-                                    <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e25'/>
-                                  </UML:AssociationEnd.participant>
-                                </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e0b' name = 'experimentalDesigns'
-                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
-                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
-                                  <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'Ia948c2m101cef0df55mm56c4'>
-                                      <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'Ia948c2m101cef0df55mm56c3' lower = '1'
-                                          upper = '-1'/>
-                                      </UML:Multiplicity.range>
-                                    </UML:Multiplicity>
-                                  </UML:AssociationEnd.multiplicity>
-                                  <UML:ModelElement.taggedValue>
-                                    <UML:TaggedValue xmi.id = 'I1acc405m101d36c87e8mm4eb2' isSpecification = 'false'>
-                                      <UML:TaggedValue.dataValue>&lt;p&gt;The association to the description and annotation of the Experiment, along with the
-grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
-                                      <UML:TaggedValue.type>
-                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
-                                      </UML:TaggedValue.type>
-                                    </UML:TaggedValue>
-                                  </UML:ModelElement.taggedValue>
-                                  <UML:AssociationEnd.participant>
-                                    <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e35'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
@@ -9973,41 +9929,6 @@ one class.
                                       <UML:Multiplicity.range>
                                         <UML:MultiplicityRange xmi.id = 'I767237m101c440f114mm628e' lower = '1'
                                           upper = '1'/>
-                                      </UML:Multiplicity.range>
-                                    </UML:Multiplicity>
-                                  </UML:AssociationEnd.multiplicity>
-                                  <UML:AssociationEnd.participant>
-                                    <UML:Class xmi.idref = 'I2863e477m101683735a4mm73f8'/>
-                                  </UML:AssociationEnd.participant>
-                                </UML:AssociationEnd>
-                              </UML:Association.connection>
-                            </UML:Association>
-                            <UML:Association xmi.id = 'I767237m101c440f114mm6233' name = 'Members' isSpecification = 'false'
-                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-                              <UML:Association.connection>
-                                <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6239' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
-                                  targetScope = 'instance' changeability = 'changeable'>
-                                  <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'I1acc405m101d36c87e8mm4fd2'>
-                                      <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'I1acc405m101d36c87e8mm4fd1' lower = '0'
-                                          upper = '-1'/>
-                                      </UML:Multiplicity.range>
-                                    </UML:Multiplicity>
-                                  </UML:AssociationEnd.multiplicity>
-                                  <UML:AssociationEnd.participant>
-                                    <UML:Class xmi.idref = 'I767237m101c440f114mm626f'/>
-                                  </UML:AssociationEnd.participant>
-                                </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6236' name = 'members'
-                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
-                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
-                                  <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'I1acc405m101d36c87e8mm4fd0'>
-                                      <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'I1acc405m101d36c87e8mm4fcf' lower = '1'
-                                          upper = '-1'/>
                                       </UML:Multiplicity.range>
                                     </UML:Multiplicity>
                                   </UML:AssociationEnd.multiplicity>
@@ -24293,6 +24214,85 @@ of a statistical analysis (for example, a t-test).&lt;/p&gt;</UML:TaggedValue.da
               isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
             <UML:DataType xmi.id = 'Ie046em101e424eaa0mm3db8' name = 'Integer[]' isSpecification = 'false'
               isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+            <UML:Association xmi.id = 'I767237m101c440f114mm6233' name = 'Members' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6239' visibility = 'public'
+                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                  targetScope = 'instance' changeability = 'changeable'>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity xmi.id = 'I1acc405m101d36c87e8mm4fd2'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'I1acc405m101d36c87e8mm4fd1' lower = '0'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref = 'I767237m101c440f114mm626f'/>
+                  </UML:AssociationEnd.participant>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6236' name = 'members'
+                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity xmi.id = 'I1acc405m101d36c87e8mm4fd0'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'I1acc405m101d36c87e8mm4fcf' lower = '1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                  <UML:AssociationEnd.participant>
+                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                  </UML:AssociationEnd.participant>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id = 'I5acf13m101bacaf829mm6e09' name = 'ExperimentDesigns'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e11' visibility = 'public'
+                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'composite'
+                  targetScope = 'instance' changeability = 'changeable'>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity xmi.id = 'I5acf13m101bacaf829mm6e13'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'I5acf13m101bacaf829mm6e15' lower = '1'
+                          upper = '1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e25'/>
+                  </UML:AssociationEnd.participant>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e0b' name = 'experimentalDesigns'
+                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity xmi.id = 'Ia948c2m101cef0df55mm56c4'>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange xmi.id = 'Ia948c2m101cef0df55mm56c3' lower = '1'
+                          upper = '-1'/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = 'I1acc405m101d36c87e8mm4eb2' isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>&lt;p&gt;The association to the description and annotation of the Experiment, along with the
+grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
+                  <UML:AssociationEnd.participant>
+                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                  </UML:AssociationEnd.participant>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
           </UML:Namespace.ownedElement>
         </UML:Package>
         <UML:Stereotype xmi.id = 'I837986m101da242ae9mm4974' name = 'Enumeration'
