@@ -41,8 +41,15 @@ version: $Id$
 	
 	<view-state id="results.view" view="pubMed.Search.results.view">
 		<transition on="newSearch" to="criteria.view"/>
+		<transition on="saveBibRef" to="saveBibRef"/>
 	    <transition on="select" to="pubMedId.set"/>
 	</view-state>
+	
+	<action-state id="saveBibRef">
+		<action bean="pubMed.Search.executeQuery"/>
+		<transition on="success" to="criteria.view"/>
+		<transition on="error" to="criteria.view"/>
+	</action-state>
 	
 	<view-state id="bibRef.results.view" view="bibRef.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view"/>
