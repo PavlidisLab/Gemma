@@ -62,8 +62,6 @@ public class SequenceManipulation {
      * Given a physical location, find out how much of it overlaps with exons of a gene. This could involve more than
      * one exon.
      * <p>
-     * There are four cases that yield non-zero overlaps: FIXME this should take a PhysicalLocation as input. FIXME this
-     * should check the chromosome (commented out for now as a convenience)
      * 
      * @param chromosome
      * @param starts of the locations we are testing.
@@ -71,6 +69,12 @@ public class SequenceManipulation {
      * @param gene Gene we are testing
      * @return Number of bases which overlap with exons of the gene. A value of zero indicates that the location is
      *         entirely within an intron.
+     *         <p>
+     *         FIXME this should take a PhysicalLocation as input.
+     *         <p>
+     *         FIXME this should check the chromosome (commented out for now as a convenience)
+     *         <p>
+     *         FIXME This only checks for one gene product per gene.
      */
     public static int getGeneExonOverlaps( String chromosome, String starts, String sizes, Gene gene ) {
         if ( gene == null ) return 0;
@@ -221,7 +225,7 @@ public class SequenceManipulation {
      */
     private static Set copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
         Set copyOfProbes = new HashSet();
-        if (compositeSequence == null ) throw new IllegalArgumentException("CompositeSequence cannot be null");
+        if ( compositeSequence == null ) throw new IllegalArgumentException( "CompositeSequence cannot be null" );
         assert compositeSequence.getReporters() != null : "Null reporters for composite sequence";
         for ( Iterator iter = compositeSequence.getReporters().iterator(); iter.hasNext(); ) {
             Reporter next = ( Reporter ) iter.next();
@@ -248,6 +252,68 @@ public class SequenceManipulation {
             result[i] = Integer.parseInt( strings[i] );
         }
         return result;
+    }
+
+    /**
+     * Find where the center of a query location is in a gene. This is defined as the location of the center base of the
+     * query sequence relative to the 3' end of the gene.
+     * 
+     * @param starts
+     * @param sizes
+     * @param gene
+     * @return
+     */
+    public static int findCenter( String starts, String sizes ) {
+
+        int[] startArray = blatLocationsToIntArray( starts );
+        int[] sizesArray = blatLocationsToIntArray( sizes );
+
+        return findCenterExonCenterBase( startArray, sizesArray );
+
+    }
+
+    /**
+     * Find the index of the aligned base in the center exon that is the center of the query.
+     * 
+     * @param centerExon
+     * @param startArray
+     * @param sizesArray
+     * @return
+     */
+    private static int findCenterExonCenterBase( int[] startArray, int[] sizesArray ) {
+        int middle = middleBase( totalSize( sizesArray ) );
+        int totalSize = 0;
+        for ( int i = 0; i < sizesArray.length; i++ ) {
+            totalSize += sizesArray[i];
+            if ( totalSize >= middle ) {
+                totalSize -= sizesArray[i];
+                int diff = middle - totalSize;
+                return startArray[i] + diff;
+            }
+        }
+        assert false : "Failed to find center!";
+        throw new IllegalStateException( "Should not be here!" );
+    }
+
+    /**
+     * @param totalSize
+     * @return
+     */
+    private static int middleBase( int totalSize ) {
+        int middle = ( int ) Math.floor( totalSize / 2.0 );
+        return middle;
+    }
+
+    /**
+     * @param sizesArray
+     * @return
+     */
+    private static int totalSize( int[] sizesArray ) {
+        int totalSize = 0;
+        for ( int i = 0; i < sizesArray.length; i++ ) {
+            totalSize += sizesArray[i];
+        }
+        return totalSize;
     }
 
 }

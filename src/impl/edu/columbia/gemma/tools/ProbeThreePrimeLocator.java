@@ -43,6 +43,7 @@ public class ProbeThreePrimeLocator {
     private double exonOverlapThreshold = 0.50;
     private double identityThreshold = 0.90;
     private double scoreThreshold = 0.90;
+    private String threeprimeMethod = GoldenPath.RIGHTEND;
 
     public Map run( InputStream input, Writer output ) throws IOException, SQLException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
@@ -68,22 +69,23 @@ public class ProbeThreePrimeLocator {
             String arrayName = sa[1];
 
             List tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(), blatRes
-                    .getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(), blatRes.getStrand() );
+                    .getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(), blatRes.getStrand(),
+                    threeprimeMethod );
 
             if ( tpds == null ) continue;
 
-//            Set hitTranscripts = new TreeSet();
-//            Set hitGenes = new TreeSet();
+            // Set hitTranscripts = new TreeSet();
+            // Set hitGenes = new TreeSet();
             for ( Iterator iterator = tpds.iterator(); iterator.hasNext(); ) {
                 ThreePrimeData tpd = ( ThreePrimeData ) iterator.next();
 
-              //  if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
+                // if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
 
                 Gene gene = tpd.getGene();
                 assert gene != null : "Null gene";
 
-//                hitTranscripts.add( gene.getNcbiId() );
-//                hitGenes.add( gene.getOfficialSymbol() );
+                // hitTranscripts.add( gene.getNcbiId() );
+                // hitGenes.add( gene.getOfficialSymbol() );
                 LocationData ld = new LocationData( tpd, blatRes );
                 if ( !allRes.containsKey( probeName ) ) {
                     allRes.put( probeName, new HashSet() );
@@ -154,8 +156,7 @@ public class ProbeThreePrimeLocator {
             for ( Iterator iterator = probeResults.iterator(); iterator.hasNext(); ) {
                 LocationData ld = ( LocationData ) iterator.next();
                 double blatScore = ld.getBr().score();
-                double overlap = (double)ld.getTpd().getExonOverlap()
-                        / (double)( ld.getBr().getQuerySize() );
+                double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
                 double score = blatScore * overlap;
                 if ( score >= maxScore ) {
                     maxScore = score;
@@ -218,10 +219,10 @@ public class ProbeThreePrimeLocator {
 
     /**
      * Ju
-     * 
-     *
      * <hr>
-     * <p>Copyright (c) 2004-2005 Columbia University
+     * <p>
+     * Copyright (c) 2004-2005 Columbia University
+     * 
      * @author pavlidis
      * @version $Id$
      */
@@ -321,9 +322,9 @@ public class ProbeThreePrimeLocator {
             String arrayName = sa[1];
             buf.append( probeName + "\t" + arrayName + "\t" + tpd.getGene().getOfficialSymbol() + "\t"
                     + tpd.getGene().getNcbiId() + "\t" );
-            buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap()   );
-            buf.append("\t" + tpd.getDistance());
-            buf.append("\n");
+            buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap() );
+            buf.append( "\t" + tpd.getDistance() );
+            buf.append( "\n" );
             return buf.toString();
         }
 

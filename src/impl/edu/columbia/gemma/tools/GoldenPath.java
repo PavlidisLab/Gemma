@@ -33,6 +33,16 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
 public class GoldenPath {
     private static final Log log = LogFactory.getLog( GoldenPath.class );
 
+    /**
+     * 3' distances are measured from the 3' (right) edge of the query
+     */
+    public static final String RIGHTEND = "right";
+
+    /**
+     * 3' distances are measured from the center of the query
+     */
+    public static final String CENTER = "center";
+
     private QueryRunner qr;
     private Connection conn;
 
@@ -229,53 +239,84 @@ public class GoldenPath {
      * @param starts Locations of alignment starts. (comma-delimited from blat)
      * @param sizes Sizes of alignment blocks (comma-delimited from blat)
      * @param strand Either + or - indicating the strand to look on, or null to search both strands.
+     * @param method The constant representing the method to use to locate the 3' distance.
      * @return A list of ThreePrimeData objects. The distance stored by a ThreePrimeData will be 0 if the sequence
      *         overhangs (rather than providing a negative distance). If no genes are found, the result is null;
      */
-    public List getThreePrimeDistances( String chromosome, int start, int end, String starts, String sizes,
-            String strand ) {
+    public List getThreePrimeDistances( String chromosome, int queryStart, int queryEnd, String starts, String sizes,
+            String strand, String method ) {
 
-        if ( end < start ) throw new IllegalArgumentException( "End must not be less than start" );
+        if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 
         // starting with refgene means we can get the correct transcript name etc.
-        Collection genes = findRefGenesByLocation( chromosome, start, end, strand );
+        Collection genes = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
 
         // get known genes as well, in case all we got was an intron.
-        genes.addAll( findKnownGenesByLocation( chromosome, start, end, strand ) );
+        genes.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
         if ( genes.size() == 0 ) return null;
 
         List results = new ArrayList();
         for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
             Gene gene = ( Gene ) iter.next();
-            ThreePrimeData tpd = new ThreePrimeData( gene );
-
-            PhysicalLocation geneLoc = gene.getPhysicalLocation();
-            int geneStart = geneLoc.getNucleotide().intValue();
-            int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
-
-            int exonOverlap = 0;
-            if ( starts != null & sizes != null ) {
-                exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, gene );
-            }
-
-            assert exonOverlap <= end - start;
-
-            tpd.setExonOverlap( exonOverlap );
-            tpd.setInIntron( exonOverlap == 0 );
-
-            if ( geneLoc.getStrand().equals( "+" ) ) {
-                // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
-                tpd.setDistance( Math.max( 0, geneEnd - end ) );
-            } else if ( gene.getPhysicalLocation().getStrand().equals( "-" ) ) {
-                // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
-                tpd.setDistance( Math.max( 0, start - geneStart ) );
-            } else {
-                throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
-            }
+            ThreePrimeData tpd = getThreePrimeDistance( chromosome, queryStart, queryEnd, starts, sizes, gene, method );
             results.add( tpd );
         }
         return results;
+    }
+
+    /**
+     * Given a location and a gene, compute the distance from the 3' end of the gene.
+     * 
+     * @param chromosome
+     * @param queryStart
+     * @param queryEnd
+     * @param starts
+     * @param sizes
+     * @param gene
+     * @param method
+     * @return
+     */
+    private ThreePrimeData getThreePrimeDistance( String chromosome, int queryStart, int queryEnd, String starts,
+            String sizes, Gene gene, String method ) {
+        ThreePrimeData tpd = new ThreePrimeData( gene );
+        PhysicalLocation geneLoc = gene.getPhysicalLocation();
+        int geneStart = geneLoc.getNucleotide().intValue();
+        int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
+        int exonOverlap = 0;
+        if ( starts != null & sizes != null ) {
+            exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, gene );
+        }
+
+        assert exonOverlap <= queryEnd - queryStart;
+        tpd.setExonOverlap( exonOverlap );
+        tpd.setInIntron( exonOverlap == 0 );
+
+        if ( method == GoldenPath.CENTER ) {
+            int center = SequenceManipulation.findCenter( starts, sizes );
+            if ( geneLoc.getStrand().equals( "+" ) ) {
+                // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
+                tpd.setDistance( Math.max( 0, geneEnd - center ) );
+            } else if ( gene.getPhysicalLocation().getStrand().equals( "-" ) ) {
+                // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
+                tpd.setDistance( Math.max( 0, center - geneStart ) );
+            } else {
+                throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
+            }
+        } else if ( method == GoldenPath.RIGHTEND ) {
+            if ( geneLoc.getStrand().equals( "+" ) ) {
+                // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
+                tpd.setDistance( Math.max( 0, geneEnd - queryEnd ) );
+            } else if ( gene.getPhysicalLocation().getStrand().equals( "-" ) ) {
+                // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
+                tpd.setDistance( Math.max( 0, queryStart - geneStart ) );
+            } else {
+                throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
+            }
+        } else {
+            throw new IllegalArgumentException( "Unknown method" );
+        }
+        return tpd;
     }
 
     /**
