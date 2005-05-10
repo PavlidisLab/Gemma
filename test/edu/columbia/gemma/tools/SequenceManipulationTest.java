@@ -198,5 +198,13 @@ public class SequenceManipulationTest extends TestCase {
 
         assertEquals( expectedReturn, actualReturn );
     }
+    
+    public final void testFindCenter() throws Exception {
+        String starts = "100,200,300,400";
+        String sizes = "10,10,10,10";
+        int actualReturn = SequenceManipulation.findCenter(starts, sizes);
+        int expectedReturn = 210;
+        assertEquals( expectedReturn, actualReturn );
+    }
 
 }
