@@ -166,7 +166,6 @@
 			<groupId>ehcache</groupId>
 			<artifactId>ehcache</artifactId>
 			<version>0.9</version>
-
 			<type>jar</type>
 			<properties>
 				<war.bundle>true</war.bundle>
@@ -209,17 +208,9 @@
 			</properties>
 		</dependency>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-
-			<type>jar</type>
-		</dependency>
-		<dependency>
 			<groupId>colt</groupId>
 			<artifactId>colt</artifactId>
 			<version>1.2.0</version>
-
 			<type>jar</type>
 			<properties>
 				<war.bundle>true</war.bundle>
@@ -229,7 +220,6 @@
 			<groupId>commons-dbutils</groupId>
 			<artifactId>commons-dbutils</artifactId>
 			<version>1.0</version>
-
 			<type>jar</type>
 			<properties>
 				<war.bundle>true</war.bundle>
@@ -245,7 +235,6 @@
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 			<version>3.1</version>
-
 			<type>jar</type>
 			<properties>
 				<war.bundle>true</war.bundle>
@@ -268,24 +257,6 @@
 			<properties>
 				<war.bundle>true</war.bundle>
 			</properties>
-		</dependency>
-		<dependency>
-			<groupId>xdoclet</groupId>
-			<artifactId>xjavadoc</artifactId>
-			<version>1.1</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>xdoclet</groupId>
-			<artifactId>xdoclet-spring-module</artifactId>
-			<version>1.2.3</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>xdoclet</groupId>
-			<artifactId>xdoclet-web-module</artifactId>
-			<version>1.2.3</version>
-			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
@@ -417,13 +388,6 @@
 			</properties>
 		</dependency>
 		<dependency>
-			<groupId>servlet</groupId>
-			<artifactId>servlet</artifactId>
-			<jar>servlet.jar</jar>
-			<type>jar</type>
-		</dependency>
-
-		<dependency>
 			<groupId>urlrewritefilter</groupId>
 			<artifactId>urlrewrite</artifactId>
 			<jar>urlrewrite-2.3.jar</jar>
@@ -476,6 +440,56 @@
 			<properties>
 				<war.bundle>true</war.bundle>
 			</properties>
+		</dependency>
+		
+		<dependency>
+			<groupId>servlet</groupId>
+			<artifactId>servlet</artifactId>
+			<jar>servlet.jar</jar>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>xdoclet</groupId>
+			<artifactId>xjavadoc</artifactId>
+			<version>1.1</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>xdoclet</groupId>
+			<artifactId>xdoclet-spring-module</artifactId>
+			<version>1.2.3</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>xdoclet</groupId>
+			<artifactId>xdoclet-web-module</artifactId>
+			<version>1.2.3</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>jsch</groupId>
+			<artifactId>jsch</artifactId>
+			<version>0.1.17</version>
+			<type>jar</type>
+			<properties>
+        		<classloader>root</classloader>
+      		</properties>
+		</dependency>	
+    	<dependency>
+			<groupId>ant</groupId>
+			<artifactId>ant-jsch</artifactId>
+			<type>jar</type>
+			<version>1.6.3</version>
+			<jar>ant-jsch-1.6.3.jar</jar>
+			<properties>
+        		<classloader>root</classloader>
+      		</properties>
 		</dependency>
 	</dependencies>
 	<build>
