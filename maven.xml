@@ -230,7 +230,24 @@
 	<goal name="remove-work-dir">
 		<ant:delete dir="${basedir}/work" quiet="false" failonerror="false"/> 
 	</goal>
-	
+	<!--TODO verify that the war file is generated correctly -->
+	<goal name="create-war">
+		<ant:delete dir="${basedir}/target" quiet="false" failonerror="false"/>
+		<maven:maven basedir="${basedir}/web" descriptor="${basedir}/project.xml" goals="war:war"/>
+	</goal>
+	<!--TODO can I set up a tunnel without putty? -->
+	<!-- set ${user}, ${server}, ${remotedir}, ${sshdir}, ${passphrase} in build.properties -->
+	<goal name="deploy-war">
+	<taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp"/>
+    <ant:scp trust="yes"
+    		 todir="${user}@${server}:${remotedir}" 
+    		 keyfile="${sshdir}"
+    		 passphrase="${passphrase}"
+             verbose="yes">
+     <fileset file="${basedir}/target/Gemma.war"/>
+    </ant:scp>
+  </goal>
+  
 	<ant:filterset id="web.variables">
 		<filter token="WEB-APP-ROOT" value="${maven.war.src}" />
 		<filter token="WEB-APP-WORK" value="${basedir}/work" />
