@@ -54,9 +54,9 @@ public class ProbeGeneMapperGui extends JFrame {
     private JButton outputFileBrowseButton = null;
     private JPanel locationMethodPanel = null;
     private JLabel locationMethodLabel = null;
-    private JComboBox locationMethodComboBox = null;
+    JComboBox locationMethodComboBox = null;
 
-    private String method = GoldenPath.RIGHTEND;
+    String method = GoldenPath.RIGHTEND;
     protected File inputFile;
     protected File outputFile;
 
@@ -117,8 +117,11 @@ public class ProbeGeneMapperGui extends JFrame {
             okButton.addActionListener( new ActionListener() {
 
                 public void actionPerformed( ActionEvent e ) {
-
-                    run();
+                    if ( inputFile != null && outputFile != null ) {
+                        run();
+                    } else {
+                        log.error( "Must provide file names" );
+                    }
 
                 }
             } );
@@ -165,7 +168,6 @@ public class ProbeGeneMapperGui extends JFrame {
             cancelButton.setText( "Cancel" );
             cancelButton.setBounds( 256, 13, 73, 26 );
             cancelButton.addActionListener( new ActionListener() {
-
                 public void actionPerformed( ActionEvent e ) {
                     exit();
                 }
