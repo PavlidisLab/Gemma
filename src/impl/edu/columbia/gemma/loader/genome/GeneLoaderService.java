@@ -54,7 +54,7 @@ public class GeneLoaderService implements BulkCreator {
      * @throws ConfigurationException
      */
     public GeneLoaderService() throws ConfigurationException {
-        conf = new PropertiesConfiguration( "gene.properties" );
+        conf = new PropertiesConfiguration( "Gemma.properties" );
         symbolCol = conf.getInt( "gene.symbolCol" );
         officialNameCol = conf.getInt( "gene.officialNameCol" );
         refIdCol = conf.getInt( "gene.refIdCol" );

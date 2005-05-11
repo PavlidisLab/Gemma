@@ -53,7 +53,7 @@ public class ChromosomeLoaderService implements BulkCreator {
      * @throws ConfigurationException
      */
     public ChromosomeLoaderService() throws ConfigurationException {
-        conf = new PropertiesConfiguration( "chromosome.properties" );
+        conf = new PropertiesConfiguration( "Gemma.properties" );
         nameCol = conf.getInt( "chromosome.nameCol" );
         taxonCol = conf.getInt( "chromosome.taxonCol" );
         alreadyRetreivedTaxa = false;

@@ -42,7 +42,7 @@ public class TaxonLoaderService implements BulkCreator {
      * @throws ConfigurationException
      */
     public TaxonLoaderService() throws ConfigurationException {
-        Configuration conf = new PropertiesConfiguration( "taxon.properties" );
+        Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
         scientificNameCol = conf.getInt( "taxon.scientificNameCol" );
         commonNameCol = conf.getInt( "taxon.commonNameCol" );
         abbreviationCol = conf.getInt( "taxon.abbreviationCol" );
