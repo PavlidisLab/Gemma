@@ -20,7 +20,7 @@ public class BaseControllerTestCase extends TestCase{
     protected final static ApplicationContext ctx;
     
     static {
-        ResourceBundle db = ResourceBundle.getBundle( "testResources" );
+        ResourceBundle db = ResourceBundle.getBundle( "test" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString("servlet.name.0");
         // Make sure you have the /web on the junit classpath.
