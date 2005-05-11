@@ -50,7 +50,7 @@ public class ArrayDesignLoaderService implements BulkCreator {
      * @throws ConfigurationException TODO fill in the auditTrail, security, and bioAssay to complete associations
      */
     public ArrayDesignLoaderService() throws ConfigurationException {
-        conf = new PropertiesConfiguration( "arrayDesign.properties" );
+        conf = new PropertiesConfiguration( "Gemma.properties" );
         identifierCol = conf.getInt( "arrayDesign.identifierCol" );
         nameCol = conf.getInt( "arrayDesign.nameCol" );
         numOfCompositeSequencesCol = conf.getInt( "arrayDesign.numOfCompositeSequencesCol" );

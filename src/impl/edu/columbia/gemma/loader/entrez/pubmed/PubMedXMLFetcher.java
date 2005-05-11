@@ -30,7 +30,7 @@ public class PubMedXMLFetcher {
     private String uri;
 
     public PubMedXMLFetcher() throws ConfigurationException {
-        Configuration config = new PropertiesConfiguration( "entrez.properties" );
+        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
         String baseURL = ( String ) config.getProperty( "entrez.efetch.baseurl" );
         String db = ( String ) config.getProperty( "entrez.efetch.pubmed.db" );
         String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
