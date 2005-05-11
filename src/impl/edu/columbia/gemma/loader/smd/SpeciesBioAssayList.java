@@ -40,7 +40,7 @@ public class SpeciesBioAssayList {
     public SpeciesBioAssayList() {
         Configuration config = null;
         try {
-            config = new PropertiesConfiguration( "smd.properties" );
+            config = new PropertiesConfiguration( "Gemma.properties" );
         } catch ( ConfigurationException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -52,7 +52,7 @@ public class Experiments {
         this.pubs = pubs;
         experiments = new HashSet();
 
-        Configuration config = new PropertiesConfiguration( "smd.properties" );
+        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
 
         baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
 

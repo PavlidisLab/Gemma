@@ -51,7 +51,7 @@ public class DataFileFetcher {
 
     public DataFileFetcher() throws IOException, ConfigurationException {
         localFiles = new HashSet();
-        Configuration config = new PropertiesConfiguration( "smd.properties" );
+        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
 
         localBasePath = ( String ) config.getProperty( "smd.local.datafile.basepath" );
         baseDir = ( String ) config.getProperty( "smd.experiments.baseDir" );

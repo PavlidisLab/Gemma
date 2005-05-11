@@ -30,7 +30,7 @@ public class SmdUtil {
     static {
         Configuration config = null;
         try {
-            config = new PropertiesConfiguration( "smd.properties" );
+            config = new PropertiesConfiguration( "Gemma.properties" );
         } catch ( ConfigurationException e ) {
             log.error(e);
         }
