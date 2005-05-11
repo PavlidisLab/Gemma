@@ -1,0 +1,432 @@
+package edu.columbia.gemma.tools;
+
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.JLabel;
+import javax.swing.JComboBox;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Map;
+
+import javax.swing.AbstractAction;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class ProbeGeneMapperGui extends JFrame {
+    private static Log log = LogFactory.getLog( ProbeGeneMapperGui.class.getName() );
+    private javax.swing.JPanel jContentPane = null;
+    private JPanel topButtonPanel = null;
+    private JPanel fileNamesPanel = null;
+    private JPanel bottomPanel = null;
+    private JButton okButton = null;
+    private JButton cancelButton = null;
+    private JPanel inputFileNamePanel = null;
+    private JPanel outputFileNamePanel = null;
+    private JTextField inputFileNameTextField = null;
+    private JButton inputFileBrowseButton = null;
+    private JTextField outputFileNameTextField = null;
+    private JButton outputFileBrowseButton = null;
+    private JPanel locationMethodPanel = null;
+    private JLabel locationMethodLabel = null;
+    private JComboBox locationMethodComboBox = null;
+
+    private String method = GoldenPath.RIGHTEND;
+    protected File inputFile;
+    protected File outputFile;
+
+    /**
+     * This method initializes jPanel
+     * 
+     * @return javax.swing.JPanel
+     */
+    private JPanel getTopButtonPanel() {
+        if ( topButtonPanel == null ) {
+            topButtonPanel = new JPanel();
+            topButtonPanel.setLayout( null );
+            topButtonPanel.add( getLocationMethodPanel(), null );
+        }
+        return topButtonPanel;
+    }
+
+    /**
+     * This method initializes jPanel
+     * 
+     * @return javax.swing.JPanel
+     */
+    private JPanel getFileNamesPanel() {
+        if ( fileNamesPanel == null ) {
+            fileNamesPanel = new JPanel();
+            fileNamesPanel.setLayout( null );
+            fileNamesPanel.add( getInputFileNamePanel(), null );
+            fileNamesPanel.add( getOutputFileNamePanel(), null );
+        }
+        return fileNamesPanel;
+    }
+
+    /**
+     * This method initializes jPanel1
+     * 
+     * @return javax.swing.JPanel
+     */
+    private JPanel getBottomPanel() {
+        if ( bottomPanel == null ) {
+            bottomPanel = new JPanel();
+            bottomPanel.setLayout( null );
+            bottomPanel.add( getOkButton(), null );
+            bottomPanel.add( getCancelButton(), null );
+        }
+        return bottomPanel;
+    }
+
+    /**
+     * This method initializes jButton
+     * 
+     * @return javax.swing.JButton
+     */
+    private JButton getOkButton() {
+        if ( okButton == null ) {
+            okButton = new JButton();
+            okButton.setText( "OK" );
+            okButton.setBounds( 200, 13, 51, 26 );
+            okButton.addActionListener( new ActionListener() {
+
+                public void actionPerformed( ActionEvent e ) {
+
+                    run();
+
+                }
+            } );
+        }
+        return okButton;
+    }
+
+    /**
+     * 
+     */
+    protected void run() {
+        ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
+        try {
+            String bestOutputFileName = outputFile.getAbsolutePath().replaceFirst( "\\.", ".best." );
+            log.info( "Saving best to " + bestOutputFileName );
+            Map results = ptpl
+                    .run( new FileInputStream( inputFile ), new BufferedWriter( new FileWriter( outputFile ) ) );
+            File o = new File( bestOutputFileName );
+            ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+        } catch ( FileNotFoundException e ) {
+            log.error( e, e );
+        } catch ( IOException e ) {
+            log.error( e, e );
+        } catch ( SQLException e ) {
+            log.error( e, e );
+        } catch ( InstantiationException e ) {
+            log.error( e, e );
+        } catch ( IllegalAccessException e ) {
+            log.error( e, e );
+        } catch ( ClassNotFoundException e ) {
+            log.error( e, e );
+        }
+
+    }
+
+    /**
+     * This method initializes jButton1
+     * 
+     * @return javax.swing.JButton
+     */
+    private JButton getCancelButton() {
+        if ( cancelButton == null ) {
+            cancelButton = new JButton();
+            cancelButton.setText( "Cancel" );
+            cancelButton.setBounds( 256, 13, 73, 26 );
+            cancelButton.addActionListener( new ActionListener() {
+
+                public void actionPerformed( ActionEvent e ) {
+                    exit();
+                }
+            } );
+        }
+        return cancelButton;
+    }
+
+    /**
+     * 
+     */
+    protected void exit() {
+        System.exit( 0 );
+    }
+
+    /**
+     * This method initializes jPanel1
+     * 
+     * @return javax.swing.JPanel
+     */
+    private JPanel getInputFileNamePanel() {
+        if ( inputFileNamePanel == null ) {
+            inputFileNamePanel = new JPanel();
+            inputFileNamePanel.setLayout( null );
+            inputFileNamePanel.setBounds( 16, 22, 544, 41 );
+            inputFileNamePanel.add( getInputFileNameTextField(), null );
+            inputFileNamePanel.add( getInputFileBrowseButton(), null );
+        }
+        return inputFileNamePanel;
+    }
+
+    /**
+     * This method initializes jPanel2
+     * 
+     * @return javax.swing.JPanel
+     */
+    private JPanel getOutputFileNamePanel() {
+        if ( outputFileNamePanel == null ) {
+            outputFileNamePanel = new JPanel();
+            outputFileNamePanel.setLayout( null );
+            outputFileNamePanel.setBounds( 15, 71, 548, 35 );
+            outputFileNamePanel.add( getOutputFileNameTextField(), null );
+            outputFileNamePanel.add( getOutputFileBrowseButton(), null );
+        }
+        return outputFileNamePanel;
+    }
+
+    /**
+     * This method initializes getInputFileNameTextField
+     * 
+     * @return javax.swing.JTextField
+     */
+    private JTextField getInputFileNameTextField() {
+        if ( inputFileNameTextField == null ) {
+            inputFileNameTextField = new JTextField();
+            inputFileNameTextField.setPreferredSize( new java.awt.Dimension( 200, 20 ) );
+            inputFileNameTextField.setLocation( 5, 12 );
+            inputFileNameTextField.setSize( 440, 20 );
+            inputFileNameTextField.setText( "Input File" );
+        }
+        return inputFileNameTextField;
+    }
+
+    /**
+     * This method initializes InputFileBrowseButton
+     * 
+     * @return javax.swing.JButton
+     */
+    private JButton getInputFileBrowseButton() {
+        if ( inputFileBrowseButton == null ) {
+            inputFileBrowseButton = new JButton();
+            inputFileBrowseButton.setText( "Browse..." );
+            inputFileBrowseButton.setActionCommand( "inputFileBrowse" );
+            inputFileBrowseButton.setBounds( 451, 8, 87, 26 );
+            inputFileBrowseButton.addActionListener( new ActionListener() {
+
+                public void actionPerformed( ActionEvent e ) {
+
+                    JFileChooser fc = new JFileChooser();
+                    fc.showOpenDialog( jContentPane.getParent() );
+                    File selectedFile = fc.getSelectedFile();
+
+                    if ( selectedFile != null ) {
+                        getInputFileNameTextField().setText( selectedFile.getAbsolutePath() );
+                        if ( !selectedFile.canRead() ) {
+                            // error
+                        } else {
+                            inputFile = selectedFile;
+                        }
+                    }
+                }
+            } );
+        }
+        return inputFileBrowseButton;
+    }
+
+    /**
+     * This method initializes OutputFileNameTextField
+     * 
+     * @return javax.swing.JTextField
+     */
+    private JTextField getOutputFileNameTextField() {
+        if ( outputFileNameTextField == null ) {
+            outputFileNameTextField = new JTextField();
+            outputFileNameTextField.setPreferredSize( new java.awt.Dimension( 200, 20 ) );
+            outputFileNameTextField.setBounds( 6, 8, 440, 20 );
+        }
+        return outputFileNameTextField;
+    }
+
+    /**
+     * @return javax.swing.JButton
+     */
+    private JButton getOutputFileBrowseButton() {
+        if ( outputFileBrowseButton == null ) {
+            outputFileBrowseButton = new JButton();
+            outputFileBrowseButton.setText( "Browse..." );
+            outputFileBrowseButton.setBounds( 454, 4, 87, 26 );
+            outputFileBrowseButton.addActionListener( new ActionListener() {
+
+                public void actionPerformed( ActionEvent e ) {
+                    JFileChooser fc = new JFileChooser();
+                    fc.showSaveDialog( jContentPane.getParent() );
+                    File selectedFile = fc.getSelectedFile();
+                    if ( selectedFile != null ) {
+                        getOutputFileNameTextField().setText( selectedFile.getAbsolutePath() );
+                        if ( selectedFile.canRead() ) {
+                            outputFile = selectedFile;
+                        } else {
+                            // error
+                        }
+                    }
+                }
+            } );
+        }
+        return outputFileBrowseButton;
+    }
+
+    /**
+     * This method initializes jPanel3
+     * 
+     * @return javax.swing.JPanel
+     */
+    private JPanel getLocationMethodPanel() {
+        if ( locationMethodPanel == null ) {
+            locationMethodLabel = new JLabel();
+            locationMethodPanel = new JPanel();
+            locationMethodPanel.setLayout( null );
+            locationMethodLabel.setText( "Location Method" );
+            locationMethodLabel.setBounds( 81, 19, 123, 16 );
+            locationMethodLabel.setFont( new java.awt.Font( "Dialog", java.awt.Font.PLAIN, 12 ) );
+            locationMethodPanel.setBounds( 0, 0, 594, 46 );
+            locationMethodPanel.add( locationMethodLabel, null );
+            locationMethodPanel.add( getLocationMethodComboBox(), null );
+        }
+        return locationMethodPanel;
+    }
+
+    /**
+     * This method initializes jComboBox
+     * 
+     * @return javax.swing.JComboBox
+     */
+    private JComboBox getLocationMethodComboBox() {
+        if ( locationMethodComboBox == null ) {
+            locationMethodComboBox = new JComboBox();
+            locationMethodComboBox.setBounds( 209, 17, 234, 20 );
+            locationMethodComboBox.addItem( "Center" );
+            locationMethodComboBox.addItem( "3' end" );
+            locationMethodComboBox.addActionListener( new java.awt.event.ActionListener() {
+
+                public void actionPerformed( java.awt.event.ActionEvent e ) {
+                    if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( GoldenPath.CENTER ) ) {
+                        method = GoldenPath.CENTER;
+                    } else if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( GoldenPath.RIGHTEND ) ) {
+                        method = GoldenPath.RIGHTEND;
+                    }
+                }
+            } );
+
+        }
+        return locationMethodComboBox;
+    }
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        try {
+            UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
+        } catch ( ClassNotFoundException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( InstantiationException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( IllegalAccessException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( UnsupportedLookAndFeelException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        ProbeGeneMapperGui pgmg = new ProbeGeneMapperGui();
+
+        pgmg.pack();
+        pgmg.show();
+
+    }
+
+    /**
+     * This is the default constructor
+     */
+    public ProbeGeneMapperGui() {
+        super();
+        initialize();
+    }
+
+    /**
+     * This method initializes this
+     * 
+     * @return void
+     */
+    private void initialize() {
+        this.setSize( 602, 472 );
+        this.setContentPane( getJContentPane() );
+        this.setTitle( "ProbeMapper" );
+    }
+
+    /**
+     * This method initializes jContentPane
+     * 
+     * @return javax.swing.JPanel
+     */
+    private javax.swing.JPanel getJContentPane() {
+        if ( jContentPane == null ) {
+            GridBagConstraints gridBagConstraints5 = new GridBagConstraints();
+            GridBagConstraints gridBagConstraints4 = new GridBagConstraints();
+            GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
+            jContentPane = new javax.swing.JPanel();
+            jContentPane.setLayout( new GridBagLayout() );
+            gridBagConstraints3.insets = new java.awt.Insets( 0, 0, 18, 0 );
+            gridBagConstraints3.gridx = 0;
+            gridBagConstraints3.gridy = 0;
+            gridBagConstraints3.ipadx = 593;
+            gridBagConstraints3.ipady = 219;
+            gridBagConstraints4.insets = new java.awt.Insets( 19, 0, 4, 0 );
+            gridBagConstraints4.gridx = 0;
+            gridBagConstraints4.gridy = 1;
+            gridBagConstraints4.ipadx = 593;
+            gridBagConstraints4.ipady = 124;
+            gridBagConstraints5.insets = new java.awt.Insets( 5, 37, 1, 31 );
+            gridBagConstraints5.gridx = 0;
+            gridBagConstraints5.gridy = 2;
+            gridBagConstraints5.ipadx = 525;
+            gridBagConstraints5.ipady = 50;
+            jContentPane.add( getTopButtonPanel(), gridBagConstraints3 );
+            jContentPane.add( getFileNamesPanel(), gridBagConstraints4 );
+            jContentPane.add( getBottomPanel(), gridBagConstraints5 );
+        }
+        return jContentPane;
+    }
+
+} // @jve:decl-index=0:visual-constraint="10,10"

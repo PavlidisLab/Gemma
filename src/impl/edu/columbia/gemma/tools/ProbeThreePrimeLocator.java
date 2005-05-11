@@ -38,12 +38,14 @@ import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
  */
 public class ProbeThreePrimeLocator {
 
+
+
     protected static final Log log = LogFactory.getLog( ProbeThreePrimeLocator.class );
     private String dbName = "hg17";
     private double exonOverlapThreshold = 0.50;
     private double identityThreshold = 0.90;
     private double scoreThreshold = 0.90;
-    private String threeprimeMethod = GoldenPath.RIGHTEND;
+    private String threeprimeMethod = GoldenPath.CENTER;
 
     public Map run( InputStream input, Writer output ) throws IOException, SQLException, InstantiationException,
             IllegalAccessException, ClassNotFoundException {
@@ -145,7 +147,7 @@ public class ProbeThreePrimeLocator {
      * @param results
      * @param writer
      */
-    private void getBest( Map results, BufferedWriter writer ) throws IOException {
+    void getBest( Map results, BufferedWriter writer ) throws IOException {
         for ( Iterator iter = results.keySet().iterator(); iter.hasNext(); ) {
             String probe = ( String ) iter.next();
             Collection probeResults = ( Collection ) results.get( probe );
