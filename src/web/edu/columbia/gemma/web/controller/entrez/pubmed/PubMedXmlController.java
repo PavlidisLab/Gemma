@@ -55,7 +55,7 @@ public class PubMedXmlController extends SimpleFormController {
      * @throws ConfigurationException
      */
     public PubMedXmlController() throws ConfigurationException {
-        conf = new PropertiesConfiguration( "entrez.properties" );
+        conf = new PropertiesConfiguration( "Gemma.properties" );
         alreadyExists = conf.getString( "entrez.pubmed.alreadyExists" );
         bibRef = conf.getString( "entrez.pubmed.bibRef" );
         requestPubMedId = conf.getString( "entrez.pubmed.pubMedId" );
