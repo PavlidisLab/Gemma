@@ -43,7 +43,7 @@ public class TaxonLoaderServiceTest extends BaseServiceTestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        conf = new PropertiesConfiguration( "testtaxa.properties" );
+        conf = new PropertiesConfiguration( "test.properties" );
         //file = new File( conf.getString( "testtaxa.filename" ) );
         tls = new TaxonLoaderService();
         control = MockControl.createControl( TaxonDao.class );
