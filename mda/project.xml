@@ -96,8 +96,8 @@
                 -->
                 <specificCollectionInterfaces>
                 false</specificCollectionInterfaces>
-                 <associationEndCollectionIndexName>
-                 name</associationEndCollectionIndexName>
+                <associationEndCollectionIndexName>
+                index</associationEndCollectionIndexName>
             </properties> 
         </dependency>
          <dependency>
