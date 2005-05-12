@@ -243,6 +243,7 @@
     		 todir="${user}@${server}:${remotedir}" 
     		 keyfile="${sshdir}"
     		 passphrase="${passphrase}"
+    		 port="23"
              verbose="yes">
      <fileset file="${basedir}/target/Gemma.war"/>
     </ant:scp>

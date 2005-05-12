@@ -96,6 +96,8 @@
                 -->
                 <specificCollectionInterfaces>
                 false</specificCollectionInterfaces>
+                 <associationEndCollectionIndexName>
+                 name</associationEndCollectionIndexName>
             </properties> 
         </dependency>
          <dependency>
