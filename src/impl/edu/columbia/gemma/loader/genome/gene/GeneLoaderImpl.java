@@ -21,25 +21,9 @@ import edu.columbia.gemma.genome.GeneDao;
  * @version $Id$
  */
 public class GeneLoaderImpl implements GeneLoader {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
-
     private static BeanFactory ctx;
-    private GeneDao geneDao;
 
-    /**
-     * @return Returns the geneDao.
-     */
-    public GeneDao getGeneDao() {
-        return geneDao;
-    }
-
-    /**
-     * @param geneDao The geneDao to set.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
-
+    protected static final Log log = LogFactory.getLog( GeneParser.class );
     static {
         ResourceBundle db = ResourceBundle.getBundle( "test" );
         String daoType = db.getString( "dao.type" );
@@ -51,14 +35,7 @@ public class GeneLoaderImpl implements GeneLoader {
         ctx = new ClassPathXmlApplicationContext( paths );
     }
 
-    /**
-     * Persist gene.
-     * 
-     * @param gene
-     */
-    public void create( Gene gene ) {
-        // TODO Auto-generated method stub
-    }
+    private GeneDao geneDao;
 
     /**
      * Persist genes in collection.
@@ -72,5 +49,36 @@ public class GeneLoaderImpl implements GeneLoader {
             Gene g = ( Gene ) iter.next();
             ( ( GeneDao ) ctx.getBean( "geneDao" ) ).create( g );
         }
+    }
+
+    /**
+     * Persist gene.
+     * 
+     * @param gene
+     */
+    public void create( Gene gene ) {
+        // TODO Auto-generated method stub
+    }
+
+    /**
+     * @return Returns the geneDao.
+     */
+    public GeneDao getGeneDao() {
+        return geneDao;
+    }
+
+    public void removeAll( Collection col ) {
+        Iterator iter = col.iterator();
+        while ( iter.hasNext() ) {
+            Gene g = ( Gene ) iter.next();
+            ( ( GeneDao ) ctx.getBean( "geneDao" ) ).remove( g );
+        }
+    }
+
+    /**
+     * @param geneDao The geneDao to set.
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
     }
 }

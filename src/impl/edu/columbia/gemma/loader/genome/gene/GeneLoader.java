@@ -14,8 +14,10 @@ import edu.columbia.gemma.genome.Gene;
  */
 public interface GeneLoader {
 
+    public void create( Collection col );
+
     public void create( Gene gene );
 
-    public void create( Collection col );
+    public void removeAll( Collection collection );
 
 }
