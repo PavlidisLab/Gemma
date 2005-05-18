@@ -8,27 +8,41 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2005 Columbia University
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
  * @author keshav
  * @version $Id$
  */
 public class GeneParserTest extends BaseServiceTestCase {
-    protected static final Log log = LogFactory.getLog( GeneParserTest.class );
-
     private static final String GENE_INFO = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene_info";
-    private static final String GENE2ACCESSION = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene2accession";
-    private GeneParser geneParser = null;
-    private GeneLoader geneLoader = null;
-    private Map map = null;
 
+    private static final String GENE2ACCESSION = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene2accession";
+    protected static final Log log = LogFactory.getLog( GeneParserTest.class );
+    private File file = null;
     private String filename = null;
     private String filename2 = null;
-    private File file = null;
+
+    private GeneLoader geneLoader = null;
+    private GeneParser geneParser = null;
+    private Map map = null;
+
+    public void testParseFileValidFile() throws Exception {
+        geneParser.parseFile( filename );
+        map = geneParser.parseFile( filename2 );
+
+        geneLoader.create( map.values() );
+
+        // TODO can you pass arguments to JUnit test?
+        // if (arg == "remove")
+        // geneLoader.removeAll( map.values() );
+
+        assertEquals( null, null );
+
+    }
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -46,16 +60,6 @@ public class GeneParserTest extends BaseServiceTestCase {
         geneLoader = null;
         map = null;
         filename = null;
-    }
-
-    public void testParseFileValidFile() throws Exception {
-        geneParser.parseFile( filename );
-        map = geneParser.parseFile( filename2 );
-
-        geneLoader.create( map.values() );
-
-        assertEquals( null, null );
-
     }
 
     // public void testParseFileInvalidFile() throws Exception {
