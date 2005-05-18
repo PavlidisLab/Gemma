@@ -26,11 +26,22 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     protected static final Log log = LogFactory.getLog( GeneParser.class );
     private GeneMappings gm = null;
+    private Iterator iter;
+    private Map map;
     private ParserUtils pu = null;
     String gFilename = null;
     String[] keys = null;
-    private Map map;
-    private Iterator iter;
+
+    /**
+     * 
+     */
+    public GeneParserImpl() {
+        gm = new GeneMappings();
+        pu = new ParserUtils();
+        map = new HashMap();
+        keys = new String[] { "gene2accession", "gene2go", "gene2refseq", "gene2sts", "gene2unigene", "gene_history",
+                "gene_info", "mim2gene" };
+    }
 
     /**
      * Parse the specified file, filename.
@@ -50,39 +61,11 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
 
         if ( pu.validFile( filename, pu.initializeFileTypes( keys ) ) ) {
             parse( fis );
-            debugMap( false );
+            debugMap();
             return map;
         } else {
             throw new IOException( "Invalid File \"" + filename + "\"" );
         }
-    }
-
-    /**
-     * Print content of map if debug is set to true.
-     * @param debug
-     */
-    private void debugMap( boolean debug ) {
-        if ( debug ) {
-            log.info( "Map contains: " );
-            iter = map.keySet().iterator();
-            int i = 0;
-            while ( iter.hasNext() ) {
-                log.info( iter.next() );
-                i++;
-            }
-            log.info( "map size: " + i );
-        }
-    }
-
-    /**
-     * 
-     */
-    public GeneParserImpl() {
-        gm = new GeneMappings();
-        pu = new ParserUtils();
-        map = new HashMap();
-        keys = new String[] { "gene2accession", "gene2go", "gene2refseq", "gene2sts", "gene2unigene", "gene_history",
-                "gene_info", "mim2gene" };
     }
 
     /**
@@ -99,6 +82,24 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
 
         return g;
 
+    }
+
+    /**
+     * Print content of map if debug is set to true.
+     * 
+     * @param debug
+     */
+    private void debugMap() {
+        if ( log.isDebugEnabled() ) {
+            log.info( "Map contains: " );
+            iter = map.keySet().iterator();
+            int i = 0;
+            while ( iter.hasNext() ) {
+                log.info( iter.next() );
+                i++;
+            }
+            log.info( "map size: " + i );
+        }
     }
 
     /**
