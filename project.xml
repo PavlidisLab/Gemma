@@ -499,6 +499,9 @@
 			${basedir}/test
 		</unitTestSourceDirectory>
 		<unitTest>
+			<excludes>
+				<exclude>**/GeneParserTest.java</exclude>
+			</excludes>
 			<includes>
 				<include>**/*Test.java</include>
 			</includes>
@@ -509,6 +512,13 @@
 						<include>**/*.xml</include>
 						<include>**/*.txt</include>
 						<include>**/*.probes</include>
+					</includes>
+					<filtering>false</filtering>
+				</resource>
+				<resource>
+					<directory>${basedir}/web</directory>
+					<includes>
+						<include>**/*.xml</include>
 					</includes>
 					<filtering>false</filtering>
 				</resource>
