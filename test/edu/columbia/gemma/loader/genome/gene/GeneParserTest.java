@@ -1,6 +1,5 @@
 package edu.columbia.gemma.loader.genome.gene;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,10 +18,9 @@ import edu.columbia.gemma.BaseServiceTestCase;
  */
 public class GeneParserTest extends BaseServiceTestCase {
     private static final String GENE_INFO = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene_info";
-
     private static final String GENE2ACCESSION = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene2accession";
+
     protected static final Log log = LogFactory.getLog( GeneParserTest.class );
-    private File file = null;
     private String filename = null;
     private String filename2 = null;
 
