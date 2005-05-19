@@ -29,7 +29,7 @@ public class BaseDAOTestCase extends TestCase {
     // This static block ensures that Spring's BeanFactory is only loaded
     // once for all tests
     static {
-        ResourceBundle db = ResourceBundle.getBundle( "test" );
+        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString("servlet.name.0");
 

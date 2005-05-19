@@ -12,7 +12,7 @@ public class BaseFlowTestCase extends AbstractFlowExecutionTests{
     
     protected String[] getConfigLocations() {
 
-        ResourceBundle db = ResourceBundle.getBundle( "test" );
+        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
         // Make sure you have the /web on the junit classpath.
