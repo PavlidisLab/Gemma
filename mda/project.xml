@@ -90,7 +90,9 @@
                 <!--     
                 <hibernateDefaultCascade >
                     none</hibernateDefaultCascade> -->
-                <!-- 
+                <hibernateCompositionCascade>
+                all</hibernateCompositionCascade>
+                <!--	    
                 <hibernateAssociationCollectionType> 
                    	list</hibernateAssociationCollectionType>
                 -->
