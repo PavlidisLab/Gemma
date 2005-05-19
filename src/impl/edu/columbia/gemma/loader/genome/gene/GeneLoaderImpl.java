@@ -21,11 +21,11 @@ import edu.columbia.gemma.genome.GeneDao;
  * @version $Id$
  */
 public class GeneLoaderImpl implements GeneLoader {
-    private static BeanFactory ctx;
-
     protected static final Log log = LogFactory.getLog( GeneParser.class );
+
+    private static BeanFactory ctx;
     static {
-        ResourceBundle db = ResourceBundle.getBundle( "test" );
+        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
 
