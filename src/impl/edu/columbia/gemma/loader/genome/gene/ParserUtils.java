@@ -37,7 +37,7 @@ public class ParserUtils {
      * @return
      */
     public boolean validFile( String filename, Collection fileTypes ) {
-        String[] f = StringUtils.split( filename, "\\" );
+        String[] f = StringUtils.split( filename, System.getProperty("file.separator") );
         return fileTypes.contains( f[f.length - 1] );
     }
 }
