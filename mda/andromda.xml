@@ -1,0 +1,137 @@
+<!--  $Id$ -->
+<andromda>
+	<properties>
+		<property name="modelValidation">true</property>
+	</properties>
+	<models>
+		<model>
+			<uri>file:${basedir}/src/uml/gemma-om.xmi</uri>
+		</model>
+	</models>
+	
+	<namespaces>
+		<namespace name="default">
+			<properties>
+				<property name="languageMappingsUri">Java</property>
+				<property name="wrapperMappingsUri">JavaWrapper</property>
+				<property name="sqlMappingsUri">MySQL</property>
+				<property name="jdbcMappingsUri">JDBC</property>
+				<property name="maxSqlNameLength">60</property>
+			</properties>
+		</namespace>
+		
+		<namespace name="spring">
+			<properties>
+				<property name="hibernateDialect">
+					net.sf.hibernate.dialect.MySQLDialect
+				</property>
+				<property name="hibernateShowSql">true</property>
+				<property name="hibernateUseQueryCache">false</property>
+				<property name="hibernateQueryUseNamedParameters">true</property>
+				<property name="hibernateCacheProvider">
+					net.sf.hibernate.cache.EhCacheProvider
+				</property>
+				<property name="hibernateInheritanceStrategy">
+					subclass
+				</property>
+				<property name="hibernateQueryCacheFactory">
+					net.sf.hibernate.cache.StandardQueryCacheFactory
+				</property>
+				<property name="springTypesPackage">
+					edu.columbia.gemma.spring
+				</property>
+				<property name="daos">
+					${maven.andromda.spring.daos.dir}
+				</property>
+				<property name="dao-impls">
+					${maven.andromda.spring.dao.impls.dir}
+				</property>
+				<property name="spring-configuration">
+					${maven.andromda.spring.spring.configuration.dir}
+				</property>
+				<property name="services">
+					${maven.andromda.spring.services.dir}
+				</property>
+				<property name="service-impls">
+					${maven.andromda.spring.service.impls.dir}
+				</property>
+				<property name="mergeLocation">
+					${maven.andromda.spring.merge.custom}
+				</property>
+				<property name="mergeMappingsUri">
+					file:${maven.andromda.merge.mappings}
+				</property>
+				<property name="driver">com.mysql.jdbc.Driver</property>
+				<property name="username">pavlidis</property>
+				<property name="password">toast</property>
+				<property name="connectionUrl">
+					jdbc:mysql://localhost:3306/gemd
+				</property>
+				<property name="hibernateDialect">
+					net.sf.hibernate.dialect.MySQLDialect
+				</property>
+				<property name="hibernateQueryUseNamedParameters">
+					true
+				</property>
+				<property name="springTypesPackage">
+					edu.columbia.gemma.spring
+				</property>
+				<property name="serviceLocator">
+					${maven.andromda.spring.service.locator.dir}
+				</property>
+				<property name="applicationContext">
+					applicationContext-hibernate.xml
+				</property>
+			</properties>
+		</namespace>
+		
+		<namespace name="hibernate">
+			<properties>
+				<property name="hibernateTypeMappingsUri">
+					Hibernate
+				</property>
+				<property name="hibernateInheritanceStrategy">
+					${hibernate.inheritance.strategy}
+				</property>
+				<property name="hibernateDefaultCascade">none</property>
+				<property name="entities">
+					${maven.andromda.hibernate.generated.dir}
+				</property>
+				<property name="entity-impls">
+					${maven.andromda.hibernate.manual.dir}
+				</property>
+				<property name="customTypesPackage">
+					${application.package}
+				</property>
+				<property name="compositionDefinesEagerLoading">
+					true
+				</property>
+				<property name="mergeLocation">
+					${maven.andromda.hibernate.merge.custom}
+				</property>
+				<property name="mergeMappingsUri">
+					file:${maven.andromda.merge.mappings}
+				</property>	
+				<property name="hibernateCompositionCascade">
+					all
+				</property>
+				<property name="hibernateDefaultCascade">none</property>
+				<property name="specificCollectionInterfaces">
+					false
+				</property>
+				<property name="associationEndCollectionIndexName">
+					index
+				</property>
+			</properties>
+		</namespace>
+
+		<namespace name="java">
+			<properties>
+				<property name="enumerations">
+					${maven.andromda.hibernate.generated.dir}
+				</property>
+			</properties>
+		</namespace>
+	</namespaces>
+</andromda>
+
