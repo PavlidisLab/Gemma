@@ -34,9 +34,8 @@ public class GeneParserTest extends BaseServiceTestCase {
 
         geneLoader.create( map.values() );
 
-        // TODO can you pass arguments to JUnit test?
-        // if (arg == "remove")
-        // geneLoader.removeAll( map.values() );
+        // TODO can you pass arguments to JUnit tests so I can select this option at runtime?
+        geneLoader.removeAll( map.values() );
 
         assertEquals( null, null );
 
