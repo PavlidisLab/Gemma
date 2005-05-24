@@ -18,6 +18,8 @@ public interface GeneLoader {
 
     public void create( Gene gene );
 
+    public void removeAll();
+
     public void removeAll( Collection collection );
 
 }

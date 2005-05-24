@@ -76,6 +76,20 @@ public class GeneLoaderImpl implements GeneLoader {
     }
 
     /**
+     * 
+     */
+    public void removeAll() {
+
+        Collection col = ( ( GeneDao ) ctx.getBean( "geneDao" ) ).findAllGenes();
+        Iterator iter = col.iterator();
+        System.err.println("Here");
+        while ( iter.hasNext() ) {
+            Gene g = ( Gene ) iter.next();
+            ( ( GeneDao ) ctx.getBean( "geneDao" ) ).remove( g );
+        }
+    }
+
+    /**
      * @param geneDao The geneDao to set.
      */
     public void setGeneDao( GeneDao geneDao ) {
