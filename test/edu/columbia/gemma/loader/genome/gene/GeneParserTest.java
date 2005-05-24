@@ -17,7 +17,7 @@ import edu.columbia.gemma.BaseServiceTestCase;
  * @version $Id$
  */
 public class GeneParserTest extends BaseServiceTestCase {
-    private static final String GENE_INFO = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene_info";
+    private static final String GENEINFO = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\geneinfo";
     private static final String GENE2ACCESSION = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene2accession";
 
     protected static final Log log = LogFactory.getLog( GeneParserTest.class );
@@ -44,7 +44,7 @@ public class GeneParserTest extends BaseServiceTestCase {
         geneLoader = new GeneLoaderImpl();
         map = new HashMap();
         // TODO don't hardcode
-        filename = GENE_INFO;
+        filename = GENEINFO;
         filename2 = GENE2ACCESSION;
     }
 
