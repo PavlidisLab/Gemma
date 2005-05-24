@@ -79,13 +79,11 @@ public class GeneLoaderImpl implements GeneLoader {
      * 
      */
     public void removeAll() {
-
-        Collection col = ( ( GeneDao ) ctx.getBean( "geneDao" ) ).findAllGenes();
-        Iterator iter = col.iterator();
-        while ( iter.hasNext() ) {
-            Gene g = ( Gene ) iter.next();
-            ( ( GeneDao ) ctx.getBean( "geneDao" ) ).remove( g );
-        }
+        
+        GeneDao gd =  ( GeneDao ) ctx.getBean( "geneDao" );
+       
+        Collection col = gd.findAllGenes();
+        gd.remove( col );
     }
 
     /**
