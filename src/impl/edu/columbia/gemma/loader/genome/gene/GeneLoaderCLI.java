@@ -6,6 +6,8 @@ import java.util.Map;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.ConfigurationException;
@@ -33,11 +35,26 @@ public class GeneLoaderCLI {
     public static void main( String args[] ) throws ConfigurationException, IOException {
         try {
             // options stage
+            OptionBuilder.withDescription( "Print help for this application" );
+            Option helpOpt = OptionBuilder.create( 'h' );
+
+            OptionBuilder.hasArg();
+            OptionBuilder.withDescription( "Parse File (requires file arg)" );
+            Option parseOpt = OptionBuilder.create( 'p' );
+
+            OptionBuilder.hasArgs();
+            OptionBuilder.withDescription( "1) Specify files\n" + "2) Load database with entries from file" );
+            Option loadOpt = OptionBuilder.create( 'l' );
+
+            OptionBuilder.withDescription( "Remove genes from database" );
+            Option removeOpt = OptionBuilder.create( 'r' );
+
             Options opt = new Options();
-            opt.addOption( "h", false, "Print help for this application" );
-            opt.addOption( "p", true, "Parse file" );
-            opt.addOption( "l", true, "1) Specify files\n" + "2) Load database with entries from file" );
-            opt.addOption( "r", false, "Remove genes from database" );
+            opt.addOption( helpOpt );
+            opt.addOption( parseOpt );
+            opt.addOption( loadOpt );
+            opt.addOption( removeOpt );
+
             // parser stage
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
