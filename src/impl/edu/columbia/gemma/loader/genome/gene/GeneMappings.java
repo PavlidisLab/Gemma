@@ -26,19 +26,12 @@ public class GeneMappings {
     protected static final Log log = LogFactory.getLog( GeneParser.class );
     Map map = new HashMap();
 
-    // static Gene gene = Gene.Factory.newInstance();
-
-    private Gene geneExists( Gene g ) {
-        if ( map.containsKey( g.getNcbiId() ) )
-            g = ( Gene ) map.get( g.getNcbiId() );
-        else {
-            map.put( g.getNcbiId(), g );
-        }
-
-        return g;
-    }
-
-    Object mapFromGene2Accession( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGene2Accession( String line, Gene g ) {
         String[] values = StringUtils.split( line, "\t" );
 
         g.setNcbiId( values[NCBI_ID] );
@@ -78,37 +71,67 @@ public class GeneMappings {
 
     }
 
-    Object mapFromGene2Go( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGene2Go( String line, Gene g ) {
         return null;
         // TODO Auto-generated method stub
 
     }
 
-    Object mapFromGene2RefSeq( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGene2RefSeq( String line, Gene g ) {
         return null;
         // TODO Auto-generated method stub
 
     }
 
-    Object mapFromGene2Sts( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGene2Sts( String line, Gene g ) {
         return null;
         // TODO Auto-generated method stub
 
     }
 
-    Object mapFromGene2Unigene( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGene2Unigene( String line, Gene g ) {
         return null;
         // TODO Auto-generated method stub
 
     }
 
-    Object mapFromGeneHistory( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGeneHistory( String line, Gene g ) {
         return null;
         // TODO Auto-generated method stub
 
     }
 
-    Object mapFromGeneInfo( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromGeneInfo( String line, Gene g ) {
 
         String[] values = StringUtils.split( line, "\t" );
 
@@ -121,7 +144,12 @@ public class GeneMappings {
         return g;
     }
 
-    Object mapFromMin2Gene( String line, Gene g ) {
+    /**
+     * @param line
+     * @param g
+     * @return
+     */
+    public Object mapFromMin2Gene( String line, Gene g ) {
         return null;
         // TODO Auto-generated method stub
 
@@ -137,29 +165,18 @@ public class GeneMappings {
      * @param gene
      * @return
      */
-    Object mapLine( String filename, String line, String[] keys, Object obj ) {
-        String[] f = StringUtils.split( filename, "\\" );
-        switch ( java.util.Arrays.asList( keys ).indexOf( f[f.length - 1] ) ) {
-            case 0:
-                return mapFromGene2Accession( line, ( Gene ) obj );
-            case 1:
-                return mapFromGene2Go( line, ( Gene ) obj );
-            case 2:
-                return mapFromGene2RefSeq( line, ( Gene ) obj );
-            case 3:
-                return mapFromGene2Sts( line, ( Gene ) obj );
-            case 4:
-                return mapFromGene2Unigene( line, ( Gene ) obj );
-            case 5:
-                return mapFromGeneHistory( line, ( Gene ) obj );
-            case 6:
-                return mapFromGeneInfo( line, ( Gene ) obj );
-            case 7:
-                return mapFromMin2Gene( line, ( Gene ) obj );
-            default:
-                return null;
+
+    /**
+     * @param g
+     * @return
+     */
+    private Gene geneExists( Gene g ) {
+        if ( map.containsKey( g.getNcbiId() ) )
+            g = ( Gene ) map.get( g.getNcbiId() );
+        else {
+            map.put( g.getNcbiId(), g );
         }
 
+        return g;
     }
-
 }

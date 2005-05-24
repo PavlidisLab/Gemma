@@ -3,11 +3,13 @@ package edu.columbia.gemma.loader.genome.gene;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,19 +30,17 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     private GeneMappings gm = null;
     private Iterator iter;
     private Map map;
-    private ParserUtils pu = null;
     String gFilename = null;
     String[] keys = null;
+    Method methodToInvoke = null;
+    String suffixOfFilename = null;
 
     /**
      * 
      */
     public GeneParserImpl() {
         gm = new GeneMappings();
-        pu = new ParserUtils();
         map = new HashMap();
-        keys = new String[] { "gene2accession", "gene2go", "gene2refseq", "gene2sts", "gene2unigene", "gene_history",
-                "gene_info", "mim2gene" };
     }
 
     /**
@@ -50,7 +50,7 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
      * @return
      * @throws IOException, ConfigurationException
      */
-    public Map parseFile( String filename ) throws IOException, ConfigurationException {
+    public Map parseFile( String filename ) throws IOException {
         File file = new File( filename );
         FileInputStream fis = new FileInputStream( file );
 
@@ -59,13 +59,21 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
         // TODO I don't like this, but I need it in parseOneLine
         gFilename = filename;
 
-        if ( pu.validFile( filename, pu.initializeFileTypes( keys ) ) ) {
-            parse( fis );
-            debugMap();
-            return map;
-        } else {
-            throw new IOException( "Invalid File \"" + filename + "\"" );
+        String[] f = StringUtils.split( filename, System.getProperty( "file.separator" ) );
+        suffixOfFilename = f[f.length - 1];
+
+        Method[] methods = gm.getClass().getMethods();
+
+        for ( int i = 0; i < methods.length; i++ ) {
+            if ( methods[i].getName().toLowerCase().matches( ( "mapFrom" + suffixOfFilename ).toLowerCase() ) ) {
+                log.info( methods[i] );
+                methodToInvoke = methods[i];
+                parse( fis );
+                debugMap();
+                return map;
+            }
         }
+        throw new IOException( "Invalid File \"" + filename + "\"" );
     }
 
     /**
@@ -77,7 +85,18 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
 
         Gene g = null;
 
-        g = ( Gene ) gm.mapLine( gFilename, line, keys, Gene.Factory.newInstance() );
+        try {
+            g = ( Gene ) methodToInvoke.invoke( gm, new Object[] { line, Gene.Factory.newInstance() } );
+        } catch ( IllegalArgumentException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( IllegalAccessException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch ( InvocationTargetException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         map.put( g.getNcbiId(), g );
 
         return g;
