@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +39,7 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     /**
      * 
      */
-    public GeneParserImpl() {
+    public GeneParserImpl() throws ConfigurationException {
         gm = new GeneMappings();
         map = new HashMap();
     }
