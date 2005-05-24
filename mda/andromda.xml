@@ -93,7 +93,6 @@
 				<property name="hibernateInheritanceStrategy">
 					${hibernate.inheritance.strategy}
 				</property>
-				<property name="hibernateDefaultCascade">none</property>
 				<property name="entities">
 					${maven.andromda.hibernate.generated.dir}
 				</property>
@@ -120,7 +119,7 @@
 					false
 				</property>
 				<property name="associationEndCollectionIndexName">
-					index
+					orderedCollectionIndex
 				</property>
 			</properties>
 		</namespace>
