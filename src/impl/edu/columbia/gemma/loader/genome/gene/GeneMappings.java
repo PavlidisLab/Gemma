@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,16 +18,27 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
 import edu.columbia.gemma.genome.gene.GeneProductType;
 
 public class GeneMappings {
-    private static final int ACCESSION = 8;
-
-    private static final int ACCESSION_VERSION = 7;
-    private static final int GENE_PRODUCT_TYPE = 5;
-    private static final int NCBI_ID = 1;
-    private static final int OFFICIAL_SYMBOL = 2;
-    private static final String RNA = "-";
-    private static final int TAX_ID = 0;
+    Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
     protected static final Log log = LogFactory.getLog( GeneParser.class );
+    
+    private static final String RNA = "-";
+//  prefix of these constants determines the file from which the value is read.
+    private final int GENE2ACCESSION_ACCESSION = conf.getInt( "gene2accession.accession" );
+    private final int GENE2ACCESSION_ACCESSION_VERSION = conf.getInt( "gene2accession.accesion_version" );
+
+    private final int GENE2ACCESSION_GENE_PRODUCT_TYPE = conf.getInt( "gene2accession.gene.product.type" );
+    private final int GENEINFO_NCBI_ID = conf.getInt( "geneinfo.ncbi_id" );
+    private final int GENEINFO_OFFICIAL_SYMBOL = conf.getInt( "geneinfo.official_symbol" );
+    private final int GENEINFO_TAX_ID = conf.getInt( "geneinfo.tax_id" );
+
     Map map = new HashMap();
+
+    /**
+     * 
+     */
+    public GeneMappings() throws ConfigurationException {
+
+    }
 
     /**
      * @param line
@@ -34,15 +48,15 @@ public class GeneMappings {
     public Object mapFromGene2Accession( String line, Gene g ) {
         String[] values = StringUtils.split( line, "\t" );
 
-        g.setNcbiId( values[NCBI_ID] );
+        g.setNcbiId( values[GENEINFO_NCBI_ID] );
 
         g = geneExists( g );
 
         // accessions association
         // 1) Create DatabaseEntry
         DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance();
-        databaseEntry.setAccessionVersion( values[ACCESSION_VERSION] );
-        databaseEntry.setAccession( values[ACCESSION] );
+        databaseEntry.setAccessionVersion( values[GENE2ACCESSION_ACCESSION_VERSION] );
+        databaseEntry.setAccession( values[GENE2ACCESSION_ACCESSION] );
         // 2) Add DatabaseEntry to the collection
         Collection deCol = new HashSet();
         deCol = g.getAccessions();
@@ -53,7 +67,7 @@ public class GeneMappings {
         // products association
         // 1) Create GeneProduct
         GeneProduct geneProduct = GeneProduct.Factory.newInstance();
-        if ( values[GENE_PRODUCT_TYPE] == RNA ) {
+        if ( values[GENE2ACCESSION_GENE_PRODUCT_TYPE] == RNA ) {
             geneProduct.setType( GeneProductType.RNA );
             geneProduct.setName( "RNA" );
         } else {
@@ -135,11 +149,11 @@ public class GeneMappings {
 
         String[] values = StringUtils.split( line, "\t" );
 
-        g.setNcbiId( values[NCBI_ID] );
+        g.setNcbiId( values[GENEINFO_NCBI_ID] );
 
         g = geneExists( g );
 
-        g.setOfficialSymbol( values[OFFICIAL_SYMBOL] );
+        g.setOfficialSymbol( values[GENEINFO_OFFICIAL_SYMBOL] );
 
         return g;
     }
