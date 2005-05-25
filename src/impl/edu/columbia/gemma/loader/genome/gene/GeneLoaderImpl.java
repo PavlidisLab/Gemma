@@ -21,9 +21,9 @@ import edu.columbia.gemma.genome.GeneDao;
  * @version $Id$
  */
 public class GeneLoaderImpl implements GeneLoader {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
-
     private static BeanFactory ctx;
+
+    protected static final Log log = LogFactory.getLog( GeneParser.class );
     static {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
@@ -43,11 +43,11 @@ public class GeneLoaderImpl implements GeneLoader {
      * @param col
      */
     public void create( Collection col ) {
-        // create( col );
+        GeneDao gd = ( ( GeneDao ) ctx.getBean( "geneDao" ) );
         Iterator iter = col.iterator();
         while ( iter.hasNext() ) {
             Gene g = ( Gene ) iter.next();
-            ( ( GeneDao ) ctx.getBean( "geneDao" ) ).create( g );
+            if ( !( gd.findByNcbiId( Integer.parseInt( g.getNcbiId() ) ).size() > 0 ) ) gd.create( g );
         }
     }
 
@@ -67,23 +67,23 @@ public class GeneLoaderImpl implements GeneLoader {
         return geneDao;
     }
 
+    /**
+     * 
+     */
+    public void removeAll() {
+
+        GeneDao gd = ( GeneDao ) ctx.getBean( "geneDao" );
+
+        Collection col = gd.findAllGenes();
+        gd.remove( col );
+    }
+
     public void removeAll( Collection col ) {
         Iterator iter = col.iterator();
         while ( iter.hasNext() ) {
             Gene g = ( Gene ) iter.next();
             ( ( GeneDao ) ctx.getBean( "geneDao" ) ).remove( g );
         }
-    }
-
-    /**
-     * 
-     */
-    public void removeAll() {
-        
-        GeneDao gd =  ( GeneDao ) ctx.getBean( "geneDao" );
-       
-        Collection col = gd.findAllGenes();
-        gd.remove( col );
     }
 
     /**
