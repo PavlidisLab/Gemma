@@ -58,23 +58,22 @@ public class GeneLoaderCLI {
             // parser stage
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
+            
             // interrogation stage
             if ( cl.hasOption( 'h' ) ) {
-                HelpFormatter f = new HelpFormatter();
-                f.printHelp( "OptionsTip", opt );
+                HelpFormatter h = new HelpFormatter();
+                h.printHelp( "Options Tip", opt );
 
             } else if ( cl.hasOption( 'p' ) ) {
                 geneParser = new GeneParserImpl();
-                geneParser.parseFile( cl.getOptionValue( 'f' ) );
+                geneParser.parseFile( cl.getOptionValue( 'p' ) );
 
             } else if ( cl.hasOption( 'l' ) ) {
                 geneParser = new GeneParserImpl();
                 geneLoader = new GeneLoaderImpl();
                 Map map;
                 String[] filenames = cl.getOptionValues( 'l' );
-                System.err.println( filenames.length );
                 for ( int i = 0; i < filenames.length - 1; i++ ) {
-                    System.err.println( filenames[i] );
                     geneParser.parseFile( filenames[i] );
                     i++;
                 }
@@ -85,7 +84,8 @@ public class GeneLoaderCLI {
                 geneLoader = new GeneLoaderImpl();
                 geneLoader.removeAll();
             } else {
-                // System.out.println(cl.getOptionValue("f"));
+                HelpFormatter h = new HelpFormatter();
+                h.printHelp( "Options Tip", opt );
             }
         } catch ( ParseException e ) {
             e.printStackTrace();
