@@ -9,6 +9,9 @@
 
 <ul class="glassList">
 	<li>
+		<a href="<c:url value="/candidateGeneList.htm"/>"><fmt:message key="menu.CandidateGeneList" />
+	</li>
+	<li>
         <a href="<c:url value="/pubMedSearch.htm"/>"><fmt:message key="menu.flow.PubMedSearch"/></a>
     </li>
     <li>
