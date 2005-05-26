@@ -67,7 +67,6 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
 
         for ( int i = 0; i < methods.length; i++ ) {
             if ( methods[i].getName().toLowerCase().matches( ( "mapFrom" + suffixOfFilename ).toLowerCase() ) ) {
-                log.info( methods[i] );
                 methodToInvoke = methods[i];
                 parse( fis );
                 debugMap();
@@ -87,7 +86,11 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
         Gene g = null;
 
         try {
-            g = ( Gene ) methodToInvoke.invoke( gm, new Object[] { line, Gene.Factory.newInstance() } );
+            Object obj = methodToInvoke.invoke( gm, new Object[] { line, Gene.Factory.newInstance() } );
+            if ( obj == null ) return obj;
+
+            g = ( Gene ) obj;
+
         } catch ( IllegalArgumentException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();
