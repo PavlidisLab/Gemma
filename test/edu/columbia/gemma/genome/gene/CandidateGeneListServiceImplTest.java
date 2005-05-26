@@ -79,9 +79,6 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         */
     }
     public void testCandidateGeneListServiceImpl(){
-
-        /*
-         */
         
         // test create CandidateGeneList
         CandidateGeneListService svc = (CandidateGeneListService)ctx.getBean("candidateGeneListService");
@@ -92,8 +89,8 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         // test add/remove candidates
         CandidateGene cg = svc.addCandidateToCandidateGeneList(cgl, g);
         CandidateGene cg2 = svc.addCandidateToCandidateGeneList(cgl, g2);
-        cg2.setOwner(p);
         CandidateGene cg3 = svc.addCandidateToCandidateGeneList(cgl, g3);
+        cg2.setOwner(p);
         svc.saveCandidateGeneList(cgl);
         svc.removeCandidateFromCandidateGeneList(cgl, cg);
         
@@ -104,18 +101,24 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         // test finders
         java.util.Collection cByName =null;
         java.util.Collection cByContributer =null;
+        java.util.Collection cAll = null;
+        
         try{
         cByName = svc.findByGeneOfficialName("test gene two");
         cByContributer = svc.findByContributer(p);
-        System.out.println(cByName.size());
-        System.out.println(cByContributer.size());
+        System.out.println("By Name: " + cByName.size());
+        System.out.println("By Contributor: " + cByContributer.size());
+        cAll = svc.getAll();
+        System.out.println("All: " + cAll.size() + " candidate lists.");
+        
+        
         }catch(Exception e){
             System.out.println(e.getMessage());
         }
         
         assertTrue( cByName!= null && cByName.size()==1);
         assertTrue( cByContributer != null && cByContributer.size()==1);
-        
+        assertTrue( cAll != null && cAll.size()>=1);
         // test remove CandidateGeneList
         svc.removeCandidateGeneList(cgl);
         
