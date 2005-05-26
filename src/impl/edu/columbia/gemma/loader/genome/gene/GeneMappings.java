@@ -27,7 +27,7 @@ public class GeneMappings {
     protected static final Log log = LogFactory.getLog( GeneParser.class );
     Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
 
-    private static final int HOMOSAPIEN = 9;// 9606;
+    private static final int HOMOSAPIEN = 9606;
     private static final int MUSMUSCULUS = 10090;
     private static final int RATTUS = 10114;
 
