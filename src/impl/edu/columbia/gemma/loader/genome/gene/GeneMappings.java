@@ -251,7 +251,6 @@ public class GeneMappings {
         while ( iter.hasNext() ) {
             Taxon t = ( Taxon ) iter.next();
             taxaMap.put( new Integer( t.getNcbiId() ), t );
-            System.err.println( taxaMap.get( new Integer( t.getNcbiId() ) ) );
         }
 
         int taxonId = Integer.parseInt( taxId );
