@@ -11,6 +11,11 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import edu.columbia.gemma.loader.loaderutils.Utilities;
 
 /**
  * Command line interface to gene parsing and loading
@@ -22,6 +27,7 @@ import org.apache.commons.configuration.ConfigurationException;
  * @version $Id$
  */
 public class GeneLoaderCLI {
+    protected static final Log log = LogFactory.getLog( GeneParser.class );
     static GeneLoader geneLoader;
     static GeneParser geneParser;
 
@@ -33,6 +39,7 @@ public class GeneLoaderCLI {
      * @throws IOException
      */
     public static void main( String args[] ) throws ConfigurationException, IOException {
+        StopWatch stopwatch;
         try {
             // options stage
             OptionBuilder.withDescription( "Print help for this application" );
@@ -58,7 +65,7 @@ public class GeneLoaderCLI {
             // parser stage
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
-            
+
             // interrogation stage
             if ( cl.hasOption( 'h' ) ) {
                 HelpFormatter h = new HelpFormatter();
@@ -73,12 +80,20 @@ public class GeneLoaderCLI {
                 geneLoader = new GeneLoaderImpl();
                 Map map;
                 String[] filenames = cl.getOptionValues( 'l' );
+
+                stopwatch = new StopWatch();
+                stopwatch.start();
+                log.info( "Timer started" );
+
                 for ( int i = 0; i < filenames.length - 1; i++ ) {
                     geneParser.parseFile( filenames[i] );
                     i++;
                 }
                 map = geneParser.parseFile( filenames[filenames.length - 1] );
                 geneLoader.create( map.values() );
+
+                stopwatch.stop();
+                Utilities.displayTime( stopwatch );
 
             } else if ( cl.hasOption( 'r' ) ) {
                 geneLoader = new GeneLoaderImpl();
@@ -91,4 +106,5 @@ public class GeneLoaderCLI {
             e.printStackTrace();
         }
     }
+
 }
