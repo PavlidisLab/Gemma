@@ -101,11 +101,10 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
 		 Collection c = cgl.getCandidates();
 		 for(Iterator iter=c.iterator();iter.hasNext();){
 			 cg1 = (CandidateGene)iter.next();
-			 System.out.println(cg1.getName());
 			 if(cg1.getGene().getName().matches("testmygene2"))
-				 assertEquals((int)cg1.getRank(),(int)0);
+				 assertEquals(cg1.getRank().intValue(),0);
 			 else
-				 assertEquals((int)cg1.getRank(),(int)1);
+				 assertEquals(cg1.getRank().intValue(),1);
 		 }
 	 }
 	 
