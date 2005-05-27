@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Fri May 27 12:25:23 EDT 2005'>
+  timestamp = 'Fri May 27 13:08:39 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -2748,7 +2748,7 @@ experiment, such as BioAssay and BioAssayData.</UML:TaggedValue.dataValue>
                                     <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e25'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'I11ca33bm1041ef48d85mmbf' name = 'experimentalDesign'
+                                <UML:AssociationEnd xmi.id = 'I11ca33bm1041ef48d85mmbf' name = 'experimentalDesigns'
                                   visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
