@@ -36,8 +36,11 @@ public class CandidateGeneListServiceImpl
 {
     // CandidateGeneList manipulation
     
-    protected void  handleCreateCandidateGeneList(CandidateGeneList candidateGeneList) throws java.lang.Exception{
-        this.getCandidateGeneListDao().create(candidateGeneList);
+    protected CandidateGeneList handleCreateCandidateGeneList(String newName ) throws java.lang.Exception{
+        CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
+        cgl.setName(newName);
+    	this.getCandidateGeneListDao().create(cgl);
+    	return cgl;
     }
     
     protected void  handleRemoveCandidateGeneList(CandidateGeneList candidateGeneList) throws java.lang.Exception{
