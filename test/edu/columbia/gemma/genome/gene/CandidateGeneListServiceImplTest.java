@@ -85,6 +85,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
         cgl.setName("New Candidate List from service test");
         svc.createCandidateGeneList(cgl);
+        long cgl_id = cgl.getId();
         
         // test add/remove candidates
         CandidateGene cg = svc.addCandidateToCandidateGeneList(cgl, g);
@@ -110,7 +111,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         System.out.println("By Contributor: " + cByContributer.size());
         cAll = svc.getAll();
         System.out.println("All: " + cAll.size() + " candidate lists.");
-        
+        cgl = svc.findByID(cgl_id);
         
         }catch(Exception e){
             System.out.println(e.getMessage());
@@ -119,6 +120,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         assertTrue( cByName!= null && cByName.size()==1);
         assertTrue( cByContributer != null && cByContributer.size()==1);
         assertTrue( cAll != null && cAll.size()>=1);
+        assertTrue( cgl != null );
         // test remove CandidateGeneList
         svc.removeCandidateGeneList(cgl);
         
