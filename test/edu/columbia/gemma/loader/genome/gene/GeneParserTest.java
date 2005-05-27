@@ -24,18 +24,19 @@ public class GeneParserTest extends BaseServiceTestCase {
     protected static final Log log = LogFactory.getLog( GeneParserTest.class );
 
     private Loader geneLoader = null;
-    private GeneParserImpl geneParser = null;
+    private GeneParser geneParser = null;
     private Map map = null;
 
     public void testParseFileValidFile() throws Exception {
-        InputStream is = this.getClass().getResourceAsStream( "/data/geneinfo" );
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/geneinfo" );
         Method m = geneParser.findParseLineMethod( "geneinfo" );
         geneParser.parse( is, m );
 
-        // // more streams
-        InputStream is2 = this.getClass().getResourceAsStream( "/data/gene2accession" );
+        InputStream is2 = this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene2accession" );
         Method m2 = geneParser.findParseLineMethod( "gene2accession" );
         map = geneParser.parse( is2, m2 );
+
+        // add a new stream for each file.
 
         geneLoader.create( map.values() );
 
@@ -54,7 +55,7 @@ public class GeneParserTest extends BaseServiceTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         // TODO can you pass arguments to JUnit tests so I can select this option at runtime?
-        geneLoader.removeAll( map.values() );
+        // geneLoader.removeAll( map.values() );
         geneParser = null;
         geneLoader = null;
         map = null;
