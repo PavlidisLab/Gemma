@@ -1,19 +1,25 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.tools;
 
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JButton;
-import javax.swing.JTextField;
-import javax.swing.JLabel;
-import javax.swing.JComboBox;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-
-import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
-import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
@@ -25,7 +31,15 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 
-import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -286,6 +300,7 @@ public class ProbeGeneMapperGui extends JFrame {
             outputFileBrowseButton = new JButton();
             outputFileBrowseButton.setText( "Browse..." );
             outputFileBrowseButton.setBounds( 454, 4, 87, 26 );
+
             outputFileBrowseButton.addActionListener( new ActionListener() {
 
                 public void actionPerformed( ActionEvent e ) {
@@ -359,16 +374,12 @@ public class ProbeGeneMapperGui extends JFrame {
         try {
             UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
         } catch ( ClassNotFoundException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch ( InstantiationException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch ( IllegalAccessException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch ( UnsupportedLookAndFeelException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         ProbeGeneMapperGui pgmg = new ProbeGeneMapperGui();
@@ -392,6 +403,7 @@ public class ProbeGeneMapperGui extends JFrame {
      * @return void
      */
     private void initialize() {
+        this.setDefaultCloseOperation( javax.swing.JFrame.EXIT_ON_CLOSE );
         this.setSize( 602, 472 );
         this.setContentPane( getJContentPane() );
         this.setTitle( "ProbeMapper" );
