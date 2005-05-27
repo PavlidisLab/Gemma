@@ -1,5 +1,7 @@
 package edu.columbia.gemma.loader.genome.gene;
 
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.loader.loaderutils.Loader;
 
 /**
  * <hr>
@@ -17,20 +20,22 @@ import edu.columbia.gemma.BaseServiceTestCase;
  * @version $Id$
  */
 public class GeneParserTest extends BaseServiceTestCase {
-    private static final String GENEINFO = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\geneinfo";
-    private static final String GENE2ACCESSION = "C:\\Documents and Settings\\keshav\\My Documents\\Gemma\\gene2accession";
 
     protected static final Log log = LogFactory.getLog( GeneParserTest.class );
-    private String filename = null;
-    private String filename2 = null;
 
-    private GeneLoader geneLoader = null;
-    private GeneParser geneParser = null;
+    private Loader geneLoader = null;
+    private GeneParserImpl geneParser = null;
     private Map map = null;
 
     public void testParseFileValidFile() throws Exception {
-        geneParser.parseFile( filename );
-        map = geneParser.parseFile( filename2 );
+        InputStream is = this.getClass().getResourceAsStream( "/data/geneinfo" );
+        Method m = geneParser.findParseLineMethod( "geneinfo" );
+        geneParser.parse( is, m );
+
+        // // more streams
+        InputStream is2 = this.getClass().getResourceAsStream( "/data/gene2accession" );
+        Method m2 = geneParser.findParseLineMethod( "gene2accession" );
+        map = geneParser.parse( is2, m2 );
 
         geneLoader.create( map.values() );
 
@@ -43,9 +48,7 @@ public class GeneParserTest extends BaseServiceTestCase {
         geneParser = new GeneParserImpl();
         geneLoader = new GeneLoaderImpl();
         map = new HashMap();
-        // TODO don't hardcode
-        filename = GENEINFO;
-        filename2 = GENE2ACCESSION;
+
     }
 
     protected void tearDown() throws Exception {
@@ -55,7 +58,6 @@ public class GeneParserTest extends BaseServiceTestCase {
         geneParser = null;
         geneLoader = null;
         map = null;
-        filename = null;
     }
 
     // public void testParseFileInvalidFile() throws Exception {

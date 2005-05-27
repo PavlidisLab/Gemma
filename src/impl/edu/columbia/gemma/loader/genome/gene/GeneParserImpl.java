@@ -3,6 +3,7 @@ package edu.columbia.gemma.loader.genome.gene;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     private GeneMappings gm = null;
     private Iterator iter;
     private Map map;
-    String gFilename = null;
+
     String[] keys = null;
     Method methodToInvoke = null;
     String suffixOfFilename = null;
@@ -44,6 +45,43 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
         map = new HashMap();
     }
 
+    public Map parseFile( String filename ) throws IOException {
+        log.info( "filename: " + filename );
+
+        File file = new File( filename );
+        FileInputStream fis = new FileInputStream( file );
+
+        Method lineParseMethod = null;
+        try {
+            lineParseMethod = this.findParseLineMethod( filename );
+        } catch ( NoSuchMethodException e ) {
+            log.error( e, e );
+            return null;
+        }
+        return this.parse( fis, lineParseMethod );
+
+    }
+
+    /**
+     * Figure out the method to parse one line from a file, based on the file name.
+     * 
+     * @param fileName
+     * @return
+     * @throws NoSuchMethodException
+     */
+    public Method findParseLineMethod( String fileName ) throws NoSuchMethodException {
+        String[] f = StringUtils.split( fileName, System.getProperty( "file.separator" ) );
+        suffixOfFilename = f[f.length - 1];
+        Method[] methods = gm.getClass().getMethods();
+
+        for ( int i = 0; i < methods.length; i++ ) {
+            if ( methods[i].getName().toLowerCase().matches( ( "mapFrom" + suffixOfFilename ).toLowerCase() ) ) {
+                return methods[i];
+            }
+        }
+        throw new NoSuchMethodException();
+    }
+
     /**
      * Parse the specified file, filename.
      * 
@@ -51,29 +89,11 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
      * @return
      * @throws IOException, ConfigurationException
      */
-    public Map parseFile( String filename ) throws IOException {
-        File file = new File( filename );
-        FileInputStream fis = new FileInputStream( file );
-
-        log.info( "filename: " + filename + " FileInputStream: " + fis.toString() );
-
-        // TODO I don't like this, but I need it in parseOneLine
-        gFilename = filename;
-
-        String[] f = StringUtils.split( filename, System.getProperty( "file.separator" ) );
-        suffixOfFilename = f[f.length - 1];
-
-        Method[] methods = gm.getClass().getMethods();
-
-        for ( int i = 0; i < methods.length; i++ ) {
-            if ( methods[i].getName().toLowerCase().matches( ( "mapFrom" + suffixOfFilename ).toLowerCase() ) ) {
-                methodToInvoke = methods[i];
-                parse( fis );
-                debugMap();
-                return map;
-            }
-        }
-        throw new IOException( "Invalid File \"" + filename + "\"" );
+    public Map parse( InputStream fis, Method lineParseMethod ) throws IOException {
+        methodToInvoke = lineParseMethod;
+        parse( fis );
+        debugMap();
+        return map;
     }
 
     /**
