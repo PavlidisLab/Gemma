@@ -15,6 +15,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.loader.loaderutils.Loader;
 import edu.columbia.gemma.loader.loaderutils.Utilities;
 
 /**
@@ -28,7 +29,7 @@ import edu.columbia.gemma.loader.loaderutils.Utilities;
  */
 public class GeneLoaderCLI {
     protected static final Log log = LogFactory.getLog( GeneParser.class );
-    static GeneLoader geneLoader;
+    static Loader geneLoader;
     static GeneParser geneParser;
 
     /**
@@ -68,8 +69,7 @@ public class GeneLoaderCLI {
 
             // interrogation stage
             if ( cl.hasOption( 'h' ) ) {
-                HelpFormatter h = new HelpFormatter();
-                h.printHelp( "Options Tip", opt );
+                printHelp( opt );
 
             } else if ( cl.hasOption( 'p' ) ) {
                 geneParser = new GeneParserImpl();
@@ -99,12 +99,19 @@ public class GeneLoaderCLI {
                 geneLoader = new GeneLoaderImpl();
                 geneLoader.removeAll();
             } else {
-                HelpFormatter h = new HelpFormatter();
-                h.printHelp( "Options Tip", opt );
+                printHelp( opt );
             }
         } catch ( ParseException e ) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * @param opt
+     */
+    private static void printHelp( Options opt ) {
+        HelpFormatter h = new HelpFormatter();
+        h.printHelp( "Options Tip", opt );
     }
 
 }

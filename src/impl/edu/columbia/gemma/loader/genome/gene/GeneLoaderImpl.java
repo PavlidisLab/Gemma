@@ -11,6 +11,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.loader.loaderutils.Loader;
 
 /**
  * <hr>
@@ -20,7 +21,7 @@ import edu.columbia.gemma.genome.GeneDao;
  * @author keshav
  * @version $Id$
  */
-public class GeneLoaderImpl implements GeneLoader {
+public class GeneLoaderImpl implements Loader {
     private static BeanFactory ctx;
 
     protected static final Log log = LogFactory.getLog( GeneParser.class );
@@ -44,8 +45,7 @@ public class GeneLoaderImpl implements GeneLoader {
      */
     public void create( Collection col ) {
         GeneDao gd = ( ( GeneDao ) ctx.getBean( "geneDao" ) );
-        Iterator iter = col.iterator();
-        while ( iter.hasNext() ) {
+        for ( Iterator iter = col.iterator(); iter.hasNext(); ) {
             Gene g = ( Gene ) iter.next();
             if ( !( gd.findByNcbiId( Integer.parseInt( g.getNcbiId() ) ).size() > 0 ) ) gd.create( g );
         }
@@ -56,7 +56,7 @@ public class GeneLoaderImpl implements GeneLoader {
      * 
      * @param gene
      */
-    public void create( Gene gene ) {
+    public void create( Object obj ) {
         // TODO Auto-generated method stub
     }
 
