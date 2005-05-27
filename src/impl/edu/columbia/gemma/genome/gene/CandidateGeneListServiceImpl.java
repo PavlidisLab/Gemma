@@ -80,4 +80,7 @@ public class CandidateGeneListServiceImpl
     public Collection handleGetAll(){
         return this.getCandidateGeneListDao().findAll();
     }
+    public CandidateGeneList handleFindByID(long id){
+    	return this.getCandidateGeneListDao().findByID(id);
+    }
 }
