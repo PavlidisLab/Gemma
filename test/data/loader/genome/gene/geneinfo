@@ -1,8 +1,8 @@
-9	1246500	repA1	-	-	-	-	-	putative replication-associated protein	protein-coding	-	-	-
-9	1246501	repA2	-	-	-	-	-	putative replication-associated protein	protein-coding	-	-	-
-9	1246502	leuA	-	-	-	-	-	2-isopropylmalate synthase	protein-coding	-	-	-
-9	1246503	leuB	-	-	-	-	-	3-isopropylmalate dehydrogenase	protein-coding	-	-	-
-9	1246504	leuC	-	-	-	-	-	3-isopropylmalate isomerase subunit	protein-coding	-	-	-
+9606	1246500	repA1	-	-	-	-	-	putative replication-associated protein	protein-coding	-	-	-
+9606	1246501	repA2	-	-	-	-	-	putative replication-associated protein	protein-coding	-	-	-
+9606	1246502	leuA	-	-	-	-	-	2-isopropylmalate synthase	protein-coding	-	-	-
+9606	1246503	leuB	-	-	-	-	-	3-isopropylmalate dehydrogenase	protein-coding	-	-	-
+9606	1246504	leuC	-	-	-	-	-	3-isopropylmalate isomerase subunit	protein-coding	-	-	-
 9	1246505	leuD	-	-	-	-	-	3-isopropylmalate synthase	protein-coding	-	-	-
 9	1246509	ibp	-	-	-	-	-	Ibp protein	protein-coding	-	-	-
 9	1246510	repA1	-	-	-	-	-	repA1 protein	protein-coding	-	-	-
