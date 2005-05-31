@@ -126,11 +126,11 @@
 		Run andromda
 		================================================================== -->
 	<goal name="mda">
-		<ant:echo message = "=============================="/>
-		<ant:echo message = "  REMEMBER TO RUN XDOCLET"/> 
-	    <ant:echo message = "=============================="/>
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run" />
+		<ant:echo message = "============================="/>
+		<ant:echo message = "   REMEMBER TO RUN XDOCLET   "/> 
+	    <ant:echo message = "============================="/>	
 	</goal>
 
 	<goal name="gp-human-reverse">
