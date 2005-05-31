@@ -50,7 +50,9 @@ public class GeneMappings {
 
     private final int TAX_ID = GENEINFO_TAX_ID;
 
+    private boolean taxonCreated = false;
     Map map = new HashMap();
+    Map taxaMap = new HashMap();
 
     private static BeanFactory ctx;
 
@@ -244,13 +246,16 @@ public class GeneMappings {
      */
     private Taxon mapTaxon( String taxId ) {
 
-        Collection taxa = ( ( TaxonDao ) ctx.getBean( "taxonDao" ) ).findAllTaxa();
-        Map taxaMap = new HashMap();
+        if ( taxonCreated ) {
+            taxonCreated = false;
+            Collection taxa = ( ( TaxonDao ) ctx.getBean( "taxonDao" ) ).findAllTaxa();
+            taxaMap = new HashMap();
 
-        Iterator iter = taxa.iterator();
-        while ( iter.hasNext() ) {
-            Taxon t = ( Taxon ) iter.next();
-            taxaMap.put( new Integer( t.getNcbiId() ), t );
+            Iterator iter = taxa.iterator();
+            while ( iter.hasNext() ) {
+                Taxon t = ( Taxon ) iter.next();
+                taxaMap.put( new Integer( t.getNcbiId() ), t );
+            }
         }
 
         int taxonId = Integer.parseInt( taxId );
@@ -277,8 +282,8 @@ public class GeneMappings {
                 t.setScientificName( "Rattus" );
                 break;
         }
-
         ( ( TaxonDao ) ctx.getBean( "taxonDao" ) ).create( t );
+        taxonCreated = true;
         return t;
     }
 

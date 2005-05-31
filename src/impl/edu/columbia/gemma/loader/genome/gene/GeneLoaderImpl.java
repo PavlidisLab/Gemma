@@ -44,11 +44,26 @@ public class GeneLoaderImpl implements Loader {
      * @param col
      */
     public void create( Collection col ) {
-        GeneDao gd = ( ( GeneDao ) ctx.getBean( "geneDao" ) );
+
         for ( Iterator iter = col.iterator(); iter.hasNext(); ) {
             Gene g = ( Gene ) iter.next();
+
+            GeneDao gd = determineGeneDao();
+
             if ( !( gd.findByNcbiId( Integer.parseInt( g.getNcbiId() ) ).size() > 0 ) ) gd.create( g );
         }
+    }
+
+    private GeneDao determineGeneDao() {
+        GeneDao gd;
+        
+        if (getGeneDao() == null){
+            gd = ( ( GeneDao ) ctx.getBean( "geneDao" ) );
+        }
+        else{
+            gd = getGeneDao();
+        }
+        return gd;
     }
 
     /**
