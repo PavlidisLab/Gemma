@@ -84,7 +84,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         CandidateGeneListService svc = (CandidateGeneListService)ctx.getBean("candidateGeneListService");
         
         CandidateGeneList cgl = svc.createCandidateGeneList("New Candidate List from service test");
-        long cgl_id = cgl.getId();
+        Long cgl_id = cgl.getId();
         
         // test add/remove candidates
         CandidateGene cg = svc.addCandidateToCandidateGeneList(cgl, g);
@@ -110,7 +110,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         System.out.println("By Contributor: " + cByContributer.size());
         cAll = svc.getAll();
         System.out.println("All: " + cAll.size() + " candidate lists.");
-        cgl = svc.findByID(cgl_id);
+        cgl = svc.findByID(cgl_id.longValue());
         
         }catch(Exception e){
             System.out.println(e.getMessage());
