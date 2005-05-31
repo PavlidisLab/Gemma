@@ -126,6 +126,9 @@
 		Run andromda
 		================================================================== -->
 	<goal name="mda">
+		<ant:echo message = "=============================="/>
+		<ant:echo message = "  REMEMBER TO RUN XDOCLET"/> 
+	    <ant:echo message = "=============================="/>
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run" />
 	</goal>
@@ -146,8 +149,6 @@
 		<attainGoal name="mda-clean" />
 		<attainGoal name="mda-remove-logs" />
 	</preGoal>
-
-
 
 	<!-- ==================================================================
 		Run andromda on test models (used for debugging Andromda)
