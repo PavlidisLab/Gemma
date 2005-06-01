@@ -7,9 +7,13 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * <hr>
@@ -23,8 +27,8 @@ public class GeneParserTest extends BaseServiceTestCase {
 
     protected static final Log log = LogFactory.getLog( GeneParserTest.class );
 
-    private Loader geneLoader = null;
-    private GeneParser geneParser = null;
+    private GeneLoaderImpl geneLoader = null;
+    private GeneParserImpl geneParser = null;
     private Map map = null;
 
     public void testParseValidFile() throws Exception {
@@ -46,8 +50,13 @@ public class GeneParserTest extends BaseServiceTestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        BeanFactory ctx = SpringContextUtil.getApplicationContext();
         geneParser = new GeneParserImpl();
         geneLoader = new GeneLoaderImpl();
+        GeneMappings geneMappings = new GeneMappings( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
+        geneParser.setGeneMappings( geneMappings );
+        geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
         map = new HashMap();
 
     }

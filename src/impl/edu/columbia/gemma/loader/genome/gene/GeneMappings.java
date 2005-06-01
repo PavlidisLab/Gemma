@@ -3,9 +3,7 @@ package edu.columbia.gemma.loader.genome.gene;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -13,8 +11,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.genome.Gene;
@@ -52,26 +48,29 @@ public class GeneMappings {
 
     private boolean taxonCreated = false;
     Map map = new HashMap();
-    Map taxaMap = new HashMap();
+    Map<Integer, Taxon> taxaMap = null;
 
-    private static BeanFactory ctx;
+    private TaxonDao taxonDao = null;
 
-    static {
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
-
-        // CAREFUL, these paths are dependent on the classpath.
-        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml",
-                servletContext + "-servlet.xml" };
-        ctx = new ClassPathXmlApplicationContext( paths );
+    /**
+     * 
+     */
+    public GeneMappings( TaxonDao taxonDao ) throws ConfigurationException {
+        if ( taxonDao == null ) throw new IllegalArgumentException();
+        this.taxonDao = taxonDao;
+        initializeTaxa();
     }
 
     /**
      * 
      */
-    public GeneMappings() throws ConfigurationException {
+    private void initializeTaxa() {
+        Collection<Taxon> taxa = taxonDao.findAllTaxa();
+        taxaMap = new HashMap<Integer, Taxon>();
 
+        for ( Taxon t : taxa ) {
+            taxaMap.put( new Integer( t.getNcbiId() ), t );
+        }
     }
 
     /**
@@ -245,22 +244,11 @@ public class GeneMappings {
      * @return
      */
     private Taxon mapTaxon( String taxId ) {
-
-        if ( taxonCreated ) {
-            taxonCreated = false;
-            Collection taxa = ( ( TaxonDao ) ctx.getBean( "taxonDao" ) ).findAllTaxa();
-            taxaMap = new HashMap();
-
-            Iterator iter = taxa.iterator();
-            while ( iter.hasNext() ) {
-                Taxon t = ( Taxon ) iter.next();
-                taxaMap.put( new Integer( t.getNcbiId() ), t );
-            }
-        }
-
+        assert taxonDao != null;
+        assert taxaMap != null;
         int taxonId = Integer.parseInt( taxId );
 
-        if ( taxaMap.containsKey( new Integer( taxonId ) ) ) return ( Taxon ) taxaMap.get( new Integer( taxonId ) );
+        if ( taxaMap.containsKey( taxonId ) ) return taxaMap.get( new Integer( taxonId ) );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setNcbiId( Integer.parseInt( taxId ) );
@@ -282,8 +270,9 @@ public class GeneMappings {
                 t.setScientificName( "Rattus" );
                 break;
         }
-        ( ( TaxonDao ) ctx.getBean( "taxonDao" ) ).create( t );
-        taxonCreated = true;
+
+        taxonDao.create( t );
+        taxaMap.put( t.getNcbiId(), t );
         return t;
     }
 
@@ -300,5 +289,19 @@ public class GeneMappings {
             default:
                 return false;
         }
+    }
+
+    /**
+     * @return Returns the taxonDao.
+     */
+    public TaxonDao getTaxonDao() {
+        return this.taxonDao;
+    }
+
+    /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
     }
 }

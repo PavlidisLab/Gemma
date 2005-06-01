@@ -29,7 +29,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  */
 public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     protected static final Log log = LogFactory.getLog( GeneParser.class );
-    private GeneMappings gm = null;
+    private GeneMappings geneMappings = null;
     private Iterator iter;
     private Map map;
 
@@ -41,7 +41,6 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
      * 
      */
     public GeneParserImpl() throws ConfigurationException {
-        gm = new GeneMappings();
         map = new HashMap();
     }
 
@@ -72,7 +71,8 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     public Method findParseLineMethod( String fileName ) throws NoSuchMethodException {
         String[] f = StringUtils.split( fileName, System.getProperty( "file.separator" ) );
         suffixOfFilename = f[f.length - 1];
-        Method[] methods = gm.getClass().getMethods();
+        assert geneMappings != null;
+        Method[] methods = geneMappings.getClass().getMethods();
 
         for ( int i = 0; i < methods.length; i++ ) {
             if ( methods[i].getName().toLowerCase().matches( ( "mapFrom" + suffixOfFilename ).toLowerCase() ) ) {
@@ -102,28 +102,29 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
      * @see BasicLineMapParser
      */
     public Object parseOneLine( String line ) {
-
+        assert geneMappings != null;
+        assert map != null;
         Gene g = null;
 
         try {
-            Object obj = methodToInvoke.invoke( gm, new Object[] { line, Gene.Factory.newInstance() } );
+            Object obj = methodToInvoke.invoke( geneMappings, new Object[] { line, Gene.Factory.newInstance() } );
             if ( obj == null ) return obj;
-
             g = ( Gene ) obj;
-
+            map.put( g.getNcbiId(), g );
+            return g;
         } catch ( IllegalArgumentException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return null;
         } catch ( IllegalAccessException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return null;
         } catch ( InvocationTargetException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            return null;
         }
-        map.put( g.getNcbiId(), g );
-
-        return g;
 
     }
 
@@ -152,6 +153,20 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
     protected Object getKey( Object newItem ) {
 
         return ( ( Gene ) newItem ).getNcbiId();
+    }
+
+    /**
+     * @return Returns the geneMappings.
+     */
+    public GeneMappings getGeneMappings() {
+        return this.geneMappings;
+    }
+
+    /**
+     * @param geneMappings The geneMappings to set.
+     */
+    public void setGeneMappings( GeneMappings geneMappings ) {
+        this.geneMappings = geneMappings;
     }
 
 }

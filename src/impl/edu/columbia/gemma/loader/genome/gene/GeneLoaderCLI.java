@@ -14,9 +14,13 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 
+import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.Loader;
 import edu.columbia.gemma.loader.loaderutils.Utilities;
+import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * Command line interface to gene parsing and loading
@@ -29,8 +33,6 @@ import edu.columbia.gemma.loader.loaderutils.Utilities;
  */
 public class GeneLoaderCLI {
     protected static final Log log = LogFactory.getLog( GeneParser.class );
-    static Loader geneLoader;
-    static GeneParser geneParser;
 
     /**
      * Command line interface to run the gene parser/loader
@@ -67,17 +69,24 @@ public class GeneLoaderCLI {
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
 
+            BeanFactory ctx = SpringContextUtil.getApplicationContext();
+
+            GeneLoaderImpl geneLoader;
+
+            GeneParserImpl geneParser = new GeneParserImpl();
+            GeneMappings geneMappings = new GeneMappings( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
+            geneParser.setGeneMappings( geneMappings );
+
             // interrogation stage
             if ( cl.hasOption( 'h' ) ) {
                 printHelp( opt );
 
             } else if ( cl.hasOption( 'p' ) ) {
-                geneParser = new GeneParserImpl();
                 geneParser.parseFile( cl.getOptionValue( 'p' ) );
-
             } else if ( cl.hasOption( 'l' ) ) {
-                geneParser = new GeneParserImpl();
                 geneLoader = new GeneLoaderImpl();
+                geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
+
                 Map map;
                 String[] filenames = cl.getOptionValues( 'l' );
 
@@ -97,6 +106,7 @@ public class GeneLoaderCLI {
 
             } else if ( cl.hasOption( 'r' ) ) {
                 geneLoader = new GeneLoaderImpl();
+                geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
                 geneLoader.removeAll();
             } else {
                 printHelp( opt );
