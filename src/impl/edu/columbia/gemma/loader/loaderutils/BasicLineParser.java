@@ -84,7 +84,7 @@ public abstract class BasicLineParser implements LineParser {
 
     }
 
-    public Iterator iterator() {
+    public Iterator<?> iterator() {
         return results.iterator();
     }
 

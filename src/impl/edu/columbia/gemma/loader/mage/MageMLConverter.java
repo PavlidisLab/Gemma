@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.mage;
 
 import java.lang.reflect.InvocationTargetException;
@@ -81,8 +99,6 @@ import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.FactorValue;
-import edu.columbia.gemma.genome.Taxon;
-import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.PolymerType;
 import edu.columbia.gemma.genome.biosequence.SequenceType;
 import edu.columbia.gemma.util.ReflectionUtil;
@@ -93,8 +109,6 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * method on any MAGE domain object and get a fully-populated Gemma domain object. There is no need to use the methods
  * in this class directly when handling MAGE-ML files: use the {@link edu.columbia.gemma.loader.mage.MageMLParser.}
  * </p>
- * <p>
- * The names of attributes etc. should be in an external file.
  * <h2>Implementation notes</h2>
  * <p>
  * Most MAGE objects have a corresponding method in this class called 'convertXXXXX', and many have a
@@ -154,7 +168,6 @@ public class MageMLConverter {
      * Used to hold references to Identifiables, so we don't convert them over and over again.
      */
     private Map identifiableCache;
-    private TaxonDao taxonDao;
 
     /**
      * 
@@ -360,7 +373,7 @@ public class MageMLConverter {
         if ( data instanceof BioDataCube ) {
             DataExternal dataExternal = ( ( BioDataCube ) data ).getDataExternal();
             if ( dataExternal == null ) {
-                log.debug( "BioDataCube with no external data" );
+                log.warn( "BioDataCube with no external data" );
             } else {
                 // this is not really the remote uri - just
                 // whatever is in the mage document.
@@ -605,7 +618,7 @@ public class MageMLConverter {
 
         if ( associationName.equals( "BiologicalCharacteristics" ) ) {
             if ( ( ( List ) associatedObject ).size() > 1 )
-                log.warn( "*** Moroe than one BiologicalCharacteristic for a MAGE CompositeSequence!" );
+                log.warn( "*** More than one BiologicalCharacteristic for a MAGE CompositeSequence!" );
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "BiologicalCharacteristic" );
         } else if ( associationName.equals( "CompositeCompositeMaps" ) ) {
             ; // we don't support.
@@ -1656,6 +1669,12 @@ public class MageMLConverter {
             return ScaleType.LINEAR;
         } else if ( val.equalsIgnoreCase( "ln" ) ) {
             return ScaleType.LN;
+        } else if ( val.equalsIgnoreCase( "log" ) ) {
+            return ScaleType.LN;
+        } else if ( val.equalsIgnoreCase( "percent" ) ) {
+            return ScaleType.PERCENT;
+        } else if ( val.equalsIgnoreCase( "fraction" ) ) {
+            return ScaleType.FRACTION;
         } else if ( val.equalsIgnoreCase( "log10" ) ) {
             return ScaleType.LOG10;
         } else if ( val.equalsIgnoreCase( "log_base_10" ) ) {
@@ -1727,18 +1746,6 @@ public class MageMLConverter {
     public void convertSpecializedQuantitationTypeAssociations( SpecializedQuantitationType mageObj,
             edu.columbia.gemma.common.quantitationtype.QuantitationType gemmaObj, Method getter ) {
         convertQuantitationTypeAssociations( mageObj, gemmaObj, getter );
-    }
-
-    /**
-     * This is a special case for an OntologyEntry that doesn't map to one in Gemma. Unfortunately, a 'species' in Mage
-     * doesn't necessarily include the taxon id or anything else that can be used to unequivocally identify the
-     * organism. Therefore we require that taxa match ones already in the data store.
-     * 
-     * @param species
-     * @return Taxon
-     */
-    public Taxon convertSpecies( OntologyEntry species ) {
-        return fetchExistingTaxonByCommonName( species.getValue() );
     }
 
     /**
@@ -1985,15 +1992,6 @@ public class MageMLConverter {
         } catch ( InvocationTargetException e ) {
             log.error( "InvocationTargetException For: " + gemmaObjName, e );
         }
-    }
-
-    /**
-     * @param result
-     * @return
-     */
-    private Taxon fetchExistingTaxonByCommonName( String commonName ) {
-        if ( taxonDao != null ) return taxonDao.findByCommonName( commonName );
-        return null;
     }
 
     /**
@@ -2301,7 +2299,7 @@ public class MageMLConverter {
                     mageAssociatedType );
             if ( gemmaAssociatedObj == null ) return;
 
-            Class gemmaClass = ReflectionUtil.getImplForBase( gemmaAssociatedObj.getClass() );
+            Class gemmaClass = ReflectionUtil.getBaseForImpl( gemmaAssociatedObj.getClass() );
             String inferredGemmaAssociationName = convertAssociationName( actualGemmaAssociationName,
                     gemmaAssociatedObj );
             log.debug( "Filling in " + inferredGemmaAssociationName );

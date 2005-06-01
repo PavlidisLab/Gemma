@@ -92,7 +92,7 @@ public class GoldenPath {
      * @param strand
      * @return
      */
-    public List findKnownGenesByLocation( String chromosome, int start, int end, String strand ) {
+    public List<Gene> findKnownGenesByLocation( String chromosome, int start, int end, String strand ) {
         Integer starti = new Integer( start );
         Integer endi = new Integer( end );
         String searchChrom = trimChromosomeName( chromosome );
@@ -119,7 +119,7 @@ public class GoldenPath {
      * @param strand
      * @param end
      */
-    public List findRefGenesByLocation( String chromosome, int start, int end, String strand ) {
+    public List<Gene> findRefGenesByLocation( String chromosome, int start, int end, String strand ) {
         Integer starti = new Integer( start );
         Integer endi = new Integer( end );
         String searchChrom = trimChromosomeName( chromosome );
@@ -147,7 +147,7 @@ public class GoldenPath {
      * @return List of Genes.
      * @throws SQLException
      */
-    private List findGenesByQuery( Integer starti, Integer endi, String searchChrom, String strand, String query ) {
+    private List<Gene> findGenesByQuery( Integer starti, Integer endi, String searchChrom, String strand, String query ) {
         // Cases:
         // 1. gene is contained within the region: txStart > start & txEnd < end;
         // 2. region is conained within the gene: txStart < start & txEnd > end;
@@ -166,7 +166,7 @@ public class GoldenPath {
             return ( List ) qr.query( conn, query, params, new ResultSetHandler() {
 
                 public Object handle( ResultSet rs ) throws SQLException {
-                    Collection r = new ArrayList();
+                    List<Gene> r = new ArrayList();
                     while ( rs.next() ) {
 
                         Gene gene = Gene.Factory.newInstance();
@@ -210,7 +210,7 @@ public class GoldenPath {
                     assert exonStartsInts.length == exonEndsInts.length;
 
                     GeneProduct gp = GeneProduct.Factory.newInstance();
-                    Collection exons = new ArrayList();
+                    Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
                     for ( int i = 0; i < exonEndsInts.length; i++ ) {
                         int exonStart = exonStartsInts[i];
                         int exonEnd = exonEndsInts[i];
@@ -222,7 +222,7 @@ public class GoldenPath {
                     }
                     gp.setExons( exons );
                     gp.setName( gene.getNcbiId() );
-                    Collection products = new HashSet();
+                    Collection<GeneProduct> products = new HashSet();
                     products.add( gp );
                     gene.setProducts( products );
                 }
@@ -261,22 +261,21 @@ public class GoldenPath {
      * @return A list of ThreePrimeData objects. The distance stored by a ThreePrimeData will be 0 if the sequence
      *         overhangs (rather than providing a negative distance). If no genes are found, the result is null;
      */
-    public List getThreePrimeDistances( String chromosome, int queryStart, int queryEnd, String starts, String sizes,
-            String strand, String method ) {
+    public List<ThreePrimeData> getThreePrimeDistances( String chromosome, int queryStart, int queryEnd, String starts,
+            String sizes, String strand, String method ) {
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 
         // starting with refgene means we can get the correct transcript name etc.
-        Collection genes = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
+        Collection<Gene> genes = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
 
         // get known genes as well, in case all we got was an intron.
         genes.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
         if ( genes.size() == 0 ) return null;
 
-        List results = new ArrayList();
-        for ( Iterator iter = genes.iterator(); iter.hasNext(); ) {
-            Gene gene = ( Gene ) iter.next();
+        List<ThreePrimeData> results = new ArrayList<ThreePrimeData>();
+        for ( Gene gene : genes ) {
             ThreePrimeData tpd = getThreePrimeDistance( chromosome, queryStart, queryEnd, starts, sizes, gene, method );
             results.add( tpd );
         }

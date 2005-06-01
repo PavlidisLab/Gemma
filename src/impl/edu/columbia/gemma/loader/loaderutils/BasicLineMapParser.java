@@ -19,10 +19,10 @@ import java.util.Map;
  */
 public abstract class BasicLineMapParser extends BasicLineParser {
 
-    private Map results;
+    private Map<Object, Object> results;
 
     public BasicLineMapParser() {
-        results = new HashMap();
+        results = new HashMap<Object, Object>();
     }
 
     /**
@@ -34,7 +34,6 @@ public abstract class BasicLineMapParser extends BasicLineParser {
     }
 
     /**
-     * 
      * @param key
      * @return
      * @see Map
@@ -46,7 +45,7 @@ public abstract class BasicLineMapParser extends BasicLineParser {
     /**
      * Returns a keyset iterator for the Map.
      */
-    public Iterator iterator() {
+    public Iterator<?> iterator() {
         return results.keySet().iterator();
     }
 

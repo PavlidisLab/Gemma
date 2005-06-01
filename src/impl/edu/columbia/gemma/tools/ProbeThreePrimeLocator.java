@@ -56,8 +56,6 @@ import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
  */
 public class ProbeThreePrimeLocator {
 
-
-
     protected static final Log log = LogFactory.getLog( ProbeThreePrimeLocator.class );
     private String dbName = "hg17";
     private double exonOverlapThreshold = 0.50;
@@ -65,8 +63,8 @@ public class ProbeThreePrimeLocator {
     private double scoreThreshold = 0.90;
     private String threeprimeMethod = GoldenPath.CENTER;
 
-    public Map run( InputStream input, Writer output ) throws IOException, SQLException, InstantiationException,
-            IllegalAccessException, ClassNotFoundException {
+    public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
+            SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
         GoldenPath bp = new GoldenPath( 3306, dbName, "localhost", "pavlidis", "toast" );
 
@@ -75,8 +73,8 @@ public class ProbeThreePrimeLocator {
 
         int count = 0;
         int skipped = 0;
-        Map allRes = new HashMap();
-        for ( Iterator iter = brp.iterator(); iter.hasNext(); ) {
+        Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
+        for ( Iterator<?> iter = brp.iterator(); iter.hasNext(); ) {
             BlatResultImpl blatRes = ( BlatResultImpl ) iter.next(); // fixme, this should not be an impl
 
             if ( blatRes.score() < scoreThreshold || blatRes.identity() < identityThreshold ) {
@@ -88,16 +86,15 @@ public class ProbeThreePrimeLocator {
             String probeName = sa[0];
             String arrayName = sa[1];
 
-            List tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(), blatRes
-                    .getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(), blatRes.getStrand(),
+            List<ThreePrimeData> tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(),
+                    blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(), blatRes.getStrand(),
                     threeprimeMethod );
 
             if ( tpds == null ) continue;
 
             // Set hitTranscripts = new TreeSet();
             // Set hitGenes = new TreeSet();
-            for ( Iterator iterator = tpds.iterator(); iterator.hasNext(); ) {
-                ThreePrimeData tpd = ( ThreePrimeData ) iterator.next();
+            for ( ThreePrimeData tpd : tpds ) {
 
                 // if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
 
@@ -108,9 +105,9 @@ public class ProbeThreePrimeLocator {
                 // hitGenes.add( gene.getOfficialSymbol() );
                 LocationData ld = new LocationData( tpd, blatRes );
                 if ( !allRes.containsKey( probeName ) ) {
-                    allRes.put( probeName, new HashSet() );
+                    allRes.put( probeName, new HashSet<LocationData>() );
                 }
-                ( ( Collection ) allRes.get( probeName ) ).add( ld );
+                allRes.get( probeName ).add( ld );
 
                 output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
                         + blatRes.getQuerySize() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t"
@@ -135,24 +132,23 @@ public class ProbeThreePrimeLocator {
      * @param hitGenes
      * @param hitTranscripts
      */
-    private String createTranscriptSignature( Set hitTranscripts, Set hitGenes ) {
-        List sortedTranscripts = new ArrayList();
+    private String createTranscriptSignature( Set<String> hitTranscripts, Set<String> hitGenes ) {
+        List<String> sortedTranscripts = new ArrayList<String>();
         sortedTranscripts.addAll( hitTranscripts );
         Collections.sort( sortedTranscripts );
 
-        List sortedGenes = new ArrayList();
+        List<String> sortedGenes = new ArrayList<String>();
         sortedGenes.addAll( hitGenes );
         Collections.sort( sortedGenes );
 
         StringBuffer transcriptSignatureBuf = new StringBuffer();
-        for ( Iterator iterator = sortedTranscripts.iterator(); iterator.hasNext(); ) {
-            String transcript = ( String ) iterator.next();
+        for ( String transcript : sortedTranscripts ) {
             if ( transcript.length() == 0 ) continue;
             transcriptSignatureBuf.append( transcript );
             transcriptSignatureBuf.append( "__" );
         }
-        for ( Iterator iter = sortedGenes.iterator(); iter.hasNext(); ) {
-            String gene = ( String ) iter.next();
+
+        for ( String gene : sortedGenes ) {
             if ( gene.length() == 0 ) continue;
             transcriptSignatureBuf.append( gene );
             transcriptSignatureBuf.append( "__" );
@@ -165,16 +161,14 @@ public class ProbeThreePrimeLocator {
      * @param results
      * @param writer
      */
-    void getBest( Map results, BufferedWriter writer ) throws IOException {
-        for ( Iterator iter = results.keySet().iterator(); iter.hasNext(); ) {
-            String probe = ( String ) iter.next();
-            Collection probeResults = ( Collection ) results.get( probe );
+    void getBest( Map<String, Collection<LocationData>> results, BufferedWriter writer ) throws IOException {
+        for ( String probe : results.keySet() ) {
+            Collection<LocationData> probeResults = results.get( probe );
             double maxBlatScore = -1.0;
             double maxScore = 0.0;
             LocationData best = null;
             double maxOverlap = 0.0;
-            for ( Iterator iterator = probeResults.iterator(); iterator.hasNext(); ) {
-                LocationData ld = ( LocationData ) iterator.next();
+            for ( LocationData ld : probeResults ) {
                 double blatScore = ld.getBr().score();
                 double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
                 double score = blatScore * overlap;
@@ -219,7 +213,8 @@ public class ProbeThreePrimeLocator {
             log.info( "Saving best to " + bestOutputFileName );
 
             ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
-            Map results = ptpl.run( new FileInputStream( f ), new BufferedWriter( new FileWriter( o ) ) );
+            Map<String, Collection<LocationData>> results = ptpl.run( new FileInputStream( f ), new BufferedWriter(
+                    new FileWriter( o ) ) );
 
             o = new File( bestOutputFileName );
             ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );

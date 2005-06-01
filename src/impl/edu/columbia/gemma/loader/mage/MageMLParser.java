@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.mage;
 
 import java.io.IOException;
@@ -6,8 +24,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.apache.commons.logging.Log;
@@ -38,6 +59,8 @@ public class MageMLParser {
     private MAGEJava mageJava;
     private MageMLConverter mlc;
     private String[] mageClasses;
+
+    private Collection<Object> convertedResult;
 
     /**
      * Create a new MageMLParser
@@ -81,7 +104,9 @@ public class MageMLParser {
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
         Package[] allPackages = Package.getPackages();
 
-        Collection result = new ArrayList();
+        if ( convertedResult == null ) {
+            convertedResult = new ArrayList<Object>();
+        }
 
         // this is a little inefficient because it tries every possible package and class. - fix is to get just
         // the mage
@@ -96,17 +121,17 @@ public class MageMLParser {
                 Class c = null;
                 try {
                     c = Class.forName( name + "." + mageClasses[j] );
-                    Collection d = getConvertedData( c );
+                    Collection<Object> d = getConvertedData( c );
                     if ( d != null && d.size() > 0 ) {
                         log.info( "Adding " + d.size() + " converted " + name + "." + mageClasses[j] + "s" );
-                        result.addAll( d );
+                        convertedResult.addAll( d );
                     }
                 } catch ( ClassNotFoundException e ) {
                     // log.error( "Class not found: " + name + "." + mageClasses[j] );
                 }
             }
         }
-        return result;
+        return convertedResult;
     }
 
     /**
@@ -118,7 +143,7 @@ public class MageMLParser {
      * @param type
      * @return Collection of MAGE domain objects.
      */
-    public Collection getData( Class type ) {
+    public Collection<Object> getData( Class type ) {
 
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
 
@@ -151,9 +176,7 @@ public class MageMLParser {
                 return null; // that's okay, not everybody has one.
             }
 
-            Object result = listGetterMethod.invoke( packageOb, new Object[] {} );
-            assert result instanceof List; // it should be a whatever_list.
-            return ( Collection ) result;
+            return ( Collection ) listGetterMethod.invoke( packageOb, new Object[] {} );
 
         } catch ( SecurityException e ) {
             log.error( e, e );
@@ -173,21 +196,21 @@ public class MageMLParser {
      * @param type
      * @return
      */
-    public Collection getConvertedData( Class type ) {
+    public Collection<Object> getConvertedData( Class type ) {
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
-        Collection dataToConvert = getData( type );
+        Collection<Object> dataToConvert = getData( type );
 
         if ( dataToConvert == null ) return null;
 
-        List result = new ArrayList();
-        for ( Iterator iter = dataToConvert.iterator(); iter.hasNext(); ) {
-            Object element = iter.next();
+        Collection<Object> localResult = new ArrayList<Object>();
+
+        for ( Object element : dataToConvert ) {
             if ( element != null ) {
                 Object converted = mlc.convert( element );
-                if ( converted != null ) result.add( mlc.convert( element ) );
+                if ( converted != null ) localResult.add( mlc.convert( element ) );
             }
         }
-        return result;
+        return localResult;
     }
 
     /**
@@ -199,4 +222,22 @@ public class MageMLParser {
         return mageJava != null;
     }
 
+    public String toString() {
+        assert convertedResult != null;
+        StringBuffer buf = new StringBuffer();
+        Map<String, Integer> tally = new HashMap<String, Integer>();
+        for ( Object element : convertedResult ) {
+            String clazz = element.getClass().getName();
+            if ( !tally.containsKey( clazz ) ) {
+                tally.put( clazz, new Integer( 0 ) );
+            }
+            tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
+        }
+
+        for ( String clazz : tally.keySet() ) {
+            buf.append( tally.get( clazz ) + " " + clazz + "s\n" );
+        }
+
+        return buf.toString();
+    }
 }

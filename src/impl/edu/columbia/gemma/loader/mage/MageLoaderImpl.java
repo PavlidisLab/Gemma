@@ -18,14 +18,17 @@
  */
 package edu.columbia.gemma.loader.mage;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.ResourceBundle;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.util.ReflectionUtil;
 
 /**
  * <hr>
@@ -36,9 +39,11 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @version $Id$
  */
 public class MageLoaderImpl implements Loader {
+    private static Log log = LogFactory.getLog( MageLoaderImpl.class.getName() );
     private static BeanFactory ctx;
 
     static {
+        log.debug( "Loading context" );
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
@@ -55,11 +60,37 @@ public class MageLoaderImpl implements Loader {
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
     public void create( Collection col ) {
-        for ( Iterator iter = col.iterator(); iter.hasNext(); ) {
-            Object entity = iter.next();
-            
-            // figure out the class of the entity, 
-            
+        log.debug( "Entering MageLoaderImpl.create()" );
+        try {
+
+            for ( Object entity : col ) {
+
+                // // only persist it if its parent is outside edu.columbia.gemma.
+                // if ( entity.getClass().getSuperclass().getName().startsWith( "edu.columbia" ) ) continue;
+
+                String className = entity.getClass().getName();
+
+                // check if className is on short list of classes to be persisted.
+                // ArrayDesign (we won't usually use this)
+                // ExpressionExperiment (most interested in this)
+                // 
+                if ( className.lastIndexOf( "ExpressionExperiment" ) < 0 ) continue; // FIXME
+
+                // figure out the class of the entity,
+                String dao = ReflectionUtil.constructDaoName( entity );
+                Object daoObj = ctx.getBean( dao );
+
+                log.debug( "Persisting: " + entity.getClass().getName() + " with " + daoObj.getClass().getName() );
+
+                // get create method
+                Method createMethod = daoObj.getClass().getMethod( "create",
+                        new Class[] { ReflectionUtil.getBaseForImpl( entity ) } );
+
+                // run create, but check exists first TODO. (need special cases)
+                createMethod.invoke( daoObj, new Object[] { entity } );
+            }
+        } catch ( Exception e ) {
+            log.error( e, e );
         }
     }
 

@@ -97,9 +97,8 @@ public class SequenceManipulation {
     public static int getGeneExonOverlaps( String chromosome, String starts, String sizes, Gene gene ) {
         if ( gene == null ) return 0;
         // if ( !gene.getPhysicalLocation().getChromosome().toString().equals( chromosome ) ) return 0;
-        Collection products = gene.getProducts();
-        for ( Iterator iter = products.iterator(); iter.hasNext(); ) {
-            GeneProduct geneProduct = ( GeneProduct ) iter.next();
+        Collection<GeneProduct> products = gene.getProducts();
+        for ( GeneProduct geneProduct : products ) {
             return getGeneProductExonOverlap( starts, sizes, null, geneProduct );
         }
         return 0;
@@ -123,7 +122,7 @@ public class SequenceManipulation {
         if ( strand != null && geneProduct.getPhysicalLocation().getStrand() != null
                 && geneProduct.getPhysicalLocation().getStrand() != strand ) return 0;
 
-        Collection exons = geneProduct.getExons();
+        Collection<PhysicalLocation> exons = geneProduct.getExons();
 
         int[] startArray = blatLocationsToIntArray( starts );
         int[] sizesArray = blatLocationsToIntArray( sizes );
@@ -135,8 +134,7 @@ public class SequenceManipulation {
         for ( int i = 0; i < sizesArray.length; i++ ) {
             int start = startArray[i];
             int end = start + sizesArray[i];
-            for ( Iterator iterator = exons.iterator(); iterator.hasNext(); ) {
-                PhysicalLocation exonLocation = ( PhysicalLocation ) iterator.next();
+            for ( PhysicalLocation exonLocation : exons ) {
                 int exonStart = exonLocation.getNucleotide().intValue();
                 int exonEnd = exonLocation.getNucleotide().intValue() + exonLocation.getNucleotideLength().intValue();
                 totalOverlap += computeOverlap( start, end, exonStart, exonEnd );
@@ -222,12 +220,10 @@ public class SequenceManipulation {
      * @param copyOfProbes
      * @return
      */
-    private static Reporter findLeftMostProbe( Set copyOfProbes ) {
+    private static Reporter findLeftMostProbe( Set<Reporter> copyOfProbes ) {
         int minLocation = Integer.MAX_VALUE;
         Reporter next = null;
-        for ( Iterator iter = copyOfProbes.iterator(); iter.hasNext(); ) {
-            Reporter probe = ( Reporter ) iter.next();
-
+        for ( Reporter probe : copyOfProbes ) {
             int loc = probe.getStartInBioChar();
             if ( loc <= minLocation ) {
                 minLocation = loc;
@@ -241,13 +237,11 @@ public class SequenceManipulation {
      * @param compositeSequence
      * @return Set of Reporters for this compositesequence.
      */
-    private static Set copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
-        Set copyOfProbes = new HashSet();
+    private static Set<Reporter> copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
+        Set<Reporter> copyOfProbes = new HashSet<Reporter>();
         if ( compositeSequence == null ) throw new IllegalArgumentException( "CompositeSequence cannot be null" );
         assert compositeSequence.getReporters() != null : "Null reporters for composite sequence";
-        for ( Iterator iter = compositeSequence.getReporters().iterator(); iter.hasNext(); ) {
-            Reporter next = ( Reporter ) iter.next();
-
+        for ( Reporter next : ( Collection<Reporter> ) compositeSequence.getReporters() ) {
             Reporter copy = Reporter.Factory.newInstance();
             copy.setImmobilizedCharacteristic( next.getImmobilizedCharacteristic() );
             copy.setStartInBioChar( next.getStartInBioChar() );
