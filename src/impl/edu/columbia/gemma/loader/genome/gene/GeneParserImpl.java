@@ -107,7 +107,7 @@ public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
         Gene g = null;
 
         try {
-            Object obj = methodToInvoke.invoke( geneMappings, new Object[] { line, Gene.Factory.newInstance() } );
+            Object obj = methodToInvoke.invoke( geneMappings, new Object[] { line } );
             if ( obj == null ) return obj;
             g = ( Gene ) obj;
             map.put( g.getNcbiId(), g );

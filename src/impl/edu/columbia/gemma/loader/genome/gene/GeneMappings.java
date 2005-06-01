@@ -78,21 +78,16 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGene2Accession( String line, Gene g ) {
+    public Object mapFromGene2Accession( String line ) {
         String[] values = StringUtils.split( line, "\t" );
 
         if ( !validTaxonId( values[TAX_ID] ) ) {
-            g = null;
-            return g;
+            return null;
         }
+        Gene gene = checkAndGetExistingGene( values[NCBI_ID] );
+        Taxon t = getTaxon( values[TAX_ID] );
 
-        Taxon t = mapTaxon( values[TAX_ID] );
-
-        g.setTaxon( t );
-
-        g.setNcbiId( values[NCBI_ID] );
-
-        g = geneExists( g );
+        gene.setTaxon( t );
 
         // accessions association
 
@@ -103,11 +98,11 @@ public class GeneMappings {
 
         // 2) Add DatabaseEntry to the collection
         Collection deCol = new HashSet();
-        deCol = g.getAccessions();
+        deCol = gene.getAccessions();
         deCol.add( databaseEntry );
 
         // 3) Add collection to gene
-        g.setAccessions( deCol );
+        gene.setAccessions( deCol );
 
         // products association
 
@@ -123,13 +118,13 @@ public class GeneMappings {
 
         // 2) Add GeneProduct to the collection
         Collection geneProductsCol = new HashSet();
-        geneProductsCol = g.getProducts();
+        geneProductsCol = gene.getProducts();
         geneProductsCol.add( geneProduct );
 
         // 3) Add collection to gene
-        g.setProducts( geneProductsCol );
+        gene.setProducts( geneProductsCol );
 
-        return g;
+        return gene;
     }
 
     /**
@@ -137,10 +132,8 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGene2Go( String line, Gene g ) {
-        return null;
-        // TODO Auto-generated method stub
-
+    public Object mapFromGene2Go( String line ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -148,10 +141,8 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGene2RefSeq( String line, Gene g ) {
-        return null;
-        // TODO Auto-generated method stub
-
+    public Object mapFromGene2RefSeq( String line ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -159,10 +150,8 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGene2Sts( String line, Gene g ) {
-        return null;
-        // TODO Auto-generated method stub
-
+    public Object mapFromGene2Sts( String line ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -170,10 +159,8 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGene2Unigene( String line, Gene g ) {
-        return null;
-        // TODO Auto-generated method stub
-
+    public Object mapFromGene2Unigene( String line ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -181,10 +168,8 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGeneHistory( String line, Gene g ) {
-        return null;
-        // TODO Auto-generated method stub
-
+    public Object mapFromGeneHistory( String line ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -192,22 +177,17 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromGeneInfo( String line, Gene g ) {
+    public Object mapFromGeneInfo( String line ) {
 
         String[] values = StringUtils.split( line, "\t" );
 
         if ( !validTaxonId( values[TAX_ID] ) ) {
-            g = null;
-            return g;
+            return null;
         }
 
-        Taxon t = mapTaxon( values[TAX_ID] );
-
+        Taxon t = getTaxon( values[TAX_ID] );
+        Gene g = checkAndGetExistingGene( values[NCBI_ID] );
         g.setTaxon( t );
-
-        g.setNcbiId( values[NCBI_ID] );
-
-        g = geneExists( g );
 
         g.setOfficialSymbol( values[GENEINFO_OFFICIAL_SYMBOL] );
 
@@ -219,31 +199,31 @@ public class GeneMappings {
      * @param g
      * @return
      */
-    public Object mapFromMin2Gene( String line, Gene g ) {
-        return null;
-        // TODO Auto-generated method stub
-
+    public Object mapFromMin2Gene( String line ) {
+        throw new UnsupportedOperationException();
     }
 
     /**
-     * @param g
-     * @return
+     * Check if a gene with this ID already exists, and return it or create a new one if it doesn't exist.
+     * 
+     * @param NCBI Id for a gene to be looked for.
+     * @return Either a new Gene instance or the existing one with the given ID
      */
-    private Gene geneExists( Gene g ) {
-        if ( map.containsKey( g.getNcbiId() ) )
-            g = ( Gene ) map.get( g.getNcbiId() );
-        else {
-            map.put( g.getNcbiId(), g );
-        }
+    private Gene checkAndGetExistingGene( String ncbiId ) {
+        if ( map.containsKey( ncbiId ) ) return ( Gene ) map.get( ncbiId );
 
+        Gene g = Gene.Factory.newInstance();
+        g.setNcbiId( ncbiId );
+        map.put( ncbiId, g );
         return g;
+
     }
 
     /**
      * @param taxId
      * @return
      */
-    private Taxon mapTaxon( String taxId ) {
+    private Taxon getTaxon( String taxId ) {
         assert taxonDao != null;
         assert taxaMap != null;
         int taxonId = Integer.parseInt( taxId );
