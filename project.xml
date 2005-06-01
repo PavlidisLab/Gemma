@@ -447,7 +447,7 @@
 				<war.bundle>true</war.bundle>
 			</properties>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>servlet</groupId>
 			<artifactId>servlet</artifactId>
@@ -484,18 +484,18 @@
 			<version>0.1.17</version>
 			<type>jar</type>
 			<properties>
-        		<classloader>root</classloader>
-      		</properties>
-		</dependency>	
-    	<dependency>
+				<classloader>root</classloader>
+			</properties>
+		</dependency>
+		<dependency>
 			<groupId>ant</groupId>
 			<artifactId>ant-jsch</artifactId>
 			<type>jar</type>
 			<version>1.6.3</version>
 			<jar>ant-jsch-1.6.3.jar</jar>
 			<properties>
-        		<classloader>root</classloader>
-      		</properties>
+				<classloader>root</classloader>
+			</properties>
 		</dependency>
 	</dependencies>
 	<build>
