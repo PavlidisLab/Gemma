@@ -45,7 +45,6 @@ public class GeneServiceImpl
     protected java.util.Collection handleGetAllGenes()
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.Collection handleGetAllGenes()
         return this.getGeneDao().findAllGenes();
     }
 
