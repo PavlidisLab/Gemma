@@ -33,7 +33,7 @@
 			<fileset dir="${basedir}/metadata/webproperties"
 				includes="**/*.properties" />
 		</ant:copy>
-		<attainGoal name="dll" />
+		<attainGoal name="ddl" />
 		<attainGoal name="xdoclet" />
 	</postGoal>
 
@@ -60,20 +60,29 @@
 
 
 	<!-- ==================================================================
-		Build and export the database schema
+		Build and export and initialize the database schema
 		================================================================== -->
-	<goal name="dll" description="Create database">
+	<goal name="ddl" description="Create database">
 		<attainGoal name="hibernate:schema-export" />
 	</goal>
 
-	<preGoal name="dll">
+	<preGoal name="ddl">
 		<attainGoal name="copy-hibconfig" />
 	</preGoal>
+	
+	<postGoal name="ddl">
+		<attainGoal name="init-database" />
+	</postGoal>
+	
+	<goal name="init-database" description="Populate database with initial data">
+		<ant:echo message="This doesn't do anything yet" />
+	</goal>
+	
 
 	<!-- ==================================================================
 		Build and export the test database schema
 		================================================================== -->
-	<goal name="dll-test" description="Create test database">
+	<goal name="ddl-test" description="Create test database">
 		<!--  run the schema through "mysql gemdtest" todo, refactor -->
 		<ant:exec dir="${src}" executable="C:/mysql/bin/mysql"
 			os="Windows XP"
