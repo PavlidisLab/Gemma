@@ -24,7 +24,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
     private TaxonDao daoTaxon = null;
     private int foo=2;
     private GeneDao daoGene= null;
-    private Gene g, g2, g3 = null;;
+    private Gene g, g2, g3, g4 = null;;
     private Person p = null;
     private PersonDao daoPerson= null;
     private Taxon t = null;
@@ -56,6 +56,11 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         g3.setOfficialName("test gene three");
         g3.setTaxon(t);
         
+        g4 = Gene.Factory.newInstance();
+        g4.setName("test gene four");
+        g4.setOfficialName("test gene four");
+        g4.setTaxon(t);
+        
         p = Person.Factory.newInstance();
         p.setFirstName("David");
         p.setLastName("Quigley");
@@ -65,6 +70,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         daoGene.create(g);
         daoGene.create(g2);
         daoGene.create(g3);
+        daoGene.create(g4);
     }
     
     protected void tearDown() throws Exception {
@@ -72,6 +78,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         daoGene.remove(g);
         daoGene.remove(g2);
         daoGene.remove(g3);
+        daoGene.remove(g4);
         daoTaxon.remove(t);
         daoPerson.remove(p);
         /*
@@ -90,6 +97,9 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         CandidateGene cg = svc.addCandidateToCandidateGeneList(cgl, g);
         CandidateGene cg2 = svc.addCandidateToCandidateGeneList(cgl, g2);
         CandidateGene cg3 = svc.addCandidateToCandidateGeneList(cgl, g3);
+        // test Add by ID; I already know the ID of G4 since I just created it.
+        CandidateGene cg4 = svc.addCandidateToCandidateGeneList(cgl, g4.getId().longValue());
+        
         cg2.setOwner(p);
         svc.saveCandidateGeneList(cgl);
         svc.removeCandidateFromCandidateGeneList(cgl, cg);
@@ -120,6 +130,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         assertTrue( cByContributer != null && cByContributer.size()==1);
         assertTrue( cAll != null && cAll.size()>=1);
         assertTrue( cgl != null );
+        assertTrue( cg4 != null );
         // test remove CandidateGeneList
         svc.removeCandidateGeneList(cgl);
         
