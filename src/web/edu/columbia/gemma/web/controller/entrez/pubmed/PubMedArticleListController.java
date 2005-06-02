@@ -49,14 +49,11 @@ public class PubMedArticleListController extends SimpleFormController {
         Map bibRefModel = new HashMap();
         switch ( maxResults ) {
             case 10:
-                System.err.println( "case 10" );
                 bibRefModel.put( "bibRefs", getBibliographicReferenceService().getAllBibliographicReferences() );
                 break;
             case 50:
-                System.err.println( "case 50" );
                 break;
             case 100:
-                System.err.println( "case 100" );
                 break;
         }
 
