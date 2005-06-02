@@ -25,6 +25,15 @@ import edu.columbia.gemma.sequence.QtlDaoImplTest;
 import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 Columbia University
+ * 
+ * @author pavlidis
+ * @author keshav
+ * @version $Id$
+ */
 public class AllTests {
 
     public static Test suite() {
@@ -45,7 +54,7 @@ public class AllTests {
         suite.addTestSuite( MageMLConverterTest.class );
         suite.addTestSuite( MageMLParserTest.class );
 
-      //  suite.addTestSuite( LoaderControllerTest.class );
+        // suite.addTestSuite( LoaderControllerTest.class );
         suite.addTestSuite( PubMedXmlControllerTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
@@ -61,7 +70,7 @@ public class AllTests {
         suite.addTestSuite( UserRoleServiceImplTest.class );
         suite.addTestSuite( UserServiceImplTest.class );
         suite.addTestSuite( UserDaoImplTest.class );
-        
+
         suite.addTestSuite( SignupControllerTest.class );
         // $JUnit-END$
 
