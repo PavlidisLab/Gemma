@@ -93,7 +93,6 @@ public class BibliographicReferenceServiceImpl extends
     protected java.util.Collection handleGetAllBibliographicReferences(
             edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
             throws java.lang.Exception {
-        System.err.println( "In Service: " + BibliographicReference.toString() );
         return getBibliographicReferenceDao().findAllBibliographicReferences();
     }
 
