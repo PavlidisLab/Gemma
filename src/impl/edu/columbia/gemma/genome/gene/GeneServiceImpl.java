@@ -16,11 +16,10 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
+
 package edu.columbia.gemma.genome.gene;
+import java.util.Iterator;
+import edu.columbia.gemma.genome.Gene;
 
 /**
  * @see edu.columbia.gemma.genome.gene.GeneService
@@ -35,8 +34,12 @@ public class GeneServiceImpl
     protected void handleSaveGene(edu.columbia.gemma.genome.Gene gene)
         throws java.lang.Exception
     {
-        //@todo implement protected void handleSaveGene(edu.columbia.gemma.genome.Gene gene)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.GeneService.handleSaveGene(edu.columbia.gemma.genome.Gene gene) Not implemented!");
+    	if( this.getGeneDao().findByID(gene.getId().longValue()) == null){
+    		this.getGeneDao().create(gene);
+    	}
+    	else{
+    		this.getGeneDao().update(gene);
+    	}
     }
 
     /**
@@ -54,8 +57,12 @@ public class GeneServiceImpl
     protected void handleRemoveGene(java.lang.String officialName)
         throws java.lang.Exception
     {
-        //@todo implement protected void handleRemoveGene(java.lang.String officialName)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.genome.gene.GeneService.handleRemoveGene(java.lang.String officialName) Not implemented!");
+    	java.util.Collection col = this.getGeneDao().findByOfficialName(officialName);
+    	Iterator iter = col.iterator();
+    	while(iter.hasNext()){
+    		Gene g = (Gene)iter.next();
+    		this.getGeneDao().remove(g);
+    	}
     }
 
     /**
@@ -84,15 +91,24 @@ public class GeneServiceImpl
     {
     	return this.getGeneDao().findByOfficialSymbolInexact(officialSymbol);
     }   
-    
+   
     /**
      * @see edu.columbia.gemma.genome.gene.GeneService#findAllQtlsByPhysicalMapLocation(edu.columbia.gemma.genome.PhysicalLocation)
      */
     protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(edu.columbia.gemma.genome.PhysicalLocation physicalMapLocation)
         throws java.lang.Exception
     {
-        //@todo implement protected java.util.Collection handleFindAllQtlsByPhysicalMapLocation(edu.columbia.gemma.genome.PhysicalLocation physicalMapLocation)
-        return null;
+        return this.getGeneDao().findByPhysicalLocation(physicalMapLocation);
     }
+
+    /**
+     * @see edu.columbia.gemma.genome.gene.GeneService#handleFindByID(java.lang.long)
+     */
+    protected edu.columbia.gemma.genome.Gene handleFindByID(long id)
+        throws java.lang.Exception
+    {
+    	return this.getGeneDao().findByID(id);
+    } 
+    
 
 }
