@@ -63,14 +63,15 @@ public class GeneServiceImplTest extends BaseDAOTestCase {
 	    cON = svc.findByOfficialName("rabble");
 	    cOS = svc.findByOfficialSymbol("rab");
 	    cOSI = svc.findByOfficialSymbolInexact("ra%");
+	    long geneID = g.getId().longValue();
+	    Gene gLookup = svc.findByID(geneID);
 	    cAll = svc.getAllGenes();
 		
 		assertTrue( cON != null && cON.size()==1);
 		assertTrue( cOS != null && cOS.size()==1);
 		assertTrue( cOSI != null && cOSI.size()>0);
 		assertTrue( cAll != null && cAll.size()>0);
-		
-		
+		assertTrue( gLookup != null && gLookup.getId().longValue() == geneID);
 	}
 	
 	protected void tearDown() throws Exception{
