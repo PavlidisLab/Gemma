@@ -22,6 +22,7 @@
 package edu.columbia.gemma.genome.gene;
 import java.util.Collection;
 import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
@@ -57,7 +58,13 @@ public class CandidateGeneListServiceImpl
         CandidateGene cg = candidateGeneList.addCandidate(gene);
         return cg;
     }
-        
+    
+    protected CandidateGene handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, long geneID ) throws java.lang.Exception{
+    	GeneDao gDAO = this.getGeneDao();
+    	Gene g = gDAO.findByID(geneID);
+    	CandidateGene cg = candidateGeneList.addCandidate(g);
+    	return cg;
+    }
     protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
         candidateGeneList.removeCandidate(candidateGene);
     } 
