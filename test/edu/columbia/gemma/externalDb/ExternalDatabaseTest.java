@@ -34,7 +34,7 @@ public class ExternalDatabaseTest extends BaseDAOTestCase {
      * @throws ConfigurationException
      */
     public void setUp() throws ConfigurationException {
-        conf = new PropertiesConfiguration( "testResources.properties" );
+        conf = new PropertiesConfiguration( "Gemma.properties" );
         db = ( GoldenPathHumanDaoHibernate ) ctx.getBean( conf.getString( "external.database.0" ) );
         //ctx.getBean( conf.getString( "external.database.1" ) );
         //ctx.getBean( conf.getString( "external.database.2" ) )
