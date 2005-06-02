@@ -48,8 +48,6 @@ public class AllTests {
       //  suite.addTestSuite( LoaderControllerTest.class );
         suite.addTestSuite( PubMedXmlControllerTest.class );
 
-        suite.addTestSuite( TaxonLoaderServiceTest.class );
-
         suite.addTestSuite( ExternalDatabaseTest.class );
 
         suite.addTestSuite( GoldenPathTest.class );
