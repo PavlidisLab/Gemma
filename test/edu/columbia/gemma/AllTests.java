@@ -7,6 +7,7 @@ import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserServiceImplTest;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.controller.common.auditAndSecurity.SignupControllerTest;
+import edu.columbia.gemma.controller.entrez.pubmed.PubMedArticleListControllerTest;
 import edu.columbia.gemma.controller.entrez.pubmed.PubMedXmlControllerTest;
 import edu.columbia.gemma.controller.flow.DetailBibRefFlowTests;
 import edu.columbia.gemma.controller.flow.SearchPubMedFlowTests;
@@ -19,6 +20,7 @@ import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
 import edu.columbia.gemma.loader.genome.TaxonLoaderServiceTest;
+import edu.columbia.gemma.loader.genome.gene.GeneParserTest;
 import edu.columbia.gemma.loader.mage.MageMLConverterTest;
 import edu.columbia.gemma.loader.mage.MageMLParserTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
@@ -41,6 +43,7 @@ public class AllTests {
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
+        
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );
 
@@ -55,7 +58,11 @@ public class AllTests {
         suite.addTestSuite( MageMLParserTest.class );
 
         // suite.addTestSuite( LoaderControllerTest.class );
+
+        suite.addTestSuite( TaxonLoaderServiceTest.class );
+
         suite.addTestSuite( PubMedXmlControllerTest.class );
+        suite.addTestSuite( PubMedArticleListControllerTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
 
@@ -72,6 +79,8 @@ public class AllTests {
         suite.addTestSuite( UserDaoImplTest.class );
 
         suite.addTestSuite( SignupControllerTest.class );
+        
+        suite.addTestSuite( GeneParserTest.class );
         // $JUnit-END$
 
         return suite;
