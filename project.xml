@@ -506,7 +506,7 @@
 		</unitTestSourceDirectory>
 		<unitTest>
 			<excludes>
-				<exclude>**/GeneParserTest.java</exclude>
+				<exclude>**/LoaderControllerTest.java</exclude>
 			</excludes>
 			<includes>
 				<include>**/*Test.java</include>
