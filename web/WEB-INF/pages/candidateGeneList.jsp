@@ -11,27 +11,18 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 <body bgcolor="#ffffff">
-<script language="javascript">
-	function doAddNew(){
-		newname = prompt("Enter name for new Candidate List");
-		if(newname != null)
-			document.location = "candidateGeneList.htm?action=add&newName=" + newname
-	}
-	function doDel(idDel){
-		if( confirm("Confirm: Delete this list permanently?")) 
-			document.location = "candidateGeneList.htm?id=" + idDel + "&action=delete";
-	}
-</script>
 
 <content tag="heading">Candidate Gene Lists</content>
 
 <h3>Candidate Gene Lists:</h3><BR>
-
+<form name="cForm" id="cForm" action="candidateGeneList.htm" method="POST">
+<input type="hidden" name="action" id="action" value="addme">
+<input type="hidden" name="newName" id="newName">
+<input type="hidden" name="listID" id="listID">
 <table bgcolor="#eeeeee" colspacing="1" cellpadding="2">
 <tr>
 	<td width="150"><b>Name</b></td>
 	<td><b>Description</b></td>
-	<td width="100">&nbsp;</td></tr>
 <%
 
 Map m = (Map)request.getAttribute("model");
@@ -43,22 +34,26 @@ if( m!=null) {
 	while (iter.hasNext()) {
 		cgl=(CandidateGeneList)iter.next();
 		String desc = cgl.getDescription();
-		if( desc == null ) 
+		if( desc == null ){ 
 			desc = "<i>n.a.</i>";
+		}
 		%>
 		<tr>
-			<td bgcolor="white"><a href="candidateGeneListDetail.htm?id=<%=cgl.getId()%>"><%=cgl.getName()%></a></td>
+			<td bgcolor="white"><a href="candidateGeneListDetail.htm?listID=<%=cgl.getId()%>"><%=cgl.getName()%></a></td>
 			<td bgcolor="white"><%=desc%></td>
-			<td align="center" bgcolor="white"><a href="javascript:doDel(<%=cgl.getId()%>)">delete</a></td>
 		</tr>
 		<%
 	}
 }
 %>
 </table>
-<P>
-<a href="javascript:doAddNew()">Add new Candidate List</a>
-
+</form>
+<P>&nbsp;</P>
+<form method="POST" name="addform" action="candidateGeneList.htm">
+	<input type="hidden" name="action" id="action" value="add">
+	<b>New List Name:</b><input type="text" name="newName" id="newName">&nbsp;
+	<input type="submit"  value="Add" size="50">
+</form>
 </body>
 </html>
 
