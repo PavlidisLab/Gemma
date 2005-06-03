@@ -74,8 +74,9 @@
 		<attainGoal name="init-database" />
 	</postGoal>
 	
-	<goal name="init-database" description="Populate database with initial data">
-		<ant:echo message="This doesn't do anything yet" />
+	<goal name="init-database" description="Populate database with initial data">		
+		<ant:echo message = "Populating database with initial data"/> 	    	
+		<attainGoal name="sql:sql" />
 	</goal>
 	
 
@@ -137,9 +138,9 @@
 	<goal name="mda">
 		<maven:maven descriptor="${basedir}/mda/project.xml"
 			goals="andromda:run" />
-		<ant:echo message = "============================="/>
-		<ant:echo message = "   REMEMBER TO RUN XDOCLET   "/> 
-	    <ant:echo message = "============================="/>	
+		<ant:echo message = "==========================================="/>
+		<ant:echo message = "          REMEMBER TO RUN XDOCLET          "/> 
+	    <ant:echo message = "==========================================="/>	
 	</goal>
 
 	<goal name="gp-human-reverse">
