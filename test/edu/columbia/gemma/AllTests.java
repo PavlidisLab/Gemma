@@ -6,12 +6,6 @@ import edu.columbia.gemma.common.auditAndSecurity.UserDaoImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserServiceImplTest;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
-import edu.columbia.gemma.controller.common.auditAndSecurity.SignupControllerTest;
-import edu.columbia.gemma.controller.entrez.pubmed.PubMedArticleListControllerTest;
-import edu.columbia.gemma.controller.entrez.pubmed.PubMedXmlControllerTest;
-import edu.columbia.gemma.controller.flow.DetailBibRefFlowTests;
-import edu.columbia.gemma.controller.flow.SearchPubMedFlowTests;
-import edu.columbia.gemma.controller.flow.action.GetPubMedActionTests;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImplTest;
@@ -26,6 +20,12 @@ import edu.columbia.gemma.loader.mage.MageMLParserTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
 import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
+import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
+import edu.columbia.gemma.web.controller.entrez.pubmed.PubMedArticleListControllerTest;
+import edu.columbia.gemma.web.controller.entrez.pubmed.PubMedXmlControllerTest;
+import edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedActionTests;
+import edu.columbia.gemma.web.controller.flow.entrez.pubmed.DetailBibRefFlowTests;
+import edu.columbia.gemma.web.controller.flow.entrez.pubmed.SearchPubMedFlowTests;
 
 /**
  * <hr>
