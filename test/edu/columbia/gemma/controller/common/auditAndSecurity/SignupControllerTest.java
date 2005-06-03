@@ -93,8 +93,8 @@ public class SignupControllerTest extends BaseControllerTestCase {
         Set set = new HashSet();
         testUser.setUserRoles( set );
 
-        testUser.setPassword( "root" );
-        testUser.setConfirmPassword( "root" );
+        testUser.setPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
+        testUser.setConfirmPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
         testUser.setPasswordHint( "test hint" );
 
         testUser.getUserRoles().add( ur );
