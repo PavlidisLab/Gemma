@@ -501,8 +501,11 @@
 	<build>
 		<nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
 		<sourceDirectory>src/gen</sourceDirectory>
+		<sourceDirectory>src/impl</sourceDirectory>
+		<sourceDirectory>src/web</sourceDirectory>
+		<sourceDirectory>metadata/webproperties</sourceDirectory>
 		<unitTestSourceDirectory>
-			${basedir}/test
+			test
 		</unitTestSourceDirectory>
 		<unitTest>
 			<excludes>
