@@ -13,38 +13,84 @@
 <body bgcolor="#ffffff">
 <content tag="heading">Candidate Gene List Detail View</content>
 
+<a href="candidateGeneList.htm">Back to all Candidate Lists</a>
+<P>&nbsp;</P>
 
-
-
+<form name="dForm" id="dForm" method="POST" action="candidateGeneListDetail.htm">
+<input type="hidden" name="action" id="action" value="update">
+<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
 <%
 CandidateGene g = null;
 Map m = (Map)request.getAttribute("model");
 if( m!=null) {
-	CandidateGeneList cg=(CandidateGeneList) m.get("candidateGeneLists");
-	out.println("Name: " + cg.getName() + "<BR>");
-	out.println("Description: " + cg.getDescription() + "<BR>");
-	Collection can = cg.getCandidates();
+	CandidateGeneList cgList=(CandidateGeneList) m.get("candidateGeneLists");
+	Collection can = cgList.getCandidates();
 	Iterator iter = can.iterator();
+	String desc = cgList.getDescription();
+	if( desc==null ){
+		desc="";
+	}
 	%>
-	<table bgcolor="#eeeeee" colspacing="1">
-		<tr><td width="150"<b>Name</b></td><td><b>Description</b></td></tr>
+	<table width="100%" bgcolor="#eeeeee" cellpadding="1" cellspacing="2">
+	<tr>
+		<td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Candidate Gene List Details</B></td>
+	</tr>
+	<tr>
+		<td bgcolor="white">Name:</td> 
+		<td bgcolor="white"><input type="text" size="100" name="listName" id="listName" value="<%=cgList.getName()%>"></td>
+	</tr>
+	<tr>
+		<td bgcolor="white">Description:</td> 
+		<td bgcolor="white"> <input type="text" size="100" name="listDescription" id="listDescription" value="<%=desc%>"></td>
+	</tr>
+	<tr>
+		<td valign="center" align="center" colspan="2" bgcolor="white"><input type="submit" value="Update Details"><BR><BR></td>
+	</tr>
+	</form>
+	<tr>
+		<td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Candidate Genes</B></td>
+	</tr>
 	<%
-	if( !iter.hasNext() )
-		out.println("<tr><td>No Genes in List</td></tr>");
+	if( !iter.hasNext() ){
+		%>
+		<tr><td colspan="2" bgcolor="white"><i>No Genes in List</i></td></tr>
+		<%
+	}
 	else{
 		while (iter.hasNext()) {
 			g=(CandidateGene)iter.next();
 			%>
 			<tr>
+				<form method="POST" action="candidateGeneListDetail.htm">
+				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
+				<input type="hidden" name="action" id="action" value="removegenefromcandidatelist">
+				<input type="hidden" name="geneID" id="geneID" value="<%=g.getId().toString()%>">
+				
 				<td bgcolor="white"><a href="GeneDetail.jsp?id=<%=g.getId()%>"><%=g.getName()%></a></td>
-				<td bgcolor="white"><%=g.getDescription()%></td>
+				<td bgcolor="white"><%=g.getDescription()%>
+					<input type="submit" value="Remove from List">
+				</td>
+				</form>
 			</tr>
 		<%
 		}
-		%></table><%
 	}
 }
 %>
+</table>
+<a href="geneFinder.htm?listID=<%=request.getParameter("listID")%>">Add New Candidate Gene to List</a>
+
+<P>
+
+<p>&nbsp;<p>
+<form method="POST" name="delform" action="candidateGeneListDetail.htm">
+	<input type="hidden" name="action" id="action" value="delete">
+	<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
+	<input type="submit" value="Delete this list permanently">
+</form>
+
+
+</form>
 </body>
 </html>
 
