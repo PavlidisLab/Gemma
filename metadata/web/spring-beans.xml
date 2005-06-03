@@ -274,7 +274,7 @@
 		<bean
 			class="org.springframework.web.flow.config.XmlFlowBuilder">
 			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/pubMedSearch-flow.xml" />
+				value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" />
 		</bean>
 	</property>
 </bean>
@@ -294,7 +294,7 @@
 </bean>
 
 <bean id="pubMed.Search.executeQuery"
-	class="edu.columbia.gemma.web.controller.flow.action.PubMedExecuteQueryAction">
+	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.PubMedExecuteQueryAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
@@ -304,7 +304,7 @@
 </bean>
 
 <bean id="pubMed.Search.getAllBibRef"
-	class="edu.columbia.gemma.web.controller.flow.action.BibRefExecuteQueryAction">
+	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.BibRefExecuteQueryAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
@@ -363,14 +363,14 @@
 		<bean
 			class="org.springframework.web.flow.config.XmlFlowBuilder">
 			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/pubMedDetail-flow.xml" />
+				value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml" />
 		</bean>
 	</property>
 </bean>
 
 <!-- equivalent to the pubMed.Search.executeQuery defined above -->
 <bean id="pubMed.Detail.criteria.formAction.getFormAction"
-	class="edu.columbia.gemma.web.controller.flow.action.GetPubMedAction">
+	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
