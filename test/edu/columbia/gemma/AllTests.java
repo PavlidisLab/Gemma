@@ -13,7 +13,6 @@ import edu.columbia.gemma.loader.arraydesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.arraydesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
-import edu.columbia.gemma.loader.genome.TaxonLoaderServiceTest;
 import edu.columbia.gemma.loader.genome.gene.GeneParserTest;
 import edu.columbia.gemma.loader.mage.MageMLConverterTest;
 import edu.columbia.gemma.loader.mage.MageMLParserTest;
@@ -58,8 +57,6 @@ public class AllTests {
         suite.addTestSuite( MageMLParserTest.class );
 
         // suite.addTestSuite( LoaderControllerTest.class );
-
-        suite.addTestSuite( TaxonLoaderServiceTest.class );
 
         suite.addTestSuite( PubMedXmlControllerTest.class );
         suite.addTestSuite( PubMedArticleListControllerTest.class );
