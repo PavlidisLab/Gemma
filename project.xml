@@ -447,7 +447,17 @@
 				<war.bundle>true</war.bundle>
 			</properties>
 		</dependency>
-
+		<dependency>
+			<groupId>xerces</groupId>
+			<artifactId>xerces</artifactId>
+			<version>2.4.0</version>
+			<type>jar</type>
+			<properties>
+				<war.bundle>true</war.bundle>
+			</properties>
+		</dependency>
+		
+		
 		<dependency>
 			<groupId>servlet</groupId>
 			<artifactId>servlet</artifactId>
