@@ -18,7 +18,6 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.Loader;
 import edu.columbia.gemma.loader.loaderutils.Utilities;
 import edu.columbia.gemma.util.SpringContextUtil;
 
@@ -32,7 +31,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class GeneLoaderCLI {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
+    protected static final Log log = LogFactory.getLog( Parser.class );
 
     /**
      * Command line interface to run the gene parser/loader
