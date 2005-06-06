@@ -20,7 +20,7 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
 import edu.columbia.gemma.genome.gene.GeneProductType;
 
 public class GeneMappings {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
+    protected static final Log log = LogFactory.getLog( Parser.class );
     Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
 
     private static final int HOMOSAPIEN = 9606;

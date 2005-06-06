@@ -27,8 +27,8 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * @author keshav
  * @version $Id$
  */
-public class GeneParserImpl extends BasicLineMapParser implements GeneParser {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
+public class GeneParserImpl extends BasicLineMapParser implements Parser {
+    protected static final Log log = LogFactory.getLog( Parser.class );
     private GeneMappings geneMappings = null;
     private Iterator iter;
     private Map map;
