@@ -1,5 +1,9 @@
 package edu.columbia.gemma.loader.loaderutils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,7 +19,7 @@ import edu.columbia.gemma.loader.genome.gene.Parser;
  * @author keshav
  * @version $Id$
  */
-public class Utilities {
+public class LoaderTools {
     protected static final Log log = LogFactory.getLog( Parser.class );
 
     /**
@@ -31,5 +35,25 @@ public class Utilities {
         else {
             log.info( "Time taken: " + time / 1000 + " s." );
         }
+    }
+
+    /**
+     * @param path
+     * @return
+     * @throws IOException
+     */
+    public static InputStream retrieveByHTTP( String path ) throws IOException {
+
+        if ( path == null ) throw new IllegalArgumentException();
+
+        URL urlPattern = new URL( path );
+
+        try {
+            return urlPattern.openStream();
+        } catch ( IOException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 }
