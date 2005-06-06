@@ -4,7 +4,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.loader.genome.gene.GeneParser;
+import edu.columbia.gemma.loader.genome.gene.Parser;
 
 /**
  * Utilities to be used by parsers and loaders.
@@ -16,7 +16,7 @@ import edu.columbia.gemma.loader.genome.gene.GeneParser;
  * @version $Id$
  */
 public class Utilities {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
+    protected static final Log log = LogFactory.getLog( Parser.class );
 
     /**
      * Display time to be used with org.apache.commons.lang.time.StopWatch
