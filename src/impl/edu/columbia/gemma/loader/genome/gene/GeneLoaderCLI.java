@@ -18,7 +18,7 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.Utilities;
+import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -101,7 +101,7 @@ public class GeneLoaderCLI {
                 geneLoader.create( map.values() );
 
                 stopwatch.stop();
-                Utilities.displayTime( stopwatch );
+                LoaderTools.displayTime( stopwatch );
 
             } else if ( cl.hasOption( 'r' ) ) {
                 geneLoader = new GeneLoaderImpl();
