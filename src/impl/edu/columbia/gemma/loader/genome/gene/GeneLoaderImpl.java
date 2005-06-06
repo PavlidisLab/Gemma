@@ -19,7 +19,7 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @version $Id$
  */
 public class GeneLoaderImpl implements Loader {
-    protected static final Log log = LogFactory.getLog( GeneParser.class );
+    protected static final Log log = LogFactory.getLog( GeneLoaderImpl.class );
 
     private GeneDao geneDao;
 
