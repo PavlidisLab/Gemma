@@ -18,7 +18,7 @@ import baseCode.bio.geneset.GONames;
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
-import edu.columbia.gemma.loader.description.OntologyEntryLoader;
+import edu.columbia.gemma.loader.description.OntologyEntryLoaderImpl;
 import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
