@@ -1,11 +1,9 @@
 package edu.columbia.gemma.loader.description;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
+import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -15,6 +13,7 @@ import org.xml.sax.SAXException;
 
 import baseCode.bio.geneset.GONames;
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.loader.loaderutils.LoaderTools;
@@ -33,8 +32,14 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
     GONames goNames = null;
 
+    Set goTermsKeysSet = null;
     Map goTermsMap = null;
-    OntologyEntryLoader ontologyEntryLoader = null;
+
+    Collection<OntologyEntry> oeCol = null;
+
+    OntologyEntryLoaderImpl ontologyEntryLoader = null;
+
+    OntologyEntryParserImpl ontologyEntryParser = null;
 
     /**
      * @throws SAXException
@@ -43,29 +48,17 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     public void testBaseCodeGoParser() throws SAXException, IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
 
-        InputStream is = LoaderTools
-                .retrieveByHTTP( "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz" );
-        GZIPInputStream gZipInputStream = new GZIPInputStream( is );
+        oeCol = ontologyEntryParser.parse();
 
-        goNames = new GONames( gZipInputStream );
-
-        goTermsMap = goNames.getMap();
-
-        Collection<String> ontologyEntryCol = goTermsMap.values();
-
-        log.info( "number of ontology entries: " + ontologyEntryCol.size() );
+        ontologyEntryLoader.createExternalDatabase( "GO" );
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        for ( Iterator<String> iter = ontologyEntryCol.iterator(); iter.hasNext(); ) {
-            OntologyEntry ontologyEntry = OntologyEntry.Factory.newInstance();
-            ontologyEntry.setCategory( iter.next() );
-
-            ontologyEntryLoader.getOntologyEntryDao().create( ontologyEntry );
-        }
+        ontologyEntryLoader.create( oeCol );
 
         stopWatch.stop();
+
         LoaderTools.displayTime( stopWatch );
 
     }
@@ -78,8 +71,13 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         BeanFactory ctx = SpringContextUtil.getApplicationContext();
 
-        ontologyEntryLoader = new OntologyEntryLoader();
+        ontologyEntryParser = new OntologyEntryParserImpl();
+
+        ontologyEntryLoader = new OntologyEntryLoaderImpl();
+
+        // "tomcatesque" functionality
         ontologyEntryLoader.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
+        ontologyEntryLoader.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
 
     }
 
@@ -89,9 +87,11 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
 
-        Collection<String> ontologyEntryCol = goTermsMap.values();
-
-        ontologyEntryLoader.getOntologyEntryDao().remove( ontologyEntryCol );
+        // Collection<OntologyEntry> col = ontologyEntryLoader.getOntologyEntryDao().findAllOntologyEntries();
+        //
+        // for ( OntologyEntry oe : col ) {
+        // ontologyEntryLoader.getOntologyEntryDao().remove( oe );
+        // }
 
         ontologyEntryLoader = null;
 
