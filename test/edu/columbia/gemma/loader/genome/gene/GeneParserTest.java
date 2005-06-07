@@ -12,7 +12,6 @@ import org.springframework.beans.factory.BeanFactory;
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.Loader;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
