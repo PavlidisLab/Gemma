@@ -13,6 +13,8 @@ import org.xml.sax.SAXException;
 
 import baseCode.bio.geneset.GONames;
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.description.DatabaseType;
+import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
@@ -50,7 +52,11 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         oeCol = ontologyEntryParser.parse();
 
-        ontologyEntryLoader.createExternalDatabase( "GO" );
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setName( "GO" );
+        ed.setWebUri( "http://archive.godatabase.org" );
+        ed.setType( DatabaseType.ONTOLOGY );
+        ontologyEntryLoader.createExternalDatabase( ed );
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();

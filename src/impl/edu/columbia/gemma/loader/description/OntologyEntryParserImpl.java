@@ -14,8 +14,6 @@ import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
 import baseCode.bio.geneset.GONames;
-import edu.columbia.gemma.common.description.DatabaseType;
-import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.loader.genome.gene.Parser;
 import edu.columbia.gemma.loader.loaderutils.LoaderTools;
@@ -68,15 +66,11 @@ public class OntologyEntryParserImpl implements Parser {
         for ( Object key : goTermsKeysSet ) {
             OntologyEntry oe = OntologyEntry.Factory.newInstance();
 
-            oe.setAccession( ( String ) key );
-
-            ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setLocalInstallDbName( "GO" );
-            ed.setName( "GO" );
-            ed.setType( DatabaseType.ONTOLOGY );
-            oe.setExternalDatabase( ed );
-
+            oe.setCategory( goNames.getAspectForId( ( String ) goTermsMap.get( key ) ) );
+            oe.setValue( goNames.getNameForId( ( String ) goTermsMap.get( key ) ) );
             oe.setDescription( ( String ) goTermsMap.get( key ) );
+
+            oe.setAccession( ( String ) key );
 
             ontologyEntryCol.add( oe );
 

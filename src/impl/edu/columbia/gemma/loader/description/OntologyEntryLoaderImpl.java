@@ -55,22 +55,19 @@ public class OntologyEntryLoaderImpl {
      * @param externalDatabaseName
      * @return
      */
-    public Object createExternalDatabase( String externalDatabaseName ) {
+    public Object createExternalDatabase( ExternalDatabase ed ) {
 
-        if ( getExternalDatabaseEntries().size() == 0 ) {
-            ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setName( externalDatabaseName );
+        if ( getExternalDatabaseEntries().size() == 0 )
             this.getExternalDatabaseDao().create( ed );
-        } else {
+        else {
             Collection<ExternalDatabase> externalDatabases = getExternalDatabaseEntries();
 
-            for ( ExternalDatabase ed : externalDatabases ) {
-                if ( ed.getName().equalsIgnoreCase( externalDatabaseName ) ) {
+            for ( ExternalDatabase externalDb : externalDatabases ) {
+                if ( externalDb.getName().equalsIgnoreCase( ed.getName() ) ) {
                     log.info( "external database " + ed.getName() + " already exists" );
                     return null;
                 }
 
-                ed.setName( externalDatabaseName );
                 this.getExternalDatabaseDao().create( ed );
                 log.info( "external database with name: " + ed.getName() + " created." );
             }
