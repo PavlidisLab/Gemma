@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Tue Jun 07 12:19:00 EDT 2005'>
+  timestamp = 'Tue Jun 07 17:41:20 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -9952,6 +9952,16 @@ one class.
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
+                                <UML:Attribute xmi.id = 'Im1fedb61fm104587c02c0m4599' name = 'DELETE' visibility = 'private'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:Attribute.initialValue>
+                                    <UML:Expression xmi.id = 'Im1fedb61fm104587c02c0m45aa' language = 'java'
+                                      body = 'D'/>
+                                  </UML:Attribute.initialValue>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
                               </UML:Classifier.feature>
                             </UML:Class>
                             <UML:Class xmi.id = 'I2863e477m101683735a4mm73f8' name = 'Contact' visibility = 'public'
@@ -12496,6 +12506,14 @@ one class.
                               </UML:Dependency.client>
                               <UML:Dependency.supplier>
                                 <UML:Class xmi.idref = 'Idd3147m1036b562585m11b'/>
+                              </UML:Dependency.supplier>
+                            </UML:Dependency>
+                            <UML:Dependency xmi.id = 'Im37bd5e71m10458967191m2c28' isSpecification = 'false'>
+                              <UML:Dependency.client>
+                                <UML:Class xmi.idref = 'I2e3c9e93m102f5a8f607m625b'/>
+                              </UML:Dependency.client>
+                              <UML:Dependency.supplier>
+                                <UML:Class xmi.idref = 'Ic0335dm101e946dc8cmm33a5'/>
                               </UML:Dependency.supplier>
                             </UML:Dependency>
                           </UML:Namespace.ownedElement>
@@ -20120,6 +20138,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Dependency xmi.idref = 'Im3993ed8m1030b26df71mm6ca'/>
                                 <UML:Dependency xmi.idref = 'Im21fcb0e1m1043ed6421dm543'/>
                                 <UML:Dependency xmi.idref = 'Im21fcb0e1m1043ed6421dm327'/>
+                                <UML:Dependency xmi.idref = 'Im37bd5e71m10458967191m2c28'/>
                               </UML:ModelElement.clientDependency>
                               <UML:ModelElement.stereotype>
                                 <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf44'/>
@@ -20796,6 +20815,41 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Class xmi.idref = 'Im4fa23811m1043de7ad12m253'/>
                               </UML:Dependency.supplier>
                             </UML:Dependency>
+                            <UML:Association xmi.id = 'Im37bd5e71m10458967191m2a89' name = 'Owner' isSpecification = 'false'
+                              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                              <UML:Association.connection>
+                                <UML:AssociationEnd xmi.id = 'Im37bd5e71m10458967191m2a83' visibility = 'public'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'Im37bd5e71m10458967191m2aa6'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'Im37bd5e71m10458967191m2aa7' lower = '0'
+                                          upper = '-1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                                <UML:AssociationEnd xmi.id = 'Im37bd5e71m10458967191m2a86' name = 'owner'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
+                                  <UML:AssociationEnd.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'Im37bd5e71m10458967191m2a88'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'Im37bd5e71m10458967191m2a87' lower = '1'
+                                          upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:AssociationEnd.multiplicity>
+                                  <UML:AssociationEnd.participant>
+                                    <UML:Class xmi.idref = 'I2863e477m101683735a4mm7341'/>
+                                  </UML:AssociationEnd.participant>
+                                </UML:AssociationEnd>
+                              </UML:Association.connection>
+                            </UML:Association>
                           </UML:Namespace.ownedElement>
                         </UML:Package>
                         <UML:Class xmi.id = 'Iff6185m1029346d98fmm2b4' name = 'CytogeneticLocation'
