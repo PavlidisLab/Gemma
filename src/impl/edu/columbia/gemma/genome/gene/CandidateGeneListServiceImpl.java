@@ -51,6 +51,7 @@ public class CandidateGeneListServiceImpl
     	
     	AuditTrail auditTrail = this.getAuditTrailDao().create(AuditTrail.Factory.newInstance());
     	auditTrail.start("CandidateGeneList Created");
+    	auditTrail.getCreationEvent().setPerformer(actor);
     	this.getAuditTrailDao().update(auditTrail);
     	
     	cgl.setAuditTrail(auditTrail);
@@ -84,6 +85,7 @@ public class CandidateGeneListServiceImpl
     	
     	AuditTrail auditTrail = this.getAuditTrailDao().create(AuditTrail.Factory.newInstance());
     	auditTrail.start("CandidateGene Created");
+    	auditTrail.getCreationEvent().setPerformer(actor);
     	this.getAuditTrailDao().update(auditTrail);
     	
     	CandidateGene cg = candidateGeneList.addCandidate(gene);
@@ -94,22 +96,19 @@ public class CandidateGeneListServiceImpl
     }
     
     protected CandidateGene handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, long geneID ) throws java.lang.Exception{
-    	assert(actor!=null);
-    	
-    	AuditTrail auditTrail = this.getAuditTrailDao().create(AuditTrail.Factory.newInstance());
-    	auditTrail.start("CandidateGene Created");
-    	
     	GeneDao gDAO = this.getGeneDao();
     	Gene g = gDAO.findByID(geneID);
-    	CandidateGene cg = candidateGeneList.addCandidate(g);
-    	cg.setOwner(actor);
-    	cg.setAuditTrail(auditTrail);
-    	
-    	return cg;
+    	return handleAddCandidateToCandidateGeneList(candidateGeneList, g);
     }
+    
     protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
     	assert(actor!=null);
     	candidateGeneList.removeCandidate(candidateGene);
+    } 
+    
+    protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, long candidateGeneID) throws java.lang.Exception{
+    	CandidateGene cg = (CandidateGene) this.getCandidateGeneDao().load(new Long(candidateGeneID));
+    	handleRemoveCandidateFromCandidateGeneList(candidateGeneList, cg);
     } 
     
     protected void  handleDecreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
@@ -123,6 +122,11 @@ public class CandidateGeneListServiceImpl
     	
     	candidateGeneList.decreaseRanking(candidateGene);
     }
+
+    protected void  handleDecreaseCandidateRanking(CandidateGeneList candidateGeneList, long candidateGeneID) throws java.lang.Exception{
+    	CandidateGene cg = (CandidateGene) this.getCandidateGeneDao().load(new Long(candidateGeneID));
+    	handleDecreaseCandidateRanking(candidateGeneList, cg);
+    } 
     
     protected void  handleIncreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
     	assert(actor!=null);
@@ -135,6 +139,11 @@ public class CandidateGeneListServiceImpl
     	
     	candidateGeneList.increaseRanking(candidateGene);
     }    
+
+    protected void  handleIncreaseCandidateRanking(CandidateGeneList candidateGeneList, long candidateGeneID) throws java.lang.Exception{
+    	CandidateGene cg = (CandidateGene) this.getCandidateGeneDao().load(new Long(candidateGeneID));
+    	handleIncreaseCandidateRanking(candidateGeneList, cg);
+    } 
     
     // Finder methods
     
