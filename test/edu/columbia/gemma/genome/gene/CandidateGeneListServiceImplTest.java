@@ -109,6 +109,9 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         // test rank manipulation
         svc.decreaseCandidateRanking(cgl, cg2);
         svc.increaseCandidateRanking(cgl, cg2);
+        svc.increaseCandidateRanking(cgl, cg.getId().longValue());
+        svc.decreaseCandidateRanking(cgl, cg.getId().longValue());
+        
         svc.saveCandidateGeneList(cgl);
         // test finders
         java.util.Collection cByName =null;
