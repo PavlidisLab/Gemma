@@ -62,6 +62,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         g4.setTaxon(t);
         
         p = Person.Factory.newInstance();
+        
         p.setFirstName("David");
         p.setLastName("Quigley");
         p.setEmail("daq2101@columbia.edu");
@@ -89,6 +90,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         
         // test create CandidateGeneList
         CandidateGeneListService svc = (CandidateGeneListService)ctx.getBean("candidateGeneListService");
+        svc.setActor(p);
         
         CandidateGeneList cgl = svc.createCandidateGeneList("New Candidate List from service test");
         Long cgl_id = cgl.getId();
@@ -127,7 +129,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         }
         
         assertTrue( cByName!= null && cByName.size()==1);
-        assertTrue( cByContributer != null && cByContributer.size()==1);
+        assertTrue( cByContributer != null && cByContributer.size()>=1);
         assertTrue( cAll != null && cAll.size()>=1);
         assertTrue( cgl != null );
         assertTrue( cg4 != null );
