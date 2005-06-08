@@ -26,8 +26,7 @@ import edu.columbia.gemma.genome.gene.GeneProductType;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="geneMappings"
- * @spring.property name="taxonDao" ref="taxonDao"
+ * @spring.bean name="geneMappings"
  */
 public class GeneMappings {
     protected static final Log log = LogFactory.getLog( Parser.class );
@@ -63,7 +62,7 @@ public class GeneMappings {
     private TaxonDao taxonDao = null;
 
     /**
-     * 
+     * @spring.constructor-arg id="geneMappings" ref="taxonDao"
      */
     public GeneMappings( TaxonDao taxonDao ) throws ConfigurationException {
         if ( taxonDao == null ) throw new IllegalArgumentException();
