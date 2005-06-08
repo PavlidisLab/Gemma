@@ -82,6 +82,9 @@
 				<property name="applicationContext">
 					applicationContext-hibernate.xml
 				</property>
+				<property name="jdbcDataSourceClass">
+					org.apache.commons.dbcp.BasicDataSource
+				</property>
 			</properties>
 		</namespace>
 		
