@@ -17,6 +17,8 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="geneLoader"
+ * @spring.property name="geneDao" ref="geneDao"
  */
 public class GeneLoaderImpl implements Loader {
     protected static final Log log = LogFactory.getLog( GeneLoaderImpl.class );

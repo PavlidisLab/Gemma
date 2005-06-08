@@ -26,6 +26,8 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="geneParser"
+ * @spring.property name="geneMappings" ref="geneMappings"
  */
 public class GeneParserImpl extends BasicLineMapParser implements Parser {
     protected static final Log log = LogFactory.getLog( Parser.class );
@@ -42,23 +44,6 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
      */
     public GeneParserImpl() throws ConfigurationException {
         map = new HashMap();
-    }
-
-    public Map parseFile( String filename ) throws IOException {
-        log.info( "filename: " + filename );
-
-        File file = new File( filename );
-        FileInputStream fis = new FileInputStream( file );
-
-        Method lineParseMethod = null;
-        try {
-            lineParseMethod = this.findParseLineMethod( filename );
-        } catch ( NoSuchMethodException e ) {
-            log.error( e, e );
-            return null;
-        }
-        return this.parse( fis, lineParseMethod );
-
     }
 
     /**
@@ -83,6 +68,13 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
     }
 
     /**
+     * @return Returns the geneMappings.
+     */
+    public GeneMappings getGeneMappings() {
+        return this.geneMappings;
+    }
+
+    /**
      * Parse the specified file, filename.
      * 
      * @param filename
@@ -94,6 +86,28 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
         parse( fis );
         debugMap();
         return map;
+    }
+
+    /**
+     * @param filename
+     * @return Map
+     * @throws IOException
+     */
+    public Map parseFile( String filename ) throws IOException {
+        log.info( "filename: " + filename );
+
+        File file = new File( filename );
+        FileInputStream fis = new FileInputStream( file );
+
+        Method lineParseMethod = null;
+        try {
+            lineParseMethod = this.findParseLineMethod( filename );
+        } catch ( NoSuchMethodException e ) {
+            log.error( e, e );
+            return null;
+        }
+        return this.parse( fis, lineParseMethod );
+
     }
 
     /**
@@ -129,6 +143,13 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
     }
 
     /**
+     * @param geneMappings The geneMappings to set.
+     */
+    public void setGeneMappings( GeneMappings geneMappings ) {
+        this.geneMappings = geneMappings;
+    }
+
+    /**
      * Print content of map if debug is set to true.
      * 
      * @param debug
@@ -153,20 +174,6 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
     protected Object getKey( Object newItem ) {
 
         return ( ( Gene ) newItem ).getNcbiId();
-    }
-
-    /**
-     * @return Returns the geneMappings.
-     */
-    public GeneMappings getGeneMappings() {
-        return this.geneMappings;
-    }
-
-    /**
-     * @param geneMappings The geneMappings to set.
-     */
-    public void setGeneMappings( GeneMappings geneMappings ) {
-        this.geneMappings = geneMappings;
     }
 
 }

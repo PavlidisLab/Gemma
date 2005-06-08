@@ -19,6 +19,16 @@ import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.gene.GeneProduct;
 import edu.columbia.gemma.genome.gene.GeneProductType;
 
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
+ * @author keshav
+ * @version $Id$
+ * @spring.bean id="geneMappings"
+ * @spring.property name="taxonDao" ref="taxonDao"
+ */
 public class GeneMappings {
     protected static final Log log = LogFactory.getLog( Parser.class );
     Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
@@ -62,7 +72,7 @@ public class GeneMappings {
     }
 
     /**
-     * 
+     * Initialize a taxa map.
      */
     private void initializeTaxa() {
         Collection<Taxon> taxa = taxonDao.findAllTaxa();
