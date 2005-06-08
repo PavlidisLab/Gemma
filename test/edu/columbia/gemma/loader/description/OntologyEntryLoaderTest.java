@@ -50,13 +50,12 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     public void testBaseCodeGoParser() throws SAXException, IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
 
-        oeCol = ontologyEntryParser.parse();
-
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GO" );
         ed.setWebUri( "http://archive.godatabase.org" );
         ed.setType( DatabaseType.ONTOLOGY );
-        ontologyEntryLoader.createExternalDatabase( ed );
+
+        oeCol = ontologyEntryParser.parse( ed );
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -82,9 +81,8 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
         ontologyEntryLoader = new OntologyEntryLoaderImpl();
 
         // "tomcatesque" functionality
+        ontologyEntryParser.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
         ontologyEntryLoader.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
-        ontologyEntryLoader.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
-
     }
 
     /**
@@ -93,11 +91,7 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
 
-        // Collection<OntologyEntry> col = ontologyEntryLoader.getOntologyEntryDao().findAllOntologyEntries();
-        //
-        // for ( OntologyEntry oe : col ) {
-        // ontologyEntryLoader.getOntologyEntryDao().remove( oe );
-        // }
+        // TODO remove all ontology entries as well on tear down
 
         ontologyEntryLoader = null;
 

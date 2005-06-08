@@ -14,6 +14,8 @@ import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
 import baseCode.bio.geneset.GONames;
+import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.loader.genome.gene.Parser;
 import edu.columbia.gemma.loader.loaderutils.LoaderTools;
@@ -25,9 +27,13 @@ import edu.columbia.gemma.loader.loaderutils.LoaderTools;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean id="ontologyEntryParser"
+ * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  */
 public class OntologyEntryParserImpl implements Parser {
     protected static final Log log = LogFactory.getLog( OntologyEntryParserImpl.class );
+
+    private ExternalDatabaseDao externalDatabaseDao;
 
     private GONames goNames;
 
@@ -35,17 +41,56 @@ public class OntologyEntryParserImpl implements Parser {
 
     private Map goTermsMap;
 
+    /**
+     * @param externalDatabaseName
+     * @return
+     */
+    public ExternalDatabase createOrGetExternalDatabase( ExternalDatabase ed ) {
+
+        if ( getExternalDatabaseEntries().size() == 0 )
+            this.getExternalDatabaseDao().create( ed );
+        else {
+            Collection<ExternalDatabase> externalDatabases = getExternalDatabaseEntries();
+
+            for ( ExternalDatabase externalDatabase : externalDatabases ) {
+                if ( externalDatabase.getName().equalsIgnoreCase( ed.getName() ) ) {
+                    log.info( "external database " + ed.getName() + " already exists" );
+                    return externalDatabase;
+                }
+
+                this.getExternalDatabaseDao().create( ed );
+                log.info( "external database with name: " + ed.getName() + " created." );
+            }
+        }
+        return ed;
+    }
+
     public Method findParseLineMethod( String string ) throws NoSuchMethodException {
         // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * @return
+     * @return Returns the externalDatabaseDao.
+     */
+    public ExternalDatabaseDao getExternalDatabaseDao() {
+        return externalDatabaseDao;
+    }
+
+    /**
+     * @return Collection
+     */
+    public Collection getExternalDatabaseEntries() {
+
+        return this.getExternalDatabaseDao().findAllExternalDb();
+    }
+
+    /**
+     * @return Collection
      * @throws IOException
      * @throws SAXException
      */
-    public Collection parse() throws IOException, SAXException {
+    public Collection parse( ExternalDatabase ed ) throws IOException, SAXException {
         InputStream is = LoaderTools
                 .retrieveByHTTP( "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz" );
         GZIPInputStream gZipInputStream = new GZIPInputStream( is );
@@ -55,6 +100,8 @@ public class OntologyEntryParserImpl implements Parser {
         goTermsMap = goNames.getMap();
 
         log.info( "number of ontology entries: " + goTermsMap.size() );
+
+        ExternalDatabase externalDatabase = createOrGetExternalDatabase( ed );
 
         log.info( "creating Gemma objects ... " );
 
@@ -72,6 +119,8 @@ public class OntologyEntryParserImpl implements Parser {
 
             oe.setAccession( ( String ) key );
 
+            oe.setExternalDatabase( externalDatabase );
+
             ontologyEntryCol.add( oe );
 
         }
@@ -86,5 +135,12 @@ public class OntologyEntryParserImpl implements Parser {
     public Map parseFile( String filename ) throws IOException {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    /**
+     * @param externalDatabaseDao The externalDatabaseDao to set.
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
     }
 }

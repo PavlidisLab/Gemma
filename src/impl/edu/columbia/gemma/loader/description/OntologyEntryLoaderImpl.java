@@ -5,8 +5,6 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 
@@ -18,30 +16,43 @@ import edu.columbia.gemma.common.description.OntologyEntryDao;
  * @author keshav
  * @version $Id$
  * @spring.bean id="ontologyEntryLoader"
- * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
  */
 public class OntologyEntryLoaderImpl {
 
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderImpl.class );
 
-    private ExternalDatabaseDao externalDatabaseDao;
-
     private OntologyEntryDao ontologyEntryDao;
 
     /**
      * @param oeCol
+     * @param dbEntry TODO
      */
     public void create( Collection<OntologyEntry> oeCol ) {
 
+        log.info( "persisting Gemma objects ..." );
+        
+        Collection<OntologyEntry> oeColFromDatabase = getOntologyEntryDao().findAllOntologyEntries();
+
         int count = 0;
         for ( OntologyEntry oe : oeCol ) {
+            assert ontologyEntryDao != null;
 
-            getOntologyEntryDao().create( oe );
-            count++;
-            if ( count % 1000 == 0 ) log.info( count + " ontology entries persisted" );
+            if ( oeColFromDatabase.size() == 0 ) {
+                getOntologyEntryDao().create( oe );
+                count++;
+                if ( count % 1000 == 0 ) log.info( count + " ontology entries persisted" );
+            } else {
+                for ( OntologyEntry oeFromDatabase : oeColFromDatabase ) {
+                    if ( ( oe.getAccession() != oeFromDatabase.getAccession() )
+                            && ( oe.getExternalDatabase() != oeFromDatabase.getExternalDatabase() ) ) {
+                        getOntologyEntryDao().create( oe );
+                        count++;
+                        if ( count % 1000 == 0 ) log.info( count + " ontology entries persisted" );
+                    }
+                }
+            }
         }
-
     }
 
     /**
@@ -52,56 +63,10 @@ public class OntologyEntryLoaderImpl {
     }
 
     /**
-     * @param externalDatabaseName
-     * @return
-     */
-    public Object createExternalDatabase( ExternalDatabase ed ) {
-
-        if ( getExternalDatabaseEntries().size() == 0 )
-            this.getExternalDatabaseDao().create( ed );
-        else {
-            Collection<ExternalDatabase> externalDatabases = getExternalDatabaseEntries();
-
-            for ( ExternalDatabase externalDb : externalDatabases ) {
-                if ( externalDb.getName().equalsIgnoreCase( ed.getName() ) ) {
-                    log.info( "external database " + ed.getName() + " already exists" );
-                    return null;
-                }
-
-                this.getExternalDatabaseDao().create( ed );
-                log.info( "external database with name: " + ed.getName() + " created." );
-            }
-        }
-        return null;
-    }
-
-    /**
-     * @return Returns the externalDatabaseDao.
-     */
-    public ExternalDatabaseDao getExternalDatabaseDao() {
-        return externalDatabaseDao;
-    }
-
-    /**
-     * @return
-     */
-    public Collection getExternalDatabaseEntries() {
-
-        return this.getExternalDatabaseDao().findAllExternalDb();
-    }
-
-    /**
      * @return Returns the ontologyEntryDao.
      */
     public OntologyEntryDao getOntologyEntryDao() {
         return ontologyEntryDao;
-    }
-
-    /**
-     * @param externalDatabaseDao The externalDatabaseDao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**
