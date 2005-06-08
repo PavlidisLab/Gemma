@@ -7,6 +7,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 
 /**
  * <hr>
@@ -30,8 +31,8 @@ public class OntologyEntryLoaderImpl {
      */
     public void create( Collection<OntologyEntry> oeCol ) {
 
-        log.info( "persisting Gemma objects ..." );
-        
+        log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
+
         Collection<OntologyEntry> oeColFromDatabase = getOntologyEntryDao().findAllOntologyEntries();
 
         int count = 0;
@@ -41,14 +42,15 @@ public class OntologyEntryLoaderImpl {
             if ( oeColFromDatabase.size() == 0 ) {
                 getOntologyEntryDao().create( oe );
                 count++;
-                if ( count % 1000 == 0 ) log.info( count + " ontology entries persisted" );
+                LoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
+
             } else {
                 for ( OntologyEntry oeFromDatabase : oeColFromDatabase ) {
                     if ( ( oe.getAccession() != oeFromDatabase.getAccession() )
-                            && ( oe.getExternalDatabase() != oeFromDatabase.getExternalDatabase() ) ) {
+                            && ( !oe.getExternalDatabase().equals( oeFromDatabase.getExternalDatabase() ) ) ) {
                         getOntologyEntryDao().create( oe );
                         count++;
-                        if ( count % 1000 == 0 ) log.info( count + " ontology entries persisted" );
+                        LoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
                     }
                 }
             }

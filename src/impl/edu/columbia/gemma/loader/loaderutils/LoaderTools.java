@@ -35,6 +35,11 @@ public class LoaderTools {
         }
     }
 
+    public static void objectsPersistedUpdate( int count, int modulus, String objectName ) {
+        if ( count % modulus == 0 ) log.info( count + " " + objectName + " persisted" );
+
+    }
+
     /**
      * @param path
      * @return
