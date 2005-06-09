@@ -16,6 +16,8 @@ import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.loader.loaderutils.LoaderTools;
@@ -50,12 +52,29 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     public void testBaseCodeGoParser() throws SAXException, IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
 
+        String url = "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz";
+
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GO" );
         ed.setWebUri( "http://archive.godatabase.org" );
         ed.setType( DatabaseType.ONTOLOGY );
 
-        oeCol = ontologyEntryParser.parse( ed );
+        LocalFile lf = LocalFile.Factory.newInstance();
+        lf.setLocalURI( "Remote file.  See remote uri for details.  " );
+        lf.setRemoteURI( url );
+        lf.setSize( 1656000 );
+
+        LocalFile lf2 = LocalFile.Factory.newInstance();
+        lf2.setLocalURI( "2nd local file local uri" );
+        lf2.setRemoteURI( "2nd local file remote uri" );
+        lf2.setSize( 1656000 );
+
+        Object[] dependencies = new Object[3];
+        dependencies[0] = ed;
+        dependencies[1] = lf;
+        dependencies[2] = lf2;
+
+        oeCol = ontologyEntryParser.parseXmlOntologyEntriesFromHttp( dependencies, url );
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -82,6 +101,7 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         // "tomcatesque" functionality
         ontologyEntryParser.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
+        ontologyEntryParser.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
         ontologyEntryLoader.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
     }
 
