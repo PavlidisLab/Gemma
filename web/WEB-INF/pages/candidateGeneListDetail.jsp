@@ -47,6 +47,8 @@ if( m!=null) {
 		<td valign="center" align="center" colspan="2" bgcolor="white"><input type="submit" value="Update Details"><BR><BR></td>
 	</tr>
 	</form>
+	</table>
+	<table width="100%" bgcolor="#eeeeee" cellpadding="1" cellspacing="2">
 	<tr>
 		<td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Candidate Genes</B></td>
 	</tr>
@@ -57,20 +59,52 @@ if( m!=null) {
 		<%
 	}
 	else{
+		int ct = 1;
 		while (iter.hasNext()) {
 			g=(CandidateGene)iter.next();
+			String gID = g.getId().toString();
 			%>
 			<tr>
+				<td width="90%" bgcolor="white"><a href="GeneDetail.jsp?id=<%=gID%>"><%=g.getName()%></a><BR><%=g.getDescription()%></td>
 				<form method="POST" action="candidateGeneListDetail.htm">
 				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
 				<input type="hidden" name="action" id="action" value="removegenefromcandidatelist">
-				<input type="hidden" name="geneID" id="geneID" value="<%=g.getId().toString()%>">
-				
-				<td bgcolor="white"><a href="GeneDetail.jsp?id=<%=g.getId()%>"><%=g.getName()%></a></td>
-				<td bgcolor="white"><%=g.getDescription()%>
-					<input type="submit" value="Remove from List">
+				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
+				<td size='75px' bgcolor="white"><%=g.getDescription()%>
+					<input type="submit" value="Remove">
 				</td>
 				</form>
+				<%
+				if( can.size()>1 && ct>1) {
+				%>
+				<form method="POST" action="candidateGeneListDetail.htm">
+				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
+				<input type="hidden" name="action" id="action" value="movecandidateuponcandidatelist">
+				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
+				<td size='75px' bgcolor="white">
+					<input type="submit" value="Move Up">
+				</td>
+				</form>
+				<%
+				}
+				else
+					out.print("<td size='75px' bgcolor='white'>&nbsp;</td>");
+				if( can.size()>1 && ct!=can.size()){
+				%>
+				<form method="POST" action="candidateGeneListDetail.htm">
+				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
+				<input type="hidden" name="action" id="action" value="movecandidatedownoncandidatelist">
+				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
+				<td size='75px' bgcolor="white">
+					<input type="submit" value="Move Down">
+				</td>
+				</form>
+				<%
+				}
+				else
+					out.print("<td size='75px' bgcolor='white'>&nbsp;</td>");
+				ct++;
+				%>
 			</tr>
 		<%
 		}

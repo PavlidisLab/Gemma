@@ -13,12 +13,14 @@
 <body bgcolor="#ffffff">
 
 <content tag="heading">Candidate Gene Lists</content>
-
-<h3>Candidate Gene Lists:</h3><BR>
+<a href="candidateGeneList.htm?limit=U">Show only my Candidate Lists</a><BR>
+<a href="candidateGeneList.htm">Show all Candidate Lists</a><BR>
 <form name="cForm" id="cForm" action="candidateGeneList.htm" method="POST">
 <input type="hidden" name="action" id="action" value="addme">
 <input type="hidden" name="newName" id="newName">
 <input type="hidden" name="listID" id="listID">
+
+
 <table bgcolor="#eeeeee" colspacing="1" cellpadding="2">
 <tr>
 	<td width="150"><b>Name</b></td>
@@ -47,6 +49,7 @@ if( m!=null) {
 }
 %>
 </table>
+
 </form>
 <P>&nbsp;</P>
 <form method="POST" name="addform" action="candidateGeneList.htm">
