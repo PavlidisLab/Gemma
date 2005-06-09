@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Wed Jun 08 18:17:54 EDT 2005'>
+  timestamp = 'Thu Jun 09 11:09:35 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -12,9 +12,9 @@
       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
       <UML:ModelElement.taggedValue>
         <UML:TaggedValue xmi.id = 'Id2a49dm1025ed2a6cbmm7252' isSpecification = 'false'>
-          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
-          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>remove.by</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
           <UML:TaggedValue.type>
@@ -7293,6 +7293,64 @@ one class.
                                   </UML:Method.body>
                                   <UML:Method.specification>
                                     <UML:Operation xmi.idref = 'I7e6b26m10265cfbff4mm11ed'/>
+                                  </UML:Method.specification>
+                                </UML:Method>
+                                <UML:Operation xmi.id = 'I6b76d33cm104615ec4cbmbcf' name = 'findAllLocalFiles'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
+                                  isAbstract = 'false'>
+                                  <UML:ModelElement.stereotype>
+                                    <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf96'/>
+                                  </UML:ModelElement.stereotype>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmc28' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfb0'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmc29' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfaa'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmc2a' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmfa4'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmc2b' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf9e'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                    <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmc2c' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'I837986m101da242ae9mmf98'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:BehavioralFeature.parameter>
+                                    <UML:Parameter xmi.id = 'I6b76d33cm104615ec4cbmbfb' name = 'return' isSpecification = 'false'
+                                      kind = 'return'>
+                                      <UML:Parameter.type>
+                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3a'/>
+                                      </UML:Parameter.type>
+                                    </UML:Parameter>
+                                  </UML:BehavioralFeature.parameter>
+                                </UML:Operation>
+                                <UML:Method xmi.id = 'I6b76d33cm104615ec4cbmbd1' isSpecification = 'false'
+                                  isQuery = 'false'>
+                                  <UML:Method.body>
+                                    <UML:ProcedureExpression xmi.id = 'I6b76d33cm104615ec4cbmbd0' language = 'java'
+                                      body = ''/>
+                                  </UML:Method.body>
+                                  <UML:Method.specification>
+                                    <UML:Operation xmi.idref = 'I6b76d33cm104615ec4cbmbcf'/>
                                   </UML:Method.specification>
                                 </UML:Method>
                               </UML:Classifier.feature>
@@ -20211,7 +20269,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Dependency xmi.idref = 'I2e3c9e93m102f5a8f607m6358'/>
                                 <UML:Dependency xmi.idref = 'Im3993ed8m1030b26df71mm6ca'/>
                                 <UML:Dependency xmi.idref = 'Im21fcb0e1m1043ed6421dm543'/>
-                                <UML:Dependency xmi.idref = 'Im21fcb0e1m1043ed6421dm327'/>
+                                <UML:Dependency xmi.idref = 'I6b76d33cm104615ec4cbmbc8'/>
                               </UML:ModelElement.clientDependency>
                               <UML:ModelElement.stereotype>
                                 <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf44'/>
@@ -20265,13 +20323,13 @@ of nucleotides associated with a gene product.  This class only represents the s
                                   isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
                                   isAbstract = 'false'>
                                   <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im2e4cd3c8m102ffa84ba0mmc08' name = 'candidateList'
+                                    <UML:Parameter xmi.id = 'I6b76d33cm104615ec4cbm963' name = 'candidateList'
                                       isSpecification = 'false' kind = 'in'>
                                       <UML:Parameter.type>
                                         <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
                                       </UML:Parameter.type>
                                     </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im2e4cd3c8m102ffa84ba0mmc07' name = 'return' isSpecification = 'false'
+                                    <UML:Parameter xmi.id = 'I6b76d33cm104615ec4cbm964' name = 'return' isSpecification = 'false'
                                       kind = 'return'>
                                       <UML:Parameter.type>
                                         <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
@@ -20308,196 +20366,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     </UML:Parameter>
                                   </UML:BehavioralFeature.parameter>
                                 </UML:Operation>
-                                <UML:Operation xmi.id = 'Im3993ed8m1030b26df71mmb42' name = 'addCandidateToCandidateGeneList'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmb2a' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmb29' name = 'gene' isSpecification = 'false'
-                                      kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ce9'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmb28' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7910'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Operation xmi.id = 'Im21fcb0e1m1043ed6421dm16c' name = 'addCandidateToCandidateGeneList'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im21fcb0e1m1043ed6421dm184' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im21fcb0e1m1043ed6421dm185' name = 'geneID' isSpecification = 'false'
-                                      kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e0e'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im21fcb0e1m1043ed6421dm186' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7910'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Operation xmi.id = 'Im3993ed8m1030b26df71mmbce' name = 'removeCandidateFromCandidateGeneList'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmbb6' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmbb4' name = 'candidateGene'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7910'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmbb3' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Method xmi.id = 'Im3993ed8m1030b26df71mmbcc' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im3993ed8m1030b26df71mmbcd' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im3993ed8m1030b26df71mmbce'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
-                                <UML:Method xmi.id = 'Im3993ed8m1030b26df71mmb40' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im3993ed8m1030b26df71mmb41' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im3993ed8m1030b26df71mmb42'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
-                                <UML:Operation xmi.id = 'Im798e8e87m1045de37e21m851' name = 'removeCandidateFromCandidateGeneList'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m869' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m86a' name = 'candidateGeneID'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e0e'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m86b' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Operation xmi.id = 'Im3993ed8m1030b26df71mmad9' name = 'increaseCandidateRanking'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmac1' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmac0' name = 'candidateGene'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7910'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mmabf' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Operation xmi.id = 'Im798e8e87m1045de37e21m8ba' name = 'increaseCandidateRanking'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m923' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m924' name = 'candidateGeneID'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e0e'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m925' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Method xmi.id = 'Im3993ed8m1030b26df71mmad7' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im3993ed8m1030b26df71mmad8' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im3993ed8m1030b26df71mmad9'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
-                                <UML:Method xmi.id = 'Im3993ed8m1030b26df71mma6e' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im3993ed8m1030b26df71mma6f' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im3993ed8m1030b26df71mma70'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
                                 <UML:Method xmi.id = 'Im3993ed8m1030b26df71mma05' isSpecification = 'false'
                                   isQuery = 'false'>
                                   <UML:Method.body>
@@ -20508,56 +20376,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     <UML:Operation xmi.idref = 'Im3993ed8m1030b26df71mma07'/>
                                   </UML:Method.specification>
                                 </UML:Method>
-                                <UML:Operation xmi.id = 'Im3993ed8m1030b26df71mma70' name = 'decreaseCandidateRanking'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mma58' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mma57' name = 'candidateGene'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7910'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im3993ed8m1030b26df71mma56' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
-                                <UML:Operation xmi.id = 'Im798e8e87m1045de37e21m974' name = 'decreaseCandidateRanking'
-                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                                  isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
-                                  isAbstract = 'false'>
-                                  <UML:BehavioralFeature.parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m98c' name = 'candidateGeneList'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m98d' name = 'candidateGeneID'
-                                      isSpecification = 'false' kind = 'in'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e0e'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                    <UML:Parameter xmi.id = 'Im798e8e87m1045de37e21m98e' name = 'return' isSpecification = 'false'
-                                      kind = 'return'>
-                                      <UML:Parameter.type>
-                                        <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e26'/>
-                                      </UML:Parameter.type>
-                                    </UML:Parameter>
-                                  </UML:BehavioralFeature.parameter>
-                                </UML:Operation>
                                 <UML:Operation xmi.id = 'I49c1f765m102ff7e25a8m683f' name = 'findByContributer'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
@@ -20666,16 +20484,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     <UML:Operation xmi.idref = 'I5a9d4282m1041fb94bd4m26'/>
                                   </UML:Method.specification>
                                 </UML:Method>
-                                <UML:Method xmi.id = 'Im21fcb0e1m1043ed6421dm16e' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im21fcb0e1m1043ed6421dm16d' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im21fcb0e1m1043ed6421dm16c'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
                                 <UML:Operation xmi.id = 'I465ee03dm10458cda92am70a' name = 'setActor' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
                                   isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
@@ -20710,36 +20518,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                                     <UML:Class xmi.idref = 'I2863e477m101683735a4mm7341'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
-                                <UML:Method xmi.id = 'Im798e8e87m1045de37e21m853' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im798e8e87m1045de37e21m852' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im798e8e87m1045de37e21m851'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
-                                <UML:Method xmi.id = 'Im798e8e87m1045de37e21m8bc' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im798e8e87m1045de37e21m8bb' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im798e8e87m1045de37e21m8ba'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
-                                <UML:Method xmi.id = 'Im798e8e87m1045de37e21m976' isSpecification = 'false'
-                                  isQuery = 'false'>
-                                  <UML:Method.body>
-                                    <UML:ProcedureExpression xmi.id = 'Im798e8e87m1045de37e21m975' language = 'java'
-                                      body = ''/>
-                                  </UML:Method.body>
-                                  <UML:Method.specification>
-                                    <UML:Operation xmi.idref = 'Im798e8e87m1045de37e21m974'/>
-                                  </UML:Method.specification>
-                                </UML:Method>
                               </UML:Classifier.feature>
                             </UML:Class>
                             <UML:Class xmi.id = 'I49c1f765m102ff7e25a8m6857' name = 'person Person'
@@ -20750,6 +20528,20 @@ of nucleotides associated with a gene product.  This class only represents the s
                               isAbstract = 'false' isActive = 'false'/>
                             <UML:Dependency xmi.id = 'Im2e4cd3c8m102ffa84ba0mmbca' name = 'candidateGene'
                               isSpecification = 'false'>
+                              <UML:ModelElement.taggedValue>
+                                <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmbc3' isSpecification = 'false'>
+                                  <UML:TaggedValue.dataValue>rank</UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.type>
+                                    <UML:TagDefinition xmi.idref = 'I6b76d33cm104615ec4cbmbc0'/>
+                                  </UML:TaggedValue.type>
+                                </UML:TaggedValue>
+                                <UML:TaggedValue xmi.id = 'I6b76d33cm104615ec4cbmbc7' isSpecification = 'false'>
+                                  <UML:TaggedValue.dataValue>set</UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.type>
+                                    <UML:TagDefinition xmi.idref = 'I6b76d33cm104615ec4cbmbc4'/>
+                                  </UML:TaggedValue.type>
+                                </UML:TaggedValue>
+                              </UML:ModelElement.taggedValue>
                               <UML:Dependency.client>
                                 <UML:Class xmi.idref = 'I1d6e4a4m102d1a4cb6dm152d'/>
                               </UML:Dependency.client>
@@ -24457,7 +24249,10 @@ of nucleotides associated with a gene product.  This class only represents the s
                             <UML:Class xmi.idref = 'Iff6185m1029346d98fmmbab'/>
                           </UML:Generalization.parent>
                         </UML:Generalization>
-                        <UML:Dependency xmi.id = 'Im21fcb0e1m1043ed6421dm327' isSpecification = 'false'>
+                        <UML:Class xmi.id = 'Im21fcb0e1m1043ed6421dm5b3' name = 'Gene:' visibility = 'public'
+                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+                          isActive = 'false'/>
+                        <UML:Dependency xmi.id = 'I6b76d33cm104615ec4cbmbc8' isSpecification = 'false'>
                           <UML:Dependency.client>
                             <UML:Class xmi.idref = 'I2e3c9e93m102f5a8f607m625b'/>
                           </UML:Dependency.client>
@@ -24465,9 +24260,6 @@ of nucleotides associated with a gene product.  This class only represents the s
                             <UML:Class xmi.idref = 'Im308018aam1014dde5881mm7ce9'/>
                           </UML:Dependency.supplier>
                         </UML:Dependency>
-                        <UML:Class xmi.id = 'Im21fcb0e1m1043ed6421dm5b3' name = 'Gene:' visibility = 'public'
-                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-                          isActive = 'false'/>
                       </UML:Namespace.ownedElement>
                     </UML:Package>
                     <UML:Package xmi.id = 'I1140071m101d462efa4mm4e9b' name = 'analysis' visibility = 'public'
@@ -25658,6 +25450,28 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
             <UML:Multiplicity xmi.id = 'Idd3147m1036b562585m77e'>
               <UML:Multiplicity.range>
                 <UML:MultiplicityRange xmi.id = 'Idd3147m1036b562585m77f' lower = '1' upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
+        <UML:TagDefinition xmi.id = 'I6b76d33cm104615ec4cbmbc0' name = '@andromda.hibernate.orderByColumns'
+          isSpecification = 'false'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = 'I6b76d33cm104615ec4cbmbc1'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = 'I6b76d33cm104615ec4cbmbc2' lower = '1'
+                  upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
+        <UML:TagDefinition xmi.id = 'I6b76d33cm104615ec4cbmbc4' name = '@andromda.hibernate.collection.type'
+          isSpecification = 'false'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = 'I6b76d33cm104615ec4cbmbc5'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = 'I6b76d33cm104615ec4cbmbc6' lower = '1'
+                  upper = '1'/>
               </UML:Multiplicity.range>
             </UML:Multiplicity>
           </UML:TagDefinition.multiplicity>
