@@ -151,7 +151,8 @@ public class OntologyEntryParserImpl implements Parser {
             Collection<LocalFile> localFiles = getLocalFileEntries();
 
             for ( LocalFile localFile : localFiles ) {
-                if ( localFile.getLocalURI() == lf.getLocalURI() || localFile.getRemoteURI() == lf.getRemoteURI() ) {
+
+                if ( localFile.getLocalURI().equalsIgnoreCase( lf.getLocalURI() ) ) {
                     log.info( "local file already exists" );
                     return localFile;
                 }
