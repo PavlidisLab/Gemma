@@ -60,10 +60,11 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
         ed.setType( DatabaseType.ONTOLOGY );
 
         LocalFile lf = LocalFile.Factory.newInstance();
-        lf.setLocalURI( "Remote file.  See remote uri for details.  " );
+        lf.setLocalURI( "Remote file.  See remote uri for details." );
         lf.setRemoteURI( url );
         lf.setSize( 1656000 );
 
+        // add a second local file
         LocalFile lf2 = LocalFile.Factory.newInstance();
         lf2.setLocalURI( "2nd local file local uri" );
         lf2.setRemoteURI( "2nd local file remote uri" );
@@ -84,6 +85,11 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
         stopWatch.stop();
 
         LoaderTools.displayTime( stopWatch );
+
+        // trying a second parsed xml file
+        oeCol = ontologyEntryParser.parseFromHttp( url, dependencies );
+
+        ontologyEntryLoader.create( oeCol );
 
     }
 
