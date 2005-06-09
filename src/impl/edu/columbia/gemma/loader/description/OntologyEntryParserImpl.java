@@ -44,92 +44,7 @@ public class OntologyEntryParserImpl implements Parser {
     private LocalFileDao localFileDao;
 
     /**
-     * @param externalDatabaseName
-     * @return
-     */
-    public ExternalDatabase createOrGetExternalDatabase( ExternalDatabase ed ) {
-
-        if ( getExternalDatabaseEntries().size() == 0 )
-            this.getExternalDatabaseDao().create( ed );
-        else {
-            Collection<ExternalDatabase> externalDatabases = getExternalDatabaseEntries();
-
-            for ( ExternalDatabase externalDatabase : externalDatabases ) {
-                if ( externalDatabase.getName().equalsIgnoreCase( ed.getName() ) ) {
-                    log.info( "external database " + ed.getName() + " already exists" );
-                    return externalDatabase;
-                }
-
-                this.getExternalDatabaseDao().create( ed );
-                log.info( "external database with name: " + ed.getName() + " created." );
-            }
-        }
-        return ed;
-    }
-
-    private LocalFile createOrGetLocalFile( LocalFile lf ) {
-        if ( getLocalFileEntries().size() == 0 )
-            this.getLocalFileDao().create( lf );
-        else {
-            Collection<LocalFile> localFiles = getLocalFileEntries();
-
-            for ( LocalFile localFile : localFiles ) {
-                if ( localFile.getLocalURI() == lf.getLocalURI() || localFile.getRemoteURI() == lf.getRemoteURI() ) {
-                    log.info( "local file already exists" );
-                    return localFile;
-                }
-
-                this.getLocalFileDao().create( lf );
-                log.info( "local file created." );
-            }
-        }
-        return lf;
-
-    }
-
-    public Method findParseLineMethod( String string ) throws NoSuchMethodException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * @return Returns the externalDatabaseDao.
-     */
-    public ExternalDatabaseDao getExternalDatabaseDao() {
-        return externalDatabaseDao;
-    }
-
-    /**
-     * @return Collection
-     */
-    public Collection getExternalDatabaseEntries() {
-
-        return this.getExternalDatabaseDao().findAllExternalDb();
-    }
-
-    private Collection getLocalFileEntries() {
-        return this.getLocalFileDao().findAllLocalFiles();
-    }
-
-    /**
-     * @return Returns the localFileDao.
-     */
-    public LocalFileDao getLocalFileDao() {
-        return localFileDao;
-    }
-
-    public Map parse( InputStream is, Method m ) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public Map parseFile( String filename ) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * Parses an xml file at the specified url. This can be a zip file.
+     * Parses an xml file at the specified url. This can be a zip file. TODO candidate for Parser interface
      * 
      * @param obj - obj will be an association (not a composition relationship)
      * @param url
@@ -137,8 +52,7 @@ public class OntologyEntryParserImpl implements Parser {
      * @throws IOException
      * @throws SAXException
      */
-    public Collection parseXmlOntologyEntriesFromHttp( Object[] dependencies, String url ) throws IOException,
-            SAXException {
+    public Collection parseFromHttp( String url, Object[] dependencies ) throws IOException, SAXException {
         Map goTermsMap = null;
         InputStream is = LoaderTools.retrieveByHTTP( url );
         GZIPInputStream gZipInputStream = new GZIPInputStream( is );
@@ -152,13 +66,18 @@ public class OntologyEntryParserImpl implements Parser {
         return createGemmaObjects( dependencies, goTermsMap );
     }
 
+    /**
+     * @param dependencies
+     * @param ontologyEntryTermsMap
+     * @return Collection
+     */
     public Collection createGemmaObjects( Object[] dependencies, Map ontologyEntryTermsMap ) {
         Set goTermsKeysSet = null;
         ExternalDatabase externalDatabase = null;
 
         LocalFile localFile = null;
 
-        Collection<LocalFile> flatFiles = new HashSet();
+        Collection<LocalFile> flatFiles = new HashSet<LocalFile>();
         for ( int i = 0; i < dependencies.length; i++ ) {
             Class c = dependencies[i].getClass();
             if ( c.getName().endsWith( "ExternalDatabaseImpl" ) )
@@ -175,7 +94,7 @@ public class OntologyEntryParserImpl implements Parser {
 
         goTermsKeysSet = ontologyEntryTermsMap.keySet();
 
-        Collection<OntologyEntry> ontologyEntryCol = new HashSet();
+        Collection<OntologyEntry> ontologyEntryCol = new HashSet<OntologyEntry>();
 
         // create Gemma domain objects
         for ( Object key : goTermsKeysSet ) {
@@ -198,6 +117,80 @@ public class OntologyEntryParserImpl implements Parser {
     }
 
     /**
+     * @param externalDatabaseName
+     * @return ExternalDatabase
+     */
+    public ExternalDatabase createOrGetExternalDatabase( ExternalDatabase ed ) {
+
+        if ( getExternalDatabaseEntries().size() == 0 )
+            this.getExternalDatabaseDao().create( ed );
+        else {
+            Collection<ExternalDatabase> externalDatabases = getExternalDatabaseEntries();
+
+            for ( ExternalDatabase externalDatabase : externalDatabases ) {
+                if ( externalDatabase.getName().equalsIgnoreCase( ed.getName() ) ) {
+                    log.info( "external database " + ed.getName() + " already exists" );
+                    return externalDatabase;
+                }
+
+                this.getExternalDatabaseDao().create( ed );
+                log.info( "external database with name: " + ed.getName() + " created." );
+            }
+        }
+        return ed;
+    }
+
+    /**
+     * @param lf
+     * @return LocalFile
+     */
+    private LocalFile createOrGetLocalFile( LocalFile lf ) {
+        if ( getLocalFileEntries().size() == 0 )
+            this.getLocalFileDao().create( lf );
+        else {
+            Collection<LocalFile> localFiles = getLocalFileEntries();
+
+            for ( LocalFile localFile : localFiles ) {
+                if ( localFile.getLocalURI() == lf.getLocalURI() || localFile.getRemoteURI() == lf.getRemoteURI() ) {
+                    log.info( "local file already exists" );
+                    return localFile;
+                }
+
+                this.getLocalFileDao().create( lf );
+                log.info( "local file created." );
+            }
+        }
+        return lf;
+
+    }
+
+    /**
+     * @return Collection
+     */
+    public Collection getExternalDatabaseEntries() {
+
+        return this.getExternalDatabaseDao().findAllExternalDb();
+    }
+
+    private Collection getLocalFileEntries() {
+        return this.getLocalFileDao().findAllLocalFiles();
+    }
+
+    /**
+     * @return Returns the localFileDao.
+     */
+    public LocalFileDao getLocalFileDao() {
+        return localFileDao;
+    }
+
+    /**
+     * @return Returns the externalDatabaseDao.
+     */
+    public ExternalDatabaseDao getExternalDatabaseDao() {
+        return externalDatabaseDao;
+    }
+
+    /**
      * @param externalDatabaseDao The externalDatabaseDao to set.
      */
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
@@ -209,6 +202,21 @@ public class OntologyEntryParserImpl implements Parser {
      */
     public void setLocalFileDao( LocalFileDao localFileDao ) {
         this.localFileDao = localFileDao;
+    }
+
+    public Map parse( InputStream is, Method m ) throws IOException {
+
+        throw new UnsupportedOperationException();
+    }
+
+    public Map parseFile( String filename ) throws IOException {
+
+        throw new UnsupportedOperationException();
+    }
+
+    public Method findParseLineMethod( String string ) throws NoSuchMethodException {
+
+        throw new UnsupportedOperationException();
     }
 
 }
