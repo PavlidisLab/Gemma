@@ -23,6 +23,7 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
  * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail
@@ -77,6 +78,20 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     }
 
     /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start(java.lang.String, Person)
+     */
+    public void start( String note, Person actor ) {
+        this.initialize(); // ensure that this is the first event.
+        AuditEvent newEvent = AuditEvent.Factory.newInstance();
+        newEvent.setAction( AuditAction.CREATE );
+        newEvent.setDate( new Date() );
+        newEvent.setPerformer(actor);
+        if ( note != null ) newEvent.setNote( note );
+
+        this.addEvent( newEvent );
+    }
+    
+    /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update()
      */
     public void update() {
@@ -99,6 +114,23 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
         this.addEvent( newEvent );
     }
 
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update(java.lang.String, Person)
+     */
+    public void update( String note, Person actor ) {
+        assert this.getEvents() != null;
+        assert this.getEvents().size() > 0; // can't have update as the first
+        // event.
+
+        AuditEvent newEvent = AuditEvent.Factory.newInstance();
+        newEvent.setAction( AuditAction.UPDATE );
+        newEvent.setPerformer(actor);
+        newEvent.setDate( new Date() );
+        if ( note != null ) newEvent.setNote( note );
+
+        this.addEvent( newEvent );
+    }
+    
     /**
      * If this AuditTrail's list is empty or null, initialize it. Otherwise, clear any events.
      */
