@@ -20,15 +20,11 @@
  */
 
 package edu.columbia.gemma.genome.gene;
-
-
 import java.util.Collection;
 import java.util.HashSet;
-
 import java.util.Iterator;
-
 import edu.columbia.gemma.genome.Gene;
-
+import edu.columbia.gemma.genome.gene.CandidateGene;
 /**
 *
 *
@@ -56,19 +52,13 @@ public class CandidateGeneListImpl
         assert this.getCandidates() != null;
         
         Collection candidates = this.getCandidates();
-        
-        // figure out the highest rank in this candidate list 
-        // note that if the list is empty the first item has rank of 0
-        int maxRank=-1;
-        if(candidates!=null){
-            Iterator iter = candidates.iterator();
-            while(iter.hasNext()){
-                CandidateGene cg = (CandidateGene) iter.next();
-                if(cg.getRank().intValue()>maxRank)
-                    maxRank=cg.getRank().intValue();
-            }
+        CandidateGene cg=null;
+        int maxRank =-1;
+        for(Iterator iter=candidates.iterator();iter.hasNext();){
+        	cg = (CandidateGene)iter.next();
+        	if(cg.getRank().intValue()>maxRank)
+        		maxRank = cg.getRank().intValue();
         }
-    
         // new candidate gene comes at end of list
         maxRank = maxRank+1;
         
@@ -82,9 +72,8 @@ public class CandidateGeneListImpl
         this.getCandidates().add(cgNew);
         
         return cgNew;
-        
     }
-    
+        
     /**
      * Adds removes the passed candidate from the list.
      * 
@@ -93,11 +82,9 @@ public class CandidateGeneListImpl
      */
     public void removeCandidate(CandidateGene candidateGene){
         if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidateGene cannot be null" );
-        assert this.getCandidates() != null;
-        
-        Collection c = this.getCandidates();
-        if(c != null && c.contains(candidateGene))
-            c.remove(candidateGene);
+        if ( this.getCandidates() == null ) throw new IllegalArgumentException("Cannot remove from an empty list.");
+        if ( ! this.getCandidates().contains(candidateGene) ) throw new IllegalArgumentException("This candidate not found on this list.");
+        this.getCandidates().remove(candidateGene);
     }
 
     /**
@@ -106,30 +93,26 @@ public class CandidateGeneListImpl
      * @param candidate	The gene to move
      * @see edu.columbia.gemma.genome.gene.CandidateGeneList#increaseRanking(CandidateGene)
      */
-    public void increaseRanking(CandidateGene candidate)
+    public void increaseRanking(CandidateGene candidateGene)
     {
-        if ( candidate == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
-        Collection c = this.getCandidates();
-        assert c != null;
+        if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
+        if ( ! this.getCandidates().contains(candidateGene) ) throw new IllegalArgumentException("This candidate not found on this list.");
         
-        // Find candidate gene with next lowest rank for a swap
-        // What fun to do this iteratively.  This should really be a double linked list.
-        // Hopefully candidate lists won't be very big.
-        CandidateGene cgToSwap=null;
-        int rankC = candidate.getRank().intValue();	// rank of passed candidate
-        int nextLowest = -1;						// initialize to -1 so it will be set immediately
-        for(Iterator iter = c.iterator(); iter.hasNext();){
-            CandidateGene cg = (CandidateGene)iter.next();
-            if(cg.getRank().intValue() < rankC && cg.getRank().intValue()>nextLowest){
-                // only tricky part is we want the highest rank that's still lower than rankC
-                nextLowest = cg.getRank().intValue();
-                cgToSwap = cg;
-            }
+        CandidateGene cg = null;
+        CandidateGene cgR = null;
+        
+        int nextLowest = -1;						// initialize to -1 so it will be set immediately 
+        for(java.util.Iterator iter=this.getCandidates().iterator();iter.hasNext();){
+        	cg = (CandidateGene)iter.next();
+        	if(cg.getRank().intValue()<candidateGene.getRank().intValue() && cg.getRank().intValue()>nextLowest){
+        		cgR = cg;
+        	}
         }
-        if (cgToSwap != null){
-            cgToSwap.setRank(new Integer(rankC));
-            candidate.setRank(new Integer(nextLowest));
-        }
+    	if(cgR !=null){
+    		Integer tmp = cgR.getRank();
+    		cgR.setRank(candidateGene.getRank());
+    		candidateGene.setRank(tmp);
+    	}
     }        
 
 
@@ -141,28 +124,24 @@ public class CandidateGeneListImpl
      */
     public void decreaseRanking(edu.columbia.gemma.genome.gene.CandidateGene candidateGene)
     {
-        if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidateGene cannot be null" );
-        Collection c = this.getCandidates();
-        assert c != null;
+        if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
+        if ( ! this.getCandidates().contains(candidateGene) ) throw new IllegalArgumentException("This candidate not found on this list.");
         
-        // Find candidate gene with next lowest rank for a swap
-        // What fun to do this iteratively.  This should really be a double linked list.
-        // Hopefully candidate lists won't be very big.
-        CandidateGene cgToSwap=null;
-        int rankC = candidateGene.getRank().intValue();	// rank of passed candidate
-        int nextHighest = Integer.MAX_VALUE;						// initialize to -1 so it will be set immediately
-        for(Iterator iter = c.iterator(); iter.hasNext();){
-            CandidateGene cg = (CandidateGene)iter.next();
-            if(cg.getRank().intValue() > rankC && cg.getRank().intValue()<nextHighest){
-                // only tricky part is we want the highest rank that's still lower than rankC
-                nextHighest = cg.getRank().intValue();
-                cgToSwap = cg;
-            }
+        CandidateGene cg = null;
+        CandidateGene cgR = null;
+        
+        int nextHighest = Integer.MAX_VALUE;	// initialize to MAX so it will be set immediately 
+        for(java.util.Iterator iter=this.getCandidates().iterator();iter.hasNext();){
+        	cg = (CandidateGene)iter.next();
+        	if(cg.getRank().intValue()>candidateGene.getRank().intValue() && cg.getRank().intValue()<nextHighest){
+        		cgR = cg;
+        	}
         }
-        if (cgToSwap != null){
-            cgToSwap.setRank(new Integer(rankC));
-            candidateGene.setRank(new Integer(nextHighest));
-        }
+    	if(cgR !=null){
+    		Integer tmp = cgR.getRank();
+    		cgR.setRank(candidateGene.getRank());
+    		candidateGene.setRank(tmp);
+    	}
     }
 
 }
