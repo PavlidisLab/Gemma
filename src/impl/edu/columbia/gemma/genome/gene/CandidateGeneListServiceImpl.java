@@ -44,16 +44,18 @@ public class CandidateGeneListServiceImpl
 	protected void handleSetActor(Person actor){
 		this.actor=actor;
 	}
+	
     protected CandidateGeneList handleCreateCandidateGeneList(String newName ) throws java.lang.Exception{
         assert(this.actor!=null);
         
     	CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
-    	
-    	AuditTrail auditTrail = this.getAuditTrailDao().create(AuditTrail.Factory.newInstance());
-    	auditTrail.start("CandidateGeneList Created");
-    	auditTrail.getCreationEvent().setPerformer(actor);
-    	this.getAuditTrailDao().update(auditTrail);
-    	
+    	AuditTrail auditTrail = AuditTrail.Factory.newInstance();
+    	AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+    	auditEvent.setAction(AuditAction.CREATE);
+    	auditEvent.setDate(new Date());
+    	auditEvent.setNote("CandidateGeneList Created");
+    	auditEvent.setPerformer(actor);
+    	auditTrail.addEvent(auditEvent);
     	cgl.setAuditTrail(auditTrail);
     	cgl.setName(newName);
         cgl.setOwner(actor);
@@ -67,83 +69,9 @@ public class CandidateGeneListServiceImpl
     
     protected void handleSaveCandidateGeneList(CandidateGeneList candidateGeneList)throws java.lang.Exception{
     	assert(actor!=null);
-    	
-    	AuditTrail auditTrail = candidateGeneList.getAuditTrail();
-    	AuditEvent auditEvent = this.getAuditEventDao().create(AuditAction.UPDATE, new Date());
-    	auditEvent.setPerformer(actor);
-    	auditEvent.setNote("CandidateGeneList Saved");
-    	auditTrail.addEvent(auditEvent);
-    	this.getAuditTrailDao().update(auditTrail);
-    	
+    	candidateGeneList.getAuditTrail().update("CandidateGeneList Saved", actor);
     	this.getCandidateGeneListDao().update(candidateGeneList);   
     }
-    
-    // Manipulate CandidateGenes in a list
-    
-    protected CandidateGene handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, Gene gene) throws java.lang.Exception{
-    	assert(actor!=null);
-    	
-    	AuditTrail auditTrail = this.getAuditTrailDao().create(AuditTrail.Factory.newInstance());
-    	auditTrail.start("CandidateGene Created");
-    	auditTrail.getCreationEvent().setPerformer(actor);
-    	this.getAuditTrailDao().update(auditTrail);
-    	
-    	CandidateGene cg = candidateGeneList.addCandidate(gene);
-    	cg.setAuditTrail(auditTrail);
-    	cg.setOwner(actor);
-    	
-        return cg;
-    }
-    
-    protected CandidateGene handleAddCandidateToCandidateGeneList(CandidateGeneList candidateGeneList, long geneID ) throws java.lang.Exception{
-    	GeneDao gDAO = this.getGeneDao();
-    	Gene g = gDAO.findByID(geneID);
-    	return handleAddCandidateToCandidateGeneList(candidateGeneList, g);
-    }
-    
-    protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
-    	assert(actor!=null);
-    	candidateGeneList.removeCandidate(candidateGene);
-    } 
-    
-    protected void  handleRemoveCandidateFromCandidateGeneList(CandidateGeneList candidateGeneList, long candidateGeneID) throws java.lang.Exception{
-    	CandidateGene cg = (CandidateGene) this.getCandidateGeneDao().load(new Long(candidateGeneID));
-    	handleRemoveCandidateFromCandidateGeneList(candidateGeneList, cg);
-    } 
-    
-    protected void  handleDecreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
-    	assert(actor!=null);
-    	AuditTrail auditTrail = candidateGeneList.getAuditTrail();
-    	assert(auditTrail != null);
-    	AuditEvent auditEvent = this.getAuditEventDao().create(AuditAction.UPDATE, new Date());
-    	auditEvent.setPerformer(actor);
-    	auditEvent.setNote("CandidateList Ranking Modified: ID " + candidateGene.getId().toString() + " rank decreased.");
-    	auditTrail.addEvent(auditEvent);
-    	
-    	candidateGeneList.decreaseRanking(candidateGene);
-    }
-
-    protected void  handleDecreaseCandidateRanking(CandidateGeneList candidateGeneList, long candidateGeneID) throws java.lang.Exception{
-    	CandidateGene cg = (CandidateGene) this.getCandidateGeneDao().load(new Long(candidateGeneID));
-    	handleDecreaseCandidateRanking(candidateGeneList, cg);
-    } 
-    
-    protected void  handleIncreaseCandidateRanking(CandidateGeneList candidateGeneList, CandidateGene candidateGene) throws java.lang.Exception{
-    	assert(actor!=null);
-    	AuditTrail auditTrail = candidateGeneList.getAuditTrail();
-    	assert(auditTrail != null);
-    	AuditEvent auditEvent = this.getAuditEventDao().create(AuditAction.UPDATE, new Date());
-    	auditEvent.setPerformer(actor);
-    	auditEvent.setNote("CandidateList Ranking Modified: ID " + candidateGene.getId().toString() + " rank increased.");
-    	auditTrail.addEvent(auditEvent);
-    	
-    	candidateGeneList.increaseRanking(candidateGene);
-    }    
-
-    protected void  handleIncreaseCandidateRanking(CandidateGeneList candidateGeneList, long candidateGeneID) throws java.lang.Exception{
-    	CandidateGene cg = (CandidateGene) this.getCandidateGeneDao().load(new Long(candidateGeneID));
-    	handleIncreaseCandidateRanking(candidateGeneList, cg);
-    } 
     
     // Finder methods
     
