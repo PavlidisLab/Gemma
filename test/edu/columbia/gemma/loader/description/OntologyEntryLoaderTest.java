@@ -74,7 +74,7 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
         dependencies[1] = lf;
         dependencies[2] = lf2;
 
-        oeCol = ontologyEntryParser.parseXmlOntologyEntriesFromHttp( dependencies, url );
+        oeCol = ontologyEntryParser.parseFromHttp( url, dependencies );
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
