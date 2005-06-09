@@ -5,6 +5,7 @@ import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.auditAndSecurity.Security;
@@ -82,10 +83,8 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         daoGene.remove(g4);
         daoTaxon.remove(t);
         daoPerson.remove(p);
-        /*
-         * daoSecurity.remove(s);
-        */
     }
+    
     public void testCandidateGeneListServiceImpl(){
         
         // test create CandidateGeneList
@@ -94,25 +93,31 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         
         CandidateGeneList cgl = svc.createCandidateGeneList("New Candidate List from service test");
         Long cgl_id = cgl.getId();
+        assertTrue(cgl!=null);
+        CandidateGene cg = cgl.addCandidate(g);
+        cg.setAuditTrail(AuditTrail.Factory.newInstance());
+        cg.getAuditTrail().start("Created CandidateGene", p);
         
-        // test add/remove candidates
-        CandidateGene cg = svc.addCandidateToCandidateGeneList(cgl, g);
-        CandidateGene cg2 = svc.addCandidateToCandidateGeneList(cgl, g2);
-        CandidateGene cg3 = svc.addCandidateToCandidateGeneList(cgl, g3);
-        // test Add by ID; I already know the ID of G4 since I just created it.
-        CandidateGene cg4 = svc.addCandidateToCandidateGeneList(cgl, g4.getId().longValue());
+        CandidateGene cg2 = cgl.addCandidate(g2);
+        cg2.setAuditTrail(AuditTrail.Factory.newInstance());
+        cg2.getAuditTrail().start("Created CandidateGene", p);
         
+        CandidateGene cg3 = cgl.addCandidate(g3);
+        cg3.setAuditTrail(AuditTrail.Factory.newInstance());
+        cg3.getAuditTrail().start("Created CandidateGene", p);
+
+        CandidateGene cg4 = cgl.addCandidate(g4);
+        cg4.setAuditTrail(AuditTrail.Factory.newInstance());
+        cg4.getAuditTrail().start("Created CandidateGene", p);
+        
+        cgl.setName("New CL Test");
+        // set owner of cg2 so I can test findByContributer
         cg2.setOwner(p);
+      
         svc.saveCandidateGeneList(cgl);
-        svc.removeCandidateFromCandidateGeneList(cgl, cg);
+        cgl = svc.findByID(cgl_id.longValue());
+        assertTrue( cgl.getCandidates().size()==4);
         
-        // test rank manipulation
-        svc.decreaseCandidateRanking(cgl, cg2);
-        svc.increaseCandidateRanking(cgl, cg2);
-        svc.increaseCandidateRanking(cgl, cg.getId().longValue());
-        svc.decreaseCandidateRanking(cgl, cg.getId().longValue());
-        
-        svc.saveCandidateGeneList(cgl);
         // test finders
         java.util.Collection cByName =null;
         java.util.Collection cByContributer =null;
@@ -133,11 +138,12 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         
         assertTrue( cByName!= null && cByName.size()==1);
         assertTrue( cByContributer != null && cByContributer.size()>=1);
-        assertTrue( cAll != null && cAll.size()>=1);
-        assertTrue( cgl != null );
-        assertTrue( cg4 != null );
+        assertTrue( cAll != null && cAll.size()>=1);;
+        
         // test remove CandidateGeneList
         svc.removeCandidateGeneList(cgl);
+        cgl = svc.findByID(cgl_id.longValue());
+        assertNull(cgl);
         
     }
 }
