@@ -3,9 +3,12 @@ package edu.columbia.gemma.loader.loaderutils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -93,5 +96,36 @@ public class LoaderTools {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static Method findParseLineMethod( Object obj, String fileName ) throws NoSuchMethodException {
+        String[] f = StringUtils.split( fileName, System.getProperty( "file.separator" ) );
+        String suffixOfFilename = f[f.length - 1];
+        assert obj != null;
+        Method[] methods = obj.getClass().getMethods();
+
+        for ( Method m : methods ) {
+            if ( m.getName().toLowerCase().contains( ( suffixOfFilename ).toLowerCase() ) ) {
+                return m;
+            }
+        }
+        throw new NoSuchMethodException();
+    }
+
+    /**
+     * Print content of map if debug is set to true.
+     * 
+     * @param debug
+     */
+    public static void debugMap( Map map ) {
+        if ( log.isDebugEnabled() ) {
+            log.info( "Map contains: " );
+
+            for ( Object obj : map.keySet() ) {
+                log.info( obj );
+            }
+
+            log.info( "map size: " + map.keySet().size() );
+        }
     }
 }
