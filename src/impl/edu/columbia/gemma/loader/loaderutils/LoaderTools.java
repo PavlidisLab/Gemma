@@ -25,6 +25,10 @@ import org.apache.commons.logging.LogFactory;
 public class LoaderTools {
     protected static final Log log = LogFactory.getLog( LoaderTools.class );
 
+    private static final int HOMOSAPIEN = 9606;
+    private static final int MUSMUSCULUS = 10090;
+    private static final int RATTUS = 10114;
+
     /**
      * Display time to be used with org.apache.commons.lang.time.StopWatch
      * 
@@ -126,6 +130,21 @@ public class LoaderTools {
             }
 
             log.info( "map size: " + map.keySet().size() );
+        }
+    }
+
+    public static boolean validTaxonId( String taxId ) {
+        int taxonId = Integer.parseInt( taxId );
+
+        switch ( taxonId ) {
+            case HOMOSAPIEN:
+                return true;
+            case MUSMUSCULUS:
+                return true;
+            case RATTUS:
+                return true;
+            default:
+                return false;
         }
     }
 }
