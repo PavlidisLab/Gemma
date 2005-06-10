@@ -86,22 +86,23 @@ public class GeneLoaderCLI {
                 geneLoader = new GeneLoaderImpl();
                 geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
 
-                Map map;
+                Map map = null;
                 String[] filenames = cl.getOptionValues( 'l' );
 
-                stopwatch = new StopWatch();
-                stopwatch.start();
-                log.info( "Timer started" );
-
-                for ( int i = 0; i < filenames.length - 1; i++ ) {
-                    geneParser.parseFile( filenames[i] );
-                    i++;
-                }
-                map = geneParser.parseFile( filenames[filenames.length - 1] );
-                geneLoader.create( map.values() );
-
-                stopwatch.stop();
-                LoaderTools.displayTime( stopwatch );
+                // stopwatch = new StopWatch();
+                // stopwatch.start();
+                // log.info( "Timer started" );
+                //
+                // for ( int i = 0; i < filenames.length - 1; i++ ) {
+                // geneParser.parseFile( filenames[i] );
+                // i++;
+                // }
+                // map = geneParser.parseFile( filenames[filenames.length - 1] );
+                // geneLoader.create( map.values() );
+                //
+                // stopwatch.stop();
+                // LoaderTools.displayTime( stopwatch );
+                LoaderTools.loadDatabase( geneLoader, map.values() );
 
             } else if ( cl.hasOption( 'r' ) ) {
                 geneLoader = new GeneLoaderImpl();

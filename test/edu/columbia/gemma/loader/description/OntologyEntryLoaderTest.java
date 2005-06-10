@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -66,8 +65,8 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         // add a second local file
         LocalFile lf2 = LocalFile.Factory.newInstance();
-        lf2.setLocalURI( "2nd local file local uri" );
-        lf2.setRemoteURI( "2nd local file remote uri" );
+        lf2.setLocalURI( "2nd local file local uri." );
+        lf2.setRemoteURI( "2nd local file remote uri." );
         lf2.setSize( 1656000 );
 
         Object[] dependencies = new Object[3];
@@ -77,19 +76,13 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         oeCol = ontologyEntryParser.parseFromHttp( url, dependencies );
 
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        // ontologyEntryLoader.create( oeCol );
+        LoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
 
-        ontologyEntryLoader.create( oeCol );
-
-        stopWatch.stop();
-
-        LoaderTools.displayTime( stopWatch );
-
-        // trying a second parsed xml file
+        // parse second file. make sure the duplicates are not persisted again.
         oeCol = ontologyEntryParser.parseFromHttp( url, dependencies );
 
-        ontologyEntryLoader.create( oeCol );
+        LoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
 
     }
 

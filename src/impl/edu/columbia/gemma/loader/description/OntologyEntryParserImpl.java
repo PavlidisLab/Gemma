@@ -132,10 +132,10 @@ public class OntologyEntryParserImpl implements Parser {
                     log.info( "external database " + ed.getName() + " already exists" );
                     return externalDatabase;
                 }
-
-                this.getExternalDatabaseDao().create( ed );
-                log.info( "external database with name: " + ed.getName() + " created." );
             }
+            this.getExternalDatabaseDao().create( ed );
+            log.info( "external database with name: " + ed.getName() + " created." );
+
         }
         return ed;
     }
@@ -145,21 +145,19 @@ public class OntologyEntryParserImpl implements Parser {
      * @return LocalFile
      */
     private LocalFile createOrGetLocalFile( LocalFile lf ) {
+
         if ( getLocalFileEntries().size() == 0 )
             this.getLocalFileDao().create( lf );
         else {
             Collection<LocalFile> localFiles = getLocalFileEntries();
-
             for ( LocalFile localFile : localFiles ) {
-
-                if ( localFile.getLocalURI().equalsIgnoreCase( lf.getLocalURI() ) ) {
+                if ( localFile.getLocalURI().equals( lf.getLocalURI() ) ) {
                     log.info( "local file already exists" );
                     return localFile;
                 }
-
-                this.getLocalFileDao().create( lf );
-                log.info( "local file created." );
             }
+            this.getLocalFileDao().create( lf );
+            log.info( "local file created." );
         }
         return lf;
 
