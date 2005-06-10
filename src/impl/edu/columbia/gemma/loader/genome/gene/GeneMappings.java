@@ -30,7 +30,7 @@ import edu.columbia.gemma.loader.loaderutils.LoaderTools;
  * @spring.bean name="geneMappings"
  */
 public class GeneMappings {
-    protected static final Log log = LogFactory.getLog( Parser.class );
+    protected static final Log log = LogFactory.getLog( GeneMappings.class );
     Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
 
     private static final int HOMOSAPIEN = 9606;
