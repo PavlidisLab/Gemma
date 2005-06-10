@@ -93,11 +93,11 @@ public class GeneLoaderCLI {
                 // stopwatch.start();
                 // log.info( "Timer started" );
                 //
-                // for ( int i = 0; i < filenames.length - 1; i++ ) {
-                // geneParser.parseFile( filenames[i] );
-                // i++;
-                // }
-                // map = geneParser.parseFile( filenames[filenames.length - 1] );
+                for ( int i = 0; i < filenames.length - 1; i++ ) {
+                    geneParser.parseFile( filenames[i] );
+                    i++;
+                }
+                map = geneParser.parseFile( filenames[filenames.length - 1] );
                 // geneLoader.create( map.values() );
                 //
                 // stopwatch.stop();
