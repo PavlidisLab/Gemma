@@ -12,6 +12,7 @@ import org.springframework.beans.factory.BeanFactory;
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -30,16 +31,20 @@ public class GeneParserTest extends BaseServiceTestCase {
     private GeneParserImpl geneParser = null;
     private Map map = null;
 
+    /**
+     * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
+     * localized to the Gemma project it has been added to the test suite.
+     * 
+     * @throws Exception
+     */
     public void testParseValidFile() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/geneinfo" );
-        Method m = geneParser.findParseLineMethod( "geneinfo" );
+        Method m = LoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "geneinfo" );
         geneParser.parse( is, m );
 
         InputStream is2 = this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene2accession" );
-        Method m2 = geneParser.findParseLineMethod( "gene2accession" );
+        Method m2 = LoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "gene2accession" );
         map = geneParser.parse( is2, m2 );
-
-        // add a new stream for each file.
 
         geneLoader.create( map.values() );
 
@@ -63,7 +68,7 @@ public class GeneParserTest extends BaseServiceTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         // TODO can you pass arguments to JUnit tests so I can select this option at runtime?
-        geneLoader.removeAll( map.values() );
+        // geneLoader.removeAll( map.values() );
         geneParser = null;
         geneLoader = null;
         map = null;
