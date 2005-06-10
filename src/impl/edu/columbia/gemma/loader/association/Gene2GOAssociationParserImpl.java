@@ -4,112 +4,250 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.common.description.OntologyEntry;
-import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.loader.genome.gene.Parser;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 
-public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements Parser {
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
+ * @author keshav
+ * @version $Id$
+ * @spring.bean id="gene2GOAssociationParser"
+ * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
+ * @spring.property name="geneDao" ref="geneDao"
+ * @spring.property name="gene2GOAssociationMappings" ref="gene2GOAssociationMappings"
+ */
 
-    private static String uri;
-    protected static final Log log = LogFactory.getLog( PubMedXMLFetcher.class );
-    private String goaHuman = null;
-    private String goaMouse = null;
-    private String goaRat = null;
-    private Map goMap = null;
-    private GoMappings goMappings;
-    private Method methodToInvoke = null;
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
+ * @author keshav
+ * @version $Id$
+ */
+public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements Parser {
+    protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserImpl.class );
+
+    Method methodToInvoke = null;
+
+    Map g2GOMap = null;
+
+    private OntologyEntryDao ontologyEntryDao = null;
+
+    private GeneDao geneDao = null;
+
+    private Gene2GOAssociationMappings gene2GOAssociationMappings = null;
+
+    private String filename;
+
+    int i = 0;
+
+    public Gene2GOAssociationParserImpl() {
+        g2GOMap = new HashMap();
+    }
 
     /**
+     * @param name
+     */
+    public Gene2GOAssociationParserImpl( String name ) {
+        g2GOMap = new HashMap();
+        filename = name;
+    }
+
+    /**
+     * @param is
+     * @param lineParseMethod
+     * @return Map
+     * @throws IOException
+     */
+    public Map parse( InputStream is, Method lineParseMethod ) throws IOException {
+        methodToInvoke = lineParseMethod;
+        parse( is );
+        LoaderTools.debugMap( g2GOMap );
+        return g2GOMap;
+    }
+
+    /**
+     * @param filename
+     * @return Map
+     * @throws IOException
+     */
+    public Map parseFile( String filename ) throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param url
+     * @param dependencies
+     * @return Collection
+     * @throws IOException
      * @throws ConfigurationException
      */
-    public Gene2GOAssociationParserImpl() throws ConfigurationException {
+    public Collection parseFromHttp( String url, Object[] dependencies ) throws IOException, ConfigurationException {
 
-        goMap = new HashMap();
+        InputStream is = LoaderTools.retrieveByHTTP( url );
 
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-        String baseURL = ( String ) config.getProperty( "association.efetch.baseurl" );
-        String db = ( String ) config.getProperty( "association.efetch.go.db" );
-        String goProject = ( String ) config.getProperty( "association.efetch.goproject" );
-
-        goaHuman = ( String ) config.getProperty( "association.efetch.url.suffix.human" );
-        goaMouse = ( String ) config.getProperty( "association.efetch.url.suffix.mouse" );
-        goaRat = ( String ) config.getProperty( "association.efetch.url.suffix.rat" );
-
-        uri = baseURL + "/" + db + "/" + goProject + "/";
-    }
-
-    public Method findParseLineMethod( String species ) throws NoSuchMethodException {
-        assert goMappings != null;
-        Method[] methods = goMappings.getClass().getMethods();
-
-        for ( int i = 0; i < methods.length; i++ ) {
-            if ( methods[i].getName().toLowerCase().matches( ( "mapFrom" + species ).toLowerCase() ) ) {
-                return methods[i];
-            }
-        }
-        throw new NoSuchMethodException();
-    }
-
-    /**
-     * @return Returns the goMappings.
-     */
-    public GoMappings getGoMappings() {
-        return goMappings;
-    }
-
-    public Map parse( InputStream is, Method m ) throws IOException {
-        methodToInvoke = m;
-        parse( is );
-
-        return goMap;
-    }
-
-    public Map parseFile( String species ) throws IOException {
-        log.info( "species: " + species );
-
-        InputStream is = readGoTermsViaHTTP( species );
+        GZIPInputStream gZipInputStream = new GZIPInputStream( is );
 
         Method lineParseMethod = null;
         try {
-            lineParseMethod = this.findParseLineMethod( species );
+            lineParseMethod = LoaderTools.findParseLineMethod( new Gene2GOAssociationMappings(), filename );
         } catch ( NoSuchMethodException e ) {
             log.error( e, e );
             return null;
         }
+        g2GOMap = this.parse( gZipInputStream, lineParseMethod );
 
-        // return this.parse( is, lineParseMethod);
-        this.parseMethod( is, lineParseMethod );
-        return goMap;
+        return createGemmaObjects( dependencies, g2GOMap );
     }
 
-    public void parseMethod( InputStream is, Method m ) throws IOException {
-        methodToInvoke = m;
-        parse( is );
+    /**
+     * @param dependencies
+     * @param gene2GOAssMap
+     * @return Collection
+     */
+    public Collection createGemmaObjects( Object[] dependencies, Map gene2GOAssMap ) {
+        Set gene2GOKeysSet = null;
+
+        Gene gene = null;
+
+        OntologyEntry ontologyEntry = null;
+
+        for ( Object obj : dependencies ) {
+            Class c = obj.getClass();
+            if ( c.getName().endsWith( "GeneImpl" ) )
+                gene = createOrGetGene( ( Gene ) obj );
+            else if ( c.getName().endsWith( "OntologyEntryImpl" ) ) {
+                ontologyEntry = createOrGetOntologyEntry( ( OntologyEntry ) obj );
+            } else {
+                throw new IllegalArgumentException( "Make sure you have specified valid dependencies" );
+            }
+        }
+        log.info( "creating Gemma objects ... " );
+
+        gene2GOKeysSet = gene2GOAssMap.keySet();
+
+        Collection<Gene2GOAssociation> gene2GOAssCol = new HashSet<Gene2GOAssociation>();
+
+        // create Gemma domain objects
+        for ( Object key : gene2GOKeysSet ) {
+            Gene2GOAssociation g2GO = Gene2GOAssociation.Factory.newInstance();
+
+            g2GO.setGene( gene );
+
+            g2GO.setAssociatedOntologyEntry( ontologyEntry );
+
+            gene2GOAssCol.add( g2GO );
+
+        }
+        return gene2GOAssCol;
+
+    }
+
+    /**
+     * @param oe
+     * @return OntologyEntry
+     */
+    private OntologyEntry createOrGetOntologyEntry( OntologyEntry oe ) {
+
+        if ( getOntologyEntries().size() == 0 )
+            this.getOntologyEntryDao().create( oe );
+        else {
+            Collection<OntologyEntry> ontologyEntries = getOntologyEntries();
+
+            for ( OntologyEntry ontologyEntry : ontologyEntries ) {
+                if ( ontologyEntry.getAccession().equals( oe.getAccession() )
+                        && ontologyEntry.getExternalDatabase().getName().equalsIgnoreCase(
+                                oe.getExternalDatabase().getName() ) ) {
+                    log.info( "ontology entry: " + ontologyEntry.getExternalDatabase().getName() + "Accession: "
+                            + ontologyEntry.getAccession() + "already exists" );
+                    return ontologyEntry;
+                }
+            }
+            this.getOntologyEntryDao().create( oe );
+            log.info( "ontology entry: " + oe.getExternalDatabase().getName() + "Accession: " + oe.getAccession()
+                    + "created" );
+
+        }
+        return oe;
+    }
+
+    /**
+     * @return Collection
+     */
+    private Collection getOntologyEntries() {
+        return this.getOntologyEntryDao().findAllOntologyEntries();
+    }
+
+    /**
+     * @param g
+     * @return Gene
+     */
+    private Gene createOrGetGene( Gene g ) {
+        if ( getGenes().size() == 0 )
+            this.getGeneDao().create( g );
+
+        else {
+            Collection<Gene> genes = getGenes();
+
+            for ( Gene gene : genes ) {
+                if ( gene.getNcbiId().equals( g.getNcbiId() ) ) {
+
+                    log.info( "gene with ncbi id " + gene.getNcbiId() + " already exists" );
+                    return gene;
+                }
+            }
+            this.getGeneDao().create( g );
+            log.info( "gene with ncbi id " + g.getNcbiId() + " already exists" );
+
+        }
+        return g;
+    }
+
+    /**
+     * @return Collection<Gene>
+     */
+    private Collection<Gene> getGenes() {
+        return this.getGeneDao().findAllGenes();
     }
 
     @Override
     public Object parseOneLine( String line ) {
-        assert goMappings != null;
-        assert goMap != null;
-        OntologyEntry oe = null;
+        assert gene2GOAssociationMappings != null;
+        assert g2GOMap != null;
+        Gene2GOAssociation g2GO = null;
 
         try {
-            Object obj = methodToInvoke.invoke( goMappings, new Object[] { line } );
+            Object obj = methodToInvoke.invoke( getGene2GOAssociationMappings(), new Object[] { line } );
             if ( obj == null ) return obj;
-            oe = ( OntologyEntry ) obj;
-            // goMap.put( oe.getNcbiId(), oe );
-            return oe;
+
+            g2GO = ( Gene2GOAssociation ) obj;
+
+            g2GOMap.put( "" + i, g2GO );
+            i++;
+
+            return g2GO;
 
         } catch ( IllegalArgumentException e ) {
             // TODO Auto-generated catch block
@@ -124,38 +262,68 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
             e.printStackTrace();
             return null;
         }
+
     }
 
-    public InputStream readGoTermsViaHTTP( String name ) throws IOException {
-        String suffix = null;
-
-        if ( name.equalsIgnoreCase( "human" ) )
-            suffix = goaHuman;
-
-        else if ( name.equalsIgnoreCase( "mouse" ) )
-            suffix = goaMouse;
-
-        else if ( name.equalsIgnoreCase( "rat" ) ) suffix = goaRat;
-
-        try {
-            return LoaderTools.retrieveByHTTP( uri + suffix );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
+    /**
+     * @param newItem
+     * @return Object
+     */
+    protected Object getKey( Object newItem ) {
+        // TODO Auto-generated method stub
         return null;
     }
 
     /**
-     * @param goMappings The goMappings to set.
+     * @param string
+     * @return Method
+     * @throws NoSuchMethodException
      */
-    public void setGoMappings( GoMappings goMappings ) {
-        this.goMappings = goMappings;
-    }
-
-    @Override
-    protected Object getKey( Object newItem ) {
+    public Method findParseLineMethod( String string ) throws NoSuchMethodException {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    /**
+     * @return Returns the ontologyEntryDao.
+     */
+    public OntologyEntryDao getOntologyEntryDao() {
+        return ontologyEntryDao;
+    }
+
+    /**
+     * @param ontologyEntryDao The ontologyEntryDao to set.
+     */
+    public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
+        this.ontologyEntryDao = ontologyEntryDao;
+    }
+
+    /**
+     * @return Returns the geneDao.
+     */
+    public GeneDao getGeneDao() {
+        return geneDao;
+    }
+
+    /**
+     * @param geneDao The geneDao to set.
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
+    }
+
+    /**
+     * @return Returns the gene2GOAssociationMappings.
+     */
+    public Gene2GOAssociationMappings getGene2GOAssociationMappings() {
+        return gene2GOAssociationMappings;
+    }
+
+    /**
+     * @param gene2GOAssociationMappings The gene2GOAssociationMappings to set.
+     */
+    public void setGene2GOAssociationMappings( Gene2GOAssociationMappings gene2GOAssociationMappings ) {
+        this.gene2GOAssociationMappings = gene2GOAssociationMappings;
     }
 
 }
