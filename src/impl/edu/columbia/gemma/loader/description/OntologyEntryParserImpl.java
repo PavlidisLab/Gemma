@@ -78,12 +78,13 @@ public class OntologyEntryParserImpl implements Parser {
         LocalFile localFile = null;
 
         Collection<LocalFile> flatFiles = new HashSet<LocalFile>();
-        for ( int i = 0; i < dependencies.length; i++ ) {
-            Class c = dependencies[i].getClass();
+
+        for ( Object obj : dependencies ) {
+            Class c = obj.getClass();
             if ( c.getName().endsWith( "ExternalDatabaseImpl" ) )
-                externalDatabase = createOrGetExternalDatabase( ( ExternalDatabase ) dependencies[i] );
+                externalDatabase = createOrGetExternalDatabase( ( ExternalDatabase ) obj );
             else if ( c.getName().endsWith( "LocalFileImpl" ) ) {
-                localFile = createOrGetLocalFile( ( LocalFile ) dependencies[i] );
+                localFile = createOrGetLocalFile( ( LocalFile ) obj );
                 flatFiles.add( localFile );
             } else {
                 throw new IllegalArgumentException( "Make sure you have specified valid dependencies" );
@@ -129,7 +130,7 @@ public class OntologyEntryParserImpl implements Parser {
 
             for ( ExternalDatabase externalDatabase : externalDatabases ) {
                 if ( externalDatabase.getName().equalsIgnoreCase( ed.getName() ) ) {
-                    log.info( "external database " + ed.getName() + " already exists" );
+                    log.info( "external database " + externalDatabase.getName() + " already exists" );
                     return externalDatabase;
                 }
             }
