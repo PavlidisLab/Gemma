@@ -68,7 +68,8 @@ public class GeneParserTest extends BaseServiceTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         // TODO can you pass arguments to JUnit tests so I can select this option at runtime?
-        // geneLoader.removeAll( map.values() );
+        // TODO to properly test removal (and thus, fetching) select values from db and then call remove.
+        geneLoader.removeAll( map.values() );
         geneParser = null;
         geneLoader = null;
         map = null;
