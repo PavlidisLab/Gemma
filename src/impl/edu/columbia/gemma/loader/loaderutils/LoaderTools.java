@@ -107,7 +107,6 @@ public class LoaderTools {
         String suffixOfFilename = f[f.length - 1];
         assert obj != null;
         Method[] methods = obj.getClass().getMethods();
-
         for ( Method m : methods ) {
             if ( m.getName().toLowerCase().contains( ( suffixOfFilename ).toLowerCase() ) ) {
                 return m;
