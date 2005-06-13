@@ -38,16 +38,20 @@ import edu.columbia.gemma.loader.smd.util.SmdUtil;
  *         
  *          
  *           
- *            &lt;publication&gt;
- *            !Citation=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
- *            !Title=Diversity of gene expression in adenocarcinoma of the lung.
- *            !PubMedID=11707590
- *            &lt;experiment_set&gt;
- *            !Name=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
- *            !ExptSetNo=810
- *            !Description=The global gene expression profiles for 67 human lung tumors representing 56 patients were examined by using 24,000-element cDNA microarrays. Subdivision of the tumors based on gene expression patterns faithfully recapitulated morphological classification of the tumors into squamous, large cell, small cell, and adenocarcinoma. The gene expression patterns made possible the subclassification of adenocarcinoma into subgroups that correlated with the degree of tumor differentiation as well as patient survival. Gene expression analysis thus promises to extend and refine standard pathologic analysis.
- *            &lt;/experiment_set&gt;
- *            &lt;/publication&gt;
+ *            
+ *             
+ *              &lt;publication&gt;
+ *              !Citation=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
+ *              !Title=Diversity of gene expression in adenocarcinoma of the lung.
+ *              !PubMedID=11707590
+ *              &lt;experiment_set&gt;
+ *              !Name=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
+ *              !ExptSetNo=810
+ *              !Description=The global gene expression profiles for 67 human lung tumors representing 56 patients were examined by using 24,000-element cDNA microarrays. Subdivision of the tumors based on gene expression patterns faithfully recapitulated morphological classification of the tumors into squamous, large cell, small cell, and adenocarcinoma. The gene expression patterns made possible the subclassification of adenocarcinoma into subgroups that correlated with the degree of tumor differentiation as well as patient survival. Gene expression analysis thus promises to extend and refine standard pathologic analysis.
+ *              &lt;/experiment_set&gt;
+ *              &lt;/publication&gt;
+ *              
+ *             
  *            
  *           
  *          
@@ -73,7 +77,8 @@ public class SMDPublication {
     String citation;
     String title;
     String pubMedId;
-    List experimentSets; // vector of ExptMetas (Experiment_sets)...but without the individual experiments filled in
+    List<SMDExperiment> experimentSets; // vector of ExptMetas (Experiment_sets)...but without the individual
+    // experiments filled in
     // until later.
     private int id;
 
@@ -99,7 +104,7 @@ public class SMDPublication {
      * 
      */
     public SMDPublication() {
-        experimentSets = new ArrayList();
+        experimentSets = new ArrayList<SMDExperiment>();
     }
 
     /**
@@ -260,11 +265,11 @@ public class SMDPublication {
         this.citation = citation;
     }
 
-    public List getExperimentSets() {
+    public List<SMDExperiment> getExperimentSets() {
         return experimentSets;
     }
 
-    public void setExperimentSets( List experimentSets ) {
+    public void setExperimentSets( List<SMDExperiment> experimentSets ) {
         this.experimentSets = experimentSets;
     }
 

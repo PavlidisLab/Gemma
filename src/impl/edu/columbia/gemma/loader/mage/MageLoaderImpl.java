@@ -20,15 +20,17 @@ package edu.columbia.gemma.loader.mage;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.ResourceBundle;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import edu.columbia.gemma.common.auditAndSecurity.Person;
+import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.loaderutils.Loader;
 import edu.columbia.gemma.util.ReflectionUtil;
+import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * <hr>
@@ -40,18 +42,35 @@ import edu.columbia.gemma.util.ReflectionUtil;
  */
 public class MageLoaderImpl implements Loader {
     private static Log log = LogFactory.getLog( MageLoaderImpl.class.getName() );
+
+    private Person defaultOwner = null;
+
+    /**
+     * This class needs direct access to the context because it uses reflection to find daos.
+     */
     private static BeanFactory ctx;
 
-    static {
-        log.debug( "Loading context" );
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
+    /**
+     * 
+     *
+     */
+    public MageLoaderImpl() {
+        ctx = SpringContextUtil.getApplicationContext();
+        initializeDefaultOwner();
+    }
 
-        // CAREFUL, these paths are dependent on the classpath.
-        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-" + daoType + ".xml",
-                servletContext + "-servlet.xml" };
-        ctx = new ClassPathXmlApplicationContext( paths );
+    /**
+     * Fetch the fallback owner to use for newly-imported data.
+     */
+    private void initializeDefaultOwner() {
+        PersonDao personDao = ( PersonDao ) ctx.getBean( "personDao" );
+        Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
+
+        assert matchingPersons.size() == 1;
+
+        defaultOwner = matchingPersons.iterator().next();
+
+        if ( defaultOwner == null ) throw new NullPointerException( "Default Person 'nobody' not found in database." );
     }
 
     /*
@@ -61,6 +80,7 @@ public class MageLoaderImpl implements Loader {
      */
     public void create( Collection col ) {
         log.debug( "Entering MageLoaderImpl.create()" );
+        assert defaultOwner != null;
         try {
 
             for ( Object entity : col ) {
@@ -75,6 +95,10 @@ public class MageLoaderImpl implements Loader {
                 // ExpressionExperiment (most interested in this)
                 // 
                 if ( className.lastIndexOf( "ExpressionExperiment" ) < 0 ) continue; // FIXME
+
+                if ( ( ( ExpressionExperiment ) entity ).getOwner() == null ) {
+                    ( ( ExpressionExperiment ) entity ).setOwner( defaultOwner );
+                }
 
                 // figure out the class of the entity,
                 String dao = ReflectionUtil.constructDaoName( entity );
@@ -100,6 +124,7 @@ public class MageLoaderImpl implements Loader {
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
      */
     public void create( Object Obj ) {
+
         // TODO Auto-generated method stub
 
     }

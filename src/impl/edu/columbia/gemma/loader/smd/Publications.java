@@ -51,16 +51,16 @@ public class Publications {
 
     private FTPClient f;
 
-    private Set publications; // set of SMDPublication
+    private Set<SMDPublication> publications;
 
     public Publications() throws ConfigurationException {
-        publications = new HashSet();
+        publications = new HashSet<SMDPublication>();
         Configuration config = new PropertiesConfiguration( "Gemma.properties" );
         baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
 
     }
 
-    public Iterator getIterator() {
+    public Iterator<SMDPublication> getIterator() {
         return publications.iterator();
     }
 

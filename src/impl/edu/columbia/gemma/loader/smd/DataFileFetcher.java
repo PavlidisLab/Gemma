@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.smd;
 
 import java.io.File;
@@ -43,14 +61,14 @@ public class DataFileFetcher {
     protected static final Log log = LogFactory.getLog( DataFileFetcher.class );
     private String localBasePath = "//cgcfs1/projects/pavlidis/grp/arraydata/__incoming/smd/rawData";
     private String baseDir = "smd/experiments/";
-    private Map cuts;
+    private Map<Integer, String> cuts;
     private FTPClient f;
     private boolean success = false;
-    private Set localFiles; // set of SMDExternalFiles recording download information.
+    private Set<SMDFile> localFiles;
     private boolean force = false; // force-redownload of files
 
     public DataFileFetcher() throws IOException, ConfigurationException {
-        localFiles = new HashSet();
+        localFiles = new HashSet<SMDFile>();
         Configuration config = new PropertiesConfiguration( "Gemma.properties" );
 
         localBasePath = ( String ) config.getProperty( "smd.local.datafile.basepath" );
@@ -66,7 +84,7 @@ public class DataFileFetcher {
      */
     private void getCuts() throws IOException {
         FTPFile[] files = f.listFiles( baseDir );
-        cuts = new TreeMap();
+        cuts = new TreeMap<Integer, String>();
         for ( int i = 0; i < files.length; i++ ) {
             String name = files[i].getName();
             String[] cutPoints = name.split( "-" );
@@ -97,10 +115,9 @@ public class DataFileFetcher {
             log.info( "Created directory " + localBasePath + "/" + expM.getNumber() );
         }
 
-        List bioAssays = expM.getExperiments();
+        List<SMDBioAssay> bioAssays = expM.getExperiments();
 
-        for ( Iterator iter = bioAssays.iterator(); iter.hasNext(); ) {
-            SMDBioAssay bA = ( SMDBioAssay ) iter.next();
+        for ( SMDBioAssay bA : bioAssays ) {
             int assayId = bA.getId();
 
             String group = findCut( assayId );
@@ -157,12 +174,11 @@ public class DataFileFetcher {
      */
     private String findCut( int assayId ) {
         Integer previous = null;
-        for ( Iterator iterator = cuts.keySet().iterator(); iterator.hasNext(); ) {
-            Integer element = ( Integer ) iterator.next();
+        for ( Integer element : cuts.keySet() ) {
             int v = element.intValue();
             if ( assayId < v ) {
-                // log.info( "Will seek " + assayId + " in " + ( String ) cuts.get( previous ) );
-                return ( String ) cuts.get( previous );
+                log.debug( "Will seek " + assayId + " in " + cuts.get( previous ) );
+                return cuts.get( previous );
             }
             previous = element;
         }
@@ -178,28 +194,29 @@ public class DataFileFetcher {
             Experiments bar = new Experiments( foo );
             bar.retrieveByFTP();
 
-            for ( Iterator iter = bar.getExperimentsIterator(); iter.hasNext(); ) {
-                SMDExperiment element = ( SMDExperiment ) iter.next();
+            for ( Iterator<SMDExperiment> iter = bar.getExperimentsIterator(); iter.hasNext(); ) {
+                SMDExperiment element = iter.next();
                 fb.retrieveByFTP( element );
             }
-
         } catch ( IOException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch ( SAXException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
-
         } catch ( ConfigurationException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
+    /**
+     * @return
+     */
     public boolean isForce() {
         return force;
     }
 
+    /**
+     * @param force
+     */
     public void setForce( boolean force ) {
         this.force = force;
     }

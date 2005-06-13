@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.smd;
 
 import java.io.IOException;
@@ -38,7 +56,7 @@ public class Experiments {
     private String baseDir = "smd/publications/";
 
     private Publications pubs;
-    private Set experiments;
+    private Set<SMDExperiment> experiments;
     private SpeciesExperimentMap sem;
     private FTPClient f;
 
@@ -50,7 +68,7 @@ public class Experiments {
      */
     public Experiments( Publications pubs ) throws IOException, ConfigurationException {
         this.pubs = pubs;
-        experiments = new HashSet();
+        experiments = new HashSet<SMDExperiment>();
 
         Configuration config = new PropertiesConfiguration( "Gemma.properties" );
 
@@ -64,17 +82,15 @@ public class Experiments {
      * @throws SAXException
      */
     public void retrieveByFTP() throws IOException, SAXException {
-
         if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
-        for ( Iterator iter = pubs.getIterator(); iter.hasNext(); ) {
-            SMDPublication pubM = ( SMDPublication ) iter.next();
+        for ( Iterator<SMDPublication> iter = pubs.getIterator(); iter.hasNext(); ) {
+            SMDPublication pubM = iter.next();
 
             log.info( "Seeking details for publication: " + pubM.getTitle() );
 
-            List expSets = pubM.getExperimentSets();
-            for ( Iterator iterator = expSets.iterator(); iterator.hasNext(); ) {
-                SMDExperiment expM = ( SMDExperiment ) iterator.next();
+            List<SMDExperiment> expSets = pubM.getExperimentSets();
+            for ( SMDExperiment expM : expSets ) {
                 expM.setPublicationId( pubM.getId() );
 
                 log.info( "Seeking experiment set meta file for " + expM.getName() );
@@ -115,32 +131,26 @@ public class Experiments {
     public String toString() {
         StringBuffer buf = new StringBuffer();
 
-        for ( Iterator iter = pubs.getIterator(); iter.hasNext(); ) {
-            SMDPublication pubM = ( SMDPublication ) iter.next();
-            List expSets = pubM.getExperimentSets();
+        for ( Iterator<SMDPublication> iter = pubs.getIterator(); iter.hasNext(); ) {
+            SMDPublication pubM = iter.next();
+            List<SMDExperiment> expSets = pubM.getExperimentSets();
 
             String pubString = pubM.toString();
 
-            for ( Iterator iterator = expSets.iterator(); iterator.hasNext(); ) {
-                SMDExperiment expM = ( SMDExperiment ) iterator.next();
-
+            for ( SMDExperiment expM : expSets ) {
                 String expSetString = expM.toString();
 
-                List exps = expM.getExperiments();
-                for ( Iterator itr = exps.iterator(); itr.hasNext(); ) {
-                    SMDBioAssay exp = ( SMDBioAssay ) itr.next();
-
+                List<SMDBioAssay> exps = expM.getExperiments();
+                for ( SMDBioAssay exp : exps ) {
                     buf.append( pubString + "\t" + expSetString + "\t" + exp + "\t" + sem.getSpecies( exp.getId() )
                             + "\n" );
-
                 }
             }
         }
-
         return buf.toString();
     }
 
-    public Iterator getExperimentsIterator() {
+    public Iterator<SMDExperiment> getExperimentsIterator() {
         return experiments.iterator();
     }
 

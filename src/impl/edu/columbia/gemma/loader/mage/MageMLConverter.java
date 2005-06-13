@@ -20,7 +20,7 @@ package edu.columbia.gemma.loader.mage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+// import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,6 +83,7 @@ import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
 
+import edu.columbia.gemma.common.auditAndSecurity.ContactImpl;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -848,14 +849,12 @@ public class MageMLConverter {
 
         // This is a bit cheesy, we just concatenate the descriptions together.
         StringBuffer descBuf = new StringBuffer();
-        List descriptions = mageObj.getDescriptions();
-        for ( Iterator iter = descriptions.iterator(); iter.hasNext(); ) {
-            Description description = ( Description ) iter.next();
+        List<Description> descriptions = mageObj.getDescriptions();
+        for ( Description description : descriptions ) {
             descBuf.append( description.getText() );
             descBuf.append( " " );
-            List annotations = description.getAnnotations();
-            for ( Iterator iterator = annotations.iterator(); iterator.hasNext(); ) {
-                OntologyEntry element = ( OntologyEntry ) iterator.next();
+            List<OntologyEntry> annotations = description.getAnnotations();
+            for ( OntologyEntry element : annotations ) {
                 edu.columbia.gemma.common.description.OntologyEntry ontologyEntry = convertOntologyEntry( element );
                 log.debug( "Got association for describable: " + ontologyEntry.getValue() );
                 // gemmaObj.addAnnotation( ontologyEntry );
@@ -893,7 +892,7 @@ public class MageMLConverter {
     public ExpressionExperiment convertExperiment( Experiment mageObj ) {
         if ( mageObj == null ) return null;
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
-        result.setSource( "Imported from MAGE-ML" ); // duh.
+        result.setSource( "Imported from MAGE-ML" );
 
         if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
         return result;
@@ -1298,6 +1297,8 @@ public class MageMLConverter {
         if ( mageObj == null ) return null;
         edu.columbia.gemma.common.description.OntologyEntry result = edu.columbia.gemma.common.description.OntologyEntry.Factory
                 .newInstance();
+        result.setAccession( mageObj.getOntologyReference() == null ? null : mageObj.getOntologyReference()
+                .getAccession() );
         result.setCategory( mageObj.getCategory() );
         result.setDescription( mageObj.getDescription() );
         result.setValue( mageObj.getValue() );
@@ -1318,7 +1319,7 @@ public class MageMLConverter {
         if ( associationName.equals( "Associations" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Associations" );
         } else if ( associationName.equals( "OntologyReference" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "OntologyReference" );
+            simpleFillIn( associatedObject, gemmaObj, getter, "ExternalDatabase" );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -2244,9 +2245,8 @@ public class MageMLConverter {
                         + ReflectionUtil.getSimpleName( convertedGemmaClass ) );
                 findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, associationName );
             } else {
-                Collection gemmaObjList = new ArrayList();
-                for ( Iterator iter = associatedList.iterator(); iter.hasNext(); ) {
-                    Object mageObj = iter.next();
+                Collection<Object> gemmaObjList = new HashSet<Object>();
+                for ( Object mageObj : associatedList ) {
                     Object convertedGemmaObj = findAndInvokeConverter( mageObj );
                     if ( convertedGemmaObj == null ) continue; // not supported.
                     log.debug( "Converting a MAGE list to a Gemma list" );
@@ -2320,12 +2320,10 @@ public class MageMLConverter {
      * @param list BioAssayData objects to be handled.
      * @param gemmaObj Gemma BioAssay object to attach data files to.
      */
-    private void specialConvertBioAssayBioAssayDataAssociations( List bioAssayData,
+    private void specialConvertBioAssayBioAssayDataAssociations( List<BioAssayData> bioAssayData,
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj ) {
 
-        for ( Iterator iter = bioAssayData.iterator(); iter.hasNext(); ) {
-            BioAssayData bioAssayDatum = ( BioAssayData ) iter.next();
-
+        for ( BioAssayData bioAssayDatum : bioAssayData ) {
             LocalFile lf = convertBioAssayData( bioAssayDatum );
 
             if ( bioAssayDatum instanceof DerivedBioAssayData ) {
@@ -2334,14 +2332,13 @@ public class MageMLConverter {
                 gemmaObj.getDerivedDataFiles().add( lf );
 
                 Transformation transformation = ( ( DerivedBioAssayData ) bioAssayDatum ).getProducerTransformation();
-                List sources = transformation.getBioAssayDataSources();
+                List<BioAssayData> sources = transformation.getBioAssayDataSources();
 
                 if ( sources.size() > 1 ) {
                     log.warn( "Derived bioassayData maps to more than one other bioassaydata!" );
                 }
 
-                for ( Iterator iterb = sources.iterator(); iterb.hasNext(); ) {
-                    BioAssayData sourceData = ( BioAssayData ) iterb.next();
+                for ( BioAssayData sourceData : sources ) {
                     if ( sourceData instanceof MeasuredBioAssayData ) {
                         MeasuredBioAssayData measuredSourceData = ( MeasuredBioAssayData ) sourceData;
                         gemmaObj.setRawDataFile( convertMeasuredBioAssayData( measuredSourceData ) );
@@ -2363,17 +2360,14 @@ public class MageMLConverter {
      * @param compositeGroups
      * @param gemmaObj
      */
-    private void specialConvertCompositeGroups( List compositeGroups,
+    private void specialConvertCompositeGroups( List<CompositeGroup> compositeGroups,
             edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
 
-        Collection designObjs = initializeDesignElementCollection( gemmaObj );
+        Collection<CompositeSequence> designObjs = initializeDesignElementCollection( gemmaObj );
 
-        for ( Iterator iter = compositeGroups.iterator(); iter.hasNext(); ) {
-            CompositeGroup rg = ( CompositeGroup ) iter.next();
-            List reps = rg.getCompositeSequences();
-            for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
-                org.biomage.DesignElement.CompositeSequence compseq = ( org.biomage.DesignElement.CompositeSequence ) iterator
-                        .next();
+        for ( CompositeGroup rg : compositeGroups ) {
+            List<org.biomage.DesignElement.CompositeSequence> reps = rg.getCompositeSequences();
+            for ( org.biomage.DesignElement.CompositeSequence compseq : reps ) {
                 CompositeSequence csconv = convertCompositeSequence( compseq );
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }
@@ -2444,14 +2438,12 @@ public class MageMLConverter {
     private void specialGetReporterFeatureLocations( org.biomage.DesignElement.Reporter mageObj, Reporter result ) {
         if ( mageObj == null ) return;
         if ( result == null ) throw new IllegalArgumentException( "Null Reporter passed" );
-        List featureReporterMaps = mageObj.getFeatureReporterMaps();
+        List<FeatureReporterMap> featureReporterMaps = mageObj.getFeatureReporterMaps();
         if ( featureReporterMaps == null ) return;
-        for ( Iterator iter = featureReporterMaps.iterator(); iter.hasNext(); ) {
-            FeatureReporterMap featureReporterMap = ( FeatureReporterMap ) iter.next();
+        for ( FeatureReporterMap featureReporterMap : featureReporterMaps ) {
             if ( featureReporterMap == null ) continue;
-            List featureInformationSources = featureReporterMap.getFeatureInformationSources();
-            for ( Iterator iterator = featureInformationSources.iterator(); iterator.hasNext(); ) {
-                FeatureInformation featureInformation = ( FeatureInformation ) iterator.next();
+            List<FeatureInformation> featureInformationSources = featureReporterMap.getFeatureInformationSources();
+            for ( FeatureInformation featureInformation : featureInformationSources ) {
                 if ( featureInformation == null ) continue;
 
                 if ( featureInformation.getFeature() == null || featureInformation.getFeature().getPosition() == null )

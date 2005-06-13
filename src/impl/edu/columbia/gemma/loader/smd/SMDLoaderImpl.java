@@ -16,19 +16,32 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.loader.smd.model;
+package edu.columbia.gemma.loader.smd;
 
-/**
- * <hr>
- * <p>
- * Copyright (c) 2004 Columbia University
- * 
- * @author pavlidis
- * @version $Id$
- */
-public class SMDFileFormat {
+import java.util.Collection;
 
-    private String name;
-    private String description;
+import edu.columbia.gemma.loader.loaderutils.Loader;
+
+public class SMDLoaderImpl implements Loader {
+
+    public void create( Collection col ) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void create( Object obj ) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void removeAll() {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void removeAll( Collection collection ) {
+        // TODO Auto-generated method stub
+
+    }
 
 }

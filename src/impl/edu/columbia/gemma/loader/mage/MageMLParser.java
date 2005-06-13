@@ -25,9 +25,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -118,9 +115,8 @@ public class MageMLParser {
                     || name.startsWith( "org.biomage.Interface" ) ) continue;
 
             for ( int j = 0; j < mageClasses.length; j++ ) {
-                Class c = null;
                 try {
-                    c = Class.forName( name + "." + mageClasses[j] );
+                    Class c = Class.forName( name + "." + mageClasses[j] );
                     Collection<Object> d = getConvertedData( c );
                     if ( d != null && d.size() > 0 ) {
                         log.info( "Adding " + d.size() + " converted " + name + "." + mageClasses[j] + "s" );

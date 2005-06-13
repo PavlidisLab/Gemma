@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.smd;
 
 import java.io.IOException;
@@ -12,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPReply;
 
 import edu.columbia.gemma.loader.smd.util.SmdUtil;
 
@@ -30,7 +47,7 @@ public class SpeciesBioAssayList {
     protected static final Log log = LogFactory.getLog( SpeciesBioAssayList.class );
     private String baseDir = "smd/organisms/";
     private SMDSpecies speciesMap;
-    private Set experiments;
+    private Set<String> experiments;
     private FTPClient f;
 
     /**
@@ -42,13 +59,11 @@ public class SpeciesBioAssayList {
         try {
             config = new PropertiesConfiguration( "Gemma.properties" );
         } catch ( ConfigurationException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         speciesMap = new SMDSpecies();
-        experiments = new HashSet();
+        experiments = new HashSet<String>();
         baseDir = ( String ) config.getProperty( "smd.organism.baseDir" );
-
     }
 
     /**
@@ -79,14 +94,14 @@ public class SpeciesBioAssayList {
     /**
      * @return
      */
-    public Set getExperiments() {
+    public Set<String> getExperiments() {
         return experiments;
     }
 
     /**
      * @param experiments
      */
-    public void setExperiments( Set experiments ) {
+    public void setExperiments( Set<String> experiments ) {
         this.experiments = experiments;
     }
 
@@ -94,9 +109,8 @@ public class SpeciesBioAssayList {
         try {
             SpeciesBioAssayList foo = new SpeciesBioAssayList();
             foo.retrieveByFTP( "human" );
-            System.err.println( foo.getExperiments() );
+            log.debug( foo.getExperiments() );
         } catch ( IOException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
