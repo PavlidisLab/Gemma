@@ -78,7 +78,7 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         gene2GOMap = gene2GOAssParser.parse( gZipIs, m );
 
-        gene2GOCol = gene2GOAssParser.createGemmaObjects( dependencies, gene2GOMap );
+        gene2GOCol = gene2GOAssParser.createOrGetDependencies( dependencies, gene2GOMap );
 
         // LoaderTools.loadDatabase( gene2GOAssLoader, gene2GOCol );
 
