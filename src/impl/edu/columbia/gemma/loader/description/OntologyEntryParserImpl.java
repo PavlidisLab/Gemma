@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
@@ -63,7 +64,7 @@ public class OntologyEntryParserImpl implements Parser {
 
         log.info( "number of ontology entries: " + goTermsMap.size() );
 
-        return createGemmaObjects( dependencies, goTermsMap );
+        return createOrGetDependencies( dependencies, goTermsMap );
     }
 
     /**
@@ -71,7 +72,7 @@ public class OntologyEntryParserImpl implements Parser {
      * @param ontologyEntryTermsMap
      * @return Collection
      */
-    public Collection createGemmaObjects( Object[] dependencies, Map ontologyEntryTermsMap ) {
+    public Collection createOrGetDependencies( Object[] dependencies, Map ontologyEntryTermsMap ) {
         Set goTermsKeysSet = null;
         ExternalDatabase externalDatabase = null;
 
@@ -216,6 +217,11 @@ public class OntologyEntryParserImpl implements Parser {
 
     public Method findParseLineMethod( String string ) throws NoSuchMethodException {
 
+        throw new UnsupportedOperationException();
+    }
+
+    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException {
+        // TODO implement to parse file over the web.
         throw new UnsupportedOperationException();
     }
 
