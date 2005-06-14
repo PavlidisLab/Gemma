@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -132,6 +134,17 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
     protected Object getKey( Object newItem ) {
 
         return ( ( Gene ) newItem ).getNcbiId();
+    }
+
+    public Collection createOrGetDependencies( Object[] dependencies, Map objectMap ) {
+        // TODO code this to create the objects that Gene is associated with. These
+        // associations should not be from compositions relationships.
+        throw new UnsupportedOperationException();
+    }
+
+    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException {
+        // TODO code this to parse directly from the web.
+        throw new UnsupportedOperationException();
     }
 
 }

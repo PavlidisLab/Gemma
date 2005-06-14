@@ -50,7 +50,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
 
     Method methodToInvoke = null;
 
-    Map g2GOMap = null;
+    Map<String, Gene2GOAssociation> g2GOMap = null;
 
     private OntologyEntryDao ontologyEntryDao = null;
 
@@ -104,7 +104,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @throws IOException
      * @throws ConfigurationException
      */
-    public Collection parseFromHttp( String url, Object[] dependencies ) throws IOException, ConfigurationException {
+    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException {
 
         InputStream is = LoaderTools.retrieveByHTTP( url );
 
@@ -117,17 +117,18 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
             log.error( e, e );
             return null;
         }
-        g2GOMap = this.parse( gZipInputStream, lineParseMethod );
+        return this.parse( gZipInputStream, lineParseMethod ).values();
 
-        return createGemmaObjects( dependencies, g2GOMap );
+        // return createDependencies( dependencies, g2GOMap );
     }
 
     /**
      * @param dependencies
      * @param gene2GOAssMap
      * @return Collection
+     * @see Parser
      */
-    public Collection createGemmaObjects( Object[] dependencies, Map gene2GOAssMap ) {
+    public Collection createOrGetDependencies( Object[] dependencies, Map gene2GOAssMap ) {
         Set gene2GOKeysSet = null;
 
         Gene gene = null;
@@ -241,11 +242,9 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
         try {
             Object obj = methodToInvoke.invoke( getGene2GOAssociationMappings(), new Object[] { line } );
             if ( obj == null ) return obj;
-
             g2GO = ( Gene2GOAssociation ) obj;
-
-            g2GOMap.put( "" + i, g2GO );
-            i++;
+            g2GOMap.put( g2GO.getAssociatedGene() + " " + g2GO.getAssociatedOntologyEntry() + " "
+                    + g2GO.getEvidenceCode(), g2GO );
 
             return g2GO;
 

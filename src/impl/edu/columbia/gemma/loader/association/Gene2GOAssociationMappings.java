@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.association.EvidenceCode;
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
@@ -41,8 +42,10 @@ public class Gene2GOAssociationMappings {
 
     Map<Integer, Taxon> taxaMap = null;
 
-    public Gene2GOAssociationMappings() throws ConfigurationException {
+    Collection<String> evidenceCodes = null;
 
+    public Gene2GOAssociationMappings() throws ConfigurationException {
+        initializeEvidenceCodes();
     }
 
     /**
@@ -54,6 +57,7 @@ public class Gene2GOAssociationMappings {
         if ( taxonDao == null ) throw new IllegalArgumentException();
         this.taxonDao = taxonDao;
         initializeTaxa();
+        initializeEvidenceCodes();
     }
 
     /**
@@ -83,9 +87,22 @@ public class Gene2GOAssociationMappings {
 
         Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance();
 
-        g2GOAss.setEvidenceCode( values[EVIDENCE_CODE] );
+        for ( String evidenceCode : evidenceCodes ) {
+            if ( values[EVIDENCE_CODE].equalsIgnoreCase( evidenceCode ) ) {
+                g2GOAss.setEvidenceCode( values[EVIDENCE_CODE] );
+                log.info( " Evidence code is " + g2GOAss.getEvidenceCode() );
+                break;
+            }
+        }
 
         return g2GOAss;
+    }
+
+    /**
+     * Initialize the evidenceCodes from the enumeration values
+     */
+    private void initializeEvidenceCodes() {
+        evidenceCodes = EvidenceCode.names();
     }
 
 }
