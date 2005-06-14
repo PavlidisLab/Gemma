@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Fri Jun 10 18:10:32 EDT 2005'>
+  timestamp = 'Mon Jun 13 19:33:40 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -12,9 +12,9 @@
       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
       <UML:ModelElement.taggedValue>
         <UML:TaggedValue xmi.id = 'Id2a49dm1025ed2a6cbmm7252' isSpecification = 'false'>
-          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
-          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>remove.by</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
           <UML:TaggedValue.type>
@@ -15349,8 +15349,6 @@ etc. in order to capture the scores and other parameters that document why we th
                             <UML:Class xmi.idref = 'I2863e477m101683735a4mm764f'/>
                           </UML:Comment.annotatedElement>
                         </UML:Comment>
-                        <UML:Comment xmi.id = 'Ic0335dm101e946dc8cmm3b21' name = '' visibility = 'public'
-                          isSpecification = 'false' body = 'Evidence code should be a&#10;enum'/>
                         <UML:Class xmi.id = 'Ic0335dm101e946dc8cmm3145' name = 'ReferenceAssociation'
                           visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
                           isAbstract = 'false' isActive = 'false'>
@@ -17175,6 +17173,93 @@ etc. in order to capture the scores and other parameters that document why we th
                             </UML:AssociationEnd>
                           </UML:Association.connection>
                         </UML:Association>
+                        <UML:Class xmi.id = 'I8c048em10477f01006m960' name = 'EvidenceCode' visibility = 'public'
+                          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+                          isActive = 'false'>
+                          <UML:ModelElement.stereotype>
+                            <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf12'/>
+                          </UML:ModelElement.stereotype>
+                          <UML:Classifier.feature>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m98e' name = 'IC' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m99f' name = 'IDA' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m97d' name = 'IEA' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m9b0' name = 'IEP' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m9c1' name = 'IGI' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m9d8' name = 'IMP' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m9e9' name = 'IPI' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006m9fa' name = 'ISS' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006ma0b' name = 'NAS' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006ma1c' name = 'ND' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006ma2d' name = 'RCA' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006ma3e' name = 'TAS' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = 'I8c048em10477f01006ma4f' name = 'NR' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                          </UML:Classifier.feature>
+                        </UML:Class>
                       </UML:Namespace.ownedElement>
                     </UML:Package>
                     <UML:Package xmi.id = 'I133a2a8m1023b73dc76mm2d45' name = 'genome' visibility = 'public'
@@ -25407,6 +25492,14 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
                 </UML:Class>
                 <UML:Class xmi.id = 'Idd3147m1036b562585m997' name = 'Exception' isSpecification = 'false'
                   isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = 'I8c048em10477f01006ma60' isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>0</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = 'I767237m101c440f114mm68ca'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
                   <UML:Namespace.ownedElement>
                     <UML:Exception xmi.id = 'Idd3147m1036b562585m999' name = 'exception' isSpecification = 'false'
                       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
@@ -25414,7 +25507,16 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
                 </UML:Class>
                 <UML:Class xmi.id = 'I126172fm1037f907030mm140' name = 'ClassCastException'
                   isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-                  isActive = 'false'/>
+                  isActive = 'false'>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = 'I8c048em10477f01006ma61' isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>0</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = 'I767237m101c440f114mm68ca'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
+                </UML:Class>
               </UML:Namespace.ownedElement>
             </UML:Package>
           </UML:Namespace.ownedElement>
