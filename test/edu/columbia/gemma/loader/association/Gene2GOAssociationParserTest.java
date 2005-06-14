@@ -15,6 +15,7 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.association.Gene2GOAssociation;
+import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.genome.Gene;
@@ -55,6 +56,12 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
         String url = "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene2go.gz";
 
         OntologyEntry oe = OntologyEntry.Factory.newInstance();
+        oe.setAccession("GO:xxxxx");
+        
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setName("external testdb");
+        
+        oe.setExternalDatabase(ed);
 
         Gene g = Gene.Factory.newInstance();
         Taxon t = Taxon.Factory.newInstance();
