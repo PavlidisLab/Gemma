@@ -90,7 +90,6 @@ public class Gene2GOAssociationMappings {
         for ( String evidenceCode : evidenceCodes ) {
             if ( values[EVIDENCE_CODE].equalsIgnoreCase( evidenceCode ) ) {
                 g2GOAss.setEvidenceCode( values[EVIDENCE_CODE] );
-                log.info( " Evidence code is " + g2GOAss.getEvidenceCode() );
                 break;
             }
         }
