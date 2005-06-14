@@ -30,6 +30,7 @@ public class LoaderTools {
     private static final int RATTUS = 10114;
 
     /**
+     * Reflectively determines which loader to use.
      * Display time to be used with org.apache.commons.lang.time.StopWatch
      * 
      * @param loader
