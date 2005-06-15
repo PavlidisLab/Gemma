@@ -9,6 +9,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.loader.expression.arraydesign.AffyProbeReader;
 
 import junit.framework.TestCase;
 

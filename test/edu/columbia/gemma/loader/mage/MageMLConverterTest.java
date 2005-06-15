@@ -20,9 +20,12 @@ package edu.columbia.gemma.loader.mage;
 
 import java.io.InputStream;
 
+import junit.framework.TestCase;
+
 import org.biomage.BioSequence.BioSequence;
 
-import junit.framework.TestCase;
+import edu.columbia.gemma.loader.expression.mage.MageMLConverter;
+import edu.columbia.gemma.loader.expression.mage.MageMLParser;
 
 public class MageMLConverterTest extends TestCase {
 

@@ -8,6 +8,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.loader.expression.arraydesign.IlluminaProbeReader;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 

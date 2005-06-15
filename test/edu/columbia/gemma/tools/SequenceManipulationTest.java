@@ -12,10 +12,10 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
-import edu.columbia.gemma.loader.arraydesign.AffyProbeReader;
 import edu.columbia.gemma.genome.PhysicalLocation;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.gene.GeneProduct;
+import edu.columbia.gemma.loader.expression.arraydesign.AffyProbeReader;
 
 /**
  * <hr>
@@ -141,7 +141,7 @@ public class SequenceManipulationTest extends TestCase {
         apr.parse( iotest );
         assertTrue( "Not found", apr.containsKey( "100470_at" ) );
         CompositeSequence t = ( CompositeSequence ) apr.get( "100470_at" );
-        assertTrue("Null", t != null );
+        assertTrue( "Null", t != null );
         BioSequence m = SequenceManipulation.collapse( t );
     }
 
@@ -198,11 +198,11 @@ public class SequenceManipulationTest extends TestCase {
 
         assertEquals( expectedReturn, actualReturn );
     }
-    
+
     public final void testFindCenter() throws Exception {
         String starts = "100,200,300,400";
         String sizes = "10,10,10,10";
-        int actualReturn = SequenceManipulation.findCenter(starts, sizes);
+        int actualReturn = SequenceManipulation.findCenter( starts, sizes );
         int expectedReturn = 210;
         assertEquals( expectedReturn, actualReturn );
     }

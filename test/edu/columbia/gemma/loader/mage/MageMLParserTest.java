@@ -28,6 +28,8 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.loader.expression.mage.MageMLParser;
+
 public class MageMLParserTest extends TestCase {
 
     protected static final Log log = LogFactory.getLog( MageMLParserTest.class );
@@ -64,26 +66,27 @@ public class MageMLParserTest extends TestCase {
         super.setUp();
         mlp = new MageMLParser();
 
-//        istBioSequence = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biosequence.xml" );
-//        istExperiment = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Experiment.xml" );
-//        istArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-ArrayDesign.xml" );
-//        istBioMaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biomaterial.xml" );
-//        istQuantitationType = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-QuantitationType.xml" );
-//
-//        istDesignElement = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-DesignElement.xml" );
-//        istPhysicalBioAssay = MageMLParserTest.class.getResourceAsStream( "/data/mage/PhysicalBioAssay.xml" );
-//        istTIGRSimpleArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/TIGRSimpleArrayDesign.xml" );
-//        istTIGRBiomaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/TIGRBiomaterial_package1.xml" );
-//        istDrosDesignElement = MageMLParserTest.class
-//                .getResourceAsStream( "/data/mage/DesignElement_minimal.package.xml" );
-//        istProtocol = MageMLParserTest.class.getResourceAsStream( "/data/mage/Protocol_package.xml" );
-//        istQTAffy = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_Affymetrix.xml" );
-//        istQTGenePix = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_GenePix.xml" );
-//
-//        istDingledine = MageMLParserTest.class.getResourceAsStream( "/data/mage/dingledine-example.mageml.jsp.xml" );
-//        istExampleBioMaterial = MageMLParserTest.class
-//                .getResourceAsStream( "/data/mage/example-experiment.biomaterial.mageml.jsp.xml" );
-//        istHematochromatosis = MageMLParserTest.class.getResourceAsStream( "/data/mage/murine_hemochromatosis.xml" );
+        // istBioSequence = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biosequence.xml" );
+        // istExperiment = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Experiment.xml" );
+        // istArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-ArrayDesign.xml" );
+        // istBioMaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-Biomaterial.xml" );
+        // istQuantitationType = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-QuantitationType.xml" );
+        //
+        // istDesignElement = MageMLParserTest.class.getResourceAsStream( "/data/mage/MGP-DesignElement.xml" );
+        // istPhysicalBioAssay = MageMLParserTest.class.getResourceAsStream( "/data/mage/PhysicalBioAssay.xml" );
+        // istTIGRSimpleArrayDesign = MageMLParserTest.class.getResourceAsStream( "/data/mage/TIGRSimpleArrayDesign.xml"
+        // );
+        // istTIGRBiomaterial = MageMLParserTest.class.getResourceAsStream( "/data/mage/TIGRBiomaterial_package1.xml" );
+        // istDrosDesignElement = MageMLParserTest.class
+        // .getResourceAsStream( "/data/mage/DesignElement_minimal.package.xml" );
+        // istProtocol = MageMLParserTest.class.getResourceAsStream( "/data/mage/Protocol_package.xml" );
+        // istQTAffy = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_Affymetrix.xml" );
+        // istQTGenePix = MageMLParserTest.class.getResourceAsStream( "/data/mage/QT_GenePix.xml" );
+        //
+        // istDingledine = MageMLParserTest.class.getResourceAsStream( "/data/mage/dingledine-example.mageml.jsp.xml" );
+        // istExampleBioMaterial = MageMLParserTest.class
+        // .getResourceAsStream( "/data/mage/example-experiment.biomaterial.mageml.jsp.xml" );
+        // istHematochromatosis = MageMLParserTest.class.getResourceAsStream( "/data/mage/murine_hemochromatosis.xml" );
     }
 
     protected void tearDown() throws Exception {
