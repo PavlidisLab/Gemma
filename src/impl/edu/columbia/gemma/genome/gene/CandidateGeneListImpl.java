@@ -20,7 +20,7 @@
  */
 
 package edu.columbia.gemma.genome.gene;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import edu.columbia.gemma.genome.Gene;
@@ -51,9 +51,10 @@ public class CandidateGeneListImpl
         if ( gene == null ) throw new IllegalArgumentException( "Parameter gene cannot be null" );
         assert this.getCandidates() != null;
         
-        Collection candidates = this.getCandidates();
+        java.util.Collection candidates = this.getCandidates();
         CandidateGene cg=null;
         int maxRank =-1;
+        
         for(Iterator iter=candidates.iterator();iter.hasNext();){
         	cg = (CandidateGene)iter.next();
         	if(cg.getRank().intValue()>maxRank)
@@ -68,7 +69,7 @@ public class CandidateGeneListImpl
         cgNew.setRank(new Integer(maxRank));
         
         if(this.getCandidates()==null)
-            this.setCandidates(new HashSet());
+            this.setCandidates(new ArrayList());
         this.getCandidates().add(cgNew);
         
         return cgNew;

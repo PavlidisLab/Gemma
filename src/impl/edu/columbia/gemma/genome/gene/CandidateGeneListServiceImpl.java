@@ -21,8 +21,6 @@
 
 package edu.columbia.gemma.genome.gene;
 import java.util.Collection;
-import edu.columbia.gemma.genome.Gene;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
@@ -88,5 +86,9 @@ public class CandidateGeneListServiceImpl
     }
     public CandidateGeneList handleFindByID(long id){
     	return this.getCandidateGeneListDao().findByID(id);
+    }
+    
+    public Collection handleFindArbitrary(String queryString){
+    	return this.getCandidateGeneListDao().findAll(queryString);
     }
 }
