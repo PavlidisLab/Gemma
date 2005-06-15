@@ -117,6 +117,9 @@
 				<property name="hibernateCompositionCascade">
 					all
 				</property>
+				<property name="hibernateAggregationCascade">
+					none
+				</property>
 				<property name="hibernateDefaultCascade">none</property>
 				<property name="specificCollectionInterfaces">
 					false
