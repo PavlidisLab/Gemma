@@ -65,7 +65,7 @@ if( m!=null) {
 			String gID = g.getId().toString();
 			%>
 			<tr>
-				<td width="90%" bgcolor="white"><a href="GeneDetail.jsp?id=<%=gID%>"><%=g.getName()%></a><BR><%=g.getDescription()%></td>
+				<td width="90%" bgcolor="white"><a href="geneDetail.htm?geneID=<%=g.getGene().getId()%>"><%=g.getName()%></a><BR><%=g.getDescription()%></td>
 				<form method="POST" action="candidateGeneListDetail.htm">
 				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
 				<input type="hidden" name="action" id="action" value="removegenefromcandidatelist">
