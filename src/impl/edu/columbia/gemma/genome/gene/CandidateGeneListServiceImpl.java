@@ -88,7 +88,7 @@ public class CandidateGeneListServiceImpl
     	return this.getCandidateGeneListDao().findByID(id);
     }
     
-    public Collection handleFindArbitrary(String queryString){
-    	return this.getCandidateGeneListDao().findAll(queryString);
+    public Collection handleFindByListOwner(Person owner){
+    	return this.getCandidateGeneListDao().findByListOwner(owner);
     }
 }
