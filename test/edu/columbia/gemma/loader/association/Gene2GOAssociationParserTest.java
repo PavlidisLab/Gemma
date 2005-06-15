@@ -44,6 +44,8 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
     Map gene2GOMap = null;
 
+    TaxonDao taxonDao = null;
+
     /**
      * @throws NoSuchMethodException
      * @throws IOException
@@ -56,16 +58,23 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
         String url = "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene2go.gz";
 
         OntologyEntry oe = OntologyEntry.Factory.newInstance();
-        oe.setAccession("GO:xxxxx");
-        
+        oe.setAccession( "GO:xxxxx" );
+
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName("external testdb");
-        
-        oe.setExternalDatabase(ed);
+        ed.setName( "external testdb" );
+
+        oe.setExternalDatabase( ed );
 
         Gene g = Gene.Factory.newInstance();
+
         Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "Human" );
+
+        Collection<Taxon> taxa = taxonDao.findAllTaxa();
+        if ( taxa.size() == 0 )
+            t.setCommonName( "Human" );
+        else
+            t.setCommonName( taxa.iterator().next().getCommonName() );
+
         g.setTaxon( t );
 
         Object[] dependencies = new Object[2];
@@ -113,6 +122,8 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         gene2GOMap = new HashMap();
 
+        taxonDao = ( TaxonDao ) ctx.getBean( "taxonDao" );
+
         // geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
 
     }
@@ -130,6 +141,8 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
         gene2GOCol = null;
 
         gene2GOMap = null;
+
+        taxonDao = null;
 
     }
 
