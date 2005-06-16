@@ -15,6 +15,7 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.association.Gene2GOAssociation;
+import edu.columbia.gemma.association.Gene2GOAssociationDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
@@ -70,12 +71,11 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
         Taxon t = Taxon.Factory.newInstance();
 
         Collection<Taxon> taxa = taxonDao.findAllTaxa();
-        if ( taxa.size() == 0 )
+        if ( taxa.size() == 0 ) {
             t.setCommonName( "Human" );
-        else
-            t.setCommonName( taxa.iterator().next().getCommonName() );
-
-        g.setTaxon( t );
+            g.setTaxon( t );
+        } else
+            g.setTaxon( taxa.iterator().next() );
 
         Object[] dependencies = new Object[2];
 
@@ -96,7 +96,7 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         gene2GOCol = gene2GOAssParser.createOrGetDependencies( dependencies, gene2GOMap );
 
-        // LoaderTools.loadDatabase( gene2GOAssLoader, gene2GOCol );
+        LoaderTools.loadDatabase( gene2GOAssLoader, gene2GOCol );
 
     }
 
@@ -124,7 +124,9 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         taxonDao = ( TaxonDao ) ctx.getBean( "taxonDao" );
 
-        // geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
+        gene2GOAssLoader = new Gene2GOAssociationLoaderImpl();
+
+        gene2GOAssLoader.setGene2GOAssociationDao( ( Gene2GOAssociationDao ) ctx.getBean( "gene2GOAssociationDao" ) );
 
     }
 
