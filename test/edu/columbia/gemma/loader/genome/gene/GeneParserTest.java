@@ -46,7 +46,7 @@ public class GeneParserTest extends BaseServiceTestCase {
         Method m2 = LoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "gene2accession" );
         map = geneParser.parse( is2, m2 );
 
-        geneLoader.create( map.values() );
+        LoaderTools.loadDatabase( geneLoader, map.values() );
 
         assertEquals( null, null );
 
