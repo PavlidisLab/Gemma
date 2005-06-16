@@ -142,7 +142,7 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
         throw new UnsupportedOperationException();
     }
 
-    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException {
+    public Map parseFromHttp( String url ) throws IOException, ConfigurationException {
         // TODO code this to parse directly from the web.
         throw new UnsupportedOperationException();
     }

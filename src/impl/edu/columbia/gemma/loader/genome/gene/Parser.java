@@ -22,7 +22,7 @@ public interface Parser {
 
     public Map parseFile( String filename ) throws IOException;
 
-    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException;
+    public Map parseFromHttp( String url ) throws IOException, ConfigurationException;
 
     public Collection createOrGetDependencies( Object[] dependencies, Map objectMap );
 
