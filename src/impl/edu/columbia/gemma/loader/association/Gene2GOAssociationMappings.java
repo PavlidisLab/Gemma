@@ -88,8 +88,10 @@ public class Gene2GOAssociationMappings {
         Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance();
 
         for ( String evidenceCode : evidenceCodes ) {
+
             if ( values[EVIDENCE_CODE].equalsIgnoreCase( evidenceCode ) ) {
-                g2GOAss.setEvidenceCode( values[EVIDENCE_CODE] );
+                g2GOAss.setEvidenceCode( EvidenceCode.fromString( evidenceCode ) );
+                // log.info("Evidence code is: " + evidenceCode + " value: " + values[EVIDENCE_CODE]);
                 break;
             }
         }
