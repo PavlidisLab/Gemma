@@ -157,6 +157,8 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
 
             g2GO.setGene( gene );
 
+            g2GO.setAssociatedGene( gene );
+
             g2GO.setAssociatedOntologyEntry( ontologyEntry );
 
             gene2GOAssCol.add( g2GO );
@@ -182,7 +184,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
                         && ontologyEntry.getExternalDatabase().getName().equalsIgnoreCase(
                                 oe.getExternalDatabase().getName() ) ) {
                     log.info( "ontology entry: " + ontologyEntry.getExternalDatabase().getName() + "Accession: "
-                            + ontologyEntry.getAccession() + "already exists" );
+                            + ontologyEntry.getAccession() + " already exists" );
                     return ontologyEntry;
                 }
             }
@@ -220,8 +222,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
                 }
             }
             this.getGeneDao().create( g );
-            log.info( "gene with ncbi id " + g.getNcbiId() + " already exists" );
-
+            log.info( "gene with ncbi id " + g.getNcbiId() + " created" );
         }
         return g;
     }
