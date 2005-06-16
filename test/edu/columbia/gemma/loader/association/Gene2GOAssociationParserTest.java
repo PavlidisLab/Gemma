@@ -68,6 +68,8 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         Gene g = Gene.Factory.newInstance();
 
+        g.setNcbiId( "1246500" );
+
         Taxon t = Taxon.Factory.newInstance();
 
         Collection<Taxon> taxa = taxonDao.findAllTaxa();
