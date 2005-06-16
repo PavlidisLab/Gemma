@@ -104,7 +104,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @throws IOException
      * @throws ConfigurationException
      */
-    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException {
+    public Map parseFromHttp( String url ) throws IOException, ConfigurationException {
 
         InputStream is = LoaderTools.retrieveByHTTP( url );
 
@@ -117,7 +117,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
             log.error( e, e );
             return null;
         }
-        return this.parse( gZipInputStream, lineParseMethod ).values();
+        return this.parse( gZipInputStream, lineParseMethod );
 
         // return createDependencies( dependencies, g2GOMap );
     }

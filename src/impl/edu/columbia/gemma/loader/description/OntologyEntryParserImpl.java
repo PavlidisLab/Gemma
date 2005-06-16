@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
@@ -53,18 +52,19 @@ public class OntologyEntryParserImpl implements Parser {
      * @throws IOException
      * @throws SAXException
      */
-    public Collection parseFromHttp( String url, Object[] dependencies ) throws IOException, SAXException {
-        Map goTermsMap = null;
+    public Map parseFromHttp( String url ) throws IOException {
         InputStream is = LoaderTools.retrieveByHTTP( url );
         GZIPInputStream gZipInputStream = new GZIPInputStream( is );
 
-        goNames = new GONames( gZipInputStream );
+        try {
+            goNames = new GONames( gZipInputStream );
+        } catch ( SAXException e ) {
+            e.printStackTrace();
+        }
 
-        goTermsMap = goNames.getMap();
+        log.info( "number of ontology entries: " + goNames.getMap().size() );
 
-        log.info( "number of ontology entries: " + goTermsMap.size() );
-
-        return createOrGetDependencies( dependencies, goTermsMap );
+        return goNames.getMap();
     }
 
     /**
@@ -212,16 +212,6 @@ public class OntologyEntryParserImpl implements Parser {
 
     public Map parseFile( String filename ) throws IOException {
 
-        throw new UnsupportedOperationException();
-    }
-
-    public Method findParseLineMethod( String string ) throws NoSuchMethodException {
-
-        throw new UnsupportedOperationException();
-    }
-
-    public Collection parseFromHttp( String url ) throws IOException, ConfigurationException {
-        // TODO implement to parse file over the web.
         throw new UnsupportedOperationException();
     }
 

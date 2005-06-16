@@ -46,7 +46,7 @@ public class OntologyEntryLoaderImpl {
 
             } else {
                 for ( OntologyEntry oeFromDatabase : oeColFromDatabase ) {
-                    if ( ( oe.getAccession() != oeFromDatabase.getAccession() )
+                    if ( ( !oe.getAccession().equals( oeFromDatabase.getAccession() ) )
                             && ( !oe.getExternalDatabase().equals( oeFromDatabase.getExternalDatabase() ) ) ) {
                         getOntologyEntryDao().create( oe );
                         count++;

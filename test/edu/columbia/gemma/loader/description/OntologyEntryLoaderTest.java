@@ -3,7 +3,6 @@ package edu.columbia.gemma.loader.description;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,10 +34,13 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
     GONames goNames = null;
 
-    Set goTermsKeysSet = null;
-    Map goTermsMap = null;
+    Map oeMap = null;
+
+    Map oeMap2 = null;
 
     Collection<OntologyEntry> oeCol = null;
+
+    Collection<OntologyEntry> oeCol2 = null;
 
     OntologyEntryLoaderImpl ontologyEntryLoader = null;
 
@@ -74,15 +76,18 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
         dependencies[1] = lf;
         dependencies[2] = lf2;
 
-        oeCol = ontologyEntryParser.parseFromHttp( url, dependencies );
+        oeMap = ontologyEntryParser.parseFromHttp( url );
 
-        // ontologyEntryLoader.create( oeCol );
+        oeCol = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap );
+
         LoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
 
         // parse second file. make sure the duplicates are not persisted again.
-        oeCol = ontologyEntryParser.parseFromHttp( url, dependencies );
+        oeMap2 = ontologyEntryParser.parseFromHttp( url );
 
-        LoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
+        oeCol2 = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap2 );
+
+        LoaderTools.loadDatabase( ontologyEntryLoader, oeCol2 );
 
     }
 
@@ -114,7 +119,13 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         ontologyEntryLoader = null;
 
-        goTermsMap = null;
+        oeMap = null;
+
+        oeMap2 = null;
+
+        oeCol = null;
+
+        oeCol2 = null;
 
     }
 
