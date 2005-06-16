@@ -275,16 +275,6 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     }
 
     /**
-     * @param string
-     * @return Method
-     * @throws NoSuchMethodException
-     */
-    public Method findParseLineMethod( String string ) throws NoSuchMethodException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
      * @return Returns the ontologyEntryDao.
      */
     public OntologyEntryDao getOntologyEntryDao() {
