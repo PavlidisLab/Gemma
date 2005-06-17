@@ -22,6 +22,8 @@ import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
+ * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
+ * loading.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -47,10 +49,12 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     OntologyEntryParserImpl ontologyEntryParser = null;
 
     /**
-     * @throws SAXException
-     * @throws IOException
+     * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
+     * localized to the Gemma project it has been added to the test suite.
+     * 
+     * @throws SAXException, IOException
      */
-    public void testBaseCodeGoParser() throws SAXException, IOException {
+    public void testParseAndLoad() throws SAXException, IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
 
         String url = "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz";

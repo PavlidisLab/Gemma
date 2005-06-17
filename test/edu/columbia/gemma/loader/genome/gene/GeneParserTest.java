@@ -16,8 +16,8 @@ import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
- * This test is more representative of integration testing than unit testing as it test multiple methods that work
- * together.
+ * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
+ * loading.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University

@@ -27,6 +27,8 @@ import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
+ * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
+ * loading.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -48,11 +50,14 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
     TaxonDao taxonDao = null;
 
     /**
+     * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
+     * localized to the Gemma project it has been added to the test suite.
+     * 
      * @throws NoSuchMethodException
      * @throws IOException
      * @throws ConfigurationException
      */
-    public void testFindParseLineMethod() throws NoSuchMethodException, IOException, ConfigurationException {
+    public void testParseAndLoad() throws NoSuchMethodException, IOException, ConfigurationException {
         log
                 .info( "Testing class: Gene2GOAssocationParser method: public Method findParseLineMethod( Map g2GOMap, String name) throws NoSuchMethodException" );
 
