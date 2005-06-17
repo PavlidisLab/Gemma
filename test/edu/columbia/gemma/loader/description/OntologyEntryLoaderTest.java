@@ -52,7 +52,8 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
      * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
      * localized to the Gemma project it has been added to the test suite.
      * 
-     * @throws SAXException, IOException
+     * @throws SAXException
+     * @throws IOException
      */
     public void testParseAndLoad() throws SAXException, IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
