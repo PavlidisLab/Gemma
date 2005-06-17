@@ -93,8 +93,8 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @throws IOException
      */
     public Map parseFile( String filename ) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO implement
+        throw new UnsupportedOperationException();
     }
 
     /**
