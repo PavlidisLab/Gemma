@@ -99,8 +99,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
 
     /**
      * @param url
-     * @param dependencies
-     * @return Collection
+     * @return Map
      * @throws IOException
      * @throws ConfigurationException
      */
@@ -118,8 +117,6 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
             return null;
         }
         return this.parse( gZipInputStream, lineParseMethod );
-
-        // return createDependencies( dependencies, g2GOMap );
     }
 
     /**
