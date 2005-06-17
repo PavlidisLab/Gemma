@@ -16,6 +16,8 @@ import edu.columbia.gemma.loader.loaderutils.LoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
+ * This test is more representative of integration testing than unit testing as it test multiple methods that work
+ * together.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -37,7 +39,7 @@ public class GeneParserTest extends BaseServiceTestCase {
      * 
      * @throws Exception
      */
-    public void testParseValidFile() throws Exception {
+    public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/geneinfo" );
         Method m = LoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "geneinfo" );
         geneParser.parse( is, m );
