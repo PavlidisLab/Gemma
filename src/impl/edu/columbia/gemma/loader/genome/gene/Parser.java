@@ -18,7 +18,7 @@ import org.apache.commons.configuration.ConfigurationException;
  */
 public interface Parser {
 
-    public Map parse( InputStream is, Method m ) throws IOException;
+    public Map parse( InputStream is, Method lineParseMethod ) throws IOException;
 
     public Map parseFile( String filename ) throws IOException;
 

@@ -205,7 +205,7 @@ public class OntologyEntryParserImpl implements Parser {
         this.localFileDao = localFileDao;
     }
 
-    public Map parse( InputStream is, Method m ) throws IOException {
+    public Map parse( InputStream is, Method lineParseMethod ) throws IOException {
 
         throw new UnsupportedOperationException();
     }
