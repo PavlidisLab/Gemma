@@ -133,6 +133,20 @@
 	</preGoal>
 
 	<!-- ==================================================================
+		Start andromda server
+		================================================================== -->
+	<goal name="start-andromda-server">
+		<maven:maven descriptor="${basedir}/mda/project.xml"
+			goals="andromda:start-server" />
+	</goal>
+	<!-- ==================================================================
+		Stop andromda server
+		================================================================== -->
+	<goal name="stop-andromda-server">
+		<maven:maven descriptor="${basedir}/mda/project.xml"
+			goals="andromda:stop-server" />
+	</goal>
+	<!-- ==================================================================
 		Run andromda
 		================================================================== -->
 	<goal name="mda">
