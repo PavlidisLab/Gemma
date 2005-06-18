@@ -3,23 +3,30 @@
 	<properties>
 		<property name="modelValidation">true</property>
 	</properties>
+	<server>
+		<host>localhost</host> 
+		<port>4446</port> 
+	</server>
+	
 	<models>
 		<model>
 			<uri>file:${basedir}/src/uml/gemma-om.xmi</uri>
 		</model>
 	</models>
-	
+
 	<namespaces>
 		<namespace name="default">
 			<properties>
 				<property name="languageMappingsUri">Java</property>
-				<property name="wrapperMappingsUri">JavaWrapper</property>
+				<property name="wrapperMappingsUri">
+					JavaWrapper
+				</property>
 				<property name="sqlMappingsUri">MySQL</property>
 				<property name="jdbcMappingsUri">JDBC</property>
 				<property name="maxSqlNameLength">60</property>
 			</properties>
 		</namespace>
-		
+
 		<namespace name="spring">
 			<properties>
 				<property name="hibernateDialect">
@@ -27,7 +34,9 @@
 				</property>
 				<property name="hibernateShowSql">true</property>
 				<property name="hibernateUseQueryCache">false</property>
-				<property name="hibernateQueryUseNamedParameters">true</property>
+				<property name="hibernateQueryUseNamedParameters">
+					true
+				</property>
 				<property name="hibernateCacheProvider">
 					net.sf.hibernate.cache.EhCacheProvider
 				</property>
@@ -87,7 +96,7 @@
 				</property>
 			</properties>
 		</namespace>
-		
+
 		<namespace name="hibernate">
 			<properties>
 				<property name="hibernateTypeMappingsUri">
@@ -113,7 +122,7 @@
 				</property>
 				<property name="mergeMappingsUri">
 					file:${maven.andromda.merge.mappings}
-				</property>	
+				</property>
 				<property name="hibernateCompositionCascade">
 					all
 				</property>
