@@ -69,6 +69,8 @@ else{
 	Collection can = (Collection) m.get("genes");
 	Iterator iter = can.iterator();
 	Gene g = null;
+	String oName = null;
+	String oSymb = null;
 	if( !iter.hasNext() )
 		out.print("No genes found that match this query.");
 	else{
@@ -77,16 +79,22 @@ else{
 		while(iter.hasNext()){
 			g = (Gene) iter.next();
 			desc = g.getDescription();
-			if(desc=="")
+			if(desc==null || desc=="" )
 				desc = "n.a.";
+			oName = g.getOfficialName();
+			oSymb = g.getOfficialSymbol();
+			if( oName==null)
+				oName = "Unknown";
+			if( oSymb==null)
+				oSymb = "Unknown";
 			%>
 			<tr>
 				<form method="POST" action="candidateGeneListDetail.htm">
 				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
 				<input type="hidden" name="action" id="action" value="addgenetocandidatelist">
 				<input type="hidden" name="geneID" id="geneID" value="<%=g.getId().toString()%>">
-				<td><%=g.getOfficialName()%></td>
-				<td><%=g.getOfficialSymbol()%></td>
+				<td><a href="/Gemma/geneDetail.htm?geneID=<%=g.getId()%>"><%=oName%></a></td>
+				<td><a href="/Gemma/geneDetail.htm?geneID=<%=g.getId()%>"><%=oSymb%></a></td>
 				<td><%=desc%></td>
 				<td><input type="submit" value="Add to list"></td>
 				</form>
