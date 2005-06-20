@@ -9,17 +9,26 @@ The purpose of this page is to prevent reloads from re-running a completed actio
 </c:if>
 <%
 Map m = (Map)request.getAttribute("model");
-if( m==null) {
+if( m==null){
 	response.sendRedirect("candidateGeneList.htm");
 }
 else{
 	String target = (String) m.get("target");
-	String listID = (String) m.get("listID");
-	if( target != null && target.compareTo("candidateGeneListDetail")==0){
-		response.sendRedirect("candidateGeneListDetail.htm?listID=" + listID);
-	}
-	else{	
+	String listID = request.getParameter("listID");
+	String geneID = request.getParameter("geneID");
+	if( target == null ){
 		response.sendRedirect("candidateGeneList.htm");
+	}
+	else{
+		if(target.compareTo("candidateGeneListDetail")==0){
+			response.sendRedirect("candidateGeneListDetail.htm?listID=" + listID);
+		}
+		else if( target.compareTo("geneDetail")==0){
+			response.sendRedirect("geneDetail.htm?geneID=" + geneID );
+		}
+		else{
+			response.sendRedirect("candidateGeneList.htm");
+		}
 	}
 }
 %>
