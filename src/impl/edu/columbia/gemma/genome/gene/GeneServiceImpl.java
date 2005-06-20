@@ -43,6 +43,29 @@ public class GeneServiceImpl
     }
 
     /**
+     * This was created because calling saveGene with an existant gene actually causes a caching error 
+     * in Spring.
+     * @see edu.columbia.gemma.genome.gene.GeneService#updateGene(edu.columbia.gemma.genome.Gene)
+     */
+    protected edu.columbia.gemma.genome.Gene handleUpdateGene(edu.columbia.gemma.genome.Gene gene)
+        throws java.lang.Exception
+    {
+    	this.getGeneDao().update(gene);
+    	return gene;
+    }
+
+    /**
+     * This was created because calling saveGene from Spring causes caching errors.  I left saveGene 
+     * in place on the assumption that Kiran's loaders use it with success.
+     * @see edu.columbia.gemma.genome.gene.GeneService#createGene(edu.columbia.gemma.genome.Gene)
+     */
+    protected edu.columbia.gemma.genome.Gene handleCreateGene(edu.columbia.gemma.genome.Gene gene)
+        throws java.lang.Exception
+    {
+    	this.getGeneDao().create(gene);
+    	return gene;
+    }
+    /**
      * @see edu.columbia.gemma.genome.gene.GeneService#getAllGenes()
      */
     protected java.util.Collection handleGetAllGenes()
