@@ -40,18 +40,13 @@ public class GeneServiceImplTest extends BaseDAOTestCase {
 	private TaxonDao tDAO=null;
 	
 	protected void setUp() throws Exception {		
-		g = Gene.Factory.newInstance();
-		gDAO = (GeneDao)ctx.getBean("geneDao");
+		
 		tDAO = (TaxonDao)ctx.getBean("taxonDao");
         t = Taxon.Factory.newInstance();
 		t.setCommonName("moose");
 		t.setScientificName("moose");
 		tDAO.create(t);
-		g.setName("rabble");
-		g.setOfficialSymbol("rab");
-		g.setOfficialName("rabble");
-		g.setTaxon(t);
-		gDAO.create(g);
+		
 		
 	}
 	public void testGeneServiceImpl(){
@@ -60,7 +55,17 @@ public class GeneServiceImplTest extends BaseDAOTestCase {
 		Collection cOSI=null;
 		Collection cAll=null;
 		GeneService svc = (GeneService)ctx.getBean("geneService");
-	    cON = svc.findByOfficialName("rabble");
+	    
+		g = Gene.Factory.newInstance();
+		g.setName("rabble");
+		g.setOfficialSymbol("rab");
+		g.setOfficialName("rabblebong");
+		g.setTaxon(t);
+		g = svc.createGene(g);
+		g.setOfficialName("rabble");
+		g = svc.updateGene(g);
+		
+		cON = svc.findByOfficialName("rabble");
 	    cOS = svc.findByOfficialSymbol("rab");
 	    cOSI = svc.findByOfficialSymbolInexact("ra%");
 	    long geneID = g.getId().longValue();
@@ -72,10 +77,11 @@ public class GeneServiceImplTest extends BaseDAOTestCase {
 		assertTrue( cOSI != null && cOSI.size()>0);
 		assertTrue( cAll != null && cAll.size()>0);
 		assertTrue( gLookup != null && gLookup.getId().longValue() == geneID);
+		
+		svc.removeGene("rabble");
 	}
 	
 	protected void tearDown() throws Exception{
-		gDAO.remove(g);
 		tDAO.remove(t);
 	}
 }
