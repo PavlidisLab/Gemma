@@ -48,6 +48,7 @@ if( m!=null) {
 	</tr>
 	</form>
 	</table>
+	<BR><BR>
 	<table width="100%" bgcolor="#eeeeee" cellpadding="1" cellspacing="2">
 	<tr>
 		<td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Candidate Genes</B></td>
@@ -63,17 +64,13 @@ if( m!=null) {
 		while (iter.hasNext()) {
 			g=(CandidateGene)iter.next();
 			String gID = g.getId().toString();
+			String gSymbol = g.getGene().getOfficialSymbol();
+			desc = g.getDescription();
+			if( desc==null )
+				desc="";
 			%>
 			<tr>
-				<td width="90%" bgcolor="white"><a href="geneDetail.htm?geneID=<%=g.getGene().getId()%>"><%=g.getName()%></a><BR><%=g.getDescription()%></td>
-				<form method="POST" action="candidateGeneListDetail.htm">
-				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
-				<input type="hidden" name="action" id="action" value="removegenefromcandidatelist">
-				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
-				<td size='75px' bgcolor="white"><%=g.getDescription()%>
-					<input type="submit" value="Remove">
-				</td>
-				</form>
+				<td width="10" bgcolor="white">
 				<%
 				if( can.size()>1 && ct>1) {
 				%>
@@ -81,32 +78,42 @@ if( m!=null) {
 				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
 				<input type="hidden" name="action" id="action" value="movecandidateuponcandidatelist">
 				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
-				<td size='75px' bgcolor="white">
-					<input type="submit" value="Move Up">
-				</td>
+				<input type="image" src="/Gemma/images/desc.gif">
 				</form>
 				<%
 				}
-				else
-					out.print("<td size='75px' bgcolor='white'>&nbsp;</td>");
 				if( can.size()>1 && ct!=can.size()){
 				%>
 				<form method="POST" action="candidateGeneListDetail.htm">
 				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
 				<input type="hidden" name="action" id="action" value="movecandidatedownoncandidatelist">
 				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
-				<td size='75px' bgcolor="white">
-					<input type="submit" value="Move Down">
-				</td>
+				<input type="image" src="/Gemma/images/asc.gif">
 				</form>
 				<%
 				}
-				else
-					out.print("<td size='75px' bgcolor='white'>&nbsp;</td>");
-				ct++;
+				
 				%>
+				</td>
+				<form method="POST" action="candidateGeneListDetail.htm">
+				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
+				<input type="hidden" name="action" id="action" value="updatecandidategene">
+				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
+				<td width="350" bgcolor="white"><a href="geneDetail.htm?geneID=<%=g.getGene().getId()%>"><%=gSymbol%></a><BR>
+				Notes:&nbsp;&nbsp;&nbsp;<input type="text" width="150" name="description" id="description" value="<%=desc%>"> <input type="submit" value="Update">
+				</td>
+				</form>
+				<form method="POST" action="candidateGeneListDetail.htm">
+				<input type="hidden" name="listID" id="listID" value="<%=request.getParameter("listID")%>">
+				<input type="hidden" name="action" id="action" value="removegenefromcandidatelist">
+				<input type="hidden" name="geneID" id="geneID" value="<%=gID%>">
+				<td size='75px' bgcolor="white" align="right">
+					<input type="submit" value="Remove">
+				</td>
+				</form>
 			</tr>
 		<%
+		ct++;
 		}
 	}
 }

@@ -4,6 +4,7 @@
 <%@ page import="edu.columbia.gemma.genome.Taxon" %>
 <%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
 <%@ page import="edu.columbia.gemma.common.description.DatabaseEntry" %>
+<%@ page import="edu.columbia.gemma.genome.gene.GeneProduct" %>
 <%@ page import="java.util.Collection" %>
 <%@ page import="java.util.Iterator" %>
 <%@ page import="java.util.Map" %>
@@ -19,12 +20,14 @@
 Map m = (Map)request.getAttribute("model");
 Gene g = null;
 String ncbi=null;
-String aliaslist=null;
-String citelist=null;
-String acclist=null;
-String productlist=null;
+String oName = null;
+String aliaslist="";
+String citelist="";
+String acclist="";
+String prodlist="";
 BibliographicReference br = null;
 DatabaseEntry db = null;
+GeneProduct prod = null;
 Taxon t=null;
 
 g = (Gene) m.get("gene");
@@ -36,6 +39,9 @@ else{
 	ncbi = g.getNcbiId();
 	if(ncbi==null)
 		ncbi="None known";
+	oName = g.getOfficialName();
+	if(oName==null)
+		oName="None known";	
 		
 	if( g.getGeneAliasses()==null || g.getGeneAliasses().size()==0 )
 		aliaslist="None known";
@@ -52,10 +58,19 @@ else{
 		citelist="None known";
 	else{
 		for(Iterator iter=g.getCitations().iterator(); iter.hasNext();){
+			String cite="";
 			br = (BibliographicReference) iter.next();
-			citelist += br.getCitation() ;
+			
+			cite += br.getAuthorList() + ". " + br.getTitle() + ". ";
+			if( br.getPublicationDate()!=null )
+				cite += br.getPublicationDate().toString();
+			if(br.getPubAccession()!=null)
+				cite = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=" + br.getPubAccession().toString() + cite + "</a>";
+			cite += "&nbsp;<a href='/Gemma/citationForm.htm?citationID=" + br.getId() + "&referPage=geneDetail&referID=" + g.getId().toString() + "'>edit</a>";
+			cite += "&nbsp;&nbsp;&nbsp;&nbsp;<a href='/Gemma/geneDetail.htm?citationID=" + br.getId() + "&geneID=" + g.getId() + "&action=removecitation'>Remove From List</a>";
+			citelist += cite;
 			if( iter.hasNext() ){
-				citelist +=  "<BR>";
+				citelist +=  "<a href=<BR>";
 			}	
 		}
 	}
@@ -71,19 +86,38 @@ else{
 			}	
 		}
 	}
-		
+	
+	if( g.getProducts()==null || g.getProducts().size()==0){
+		prodlist="None known";
+	}
+	else{
+		for( Iterator iter=g.getProducts().iterator(); iter.hasNext();){
+			prod = (GeneProduct)iter.next();
+			prodlist += prod.getName();
+			if( iter.hasNext() ){
+				prodlist += "<BR>";
+			}
+		}
+	}
+	
 	%>
 	
 	<table>
-		<tr><td>Official Name:</td><td><%=g.getOfficialName()%></td></tr>
+		<tr><td>Official Name:</td><td><%=oName%></td></tr>
 		<tr><td>Official Symbol:</td><td><%=g.getOfficialSymbol()%></td></tr>
 		<tr><td>NCBI ID:</td><td><%=ncbi%></td></tr>
 		<tr><td>Aliases:</td><td><%=aliaslist%></td></tr>
 		<tr><td>Citations:</td><td><%=citelist%></td></tr>
 		<tr><td>Accessions:</td><td><%=acclist%></td></tr>
-		<tr><td>Products:</td><td><%=productlist%></td></tr>
+		<tr><td>Products:</td><td><%=prodlist%></td></tr>
 		<tr><td>Taxon:</td><td><%=t.getScientificName()%> (<%=t.getCommonName()%>)</td></tr>
 	</table>
+	<BR><BR>
+	<form method="post" action="geneDetail.htm" id="addcite" name="addcite">
+	<input type="hidden" name="geneID" value="<%=g.getId()%>">
+	<input type="hidden" name="action" value="addcitation">
+	Add Citation by Pubmed ID: <input type="text" name="pubmedID" id="pubmedID"><input type="submit" value="Add">
+	</form>
 	<%
 }
 %>
