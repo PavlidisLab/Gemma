@@ -24,6 +24,8 @@
  */
 package edu.columbia.gemma.common.description;
 
+import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+
 /**
  * Implementation of BibliographicReferenceService.
  * <hr>
@@ -60,9 +62,15 @@ public class BibliographicReferenceServiceImpl extends
      */
     protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
             throws java.lang.Exception {
-        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference
-        // handleFindByExternalId(java.lang.String id)
-        return null;
+    	
+    	int pubMedId = new Integer(id).intValue();
+    	PubMedXMLFetcher fetch = new PubMedXMLFetcher();
+    	BibliographicReference br = fetch.retrieveByHTTP( pubMedId );
+        if ( !alreadyExists( br ) ){
+        	saveBibliographicReference( br );
+        }
+        return br;    	
+        
     }
 
     /**
