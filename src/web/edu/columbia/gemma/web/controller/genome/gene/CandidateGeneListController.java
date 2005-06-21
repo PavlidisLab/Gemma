@@ -104,6 +104,7 @@ public class CandidateGeneListController extends BaseCommandController {
 		if (action == null)
 			action = "view";
 
+		// Load the user into usr, used to attribute actions and search by owner
 		User usr = userService.getUser(request.getRemoteUser());
 		this.candidateGeneListService.setActor(usr);
 
@@ -122,17 +123,38 @@ public class CandidateGeneListController extends BaseCommandController {
 				candidateGeneListModel.put("candidateGeneLists", this
 						.getCandidateGeneListService().findByID(listID));
 			} else {
-				candidateGeneListModel.put("candidateGeneLists", this
+				String limitToUser = request.getParameter("limit");
+				if( limitToUser==null)
+					candidateGeneListModel.put("candidateGeneLists", this
 						.getCandidateGeneListService().getAll());
+				else
+					candidateGeneListModel.put("candidateGeneLists", this.getCandidateGeneListService().findByListOwner(usr));
 			}
 		}
 		CandidateGene cg = null;
 
+		if (action.compareTo("updatecandidategene")==0){
+			CandidateGeneList cgl = this.getCandidateGeneListService().findByID(listID);
+			for (java.util.Iterator iter = cgl.getCandidates().iterator(); iter.hasNext();) {
+				cg = (CandidateGene) iter.next();
+				if (cg.getId().longValue() == geneID){
+					break;
+				}
+			}
+			cg.setDescription(request.getParameter("description"));
+			cg.getAuditTrail().update("CandidateGene Modified Description", usr);
+			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			return new ModelAndView(new RedirectView(
+					"candidateGeneListActionComplete.htm?target=candidateGeneListDetail&listID="
+							+ request.getParameter("listID")));
+		}
+	
+	
+		
 		if (action.compareTo("movecandidateuponcandidatelist") == 0) {
 			CandidateGeneList cgl = this.getCandidateGeneListService()
 					.findByID(listID);
-			for (java.util.Iterator iter = cgl.getCandidates().iterator(); iter
-					.hasNext();) {
+			for (java.util.Iterator iter = cgl.getCandidates().iterator(); iter.hasNext();) {
 				cg = (CandidateGene) iter.next();
 				if (cg.getId().longValue() == geneID)
 					break;
