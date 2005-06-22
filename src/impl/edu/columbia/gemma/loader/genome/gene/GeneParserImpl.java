@@ -16,7 +16,8 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
-import edu.columbia.gemma.loader.loaderutils.LoaderTools;
+import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
  * Parse gene files (ncbi, etc).
@@ -62,7 +63,7 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
     public Map parse( InputStream fis, Method lineParseMethod ) throws IOException {
         methodToInvoke = lineParseMethod;
         parse( fis );
-        LoaderTools.debugMap( map );
+        ParserTools.debugMap( map );
         return map;
     }
 
@@ -79,7 +80,7 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
 
         Method lineParseMethod = null;
         try {
-            lineParseMethod = LoaderTools.findParseLineMethod( getGeneMappings(), filename );
+            lineParseMethod = ParserTools.findParseLineMethod( getGeneMappings(), filename );
         } catch ( NoSuchMethodException e ) {
             log.error( e, e );
             return null;

@@ -7,7 +7,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
-import edu.columbia.gemma.loader.loaderutils.LoaderTools;
+import edu.columbia.gemma.loader.loaderutils.ParserTools;
 
 /**
  * <hr>
@@ -42,7 +42,7 @@ public class OntologyEntryLoaderImpl {
             if ( oeColFromDatabase.size() == 0 ) {
                 getOntologyEntryDao().create( oe );
                 count++;
-                LoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
+                ParserTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
 
             } else {
                 for ( OntologyEntry oeFromDatabase : oeColFromDatabase ) {
@@ -50,7 +50,7 @@ public class OntologyEntryLoaderImpl {
                             && ( !oe.getExternalDatabase().equals( oeFromDatabase.getExternalDatabase() ) ) ) {
                         getOntologyEntryDao().create( oe );
                         count++;
-                        LoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
+                        ParserTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
                     }
                 }
             }

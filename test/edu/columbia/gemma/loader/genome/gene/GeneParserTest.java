@@ -12,7 +12,7 @@ import org.springframework.beans.factory.BeanFactory;
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.LoaderTools;
+import edu.columbia.gemma.loader.loaderutils.ParserTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -41,14 +41,14 @@ public class GeneParserTest extends BaseServiceTestCase {
      */
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/geneinfo" );
-        Method m = LoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "geneinfo" );
+        Method m = ParserTools.findParseLineMethod( geneParser.getGeneMappings(), "geneinfo" );
         geneParser.parse( is, m );
 
         InputStream is2 = this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene2accession" );
-        Method m2 = LoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "gene2accession" );
+        Method m2 = ParserTools.findParseLineMethod( geneParser.getGeneMappings(), "gene2accession" );
         map = geneParser.parse( is2, m2 );
 
-        LoaderTools.loadDatabase( geneLoader, map.values() );
+        ParserTools.loadDatabase( geneLoader, map.values() );
 
         assertEquals( null, null );
 
