@@ -29,7 +29,7 @@ import java.util.Iterator;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
-import edu.columbia.gemma.loader.expression.arraydesign.AffyProbeReader;
+import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReader;
 
 /**
  * Given an Affymetrix array design, "collapse" the probes into sequences that include all probe sequence.

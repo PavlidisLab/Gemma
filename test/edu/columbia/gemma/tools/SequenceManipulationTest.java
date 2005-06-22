@@ -15,7 +15,7 @@ import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.genome.PhysicalLocation;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.gene.GeneProduct;
-import edu.columbia.gemma.loader.expression.arraydesign.AffyProbeReader;
+import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReader;
 
 /**
  * <hr>
