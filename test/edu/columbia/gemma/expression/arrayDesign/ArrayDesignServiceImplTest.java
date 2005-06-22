@@ -7,6 +7,9 @@ import java.util.HashSet;
 import org.easymock.MockControl;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImpl;
 
 /**
  * <hr>

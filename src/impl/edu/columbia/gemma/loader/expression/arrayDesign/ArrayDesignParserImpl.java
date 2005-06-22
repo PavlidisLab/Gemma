@@ -87,7 +87,6 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements Parser 
 
         // create Gemma domain objects
         for ( Object key : adKeysSet ) {
-            System.err.println( "key : " + key );
             ArrayDesign ad = ( ArrayDesign ) adMap.get( key );
 
             ad.setDesignProvider( contact );

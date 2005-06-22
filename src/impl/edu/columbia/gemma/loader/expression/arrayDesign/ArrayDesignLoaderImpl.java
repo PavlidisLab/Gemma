@@ -45,12 +45,16 @@ public class ArrayDesignLoaderImpl {
                 ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
 
             } else {
+                ArrayDesign tmp = null;
                 for ( ArrayDesign adFromDatabase : adColFromDatabase ) {
-                    if ( !ad.getName().equals( adFromDatabase.getName() ) ) {
-                        getArrayDesignDao().create( ad );
-                        count++;
-                        ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
-                    }
+                    if ( ad.getName().equals( adFromDatabase.getName() ) ) break;
+
+                    tmp = ad;
+                }
+                if ( tmp != null ) {
+                    getArrayDesignDao().create( tmp );
+                    count++;
+                    ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
                 }
             }
         }

@@ -88,10 +88,8 @@ public class ArrayDesignMappings {
         if ( arrayDesignMap.containsKey( name ) ) return arrayDesignMap.get( name );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        System.err.println( "1 checkAndGet: " + ad.toString() );
         ad.setName( name );
         arrayDesignMap.put( name, ad );
-        System.err.println( "2 checkAndGet: " + ad.toString() );
         return ad;
     }
 
