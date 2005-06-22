@@ -2,13 +2,22 @@ package edu.columbia.gemma.loader.expression.arraydesign;
 
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.loader.loaderutils.LoaderTools;
+import edu.columbia.gemma.common.auditAndSecurity.Contact;
+import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
+import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.common.description.LocalFileDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
@@ -25,9 +34,38 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
 
     private ArrayDesignParserImpl arrayDesignParser = null;
 
-    // private ArrayDesignLoaderImpl arrayDesignLoader = null;
+    private ArrayDesignLoaderImpl arrayDesignLoader = null;
 
     private Map map = null;
+
+    /**
+     * set up
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        BeanFactory ctx = SpringContextUtil.getApplicationContext();
+
+        arrayDesignParser = new ArrayDesignParserImpl();
+
+        arrayDesignParser.setArrayDesignMappings( ( ArrayDesignMappings ) ctx.getBean( "arrayDesignMappings" ) );
+
+        arrayDesignParser.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
+
+        arrayDesignParser.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
+
+        arrayDesignLoader = new ArrayDesignLoaderImpl();
+
+        arrayDesignLoader.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
+
+    }
+
+    /**
+     * tear down
+     */
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
 
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
@@ -37,30 +75,31 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
      */
     public void testParseAndLoad() throws Exception {
 
-        // TODO create dependencies
+        Method m = ParserAndLoaderTools.findParseLineMethod( arrayDesignParser.getArrayDesignMappings(), "array" );
 
-        Method m = LoaderTools.findParseLineMethod( arrayDesignParser.getArrayDesignMappings(), "put the file suffix" );
-
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/HC-G110.txt" );
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/array.txt" );
+        // InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/HC-G110.txt" );
 
         map = arrayDesignParser.parse( is, m );
 
-        // LoaderTools.loadDatabase( arrayDesignLoader, map.values() );
+        Object[] dependencies = new Object[2];
 
-    }
+        Contact contact = Contact.Factory.newInstance();
+        contact.setName( "Affymetrix" );
+        contact.setPhone( "888-362-2447" );
+        contact.setURI( "http://www.affymetrix.com/index.affx" );
 
-    /**
-     * set up
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
+        LocalFile lf = LocalFile.Factory.newInstance();
+        lf.setLocalURI( "/data/loader/expression/arraydesign/array.txt" );
+        lf.setSize( 12177 );
 
-    /**
-     * tear down
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
+        dependencies[0] = contact;
+        dependencies[1] = lf;
+
+        Collection<ArrayDesign> col = arrayDesignParser.createOrGetDependencies( dependencies, map );
+
+        ParserAndLoaderTools.loadDatabase( arrayDesignLoader, col );
+
     }
 
 }
