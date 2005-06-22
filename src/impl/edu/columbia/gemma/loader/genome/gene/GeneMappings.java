@@ -18,7 +18,7 @@ import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.gene.GeneProduct;
 import edu.columbia.gemma.genome.gene.GeneProductType;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
  * <hr>
@@ -91,7 +91,7 @@ public class GeneMappings {
     public Object mapFromGene2Accession( String line ) {
         String[] values = StringUtils.split( line, "\t" );
 
-        if ( !ParserTools.validTaxonId( values[TAX_ID] ) ) {
+        if ( !ParserAndLoaderTools.validTaxonId( values[TAX_ID] ) ) {
             return null;
         }
         Gene gene = checkAndGetExistingGene( values[NCBI_ID] );
@@ -191,7 +191,7 @@ public class GeneMappings {
 
         String[] values = StringUtils.split( line, "\t" );
 
-        if ( !ParserTools.validTaxonId( values[TAX_ID] ) ) {
+        if ( !ParserAndLoaderTools.validTaxonId( values[TAX_ID] ) ) {
             return null;
         }
 

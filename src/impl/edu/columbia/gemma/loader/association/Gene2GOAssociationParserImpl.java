@@ -21,7 +21,7 @@ import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
@@ -83,7 +83,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     public Map parse( InputStream is, Method lineParseMethod ) throws IOException {
         methodToInvoke = lineParseMethod;
         parse( is );
-        ParserTools.debugMap( g2GOMap );
+        ParserAndLoaderTools.debugMap( g2GOMap );
         return g2GOMap;
     }
 
@@ -105,13 +105,13 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      */
     public Map parseFromHttp( String url ) throws IOException, ConfigurationException {
 
-        InputStream is = ParserTools.retrieveByHTTP( url );
+        InputStream is = ParserAndLoaderTools.retrieveByHTTP( url );
 
         GZIPInputStream gZipInputStream = new GZIPInputStream( is );
 
         Method lineParseMethod = null;
         try {
-            lineParseMethod = ParserTools.findParseLineMethod( new Gene2GOAssociationMappings(), filename );
+            lineParseMethod = ParserAndLoaderTools.findParseLineMethod( new Gene2GOAssociationMappings(), filename );
         } catch ( NoSuchMethodException e ) {
             log.error( e, e );
             return null;

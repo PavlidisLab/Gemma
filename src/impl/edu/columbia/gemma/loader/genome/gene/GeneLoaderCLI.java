@@ -18,7 +18,7 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 import edu.columbia.gemma.util.SpringContextUtil;
 
@@ -103,7 +103,7 @@ public class GeneLoaderCLI {
                 //
                 // stopwatch.stop();
                 // LoaderTools.displayTime( stopwatch );
-                ParserTools.loadDatabase( geneLoader, map.values() );
+                ParserAndLoaderTools.loadDatabase( geneLoader, map.values() );
 
             } else if ( cl.hasOption( 'r' ) ) {
                 geneLoader = new GeneLoaderImpl();

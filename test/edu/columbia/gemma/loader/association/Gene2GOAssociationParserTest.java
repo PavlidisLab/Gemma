@@ -23,7 +23,7 @@ import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -97,13 +97,13 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         GZIPInputStream gZipIs = new GZIPInputStream( is );
 
-        Method m = ParserTools.findParseLineMethod( gene2GOAssParser.getGene2GOAssociationMappings(), "gene2go" );
+        Method m = ParserAndLoaderTools.findParseLineMethod( gene2GOAssParser.getGene2GOAssociationMappings(), "gene2go" );
 
         gene2GOMap = gene2GOAssParser.parse( gZipIs, m );
 
         gene2GOCol = gene2GOAssParser.createOrGetDependencies( dependencies, gene2GOMap );
 
-        ParserTools.loadDatabase( gene2GOAssLoader, gene2GOCol );
+        ParserAndLoaderTools.loadDatabase( gene2GOAssLoader, gene2GOCol );
 
     }
 

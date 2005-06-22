@@ -7,9 +7,10 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
+ * A service to load OntologyEntries (from any user interface).
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -42,7 +43,7 @@ public class OntologyEntryLoaderImpl {
             if ( oeColFromDatabase.size() == 0 ) {
                 getOntologyEntryDao().create( oe );
                 count++;
-                ParserTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
+                ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
 
             } else {
                 for ( OntologyEntry oeFromDatabase : oeColFromDatabase ) {
@@ -50,7 +51,7 @@ public class OntologyEntryLoaderImpl {
                             && ( !oe.getExternalDatabase().equals( oeFromDatabase.getExternalDatabase() ) ) ) {
                         getOntologyEntryDao().create( oe );
                         count++;
-                        ParserTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
+                        ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
                     }
                 }
             }

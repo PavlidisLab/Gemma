@@ -19,7 +19,7 @@ import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
@@ -53,7 +53,7 @@ public class OntologyEntryParserImpl implements Parser {
      * @throws SAXException
      */
     public Map parseFromHttp( String url ) throws IOException {
-        InputStream is = ParserTools.retrieveByHTTP( url );
+        InputStream is = ParserAndLoaderTools.retrieveByHTTP( url );
         GZIPInputStream gZipInputStream = new GZIPInputStream( is );
 
         try {

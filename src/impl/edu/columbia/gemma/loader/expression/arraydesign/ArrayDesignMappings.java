@@ -23,12 +23,15 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
  * 
  * @author keshav
  * @version $Id$
+ * @spring.bean name="arrayDesignMappings"
  */
 public class ArrayDesignMappings {
     protected static final Log log = LogFactory.getLog( ArrayDesignMappings.class );
     Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
 
     private final int ARRAY_ARRAYDESIGN_NAME = conf.getInt( "array.name" );
+    private final int ARRAY_DESCRIPTION = conf.getInt( "array.description" );
+    private final int ARRAY_NUM_OF_REPORTERS = conf.getInt( "array.numofreporters" );
 
     Map<String, ArrayDesign> arrayDesignMap = new HashMap<String, ArrayDesign>();
     Map<String, Contact> designProvidersMap = null;
@@ -41,7 +44,6 @@ public class ArrayDesignMappings {
      */
     public ArrayDesignMappings() throws ConfigurationException {
         super();
-        initializeDesignProviders();
     }
 
     /**
@@ -55,9 +57,11 @@ public class ArrayDesignMappings {
 
         ArrayDesign arrayDesign = checkAndGetExistingArrayDesign( values[ARRAY_ARRAYDESIGN_NAME] );
 
-        // arrayDesign.setDesignProvider();
+        arrayDesign.setDescription( values[ARRAY_DESCRIPTION] );
 
-        return null;
+        arrayDesign.setNumberOfCompositeSequences( ARRAY_NUM_OF_REPORTERS );
+
+        return arrayDesign;
     }
 
     /**
@@ -72,18 +76,6 @@ public class ArrayDesignMappings {
         if ( line.startsWith( "Probe" ) || line.startsWith( " " ) ) return null;
 
         return null;
-    }
-
-    /**
-     * TODO add findAllContacts finder to the model.
-     */
-    private void initializeDesignProviders() {
-        // Collection<Contact> designProviders = contactDao.findAllContacts();
-        // designProvidersMap = new HashMap<String, Contact>();
-        //        
-        // for ( Contact c : designProviders ) {
-        // designProvidersMap.put( c.getName(), c );
-        // }
     }
 
     /**

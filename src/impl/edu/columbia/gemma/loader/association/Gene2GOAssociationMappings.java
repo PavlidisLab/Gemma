@@ -15,7 +15,7 @@ import edu.columbia.gemma.association.EvidenceCode;
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
  * <hr>
@@ -81,7 +81,7 @@ public class Gene2GOAssociationMappings {
 
         if ( line.startsWith( "#" ) ) return null;
 
-        if ( !ParserTools.validTaxonId( values[TAX_ID] ) ) {
+        if ( !ParserAndLoaderTools.validTaxonId( values[TAX_ID] ) ) {
             return null;
         }
 

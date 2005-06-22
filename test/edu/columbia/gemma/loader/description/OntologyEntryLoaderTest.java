@@ -18,7 +18,7 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -85,14 +85,14 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         oeCol = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap );
 
-        ParserTools.loadDatabase( ontologyEntryLoader, oeCol );
+        ParserAndLoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
 
         // parse second file. make sure the duplicates are not persisted again.
         oeMap2 = ontologyEntryParser.parseFromHttp( url );
 
         oeCol2 = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap2 );
 
-        ParserTools.loadDatabase( ontologyEntryLoader, oeCol2 );
+        ParserAndLoaderTools.loadDatabase( ontologyEntryLoader, oeCol2 );
 
     }
 

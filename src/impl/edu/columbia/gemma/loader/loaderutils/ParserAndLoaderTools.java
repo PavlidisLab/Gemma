@@ -22,16 +22,15 @@ import org.apache.commons.logging.LogFactory;
  * @author keshav
  * @version $Id$
  */
-public class ParserTools {
-    protected static final Log log = LogFactory.getLog( ParserTools.class );
+public class ParserAndLoaderTools {
+    protected static final Log log = LogFactory.getLog( ParserAndLoaderTools.class );
 
     private static final int HOMOSAPIEN = 9606;
     private static final int MUSMUSCULUS = 10090;
     private static final int RATTUS = 10114;
 
     /**
-     * Reflectively determines which loader to use.
-     * Display time to be used with org.apache.commons.lang.time.StopWatch
+     * Reflectively determines which loader to use. Display time to be used with org.apache.commons.lang.time.StopWatch
      * 
      * @param loader
      * @param col
@@ -109,7 +108,8 @@ public class ParserTools {
         assert obj != null;
         Method[] methods = obj.getClass().getMethods();
         for ( Method m : methods ) {
-            if ( m.getName().toLowerCase().contains( ( suffixOfFilename ).toLowerCase() ) ) {
+            if ( m.getName().toLowerCase().contains( ( suffixOfFilename ).toLowerCase() )
+                    && m.getName().startsWith( "mapFrom" ) ) {
                 return m;
             }
         }

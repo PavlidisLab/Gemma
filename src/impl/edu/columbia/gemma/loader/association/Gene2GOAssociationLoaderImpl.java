@@ -7,7 +7,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
-import edu.columbia.gemma.loader.loaderutils.ParserTools;
+import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
  * <hr>
@@ -42,7 +42,7 @@ public class Gene2GOAssociationLoaderImpl {
             if ( g2GoColFromDatabase.size() == 0 ) {
                 getGene2GOAssociationDao().create( g2Go );
                 count++;
-                ParserTools.objectsPersistedUpdate( count, 1000, "Gene2GOAssociation objects" );
+                ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Gene2GOAssociation objects" );
 
             } else {
                 for ( Gene2GOAssociation g2GoFromDatabase : g2GoColFromDatabase ) {
@@ -51,7 +51,7 @@ public class Gene2GOAssociationLoaderImpl {
                                     g2GoFromDatabase.getAssociatedOntologyEntry() ) ) ) {
                         getGene2GOAssociationDao().create( g2Go );
                         count++;
-                        ParserTools.objectsPersistedUpdate( count, 1000, "Gene2GOAssociation objects" );
+                        ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Gene2GOAssociation objects" );
                     }
                 }
             }
