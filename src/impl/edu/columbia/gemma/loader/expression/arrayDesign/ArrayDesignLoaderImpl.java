@@ -47,7 +47,10 @@ public class ArrayDesignLoaderImpl {
             } else {
                 ArrayDesign tmp = null;
                 for ( ArrayDesign adFromDatabase : adColFromDatabase ) {
-                    if ( ad.getName().equals( adFromDatabase.getName() ) ) break;
+                    if ( ad.getName().equals( adFromDatabase.getName() ) ) {
+                        tmp = null;
+                        break;
+                    }
 
                     tmp = ad;
                 }
