@@ -66,7 +66,7 @@ public class ArrayDesignMappings {
 
         arrayDesign.setDescription( values[ARRAY_DESCRIPTION] );
 
-        arrayDesign.setNumberOfCompositeSequences( ARRAY_NUM_OF_REPORTERS );
+        arrayDesign.setNumberOfFeatures( Integer.parseInt( values[ARRAY_NUM_OF_REPORTERS] ) );
 
         return arrayDesign;
     }
@@ -81,8 +81,8 @@ public class ArrayDesignMappings {
         String[] values = StringUtils.split( line, "\t" );
 
         if ( line.startsWith( "Probe" ) ) return null;
-        
-        if ( values.length == 0) return null;
+
+        if ( values.length == 0 ) return null;
 
         ArrayDesign arrayDesign = checkAndGetExistingArrayDesign( "MG-U74A" );
 
