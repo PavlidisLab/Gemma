@@ -53,10 +53,8 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
         this.getArrayDesignDao().remove( this.getArrayDesignDao().findByName( name ) );
     }
 
-    /**
-     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#findByName(java.lang.String)
-     */
-    protected java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception {
+    @Override
+    protected edu.columbia.gemma.expression.arrayDesign.ArrayDesign handleFindArrayDesignByName( String name ) throws Exception {
         return this.getArrayDesignDao().findByName( name );
     }
 }
