@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+A Spring WebFlow.  Flows can be in 1 of 4 states:	
+view-state: displays associated view
+action-state:  can be used to execute bean defined in bean-factory.xml
+subflow-state: execute another flow
+end-state: end flow sequence
+
+Allows you to select arrayDesign details.  This is a subflow of arrayDesign.Search.   
+
+author: keshav
+version: $Id$	
+-->
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="arrayDesign.Detail" start-state="detail.get">
+
+	<action-state id="detail.get">
+		<action bean="arrayDesign.Detail.criteria.formAction.getFormAction"/>
+		<transition on="success" to="detail.view"/>
+		<transition on="error" to="error"/>
+	</action-state>
+
+	<view-state id="detail.view" view="arrayDesign.Detail.view">
+		<transition on="back" to="finish"/>
+	</view-state>
+
+	<end-state id="finish"/>
+	
+	<end-state id="error" view="error.view"/>
+	
+</webflow>

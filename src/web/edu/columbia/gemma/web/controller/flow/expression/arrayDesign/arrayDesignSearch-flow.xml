@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+A Spring WebFlow.  Flows can be in 1 of 4 states:	
+view-state: displays associated view
+action-state:  can be used to execute bean defined in bean-factory.xml
+subflow-state: execute another flow
+end-state: end flow sequence
+
+This flow is used to get all arrayDesigns.  The flow has a subflow "arrayDesign.Detail" 
+
+author: keshav
+version: $Id$
+-->
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="arrayDesign.Search" start-state="criteria.view">
+
+	<view-state id="criteria.view" view="arrayDesign.Search.criteria.view">
+		<!-- <transition on="submitPubMed" to="bindAndValidate"/> -->
+		<transition on="getArrayDesigns" to="getAllArrayDesigns"/> 
+	</view-state>
+	<!-- 
+	<action-state id="bindAndValidate">
+		<action bean="pubMed.Search.criteria.formAction"/>
+		<transition on="success" to="executeQuery"/>
+		<transition on="error" to="criteria.view"/>
+	</action-state>
+	-->
+	<action-state id="getAllArrayDesigns">
+		<action bean="arrayDesign.Search.getAllArrayDesigns"/>
+		<transition on="success" to="arrayDesign.results.view"/>
+	</action-state>
+	<!-- 
+	<action-state id="executeQuery">
+		<action bean="pubMed.Search.executeQuery"/>
+		<transition on="success" to="results.view"/>
+		<transition on="error" to="criteria.view"/>
+	</action-state>
+	
+	<view-state id="results.view" view="pubMed.Search.results.view">
+		<transition on="newSearch" to="criteria.view"/>
+		<transition on="saveBibRef" to="saveBibRef"/>
+	    <transition on="select" to="pubMedId.set"/>
+	</view-state>
+	
+	<action-state id="saveBibRef">
+		<action bean="pubMed.Search.executeQuery"/>
+		<transition on="success" to="criteria.view"/>
+		<transition on="error" to="criteria.view"/>
+	</action-state>
+	-->
+	<view-state id="arrayDesign.results.view" view="arrayDesign.GetAll.results.view">
+		<transition on="newSearch" to="criteria.view"/>
+	    <transition on="select" to="arrayDesign.set"/> 
+	</view-state>
+	
+	<action-state id="arrayDesign.set">
+		<action bean="arrayDesign.Search.id.set"/> 
+		<transition on="success" to="arrayDesign.Detail"/>
+		<transition on="error" to="error"/>
+	</action-state>
+
+	<subflow-state id="arrayDesign.Detail" flow="arrayDesign.Detail">
+		<attribute-mapper bean="arrayDesign.id.attributeMapper"/> 
+		<transition on="finish" to="criteria.view"/>
+		<transition on="error" to="error"/>
+	</subflow-state>
+
+	<end-state id="error" view="error.view"/>
+	
+</webflow>
