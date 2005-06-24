@@ -144,8 +144,11 @@
 <!-- ==================================================== -->
 <!-- 	Used by the fileUploadController 				  -->
 <!-- ==================================================== -->
-<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
-        <property name="maxUploadSize"><value>2097152</value></property>
+<bean id="multipartResolver"
+	class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+	<property name="maxUploadSize">
+		<value>2097152</value>
+	</property>
 </bean>
 
 <bean id="messageSource"
@@ -373,6 +376,106 @@
 	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
+	</property>
+</bean>
+
+<!--  ArrayDesign WebFlow -->
+
+<bean id="arrayDesignSearchController" name="/arrayDesignSearch.htm"
+	class="org.springframework.web.flow.mvc.FlowController">
+	<property name="cacheSeconds" value="5" />
+	<property name="flowExecutionManager"
+		ref="flowExecutionManagerArrayDesign" />
+</bean>
+
+<bean id="flowExecutionManagerArrayDesign"
+	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
+	<!-- Choose 0 or 1 flowExecutionStorage (to resolve back button issue) Strategy-->
+
+	<property name="flowExecutionStorage">
+		<bean
+			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
+	</property>
+	<!--
+		<property name="flowExecutionStorage">
+		<bean class="org.springframework.web.flow.execution.servlet.HttpSessionFlowExecutionStorage"/>
+		</property>
+		<property name="flowExecutionStorage">
+		<bean class="org.springframework.web.flow.execution.ClientContinuationFlowExecutionStorage">
+		<property name="compress"><value>true</value></property>
+		</bean>
+		</property>
+	-->
+	<property name="flow" ref="arrayDesign.Search" />
+</bean>
+
+<bean id="arrayDesign.Search"
+	class="org.springframework.web.flow.config.FlowFactoryBean">
+	<property name="flowBuilder">
+		<bean
+			class="org.springframework.web.flow.config.XmlFlowBuilder">
+			<property name="resource"
+				value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignSearch-flow.xml" />
+		</bean>
+	</property>
+</bean>
+
+<bean id="arrayDesign.Search.getAllArrayDesigns"
+	class="edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign.ArrayDesignExecuteQueryAction">
+	<property name="arrayDesignService">
+		<ref bean="arrayDesignService" />
+	</property>
+</bean>
+
+<bean id="arrayDesign.Search.id.set"
+	class="org.springframework.web.flow.action.EventParameterMapperAction">
+	<property name="mapping" value="name" /><!--,java.lang.String"/>-->
+	<property name="targetScopeAsString">
+		<value>flow</value>
+	</property>
+</bean>
+
+<bean id="arrayDesign.id.attributeMapper"
+	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
+	<property name="inputMappings">
+		<list>
+			<value>name</value>
+		</list>
+	</property>
+</bean>
+
+<!-- Subflow (detail flow) -->
+<bean id="arrayDesignDetailController" name="/arrayDesignDetail.htm"
+	class="org.springframework.web.flow.mvc.FlowController">
+	<property name="flowExecutionManager"
+		ref="flowExecutionManagerArrayDesignDetail" />
+</bean>
+
+<bean id="flowExecutionManagerArrayDesignDetail"
+	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
+	<property name="flowExecutionStorage">
+		<bean
+			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
+	</property>
+
+	<property name="flow" ref="arrayDesign.Detail" />
+</bean>
+
+<bean id="arrayDesign.Detail"
+	class="org.springframework.web.flow.config.FlowFactoryBean">
+	<property name="flowBuilder">
+		<bean
+			class="org.springframework.web.flow.config.XmlFlowBuilder">
+			<property name="resource"
+				value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignDetail-flow.xml" />
+		</bean>
+	</property>
+</bean>
+
+<bean id="arrayDesign.Detail.criteria.formAction.getFormAction"
+	class="edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign.GetArrayDesignAction">
+	<property name="arrayDesignService">
+		<ref bean="arrayDesignService" />
 	</property>
 </bean>
 
