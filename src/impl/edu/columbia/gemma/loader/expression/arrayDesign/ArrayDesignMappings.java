@@ -1,6 +1,8 @@
 package edu.columbia.gemma.loader.expression.arrayDesign;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
@@ -14,6 +16,8 @@ import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
+import edu.columbia.gemma.expression.designElement.DesignElement;
 
 /**
  * The mappings based on different files.
@@ -32,6 +36,9 @@ public class ArrayDesignMappings {
     private final int ARRAY_ARRAYDESIGN_NAME = conf.getInt( "array.name" );
     private final int ARRAY_DESCRIPTION = conf.getInt( "array.description" );
     private final int ARRAY_NUM_OF_REPORTERS = conf.getInt( "array.numofreporters" );
+
+    private final int MGU74A_NAME = conf.getInt( "mgu74a.name" );
+    private final int MGU74A_DESCRIPTION = conf.getInt( "mgu74a.description" );
 
     Map<String, ArrayDesign> arrayDesignMap = new HashMap<String, ArrayDesign>();
     Map<String, Contact> designProvidersMap = null;
@@ -73,7 +80,19 @@ public class ArrayDesignMappings {
     public Object mapFromMGU74A( String line ) {
         String[] values = StringUtils.split( line, "\t" );
 
-        if ( line.startsWith( "Probe" ) || line.startsWith( " " ) ) return null;
+        if ( line.startsWith( "Probe" ) ) return null;
+        
+        if ( values.length == 0) return null;
+
+        ArrayDesign arrayDesign = checkAndGetExistingArrayDesign( "MG-U74A" );
+
+        CompositeSequence cs = CompositeSequence.Factory.newInstance();
+        cs.setName( values[MGU74A_NAME] );
+        cs.setDescription( values[MGU74A_DESCRIPTION] );
+
+        Collection<DesignElement> designElements = new HashSet<DesignElement>();
+        designElements.add( cs );
+        arrayDesign.setDesignElements( designElements );
 
         return null;
     }
