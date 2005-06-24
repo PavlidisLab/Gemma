@@ -6,11 +6,22 @@
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
+<SCRIPT LANGUAGE = "JavaScript">
+	function selectButton(target){
+		if(target == 0){
+			document.backForm._eventId.value="back"
+		}
+		if(target == 1){
+			document.backForm._eventId.value="edit"
+		}
+		document.backForm.submit();
+	}
+	</SCRIPT> 
 	<HEAD></HEAD>
 	<BODY>
 		<FORM name="backForm" action="arrayDesignDetail.htm">
 				<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
-				<INPUT type="hidden" name="_eventId" value="back">
+				<INPUT type="hidden" name="_eventId" value="">
 		</FORM>
 		<TABLE width="100%">
 			<TR>
@@ -42,7 +53,12 @@
 			<TR>
 				<TD COLSPAN="2">
 					<DIV align="right">
-						<INPUT type="button" onclick="javascript:document.backForm.submit()" value="Back">
+						<INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
+					</DIV>
+				</TD>
+				<TD COLSPAN="2">
+					<DIV align="right">
+						<INPUT type="button" onclick="javascript:selectButton(1)" value="Edit">
 					</DIV>
 				</TD>
 			</TR>
