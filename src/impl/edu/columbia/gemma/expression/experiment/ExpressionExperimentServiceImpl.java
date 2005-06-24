@@ -1,0 +1,85 @@
+/*
+ * The Gemma project.
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package edu.columbia.gemma.expression.experiment;
+
+/**
+ * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService
+ */
+public class ExpressionExperimentServiceImpl
+    extends edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase
+{
+
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#saveExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
+     */
+    protected void handleSaveExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment expressionExperiment)
+        throws java.lang.Exception
+    {
+    	this.getExpressionExperimentDao().update(expressionExperiment);
+    }
+
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getAllExpressionExperiments()
+     */
+    protected java.util.Collection handleGetAllExpressionExperiments()
+        throws java.lang.Exception
+    {
+        return this.getExpressionExperimentDao().getAll();
+    }
+
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#findByParticipant()
+     */
+    protected java.util.Collection handleFindByParticipant(long id)
+        throws java.lang.Exception
+    {
+        return this.getExpressionExperimentDao().findByParticipant(id);
+    }
+
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getById()
+     */
+    protected ExpressionExperiment handleFindById(long id)
+        throws java.lang.Exception
+    {
+        return this.getExpressionExperimentDao().findById(id);
+    }
+    
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#removeExpressionExperiment(ExpressionExperiment)
+     */
+    protected void handleRemoveExpressionExperiment(ExpressionExperiment expressionExperiment)
+        throws java.lang.Exception
+    {
+        this.getExpressionExperimentDao().remove(expressionExperiment);
+    }
+
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#createExpressionExperiment()
+     */
+    protected ExpressionExperiment handleCreateExpressionExperiment(ExpressionExperiment expressionExperiment)
+        throws java.lang.Exception
+    {
+        return (ExpressionExperiment)this.getExpressionExperimentDao().create(expressionExperiment);
+    }
+}
