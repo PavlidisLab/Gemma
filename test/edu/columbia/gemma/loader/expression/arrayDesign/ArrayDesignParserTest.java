@@ -16,9 +16,6 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
-import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignLoaderImpl;
-import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignMappings;
-import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserImpl;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
@@ -40,6 +37,10 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
     private ArrayDesignLoaderImpl arrayDesignLoader = null;
 
     private Map map = null;
+
+    private Map map2 = null;
+
+    private Collection<ArrayDesign> col = null;
 
     /**
      * set up
@@ -79,11 +80,12 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
     public void testParseAndLoad() throws Exception {
 
         Method m = ParserAndLoaderTools.findParseLineMethod( arrayDesignParser.getArrayDesignMappings(), "array" );
-
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/array.txt" );
-        // InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/HC-G110.txt" );
+        arrayDesignParser.parse( is, m );
 
-        map = arrayDesignParser.parse( is, m );
+        Method m2 = ParserAndLoaderTools.findParseLineMethod( arrayDesignParser.getArrayDesignMappings(), "mgu74a" );
+        InputStream is2 = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/MG-U74A.txt" );
+        map = arrayDesignParser.parse( is2, m2 );
 
         Object[] dependencies = new Object[2];
 
@@ -99,10 +101,13 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
         dependencies[0] = contact;
         dependencies[1] = lf;
 
-        Collection<ArrayDesign> col = arrayDesignParser.createOrGetDependencies( dependencies, map );
+        col = arrayDesignParser.createOrGetDependencies( dependencies, map );
 
         ParserAndLoaderTools.loadDatabase( arrayDesignLoader, col );
 
     }
-
+//TODO implement this.    
+//    public void testParseDelete() throws Exception {
+//        
+//    }
 }
