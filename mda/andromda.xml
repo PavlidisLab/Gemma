@@ -5,7 +5,7 @@
 	</properties>
 	<server>
 		<host>localhost</host> 
-		<port>4446</port> 
+		<port>4445</port> 
 	</server>
 	
 	<models>
@@ -76,15 +76,7 @@
 				<property name="connectionUrl">
 					jdbc:mysql://localhost:3306/gemd
 				</property>
-				<property name="hibernateDialect">
-					net.sf.hibernate.dialect.MySQLDialect
-				</property>
-				<property name="hibernateQueryUseNamedParameters">
-					true
-				</property>
-				<property name="springTypesPackage">
-					edu.columbia.gemma.spring
-				</property>
+				
 				<property name="serviceLocator">
 					${maven.andromda.spring.service.locator.dir}
 				</property>
@@ -144,6 +136,11 @@
 				<property name="enumerations">
 					${maven.andromda.hibernate.generated.dir}
 				</property>
+				<!-- 
+				<property name="exceptions">
+					${maven.andromda.hibernate.generated.dir}
+				</property>
+				-->
 			</properties>
 		</namespace>
 	</namespaces>
