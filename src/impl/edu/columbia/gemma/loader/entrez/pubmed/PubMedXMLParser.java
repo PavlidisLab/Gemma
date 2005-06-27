@@ -93,21 +93,26 @@ public class PubMedXMLParser {
      */
     private BibliographicReference setUpBibRef( Document doc ) throws IOException {
         BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+        
+        // inserted null checks so that documents with older formats would still load
+        if(doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).getLength()>0)
+        	bibRef.setAbstractText( getTextValue( ( Element ) doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).item( 0 ) ) );
+  
+        if(doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).getLength()>0)
+        	bibRef.setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).item( 0 ) ) );
 
-        bibRef
-                .setAbstractText( getTextValue( ( Element ) doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).item( 0 ) ) );
+        if(doc.getElementsByTagName( TITLE_ELEMENT ).getLength()>0)
+        	bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
+ 
+        if(doc.getElementsByTagName( "Volume" ).getLength()>0)
+        	bibRef.setVolume(getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );
 
-        bibRef.setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).item( 0 ) ) );
-
-        bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
-
-        bibRef.setVolume( getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );
-
-        bibRef.setIssue( getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ) );
-
-        bibRef.setPublication( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT )
-                .item( 0 ) ) );
-
+        if(doc.getElementsByTagName( "Issue" ).getLength()>0)
+        	bibRef.setIssue(getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ));
+        
+        if( doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT ).getLength()>0)
+        	bibRef.setPublication( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT ).item( 0 ) ) );
+        
         bibRef.setAuthorList( extractAuthorList( doc ) );
         // bibRef.setYear( extractPublicationYear( doc ) );
         bibRef.setPublicationDate( extractPublicationDate( doc ) );
