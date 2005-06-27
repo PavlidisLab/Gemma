@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Sun Jun 26 10:41:44 EDT 2005'>
+  timestamp = 'Sun Jun 26 22:57:24 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -3834,6 +3834,9 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   isQuery = 'false' concurrency = 'sequential' isRoot = 'false' isLeaf = 'false'
                                   isAbstract = 'false'>
+                                  <UML:ModelElement.clientDependency>
+                                    <UML:Dependency xmi.idref = 'I1cf7a11m104af84616dmm5af7'/>
+                                  </UML:ModelElement.clientDependency>
                                   <UML:BehavioralFeature.parameter>
                                     <UML:Parameter xmi.id = 'Ibaaea8m10259547663mm28a0' name = 'return' isSpecification = 'false'
                                       kind = 'return'>
@@ -4559,6 +4562,21 @@ place at the level of CompositeSequences</UML:TaggedValue.dataValue>
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
+                            <UML:Class xmi.id = 'I1cf7a11m104af84616dmm5b1c' name = 'ArrayDesignExistsException'
+                              visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+                              isAbstract = 'false' isActive = 'false'>
+                              <UML:ModelElement.stereotype>
+                                <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf18'/>
+                              </UML:ModelElement.stereotype>
+                            </UML:Class>
+                            <UML:Dependency xmi.id = 'I1cf7a11m104af84616dmm5af7' isSpecification = 'false'>
+                              <UML:Dependency.client>
+                                <UML:Operation xmi.idref = 'Ibaaea8m10259547663mm28b8'/>
+                              </UML:Dependency.client>
+                              <UML:Dependency.supplier>
+                                <UML:Class xmi.idref = 'I1cf7a11m104af84616dmm5b1c'/>
+                              </UML:Dependency.supplier>
+                            </UML:Dependency>
                           </UML:Namespace.ownedElement>
                         </UML:Package>
                         <UML:Package xmi.id = 'I5acf13m101bacaf829mm6f1d' name = 'bioAssay' visibility = 'public'
@@ -26849,6 +26867,8 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
                   <UML:Namespace.ownedElement>
                     <UML:Exception xmi.id = 'Idd3147m1036b562585m999' name = 'exception' isSpecification = 'false'
                       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                    <UML:Exception xmi.id = 'I1cf7a11m104af84616dmm5af8' name = 'exception'
+                      isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
                   </UML:Namespace.ownedElement>
                 </UML:Class>
                 <UML:Class xmi.id = 'I126172fm1037f907030mm140' name = 'ClassCastException'
@@ -27058,6 +27078,8 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
       </UML:Namespace.ownedElement>
     </UML:Model>
     <UML:A_context_raisedSignal>
+      <UML:Operation xmi.idref = 'Ibaaea8m10259547663mm28b8'/>
+      <UML:Exception xmi.idref = 'I1cf7a11m104af84616dmm5af8'/>
       <UML:Operation xmi.idref = 'Idd3147m1036b562585mm2f7'/>
       <UML:Exception xmi.idref = 'Idd3147m1036b562585m999'/>
     </UML:A_context_raisedSignal>
