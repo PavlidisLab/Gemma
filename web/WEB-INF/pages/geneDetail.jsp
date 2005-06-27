@@ -54,26 +54,7 @@ else{
 		}
 	}
 	
-	if( g.getCitations()==null || g.getCitations().size()==0 )
-		citelist="None known";
-	else{
-		for(Iterator iter=g.getCitations().iterator(); iter.hasNext();){
-			String cite="";
-			br = (BibliographicReference) iter.next();
-			
-			cite += br.getAuthorList() + ". " + br.getTitle() + ". ";
-			if( br.getPublicationDate()!=null )
-				cite += br.getPublicationDate().toString();
-			if(br.getPubAccession()!=null)
-				cite = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=" + br.getPubAccession().toString() + cite + "</a>";
-			cite += "&nbsp;<a href='/Gemma/citationForm.htm?citationID=" + br.getId() + "&referPage=geneDetail&referID=" + g.getId().toString() + "'>edit</a>";
-			cite += "&nbsp;&nbsp;&nbsp;&nbsp;<a href='/Gemma/geneDetail.htm?citationID=" + br.getId() + "&geneID=" + g.getId() + "&action=removecitation'>Remove From List</a>";
-			citelist += cite;
-			if( iter.hasNext() ){
-				citelist +=  "<a href=<BR>";
-			}	
-		}
-	}
+
 
 	if( g.getAccessions()==null || g.getAccessions().size()==0 )
 		acclist="None known";
@@ -107,7 +88,38 @@ else{
 		<tr><td>Official Symbol:</td><td><%=g.getOfficialSymbol()%></td></tr>
 		<tr><td>NCBI ID:</td><td><%=ncbi%></td></tr>
 		<tr><td>Aliases:</td><td><%=aliaslist%></td></tr>
-		<tr><td>Citations:</td><td><%=citelist%></td></tr>
+		<tr><td>Citations:</td><td><%
+		
+		if( g.getCitations()==null || g.getCitations().size()==0 )
+			out.print("None known");
+		else{
+			for(Iterator iter=g.getCitations().iterator(); iter.hasNext();){
+				br = (BibliographicReference) iter.next();
+				
+				out.print(br.getAuthorList() + ". " + br.getTitle() + ". ");
+				if( br.getPublicationDate()!=null )
+					out.print( br.getPublicationDate().toString());
+				if(br.getPubAccession()!=null)
+					out.print("<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=" + br.getPubAccession().toString() + "</a>");
+				%>
+				<BR>
+				Description:
+				<form method="post" action="geneDetail.htm" id="addcite" name="addcite">
+				<input type="hidden" name="geneID" value="<%=g.getId()%>">
+				<input type="hidden" name="citationID" value="<%=br.getId()%>">
+				<input type="hidden" name="action" value="updatecitation">
+				<input type="text" name="description" id="description"><input type="submit" value="Add">
+				</form>
+				&nbsp;<a href='/Gemma/citationForm.htm?citationID=<%=br.getId()%>&referPage=geneDetail&referID=<%=g.getId()%>'>edit</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;<a href='/Gemma/geneDetail.htm?citationID=<%=br.getId()%>&geneID=<%=g.getId()%>&action=removecitation'>Remove From List</a>
+				<%
+				if( iter.hasNext() ){
+					out.print("<BR>");
+				}	
+			}
+		}
+		
+		%></td></tr>
 		<tr><td>Accessions:</td><td><%=acclist%></td></tr>
 		<tr><td>Products:</td><td><%=prodlist%></td></tr>
 		<tr><td>Taxon:</td><td><%=t.getScientificName()%> (<%=t.getCommonName()%>)</td></tr>
