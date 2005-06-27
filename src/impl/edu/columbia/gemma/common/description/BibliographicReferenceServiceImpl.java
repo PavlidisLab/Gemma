@@ -63,13 +63,7 @@ public class BibliographicReferenceServiceImpl extends
     protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
             throws java.lang.Exception {
     	
-    	int pubMedId = new Integer(id).intValue();
-    	PubMedXMLFetcher fetch = new PubMedXMLFetcher();
-    	BibliographicReference br = fetch.retrieveByHTTP( pubMedId );
-        if ( !alreadyExists( br ) ){
-        	saveBibliographicReference( br );
-        }
-        return br;    	
+    	return null;
         
     }
 
@@ -79,11 +73,24 @@ public class BibliographicReferenceServiceImpl extends
      */
     protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id,
             java.lang.String databaseName ) throws java.lang.Exception {
-        //@todo implement protected edu.columbia.gemma.common.description.BibliographicReference
-        // handleFindByExternalId(java.lang.String id, java.lang.String databaseName)
-        return null;
+    	
+    	return this.getBibliographicReferenceDao().findByExternalId(id, databaseName);
     }
 
+    protected BibliographicReference handleCreateBibliographicReferenceByLookup( java.lang.String id, java.lang.String databaseName ) 
+    	throws java.lang.Exception {
+    	
+    		ExternalDatabase ed = this.getExternalDatabaseDao().findByName(databaseName);
+    		DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+    		dbe.setAccession(id);
+    		dbe.setExternalDatabase(ed);  // should be saved by composition
+    		PubMedXMLFetcher fetch = new PubMedXMLFetcher();
+    		int pubmedID = new Integer(id).intValue();
+    		BibliographicReference br = fetch.retrieveByHTTP( pubmedID );
+    		br.setPubAccession(dbe);
+    		return (BibliographicReference) this.getBibliographicReferenceDao().create(br);
+    }
+        
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
      */
