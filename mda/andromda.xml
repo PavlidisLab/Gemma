@@ -75,8 +75,7 @@
 				<property name="password">toast</property>
 				<property name="connectionUrl">
 					jdbc:mysql://localhost:3306/gemd
-				</property>
-				
+				</property>				
 				<property name="serviceLocator">
 					${maven.andromda.spring.service.locator.dir}
 				</property>
@@ -135,12 +134,10 @@
 			<properties>
 				<property name="enumerations">
 					${maven.andromda.hibernate.generated.dir}
-				</property>
-				<!-- 
+				</property>				 
 				<property name="exceptions">
 					${maven.andromda.hibernate.generated.dir}
 				</property>
-				-->
 			</properties>
 		</namespace>
 	</namespaces>
