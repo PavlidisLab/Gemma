@@ -82,4 +82,10 @@ public class ExpressionExperimentServiceImpl
     {
         return (ExpressionExperiment)this.getExpressionExperimentDao().create(expressionExperiment);
     }
+
+    @Override
+    protected void handleUpdateExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        // TODO Auto-generated method stub
+        
+    }
 }
