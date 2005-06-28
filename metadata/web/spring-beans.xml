@@ -479,6 +479,41 @@
 	</property>
 </bean>
 
+<!--  ArrayDesign Edit subflow -->
+<bean id="arrayDesignEditController" name="/arrayDesignEdit.htm"
+	class="org.springframework.web.flow.mvc.FlowController">
+	<property name="flowExecutionManager"
+		ref="flowExecutionManagerArrayDesignDetail" />
+</bean>
+
+<bean id="flowExecutionManagerArrayDesignEdit"
+	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
+	<property name="flowExecutionStorage">
+		<bean
+			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
+	</property>
+
+	<property name="flow" ref="arrayDesign.Edit" />
+</bean>
+
+<bean id="arrayDesign.Edit"
+	class="org.springframework.web.flow.config.FlowFactoryBean">
+	<property name="flowBuilder">
+		<bean
+			class="org.springframework.web.flow.config.XmlFlowBuilder">
+			<property name="resource"
+				value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
+		</bean>
+	</property>
+</bean>
+
+<bean id="arrayDesign.Edit.formAction"
+	class="edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign.ArrayDesignEditAction">
+	<property name="arrayDesignService">
+		<ref bean="arrayDesignService" />
+	</property>
+</bean>
+
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 <bean id="conversion.service"
 	class="org.springframework.binding.convert.support.DefaultConversionService"
