@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	A Spring WebFlow.  Flows can be in 1 of 4 states:	
+	view-state: displays associated view
+	action-state:  can be used to execute bean defined in bean-factory.xml
+	subflow-state: execute another flow
+	end-state: end flow sequence
+	
+	This flow is used to get all arrayDesigns.  The flow has a subflow "arrayDesign.Detail" 
+	
+	author: keshav
+	version: $Id$
+-->
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="arrayDesign.Edit" start-state="setupForm">
+
+	<action-state id="setupForm">
+		<action bean="arrayDesign.Edit.formAction" />
+		<transition on="success" to="arrayDesign.Edit.view" />
+	</action-state>
+
+	<view-state id="arrayDesign.Edit.view"
+		view="arrayDesign.Edit.view">
+		<transition on="submit" to="save" />
+		<!-- <action bean="arrayDesign.Edit.formAction" method="bindAndValidate"/> 
+			</transition>-->
+		<transition on="cancel" to="finish" />
+	</view-state>
+	<!-- 
+		<action-state id="bindAndValidate">
+		<action bean="pubMed.Search.criteria.formAction"/>
+		<transition on="success" to="executeQuery"/>
+		<transition on="error" to="criteria.view"/>
+		</action-state>
+	-->
+	<action-state id="save">
+		<action bean="arrayDesign.Edit.formAction" />
+		<transition on="success" to="finish" />
+	</action-state>
+
+	<end-state id="finish" view="redirect:/mainMenu.html" />
+
+</webflow>

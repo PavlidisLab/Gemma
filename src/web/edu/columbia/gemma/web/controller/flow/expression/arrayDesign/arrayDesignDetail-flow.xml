@@ -24,8 +24,15 @@ version: $Id$
 
 	<view-state id="detail.view" view="arrayDesign.Detail.view">
 		<transition on="back" to="finish"/>
+ 		<transition on="edit" to="arrayDesign.Edit"/> 
 	</view-state>
-
+	
+	<subflow-state id="arrayDesign.Edit" flow="arrayDesign.Edit">
+		<attribute-mapper bean="arrayDesign.id.attributeMapper"/> 
+		<transition on="finish" to="finish"/>
+		<transition on="error" to="error"/>
+	</subflow-state>
+		
 	<end-state id="finish"/>
 	
 	<end-state id="error" view="error.view"/>
