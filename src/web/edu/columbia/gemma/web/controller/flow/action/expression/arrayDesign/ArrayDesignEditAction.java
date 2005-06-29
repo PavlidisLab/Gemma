@@ -2,6 +2,7 @@ package edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.validation.DataBinder;
 import org.springframework.web.flow.Event;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.ScopeType;
@@ -22,6 +23,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 public class ArrayDesignEditAction extends FormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private ArrayDesignService arrayDesignService;
+    private ArrayDesign ad = null;
 
     /**
      * 
@@ -37,40 +39,53 @@ public class ArrayDesignEditAction extends FormAction {
         log.info( "flow scope: " + context.getFlowScope() );
         log.info( "request scope: " + context.getRequestScope() );
 
-        ArrayDesign arrayDesign = ( ArrayDesignImpl ) super.createFormObject( context );
-        // TODO arrayDesign.setXXX(?);
-        return arrayDesign;
+        String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
+
+        // ad = ( ArrayDesignImpl ) super.createFormObject( context );
+        ad = getArrayDesignService().findArrayDesignByName( name );
+
+        if ( ad != null ) context.getRequestScope().setAttribute( "arrayDesign", ad );
+
+        return ad;
     }
 
-    // protected void initBinder(RequestContext context, DataBinder binder){
-    //        
-    // }
+    /**
+     * This is the webflow equivalent of mvc's formBackingObject
+     * 
+     * @param context
+     * @param binder
+     */
+    protected void initBinder( RequestContext context, DataBinder binder ) {
 
+        this.setBindOnSetupForm( true );
+
+        log.info( ( this.isBindOnSetupForm() ) );
+
+    }
+
+    /**
+     * @param context
+     * @return
+     * @throws Exception
+     */
     public Event save( RequestContext context ) throws Exception {
-        log.info( "saving ArrayDesign" );
 
-        ArrayDesign arrayDesign = ( ArrayDesign ) context.getFlowScope().getAttribute( "arrayDesign" );
-        getArrayDesignService().saveArrayDesign( arrayDesign );
-        // String msg = "<strong>" + arrayDesign.getName() + "</strong> added successfully.";
-        // context.getRequestScope().setAttribute( "message", msg );
+        log.info( "flow scope: " + context.getFlowScope().getAttributeMap() );
+        log.info( "request scope: " + context.getRequestScope().getAttributeMap() );
+
+        ad.setName( ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class ) );
+        ad.setDescription( ( String ) context.getRequestScope().getAttribute( "description", String.class ) );
+
+        // ad.setNumberOfFeatures( Integer.parseInt( ( String ) context.getRequestScope().getAttribute(
+        // "numberOfFeatures",
+        // String.class ) ) );
+
+        log.info( "updating ArrayDesign " + ad.getName() );
+
+        getArrayDesignService().updateArrayDesign( ad );
 
         return success();
     }
-
-    // /**
-    // * This is the equivalent of writing the onSubmit method in a Spring Controller, or a doGet (doPost) method in a
-    // * Java Servlet.
-    // *
-    // * @param context
-    // * @return Event
-    // * @exception Exception
-    // */
-    // protected Event doExecuteAction( RequestContext context ) throws Exception {
-    // Collection col = getArrayDesignService().getAllArrayDesigns();
-    // context.getRequestScope().setAttribute( "arrayDesigns", col );
-    //
-    // return success();
-    // }
 
     /**
      * @param arrayDesignService The arrayDesignService to set.
