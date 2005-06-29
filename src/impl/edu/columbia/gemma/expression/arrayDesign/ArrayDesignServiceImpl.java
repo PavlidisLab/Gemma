@@ -54,7 +54,13 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
     }
 
     @Override
-    protected edu.columbia.gemma.expression.arrayDesign.ArrayDesign handleFindArrayDesignByName( String name ) throws Exception {
+    protected edu.columbia.gemma.expression.arrayDesign.ArrayDesign handleFindArrayDesignByName( String name )
+            throws Exception {
         return this.getArrayDesignDao().findByName( name );
+    }
+
+    protected void handleUpdateArrayDesign( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
+            throws Exception {
+        this.getArrayDesignDao().update( arrayDesign );
     }
 }
