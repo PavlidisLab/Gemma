@@ -4,8 +4,6 @@ import org.springframework.web.flow.Event;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
 
-import edu.columbia.gemma.common.description.BibliographicReference;
-import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 
@@ -16,7 +14,6 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
  * 
  * @author keshav
  * @version $Id$
- * 
  */
 public class GetArrayDesignAction extends AbstractAction {
 
@@ -36,14 +33,17 @@ public class GetArrayDesignAction extends AbstractAction {
         this.arrayDesignService = arrayDesignService;
     }
 
+    /**
+     * @param context
+     * @return Event
+     */
     protected Event doExecuteAction( RequestContext context ) throws Exception {
         String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
         ArrayDesign ad = getArrayDesignService().findArrayDesignByName( name );
         if ( ad != null ) {
             context.getRequestScope().setAttribute( "arrayDesign", ad );
             return success();
-        } else {
-            return error();
         }
+        return error();
     }
 }
