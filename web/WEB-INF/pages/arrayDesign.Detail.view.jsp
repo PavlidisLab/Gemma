@@ -1,8 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*" %>
-<%@ page import="edu.columbia.gemma.common.description.BibliographicReference" %>
+<%@ page import="edu.columbia.gemma.expression.arrayDesign.ArrayDesign" %>
 
-<jsp:useBean id="bibliographicReference" scope="request" class="edu.columbia.gemma.common.description.BibliographicReferenceImpl"/>
+<jsp:useBean id="arrayDesign" scope="request" class="edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl"/>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
@@ -20,8 +20,8 @@
 	<HEAD></HEAD>
 	<BODY>
 		<FORM name="backForm" action="arrayDesignDetail.htm">
-				<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
-				<INPUT type="hidden" name="_eventId" value="">
+				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
+				<input type="hidden" name="_eventId" value="">
 		</FORM>
 		<TABLE width="100%">
 			<TR>
