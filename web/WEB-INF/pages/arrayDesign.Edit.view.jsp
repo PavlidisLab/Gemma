@@ -1,23 +1,25 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <spring:bind path="arrayDesign.*">
-    <c:if test="${not empty status.errorMessages}">
-    <div class="error">	
-        <c:forEach var="error" items="${status.errorMessages}">
-            <img src="<c:url value="/images/iconWarning.gif"/>"
-                alt="<fmt:message key="icon.warning"/>" class="icon" />
-            <c:out value="${error}" escapeXml="false"/><br />
-        </c:forEach>
-    </div>
-    </c:if>
+	<c:if test="${not empty status.errorMessages}">
+		<div class="error"><c:forEach var="error"
+			items="${status.errorMessages}">
+			<img src="<c:url value="/images/iconWarning.gif"/>"
+				alt="<fmt:message key="icon.warning"/>" class="icon" />
+			<c:out value="${error}" escapeXml="false" />
+			<br />
+		</c:forEach></div>
+	</c:if>
 </spring:bind>
 
-<form method="post" action="<c:url value="/arrayDesignEdit.htm"/>" id="arrayDesignForm"
-    onsubmit="return onFormSubmit(this)">
-    <INPUT type="hidden" name="_flowExecutionId" value="<c:out value="${flowExecutionId}"/>">
-	<INPUT type="hidden" name="_eventId" value="submit">
-<%--
+<form method="post" action="<c:url value="/arrayDesignEdit.htm"/>"
+	id="arrayDesignForm" onsubmit="return onFormSubmit(this)">
+	<input type="hidden" name="_flowExecutionId" value="<c:out value="${flowExecutionId}"/>">  
+	<input type="hidden" name="_eventId" value="submit"> 
+	
+<%--	
 <input type="hidden" name="from" value="<c:out value="${param.from}"/>" />
+
 <c:if test="${cookieLogin == 'true'}">
     <spring:bind path="user.password">
     <input type="hidden" name="password" value="<c:out value="${status.value}"/>"/>
@@ -26,13 +28,12 @@
     <input type="hidden" name="confirmPassword" value="<c:out value="${status.value}"/>"/>
     </spring:bind>
 </c:if>
-
-<c:if test="${empty user.userName}">
-    <input type="hidden" name="encryptPass" value="true" />
-</c:if>
 --%>
-<table class="detail">
+<c:if test="${empty arrayDesign.name}">
+<%--    <input type="hidden" name="encryptPass" value="true" />  --%>
+</c:if>
 
+<table class="detail">
 <c:set var="pageButtons">
     <tr>
     	<td></td>
@@ -45,36 +46,58 @@
                 onclick="bCancel=true;return confirmDelete('arrayDesign')" 
                 value="<fmt:message key="button.delete"/>" />
         </c:if>
-       
+        
             <input type="submit" class="button" name="cancel" onclick="bCancel=true"
                 value="<fmt:message key="button.cancel"/>" />
         </td>
     </tr>
 </c:set>
 
-    <tr>
-        <th>
+	<tr>
+		<th>
             <Gemma:label key="arrayDesign.name"/>
         </th>
         <td>
-            <spring:bind path="arrayDesign.name">
-            <input type="text" name="name" value="<c:out value="${status.value}"/>" id="name"/>
-            <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
-            </spring:bind>
+        <spring:bind path="arrayDesign.name">
+        <c:choose>
+            <c:when test="${empty arrayDesign.name}">
+                <input type="text" name="name" value="<c:out value="${status.value}"/>" id="name"/>
+                <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
+            </c:when>
+            <c:otherwise>
+                <c:out value="${arrayDesign.name}"/>
+                <input type="hidden" name="name" value="<c:out value="${status.value}"/>" id="name"/>
+            </c:otherwise>
+        </c:choose>
+        </spring:bind>
         </td>
-    </tr>
-    <tr>
+	</tr>
+	
+	<tr>
         <th>
             <Gemma:label key="arrayDesign.description"/>
         </th>
-        <td>
+        <td>         
             <spring:bind path="arrayDesign.description">
             <input type="text" name="description" value="<c:out value="${status.value}"/>" id="description"/>
             <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             </spring:bind>
         </td>
     </tr>
-<%--    
+    
+	<tr>
+        <th>
+            <Gemma:label key="arrayDesign.numberOfFeatures"/>
+        </th>
+        <td>
+            <spring:bind path="arrayDesign.numberOfFeatures">
+            <input type="text" name="numberOfFeatures" value="<c:out value="${status.value}"/>" id="numberOfFeatures"/>
+            <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
+            </spring:bind>
+        </td>
+    </tr>
+    
+	<%--    
 <c:choose>
     <c:when test="${param.from == 'list' or param.method == 'Add'}">
     <tr>
@@ -125,9 +148,9 @@
     </tr>
     </c:when>
 </c:choose>
---%>    
-    <%-- Print out buttons - defined at top of form --%>
-    <%-- This is so you can put them at the top and the bottom if you like --%>
+--%>
+	<%-- Print out buttons - defined at top of form --%>
+	<%-- This is so you can put them at the top and the bottom if you like --%>
 	<c:out value="${pageButtons}" escapeXml="false" />
 
 </table>
@@ -143,13 +166,25 @@ highlightFormElements();
 <c:otherwise><c:set var="focus" value="password"/></c:otherwise></c:choose>
 --%>
 var focusControl = document.forms["arrayDesignForm"].elements["<c:out value="${focus}"/>"];
-
+<%--
 if (focusControl.type != "hidden" && !focusControl.disabled) {
     focusControl.focus();
 }
+--%>
 
+function onFormSubmit(theForm) {
 <%--
-<html:javascript formName="arrayDesign" staticJavascript="false"/>
+<c:if test="${param.from == 'list'}">
+    selectAll('userRoles');
+</c:if>
+    return validateUser(theForm);
+--%>    
+}
+// -->
+</script>
+
+<html:javascript formName="arrayDesignForm" staticJavascript="false"/>
+<%--
 <script type="text/javascript"
       src="<c:url value="/scripts/validator.jsp"/>"></script>
 --%>
