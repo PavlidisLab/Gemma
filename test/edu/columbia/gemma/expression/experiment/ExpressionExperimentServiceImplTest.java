@@ -40,9 +40,9 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
  
     	super.setUp();
     	
-    	sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
-	    s = sessionFactory.openSession();
-	    TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(s));
+//    	sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
+//	    s = sessionFactory.openSession();
+//	    TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(s));
 	    
     	pDao= (PersonDao)ctx.getBean("personDao");
     	nobody = (Person)pDao.load(new Long(1));
@@ -87,11 +87,11 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
     }
     protected void tearDown() throws Exception {
     	super.tearDown();
-    	SessionHolder holder = (SessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
-	    s = holder.getSession(); 
-	    s.flush();
-	    TransactionSynchronizationManager.unbindResource(sessionFactory);
-	    s.close();
+//    	SessionHolder holder = (SessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
+//	    s = holder.getSession(); 
+//	    s.flush();
+//	    TransactionSynchronizationManager.unbindResource(sessionFactory);
+//	    s.close();
 	
     }
 }
