@@ -22,7 +22,6 @@ Gene g = null;
 String ncbi=null;
 String oName = null;
 String aliaslist="";
-String citelist="";
 String acclist="";
 String prodlist="";
 BibliographicReference br = null;
@@ -53,8 +52,6 @@ else{
 			}	
 		}
 	}
-	
-
 
 	if( g.getAccessions()==null || g.getAccessions().size()==0 )
 		acclist="None known";
@@ -84,11 +81,11 @@ else{
 	%>
 	
 	<table>
-		<tr><td>Official Name:</td><td><%=oName%></td></tr>
-		<tr><td>Official Symbol:</td><td><%=g.getOfficialSymbol()%></td></tr>
-		<tr><td>NCBI ID:</td><td><%=ncbi%></td></tr>
-		<tr><td>Aliases:</td><td><%=aliaslist%></td></tr>
-		<tr><td>Citations:</td><td><%
+		<tr><td align="top">Official Name:</td><td><%=oName%></td></tr>
+		<tr><td align="top">Official Symbol:</td><td><%=g.getOfficialSymbol()%></td></tr>
+		<tr><td align="top">NCBI ID:</td><td><%=ncbi%></td></tr>
+		<tr><td align="top">Aliases:</td><td><%=aliaslist%></td></tr>
+		<tr><td align="top">Citations:</td><td><%
 		
 		if( g.getCitations()==null || g.getCitations().size()==0 )
 			out.print("None known");
@@ -96,7 +93,7 @@ else{
 			for(Iterator iter=g.getCitations().iterator(); iter.hasNext();){
 				br = (BibliographicReference) iter.next();
 				
-				out.print(br.getAuthorList() + ". " + br.getTitle() + ". ");
+				out.print(br.getAuthorList() + ". <B>" + br.getTitle() + "</B>. ");
 				if( br.getPublicationDate()!=null )
 					out.print( br.getPublicationDate().toString());
 				if(br.getPubAccession()!=null)
