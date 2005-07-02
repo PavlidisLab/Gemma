@@ -35,7 +35,7 @@ public class ArrayDesignEditAction extends FormAction {
     }
 
     public Object createFormObject( RequestContext context ) throws InstantiationException, IllegalAccessException {
-        log.info( "originating event: " + context.getOriginatingEvent() );
+        log.info( "originating event: " + context.getSourceEvent() );
         log.info( "flow scope: " + context.getFlowScope() );
         log.info( "request scope: " + context.getRequestScope() );
 

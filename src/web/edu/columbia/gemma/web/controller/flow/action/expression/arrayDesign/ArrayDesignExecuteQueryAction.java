@@ -49,7 +49,7 @@ public class ArrayDesignExecuteQueryAction extends AbstractAction {
      * @return Event
      * @exception Exception
      */
-    protected Event doExecuteAction( RequestContext context ) throws Exception {
+    protected Event doExecute( RequestContext context ) throws Exception {
         Collection col = getArrayDesignService().getAllArrayDesigns();
         context.getRequestScope().setAttribute( "arrayDesigns", col );
 

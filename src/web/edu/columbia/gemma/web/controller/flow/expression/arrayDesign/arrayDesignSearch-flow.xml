@@ -35,17 +35,23 @@ version: $Id$
 	
 	<view-state id="arrayDesign.results.view" view="arrayDesign.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view"/>
-	    <transition on="select" to="arrayDesign.set"/> 
+	     <transition on="select" to="arrayDesign.set"/> 
+	    <!--<transition on="select" to="arrayDesign.Detail"/>-->
 	</view-state>
-	
+	 
 	<action-state id="arrayDesign.set">
 		<action bean="arrayDesign.Search.id.set"/> 
 		<transition on="success" to="arrayDesign.Detail"/>
 		<transition on="error" to="error"/>
 	</action-state>
-
-	<subflow-state id="arrayDesign.Detail" flow="arrayDesign.Detail">
-		<attribute-mapper bean="arrayDesign.id.attributeMapper"/> 
+	
+	<subflow-state id="arrayDesign.Detail" flow="arrayDesign.Detail"> 
+	<!-- <attribute-mapper bean="arrayDesign.id.attributeMapper"/>-->
+		   
+		<attribute-mapper>
+            <input name="${flowScope.name}"/>
+		</attribute-mapper>
+		
 		<transition on="finish" to="criteria.view"/>
 		<transition on="error" to="error"/>
 	</subflow-state>

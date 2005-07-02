@@ -42,7 +42,8 @@ version: $Id$
 	<view-state id="results.view" view="pubMed.Search.results.view">
 		<transition on="newSearch" to="criteria.view"/>
 		<transition on="saveBibRef" to="saveBibRef"/>
-	    <transition on="select" to="pubMedId.set"/>
+	    <!-- <transition on="select" to="pubMedId.set"/>-->
+	    <transition on="select" to="pubMed.Detail"/>
 	</view-state>
 	
 	<action-state id="saveBibRef">
@@ -53,18 +54,21 @@ version: $Id$
 	
 	<view-state id="bibRef.results.view" view="bibRef.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view"/>
-	    <transition on="select" to="pubMedId.set"/>
+	    <!-- <transition on="select" to="pubMedId.set"/>-->
+	    <transition on="select" to="pubMed.Detail"/>
 	</view-state>
-	
+	<!-- 
 	<action-state id="pubMedId.set">
 		<action bean="pubMed.Search.id.set"/> 
 		<transition on="success" to="pubMed.Detail"/>
 		<transition on="error" to="error"/>
 	</action-state>
-
+	-->
 	<subflow-state id="pubMed.Detail" flow="pubMed.Detail">
-		<attribute-mapper bean="pubMed.id.attributeMapper"/> 
-		<!--<transition on="finish" to="executeQuery"/>-->
+		<!-- <attribute-mapper bean="pubMed.id.attributeMapper"/> -->
+		<attribute-mapper>
+            <input value="${sourceEvent.parameters.id}" as="title" />
+		</attribute-mapper> 
 		<transition on="finish" to="criteria.view"/>
 		<transition on="error" to="error"/>
 	</subflow-state>

@@ -24,17 +24,21 @@ version: $Id$
 
 	<view-state id="detail.view" view="arrayDesign.Detail.view">
 		<transition on="back" to="finish"/>
- 		<transition on="edit" to="arrayDesign.set"/> 
+ 		<!-- <transition on="edit" to="arrayDesign.set"/> -->
+ 		<transition on="edit" to="arrayDesign.Edit"/>
 	</view-state>
-	
+	<!-- 
 	<action-state id="arrayDesign.set">
 		<action bean="arrayDesign.Search.id.set"/>
 		<transition on="success" to="arrayDesign.Edit"/>
 		<transition on="error" to="error"/>
 	</action-state>
-	
+	-->
 	<subflow-state id="arrayDesign.Edit" flow="arrayDesign.Edit">
-		<attribute-mapper bean="arrayDesign.id.attributeMapper"/> 
+		<!-- <attribute-mapper bean="arrayDesign.id.attributeMapper"/> -->
+		<attribute-mapper>
+            <input value="${sourceEvent.parameters.id}" as="name" />
+		</attribute-mapper> 
 		<transition on="finish" to="finish"/>
 		<transition on="error" to="error"/>
 	</subflow-state>

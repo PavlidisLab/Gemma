@@ -3,7 +3,6 @@ package edu.columbia.gemma.web.controller.flow.action.entrez.pubmed;
 import java.util.Collection;
 
 import org.springframework.web.flow.Event;
-import org.springframework.web.flow.InternalRequestContext;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
 
@@ -50,7 +49,7 @@ public class BibRefExecuteQueryAction extends AbstractAction {
      * @return Event
      * @exception Exception
      */
-    protected Event doExecuteAction( RequestContext context ) throws Exception {
+    protected Event doExecute( RequestContext context ) throws Exception {
         Collection col = getBibliographicReferenceService().getAllBibliographicReferences();
         context.getRequestScope().setAttribute( "bibliographicReferences", col );
 

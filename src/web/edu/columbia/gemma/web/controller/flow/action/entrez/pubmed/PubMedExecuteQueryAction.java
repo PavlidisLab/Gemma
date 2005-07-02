@@ -67,21 +67,21 @@ public class PubMedExecuteQueryAction extends AbstractAction {
      * @return Event
      * @exception Exception
      */
-    protected Event doExecuteAction( RequestContext context ) throws Exception {
+    protected Event doExecute( RequestContext context ) throws Exception {
 
-        String event = ( String ) context.getOriginatingEvent().getParameter( "_eventId" );
+        String event = ( String ) context.getSourceEvent().getParameter( "_eventId" );
         int pubMedId;
         BibliographicReference br;
         try {
             if ( event.equals( "submitPubMed" ) ) {
-                pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "pubMedId" ) );
+                pubMedId = Integer.parseInt( ( String ) context.getSourceEvent().getParameter( "pubMedId" ) );
                 br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
                 List list = new ArrayList();
                 list.add( br );
                 context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
                 context.getRequestScope().setAttribute( "bibliographicReferences", list );
             } else if ( event.equals( "saveBibRef" ) ) {
-                pubMedId = Integer.parseInt( ( String ) context.getOriginatingEvent().getParameter( "_pubMedId" ) );
+                pubMedId = Integer.parseInt( ( String ) context.getSourceEvent().getParameter( "_pubMedId" ) );
                 br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
                 if ( !getBibliographicReferenceService().alreadyExists( br ) )
                     getBibliographicReferenceService().saveBibliographicReference( br );

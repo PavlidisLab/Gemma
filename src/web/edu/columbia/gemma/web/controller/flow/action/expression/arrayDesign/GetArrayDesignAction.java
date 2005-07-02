@@ -37,7 +37,7 @@ public class GetArrayDesignAction extends AbstractAction {
      * @param context
      * @return Event
      */
-    protected Event doExecuteAction( RequestContext context ) throws Exception {
+    protected Event doExecute( RequestContext context ) throws Exception {
         String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
         ArrayDesign ad = getArrayDesignService().findArrayDesignByName( name );
         if ( ad != null ) {

@@ -33,7 +33,7 @@ public class GetPubMedAction extends AbstractAction {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    protected Event doExecuteAction( RequestContext context ) throws Exception {
+    protected Event doExecute( RequestContext context ) throws Exception {
         String title = ( String ) context.getFlowScope().getRequiredAttribute( "title", String.class );
         BibliographicReference br = getBibliographicReferenceService().getBibliographicReferenceByTitle( title );
         if ( br != null ) {
