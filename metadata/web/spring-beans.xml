@@ -218,24 +218,19 @@
 -->
 <!-- ==================================================== -->
 
-
 <!-- Controller for the entire application.  This can be parameterized by adding the  
 	_flowId to the client view (ie. jsp).  If this is not specified, you must specify
 	an HttpServletFlowExecutionManager (ie. see pubMedSearchFrontController).
 -->
 <bean id="frontController" name="/search.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flowExecutionManager">
-		<bean
-			class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager" />
-	</property>
 </bean>
 
 <!-- Parent Flow (search flow) -->
 <bean id="pubMedSearchController" name="/pubMedSearch.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
 	<property name="cacheSeconds" value="5" />
-	<property name="flowExecutionManager" ref="flowExecutionManager" />
+	<property name="flow" ref="pubMed.Search" />
 </bean>
 
 <!-- ==================================================== -->
@@ -246,40 +241,12 @@
 	on the views!
 -->
 <!-- ==================================================== -->
-<bean id="flowExecutionManager"
-	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
-	<!-- Choose 0 or 1 flowExecutionStorage (to resolve back button issue) Strategy-->
-
-	<property name="flowExecutionStorage">
-		<bean
-			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
-	</property>
-	<!--
-		<property name="flowExecutionStorage">
-		<bean class="org.springframework.web.flow.execution.servlet.HttpSessionFlowExecutionStorage"/>
-		</property>
-		
-		<property name="flowExecutionStorage">
-		<bean class="org.springframework.web.flow.execution.ClientContinuationFlowExecutionStorage">
-		<property name="compress"><value>true</value></property>
-		</bean>
-		</property>
-	-->
-
-	<property name="flow" ref="pubMed.Search" />
-
-</bean>
 
 <!-- Xml FlowBuilder definition for the search flow -->
 <bean id="pubMed.Search"
-	class="org.springframework.web.flow.config.FlowFactoryBean">
-	<property name="flowBuilder">
-		<bean
-			class="org.springframework.web.flow.config.XmlFlowBuilder">
-			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" />
-		</bean>
-	</property>
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" />
 </bean>
 
 <!-- Next 4 beans are called from pubMedSearch-flow.xml -->
@@ -316,29 +283,32 @@
 <!-- Maps parameters in an event (ie. HttpServletRequestEvent, ContextEvent)
 	to attributes set in flow scope 
 -->
-<bean id="pubMed.Search.id.set"
-	class="org.springframework.web.flow.action.EventParameterMapperAction">
-	<property name="mapping" value="title" /><!--,java.lang.String"/>-->
+<!-- 
+	<bean id="pubMed.Search.id.set"
+	class="org.springframework.web.flow.action.AttributeMapperAction">
+	<property name="mapping" value="title" />
 	<property name="targetScopeAsString">
-		<value>flow</value>
+	<value>flow</value>
 	</property>
-</bean>
-
+	
+	</bean>
+-->
 <!-- Mappings executed when mapping input data from a parent flow to a subflow -->
-<bean id="pubMed.id.attributeMapper"
+<!-- 
+	<bean id="pubMed.id.attributeMapper"
 	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
 	<property name="inputMappings">
-		<list>
-			<value>title</value>
-		</list>
+	<list>
+	<value>title</value>
+	</list>
 	</property>
-</bean>
+	</bean>
+-->
 
 <!-- Subflow (detail flow) -->
 <bean id="pubMedDetailController" name="/pubMedDetail.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flowExecutionManager"
-		ref="flowExecutionManagerDetail" />
+	<property name="flow" ref="pubMed.Detail" />
 </bean>
 
 <!--
@@ -349,26 +319,12 @@
 	NOTE:  The Storage mechanism used in a subflow must be equivalent to that of the 
 	parent flow
 -->
-<bean id="flowExecutionManagerDetail"
-	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
-	<property name="flowExecutionStorage">
-		<bean
-			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
-	</property>
-
-	<property name="flow" ref="pubMed.Detail" />
-</bean>
 
 <!-- xml FlowBuilder definition for the detail flow -->
 <bean id="pubMed.Detail"
-	class="org.springframework.web.flow.config.FlowFactoryBean">
-	<property name="flowBuilder">
-		<bean
-			class="org.springframework.web.flow.config.XmlFlowBuilder">
-			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml" />
-		</bean>
-	</property>
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml" />
 </bean>
 
 <!-- equivalent to the pubMed.Search.executeQuery defined above -->
@@ -384,40 +340,13 @@
 <bean id="arrayDesignSearchController" name="/arrayDesignSearch.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
 	<property name="cacheSeconds" value="5" />
-	<property name="flowExecutionManager"
-		ref="flowExecutionManagerArrayDesign" />
-</bean>
-
-<bean id="flowExecutionManagerArrayDesign"
-	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
-	<!-- Choose 0 or 1 flowExecutionStorage (to resolve back button issue) Strategy-->
-
-	<property name="flowExecutionStorage">
-		<bean
-			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
-	</property>
-	<!--
-		<property name="flowExecutionStorage">
-		<bean class="org.springframework.web.flow.execution.servlet.HttpSessionFlowExecutionStorage"/>
-		</property>
-		<property name="flowExecutionStorage">
-		<bean class="org.springframework.web.flow.execution.ClientContinuationFlowExecutionStorage">
-		<property name="compress"><value>true</value></property>
-		</bean>
-		</property>
-	-->
 	<property name="flow" ref="arrayDesign.Search" />
 </bean>
 
 <bean id="arrayDesign.Search"
-	class="org.springframework.web.flow.config.FlowFactoryBean">
-	<property name="flowBuilder">
-		<bean
-			class="org.springframework.web.flow.config.XmlFlowBuilder">
-			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignSearch-flow.xml" />
-		</bean>
-	</property>
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignSearch-flow.xml" />
 </bean>
 
 <bean id="arrayDesign.Search.getAllArrayDesigns"
@@ -428,48 +357,37 @@
 </bean>
 
 <bean id="arrayDesign.Search.id.set"
-	class="org.springframework.web.flow.action.EventParameterMapperAction">
-	<property name="mapping" value="name" /><!--,java.lang.String"/>-->
-	<property name="targetScopeAsString">
-		<value>flow</value>
-	</property>
+	class="org.springframework.web.flow.action.AttributeMapperAction">
+	<property name="mapping" value="${flowScope.name}" />
 </bean>
 
 <bean id="arrayDesign.id.attributeMapper"
 	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
 	<property name="inputMappings">
-		<list>
-			<value>name</value>
-		</list>
+
+		<map>
+			<entry key="${flowScope.name}" value="name" />
+		</map>
+
 	</property>
+</bean>
+
+<bean id="propertyPlaceholderConfigurer"
+	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	<property name="ignoreUnresolvablePlaceholders" value="true" />
+	<property name="ignoreResourceNotFound" value="true" />
 </bean>
 
 <!-- Subflow (detail flow) -->
 <bean id="arrayDesignDetailController" name="/arrayDesignDetail.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flowExecutionManager"
-		ref="flowExecutionManagerArrayDesignDetail" />
-</bean>
-
-<bean id="flowExecutionManagerArrayDesignDetail"
-	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
-	<property name="flowExecutionStorage">
-		<bean
-			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
-	</property>
-
 	<property name="flow" ref="arrayDesign.Detail" />
 </bean>
 
 <bean id="arrayDesign.Detail"
-	class="org.springframework.web.flow.config.FlowFactoryBean">
-	<property name="flowBuilder">
-		<bean
-			class="org.springframework.web.flow.config.XmlFlowBuilder">
-			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignDetail-flow.xml" />
-		</bean>
-	</property>
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignDetail-flow.xml" />
 </bean>
 
 <bean id="arrayDesign.Detail.criteria.formAction.getFormAction"
@@ -482,29 +400,13 @@
 <!--  ArrayDesign Edit subflow -->
 <bean id="arrayDesignEditController" name="/arrayDesignEdit.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flowExecutionManager"
-		ref="flowExecutionManagerArrayDesignDetail" />
-</bean>
-
-<bean id="flowExecutionManagerArrayDesignEdit"
-	class="org.springframework.web.flow.execution.servlet.HttpServletFlowExecutionManager">
-	<property name="flowExecutionStorage">
-		<bean
-			class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
-	</property>
-
 	<property name="flow" ref="arrayDesign.Edit" />
 </bean>
 
 <bean id="arrayDesign.Edit"
-	class="org.springframework.web.flow.config.FlowFactoryBean">
-	<property name="flowBuilder">
-		<bean
-			class="org.springframework.web.flow.config.XmlFlowBuilder">
-			<property name="resource"
-				value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
-		</bean>
-	</property>
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
 </bean>
 
 <bean id="arrayDesign.Edit.formAction"
