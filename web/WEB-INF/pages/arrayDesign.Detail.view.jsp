@@ -22,6 +22,7 @@
 		<FORM name="backForm" action="arrayDesignDetail.htm">
 				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
 				<input type="hidden" name="_eventId" value="">
+				<input type="hidden" name="name" value="<%=request.getAttribute("name") %>">
 		</FORM>
 		<TABLE width="100%">
 			<TR>
