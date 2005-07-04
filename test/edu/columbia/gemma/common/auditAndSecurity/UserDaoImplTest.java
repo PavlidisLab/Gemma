@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.sf.hibernate.SessionFactory;
+import org.hibernate.SessionFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -12,12 +12,11 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
- * Tests the Contact, Person, User interitance hierarchy and the association 
- * between User and UserRole.
- * 
- *
+ * Tests the Contact, Person, User interitance hierarchy and the association between User and UserRole.
  * <hr>
- * <p>Copyright (c) 2004 - 2005 Columbia University
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
  * @author keshav
  * @version $Id$
  */

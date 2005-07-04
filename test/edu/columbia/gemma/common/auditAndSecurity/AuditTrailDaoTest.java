@@ -3,7 +3,7 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import java.util.Collection;
 import java.util.Date;
 
-import net.sf.hibernate.SessionFactory;
+import org.hibernate.SessionFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -76,7 +76,7 @@ public class AuditTrailDaoTest extends BaseDAOTestCase {
      * @exception Exception
      */
     protected void tearDown() throws Exception {
-        //getAuditTrailDao().remove( auditTrail );
+        // getAuditTrailDao().remove( auditTrail );
         auditTrailDao = null;
     }
 
