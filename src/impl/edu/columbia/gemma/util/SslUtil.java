@@ -7,7 +7,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import edu.columbia.gemma.web.Constants;
- 
 
 /**
  * SslUtil utility class
@@ -22,11 +21,9 @@ import edu.columbia.gemma.web.Constants;
  * <p>
  * Copyright (c) 2004-2005 Columbia University
  * 
- * @author pavlidis
  * @version $Id$
  */
 public class SslUtil {
-    // ~ Static fields/initializers =============================================
 
     public static final String HTTP = "http";
     public static final String HTTPS = "https";
@@ -37,8 +34,12 @@ public class SslUtil {
     public static final String STD_HTTP_PORT = "80";
     public static final String STD_HTTPS_PORT = "443";
 
-    // ~ Methods ================================================================
-
+    /**
+     * @param request
+     * @param ctx
+     * @param isSecure
+     * @return
+     */
     public static String getRedirectString( HttpServletRequest request, ServletContext ctx, boolean isSecure ) {
         // get the port numbers from the application context
         Map config = ( HashMap ) ctx.getAttribute( Constants.CONFIG );

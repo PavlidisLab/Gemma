@@ -1261,6 +1261,7 @@ public class MageMLConverter {
         if ( mageObj.getValue() != null ) result.setValue( mageObj.getValue().toString() ); // FIME - is this okay
 
         result.setType( convertMeasurementType( mageObj.getType() ) );
+        result.setRepresentation( PrimitiveType.STRING ); // FIXME - this is not going to work.
         return result;
     }
 
@@ -1319,10 +1320,24 @@ public class MageMLConverter {
         if ( associationName.equals( "Associations" ) ) {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Associations" );
         } else if ( associationName.equals( "OntologyReference" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "ExternalDatabase" );
+            assert associatedObject instanceof org.biomage.Description.DatabaseEntry;
+            specialConvertOntologyEntryDatabaseEntry( ( org.biomage.Description.DatabaseEntry ) associatedObject,
+                    gemmaObj );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
+    }
+
+    /**
+     * In Gemma, an OntologyEntry isa DatabaseEntry, while in Mage, an OntologyEntry hasa DatabaseEntry.
+     * 
+     * @param associatedObject
+     * @param gemmaObj
+     */
+    private void specialConvertOntologyEntryDatabaseEntry( org.biomage.Description.DatabaseEntry databaseEntry,
+            edu.columbia.gemma.common.description.OntologyEntry gemmaObj ) {
+        // gemmaObj.setAccession( databaseEntry.getAccession() );
+        gemmaObj.setExternalDatabase( convertDatabase( databaseEntry.getDatabase() ) );
     }
 
     /**

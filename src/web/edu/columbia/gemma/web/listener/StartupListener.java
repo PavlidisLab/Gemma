@@ -48,10 +48,10 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         // Orion starts Servlets before Listeners, so check if the config
         // object already exists
-        Map config = ( HashMap ) context.getAttribute( Constants.CONFIG );
+        Map<String, String> config = ( HashMap<String, String> ) context.getAttribute( Constants.CONFIG );
 
         if ( config == null ) {
-            config = new HashMap();
+            config = new HashMap<String, String>();
         }
 
         // Create a config object to hold all the app config values

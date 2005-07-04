@@ -3,7 +3,7 @@ package edu.columbia.gemma.web.controller.flow.entrez.pubmed;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.web.flow.SimpleEvent;
+import org.springframework.web.flow.Event;
 import org.springframework.web.flow.ViewDescriptor;
 
 import edu.columbia.gemma.BaseFlowTestCase;
@@ -44,7 +44,7 @@ public class SearchPubMedFlowTests extends BaseFlowTestCase {
         Map properties = new HashMap();
         properties.put( "pubMedId", "15173114" );
         properties.put( "_eventId", "pubMedSearch" );
-        ViewDescriptor view = signalEvent( new SimpleEvent( this, "submitPubMed", properties ) );
+        ViewDescriptor view = signalEvent( new Event( this, "submitPubMed", properties ) );
         assertCurrentStateEquals( "results.view" );
         // asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 1 );
     }

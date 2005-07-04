@@ -65,7 +65,6 @@ version: $Id$
 	</action-state>
 	-->
 	<subflow-state id="pubMed.Detail" flow="pubMed.Detail">
-		<!-- <attribute-mapper bean="pubMed.id.attributeMapper"/> -->
 		<attribute-mapper>
             <input value="${sourceEvent.parameters.id}" as="title" />
 		</attribute-mapper> 

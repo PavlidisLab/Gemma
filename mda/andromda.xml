@@ -27,28 +27,32 @@
 				<property name="sqlMappingsUri">MySQL</property>
 				<property name="jdbcMappingsUri">JDBC</property>
 				<property name="maxSqlNameLength">60</property>
+				<property name="hibernateVersion">3</property>
+				<property name="hibernateQueryCacheFactory">
+					org.hibernate.cache.StandardQueryCacheFactory
+				</property>
+				<property name="hibernateCacheProvider">
+					org.hibernate.cache.EhCacheProvider
+				</property>
 			</properties>
 		</namespace>
 
 		<namespace name="spring">
 			<properties>
 				<property name="hibernateDialect">
-					net.sf.hibernate.dialect.MySQLDialect
+					org.hibernate.dialect.MySQLDialect
 				</property>
+
 				<property name="hibernateShowSql">true</property>
 				<property name="hibernateUseQueryCache">false</property>
 				<property name="hibernateQueryUseNamedParameters">
 					true
 				</property>
-				<property name="hibernateCacheProvider">
-					net.sf.hibernate.cache.EhCacheProvider
-				</property>
+
 				<property name="hibernateInheritanceStrategy">
 					subclass
 				</property>
-				<property name="hibernateQueryCacheFactory">
-					net.sf.hibernate.cache.StandardQueryCacheFactory
-				</property>
+
 				<property name="springTypesPackage">
 					edu.columbia.gemma.spring
 				</property>
@@ -87,6 +91,12 @@
 				</property>
 				<property name="jdbcDataSourceClass">
 					org.apache.commons.dbcp.BasicDataSource
+				</property>
+				<property name="transactionManager">
+					org.springframework.orm.hibernate3.HibernateTransactionManager
+				</property>
+				<property name="sessionFactory">
+					org.springframework.orm.hibernate3.LocalSessionFactoryBean
 				</property>
 			</properties>
 		</namespace>
@@ -130,6 +140,15 @@
 				<property name="associationEndCollectionIndexName">
 					orderedCollectionIndex
 				</property>
+
+				<property name="configuration">
+					${maven.andromda.hibernate.generated.dir}
+				</property>
+				<property name="hibernateEnableCache">true</property>
+
+				<property name="hibernateTransactionFactoryClass">
+					org.hibernate.transaction.JTATransactionFactory
+				</property>
 			</properties>
 		</namespace>
 
@@ -143,6 +162,8 @@
 				</property>
 			</properties>
 		</namespace>
+
+
 	</namespaces>
 </andromda>
 

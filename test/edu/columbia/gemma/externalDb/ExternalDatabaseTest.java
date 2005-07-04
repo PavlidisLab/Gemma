@@ -2,8 +2,6 @@ package edu.columbia.gemma.externalDb;
 
 import java.sql.SQLException;
 
-import net.sf.hibernate.HibernateException;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -36,9 +34,9 @@ public class ExternalDatabaseTest extends BaseDAOTestCase {
     public void setUp() throws ConfigurationException {
         conf = new PropertiesConfiguration( "Gemma.properties" );
         db = ( GoldenPathHumanDaoHibernate ) ctx.getBean( conf.getString( "external.database.0" ) );
-        //ctx.getBean( conf.getString( "external.database.1" ) );
-        //ctx.getBean( conf.getString( "external.database.2" ) )
-        //ctx.getBean( conf.getString( "external.database.3" ) )
+        // ctx.getBean( conf.getString( "external.database.1" ) );
+        // ctx.getBean( conf.getString( "external.database.2" ) )
+        // ctx.getBean( conf.getString( "external.database.3" ) )
     }
 
     public void tearDown() {
@@ -51,7 +49,7 @@ public class ExternalDatabaseTest extends BaseDAOTestCase {
      * @throws HibernateException
      * @throws SQLException
      */
-    public void testConnectToDatabase() throws HibernateException, SQLException {
+    public void testConnectToDatabase() throws Exception {
         boolean connectionIsClosed = db.connectToDatabase();
         assertEquals( connectionIsClosed, false );
     }
@@ -60,7 +58,7 @@ public class ExternalDatabaseTest extends BaseDAOTestCase {
      * @throws HibernateException
      * @throws SQLException TODO implement when you have mapped the tables from these other databases to objects.
      */
-    public void testRetreiveFromDatabase() throws HibernateException, SQLException {
+    public void testRetreiveFromDatabase() throws Exception {
 
     }
 

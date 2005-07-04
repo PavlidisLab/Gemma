@@ -1,6 +1,6 @@
 package edu.columbia.gemma.web.controller.flow.entrez.pubmed;
 
-import org.springframework.web.flow.SimpleEvent;
+import org.springframework.web.flow.Event;
 import org.springframework.web.flow.ViewDescriptor;
 
 import edu.columbia.gemma.BaseFlowTestCase;
@@ -38,7 +38,7 @@ public class DetailBibRefFlowTests extends BaseFlowTestCase {
      */
     public void testCriteriaView_Submit_getBibRef_Success() {
         startFlow();
-        ViewDescriptor view = signalEvent( new SimpleEvent( this, "getBibRef" ) );
+        ViewDescriptor view = signalEvent( new Event( this, "getBibRef" ) );
 
         assertCurrentStateEquals( "bibRef.results.view" );
         // asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 7 );

@@ -3,14 +3,14 @@
     "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <beans>
-    <!-- For mail settings and future properties files -->
-    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <!-- For mail settings and future properties files (also defined in spring-beans) -->
+ <!--   <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
                 <value>classpath:mail.properties</value>
             </list>
         </property>
-    </bean>
+    </bean> -->
     
     <!-- JNDI DataSource for J2EE environments -->
     <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">

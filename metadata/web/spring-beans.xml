@@ -13,7 +13,7 @@
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
 <bean id="sessionFactoryGoldenPathHuman"
-	class="org.springframework.orm.hibernate.LocalSessionFactoryBean">
+	class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
 	<property name="dataSource">
 		<ref bean="dataSourceGoldenPathHuman" />
 	</property>
@@ -23,14 +23,14 @@
 	<property name="hibernateProperties">
 		<props>
 			<prop key="hibernate.dialect">
-				net.sf.hibernate.dialect.MySQLDialect
+				org.hibernate.dialect.MySQLDialect
 			</prop>
 			<prop key="hibernate.cache.use_query_cache">false</prop>
 			<prop key="hibernate.cache.provider_class">
-				net.sf.hibernate.cache.EhCacheProvider
+				org.hibernate.cache.EhCacheProvider
 			</prop>
 			<prop key="hibernate.cache.query_cache_factory">
-				net.sf.hibernate.cache.StandardQueryCacheFactory
+				org.hibernate.cache.StandardQueryCacheFactory
 			</prop>
 			<prop key="hibernate.show_sql">true</prop>
 		</props>
@@ -113,7 +113,10 @@
 			<value>classpath:mail.properties</value>
 		</list>
 	</property>
+	<property name="ignoreUnresolvablePlaceholders" value="true" />
+	<property name="ignoreResourceNotFound" value="true" />
 </bean>
+<!--  TODO: define a separate propertyConfigurer for the web flows, somehow -->
 
 <!-- ==================================================== -->
 
@@ -358,7 +361,7 @@
 
 <bean id="arrayDesign.Search.id.set"
 	class="org.springframework.web.flow.action.AttributeMapperAction">
-	<property name="mapping" value="${flowScope.name}" />
+	<property name="mapping" value="flowScope.name" />
 </bean>
 
 <bean id="arrayDesign.id.attributeMapper"
@@ -372,11 +375,7 @@
 	</property>
 </bean>
 
-<bean id="propertyPlaceholderConfigurer"
-	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-	<property name="ignoreUnresolvablePlaceholders" value="true" />
-	<property name="ignoreResourceNotFound" value="true" />
-</bean>
+
 
 <!-- Subflow (detail flow) -->
 <bean id="arrayDesignDetailController" name="/arrayDesignDetail.htm"

@@ -222,8 +222,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements Parser 
 
     @Override
     protected Object getKey( Object newItem ) {
-        // TODO Auto-generated method stub
-        return null;
+        return ( ( ArrayDesign ) newItem ).getName();
     }
 
     /**

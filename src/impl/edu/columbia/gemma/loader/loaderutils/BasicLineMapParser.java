@@ -44,6 +44,14 @@ public abstract class BasicLineMapParser extends BasicLineParser {
     }
 
     /**
+     * @param key
+     * @param value
+     */
+    protected void put( Object key, Object value ) {
+        results.put( key, value );
+    }
+
+    /**
      * @param probeSetId
      * @see Map
      */

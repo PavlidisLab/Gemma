@@ -18,19 +18,32 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.common.description.OntologyEntry;
+import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.biomaterial.BioMaterial;
+import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.Treatment;
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
+import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
+import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.expression.experiment.FactorValue;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.loader.loaderutils.Loader;
-import edu.columbia.gemma.util.ReflectionUtil;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * <hr>
@@ -39,31 +52,37 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * 
  * @author pavlidis
  * @version $Id$
+ * @spring.bean id="mageLoader"
+ * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
+ * @spring.property name="personDao" ref="personDao"
+ * @spring.property name="expressionExperimentDao" ref="expressionExperimentDao"
+ * @spring.property name="bioMaterialDao" ref="bioMaterialDao"
  */
 public class MageLoaderImpl implements Loader {
     private static Log log = LogFactory.getLog( MageLoaderImpl.class.getName() );
 
     private Person defaultOwner = null;
 
-    /**
-     * This class needs direct access to the context because it uses reflection to find daos.
-     */
-    private static BeanFactory ctx;
+    private PersonDao personDao;
+
+    private OntologyEntryDao ontologyEntryDao;
+
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    private BioMaterialDao bioMaterialDao;
 
     /**
      * 
      *
      */
     public MageLoaderImpl() {
-        ctx = SpringContextUtil.getApplicationContext();
-        initializeDefaultOwner();
+
     }
 
     /**
      * Fetch the fallback owner to use for newly-imported data.
      */
     private void initializeDefaultOwner() {
-        PersonDao personDao = ( PersonDao ) ctx.getBean( "personDao" );
         Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
 
         assert matchingPersons.size() == 1;
@@ -74,48 +93,144 @@ public class MageLoaderImpl implements Loader {
     }
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc) TODO: finish implementing this.
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
     public void create( Collection col ) {
         log.debug( "Entering MageLoaderImpl.create()" );
-        assert defaultOwner != null;
+        if ( defaultOwner == null ) initializeDefaultOwner();
         try {
 
             for ( Object entity : col ) {
 
-                // // only persist it if its parent is outside edu.columbia.gemma.
-                // if ( entity.getClass().getSuperclass().getName().startsWith( "edu.columbia" ) ) continue;
-
                 String className = entity.getClass().getName();
+                log.debug( "Loading " + className );
 
                 // check if className is on short list of classes to be persisted.
-                // ArrayDesign (we won't usually use this)
+                // ArrayDesign (we won't usually use this - mage-ml of array designs is gigantic.)
                 // ExpressionExperiment (most interested in this)
                 // 
-                if ( className.lastIndexOf( "ExpressionExperiment" ) < 0 ) continue; // FIXME
-
-                if ( ( ( ExpressionExperiment ) entity ).getOwner() == null ) {
-                    ( ( ExpressionExperiment ) entity ).setOwner( defaultOwner );
+                if ( entity instanceof ExpressionExperiment ) {
+                    loadExpressionExperiment( ( ExpressionExperiment ) entity );
+                } else if ( entity instanceof ArrayDesign ) {
+                    // loadArrayDesign( ( ArrayDesign ) entity );
+                } else if ( entity instanceof BioSequence ) {
+                    // deal with in cascade from array design? Do nothing, probably.
+                } else if ( entity instanceof CompositeSequence ) {
+                    // cascade from array design, do nothing
+                } else if ( entity instanceof Reporter ) {
+                    // cascade from array design, do nothing
+                } else if ( entity instanceof QuantitationType ) {
+                    // loadQuantitationType( ( QuantitationType ) entity );
+                } else if ( entity instanceof BioMaterial ) {
+                    loadBioMaterial( ( BioMaterial ) entity );
+                } else if ( entity instanceof ExternalDatabase ) {
+                    // probably won't use this much.
+                    // loadExternalDatabase( ( ExternalDatabase ) entity );
+                } else if ( entity instanceof LocalFile ) {
+                    // loadLocalFile( ( LocalFile ) entity );
+                } else {
+                    throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
                 }
-
-                // figure out the class of the entity,
-                String dao = ReflectionUtil.constructDaoName( entity );
-                Object daoObj = ctx.getBean( dao );
-
-                log.debug( "Persisting: " + entity.getClass().getName() + " with " + daoObj.getClass().getName() );
-
-                // get create method
-                Method createMethod = daoObj.getClass().getMethod( "create",
-                        new Class[] { ReflectionUtil.getBaseForImpl( entity ) } );
-
-                // run create, but check exists first TODO. (need special cases)
-                createMethod.invoke( daoObj, new Object[] { entity } );
             }
         } catch ( Exception e ) {
             log.error( e, e );
         }
+    }
+
+    /**
+     * @param file
+     */
+    private void loadLocalFile( LocalFile file ) {
+        throw new UnsupportedOperationException( "Can't deal with " + file.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param database
+     */
+    private void loadExternalDatabase( ExternalDatabase database ) {
+        throw new UnsupportedOperationException( "Can't deal with " + database.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param entity
+     */
+    private void loadQuantitationType( QuantitationType entity ) {
+        throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param entity
+     */
+    private void loadBioMaterial( BioMaterial entity ) {
+        for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getCharacteristics() ) {
+            characteristic = ( OntologyEntry ) ontologyEntryDao.findOrCreate( characteristic );
+        }
+
+        OntologyEntry materialType = entity.getMaterialType();
+        materialType = ( OntologyEntry ) ontologyEntryDao.findOrCreate( materialType );
+
+        for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
+
+            // find or create the treatment object.
+            OntologyEntry treatmentType = treatment.getTreatmentType();
+            treatmentType = ( OntologyEntry ) ontologyEntryDao.findOrCreate( treatmentType );
+        }
+
+        bioMaterialDao.create( entity );
+
+    }
+
+    /**
+     * @param entity
+     */
+    private void loadArrayDesign( ArrayDesign entity ) {
+        throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param entity
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private void loadExpressionExperiment( ExpressionExperiment entity ) {
+        if ( entity.getOwner() == null ) {
+            entity.setOwner( defaultOwner );
+        }
+
+        // this is very annoying code.
+        // the following ontology entries must be persisted manually.
+        // manually persist: experimentaldesign->experimentalFactor->annotation, category
+        // manually persist: experimentaldesign->experimentalFactor->FactorValue->value
+        for ( ExperimentalDesign experimentalDesign : ( Collection<ExperimentalDesign> ) entity
+                .getExperimentalDesigns() ) {
+            for ( ExperimentalFactor experimentalFactor : ( Collection<ExperimentalFactor> ) experimentalDesign
+                    .getExperimentalFactors() ) {
+                for ( OntologyEntry annotation : ( Collection<OntologyEntry> ) experimentalFactor.getAnnotations() ) {
+                    annotation = ( OntologyEntry ) ontologyEntryDao.findOrCreate( annotation );
+                }
+
+                OntologyEntry category = experimentalFactor.getCategory();
+                category = ( OntologyEntry ) ontologyEntryDao.findOrCreate( category );
+
+                for ( FactorValue factorValue : ( Collection<FactorValue> ) experimentalFactor.getFactorValues() ) {
+                    OntologyEntry value = factorValue.getValue();
+                }
+            }
+        }
+
+        // manually persist: experimentaldesign->bioassay->factorvalue->value
+        for ( BioAssay bA : ( Collection<BioAssay> ) ( ( ExpressionExperiment ) entity ).getBioAssays() ) {
+            for ( FactorValue factorValue : ( Collection<FactorValue> ) bA.getBioAssayFactorValues() ) {
+                for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
+                    value = ( OntologyEntry ) ontologyEntryDao.findOrCreate( value );
+                }
+            }
+        }
+
+        expressionExperimentDao.create( entity );
     }
 
     /*
@@ -148,4 +263,27 @@ public class MageLoaderImpl implements Loader {
         // TODO Auto-generated method stub
 
     }
+
+    public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
+        this.ontologyEntryDao = ontologyEntryDao;
+    }
+
+    public void setPersonDao( PersonDao personDao ) {
+        this.personDao = personDao;
+    }
+
+    /**
+     * @param bioMaterialDao The bioMaterialDao to set.
+     */
+    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
+        this.bioMaterialDao = bioMaterialDao;
+    }
+
+    /**
+     * @param expressionExperimentDao The expressionExperimentDao to set.
+     */
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
+    }
+
 }

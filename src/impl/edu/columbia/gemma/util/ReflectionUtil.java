@@ -15,15 +15,15 @@ public class ReflectionUtil {
 
     /**
      * Get simple name for class ; given java.lang.Object.getClass(), will return "Object".
+     * 
      * @param clazz
      * @return
      * @deprecated - replace in JDK 1.5 with Class.getSimpleName()
      */
-    public static String getSimpleName(Class clazz) {
-        return clazz.getName().substring(clazz.getName().lastIndexOf('.') + 1);
+    public static String getSimpleName( Class clazz ) {
+        return clazz.getName().substring( clazz.getName().lastIndexOf( '.' ) + 1 );
     }
-    
-    
+
     /**
      * @param obj A data object that is expected to have an associated data access object.
      * @return Name of Dao bean; for example, given foo.Bar, it returns "barDao". This does not guarantee that the DAO
@@ -43,14 +43,14 @@ public class ReflectionUtil {
      * @return base object for Impl; for example, for a FooImpl instance it returns Foo.class.
      */
     public static Class getBaseForImpl( Object obj ) {
-        return getImplForBase( obj.getClass() );
+        return getBaseForImpl( obj.getClass() );
     }
 
     /**
      * @param cls
-     * @return impl class for a base class; for example, for Foo.class it returns FooImpl.class.
+     * @return base object for Impl; for example, for a FooImpl.class it returns Foo.class.
      */
-    public static Class getImplForBase( Class cls ) {
+    public static Class getBaseForImpl( Class cls ) {
         if ( cls.getName().endsWith( "Impl" ) ) {
             return cls.getSuperclass();
         }
@@ -62,7 +62,7 @@ public class ReflectionUtil {
      * @return Unqualified type name; for example, given an instance of an edu.bar.Foo, returns "Foo".
      */
     public static String objectToTypeName( Object obj ) {
-        return getSimpleName(obj.getClass());
+        return getSimpleName( obj.getClass() );
     }
 
 }
