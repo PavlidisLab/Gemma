@@ -1,14 +1,16 @@
 package edu.columbia.gemma.web.controller.flow.action.entrez.pubmed;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.validation.Errors;
 import org.springframework.web.flow.Event;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
+import org.springframework.web.flow.action.FormObjectAccessor;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
@@ -32,27 +34,6 @@ public class PubMedExecuteQueryAction extends AbstractAction {
     private BibliographicReferenceService bibliographicReferenceService;
     private ExternalDatabaseService externalDatabaseService;
     private PubMedXMLFetcher pubMedXmlFetcher;
-
-    /**
-     * 
-     */
-    public PubMedExecuteQueryAction() {
-
-    }
-
-    /**
-     * @return Returns the bibliographicReferenceService.
-     */
-    public BibliographicReferenceService getBibliographicReferenceService() {
-        return bibliographicReferenceService;
-    }
-
-    /**
-     * @return Returns the pubMedXmlFetcher.
-     */
-    public PubMedXMLFetcher getPubMedXmlFetcher() {
-        return pubMedXmlFetcher;
-    }
 
     /**
      * @param bibliographicReferenceService The bibliographicReferenceService to set.
@@ -90,15 +71,22 @@ public class PubMedExecuteQueryAction extends AbstractAction {
         BibliographicReference br;
         try {
             pubMedId = StringUtil.relaxedParseInt( ( String ) context.getSourceEvent().getParameter( "pubMedId" ) );
-            br = getPubMedXmlFetcher().retrieveByHTTP( pubMedId );
+            br = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
             if ( event.equals( "submitPubMed" ) ) {
                 List<BibliographicReference> list = new ArrayList<BibliographicReference>();
                 list.add( br );
                 context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
                 context.getRequestScope().setAttribute( "bibliographicReferences", list );
             } else if ( event.equals( "saveBibRef" ) ) {
+
+                if ( br == null ) {
+                    Errors errors = new FormObjectAccessor( context ).getFormErrors();
+                    errors.reject( "PubMedXmlFetcher", "No results." );
+                    return error();
+                }
+
                 log.debug( "Saving bibliographic reference" );
-                if ( !getBibliographicReferenceService().alreadyExists( br ) ) {
+                if ( !this.bibliographicReferenceService.alreadyExists( br ) ) {
                     // fill in the accession and the external database.
                     if ( br.getPubAccession() == null ) {
                         DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
@@ -110,19 +98,26 @@ public class PubMedExecuteQueryAction extends AbstractAction {
 
                     if ( pubMedDb == null ) {
                         log.error( "There was no external database 'PubMed'" );
-                        return error(); // TODO : make this informative.
+                        Errors errors = new FormObjectAccessor( context ).getFormErrors();
+                        errors.reject( "ExternalDatabaseError", "There was no external database 'PubMed'" );
+
+                        return error();
                     }
 
                     br.getPubAccession().setExternalDatabase( pubMedDb );
 
-                    getBibliographicReferenceService().saveBibliographicReference( br );
+                    this.bibliographicReferenceService.saveBibliographicReference( br );
                 }
             }
             return success();
         }
         // TODO When you start using value objects, do the pubMed validation in the validator.
-        catch ( Exception e ) {
-            log.error( "There was an error.", e ); // number parsing is a common one.
+        catch ( IOException e ) {
+            Errors errors = new FormObjectAccessor( context ).getFormErrors();
+            errors.reject( "IOError", e.getMessage() );
+            return error();
+        } catch ( Exception e ) {
+            context.getRequestScope().setAttribute( "error.message", "There was an error: " + e );
             return error();
         }
     }

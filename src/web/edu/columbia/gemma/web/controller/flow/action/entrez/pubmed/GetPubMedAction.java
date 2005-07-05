@@ -42,7 +42,7 @@ public class GetPubMedAction extends AbstractAction {
             context.getRequestScope().setAttribute( "bibliographicReference", br );
             return success();
         }
-        log.error("Did't find pubMedId " + pubMedId );
+        log.error("Didn't find pubMedId " + pubMedId );
         return error();
     }
 }
