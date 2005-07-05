@@ -32,14 +32,14 @@ public class GetPubMedActionTests extends TestCase {
         MockControl control = MockControl.createControl( BibliographicReferenceService.class );
         BibliographicReferenceService bibliographicReferenceService = ( BibliographicReferenceService ) control
                 .getMock();
-        bibliographicReferenceService.getBibliographicReferenceByTitle( "mock non-existing title" );
+        bibliographicReferenceService.findByExternalId( "19491" );
         control.setReturnValue( null, 1 );
         control.replay();
 
         GetPubMedAction action = new GetPubMedAction();
         action.setBibliographicReferenceService( bibliographicReferenceService );
         MockRequestContext context = new MockRequestContext();
-        context.getFlowScope().setAttribute( "title", "mock non-existing title" );
+        context.getFlowScope().setAttribute( "pubMedId", "19491" );
         Event result = action.execute( context );
         assertEquals( "error", result.getId() );
         asserts().assertAttributeNotPresent( context.getRequestScope(), "bibliographicReference" );
@@ -52,7 +52,7 @@ public class GetPubMedActionTests extends TestCase {
         MockControl control = MockControl.createControl( BibliographicReferenceService.class );
         BibliographicReferenceService bibliographicReferenceService = ( BibliographicReferenceService ) control
                 .getMock();
-        bibliographicReferenceService.getBibliographicReferenceByTitle( "mock existing title" );
+        bibliographicReferenceService.findByExternalId( "19491" );
         //method getBibliographicReferenceByTitle(String s) called once.
         control.setReturnValue( new BibliographicReferenceImpl(), 1 );
         control.replay();
@@ -60,7 +60,7 @@ public class GetPubMedActionTests extends TestCase {
         GetPubMedAction action = new GetPubMedAction();
         action.setBibliographicReferenceService( bibliographicReferenceService );
         MockRequestContext context = new MockRequestContext();
-        context.getFlowScope().setAttribute( "title", "mock existing title" );
+        context.getFlowScope().setAttribute( "pubMedId", "19491" );
         Event result = action.execute( context );
         assertEquals( "success", result.getId() );
         asserts().assertAttributePresent( context.getRequestScope(), "bibliographicReference" );
