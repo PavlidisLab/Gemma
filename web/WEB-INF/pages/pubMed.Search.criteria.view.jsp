@@ -50,8 +50,13 @@
 	</TR>
 	<spring:hasBindErrors name="query">
 		<TR>
-			<TD COLSPAN="2"><FONT color="red">Please provide valid query
-			criteria!</FONT></TD>
+			<TD COLSPAN="2"><div class="error">There were the following error(s) with your submission:<ul>
+            <c:forEach var="errMsgObj" items="${errors.allErrors}">
+               <li>
+                  <spring:message code="${errMsgObj.code}" text="${errMsgObj.defaultMessage}"/>
+               </li>
+            </c:forEach>
+         </ul></div></TD>
 		</TR>
 	</spring:hasBindErrors>
 	<TR>
