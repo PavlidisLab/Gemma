@@ -48,16 +48,16 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#findByParticipant()
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#findByInvestigator()
      */
-    protected java.util.Collection handleFindByParticipant(long id)
+    protected java.util.Collection handleFindByInvestigator(long id)
         throws java.lang.Exception
     {
-        return this.getExpressionExperimentDao().findByParticipant(id);
+        return this.getExpressionExperimentDao().findByInvestigator(id);
     }
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getById()
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#findById()
      */
     protected ExpressionExperiment handleFindById(long id)
         throws java.lang.Exception
@@ -66,7 +66,7 @@ public class ExpressionExperimentServiceImpl
     }
     
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#removeExpressionExperiment(ExpressionExperiment)
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#removeExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
      */
     protected void handleRemoveExpressionExperiment(ExpressionExperiment expressionExperiment)
         throws java.lang.Exception
@@ -75,7 +75,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#createExpressionExperiment()
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#createExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
      */
     protected ExpressionExperiment handleCreateExpressionExperiment(ExpressionExperiment expressionExperiment)
         throws java.lang.Exception
@@ -83,9 +83,11 @@ public class ExpressionExperimentServiceImpl
         return (ExpressionExperiment)this.getExpressionExperimentDao().create(expressionExperiment);
     }
 
-    @Override
-    protected void handleUpdateExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
-        // TODO Auto-generated method stub
-        
+    /**
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#updateExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
+     */
+    protected void handleUpdateExpressionExperiment( ExpressionExperiment expressionExperiment ) 
+    	throws java.lang.Exception {
+        this.getExpressionExperimentDao().update(expressionExperiment);
     }
 }
