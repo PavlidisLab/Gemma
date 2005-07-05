@@ -1,5 +1,7 @@
 package edu.columbia.gemma.web.controller.flow.action.entrez.pubmed;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.flow.Event;
 import org.springframework.web.flow.RequestContext;
 import org.springframework.web.flow.action.AbstractAction;
@@ -16,7 +18,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
  * @version $Id$
  */
 public class GetPubMedAction extends AbstractAction {
-
+    private static Log log = LogFactory.getLog( GetPubMedAction.class.getName() );
     private BibliographicReferenceService bibliographicReferenceService;
 
     /**
@@ -34,13 +36,13 @@ public class GetPubMedAction extends AbstractAction {
     }
 
     protected Event doExecute( RequestContext context ) throws Exception {
-        String title = ( String ) context.getFlowScope().getRequiredAttribute( "title", String.class );
-        BibliographicReference br = getBibliographicReferenceService().getBibliographicReferenceByTitle( title );
+        String pubMedId = ( String ) context.getFlowScope().getRequiredAttribute( "pubMedId", String.class );
+        BibliographicReference br = getBibliographicReferenceService().findByExternalId( pubMedId );
         if ( br != null ) {
             context.getRequestScope().setAttribute( "bibliographicReference", br );
             return success();
-        } else {
-            return error();
         }
+        log.error("Did't find pubMedId " + pubMedId );
+        return error();
     }
 }

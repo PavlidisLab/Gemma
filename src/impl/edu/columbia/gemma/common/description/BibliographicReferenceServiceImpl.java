@@ -49,8 +49,8 @@ public class BibliographicReferenceServiceImpl extends
             throws java.lang.Exception {
 
         boolean exists = false;
-        //Collection col = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
-        //if ( col.size() > 0 ) exists = true;
+        // Collection col = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
+        // if ( col.size() > 0 ) exists = true;
         BibliographicReference br = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
         if ( br != null ) exists = true;
 
@@ -62,9 +62,9 @@ public class BibliographicReferenceServiceImpl extends
      */
     protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id )
             throws java.lang.Exception {
-    	
-    	return null;
-        
+
+        return this.getBibliographicReferenceDao().findByExternalId( id, "PubMed" );
+
     }
 
     /**
@@ -73,24 +73,24 @@ public class BibliographicReferenceServiceImpl extends
      */
     protected edu.columbia.gemma.common.description.BibliographicReference handleFindByExternalId( java.lang.String id,
             java.lang.String databaseName ) throws java.lang.Exception {
-    	
-    	return this.getBibliographicReferenceDao().findByExternalId(id, databaseName);
+
+        return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
     }
 
-    protected BibliographicReference handleCreateBibliographicReferenceByLookup( java.lang.String id, java.lang.String databaseName ) 
-    	throws java.lang.Exception {
-    	
-    		ExternalDatabase ed = this.getExternalDatabaseDao().findByName(databaseName);
-    		DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-    		dbe.setAccession(id);
-    		dbe.setExternalDatabase(ed);  // should be saved by composition
-    		PubMedXMLFetcher fetch = new PubMedXMLFetcher();
-    		int pubmedID = new Integer(id).intValue();
-    		BibliographicReference br = fetch.retrieveByHTTP( pubmedID );
-    		br.setPubAccession(dbe);
-    		return (BibliographicReference) this.getBibliographicReferenceDao().create(br);
+    protected BibliographicReference handleCreateBibliographicReferenceByLookup( java.lang.String id,
+            java.lang.String databaseName ) throws java.lang.Exception {
+
+        ExternalDatabase ed = this.getExternalDatabaseDao().findByName( databaseName );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setAccession( id );
+        dbe.setExternalDatabase( ed ); // should be saved by composition
+        PubMedXMLFetcher fetch = new PubMedXMLFetcher();
+        int pubmedID = new Integer( id ).intValue();
+        BibliographicReference br = fetch.retrieveByHTTP( pubmedID );
+        br.setPubAccession( dbe );
+        return ( BibliographicReference ) this.getBibliographicReferenceDao().create( br );
     }
-        
+
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
      */
@@ -102,9 +102,9 @@ public class BibliographicReferenceServiceImpl extends
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences(int
      *      maxResults)
      */
-    //TODO can you create a finder method for this where the parameter maxResults
-    //does not end up as a named parameter. I want to use Hibernate's maxResults(int max)
-    //method.
+    // TODO can you create a finder method for this where the parameter maxResults
+    // does not end up as a named parameter. I want to use Hibernate's maxResults(int max)
+    // method.
     protected java.util.Collection handleGetAllBibliographicReferences(
             edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
             throws java.lang.Exception {

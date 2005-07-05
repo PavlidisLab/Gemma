@@ -6,6 +6,7 @@ import edu.columbia.gemma.common.auditAndSecurity.UserDaoImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserServiceImplTest;
 import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
+import edu.columbia.gemma.common.description.ExternalDatabaseServiceImplTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImplTest;
@@ -62,6 +63,7 @@ public class AllTests {
         suite.addTestSuite( PubMedArticleListControllerTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
+        suite.addTestSuite( ExternalDatabaseServiceImplTest.class );
 
         suite.addTestSuite( GoldenPathTest.class );
 

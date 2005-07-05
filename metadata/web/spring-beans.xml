@@ -271,6 +271,9 @@
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
+	<property name="externalDatabaseService">
+		<ref bean="externalDatabaseService" />
+	</property>
 	<property name="pubMedXmlFetcher">
 		<ref bean="pubMedXmlFetcher" />
 	</property>

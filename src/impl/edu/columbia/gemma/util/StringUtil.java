@@ -3,6 +3,7 @@ package edu.columbia.gemma.util;
 import java.io.IOException;
 import java.security.MessageDigest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -91,4 +92,14 @@ public class StringUtil {
             throw new RuntimeException( io.getMessage(), io.getCause() );
         }
     }
+
+    /**
+     * @param str
+     * @return
+     */
+    public static int relaxedParseInt( String str ) {
+        str = StringUtils.strip( str );
+        return Integer.parseInt( str );
+    }
+
 }
