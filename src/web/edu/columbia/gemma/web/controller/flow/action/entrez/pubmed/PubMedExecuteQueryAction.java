@@ -115,10 +115,13 @@ public class PubMedExecuteQueryAction extends AbstractAction {
         catch ( IOException e ) {
             Errors errors = new FormObjectAccessor( context ).getFormErrors();
             errors.reject( "IOError", e.getMessage() );
-            return error();
+        } catch ( NumberFormatException e ) {
+            Errors errors = new FormObjectAccessor( context ).getFormErrors();
+            errors.reject( "NumberFormat", "Not a number" );
         } catch ( Exception e ) {
-            context.getRequestScope().setAttribute( "error.message", "There was an error: " + e );
-            return error();
+            Errors errors = new FormObjectAccessor( context ).getFormErrors();
+            errors.reject( "GenericError", "Some other kind of error" );
         }
+        return error();
     }
 }
