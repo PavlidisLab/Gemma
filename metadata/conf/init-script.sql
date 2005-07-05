@@ -6,3 +6,6 @@ insert into user_role (NAME, USER_NAME) values ("admin", "administrator");
 insert into taxon (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("homo sapien","human","9606");
 insert into taxon (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("mus musculus","mouse","10090"); 
 insert into taxon (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("rattus","rat","10114");
+
+insert into external_database(NAME, DESCRIPTION, WEB_URI, FTP_URI) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/");
+insert into external_database(NAME, DESCRIPTION,  WEB_URI, FTP_URI) values ("GO", "Gene Ontology database", "http://www.godatabase.org/dev/database/", "http://archive.godatabase.org");
