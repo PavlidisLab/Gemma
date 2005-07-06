@@ -64,22 +64,11 @@ public class PubMedXMLFetcher {
      * @return BibliographicReference representing the publication
      * @throws IOException
      */
-    public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException {
+    public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException, SAXException,
+            ParserConfigurationException {
         URL toBeGotten = new URL( uri + pubMedId );
 
         PubMedXMLParser pmxp = new PubMedXMLParser();
-        try {
-            return pmxp.parse( toBeGotten.openStream() );
-        } catch ( IOException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( SAXException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( ParserConfigurationException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return null;
+        return pmxp.parse( toBeGotten.openStream() );
     }
 }

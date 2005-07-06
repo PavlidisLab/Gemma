@@ -31,21 +31,31 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
+import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.common.description.ExternalDatabase;
 
 /**
  * Simple class to parse XML in the format defined by
- * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}.
+ * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object
+ * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase.
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University
+ * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class PubMedXMLParser {
+
+    /**
+     * Used to define the ExternalDatabase object linked to the result.
+     */
+    private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
 
     private static final String PUB_STATUS_ELEMENT = "PubStatus";
     private static final String PUBMED_PUB_DATE_ELEMENT = "PubMedPubDate";
@@ -76,11 +86,21 @@ public class PubMedXMLParser {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
-        factory.setValidating( true );
+        // factory.setValidating( true );
 
         DocumentBuilder builder = factory.newDocumentBuilder();
+        builder.setErrorHandler( new ErrorHandler() {
+            public void warning( SAXParseException exception ) throws SAXException {
+                throw exception;
+            }
 
-        // builder.setErrorHandler()
+            public void error( SAXParseException exception ) throws SAXException {
+                throw exception;
+            }
+
+            public void fatalError( SAXParseException exception ) throws SAXException {
+            }
+        } );
 
         Document document = builder.parse( is );
         return setUpBibRef( document );
@@ -92,30 +112,45 @@ public class PubMedXMLParser {
      * @throws IOException
      */
     private BibliographicReference setUpBibRef( Document doc ) throws IOException {
+
         BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
-        
+
         // inserted null checks so that documents with older formats would still load
-        if(doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).getLength()>0)
-        	bibRef.setAbstractText( getTextValue( ( Element ) doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).item( 0 ) ) );
-  
-        if(doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).getLength()>0)
-        	bibRef.setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).item( 0 ) ) );
+        if ( doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).getLength() > 0 )
+            bibRef.setAbstractText( getTextValue( ( Element ) doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT )
+                    .item( 0 ) ) );
 
-        if(doc.getElementsByTagName( TITLE_ELEMENT ).getLength()>0)
-        	bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
- 
-        if(doc.getElementsByTagName( "Volume" ).getLength()>0)
-        	bibRef.setVolume(getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );
+        if ( doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).getLength() > 0 )
+            bibRef
+                    .setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT )
+                            .item( 0 ) ) );
 
-        if(doc.getElementsByTagName( "Issue" ).getLength()>0)
-        	bibRef.setIssue(getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ));
-        
-        if( doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT ).getLength()>0)
-        	bibRef.setPublication( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT ).item( 0 ) ) );
-        
+        if ( doc.getElementsByTagName( TITLE_ELEMENT ).getLength() > 0 )
+            bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
+
+        if ( doc.getElementsByTagName( "Volume" ).getLength() > 0 )
+            bibRef.setVolume( getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );
+
+        if ( doc.getElementsByTagName( "Issue" ).getLength() > 0 )
+            bibRef.setIssue( getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ) );
+
+        if ( doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT ).getLength() > 0 )
+            bibRef.setPublication( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT )
+                    .item( 0 ) ) );
+
         bibRef.setAuthorList( extractAuthorList( doc ) );
         // bibRef.setYear( extractPublicationYear( doc ) );
         bibRef.setPublicationDate( extractPublicationDate( doc ) );
+
+        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+        dbEntry.setAccession( getTextValue( ( Element ) doc.getElementsByTagName( PMID_ELEMENT ).item( 0 ) ) );
+
+        ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
+        exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
+        dbEntry.setExternalDatabase( exDb );
+
+        bibRef.setPubAccession( dbEntry );
+
         return bibRef;
     }
 
@@ -125,6 +160,11 @@ public class PubMedXMLParser {
      * @throws IOException
      */
     private String extractAuthorList( Document doc ) throws IOException {
+
+        if ( doc.getElementsByTagName( "AuthorList" ).item( 0 ) == null ) {
+            throw new IOException( "No results found" );
+        }
+
         NodeList authorList = doc.getElementsByTagName( "AuthorList" ).item( 0 ).getChildNodes();
         StringBuffer al = new StringBuffer();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
