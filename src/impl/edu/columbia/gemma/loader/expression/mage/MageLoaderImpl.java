@@ -31,10 +31,12 @@ import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
+import edu.columbia.gemma.expression.biomaterial.TreatmentDao;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
@@ -57,6 +59,7 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @spring.property name="personDao" ref="personDao"
  * @spring.property name="expressionExperimentDao" ref="expressionExperimentDao"
  * @spring.property name="bioMaterialDao" ref="bioMaterialDao"
+ * @spring.property name="arrayDesignDao" ref="arrayDesignDao"
  */
 public class MageLoaderImpl implements Loader {
     private static Log log = LogFactory.getLog( MageLoaderImpl.class.getName() );
@@ -70,6 +73,17 @@ public class MageLoaderImpl implements Loader {
     private ExpressionExperimentDao expressionExperimentDao;
 
     private BioMaterialDao bioMaterialDao;
+
+    private ArrayDesignDao arrayDesignDao;
+
+    private TreatmentDao treatmentDao;
+
+    /**
+     * @param arrayDesignDao The arrayDesignDao to set.
+     */
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
 
     /**
      * 
@@ -105,13 +119,13 @@ public class MageLoaderImpl implements Loader {
             for ( Object entity : col ) {
 
                 String className = entity.getClass().getName();
-                log.debug( "Loading " + className );
 
                 // check if className is on short list of classes to be persisted.
                 // ArrayDesign (we won't usually use this - mage-ml of array designs is gigantic.)
                 // ExpressionExperiment (most interested in this)
                 // 
                 if ( entity instanceof ExpressionExperiment ) {
+                    log.debug( "Loading " + className );
                     loadExpressionExperiment( ( ExpressionExperiment ) entity );
                 } else if ( entity instanceof ArrayDesign ) {
                     // loadArrayDesign( ( ArrayDesign ) entity );
@@ -124,12 +138,15 @@ public class MageLoaderImpl implements Loader {
                 } else if ( entity instanceof QuantitationType ) {
                     // loadQuantitationType( ( QuantitationType ) entity );
                 } else if ( entity instanceof BioMaterial ) {
+                    log.debug( "Loading " + className );
                     loadBioMaterial( ( BioMaterial ) entity );
                 } else if ( entity instanceof ExternalDatabase ) {
                     // probably won't use this much.
                     // loadExternalDatabase( ( ExternalDatabase ) entity );
                 } else if ( entity instanceof LocalFile ) {
                     // loadLocalFile( ( LocalFile ) entity );
+                } else if ( entity instanceof BioAssay ) {
+                    // loadBioAssay( ( BioAssay ) entity );
                 } else {
                     throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
                 }
@@ -137,6 +154,13 @@ public class MageLoaderImpl implements Loader {
         } catch ( Exception e ) {
             log.error( e, e );
         }
+    }
+
+    /**
+     * @param assay
+     */
+    private void loadBioAssay( BioAssay assay ) {
+        throw new UnsupportedOperationException( "Can't deal with " + assay.getClass().getName() + " yet" );
     }
 
     /**
@@ -165,17 +189,15 @@ public class MageLoaderImpl implements Loader {
      */
     private void loadBioMaterial( BioMaterial entity ) {
         for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getCharacteristics() ) {
-            characteristic = ( OntologyEntry ) ontologyEntryDao.findOrCreate( characteristic );
+            characteristic.setId( ontologyEntryDao.findOrCreate( characteristic ).getId() );
         }
 
         OntologyEntry materialType = entity.getMaterialType();
-        materialType = ( OntologyEntry ) ontologyEntryDao.findOrCreate( materialType );
+        if ( materialType != null ) materialType.setId( ontologyEntryDao.findOrCreate( materialType ).getId() );
 
         for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
-
-            // find or create the treatment object.
-            OntologyEntry treatmentType = treatment.getTreatmentType();
-            treatmentType = ( OntologyEntry ) ontologyEntryDao.findOrCreate( treatmentType );
+            OntologyEntry action = treatment.getAction();
+            if ( action != null ) action.setId( ontologyEntryDao.findOrCreate( action ).getId() );
         }
 
         bioMaterialDao.create( entity );
@@ -204,29 +226,59 @@ public class MageLoaderImpl implements Loader {
         // the following ontology entries must be persisted manually.
         // manually persist: experimentaldesign->experimentalFactor->annotation, category
         // manually persist: experimentaldesign->experimentalFactor->FactorValue->value
+        // experimentaldesign->type
         for ( ExperimentalDesign experimentalDesign : ( Collection<ExperimentalDesign> ) entity
                 .getExperimentalDesigns() ) {
+
+            // type
+            for ( OntologyEntry type : ( Collection<OntologyEntry> ) experimentalDesign.getTypes() ) {
+                type.setId( ontologyEntryDao.findOrCreate( type ).getId() );
+            }
+
             for ( ExperimentalFactor experimentalFactor : ( Collection<ExperimentalFactor> ) experimentalDesign
                     .getExperimentalFactors() ) {
                 for ( OntologyEntry annotation : ( Collection<OntologyEntry> ) experimentalFactor.getAnnotations() ) {
-                    annotation = ( OntologyEntry ) ontologyEntryDao.findOrCreate( annotation );
+                    annotation.setId( ontologyEntryDao.findOrCreate( annotation ).getId() );
                 }
 
                 OntologyEntry category = experimentalFactor.getCategory();
-                category = ( OntologyEntry ) ontologyEntryDao.findOrCreate( category );
+                if ( category == null ) {
+                    log.debug( "No 'category' for ExperimentalDesign" );
+                } else {
+                    category.setId( ontologyEntryDao.findOrCreate( category ).getId() );
+                    log.debug( "ExperimentalDesign.category=" + category.getId() );
+                }
 
                 for ( FactorValue factorValue : ( Collection<FactorValue> ) experimentalFactor.getFactorValues() ) {
+
                     OntologyEntry value = factorValue.getValue();
+                    if ( value == null ) {
+                        log.debug( "No 'value' for FactorValue" ); // that's okay, it can be a measurement.
+                        if ( factorValue.getMeasurement() == null ) {
+                            throw new IllegalStateException( "FactorValue must have either a measurement or a value" );
+                        }
+                    } else {
+                        if ( factorValue.getMeasurement() != null ) {
+                            throw new IllegalStateException( "FactorValue cannot have both a measurement and a value" );
+                        }
+                        factorValue.setValue( ontologyEntryDao.findOrCreate( value ) );
+                        log.debug( "factorValue.value=" + value.getId() );
+                    }
                 }
             }
         }
 
-        // manually persist: experimentaldesign->bioassay->factorvalue->value
+        // manually persist: experimentaldesign->bioassay->factorvalue->value and bioassay->arraydesign
         for ( BioAssay bA : ( Collection<BioAssay> ) ( ( ExpressionExperiment ) entity ).getBioAssays() ) {
             for ( FactorValue factorValue : ( Collection<FactorValue> ) bA.getBioAssayFactorValues() ) {
+
                 for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
-                    value = ( OntologyEntry ) ontologyEntryDao.findOrCreate( value );
+                    value.setId( ontologyEntryDao.findOrCreate( value ).getId() );
                 }
+            }
+
+            for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) bA.getArrayDesignsUsed() ) {
+                arrayDesign.setId( arrayDesignDao.findOrCreate( arrayDesign ).getId() );
             }
         }
 
@@ -284,6 +336,13 @@ public class MageLoaderImpl implements Loader {
      */
     public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
         this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    /**
+     * @param treatmentDao The treatmentDao to set.
+     */
+    public void setTreatmentDao( TreatmentDao treatmentDao ) {
+        this.treatmentDao = treatmentDao;
     }
 
 }

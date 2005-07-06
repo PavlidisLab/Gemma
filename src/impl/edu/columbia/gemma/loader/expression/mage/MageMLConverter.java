@@ -1787,6 +1787,8 @@ public class MageMLConverter {
     public Treatment convertTreatment( org.biomage.BioMaterial.Treatment mageObj ) {
         if ( mageObj == null ) return null;
         Treatment result = Treatment.Factory.newInstance();
+        Integer order = mageObj.getOrder();
+        if ( order != null ) result.setOrderApplied( order.intValue() );
         if ( !convertIdentifiable( mageObj, result ) ) convertAssociations( mageObj, result );
         return result;
     }
@@ -1802,9 +1804,7 @@ public class MageMLConverter {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Action" ) ) {
-            // we don't support any of this!
-        } else if ( associationName.equals( "Action" ) ) {
-            // simpleFillIn(associatedObject, gemmaObj, getter);
+            simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "ActionMeasurement" ) ) {
             //
         } else if ( associationName.equals( "CompoundMeasurements" ) ) {
