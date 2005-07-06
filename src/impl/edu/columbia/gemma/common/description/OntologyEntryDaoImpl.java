@@ -47,6 +47,7 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
                 queryObject.add( Restrictions.eq( "category", ontologyEntry.getCategory() ) ).add(
                         Restrictions.eq( "value", ontologyEntry.getValue() ) );
             }
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -66,9 +67,14 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
         }
     }
 
+    @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry.getAccession() == null && ontologyEntry.getExternalDatabase() == null
+                && ontologyEntry.getCategory() == null && ontologyEntry.getValue() == null ) return null;
         OntologyEntry newOntologyEntry = find( ontologyEntry );
-        if ( newOntologyEntry != null ) return newOntologyEntry;
+        if ( newOntologyEntry != null ) {
+            return newOntologyEntry;
+        }
         log.debug( "Creating new ontologyEntry: " + ontologyEntry );
         return ( OntologyEntry ) create( ontologyEntry );
     }
