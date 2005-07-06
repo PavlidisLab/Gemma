@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Tue Jul 05 18:40:37 EDT 2005'>
+  timestamp = 'Wed Jul 06 15:20:54 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -12,9 +12,9 @@
       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
       <UML:ModelElement.taggedValue>
         <UML:TaggedValue xmi.id = 'Id2a49dm1025ed2a6cbmm7252' isSpecification = 'false'>
-          <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
-          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>remove.by</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
           <UML:TaggedValue.type>
@@ -1597,13 +1597,13 @@ experiment, such as BioAssay and BioAssayData.</UML:TaggedValue.dataValue>
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e4f' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'composite'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'I18e95d9m104e76a9100m1c2c'>
+                                    <UML:Multiplicity xmi.id = 'I11fb2e0m104e974101dm1b8a'>
                                       <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'I18e95d9m104e76a9100m1c2d' lower = '0'
-                                          upper = '-1'/>
+                                        <UML:MultiplicityRange xmi.id = 'I11fb2e0m104e974101dm1b8b' lower = '1'
+                                          upper = '1'/>
                                       </UML:Multiplicity.range>
                                     </UML:Multiplicity>
                                   </UML:AssociationEnd.multiplicity>
@@ -6002,7 +6002,7 @@ one class.
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e61' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'composite'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Ia948c2m101cef0df55mm5b52'>
@@ -6016,9 +6016,9 @@ one class.
                                     <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e75'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e5b' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-                                  targetScope = 'instance' changeability = 'changeable'>
+                                <UML:AssociationEnd xmi.id = 'I5acf13m101bacaf829mm6e5b' name = 'treatments'
+                                  visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                                  aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'Ia948c2m101cef0df55mm5b54'>
                                       <UML:Multiplicity.range>
@@ -6144,8 +6144,25 @@ one class.
                                 </UML:TaggedValue>
                               </UML:ModelElement.taggedValue>
                               <UML:GeneralizableElement.generalization>
-                                <UML:Generalization xmi.idref = 'I322b7f4am101c5835e60mm60b5'/>
+                                <UML:Generalization xmi.idref = 'I11fb2e0m104e974101dm1d7b'/>
                               </UML:GeneralizableElement.generalization>
+                              <UML:Classifier.feature>
+                                <UML:Attribute xmi.id = 'I11fb2e0m104e974101dm1ce6' name = 'orderApplied'
+                                  visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'I11fb2e0m104e974101dm1d82' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>The order in which this treatment was applied to the biomaterial, relative to the other treatments.</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                              </UML:Classifier.feature>
                             </UML:Class>
                             <UML:Class xmi.id = 'I7e6b26m10265cfbff4mm207c' name = 'BioMaterialService'
                               visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
@@ -6389,7 +6406,7 @@ one class.
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
-                            <UML:Association xmi.id = 'I767237m101c440f114mm6052' name = 'TreatmentType'
+                            <UML:Association xmi.id = 'I767237m101c440f114mm6052' name = 'TreatmentAction'
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6058' visibility = 'public'
@@ -6407,7 +6424,7 @@ one class.
                                     <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e77'/>
                                   </UML:AssociationEnd.participant>
                                 </UML:AssociationEnd>
-                                <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6055' name = 'treatmentType'
+                                <UML:AssociationEnd xmi.id = 'I767237m101c440f114mm6055' name = 'action'
                                   visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
@@ -6424,6 +6441,13 @@ one class.
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
+                            <UML:Class xmi.id = 'I11fb2e0m104e974101dm1bb8' name = 'treatment' visibility = 'public'
+                              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+                              isActive = 'false'/>
+                            <UML:Comment xmi.id = 'I11fb2e0m104e974101dm1d3f' name = '' visibility = 'public'
+                              isSpecification = 'false' body = 'treatment is a bioevent in mage.'/>
+                            <UML:Comment xmi.id = 'I11fb2e0m104e974101dm1d44' name = '' visibility = 'public'
+                              isSpecification = 'false' body = 'have left out compund etc. for now'/>
                           </UML:Namespace.ownedElement>
                         </UML:Package>
                         <UML:Package xmi.id = 'I1af67f0m102d10e4abem17b7' name = 'analysis' visibility = 'public'
@@ -16014,14 +16038,6 @@ one class.
                             <UML:Class xmi.idref = 'I10f93f9m102a7804758mm6f5'/>
                           </UML:Generalization.parent>
                         </UML:Generalization>
-                        <UML:Generalization xmi.id = 'I322b7f4am101c5835e60mm60b5' isSpecification = 'false'>
-                          <UML:Generalization.child>
-                            <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e77'/>
-                          </UML:Generalization.child>
-                          <UML:Generalization.parent>
-                            <UML:Class xmi.idref = 'I10f93f9m102a7804758mm6f5'/>
-                          </UML:Generalization.parent>
-                        </UML:Generalization>
                         <UML:Generalization xmi.id = 'I322b7f4am101c5835e60mm6092' isSpecification = 'false'>
                           <UML:Generalization.child>
                             <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e55'/>
@@ -16121,6 +16137,14 @@ one class.
                         <UML:Generalization xmi.id = 'I44a541m1049f8aad8fmf6f' isSpecification = 'false'>
                           <UML:Generalization.child>
                             <UML:Class xmi.idref = 'I2863e477m101683735a4mm73f8'/>
+                          </UML:Generalization.child>
+                          <UML:Generalization.parent>
+                            <UML:Class xmi.idref = 'I10f93f9m102a7804758mm6f5'/>
+                          </UML:Generalization.parent>
+                        </UML:Generalization>
+                        <UML:Generalization xmi.id = 'I11fb2e0m104e974101dm1d7b' isSpecification = 'false'>
+                          <UML:Generalization.child>
+                            <UML:Class xmi.idref = 'I5acf13m101bacaf829mm6e77'/>
                           </UML:Generalization.child>
                           <UML:Generalization.parent>
                             <UML:Class xmi.idref = 'I10f93f9m102a7804758mm6f5'/>
@@ -27951,10 +27975,10 @@ grouping of the top-level BioAssays.&lt;/p&gt;</UML:TaggedValue.dataValue>
       </UML:Namespace.ownedElement>
     </UML:Model>
     <UML:A_context_raisedSignal>
-      <UML:Operation xmi.idref = 'Ibaaea8m10259547663mm28b8'/>
-      <UML:Exception xmi.idref = 'I1cf7a11m104af84616dmm5af8'/>
       <UML:Operation xmi.idref = 'Idd3147m1036b562585mm2f7'/>
       <UML:Exception xmi.idref = 'Idd3147m1036b562585m999'/>
+      <UML:Operation xmi.idref = 'Ibaaea8m10259547663mm28b8'/>
+      <UML:Exception xmi.idref = 'I1cf7a11m104af84616dmm5af8'/>
     </UML:A_context_raisedSignal>
   </XMI.content>
 </XMI>
