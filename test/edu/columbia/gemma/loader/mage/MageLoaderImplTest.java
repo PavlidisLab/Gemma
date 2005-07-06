@@ -32,6 +32,7 @@ import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.TreatmentDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.loader.expression.mage.MageLoaderImpl;
 import edu.columbia.gemma.loader.expression.mage.MageMLParser;
@@ -62,6 +63,7 @@ public class MageLoaderImplTest extends BaseDAOTestCase {
         ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
         ml.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
         ml.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
+        ml.setTreatmentDao( ( TreatmentDao ) ctx.getBean( "treatmentDao" ) );
     }
 
     @Override
