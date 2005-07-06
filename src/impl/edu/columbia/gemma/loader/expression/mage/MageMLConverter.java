@@ -1123,6 +1123,10 @@ public class MageMLConverter {
         // describable.
         gemmaObj.setName( mageObj.getName() );
 
+        if ( gemmaObj.getName() == null ) {
+            gemmaObj.setName( mageObj.getIdentifier() );
+        }
+
         identifiableCache.put( mageObj.getIdentifier(), gemmaObj );
         convertDescribable( mageObj, gemmaObj );
         return false;

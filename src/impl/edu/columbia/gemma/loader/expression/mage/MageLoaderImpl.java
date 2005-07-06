@@ -278,7 +278,8 @@ public class MageLoaderImpl implements Loader {
             }
 
             for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) bA.getArrayDesignsUsed() ) {
-                arrayDesign.setId( arrayDesignDao.findOrCreate( arrayDesign ).getId() );
+                ArrayDesign persistentArrayDesign = arrayDesignDao.findOrCreate( arrayDesign );
+                if ( persistentArrayDesign != null ) arrayDesign.setId( persistentArrayDesign.getId() );
             }
         }
 
