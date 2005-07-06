@@ -22,6 +22,8 @@
  */
 package edu.columbia.gemma.common.description;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -29,6 +31,8 @@ import org.hibernate.criterion.Restrictions;
  * @see edu.columbia.gemma.common.description.OntologyEntry
  */
 public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.OntologyEntryDaoBase {
+
+    private static Log log = LogFactory.getLog( OntologyEntryDaoImpl.class.getName() );
 
     @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
@@ -53,7 +57,7 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( edu.columbia.gemma.common.description.OntologyEntry ) results.iterator().next();
+                    result = ( OntologyEntry ) results.iterator().next();
                 }
             }
             return ( OntologyEntry ) result;
@@ -65,6 +69,7 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
         OntologyEntry newOntologyEntry = find( ontologyEntry );
         if ( newOntologyEntry != null ) return newOntologyEntry;
+        log.debug( "Creating new ontologyEntry: " + ontologyEntry );
         return ( OntologyEntry ) create( ontologyEntry );
     }
 }
