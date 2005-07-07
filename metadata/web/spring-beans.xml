@@ -418,6 +418,62 @@
 	</property>
 </bean>
 
+<!--  ExpressionExperiment flow -->
+<bean id="expressionExperimentSearchController" name="/expressionExperimentSearch.htm"
+	class="org.springframework.web.flow.mvc.FlowController">
+	<property name="cacheSeconds" value="5" />
+	<property name="flow" ref="expressionExperiment.Search" />
+</bean>
+
+<bean id="expressionExperiment.Search"
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentSearch-flow.xml" />
+</bean>
+
+
+<bean id="expressionExperiment.Search.getAllExpressionExperiments"
+	class="edu.columbia.gemma.web.controller.flow.action.expression.experiment.ExpressionExperimentExecuteQueryAction">
+	<property name="expressionExperimentService">
+		<ref bean="expressionExperimentService" />
+	</property>
+</bean>
+
+<bean id="expressionExperiment.Search.id.set"
+	class="org.springframework.web.flow.action.AttributeMapperAction">
+	<property name="mapping" value="flowScope.experimentID" />
+</bean>
+
+<bean id="expressionExperiment.id.attributeMapper"
+	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
+	<property name="inputMappings">
+		<map>
+			<entry key="${flowScope.experimentID}" value="experimentID" />
+		</map>
+	</property>
+</bean>
+
+<!--  ExpressionExperiment Detail subflow -->
+<bean id="expressionExperimentDetailController" name="/expressionExperimentDetail.htm"
+	class="org.springframework.web.flow.mvc.FlowController">
+	<property name="flow" ref="expressionExperiment.Detail" />
+</bean>
+
+<bean id="expressionExperiment.Detail"
+	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentDetail-flow.xml" />
+</bean>
+
+<bean id="expressionExperiment.Detail.criteria.formAction.getFormAction"
+	class="edu.columbia.gemma.web.controller.flow.action.expression.experiment.GetExpressionExperimentAction">
+	<property name="expressionExperimentService">
+		<ref bean="expressionExperimentService" />
+	</property>
+</bean>
+
+
+
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 <bean id="conversion.service"
 	class="org.springframework.binding.convert.support.DefaultConversionService"
