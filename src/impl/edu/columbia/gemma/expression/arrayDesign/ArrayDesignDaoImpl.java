@@ -16,16 +16,18 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.expression.arrayDesign;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
  * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesign
  */
 public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoBase {
@@ -34,7 +36,10 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
 
     @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getName() == null ) return null;
+        if ( arrayDesign.getName() == null ) {
+            log.debug( "Array design must have a name to use as comparison key" );
+            return null;
+        }
         ArrayDesign newArrayDesign = this.findByName( arrayDesign.getName() );
         if ( newArrayDesign != null ) {
             return newArrayDesign;
