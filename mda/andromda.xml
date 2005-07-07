@@ -43,7 +43,7 @@
 					org.hibernate.dialect.MySQLDialect
 				</property>
 
-				<property name="hibernateShowSql">true</property>
+				<property name="hibernateShowSql">false</property>
 				<property name="hibernateUseQueryCache">false</property>
 				<property name="hibernateQueryUseNamedParameters">
 					true

@@ -518,9 +518,9 @@
         </dependency>
         <dependency>
             <groupId>ant</groupId>
-            <artifactId>ant-jsch</artifactId>
+            <artifactId>ant</artifactId>
             <version>1.6.3</version>
-            <jar>ant-jsch-1.6.3.jar</jar>
+            <jar>ant-1.6.3.jar</jar>
             <type>jar</type>
             <properties>
                 <classloader>root</classloader>

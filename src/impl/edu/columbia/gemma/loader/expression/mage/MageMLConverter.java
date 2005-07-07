@@ -20,7 +20,6 @@ package edu.columbia.gemma.loader.expression.mage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-// import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,9 +52,14 @@ import org.biomage.BioAssayData.BioAssayMap;
 import org.biomage.BioAssayData.BioDataCube;
 import org.biomage.BioAssayData.BioDataTuples;
 import org.biomage.BioAssayData.BioDataValues;
+import org.biomage.BioAssayData.CompositeSequenceDimension;
 import org.biomage.BioAssayData.DataExternal;
 import org.biomage.BioAssayData.DerivedBioAssayData;
+import org.biomage.BioAssayData.DesignElementDimension;
+import org.biomage.BioAssayData.FeatureDimension;
 import org.biomage.BioAssayData.MeasuredBioAssayData;
+import org.biomage.BioAssayData.QuantitationTypeDimension;
+import org.biomage.BioAssayData.ReporterDimension;
 import org.biomage.BioAssayData.Transformation;
 import org.biomage.BioMaterial.BioSample;
 import org.biomage.BioMaterial.BioSource;
@@ -84,7 +88,6 @@ import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
 
-import edu.columbia.gemma.common.auditAndSecurity.ContactImpl;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -172,11 +175,17 @@ public class MageMLConverter {
     private Map<String, Object> identifiableCache;
 
     /**
+     * Stores the dimension information for the bioassays
+     */
+    private Map<String, Map> bioAssayDimensions;
+
+    /**
      * 
      *
      */
     public MageMLConverter() {
         identifiableCache = new HashMap<String, Object>();
+        bioAssayDimensions = new HashMap<String, Map>();
     }
 
     /**
@@ -188,6 +197,14 @@ public class MageMLConverter {
     public Object convert( Object mageObj ) {
         log.debug( "Converting " + ReflectionUtil.getSimpleName( mageObj.getClass() ) );
         return findAndInvokeConverter( mageObj );
+    }
+
+    /**
+     * @param mageObj
+     * @return
+     */
+    public edu.columbia.gemma.common.description.OntologyEntry convertAction( OntologyEntry mageObj ) {
+        return convertOntologyEntry( mageObj );
     }
 
     /**
@@ -371,6 +388,7 @@ public class MageMLConverter {
 
         BioDataValues data = mageObj.getBioDataValues();
         LocalFile result = LocalFile.Factory.newInstance();
+        result.setLocalURI( "Nowhere yet" );
 
         if ( data instanceof BioDataCube ) {
             DataExternal dataExternal = ( ( BioDataCube ) data ).getDataExternal();
@@ -388,7 +406,65 @@ public class MageMLConverter {
             throw new IllegalArgumentException( "Unkonwn BioDataValue class" );
         }
 
+        convertBioAssayDataAssociations( mageObj );
         return result;
+    }
+
+    /**
+     * In a typical MAGE file, we have the following associations:
+     * <p>
+     * MeasuredBioAssayData->BioDataCube->DataExternal
+     * </p>
+     * <p>
+     * The dimensions (designelement, quantitationtype and bioassay) are not full-scale Gemma objects, but we need to
+     * extract this information so we can decipher the data files. However, the FeatureDimension is often not available
+     * in the MAGE file (for example, in the ArrayExpress MAGE files for experiments done on Affymetrix platforms). In
+     * these cases we have to get the feature dimension from somewhere else.
+     * <p>
+     * There also seems to be no particular standard as to whether the external data files contain compositesequence or
+     * reporter or feature data. Feature data makes the most sense. For Affy files that seems to be what you get (so
+     * far).
+     * 
+     * @param mageObj
+     */
+    public void convertBioAssayDataAssociations( BioAssayData mageObj ) {
+        QuantitationTypeDimension qtd = mageObj.getQuantitationTypeDimension();
+        List quantitationTypes = null;
+        if ( qtd != null ) {
+            quantitationTypes = ( List ) qtd.getQuantitationTypes();
+        }
+
+        DesignElementDimension ded = mageObj.getDesignElementDimension();
+        List designElements = null;
+
+        BioAssayDimension bad = mageObj.getBioAssayDimension();
+        if ( bad != null ) {
+            List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
+            for ( BioAssay bioAssay : bioAssays ) {
+                String name = bioAssay.getName();
+                if ( bioAssayDimensions.get( name ) == null ) {
+                    bioAssayDimensions.put( name, new HashMap<String, List>() );
+                }
+
+                if ( ded instanceof FeatureDimension ) {
+                    log.info( "Got a feature dimension: " + ded.getIdentifier() );
+                    designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
+                    bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
+                } else if ( ded instanceof CompositeSequenceDimension ) {
+                    log.info( "Got a compositesequence dimension: " + ded.getIdentifier() );
+                    designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
+                    bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
+                } else if ( ded instanceof ReporterDimension ) {
+                    log.info( "Got a reporter dimension: " + ded.getIdentifier() );
+                    designElements = ( ( ReporterDimension ) ded ).getReporters();
+                    bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
+                }
+
+                bioAssayDimensions.get( name ).put( "QuantitationTypeDimension", quantitationTypes );
+
+            }
+        }
+
     }
 
     /**
@@ -439,6 +515,8 @@ public class MageMLConverter {
             // we don't support
         } else if ( associationName.equals( "Treatments" ) ) {
             assert associatedObject instanceof List;
+            // specialConvertBioMaterialTreatmentAssociations(
+            // ( List<org.biomage.BioMaterial.Treatment> ) associatedObject, gemmaObj );
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "Treatments" );
         } else {
             log.debug( "Unsupported or unknown association, or from subclass: " + associationName );
@@ -954,9 +1032,12 @@ public class MageMLConverter {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Provider" );
         } else if ( associationName.equals( "BioAssayData" ) ) {
-            assert associatedObject instanceof List;
-            if ( ( ( List ) associatedObject ).size() > 0 )
-                log.warn( "Missing out on BioAssayData from Experiment  " );
+            // we get this directly through the bioassay->bioassay data association.
+            // assert associatedObject instanceof List;
+            // if ( gemmaObj.getBioAssays() == null ) {
+            // // need bioAssays first!
+            // log.error( "Need bioassays first before can convert bioassaydata!" );
+            // }
             // specialConvertExperimentBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "ExperimentDesigns" ) ) {
             assert associatedObject instanceof List;
@@ -965,6 +1046,18 @@ public class MageMLConverter {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
     }
+
+    // /**
+    // * @param list
+    // * @param gemmaObj
+    // */
+    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
+    // ExpressionExperiment gemmaObj ) {
+    // for ( BioAssayData data : bioAssayData ) {
+    // LocalFile file = convertBioAssayData( data );
+    // // need to attachi this to
+    // }
+    // }
 
     /**
      * @param mageObj
@@ -1297,6 +1390,9 @@ public class MageMLConverter {
     // }
 
     /**
+     * OntologyEntry is a subclass of DatabaseEntry in Gemma, but not in MAGE. Instead, a MAGE object has an
+     * OntologyReference to a databaseEntry.
+     * 
      * @param mageObj
      * @return
      */
@@ -1342,7 +1438,6 @@ public class MageMLConverter {
      */
     private void specialConvertOntologyEntryDatabaseEntry( org.biomage.Description.DatabaseEntry databaseEntry,
             edu.columbia.gemma.common.description.OntologyEntry gemmaObj ) {
-        // gemmaObj.setAccession( databaseEntry.getAccession() );
         gemmaObj.setExternalDatabase( convertDatabase( databaseEntry.getDatabase() ) );
     }
 
@@ -1810,7 +1905,7 @@ public class MageMLConverter {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Action" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            simpleFillIn( associatedObject, gemmaObj, getter, "Action" );
         } else if ( associationName.equals( "ActionMeasurement" ) ) {
             //
         } else if ( associationName.equals( "CompoundMeasurements" ) ) {
@@ -2346,6 +2441,7 @@ public class MageMLConverter {
 
         for ( BioAssayData bioAssayDatum : bioAssayData ) {
             LocalFile lf = convertBioAssayData( bioAssayDatum );
+            if ( lf == null ) continue;
 
             if ( bioAssayDatum instanceof DerivedBioAssayData ) {
                 if ( gemmaObj.getDerivedDataFiles() == null ) gemmaObj.setDerivedDataFiles( new HashSet() );
@@ -2366,7 +2462,8 @@ public class MageMLConverter {
                     }
                 }
             } else if ( bioAssayDatum instanceof MeasuredBioAssayData ) {
-                // gemmaObj.setRawDataFiles( lf ); // we get it through the transformation instead.
+                log.info( "Got raw data file" );
+                gemmaObj.setRawDataFile( lf );
             } else {
                 throw new IllegalArgumentException( "Unknown BioAssayData class: " + bioAssayDatum.getClass().getName() );
             }

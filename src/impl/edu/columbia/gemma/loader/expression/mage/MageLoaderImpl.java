@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.biomage.BioAssayData.BioAssayData;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -158,6 +159,10 @@ public class MageLoaderImpl implements Loader {
         }
     }
 
+    // private void loadBioAssayData(BioAssayData data) {
+    // throw new UnsupportedOperationException( "Can't deal with " + data.getClass().getName() + " yet" );
+    // }
+
     /**
      * @param assay
      */
@@ -214,7 +219,7 @@ public class MageLoaderImpl implements Loader {
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
         if ( externalDatabase == null ) return;
 
-        externalDatabase.equals( externalDatabaseDao.findOrCreate( externalDatabase ) );
+        databaseEntry.getExternalDatabase().setId( externalDatabaseDao.findOrCreate( externalDatabase ).getId() );
 
     }
 
@@ -354,7 +359,6 @@ public class MageLoaderImpl implements Loader {
         this.expressionExperimentDao = expressionExperimentDao;
     }
 
-   
     /**
      * @param externalDatabaseDao The externalDatabaseDao to set.
      */

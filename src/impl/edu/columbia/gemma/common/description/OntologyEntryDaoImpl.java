@@ -36,6 +36,8 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
 
     @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry.getAccession() == null && ontologyEntry.getExternalDatabase() == null
+                && ontologyEntry.getCategory() == null && ontologyEntry.getValue() == null ) return null;
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( OntologyEntry.class );
 
@@ -69,8 +71,7 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
 
     @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
-        if ( ontologyEntry.getAccession() == null && ontologyEntry.getExternalDatabase() == null
-                && ontologyEntry.getCategory() == null && ontologyEntry.getValue() == null ) return null;
+
         OntologyEntry newOntologyEntry = find( ontologyEntry );
         if ( newOntologyEntry != null ) {
             return newOntologyEntry;
