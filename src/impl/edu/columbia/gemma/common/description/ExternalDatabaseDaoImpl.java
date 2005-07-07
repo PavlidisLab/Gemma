@@ -20,6 +20,8 @@
  */
 package edu.columbia.gemma.common.description;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -30,40 +32,42 @@ import org.hibernate.criterion.Restrictions;
  * 
  * @author pavlidis
  * @version $Id$
- * @see edu.columbia.gemma.common.description.DatabaseEntry
+ * @see edu.columbia.gemma.common.description.ExternalDatabase
  */
-public class DatabaseEntryDaoImpl extends edu.columbia.gemma.common.description.DatabaseEntryDaoBase {
+public class ExternalDatabaseDaoImpl extends edu.columbia.gemma.common.description.ExternalDatabaseDaoBase {
+
+    private static Log log = LogFactory.getLog( ExternalDatabaseDaoImpl.class.getName() );
 
     @Override
-    public DatabaseEntry find( DatabaseEntry databaseEntry ) {
+    public ExternalDatabase find( ExternalDatabase externalDatabase ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( DatabaseEntry.class );
-            queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).add(
-                    Restrictions.eq( "externalDatabase", databaseEntry.getExternalDatabase() ) );
+            Criteria queryObject = super.getSession( false ).createCriteria( ExternalDatabase.class );
+            queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
-                                    + edu.columbia.gemma.common.description.DatabaseEntry.class.getName()
+                                    + edu.columbia.gemma.common.description.ExternalDatabase.class.getName()
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( edu.columbia.gemma.common.description.DatabaseEntry ) results.iterator().next();
+                    result = ( edu.columbia.gemma.common.description.ExternalDatabase ) results.iterator().next();
                 }
             }
-            return ( DatabaseEntry ) result;
+            return ( ExternalDatabase ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
     }
 
     @Override
-    public DatabaseEntry findOrCreate( DatabaseEntry databaseEntry ) {
-        if ( databaseEntry == null || databaseEntry.getAccession() == null ) return null;
-        DatabaseEntry newDatabaseEntry = find( databaseEntry );
-        if ( newDatabaseEntry != null ) return newDatabaseEntry;
-        return create( databaseEntry );
+    public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase ) {
+        if ( externalDatabase == null || externalDatabase.getName() == null ) return null;
+        ExternalDatabase newExternalDatabase = find( externalDatabase );
+        if ( newExternalDatabase != null ) return newExternalDatabase;
+        log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
+        return ( ExternalDatabase ) create( externalDatabase );
     }
 }

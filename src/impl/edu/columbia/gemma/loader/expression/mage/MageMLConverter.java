@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -168,14 +169,14 @@ public class MageMLConverter {
     /**
      * Used to hold references to Identifiables, so we don't convert them over and over again.
      */
-    private Map identifiableCache;
+    private Map<String, Object> identifiableCache;
 
     /**
      * 
      *
      */
     public MageMLConverter() {
-        identifiableCache = new HashMap();
+        identifiableCache = new HashMap<String, Object>();
     }
 
     /**
@@ -1123,6 +1124,7 @@ public class MageMLConverter {
         // describable.
         gemmaObj.setName( mageObj.getName() );
 
+        /* Use the identifier as a name if there isn't a name. */
         if ( gemmaObj.getName() == null ) {
             gemmaObj.setName( mageObj.getIdentifier() );
         }
@@ -2444,8 +2446,23 @@ public class MageMLConverter {
         ArrayDesign ad = bac.getArray().getArrayDesign();
         if ( ad == null ) return;
         edu.columbia.gemma.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
-        if ( result.getArrayDesignsUsed() == null ) result.setArrayDesignsUsed( new HashSet() );
+
+        if ( result.getArrayDesignsUsed() == null ) {
+            result.setArrayDesignsUsed( new HashSet() );
+        }
+
+        // check to make sure we aren't addin the same array design twice.
+        Set<String> alreadyLinkedArrayDesigns = new HashSet<String>();
+        for ( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign : ( Collection<edu.columbia.gemma.expression.arrayDesign.ArrayDesign> ) result
+                .getArrayDesignsUsed() ) {
+            alreadyLinkedArrayDesigns.add( arrayDesign.getName() );
+        }
+
+        if ( alreadyLinkedArrayDesigns.contains( conv.getName() ) ) return;
+
+        log.info( "Adding array design used " + ad.getName() + " to " + result.getName() );
         result.getArrayDesignsUsed().add( conv );
+
     }
 
     /**

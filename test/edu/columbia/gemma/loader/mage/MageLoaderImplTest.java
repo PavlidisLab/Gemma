@@ -18,8 +18,6 @@
  */
 package edu.columbia.gemma.loader.mage;
 
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.ZipInputStream;
@@ -29,10 +27,10 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
-import edu.columbia.gemma.expression.biomaterial.TreatmentDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.loader.expression.mage.MageLoaderImpl;
 import edu.columbia.gemma.loader.expression.mage.MageMLParser;
@@ -63,7 +61,8 @@ public class MageLoaderImplTest extends BaseDAOTestCase {
         ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
         ml.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
         ml.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
-        ml.setTreatmentDao( ( TreatmentDao ) ctx.getBean( "treatmentDao" ) );
+        // ml.setTreatmentDao( ( TreatmentDao ) ctx.getBean( "treatmentDao" ) );
+        ml.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
     }
 
     @Override
@@ -93,8 +92,25 @@ public class MageLoaderImplTest extends BaseDAOTestCase {
      * 
      * @throws Exception
      */
-    public void testCreateCollectionReal() throws Exception {
-        log.debug( "Parsing MAGE from ArrayExpress" );
+    public void testCreateCollectionRealA() throws Exception {
+        log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );
+        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
+        MageMLParser mlp = new MageMLParser();
+        mlp.parse( istMageExamples );
+        Collection result = mlp.getConvertedData();
+        log.info( result.size() + " Objects parsed from the MAGE file." );
+        log.info( "Tally:\n" + mlp );
+        istMageExamples.close();
+        ml.create( result );
+    }
+
+    /**
+     * A real example of an experimental package.
+     * 
+     * @throws Exception
+     */
+    public void testCreateCollectionRealB() throws Exception {
+        log.debug( "Parsing MAGE from ArrayExpress (WMIT)" );
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-WMIT-4.xml" );
         MageMLParser mlp = new MageMLParser();
         mlp.parse( istMageExamples );

@@ -25,7 +25,9 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
@@ -76,7 +78,7 @@ public class MageLoaderImpl implements Loader {
 
     private ArrayDesignDao arrayDesignDao;
 
-    private TreatmentDao treatmentDao;
+    private ExternalDatabaseDao externalDatabaseDao;
 
     /**
      * @param arrayDesignDao The arrayDesignDao to set.
@@ -189,6 +191,7 @@ public class MageLoaderImpl implements Loader {
      */
     private void loadBioMaterial( BioMaterial entity ) {
         for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getCharacteristics() ) {
+            fillInPersistentExternalDatabase( characteristic );
             characteristic.setId( ontologyEntryDao.findOrCreate( characteristic ).getId() );
         }
 
@@ -201,6 +204,17 @@ public class MageLoaderImpl implements Loader {
         }
 
         bioMaterialDao.create( entity );
+
+    }
+
+    /**
+     * @param characteristic
+     */
+    private void fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
+        ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
+        if ( externalDatabase == null ) return;
+
+        externalDatabase.equals( externalDatabaseDao.findOrCreate( externalDatabase ) );
 
     }
 
@@ -271,7 +285,6 @@ public class MageLoaderImpl implements Loader {
         // manually persist: experimentaldesign->bioassay->factorvalue->value and bioassay->arraydesign
         for ( BioAssay bA : ( Collection<BioAssay> ) ( ( ExpressionExperiment ) entity ).getBioAssays() ) {
             for ( FactorValue factorValue : ( Collection<FactorValue> ) bA.getBioAssayFactorValues() ) {
-
                 for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
                     value.setId( ontologyEntryDao.findOrCreate( value ).getId() );
                 }
@@ -279,6 +292,8 @@ public class MageLoaderImpl implements Loader {
 
             for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) bA.getArrayDesignsUsed() ) {
                 ArrayDesign persistentArrayDesign = arrayDesignDao.findOrCreate( arrayDesign );
+                log.debug( "Arraydesign for bioassay " + bA.getName() + " is " + persistentArrayDesign.getName()
+                        + " id=" + persistentArrayDesign.getId() );
                 if ( persistentArrayDesign != null ) arrayDesign.setId( persistentArrayDesign.getId() );
             }
         }
@@ -339,11 +354,12 @@ public class MageLoaderImpl implements Loader {
         this.expressionExperimentDao = expressionExperimentDao;
     }
 
+   
     /**
-     * @param treatmentDao The treatmentDao to set.
+     * @param externalDatabaseDao The externalDatabaseDao to set.
      */
-    public void setTreatmentDao( TreatmentDao treatmentDao ) {
-        this.treatmentDao = treatmentDao;
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
     }
 
 }
