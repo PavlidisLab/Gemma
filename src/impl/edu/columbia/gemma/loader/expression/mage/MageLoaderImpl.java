@@ -22,7 +22,6 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.biomage.BioAssayData.BioAssayData;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -39,7 +38,6 @@ import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
-import edu.columbia.gemma.expression.biomaterial.TreatmentDao;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
@@ -197,30 +195,46 @@ public class MageLoaderImpl implements Loader {
     private void loadBioMaterial( BioMaterial entity ) {
         for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getCharacteristics() ) {
             fillInPersistentExternalDatabase( characteristic );
-            characteristic.setId( ontologyEntryDao.findOrCreate( characteristic ).getId() );
+            persistOntologyEntry( characteristic );
         }
 
         OntologyEntry materialType = entity.getMaterialType();
-        if ( materialType != null ) materialType.setId( ontologyEntryDao.findOrCreate( materialType ).getId() );
+        if ( materialType != null ) {
+            entity.setMaterialType( ontologyEntryDao.findOrCreate( materialType ) );
+        }
 
         for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
             OntologyEntry action = treatment.getAction();
-            if ( action != null ) action.setId( ontologyEntryDao.findOrCreate( action ).getId() );
+            persistOntologyEntry( action );
         }
 
         bioMaterialDao.create( entity );
-
     }
 
     /**
      * @param characteristic
      */
-    private void fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
+    private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
-        if ( externalDatabase == null ) return;
+        if ( externalDatabase == null ) {
+            log.debug( "No externalDatabase" );
+            return null;
+        }
+        databaseEntry.setExternalDatabase( externalDatabaseDao.findOrCreate( externalDatabase ) );
+        return databaseEntry;
+    }
 
-        databaseEntry.getExternalDatabase().setId( externalDatabaseDao.findOrCreate( externalDatabase ).getId() );
-
+    /**
+     * Need to go to the bottom of the tree and persist them.
+     * 
+     * @param ontologyEntry
+     */
+    private void persistOntologyEntry( OntologyEntry ontologyEntry ) {
+        ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
+        // for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() )
+        // {
+        // persistOntologyEntry( associatedOntologyEntry );
+        // }
     }
 
     /**
@@ -251,26 +265,27 @@ public class MageLoaderImpl implements Loader {
 
             // type
             for ( OntologyEntry type : ( Collection<OntologyEntry> ) experimentalDesign.getTypes() ) {
-                type.setId( ontologyEntryDao.findOrCreate( type ).getId() );
+                persistOntologyEntry( type );
             }
 
             for ( ExperimentalFactor experimentalFactor : ( Collection<ExperimentalFactor> ) experimentalDesign
                     .getExperimentalFactors() ) {
                 for ( OntologyEntry annotation : ( Collection<OntologyEntry> ) experimentalFactor.getAnnotations() ) {
-                    annotation.setId( ontologyEntryDao.findOrCreate( annotation ).getId() );
+                    persistOntologyEntry( annotation );
                 }
 
                 OntologyEntry category = experimentalFactor.getCategory();
                 if ( category == null ) {
                     log.debug( "No 'category' for ExperimentalDesign" );
                 } else {
-                    category.setId( ontologyEntryDao.findOrCreate( category ).getId() );
+                    persistOntologyEntry( category );
                     log.debug( "ExperimentalDesign.category=" + category.getId() );
                 }
 
                 for ( FactorValue factorValue : ( Collection<FactorValue> ) experimentalFactor.getFactorValues() ) {
 
                     OntologyEntry value = factorValue.getValue();
+
                     if ( value == null ) {
                         log.debug( "No 'value' for FactorValue" ); // that's okay, it can be a measurement.
                         if ( factorValue.getMeasurement() == null ) {
@@ -280,7 +295,8 @@ public class MageLoaderImpl implements Loader {
                         if ( factorValue.getMeasurement() != null ) {
                             throw new IllegalStateException( "FactorValue cannot have both a measurement and a value" );
                         }
-                        factorValue.setValue( ontologyEntryDao.findOrCreate( value ) );
+                        persistOntologyEntry( value );
+                        // factorValue.setValue( value );
                         log.debug( "factorValue.value=" + value.getId() );
                     }
                 }
@@ -291,7 +307,7 @@ public class MageLoaderImpl implements Loader {
         for ( BioAssay bA : ( Collection<BioAssay> ) ( ( ExpressionExperiment ) entity ).getBioAssays() ) {
             for ( FactorValue factorValue : ( Collection<FactorValue> ) bA.getBioAssayFactorValues() ) {
                 for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
-                    value.setId( ontologyEntryDao.findOrCreate( value ).getId() );
+                    persistOntologyEntry( value );
                 }
             }
 
