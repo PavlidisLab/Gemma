@@ -194,7 +194,6 @@ public class MageLoaderImpl implements Loader {
      */
     private void loadBioMaterial( BioMaterial entity ) {
         for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getCharacteristics() ) {
-            fillInPersistentExternalDatabase( characteristic );
             persistOntologyEntry( characteristic );
         }
 
@@ -230,11 +229,11 @@ public class MageLoaderImpl implements Loader {
      * @param ontologyEntry
      */
     private void persistOntologyEntry( OntologyEntry ontologyEntry ) {
+        fillInPersistentExternalDatabase( ontologyEntry );
         ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
-        // for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() )
-        // {
-        // persistOntologyEntry( associatedOntologyEntry );
-        // }
+        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
+            persistOntologyEntry( associatedOntologyEntry );
+        }
     }
 
     /**
