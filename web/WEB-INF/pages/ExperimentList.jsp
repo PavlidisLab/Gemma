@@ -33,7 +33,7 @@ if( m!=null) {
 		if( desc == null ){ 
 			desc = "<i>n.a.</i>";
 		}
-		Person pi = (Person)ee.getOwner();
+		Person pi = ee.getOwner();
 		String piName = null;
 		if( pi==null){
 			piName = "Unassigned";
@@ -43,7 +43,7 @@ if( m!=null) {
 		}
 		%>
 		<tr>
-			<td bgcolor="white"><a href="ExperimentDetail.htm?experimentID=<%=ee.getId()%>"><%=ee.getName()%></a></td>
+			<td bgcolor="white"><a href="ExperimentDetail.html?experimentID=<%=ee.getId()%>"><%=ee.getName()%></a></td>
 			<td bgcolor="white"><%=desc%></td>
 			<td bgcolor="white"><%=piName%></td>
 		</tr>
@@ -56,7 +56,7 @@ if( m!=null) {
 
 <P>&nbsp;</P>
 
-<form method="POST" name="addform" action="ExperimentList.htm">
+<form method="POST" name="addform" action="ExperimentList.html">
 	<input type="hidden" name="action" id="action" value="add">
 	<b>New Experiment Name:</b><input type="text" name="newName" id="newName">&nbsp;
 	<input type="submit"  value="Add" size="50">
