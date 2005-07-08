@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.BaseCommandController;
 
+import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
@@ -24,7 +25,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
  * 
  * @author daq2101
  * @version $Id$
- * @spring.bean id="experimentController" name="/ExperimentDetail.htm /ExperimentList.htm"
+ * @spring.bean id="experimentController" name="/ExperimentDetail.html /ExperimentList.html"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
@@ -97,6 +98,20 @@ public class ExperimentController extends BaseCommandController {
 			}
 		}
 
+		if( action.equals("setPI" )){
+			ExpressionExperiment ee = this.getExpressionExperimentService().findById(experimentID);
+			String UserName = request.getParameter("username");
+			User u = this.getUserService().getUser(UserName);
+			if(u==null){
+				experimentModel.put("error", "User Not Found");
+			}
+			else{
+				ee.setOwner(u);
+				this.expressionExperimentService.saveExpressionExperiment(ee);	
+			}
+			experimentModel.put("experiments", this.getExpressionExperimentService().findById(experimentID));
+			view = "ExperimentDetail";
+		}
 		if( action.equals("add") ){
 			String eName = request.getParameter("newName");
 			ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -116,16 +131,16 @@ public class ExperimentController extends BaseCommandController {
 		if( action.equals("removeParticipant")){
 			ExpressionExperiment ee = this.getExpressionExperimentService().findById(experimentID);
 			long userID = new Long(request.getParameter("userID")).longValue();
-			User u = null;
-			User uNuke = null;
+			Person p = null;
+			Person pNuke = null;
 			java.util.Collection par = ee.getInvestigators();
 			for(java.util.Iterator iter=par.iterator(); iter.hasNext(); ){
-				u = (User) iter.next();
-				if(u.getId().longValue()==userID)
-					uNuke = u;
+				p = (Person) iter.next();
+				if(p.getId().longValue()==userID)
+					pNuke = p;
 			}
-			if(uNuke!=null){
-				par.remove(u);
+			if(pNuke != null){
+				par.remove(pNuke);
 				this.expressionExperimentService.saveExpressionExperiment(ee);	
 			}
 			experimentModel.put("experiments", this.getExpressionExperimentService().findById(experimentID));
