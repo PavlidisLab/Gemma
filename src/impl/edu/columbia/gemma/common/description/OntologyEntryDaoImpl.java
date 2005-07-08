@@ -16,10 +16,6 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.common.description;
 
 import org.apache.commons.logging.Log;
@@ -28,6 +24,12 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
  * @see edu.columbia.gemma.common.description.OntologyEntry
  */
 public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.OntologyEntryDaoBase {
@@ -74,9 +76,23 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
 
         OntologyEntry newOntologyEntry = find( ontologyEntry );
         if ( newOntologyEntry != null ) {
+            log.debug( "Found existing ontologyEntry: "
+                    + newOntologyEntry
+                    + " externalDatabase="
+                    + newOntologyEntry.getExternalDatabase()
+                    + ", Database Id="
+                    + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
+                            .getId() ) );
             return newOntologyEntry;
         }
-        log.debug( "Creating new ontologyEntry: " + ontologyEntry );
+        log
+                .debug( "Creating new ontologyEntry: "
+                        + ontologyEntry
+                        + " externalDatabase="
+                        + ontologyEntry.getExternalDatabase()
+                        + ", Database Id="
+                        + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
+                                .getId() ) );
         return ( OntologyEntry ) create( ontologyEntry );
     }
 }

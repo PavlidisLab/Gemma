@@ -211,7 +211,7 @@ public class MageLoaderImpl implements Loader {
     }
 
     /**
-     * @param characteristic
+     * @param databaseEntry
      */
     private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
@@ -224,16 +224,23 @@ public class MageLoaderImpl implements Loader {
     }
 
     /**
-     * Need to go to the bottom of the tree and persist them.
+     * @param ontologyEntry
+     */
+    private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
+        this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
+        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
+            fillInPersistentExternalDatabase( associatedOntologyEntry );
+        }
+    }
+
+    /**
+     * Ontology entr
      * 
      * @param ontologyEntry
      */
     private void persistOntologyEntry( OntologyEntry ontologyEntry ) {
         fillInPersistentExternalDatabase( ontologyEntry );
         ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
-        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
-            persistOntologyEntry( associatedOntologyEntry );
-        }
     }
 
     /**
