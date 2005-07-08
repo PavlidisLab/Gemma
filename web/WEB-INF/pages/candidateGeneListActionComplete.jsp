@@ -10,24 +10,24 @@ The purpose of this page is to prevent reloads from re-running a completed actio
 <%
 Map m = (Map)request.getAttribute("model");
 if( m==null){
-	response.sendRedirect("candidateGeneList.htm");
+	response.sendRedirect("candidateGeneList.html");
 }
 else{
 	String target = (String) m.get("target");
 	String listID = request.getParameter("listID");
 	String geneID = request.getParameter("geneID");
 	if( target == null ){
-		response.sendRedirect("candidateGeneList.htm");
+		response.sendRedirect("candidateGeneList.html");
 	}
 	else{
 		if(target.compareTo("candidateGeneListDetail")==0){
-			response.sendRedirect("candidateGeneListDetail.htm?listID=" + listID);
+			response.sendRedirect("candidateGeneListDetail.html?listID=" + listID);
 		}
 		else if( target.compareTo("geneDetail")==0){
 			response.sendRedirect("geneDetail.htm?geneID=" + geneID );
 		}
 		else{
-			response.sendRedirect("candidateGeneList.htm");
+			response.sendRedirect("candidateGeneList.html");
 		}
 	}
 }
