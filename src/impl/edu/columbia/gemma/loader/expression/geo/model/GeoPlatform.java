@@ -30,9 +30,7 @@ import java.util.List;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoPlatform implements Contactable {
-
-    GeoContact contact;
+public class GeoPlatform extends GeoData {
 
     String title;
 
@@ -60,15 +58,9 @@ public class GeoPlatform implements Contactable {
 
     Collection<Integer> pubMedIds;
 
-    String geoAccesssion;
-
     List<String> columnNames;
 
     List<List> platformData;
-
-    public GeoPlatform() {
-        this.contact = new GeoContact();
-    }
 
     /**
      * @return Returns the catalogNumbers.
@@ -149,20 +141,6 @@ public class GeoPlatform implements Contactable {
      */
     public void setDistribution( String distribution ) {
         this.distribution = distribution;
-    }
-
-    /**
-     * @return Returns the geoAccesssion.
-     */
-    public String getGeoAccesssion() {
-        return this.geoAccesssion;
-    }
-
-    /**
-     * @param geoAccesssion The geoAccesssion to set.
-     */
-    public void setGeoAccesssion( String geoAccesssion ) {
-        this.geoAccesssion = geoAccesssion;
     }
 
     /**
@@ -275,15 +253,6 @@ public class GeoPlatform implements Contactable {
      */
     public void setWebLinks( Collection<String> webLinks ) {
         this.webLinks = webLinks;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.expression.geo.model.Contactable#getContact()
-     */
-    public GeoContact getContact() {
-        return this.contact;
     }
 
 }

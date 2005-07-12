@@ -20,8 +20,10 @@ package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <hr>
@@ -31,17 +33,15 @@ import java.util.List;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoSample implements Contactable {
+public class GeoSample extends GeoData {
     String title;
 
-    GeoContact contact;
     List<GeoChannel> channelData;
     String hybProtocol;
     String dataProcessing;
     String scanProtocol;
     String description;
     String platformId; // refers to a platform object.
-    String geoAccession;
 
     // SAGE items.
     String anchor;
@@ -52,6 +52,7 @@ public class GeoSample implements Contactable {
         channelData = new ArrayList<GeoChannel>();
         this.addChannel();
         contact = new GeoContact();
+      
     }
 
     /**
@@ -128,19 +129,7 @@ public class GeoSample implements Contactable {
         this.description = description;
     }
 
-    /**
-     * @return Returns the geoAccession.
-     */
-    public String getGeoAccession() {
-        return this.geoAccession;
-    }
-
-    /**
-     * @param geoAccession The geoAccession to set.
-     */
-    public void setGeoAccession( String geoAccession ) {
-        this.geoAccession = geoAccession;
-    }
+   
 
     /**
      * @return Returns the hybProtocol.
@@ -242,13 +231,5 @@ public class GeoSample implements Contactable {
         this.title = title;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.expression.geo.model.Contactable#getContact()
-     */
-    public GeoContact getContact() {
-        return contact;
-    }
 
 }

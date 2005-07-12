@@ -29,9 +29,8 @@ import java.util.HashSet;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoSeries implements Contactable {
+public class GeoSeries extends GeoData {
 
-    GeoContact contact;
     String seriesTitle;
 
     String summary;
@@ -42,7 +41,6 @@ public class GeoSeries implements Contactable {
     Collection<String> contributers;
     Collection<Variable> variables;
     Collection<String> sampleIds;
-    String geoAccesssion;
 
     public GeoSeries() {
         keywords = new HashSet<String>();
@@ -51,11 +49,6 @@ public class GeoSeries implements Contactable {
         variables = new HashSet<Variable>();
         webLinks = new HashSet<String>();
         contributers = new HashSet<String>();
-        this.contact = new GeoContact();
-    }
-
-    public GeoContact getContact() {
-        return contact;
     }
 
     /**
@@ -70,20 +63,6 @@ public class GeoSeries implements Contactable {
      */
     public void setContributers( Collection<String> contributers ) {
         this.contributers = contributers;
-    }
-
-    /**
-     * @return Returns the geoAccesssion.
-     */
-    public String getGeoAccesssion() {
-        return this.geoAccesssion;
-    }
-
-    /**
-     * @param geoAccesssion The geoAccesssion to set.
-     */
-    public void setGeoAccesssion( String geoAccesssion ) {
-        this.geoAccesssion = geoAccesssion;
     }
 
     /**
