@@ -18,6 +18,215 @@
  */
 package edu.columbia.gemma.loader.expression.geo.model;
 
-public class GeoSeries {
+import java.util.Collection;
+import java.util.HashSet;
+
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class GeoSeries implements Contactable {
+
+    GeoContact contact;
+    String seriesTitle;
+
+    String summary;
+    String overallDesign;
+    Collection<String> keywords;
+    Collection<String> pubmedIds;
+    Collection<String> webLinks;
+    Collection<String> contributers;
+    Collection<Variable> variables;
+    Collection<String> sampleIds;
+    String geoAccesssion;
+
+    public GeoSeries() {
+        keywords = new HashSet<String>();
+        pubmedIds = new HashSet<String>();
+        sampleIds = new HashSet<String>();
+        variables = new HashSet<Variable>();
+        webLinks = new HashSet<String>();
+        contributers = new HashSet<String>();
+        this.contact = new GeoContact();
+    }
+
+    public GeoContact getContact() {
+        return contact;
+    }
+
+    /**
+     * @return Returns the contributers.
+     */
+    public Collection<String> getContributers() {
+        return this.contributers;
+    }
+
+    /**
+     * @param contributers The contributers to set.
+     */
+    public void setContributers( Collection<String> contributers ) {
+        this.contributers = contributers;
+    }
+
+    /**
+     * @return Returns the geoAccesssion.
+     */
+    public String getGeoAccesssion() {
+        return this.geoAccesssion;
+    }
+
+    /**
+     * @param geoAccesssion The geoAccesssion to set.
+     */
+    public void setGeoAccesssion( String geoAccesssion ) {
+        this.geoAccesssion = geoAccesssion;
+    }
+
+    /**
+     * @return Returns the overallDesign.
+     */
+    public String getOverallDesign() {
+        return this.overallDesign;
+    }
+
+    /**
+     * @param overallDesign The overallDesign to set.
+     */
+    public void setOverallDesign( String overallDesign ) {
+        this.overallDesign = overallDesign;
+    }
+
+    /**
+     * @return Returns the pubmedIds.
+     */
+    public Collection<String> getPubmedIds() {
+        return this.pubmedIds;
+    }
+
+    /**
+     * @param pubmedIds The pubmedIds to set.
+     */
+    public void setPubmedIds( Collection<String> pubmedIds ) {
+        this.pubmedIds = pubmedIds;
+    }
+
+    /**
+     * @return Returns the sampleIds.
+     */
+    public Collection<String> getSampleIds() {
+        return this.sampleIds;
+    }
+
+    /**
+     * @param sampleIds The sampleIds to set.
+     */
+    public void setSampleIds( Collection<String> sampleIds ) {
+        this.sampleIds = sampleIds;
+    }
+
+    /**
+     * @return Returns the seriesTitle.
+     */
+    public String getSeriesTitle() {
+        return this.seriesTitle;
+    }
+
+    /**
+     * @param seriesTitle The seriesTitle to set.
+     */
+    public void setSeriesTitle( String seriesTitle ) {
+        this.seriesTitle = seriesTitle;
+    }
+
+    /**
+     * @return Returns the summaries.
+     */
+    public String getSummaries() {
+        return this.summary;
+    }
+
+    /**
+     * @param summaries The summaries to set.
+     */
+    public void setSummaries( String summary ) {
+        this.summary = summary;
+    }
+
+    public void addToSummary( String summary ) {
+        this.summary = this.summary + " " + summary;
+    }
+
+    /**
+     * @return Returns the type.
+     */
+    public Collection<String> getKeywords() {
+        return this.keywords;
+    }
+
+    /**
+     * @param type The type to set.
+     */
+    public void setKeywords( Collection<String> type ) {
+        this.keywords = type;
+    }
+
+    /**
+     * @return Returns the variables.
+     */
+    public Collection<Variable> getVariables() {
+        return this.variables;
+    }
+
+    /**
+     * @param keyword
+     */
+    public void addToKeywords( String keyword ) {
+        this.keywords.add( keyword );
+    }
+
+    public void addToPubmedIds( String id ) {
+        this.pubmedIds.add( id );
+    }
+
+    /**
+     * @param variables The variables to set.
+     */
+    public void setVariables( Collection<Variable> variables ) {
+        this.variables = variables;
+    }
+
+    /**
+     * @return Returns the webLinks.
+     */
+    public Collection<String> getWebLinks() {
+        return this.webLinks;
+    }
+
+    /**
+     * @param webLinks The webLinks to set.
+     */
+    public void setWebLinks( Collection<String> webLinks ) {
+        this.webLinks = webLinks;
+    }
+
+    /**
+     * @param contact The contact to set.
+     */
+    public void setContact( GeoContact contact ) {
+        this.contact = contact;
+    }
+
+}
+
+class Variable {
+
+    Collection<String> descriptions;
+    Collection<String> variableSampleList;
+    Collection<String> repeats;
+    Collection<String> repeatsSampleList;
 
 }
