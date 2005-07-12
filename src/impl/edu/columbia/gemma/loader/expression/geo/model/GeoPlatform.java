@@ -58,8 +58,6 @@ public class GeoPlatform extends GeoData {
 
     Collection<Integer> pubMedIds;
 
-    List<String> columnNames;
-
     List<List> platformData;
 
     /**
@@ -92,20 +90,6 @@ public class GeoPlatform extends GeoData {
      */
     public void setCoating( String coating ) {
         this.coating = coating;
-    }
-
-    /**
-     * @return Returns the columnNames.
-     */
-    public List<String> getColumnNames() {
-        return this.columnNames;
-    }
-
-    /**
-     * @param columnNames The columnNames to set.
-     */
-    public void setColumnNames( List<String> columnNames ) {
-        this.columnNames = columnNames;
     }
 
     /**

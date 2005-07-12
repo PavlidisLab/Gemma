@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -16,8 +18,8 @@ import org.apache.commons.logging.LogFactory;
 
 import baseCode.util.StringUtil;
 
-import edu.columbia.gemma.loader.expression.geo.model.Contactable;
 import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
+import edu.columbia.gemma.loader.expression.geo.model.GeoData;
 import edu.columbia.gemma.loader.expression.geo.model.GeoPlatform;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
@@ -46,9 +48,22 @@ public class GeoFamilyParser {
     private Map<String, GeoPlatform> platformMap;
     private Map<String, GeoSeries> seriesMap;
 
+    // TODO: Move all of these into the respective objects.
     private Map<String, String> platformColumns;
     private Map<String, String> sampleColumns;
     private Map<String, String> seriesColumns;
+
+    public Map getSamples() {
+        return this.sampleMap;
+    }
+
+    public Map getPlatforms() {
+        return this.platformMap;
+    }
+
+    public Map getSeries() {
+        return this.seriesMap;
+    }
 
     public GeoFamilyParser() {
         sampleMap = new HashMap<String, GeoSample>();
@@ -56,7 +71,6 @@ public class GeoFamilyParser {
         seriesMap = new HashMap<String, GeoSeries>();
         platformColumns = new HashMap<String, String>();
         sampleColumns = new HashMap<String, String>();
-        seriesColumns = new HashMap<String, String>();
     }
 
     /**
@@ -99,6 +113,7 @@ public class GeoFamilyParser {
                 String value = extractValue( line );
                 currentSampleAccession = value;
                 sampleMap.put( value, new GeoSample() );
+                log.debug( "In sample" );
             } else if ( startsWithIgnoreCase( line, "^PLATFORM" ) ) {
                 inPlatform = true;
                 inDatabase = false;
@@ -107,6 +122,7 @@ public class GeoFamilyParser {
                 String value = extractValue( line );
                 currentPlatformAccession = value;
                 platformMap.put( value, new GeoPlatform() );
+                log.debug( "In platform" );
             } else if ( startsWithIgnoreCase( line, "^SERIES" ) ) {
                 inSeries = true;
                 inPlatform = false;
@@ -115,6 +131,7 @@ public class GeoFamilyParser {
                 String value = extractValue( line );
                 currentSeriesAccession = value;
                 seriesMap.put( value, new GeoSeries() );
+                log.debug( "In series" );
             } else {
                 throw new IllegalStateException( "Unknown flag: " + line );
             }
@@ -318,11 +335,12 @@ public class GeoFamilyParser {
             }
         } else if ( line.startsWith( "#" ) ) {
             if ( inPlatform ) {
-                extractKeyValue( platformColumns, line );
+                platformMap.get( currentPlatformAccession ).getColumnNames().add(
+                        extractKeyValue( platformColumns, line ) );
             } else if ( inSample ) {
-                extractKeyValue( sampleColumns, line );
+                sampleMap.get( currentSampleAccession ).getColumnNames().add( extractKeyValue( sampleColumns, line ) );
             } else if ( inSeries ) {
-                extractKeyValue( seriesColumns, line );
+                seriesMap.get( currentSeriesAccession ).getColumnNames().add( extractKeyValue( seriesColumns, line ) );
             } else {
                 throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
             }
@@ -344,18 +362,22 @@ public class GeoFamilyParser {
      * @param map
      * @param line
      */
-    private void extractKeyValue( Map<String, String> map, String line ) {
+    private String extractKeyValue( Map<String, String> map, String line ) {
         if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
 
         String fixed = line.substring( line.indexOf( '#' ) + 1 );
 
-        String[] tokens = fixed.split( "=" );
-        assert tokens.length == 2;
+        String[] tokens = fixed.split( "=", 2 );
+        if ( tokens.length != 2 ) {
+            throw new IllegalArgumentException( "Wrong type of line: " + line );
+        }
         String key = tokens[0];
         String value = tokens[1];
         key = StringUtils.strip( key );
         value = StringUtils.strip( key );
+        log.debug( "Extracted key: " + key );
         map.put( key, value );
+        return key;
     }
 
     /**
@@ -365,7 +387,7 @@ public class GeoFamilyParser {
      * @param value
      */
     private void sampleChannelAddTo( String sampleAccession, String property, int channel, String value ) {
-        GeoSample sample = sampleMap.get( sampleAccession ); // TODO Auto-generated method stub
+        GeoSample sample = sampleMap.get( sampleAccession );
         this.addTo( sample.getChannel( channel ), property, value );
     }
 
@@ -376,7 +398,7 @@ public class GeoFamilyParser {
      * @param value
      */
     private void sampleChannelSet( String sampleAccession, String property, int channel, String value ) {
-        GeoSample sample = sampleMap.get( sampleAccession ); // TODO Auto-generated method stub
+        GeoSample sample = sampleMap.get( sampleAccession );
         try {
             BeanUtils.setProperty( sample.getChannel( channel ), property, value );
         } catch ( IllegalAccessException e ) {
@@ -406,14 +428,16 @@ public class GeoFamilyParser {
      */
     private void parsePlatformLine( String line ) {
         String[] tokens = line.split( FIELD_DELIM );
+
+        Map<String, List<String>> platformDataMap = platformMap.get( currentPlatformAccession ).getData();
+
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
-            try {
-                double val = Double.parseDouble( token );
-            } catch ( NumberFormatException e ) {
-
+            String columnName = platformMap.get( currentPlatformAccession ).getColumnNames().get( i );
+            if ( !platformDataMap.containsKey( columnName ) ) {
+                platformDataMap.put( columnName, new ArrayList<String>() );
             }
-
+            platformDataMap.get( columnName ).add( token );
         }
     }
 
@@ -422,13 +446,16 @@ public class GeoFamilyParser {
      */
     private void parseSampleDataLine( String line ) {
         String[] tokens = line.split( FIELD_DELIM );
+
+        Map<String, List<String>> sampleDataMap = sampleMap.get( currentSampleAccession ).getData();
+
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
-            try {
-                double val = Double.parseDouble( token );
-            } catch ( NumberFormatException e ) {
-                
+            String columnName = sampleMap.get( currentSampleAccession ).getColumnNames().get( i );
+            if ( !sampleDataMap.containsKey( columnName ) ) {
+                sampleDataMap.put( columnName, new ArrayList<String>() );
             }
+            sampleDataMap.get( columnName ).add( token );
         }
     }
 
@@ -437,13 +464,16 @@ public class GeoFamilyParser {
      */
     private void parseSeriesDataLine( String line ) {
         String[] tokens = line.split( FIELD_DELIM );
+
+        Map<String, List<String>> seriesDataMap = seriesMap.get( currentSeriesAccession ).getData();
+
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
-            try {
-                double val = Double.parseDouble( token );
-            } catch ( NumberFormatException e ) {
-                
+            String columnName = seriesMap.get( currentSeriesAccession ).getColumnNames().get( i );
+            if ( !seriesDataMap.containsKey( columnName ) ) {
+                seriesDataMap.put( columnName, new ArrayList<String>() );
             }
+            seriesDataMap.get( columnName ).add( token );
         }
     }
 
@@ -577,8 +607,8 @@ public class GeoFamilyParser {
     private void contactSet( Object object, String property, Object value ) {
         if ( object instanceof GeoContact ) {
             contactSet( ( GeoContact ) object, property, value );
-        } else if ( object instanceof Contactable ) {
-            GeoContact contact = ( ( Contactable ) object ).getContact();
+        } else if ( object instanceof GeoData ) {
+            GeoContact contact = ( ( GeoData ) object ).getContact();
             contactSet( contact, property, value );
         }
     }
