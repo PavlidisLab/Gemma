@@ -42,5 +42,11 @@ public class GeoFamilyParserTest extends TestCase {
         parser.parse( is );
         assertEquals( 1, parser.getSamples().size() );
     }
+    
+   public void testParseDataset() throws Exception {
+        is = this.getClass().getResourceAsStream( "/data/geo/GDS100.soft.txt" );
+        parser.parse( is );
+        assertEquals( 8, parser.getSamples().size() );
+    }
 
 }

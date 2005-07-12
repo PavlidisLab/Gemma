@@ -39,7 +39,7 @@ public class GeoSeries extends GeoData {
     Collection<String> pubmedIds;
     Collection<String> webLinks;
     Collection<String> contributers;
-    Collection<Variable> variables;
+    Collection<GeoVariable> variables;
     Collection<String> sampleIds;
 
     Collection<GeoSample> samples;
@@ -48,7 +48,7 @@ public class GeoSeries extends GeoData {
         keywords = new HashSet<String>();
         pubmedIds = new HashSet<String>();
         sampleIds = new HashSet<String>();
-        variables = new HashSet<Variable>();
+        variables = new HashSet<GeoVariable>();
         webLinks = new HashSet<String>();
         contributers = new HashSet<String>();
         samples = new HashSet<GeoSample>();
@@ -167,7 +167,7 @@ public class GeoSeries extends GeoData {
     /**
      * @return Returns the variables.
      */
-    public Collection<Variable> getVariables() {
+    public Collection<GeoVariable> getVariables() {
         return this.variables;
     }
 
@@ -182,11 +182,9 @@ public class GeoSeries extends GeoData {
         this.pubmedIds.add( id );
     }
 
-    /**
-     * @param variables The variables to set.
-     */
-    public void setVariables( Collection<Variable> variables ) {
-        this.variables = variables;
+    
+    public void addToVariables(GeoVariable variable) {
+        this.variables.add(variable);
     }
 
     /**
@@ -212,11 +210,3 @@ public class GeoSeries extends GeoData {
 
 }
 
-class Variable {
-
-    Collection<String> descriptions;
-    Collection<String> variableSampleList;
-    Collection<String> repeats;
-    Collection<String> repeatsSampleList;
-
-}
