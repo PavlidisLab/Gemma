@@ -71,6 +71,7 @@ public class GeoFamilyParser {
         seriesMap = new HashMap<String, GeoSeries>();
         platformColumns = new HashMap<String, String>();
         sampleColumns = new HashMap<String, String>();
+        seriesColumns = new HashMap<String, String>();
     }
 
     /**
@@ -203,6 +204,9 @@ public class GeoFamilyParser {
                     sample.getChannel( channel ).addCharacteristic( value );
                 } else if ( startsWithIgnoreCase( line, "!Sample_platform_id" ) ) {
                     sampleSet( currentSampleAccession, "id", value );
+                    if ( platformMap.containsKey( value ) ) {
+                        sampleMap.get( currentSampleAccession ).addPlatform( platformMap.get( value ) );
+                    }
                 } else if ( startsWithIgnoreCase( line, "!Sample_contact_name" ) ) {
                     sampleContactSet( currentSampleAccession, "name", value );
                 } else if ( startsWithIgnoreCase( line, "!Sample_contact_email" ) ) {
@@ -224,6 +228,9 @@ public class GeoFamilyParser {
                 } else if ( startsWithIgnoreCase( line, "!Sample_contact_fax" ) ) {
                     sampleContactSet( currentSeriesAccession, "fax", value );
                 } else if ( startsWithIgnoreCase( line, "!Sample_series_id" ) ) {
+                    if ( seriesMap.containsKey( value ) ) {
+                        this.seriesMap.get( value ).addSample( this.sampleMap.get( currentSampleAccession ) );
+                    }
                     seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
                 } else {
                     throw new IllegalStateException( "Unknown flag: " + line );
@@ -248,6 +255,9 @@ public class GeoFamilyParser {
                     seriesMap.get( currentSeriesAccession ).getContributers().add( value );
                 } else if ( startsWithIgnoreCase( line, "!Series_sample_id" ) ) {
                     seriesMap.get( currentSeriesAccession ).getSampleIds().add( value );
+                    if ( this.sampleMap.containsKey( value ) ) {
+                        this.seriesMap.get( currentSeriesAccession ).addSample( this.sampleMap.get( value ) );
+                    }
                 } else if ( startsWithIgnoreCase( line, "!Series_contact_name" ) ) {
                     seriesContactSet( currentSeriesAccession, "name", value );
                 } else if ( startsWithIgnoreCase( line, "!Series_contact_email" ) ) {

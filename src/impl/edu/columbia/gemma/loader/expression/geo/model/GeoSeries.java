@@ -42,6 +42,8 @@ public class GeoSeries extends GeoData {
     Collection<Variable> variables;
     Collection<String> sampleIds;
 
+    Collection<GeoSample> samples;
+
     public GeoSeries() {
         keywords = new HashSet<String>();
         pubmedIds = new HashSet<String>();
@@ -49,6 +51,15 @@ public class GeoSeries extends GeoData {
         variables = new HashSet<Variable>();
         webLinks = new HashSet<String>();
         contributers = new HashSet<String>();
+        samples = new HashSet<GeoSample>();
+    }
+
+    public void addSample( GeoSample sample ) {
+        this.samples.add( sample );
+    }
+
+    public Collection<GeoSample> getSamples() {
+        return this.samples;
     }
 
     /**

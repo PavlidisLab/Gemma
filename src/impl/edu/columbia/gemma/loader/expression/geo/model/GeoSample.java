@@ -43,6 +43,8 @@ public class GeoSample extends GeoData {
     String description;
     String platformId; // refers to a platform object.
 
+    Collection<GeoPlatform> platforms;
+    
     // SAGE items.
     String anchor;
     int tagCount;
@@ -52,7 +54,16 @@ public class GeoSample extends GeoData {
         channelData = new ArrayList<GeoChannel>();
         this.addChannel();
         contact = new GeoContact();
-      
+        platforms = new HashSet<GeoPlatform>();
+    }
+    
+    
+    public void addPlatform(GeoPlatform platform) {
+        this.platforms.add(platform);
+    }
+    
+    public Collection<GeoPlatform> getPlatforms() {
+        return this.platforms;
     }
 
     /**
