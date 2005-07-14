@@ -10,7 +10,15 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 <body bgcolor="#ffffff">
-
+<script language="javascript">
+	function deleteExperiment(id){
+		if( confirm("CONFIRM: Delete this experiment permanently?") ){
+			document.addform.action.value="delete";
+			document.addform.experimentID.value=id;
+			document.addform.submit();
+		}
+	}
+</script>
 <content tag="heading">Experiments</content>
 
 
@@ -19,6 +27,7 @@
 	<td width="150"><b>Name</b></td>
 	<td><b>Description</b></td>
 	<td><b>Principle Investigator</b></td>
+	<td><b>Action</b></td>
 </tr>
 <%
 
@@ -46,6 +55,7 @@ if( m!=null) {
 			<td bgcolor="white"><a href="ExperimentDetail.html?experimentID=<%=ee.getId()%>"><%=ee.getName()%></a></td>
 			<td bgcolor="white"><%=desc%></td>
 			<td bgcolor="white"><%=piName%></td>
+			<td bgcolor="white"><a href="javascript:deleteExperiment(<%=ee.getId()%>)">del</a></td>
 		</tr>
 		<%
 	}
@@ -58,6 +68,7 @@ if( m!=null) {
 
 <form method="POST" name="addform" action="ExperimentList.html">
 	<input type="hidden" name="action" id="action" value="add">
+	<input type="hidden" name="experimentID" id="experimentID" value="">
 	<b>New Experiment Name:</b><input type="text" name="newName" id="newName">&nbsp;
 	<input type="submit"  value="Add" size="50">
 </form>

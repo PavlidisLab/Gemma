@@ -8,6 +8,9 @@
 <%@ page import="edu.columbia.gemma.expression.experiment.ExperimentalDesign" %>
 <%@ page import="edu.columbia.gemma.expression.experiment.ExperimentalFactor" %>
 <%@ page import="edu.columbia.gemma.expression.experiment.FactorValue" %>
+<%@ page import="edu.columbia.gemma.expression.bioAssay.BioAssay" %>
+<%@ page import="edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector" %>
+<%@ page import="edu.columbia.gemma.expression.arrayDesign.ArrayDesign" %>
 <html>
 <head>
 	<title>Experiment Detail</title>
@@ -32,7 +35,7 @@ Map m = (Map)request.getAttribute("model");
 
 if( m!=null) {
 	ee=(ExpressionExperiment) m.get("experiments");
-	
+
 	if(ee==null){
 		out.print("<B>ERROR: No Experiment with that ID was found.</B><P>&nbsp</P>");
 	}
@@ -65,10 +68,22 @@ if( m!=null) {
 	
 		<tr>
 			<td bgcolor="white">Name:</td> 
-			<td bgcolor="white">
+			<td width="80%" bgcolor="white">
 				<input size="68" type="text" name="eName" id="eName" value="<%=ee.getName()%>">
 			</td>
 		</tr>
+		<tr>
+			<td bgcolor="white">Release Date:</td> 
+			<td bgcolor="white">
+				TODO: Attribute?
+			</td>
+		</tr>
+		<tr>
+			<td bgcolor="white">Submission Date:</td> 
+			<td bgcolor="white">
+				TODO: Attribute?
+			</td>
+		</tr>		
 		<tr>
 			<td bgcolor="white">Provider URL:</td> 
 			<td bgcolor="white"><%
@@ -112,19 +127,25 @@ if( m!=null) {
 			<form name="dFormU" id="dFormU" method="POST" action="ExperimentDetail.html">
 			<input type="hidden" name="action" id="action" value="setPI">
 			<input type="hidden" name="experimentID" id="experimentID" value="<%=ee.getId()%>">
-			<td valign="top">Principle Investigator:</td>
-			<td>
-				<%=ee.getOwner().getFullName()%><br>Change by Username: <input type="text" name="username" id="username"> <input type="submit" value="update">
+			<td valign="top">Principle Investigator:<BR>
+			<%=ee.getOwner().getFullName()%>
+			</td>
+			<td valign="top">
+				<input type="text" name="username" id="username"> <input type="submit" value="update">
 			</td>
 		</tr>
 		</form>
+		<tr>
+			<td>Additional Investigators:</td>
+			<td>&nbsp;</td>
+		</tr>
 			<%
 			for(Iterator iter=ee.getInvestigators().iterator(); iter.hasNext(); ){
 				Person p = (Person) iter.next();
 				%>
 				<tr>
-					<td><%=p.getFullName()%></td>
-					<td><a href="javascript:doRemove(<%=p.getId()%>)">remove</a></td>
+					<td><%=p.getFullName()%>&nbsp;&nbsp;&nbsp;(<a href="javascript:doRemove(<%=p.getId()%>)">remove</a>)</td>
+					<td></td>
 				</tr>
 			<%
 			}
@@ -134,8 +155,8 @@ if( m!=null) {
 			<input type="hidden" name="action" id="action" value="addParticipant">
 			<input type="hidden" name="experimentID" id="experimentID" value="<%=ee.getId()%>">
 			<td align="right"></td>
-			<td>
-				Add by Username: <input type="text" name="username" id="username"> <input type="submit" value="add">
+			<td valign="top">
+				<input type="text" name="username" id="username"> <input type="submit" value="add">
 			</td>
 		</tr>
 		</form>
@@ -212,16 +233,17 @@ if( m!=null) {
 										else
 											factorValue = fvValue.getValue();
 										if(fv.getMeasurement()==null)
-											factorMeasurement="Unknown Measurement";
+											factorMeasurement="";
 										else
 											factorMeasurement = fv.getMeasurement().getValue();
 										factorList = factorList + fv.getName() + " (" + factorValue + ") " + factorMeasurement + "<br>";
 									}						
 								}
 							}
+							
 							%>
 							<table>
-								<tr><td valign='top'><%=categoryName%>:</td>
+								<tr><td valign='top'><b><%=categoryName%></b>:</td>
 								<tr><td valign='top'><%=factorList%></td></tr>
 							</table>
 						</td>
@@ -233,7 +255,109 @@ if( m!=null) {
 			%>
 			
 		</tr>	
+		<tr>
+			<td colspan="2" bgcolor="#eeeeee">
+				<B>Quantitation</B>
+			</td>
+		</tr>
+		
+		<%
+		
+		if( ee.getAnalyses().size()==0) {
+			out.print("<tr><td colspan='2'>No analysis for this experiment</td></tr>");
+		}
+		else{
+			out.print("<tr><td colspan='2'>"+ ee.getAnalyses().size()+ "</td></tr>");
+		}
+		%>
+		
+		<tr>
+			<td colspan="2" bgcolor="#eeeeee">
+				<B>DesignElement Data Vectors</B>
+			</td>
+		</tr>
+		<%
+		
+		if( ee.getDesignElementDataVectors().size()==0){
+			out.print("<tr><td colspan='2'>No DesignElementDataVectors for this experiment</td></tr>");
+		}
+		else{
+			for(Iterator iter=ee.getDesignElementDataVectors().iterator(); iter.hasNext(); ){
+				DesignElementDataVector ddv = (DesignElementDataVector) iter.next();
+				out.print( "<tr><td>" + ddv.getDesignElement().getName()  + "</td><td>");
+				out.print ("Quant: " + ddv.getQuantitationType().getName() + "</td></tr>");
+			}	
+		}
+		%>
+		<tr>
+			<td colspan="2" bgcolor="#eeeeee">
+				<B>Bio Assays</B>
+			</td>
+		</tr>
+		
+		<%
+		if( ee.getBioAssays()==null ){
+			out.print("<tr><td colspan='2'>No BioAssays for this experiment</td></tr>");
+		}
+		else{
+			for(Iterator iter=ee.getBioAssays().iterator(); iter.hasNext(); ){
 				
+				BioAssay ba = (BioAssay) iter.next();
+				
+				out.print( "<tr><td valign='top'>" + ba.getName() + "</td><td>");
+				String baAcc="(No Accession)";
+				String baDesc="(No Description)";
+				if( ba.getAccession() != null ){
+					baAcc = ba.getAccession().getAccession();
+				}
+				out.print(baAcc + " " + baDesc );
+				if( ba.getBioAssayFactorValues().size()==0){
+					out.print("No factor values<BR>");
+				}
+				else{
+					out.print("Factor values:<BR>" );
+					for(Iterator iterF=ba.getBioAssayFactorValues().iterator(); iterF.hasNext(); ){
+						FactorValue fv = (FactorValue) iterF.next();
+						String factorValue="Unknown Value";
+						String factorMeasurement="";
+						if(fv.getValue() != null){
+							factorValue = fv.getValue().getValue();
+						}
+						if( fv.getMeasurement()!=null ){
+							factorMeasurement = "(" + fv.getMeasurement().getValue() + ")";
+						}
+						out.print( fv.getName() + ": " + factorValue + " " + factorMeasurement );
+						
+					}
+				}
+				if( ba.getArrayDesignsUsed().size()==0){
+					out.print("No array designs<BR>");
+				}
+				else{
+					out.print("<b>Array designs</b>:<BR>" );
+					for(Iterator iterD=ba.getArrayDesignsUsed().iterator(); iterD.hasNext(); ){
+						ArrayDesign ad = (ArrayDesign) iterD.next();
+						String adDesc="(no description)";
+						String adName = "(No name)";
+						if( ad.getDescription() != null )
+							adDesc = ad.getDescription();
+						if( ad.getName() != null )
+							adName = ad.getName();
+						
+						out.print( adName + " (" + ad.getDesignElements().size() + " elements)<br>" + adDesc);
+						if( ad.getDesignProvider() == null )
+							out.print("Unknown provider");
+						else
+							out.print(ad.getDesignProvider().getName());
+						
+					}
+				}
+				out.print("</td></tr>");
+				out.print("<tr><td colspan='2'><hr></td></tr>");
+			}
+				
+		}
+		%>
 		</table>
 	<%	
 	}
