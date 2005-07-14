@@ -43,14 +43,15 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( OntologyEntry.class );
 
+            /* FIXME Warning: unfortunately, the accession numbers are not unique for MGED! So we aren't using them. */
             /* go by accession/database if present, otherwise by category/value */
-            if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
-                queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).add(
-                        Restrictions.eq( "externalDatabase", ontologyEntry.getExternalDatabase() ) );
-            } else {
-                queryObject.add( Restrictions.eq( "category", ontologyEntry.getCategory() ) ).add(
-                        Restrictions.eq( "value", ontologyEntry.getValue() ) );
-            }
+//            if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
+//                queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).add(
+//                        Restrictions.eq( "externalDatabase", ontologyEntry.getExternalDatabase() ) );
+//            } else {
+                queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
+                        Restrictions.ilike( "value", ontologyEntry.getValue() ) );
+            //}
 
             java.util.List results = queryObject.list();
             Object result = null;
