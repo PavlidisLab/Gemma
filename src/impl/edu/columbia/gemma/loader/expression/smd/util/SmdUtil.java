@@ -27,7 +27,8 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
+
+import baseCode.util.NetUtils;
 
 /**
  * <hr>
@@ -86,19 +87,7 @@ public class SmdUtil {
      * @throws IOException
      */
     public static FTPClient connect( int mode ) throws SocketException, IOException {
-        FTPClient f = new FTPClient();
-
-        boolean success = false;
-        f.connect( host );
-        int reply = f.getReplyCode();
-        if ( FTPReply.isPositiveCompletion( reply ) ) success = f.login( login, password );
-        if ( !success ) {
-            f.disconnect();
-            throw new IOException( "Couldn't connect to " + host );
-        }
-        f.setFileType( mode );
-        log.info( "Connected to " + host );
-        return f;
+        return NetUtils.connect( mode, host, login, password );
     }
 
     /**
