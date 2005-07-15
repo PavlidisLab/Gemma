@@ -24,7 +24,7 @@ else{
 			response.sendRedirect("candidateGeneListDetail.html?listID=" + listID);
 		}
 		else if( target.compareTo("geneDetail")==0){
-			response.sendRedirect("geneDetail.htm?geneID=" + geneID );
+			response.sendRedirect("geneDetail.html?geneID=" + geneID );
 		}
 		else{
 			response.sendRedirect("candidateGeneList.html");
