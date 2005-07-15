@@ -25,7 +25,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
  * 
  * @author daq2101
  * @version $Id$
- * @spring.bean id="geneController" name="/geneDetail.htm"
+ * @spring.bean id="geneController" name="/geneDetail.html"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  */
