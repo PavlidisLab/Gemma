@@ -92,7 +92,7 @@
 				<property name="jdbcDataSourceClass">
 					org.apache.commons.dbcp.BasicDataSource
 				</property>
-				<property name="transactionManager">
+				<property name="localTransactionManager">
 					org.springframework.orm.hibernate3.HibernateTransactionManager
 				</property>
 				<property name="sessionFactory">
