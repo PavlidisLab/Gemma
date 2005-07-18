@@ -38,16 +38,20 @@
     <tr>
     	<td></td>
     	<td class="buttonBar">
+    	<%--
             <input type="submit" class="button" name="save" 
                 onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
-            
+        --%>
+        <input type="submit" class="button" name="save" 
+                onclick="bCancel=false;this.form._eventId.value='submit'" value="<fmt:message key="button.save"/>" />
+                    
         <c:if test="${param.from == 'list'}">
             <input type="submit" class="button" name="delete"
                 onclick="bCancel=true;return confirmDelete('arrayDesign')" 
                 value="<fmt:message key="button.delete"/>" />
         </c:if>
         
-            <input type="submit" class="button" name="cancel" onclick="bCancel=true"
+            <input type="submit" class="button" name="cancel" onclick="bCancel=true;this.form._eventId.value='cancel'"
                 value="<fmt:message key="button.cancel"/>" />
         </td>
     </tr>
@@ -89,11 +93,20 @@
         <th>
             <Gemma:label key="arrayDesign.numberOfFeatures"/>
         </th>
-        <td>
-            <spring:bind path="arrayDesign.numberOfFeatures">
-            <input type="text" name="numberOfFeatures" value="<c:out value="${status.value}"/>" id="numberOfFeatures"/>
-            <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
-            </spring:bind>
+        <td><%--
+            <c:when test="${empty arrayDesign.numberOfFeatures}">
+                <input type="text" name="numberOfFeatures" value="<c:out value="${status.value}"/>" id="numberOfFeatures"/>
+                <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
+            </c:when>
+            --%>
+            <%-- 
+            <c:otherwise>
+            --%>
+                <c:out value="${arrayDesign.numberOfFeatures}"/>
+            <%--    
+                <input type="hidden" name="numberOfFeatures" value="<c:out value="${status.value}"/>" id="numberOfFeatures"/>
+            </c:otherwise>
+            --%>
         </td>
     </tr>
     
