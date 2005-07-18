@@ -229,6 +229,13 @@
 	class="org.springframework.web.flow.mvc.FlowController">
 </bean>
 
+<bean id="flowExecutionManager" 
+	class="org.springframework.web.flow.execution.servlet.ServletFlowExecutionManager">
+	<property name="storage">
+		<bean class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage"/>
+	</property>
+</bean>
+
 <!-- Parent Flow (search flow) -->
 <bean id="pubMedSearchController" name="/pubMedSearch.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
@@ -347,6 +354,7 @@
 	class="org.springframework.web.flow.mvc.FlowController">
 	<property name="cacheSeconds" value="5" />
 	<property name="flow" ref="arrayDesign.Search" />
+	<property name="flowExecutionManager" ref="flowExecutionManager"/>
 </bean>
 
 <bean id="arrayDesign.Search"
@@ -384,6 +392,7 @@
 <bean id="arrayDesignDetailController" name="/arrayDesignDetail.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
 	<property name="flow" ref="arrayDesign.Detail" />
+	<property name="flowExecutionManager" ref="flowExecutionManager"/>
 </bean>
 
 <bean id="arrayDesign.Detail"
@@ -403,6 +412,7 @@
 <bean id="arrayDesignEditController" name="/arrayDesignEdit.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
 	<property name="flow" ref="arrayDesign.Edit" />
+	<property name="flowExecutionManager" ref="flowExecutionManager"/>
 </bean>
 
 <bean id="arrayDesign.Edit"
