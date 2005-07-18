@@ -33,13 +33,24 @@ public class ArrayDesignEditAction extends FormAction {
         setFormObjectClass( ArrayDesignImpl.class );
         setFormObjectScope( ScopeType.FLOW );
     }
-
+    
+    /**
+     * flowScope - attributes in the flowScope are available for the duration of the flow
+     * requestScope - attributes in the requestScope are available for the duration of the request
+     * sourceEvent - this is the event that originated the request.  SourceEvent can contain parameters provided
+     * as input by the client.
+     * 
+     * @param context
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     */
     public Object createFormObject( RequestContext context ) throws InstantiationException, IllegalAccessException {
         log.info( "originating event: " + context.getSourceEvent() );
         log.info( "flow scope: " + context.getFlowScope() );
         log.info( "request scope: " + context.getRequestScope() );
 
-        String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
+        // String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
+        String name = ( String ) context.getSourceEvent().getAttribute( "name" );
 
         // ad = ( ArrayDesignImpl ) super.createFormObject( context );
         ad = getArrayDesignService().findArrayDesignByName( name );
@@ -73,8 +84,10 @@ public class ArrayDesignEditAction extends FormAction {
         log.info( "flow scope: " + context.getFlowScope().getAttributeMap() );
         log.info( "request scope: " + context.getRequestScope().getAttributeMap() );
 
-        ad.setName( ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class ) );
-        ad.setDescription( ( String ) context.getRequestScope().getAttribute( "description", String.class ) );
+        ad.setName( ( String ) context.getSourceEvent().getAttribute( "name" ) );
+        ad.setDescription( ( String ) context.getSourceEvent().getAttribute( "description" ) );
+        // ad.setName( ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class ) );
+        // ad.setDescription( ( String ) context.getRequestScope().getAttribute( "description", String.class ) );
 
         // ad.setNumberOfFeatures( Integer.parseInt( ( String ) context.getRequestScope().getAttribute(
         // "numberOfFeatures",
