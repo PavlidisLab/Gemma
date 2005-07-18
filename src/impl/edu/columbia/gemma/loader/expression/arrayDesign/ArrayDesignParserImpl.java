@@ -106,6 +106,9 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements Parser 
             Collection<Contact> contacts = getContacts();
 
             for ( Contact contact : contacts ) {
+
+                String name = contact.getName();
+                if ( name == null ) break;
                 if ( contact.getName().equals( c.getName() ) ) {
                     log.info( "manufacturer: " + contact.getName() + " already exists" );
                     return contact;
