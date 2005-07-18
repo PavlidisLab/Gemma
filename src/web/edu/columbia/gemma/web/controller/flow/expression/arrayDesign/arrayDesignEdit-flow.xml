@@ -24,7 +24,9 @@
 
 	<view-state id="arrayDesign.Edit.view"
 		view="arrayDesign.Edit.view">
-		<transition on="submit" to="save" />
+		<transition on="submit" to="save" >
+			<action bean="arrayDesign.Edit.formAction" method="bindAndValidate"/>
+		</transition>	
 		<transition on="cancel" to="finish" />
 	</view-state>
 	
