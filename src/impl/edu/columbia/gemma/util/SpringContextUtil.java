@@ -74,7 +74,7 @@ public class SpringContextUtil {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "applicationContext-dataSource.xml", "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
+        String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
                 servletContext + "-servlet.xml"};
         return paths;
     }
