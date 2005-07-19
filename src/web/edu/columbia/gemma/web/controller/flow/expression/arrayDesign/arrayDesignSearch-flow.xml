@@ -30,14 +30,9 @@
 	<view-state id="arrayDesign.results.view"
 		view="arrayDesign.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view" />
-		<transition on="select" to="arrayDesign.set" />
-	</view-state>
-
-	<action-state id="arrayDesign.set">
-		<action bean="arrayDesign.Search.id.set" />
-		<transition on="success" to="arrayDesign.Detail" />
+		<transition on="select" to="arrayDesign.Detail" />
 		<transition on="error" to="error" />
-	</action-state>
+	</view-state>
 
 	<subflow-state id="arrayDesign.Detail" flow="arrayDesign.Detail">
 		<attribute-mapper>
