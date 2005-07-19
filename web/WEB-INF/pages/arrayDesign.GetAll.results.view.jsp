@@ -40,7 +40,7 @@
             %>
 			<TR>
 				<TD><A
-					href="arrayDesignSearch.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_eventId=select&name=<%=arrayDesign.getName() %>">
+					href="search.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_eventId=select&name=<%=arrayDesign.getName() %>">
 				<%=arrayDesign.getName() %> </A></TD>
 				<TD><%=arrayDesign.getDescription() %></TD>
 			</TR>

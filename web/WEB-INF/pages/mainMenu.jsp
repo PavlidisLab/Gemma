@@ -9,7 +9,7 @@
 
 <ul class="glassList">
 	<li>
-        <a href="<c:url value="/arrayDesignSearch.htm?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
+        <a href="<c:url value="/search.htm?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
     </li>
 	<li>
         <a href="<c:url value="/ExperimentList.html"/>">Show Expression Experiments</a>

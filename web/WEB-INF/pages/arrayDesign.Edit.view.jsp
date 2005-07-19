@@ -12,7 +12,7 @@
 	</c:if>
 </spring:bind>
 
-<form method="post" action="<c:url value="/arrayDesignEdit.htm"/>"
+<form method="post" action="<c:url value="/search.htm"/>"
 	id="arrayDesignForm" onsubmit="return onFormSubmit(this)">
 	<input type="hidden" name="_flowExecutionId" value="<c:out value="${flowExecutionId}"/>">  
 	<input type="hidden" name="_eventId" value="submit"> 

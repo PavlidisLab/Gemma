@@ -19,7 +19,7 @@
 	</SCRIPT> 
 	<HEAD></HEAD>
 	<BODY>
-		<FORM name="backForm" action="arrayDesignDetail.htm">
+		<FORM name="backForm" action="">
 				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
 				<input type="hidden" name="_eventId" value="">
 				<input type="hidden" name="name" value="<%=request.getAttribute("name") %>">
