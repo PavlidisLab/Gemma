@@ -227,8 +227,16 @@
 -->
 <bean id="frontController" name="/search.htm"
 	class="org.springframework.web.flow.mvc.FlowController">
+	<property name="cacheSeconds" value="5" />
+	<property name="flowExecutionManager" ref="flowExecutionManager"/>
 </bean>
 
+<!--
+	CONTINUATIONS
+	Custom configuration of the HTTP request flow execution manager.
+	Note how you can just change the flow execution storage strategy without any impact
+	on the views!
+-->
 <bean id="flowExecutionManager" 
 	class="org.springframework.web.flow.execution.servlet.ServletFlowExecutionManager">
 	<property name="storage">
@@ -242,15 +250,6 @@
 	<property name="cacheSeconds" value="5" />
 	<property name="flow" ref="pubMed.Search" />
 </bean>
-
-<!-- ==================================================== -->
-<!--
-	CONTINUATIONS
-	Custom configuration of the HTTP request flow execution manager.
-	Note how you can just change the flow execution storage strategy without any impact
-	on the views!
--->
-<!-- ==================================================== -->
 
 <!-- Xml FlowBuilder definition for the search flow -->
 <bean id="pubMed.Search"
@@ -324,15 +323,6 @@
 	<property name="flow" ref="pubMed.Detail" />
 </bean>
 
-<!--
-	CONTINUATIONS
-	Custom configuration of the HTTP request flow execution manager.
-	Note how you can just change the flow execution storage strategy without any impact
-	on the views (see teh flowExecutionManager above for other variants).
-	NOTE:  The Storage mechanism used in a subflow must be equivalent to that of the 
-	parent flow
--->
-
 <!-- xml FlowBuilder definition for the detail flow -->
 <bean id="pubMed.Detail"
 	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
@@ -350,13 +340,6 @@
 
 <!--  ArrayDesign WebFlow -->
 
-<bean id="arrayDesignSearchController" name="/arrayDesignSearch.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="cacheSeconds" value="5" />
-	<property name="flow" ref="arrayDesign.Search" />
-	<property name="flowExecutionManager" ref="flowExecutionManager"/>
-</bean>
-
 <bean id="arrayDesign.Search"
 	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
 	<property name="location"
@@ -370,30 +353,7 @@
 	</property>
 </bean>
 
-<bean id="arrayDesign.Search.id.set"
-	class="org.springframework.web.flow.action.AttributeMapperAction">
-	<property name="mapping" value="flowScope.name" />
-</bean>
-
-<bean id="arrayDesign.id.attributeMapper"
-	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
-	<property name="inputMappings">
-
-		<map>
-			<entry key="${flowScope.name}" value="name" />
-		</map>
-
-	</property>
-</bean>
-
-
-
-<!-- Subflow (detail flow) -->
-<bean id="arrayDesignDetailController" name="/arrayDesignDetail.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flow" ref="arrayDesign.Detail" />
-	<property name="flowExecutionManager" ref="flowExecutionManager"/>
-</bean>
+<!-- ArrayDesign Detail Subflow -->
 
 <bean id="arrayDesign.Detail"
 	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
@@ -409,11 +369,6 @@
 </bean>
 
 <!--  ArrayDesign Edit subflow -->
-<bean id="arrayDesignEditController" name="/arrayDesignEdit.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flow" ref="arrayDesign.Edit" />
-	<property name="flowExecutionManager" ref="flowExecutionManager"/>
-</bean>
 
 <bean id="arrayDesign.Edit"
 	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
@@ -440,7 +395,6 @@
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentSearch-flow.xml" />
 </bean>
-
 
 <bean id="expressionExperiment.Search.getAllExpressionExperiments"
 	class="edu.columbia.gemma.web.controller.flow.action.expression.experiment.ExpressionExperimentExecuteQueryAction">
