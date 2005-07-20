@@ -79,6 +79,15 @@
 	
 	<tr>
         <th>
+            <Gemma:label key="arrayDesign.manufacturer"/>
+        </th>
+        <td>
+                <c:out value="${arrayDesign.designProvider.name}"/>
+        </td>
+    </tr>
+	
+	<tr>
+        <th>
             <Gemma:label key="arrayDesign.description"/>
         </th>
         <td>         

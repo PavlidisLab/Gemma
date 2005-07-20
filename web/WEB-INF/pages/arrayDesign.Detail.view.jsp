@@ -36,6 +36,10 @@
 				<TD><jsp:getProperty name="arrayDesign" property="name"/></TD>
 			</TR>
 			<TR>
+				<TD><B>Manufacturer</B></TD>
+				<TD><%=arrayDesign.getDesignProvider().getName()%></TD>
+			</TR>
+			<TR>
 				<TD><B>Description</B></TD>
 				<TD><jsp:getProperty name="arrayDesign" property="description"/></TD>
 			</TR>

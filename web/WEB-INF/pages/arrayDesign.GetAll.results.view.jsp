@@ -7,7 +7,7 @@
 <HEAD>
 </HEAD>
 <BODY>
-<FORM name="newSearchForm" action="pubMedSearch.htm"><INPUT
+<FORM name="newSearchForm" action=""><INPUT
 	type="hidden" name="_flowExecutionId"
 	value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
 	type="hidden" name="_eventId" value="newSearch"></FORM>
