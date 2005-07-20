@@ -92,7 +92,7 @@
         </th>
         <td>         
             <spring:bind path="arrayDesign.description">
-            <textarea name="description" id="description" rows=8><c:out value="${status.value}"/></textarea>
+            <textarea name="description" id="description" rows=8 cols=30><c:out value="${status.value}"/></textarea>
             <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             </spring:bind>
         </td>
