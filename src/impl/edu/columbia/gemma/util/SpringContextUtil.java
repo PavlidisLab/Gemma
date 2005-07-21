@@ -22,12 +22,7 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.access.BeanFactoryLocator;
-import org.springframework.beans.factory.access.BeanFactoryReference;
-import org.springframework.beans.factory.access.SingletonBeanFactoryLocator;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
@@ -46,18 +41,6 @@ public class SpringContextUtil {
      * @return
      */
     public static BeanFactory getApplicationContext() {
-        // try {
-        // BeanFactoryLocator bfl = SingletonBeanFactoryLocator.getInstance();
-        // BeanFactoryReference bfr = bfl.useBeanFactory( "beanRefFactory" );
-        // BeanFactory bf = bfr.getFactory();
-        // if ( bf != null ) {
-        // log.debug( "Got factory with SingletonBeanFactoryLocator" );
-        // return bf;
-        // }
-        // } catch ( FatalBeanException e ) {
-        // log.debug( "No factory found using SingletonBeanFactoryLocator, getting from classpath" );
-        // }
-
         if ( ctx == null ) {
             String[] paths = getConfigLocations();
             ctx = new ClassPathXmlApplicationContext( paths );
@@ -75,7 +58,8 @@ public class SpringContextUtil {
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
         String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
-                servletContext + "-servlet.xml"};
+                servletContext + "-servlet.xml" };
+ 
         return paths;
     }
 
