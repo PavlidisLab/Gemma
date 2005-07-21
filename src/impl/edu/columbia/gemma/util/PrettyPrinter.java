@@ -34,10 +34,10 @@ public class PrettyPrinter {
      * @param gemmaObjs Collection of objects.
      * @return String representing the objects.
      */
-    public static String print( Collection gemmaObjs ) {
+    public static String print( Collection<Object> gemmaObjs ) {
         StringBuffer buf = new StringBuffer();
         try {
-            for ( Iterator iter = gemmaObjs.iterator(); iter.hasNext(); ) {
+            for ( Iterator<Object> iter = gemmaObjs.iterator(); iter.hasNext(); ) {
                 Object gemmaObj = iter.next();
 
                 if ( gemmaObj == null ) log.error( "Null object in collection" );
