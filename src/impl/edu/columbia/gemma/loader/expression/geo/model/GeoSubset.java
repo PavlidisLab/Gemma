@@ -6,6 +6,10 @@ public class GeoSubset extends GeoData {
     private GeoSample sample;
     private String type;
 
+    public void addToDescription( String s ) {
+        this.description = this.description + " " + s;
+    }
+
     /**
      * @return Returns the description.
      */

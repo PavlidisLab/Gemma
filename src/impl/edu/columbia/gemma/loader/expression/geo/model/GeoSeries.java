@@ -31,8 +31,7 @@ import java.util.HashSet;
  */
 public class GeoSeries extends GeoData {
 
-    String seriesTitle;
-
+    String title;
     String summary;
     String overallDesign;
     Collection<String> keywords;
@@ -121,15 +120,15 @@ public class GeoSeries extends GeoData {
     /**
      * @return Returns the seriesTitle.
      */
-    public String getSeriesTitle() {
-        return this.seriesTitle;
+    public String getTitle() {
+        return this.title;
     }
 
     /**
      * @param seriesTitle The seriesTitle to set.
      */
-    public void setSeriesTitle( String seriesTitle ) {
-        this.seriesTitle = seriesTitle;
+    public void setTitle( String seriesTitle ) {
+        this.title = seriesTitle;
     }
 
     /**
@@ -182,9 +181,8 @@ public class GeoSeries extends GeoData {
         this.pubmedIds.add( id );
     }
 
-    
-    public void addToVariables(GeoVariable variable) {
-        this.variables.add(variable);
+    public void addToVariables( GeoVariable variable ) {
+        this.variables.add( variable );
     }
 
     /**
@@ -209,4 +207,3 @@ public class GeoSeries extends GeoData {
     }
 
 }
-

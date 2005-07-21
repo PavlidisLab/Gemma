@@ -76,4 +76,9 @@ public abstract class GeoData {
         this.geoAccesssion = geoAccesssion;
     }
 
+    @Override
+    public String toString() {
+        return this.geoAccesssion;
+    }
+
 }

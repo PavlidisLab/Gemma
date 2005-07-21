@@ -40,7 +40,7 @@ public class GeoDataset extends GeoData {
     private GeoPlatform platform;
     private String probeType;
 
-    private GeoSeries series;
+    private Collection<GeoSeries> series;
     private String title;
     private int numSamples;
     private String updateDate;
@@ -49,6 +49,7 @@ public class GeoDataset extends GeoData {
 
     public GeoDataset() {
         this.subsets = new HashSet<GeoSubset>();
+        this.series = new HashSet<GeoSeries>();
     }
 
     public void addSubset( GeoSubset subset ) {
@@ -170,15 +171,8 @@ public class GeoDataset extends GeoData {
     /**
      * @return Returns the series.
      */
-    public GeoSeries getSeries() {
+    public Collection<GeoSeries> getSeries() {
         return this.series;
-    }
-
-    /**
-     * @param series The series to set.
-     */
-    public void setSeries( GeoSeries series ) {
-        this.series = series;
     }
 
     /**
@@ -235,6 +229,15 @@ public class GeoDataset extends GeoData {
      */
     public void setValueType( String valueType ) {
         this.valueType = valueType;
+    }
+
+    /**
+     * @param newSeries
+     */
+    public void addSeries( GeoSeries newSeries ) {
+        assert this.series != null;
+        this.series.add( newSeries );
+
     }
 
 }

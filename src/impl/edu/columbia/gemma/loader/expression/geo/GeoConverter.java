@@ -20,22 +20,35 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.auditAndSecurity.Contact;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.biomaterial.BioMaterial;
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
+import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
 import edu.columbia.gemma.loader.expression.geo.model.GeoData;
+import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoPlatform;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
+import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
+import edu.columbia.gemma.loader.expression.geo.util.GeoConstants;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -55,29 +68,90 @@ public class GeoConverter {
 
     private ExternalDatabase geoDatabase;
 
+    // private Collection<ExpressionExperiment> results;
+
     public GeoConverter() {
         geoDatabase = ExternalDatabase.Factory.newInstance();
         geoDatabase.setName( "GEO" );
         geoDatabase.setType( DatabaseType.EXPRESSION );
+        // results = new HashSet<ExpressionExperiment>();
     }
 
     /**
      * @param seriesMap
      */
-    public void convert( Map<String, GeoSeries> seriesMap ) {
-        for ( String seriesName : seriesMap.keySet() ) {
+    public Collection convert( Map<String, Object> map ) {
+        Collection results = new HashSet();
+        for ( String name : map.keySet() ) {
+            Object geoObject = map.get( name );
+            results.add( convert( geoObject ) );
+        }
+        return results;
+    }
 
-            GeoSeries series = seriesMap.get( seriesName );
+    /**
+     * @param geoObject
+     */
+    public Object convert( Object geoObject ) {
+        if ( geoObject == null ) {
+            log.warn( "Null object" );
+            return null;
+        }
+        if ( geoObject instanceof GeoDataset ) {
+            return convert( ( GeoDataset ) geoObject );
+        } else if ( geoObject instanceof GeoSeries ) {
+            return convert( ( GeoSeries ) geoObject );
+        } else if ( geoObject instanceof Map ) {
+            return convert( ( Map ) geoObject );
+        } else if ( geoObject instanceof GeoSubset ) {
+            return convert( ( GeoSubset ) geoObject );
+        } else {
+            throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() );
+        }
 
-            convertSeries( series );
+    }
 
+    /**
+     * @param geoDataset
+     */
+    private ExpressionExperiment convert( GeoDataset geoDataset ) {
+        log.info( "Converting dataset:" + geoDataset.getGeoAccesssion() );
+        ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
+        result.setAccession( convertDatabaseEntry( geoDataset ) );
+        convertSubsetAssociations( result, geoDataset );
+        convertSeriesAssociations( result, geoDataset );
+        return result;
+    }
+
+    /**
+     * @param result
+     * @param geoDataset
+     */
+    private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
+        log.info( "Converting subsets associations of a dataset" );
+        for ( GeoSubset subset : geoDataset.getSubsets() ) {
+            // fixme
+            convert( subset );
+        }
+    }
+
+    /**
+     * @param result
+     * @param geoDataset
+     */
+    private void convertSeriesAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
+        log.info( "Converting series associations of a dataset" );
+        for ( GeoSeries series : geoDataset.getSeries() ) {
+            // fixme;
+            convert( series );
         }
     }
 
     /**
      * @param series
      */
-    private void convertSeries( GeoSeries series ) {
+    private ExpressionExperiment convert( GeoSeries series ) {
+        if ( series == null ) return null;
         log.info( "Converting series: " + series.getGeoAccesssion() );
 
         Collection<GeoVariable> variables = series.getVariables();
@@ -94,9 +168,39 @@ public class GeoConverter {
         for ( GeoSample sample : samples ) {
             convert( sample );
         }
-
+        return expExp;
     }
 
+    /**
+     * @param contact
+     * @return
+     */
+    private Person convert( GeoContact contact ) {
+        Person result = Person.Factory.newInstance();
+        result.setAddress( contact.getCity() );
+        result.setPhone( contact.getPhone() );
+        result.setName( contact.getName() );
+        // FIXME - set security, etc.
+        return result;
+    }
+
+    /**
+     * @param subset
+     */
+    private ExpressionExperimentSubSet convert( GeoSubset subset ) {
+        // treat this like an expression experiment, but it has to be attached to the parent experiment.
+        ExpressionExperimentSubSet expExp = ExpressionExperimentSubSet.Factory.newInstance();
+        expExp.setAccession( convertDatabaseEntry( subset ) );
+        // FIXME expExp.setSourceExperiment();
+        return expExp;
+    }
+
+    /**
+     * Often-needed generation of a valid databaseentry object.
+     * 
+     * @param geoData
+     * @return
+     */
     private DatabaseEntry convertDatabaseEntry( GeoData geoData ) {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
         result.setExternalDatabase( this.geoDatabase );
@@ -108,12 +212,19 @@ public class GeoConverter {
      * @param sample
      */
     private void convert( GeoSample sample ) {
+        if ( sample == null ) {
+            log.warn( "Null sample" );
+            return;
+        }
         log.info( "Converting sample: " + sample.getGeoAccesssion() );
-        BioAssay bioAssay = BioAssay.Factory.newInstance();
+        BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+
+        // bioMaterial.setAccession(convertDatabaseEntry(sample));
+        bioMaterial.setName( sample.getTitle() );
+        bioMaterial.setDescription( sample.getDescription() );
 
         Collection<GeoPlatform> platforms = sample.getPlatforms();
         for ( GeoPlatform platform : platforms ) {
-
             convert( platform );
         }
     }
@@ -123,8 +234,100 @@ public class GeoConverter {
      */
     private void convert( GeoPlatform platform ) {
         log.info( "Converting platform: " + platform.getGeoAccesssion() );
-        // TODO Auto-generated method stub
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( platform.getTitle() );
+        ad.setDescription( platform.getDescriptions() );
 
+        // convert the design element information.
+        String identifier = determinePlatformIdentifier( platform );
+        String externalReference = determinePlatformExternalReferenceIdentifier( platform );
+        String descriptionColumn = determinePlatformDescriptionColumn( platform );
+
+        List<String> identifiers = platform.getData().get( identifier );
+        List<String> externalRefs = platform.getData().get( externalReference );
+        List<String> descriptions = platform.getData().get( descriptionColumn );
+
+        assert identifier != null;
+        assert externalRefs != null;
+        assert externalRefs.size() == identifiers.size() : "Unequal numbers of identifiers and external references!";
+
+        Iterator<String> refIter = externalRefs.iterator();
+        Iterator<String> descIter = descriptions.iterator();
+        Collection compositeSequences = new HashSet();
+        for ( String id : identifiers ) {
+            String externalRef = refIter.next();
+            String description = descIter.next();
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( id );
+            cs.setDescription( description );
+
+            BioSequence bs = BioSequence.Factory.newInstance();
+            bs.setName( externalRef );
+
+            cs.setBiologicalCharacteristic( bs );
+
+        }
+        ad.setDesignElements( compositeSequences );
+
+        // convert the manufacturer information.
+        if ( platform.getManufacturer() != null ) {
+            Contact manufacturer = ( Contact ) convert( platform.getManufacturer() );
+            ad.setDesignProvider( manufacturer );
+        }
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
+    private String determinePlatformIdentifier( GeoPlatform platform ) {
+        Collection<String> columnNames = platform.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelyId( string ) ) {
+                log.info( string + " appears to indicate the array element identifier in column " + index
+                        + " for platform " + platform );
+                return string;
+            }
+            index++;
+        }
+        return null;
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
+    private String determinePlatformExternalReferenceIdentifier( GeoPlatform platform ) {
+        Collection<String> columnNames = platform.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelyExternalReference( string ) ) {
+                log.info( string + " appears to indicate the external reference identifier in column " + index
+                        + " for platform " + platform );
+                return string;
+            }
+            index++;
+        }
+        return null;
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
+    private String determinePlatformDescriptionColumn( GeoPlatform platform ) {
+        Collection<String> columnNames = platform.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelyProbeDescription( string ) ) {
+                log.info( string + " appears to indicate the  probe descriptions in column " + index + " for platform "
+                        + platform );
+                return string;
+            }
+            index++;
+        }
+        return null;
     }
 
 }
