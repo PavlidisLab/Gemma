@@ -131,7 +131,9 @@ public class ProbeGeneMapperGui extends JFrame {
             okButton.addActionListener( new ActionListener() {
 
                 public void actionPerformed( ActionEvent e ) {
-                    if ( inputFile != null && outputFile != null ) {
+                    inputFile = new File( inputFileNameTextField.getText() );
+                    outputFile = new File( outputFileNameTextField.getText() );
+                    if ( inputFile != null || outputFile != null ) {
                         run();
                     } else {
                         log.error( "Must provide file names" );
@@ -287,6 +289,7 @@ public class ProbeGeneMapperGui extends JFrame {
         if ( outputFileNameTextField == null ) {
             outputFileNameTextField = new JTextField();
             outputFileNameTextField.setPreferredSize( new java.awt.Dimension( 200, 20 ) );
+            outputFileNameTextField.setText( "Output file" );
             outputFileNameTextField.setBounds( 6, 8, 440, 20 );
         }
         return outputFileNameTextField;

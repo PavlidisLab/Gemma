@@ -35,7 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,17 +55,34 @@ import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
  */
 public class ProbeThreePrimeLocator {
 
-    protected static final Log log = LogFactory.getLog( ProbeThreePrimeLocator.class );
-    private String dbName = "hg17";
+    /**
+     * 
+     */
+    private static final String PASSWORD = "toast";
+    /**
+     * 
+     */
+    private static final String USERNAME = "pavlidis";
+    /**
+     * 
+     */
+    private static final String HOST = "localhost";
+    /**
+     * 
+     */
+    private static final int PORT = 3306;
+
+    private static final String DATABASE_NAME = "hg17";
     private double exonOverlapThreshold = 0.50;
     private double identityThreshold = 0.90;
     private double scoreThreshold = 0.90;
     private String threeprimeMethod = GoldenPath.CENTER;
+    private static Log log = LogFactory.getLog( ProbeThreePrimeLocator.class.getName() );
 
     public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-        GoldenPath bp = new GoldenPath( 3306, dbName, "localhost", "pavlidis", "toast" );
+        GoldenPath bp = new GoldenPath( PORT, DATABASE_NAME, HOST, USERNAME, PASSWORD );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( input );
@@ -92,17 +108,11 @@ public class ProbeThreePrimeLocator {
 
             if ( tpds == null ) continue;
 
-            // Set hitTranscripts = new TreeSet();
-            // Set hitGenes = new TreeSet();
             for ( ThreePrimeData tpd : tpds ) {
-
-                // if ( tpd.getExonOverlap() / blatRes.getQuerySize() < exonOverlapThreshold ) continue;
 
                 Gene gene = tpd.getGene();
                 assert gene != null : "Null gene";
 
-                // hitTranscripts.add( gene.getNcbiId() );
-                // hitGenes.add( gene.getOfficialSymbol() );
                 LocationData ld = new LocationData( tpd, blatRes );
                 if ( !allRes.containsKey( probeName ) ) {
                     allRes.put( probeName, new HashSet<LocationData>() );
@@ -112,15 +122,12 @@ public class ProbeThreePrimeLocator {
                 output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
                         + blatRes.getQuerySize() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t"
                         + blatRes.score() + "\t" + gene.getOfficialSymbol() + "\t" + gene.getNcbiId() + "\t"
-                        + tpd.getDistance() + "\t" + tpd.getExonOverlap() + "\n" );
+                        + tpd.getDistance() + "\t" + tpd.getExonOverlap() + "\t" + blatRes.getTargetName() + "\t"
+                        + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
 
                 count++;
                 if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " probes" );
             }
-
-            // String transcriptSignature = createTranscriptSignature( hitTranscripts, hitGenes );
-            // output.write( probeName + "\t" + transcriptSignature + "\n" );
-
         }
         log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         input.close();
@@ -168,6 +175,7 @@ public class ProbeThreePrimeLocator {
             double maxScore = 0.0;
             LocationData best = null;
             double maxOverlap = 0.0;
+            int alignLength = 0;
             for ( LocationData ld : probeResults ) {
                 double blatScore = ld.getBr().score();
                 double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
@@ -177,11 +185,13 @@ public class ProbeThreePrimeLocator {
                     maxBlatScore = blatScore;
                     best = ld;
                     maxOverlap = overlap;
+                    alignLength = ld.getBr().getTargetEnd() - ld.getBr().getTargetStart();
                 }
             }
             best.setBestBlatScore( maxBlatScore );
             best.setBestOverlap( maxOverlap );
             best.setNumHits( probeResults.size() );
+            best.setAlignLength( alignLength );
             writer.write( best.toString() );
         }
 
@@ -233,7 +243,6 @@ public class ProbeThreePrimeLocator {
     }
 
     /**
-     * Ju
      * <hr>
      * <p>
      * Copyright (c) 2004-2005 Columbia University
@@ -247,6 +256,7 @@ public class ProbeThreePrimeLocator {
         private double maxOverlap;
         private int numHits;
         private ThreePrimeData tpd;
+        private int alignLength;
 
         /**
          * @param tpd2
@@ -339,8 +349,26 @@ public class ProbeThreePrimeLocator {
                     + tpd.getGene().getNcbiId() + "\t" );
             buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap() );
             buf.append( "\t" + tpd.getDistance() );
+            buf.append( "\t" + this.alignLength );
+            buf.append( "\t" + this.br.getTargetName() );
+            buf.append( "\t" + this.br.getTargetStart() );
+            buf.append( "\t" + this.br.getTargetEnd() );
             buf.append( "\n" );
             return buf.toString();
+        }
+
+        /**
+         * @return Returns the alignLength.
+         */
+        public int getAlignLength() {
+            return this.alignLength;
+        }
+
+        /**
+         * @param alignLength The alignLength to set.
+         */
+        public void setAlignLength( int alignLength ) {
+            this.alignLength = alignLength;
         }
 
     }

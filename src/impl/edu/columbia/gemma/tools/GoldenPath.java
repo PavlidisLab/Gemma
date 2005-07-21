@@ -40,7 +40,7 @@ import edu.columbia.gemma.genome.PhysicalLocation;
 import edu.columbia.gemma.genome.gene.GeneProduct;
 
 /**
- * This is temporary, until we have this in our own database.
+ * This is partly temporary, until we have this in our own database.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -60,6 +60,11 @@ public class GoldenPath {
      * 3' distances are measured from the center of the query
      */
     public static final String CENTER = "center";
+
+    /**
+     * 3' distance are measured from the 5' (left) edge of the query.
+     */
+    private static final String LEFTEND = "left";
 
     private QueryRunner qr;
     private Connection conn;
@@ -163,10 +168,10 @@ public class GoldenPath {
                 params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom };
             }
 
-            return ( List ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
                 public Object handle( ResultSet rs ) throws SQLException {
-                    List<Gene> r = new ArrayList();
+                    List<Gene> r = new ArrayList<Gene>();
                     while ( rs.next() ) {
 
                         Gene gene = Gene.Factory.newInstance();
@@ -252,14 +257,15 @@ public class GoldenPath {
      * Given a physical location, find how close it is to the 3' end of a gene it is in.
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)
-     * @param start The start base of the region to query.
-     * @param end The end base of the region to query.
-     * @param starts Locations of alignment starts. (comma-delimited from blat)
+     * @param queryStart The start base of the region to query (the start of the alignment to the genome)
+     * @param queryEnd The end base of the region to query (the end of the alignment to the genome)
+     * @param starts Locations of alignment block starts. (comma-delimited from blat)
      * @param sizes Sizes of alignment blocks (comma-delimited from blat)
      * @param strand Either + or - indicating the strand to look on, or null to search both strands.
      * @param method The constant representing the method to use to locate the 3' distance.
      * @return A list of ThreePrimeData objects. The distance stored by a ThreePrimeData will be 0 if the sequence
-     *         overhangs (rather than providing a negative distance). If no genes are found, the result is null;
+     *         overhangs the found genes (rather than providing a negative distance). If no genes are found, the result
+     *         is null;
      */
     public List<ThreePrimeData> getThreePrimeDistances( String chromosome, int queryStart, int queryEnd, String starts,
             String sizes, String strand, String method ) {
@@ -292,7 +298,7 @@ public class GoldenPath {
      * @param sizes
      * @param gene
      * @param method
-     * @return
+     * @return a ThreePrimeData object containing the results.
      */
     private ThreePrimeData getThreePrimeDistance( String chromosome, int queryStart, int queryEnd, String starts,
             String sizes, Gene gene, String method ) {
@@ -330,6 +336,8 @@ public class GoldenPath {
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
+        } else if ( method == GoldenPath.LEFTEND ) {
+            throw new UnsupportedOperationException( "Left edge measure not supported" );
         } else {
             throw new IllegalArgumentException( "Unknown method" );
         }
@@ -343,7 +351,12 @@ public class GoldenPath {
 
         private boolean inIntron = false;
         private int exonOverlap = 0;
+
+        /**
+         * The distance from the gene (measured from a point defined by the caller)
+         */
         private int distance;
+
         private Gene gene;
 
         public ThreePrimeData( Gene gene ) {
