@@ -127,10 +127,10 @@ public class PrettyPrinter {
             if ( prop.getDisplayName().equals( "mutable" ) ) continue; // shows up in the enums, just clutter.
 
             // generate a 'heading' for this object.
-            if ( first ) buf.append( indent + ReflectionUtil.getSimpleName( gemmaObj.getClass() ) + " Properties:\n" );
+            if ( first ) buf.append( indent +   gemmaObj.getClass().getSimpleName() + " Properties:\n" );
 
             first = false;
-            buf.append( indent + "   " + ReflectionUtil.getSimpleName( gemmaObj.getClass() ) + "." + prop.getName()
+            buf.append( indent + "   " +  gemmaObj.getClass().getSimpleName() + "." + prop.getName()
                     + ": " + ( o == null ? "---" : o ) + "\n" );
             print( buf, o, level );
         }
