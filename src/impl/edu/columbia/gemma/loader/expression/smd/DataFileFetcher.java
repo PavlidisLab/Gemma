@@ -42,10 +42,13 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
+import baseCode.util.NetUtils;
+
 import edu.columbia.gemma.loader.expression.smd.model.SMDBioAssay;
 import edu.columbia.gemma.loader.expression.smd.model.SMDExperiment;
 import edu.columbia.gemma.loader.expression.smd.model.SMDFile;
 import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
+import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
  * Download (but do not parse) data files for a given ExperimentSet.
@@ -56,16 +59,10 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcher {
+public class DataFileFetcher extends FtpFetcher {
 
-    protected static final Log log = LogFactory.getLog( DataFileFetcher.class );
-    private String localBasePath = "//cgcfs1/projects/pavlidis/grp/arraydata/__incoming/smd/rawData";
-    private String baseDir = "smd/experiments/";
     private Map<Integer, String> cuts;
-    private FTPClient f;
-    private boolean success = false;
     private Set<SMDFile> localFiles;
-    private boolean force = false; // force-redownload of files
 
     public DataFileFetcher() throws IOException, ConfigurationException {
         localFiles = new HashSet<SMDFile>();
@@ -104,16 +101,7 @@ public class DataFileFetcher {
         if ( !f.isConnected() ) SmdUtil.connect( FTP.BINARY_FILE_TYPE );
 
         // create a place to store the files.
-        File newDir = new File( localBasePath + "/" + expM.getNumber() );
-
-        if ( !newDir.exists() ) {
-            success = newDir.mkdir();
-            if ( !success ) {
-                f.disconnect();
-                throw new IOException( "Could not create output directory" );
-            }
-            log.info( "Created directory " + localBasePath + "/" + expM.getNumber() );
-        }
+        File newDir = mkdir( Integer.toString( expM.getNumber() ) );
 
         List<SMDBioAssay> bioAssays = expM.getExperiments();
 
@@ -126,37 +114,17 @@ public class DataFileFetcher {
             }
 
             String outputFileName = newDir + "/" + assayId + ".xls.gz";
-            File outputFile = new File( outputFileName );
 
             String seekFile = baseDir + group + "/" + assayId + ".xls.gz";
-            FTPFile[] allfilesInGroup = f.listFiles( seekFile );
-            if ( allfilesInGroup.length == 0 ) {
-                log.error( "File " + seekFile + " does not seem to exist on the remote host" );
-                continue;
-            }
 
-            long expectedSize = allfilesInGroup[0].getSize();
-            if ( outputFile.exists() && outputFile.length() == expectedSize && !force ) {
-                log.warn( "Output file" + outputFileName + " already exists with correct size. Will not re-download" );
-                continue;
-            }
-
-            OutputStream os = new FileOutputStream( outputFileName );
-
-            log.info( "Seeking file " + seekFile + " with size " + expectedSize + " bytes" );
-            success = f.retrieveFile( seekFile, os );
-            os.close();
-            if ( !success ) {
-                log.error( "Failed to complete download of " + assayId );
-                continue;
-            }
+            NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
 
             // get meta-data about the file.
             SMDFile file = new SMDFile();
             file.setDownloadDate( new SimpleDateFormat().format( new Date() ) );
             file.setDownloadURL( seekFile );
             file.setLocalPath( outputFileName );
-            file.setSize( outputFile.length() );
+            // file.setSize( outputFile.length() );
             localFiles.add( file );
 
             log.info( "Retrieved " + assayId + ".xls.gz" + " for experiment(set) " + expM.getNumber()

@@ -78,9 +78,6 @@ public class SmdUtil {
     /**
      * Convenient method to get a FTP connection.
      * 
-     * @param host
-     * @param login
-     * @param password
      * @param mode
      * @return
      * @throws SocketException

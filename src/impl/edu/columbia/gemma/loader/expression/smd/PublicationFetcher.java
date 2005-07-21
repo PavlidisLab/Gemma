@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 
 import edu.columbia.gemma.loader.expression.smd.model.SMDPublication;
 import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
+import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
  * Retrieve information on SMD publications.
@@ -28,9 +29,7 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  * @author pavlidis
  * @version $Id$
  */
-public class PublicationFetcher {
-
-    protected static final Log log = LogFactory.getLog( PublicationFetcher.class );
+public class PublicationFetcher extends FtpFetcher {
 
     public static void main( String[] args ) {
         try {
@@ -47,10 +46,6 @@ public class PublicationFetcher {
             e.printStackTrace();
         }
     }
-
-    private String baseDir = "smd/publications/";
-
-    private FTPClient f;
 
     private Set<SMDPublication> publications;
 

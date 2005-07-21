@@ -39,6 +39,7 @@ import edu.columbia.gemma.loader.expression.smd.model.SMDBioAssay;
 import edu.columbia.gemma.loader.expression.smd.model.SMDExperiment;
 import edu.columbia.gemma.loader.expression.smd.model.SMDPublication;
 import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
+import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
  * Given a set of Publications from SMD, get all the meta-data for the experiments (bioassays) for the experiment_sets
@@ -50,15 +51,11 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  * @author pavlidis
  * @version $Id$
  */
-public class ExperimentFetcher {
-
-    protected static final Log log = LogFactory.getLog( PublicationFetcher.class );
-    private String baseDir = "smd/publications/";
+public class ExperimentFetcher extends FtpFetcher {
 
     private PublicationFetcher pubs;
     private Set<SMDExperiment> experiments;
     private SpeciesExperimentMap sem;
-    private FTPClient f;
 
     // for each publication, get the experiment_sets. Then get the experiment set metadata file. then get the species.
 

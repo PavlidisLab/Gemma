@@ -20,16 +20,13 @@ package edu.columbia.gemma.loader.expression.smd;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
 import baseCode.util.FileTools;
-
 import edu.columbia.gemma.loader.expression.smd.model.SMDBioAssay;
 import edu.columbia.gemma.loader.expression.smd.model.SMDPerson;
 import edu.columbia.gemma.loader.expression.smd.model.SMDQuantitationType;
@@ -60,30 +57,32 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  *   
  *    
  *     
- *                      
- *                         !Exptid=3823
- *                         !Experiment Name=COLO205_CL4010_COLON
- *                         !Organism=Homo sapiens
- *                         !Category=Cell-line
- *                         !Subcategory=Pharmacogenomics
- *                         !Experimenter=Douglas Ross
- *                         !Contact email=dross{@link @}cmgm.stanford.edu
- *                         !Contact Address1=Genetics
- *                         !Contact Address2=M309
- *                         !State=CA
- *                         !Postal Code=94305
- *                         !SlideName=dtp2847
- *                         !Printname=10k_Print3
- *                         !Tip Configuration=Standard 4-tip
- *                         !Columns per Sector=50
- *                         !Rows per Sector=50
- *                         !Column Spacing=137
- *                         !Row Spacing=137
- *                         !Channel 1 Description=Reference_Pool
- *                         !Channel 2 Description=COLO205_CL4010_COLON
- *                         !Scanning Software=ScanAlyze
- *                         !Software version=2.44
- *                         !Scanning parameters=
+ *      
+ *                       
+ *                          !Exptid=3823
+ *                          !Experiment Name=COLO205_CL4010_COLON
+ *                          !Organism=Homo sapiens
+ *                          !Category=Cell-line
+ *                          !Subcategory=Pharmacogenomics
+ *                          !Experimenter=Douglas Ross
+ *                          !Contact email=dross{@link @}cmgm.stanford.edu
+ *                          !Contact Address1=Genetics
+ *                          !Contact Address2=M309
+ *                          !State=CA
+ *                          !Postal Code=94305
+ *                          !SlideName=dtp2847
+ *                          !Printname=10k_Print3
+ *                          !Tip Configuration=Standard 4-tip
+ *                          !Columns per Sector=50
+ *                          !Rows per Sector=50
+ *                          !Column Spacing=137
+ *                          !Row Spacing=137
+ *                          !Channel 1 Description=Reference_Pool
+ *                          !Channel 2 Description=COLO205_CL4010_COLON
+ *                          !Scanning Software=ScanAlyze
+ *                          !Software version=2.44
+ *                          !Scanning parameters=
+ *        
  *       
  *      
  *     
@@ -111,79 +110,81 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  *   
  *    
  *     
- *                   
- *                          SPOT -- an integer, which goes up as rows go up.
- *                          NAME -- For things other than controls, this seems to be an integer.
- *                          Clone ID -- often IMAGE:XXXX
- *                          Gene Symbol -- official symbol, if known
- *                          Gene Name -- official name, if known 
- *                          Cluster ID -- Unigene cluster
- *                          Accession  -- genbank accession number
- *                          Preferred name -- Seems to be blank mostly, but may be an alternative name for the gene.
- *                          SUID  -- internal identifier of the clone (?)
- *                          CH1I_MEAN -- Mean spot pixel intensity at Channel 1 (usually 532 nm).
- *                          CH1D_MEDIAN -- Median spot pixel intensity at Channel 1 with the median-background subtracted (CH1I_MEDIAN - CH1B_MEDIAN).
- *                          CH1I_MEDIAN
- *                          CH1_PER_SAT
- *                          CH1I_SD -- Standard deviation of the spot intensity at Channel 1
- *                          CH1B_MEAN -- Mean spot background in Channel 1 (usually 532 nm).
- *                          CH1B_MEDIAN
- *                          CH1B_SD
- *                          CH1D_MEAN
- *                          CH2I_MEAN
- *                          CH2D_MEAN
- *                          CH2D_MEDIAN 
- *                          CH2I_MEDIAN
- *                          CH2_PER_SAT -- percentage of saturated pixels in channel 2. Blank?
- *                          CH2I_SD
- *                          CH2B_MEAN
- *                          CH2B_MEDIAN
- *                          CH2B_SD
- *                          CH2BN_MEDIAN
- *                          CH2DN_MEAN -- normalized, background subtracted
- *                          CH2IN_MEAN -- normalized intensity
- *                          CH2DN_MEDIAN -- normalized, bg sub
- *                          CH2IN_MEDIAN -- normalized
- *                          CORR
- *                          DIAMETER -- blank?
- *                          FLAG
- *                          LOG_RAT2N_MEAN -- normalized log base 2 ratio of the mean pixel intensities
- *                          LOG_RAT2N_MEDIAN -- normalized log bas 2 ratio of the median
- *                          PIX_RAT2_MEAN
- *                          PIX_RAT2_MEDIAN
- *                          PERGTBCH1I_1SD
- *                          PERGTBCH1I_2SD
- *                          PERGTBCH2I_1SD
- *                          PERGTBCH2I_2SD
- *                          RAT1_MEAN
- *                          RAT1N_MEAN
- *                          RAT2_MEAN
- *                          RAT2_MEDIAN
- *                          RAT2_SD
- *                          RAT2N_MEAN
- *                          RAT2N_MEDIAN
- *                          REGR
- *                          SUM_MEAN
- *                          SUM_MEDIAN
- *                          TOT_BPIX
- *                          TOT_SPIX
- *                          X_COORD
- *                          Y_COORD
- *                          TOP
- *                          BOT
- *                          LEFT
- *                          RIGHT
- *                          SECTOR
- *                          SECTORROW
- *                          SECTORCOL
- *                          SOURCE
- *                          PLATE
- *                          PROW
- *                          PCOL
- *                          FAILED
- *                          IS_VERIFIED
- *                          IS_CONTAMINATED
- *                          LUID
+ *      
+ *                    
+ *                           SPOT -- an integer, which goes up as rows go up.
+ *                           NAME -- For things other than controls, this seems to be an integer.
+ *                           Clone ID -- often IMAGE:XXXX
+ *                           Gene Symbol -- official symbol, if known
+ *                           Gene Name -- official name, if known 
+ *                           Cluster ID -- Unigene cluster
+ *                           Accession  -- genbank accession number
+ *                           Preferred name -- Seems to be blank mostly, but may be an alternative name for the gene.
+ *                           SUID  -- internal identifier of the clone (?)
+ *                           CH1I_MEAN -- Mean spot pixel intensity at Channel 1 (usually 532 nm).
+ *                           CH1D_MEDIAN -- Median spot pixel intensity at Channel 1 with the median-background subtracted (CH1I_MEDIAN - CH1B_MEDIAN).
+ *                           CH1I_MEDIAN
+ *                           CH1_PER_SAT
+ *                           CH1I_SD -- Standard deviation of the spot intensity at Channel 1
+ *                           CH1B_MEAN -- Mean spot background in Channel 1 (usually 532 nm).
+ *                           CH1B_MEDIAN
+ *                           CH1B_SD
+ *                           CH1D_MEAN
+ *                           CH2I_MEAN
+ *                           CH2D_MEAN
+ *                           CH2D_MEDIAN 
+ *                           CH2I_MEDIAN
+ *                           CH2_PER_SAT -- percentage of saturated pixels in channel 2. Blank?
+ *                           CH2I_SD
+ *                           CH2B_MEAN
+ *                           CH2B_MEDIAN
+ *                           CH2B_SD
+ *                           CH2BN_MEDIAN
+ *                           CH2DN_MEAN -- normalized, background subtracted
+ *                           CH2IN_MEAN -- normalized intensity
+ *                           CH2DN_MEDIAN -- normalized, bg sub
+ *                           CH2IN_MEDIAN -- normalized
+ *                           CORR
+ *                           DIAMETER -- blank?
+ *                           FLAG
+ *                           LOG_RAT2N_MEAN -- normalized log base 2 ratio of the mean pixel intensities
+ *                           LOG_RAT2N_MEDIAN -- normalized log bas 2 ratio of the median
+ *                           PIX_RAT2_MEAN
+ *                           PIX_RAT2_MEDIAN
+ *                           PERGTBCH1I_1SD
+ *                           PERGTBCH1I_2SD
+ *                           PERGTBCH2I_1SD
+ *                           PERGTBCH2I_2SD
+ *                           RAT1_MEAN
+ *                           RAT1N_MEAN
+ *                           RAT2_MEAN
+ *                           RAT2_MEDIAN
+ *                           RAT2_SD
+ *                           RAT2N_MEAN
+ *                           RAT2N_MEDIAN
+ *                           REGR
+ *                           SUM_MEAN
+ *                           SUM_MEDIAN
+ *                           TOT_BPIX
+ *                           TOT_SPIX
+ *                           X_COORD
+ *                           Y_COORD
+ *                           TOP
+ *                           BOT
+ *                           LEFT
+ *                           RIGHT
+ *                           SECTOR
+ *                           SECTORROW
+ *                           SECTORCOL
+ *                           SOURCE
+ *                           PLATE
+ *                           PROW
+ *                           PCOL
+ *                           FAILED
+ *                           IS_VERIFIED
+ *                           IS_CONTAMINATED
+ *                           LUID
+ *        
  *       
  *      
  *     
@@ -203,29 +204,31 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  *   
  *    
  *     
+ *      
+ *         
+ *             
+ *              my %kScanalyze2SMDMapping = (&quot;SPOT&quot;           =&gt; &quot;SPOT&quot;,
+ *              &quot;CH1I&quot;           =&gt; &quot;CH1I_MEAN&quot;, 
+ *              &quot;CH1BA&quot;          =&gt; &quot;CH1B_MEAN&quot;, 
+ *              &quot;CH1B&quot;           =&gt; &quot;CH1B_MEDIAN&quot;, 
+ *              &quot;CH1D_MEAN&quot;      =&gt; &quot;CH1D_MEAN&quot;, # Calculated from CH1I_MEAN - CH1B_MEDIAN
+ *              &quot;CH2I&quot;           =&gt; &quot;CH2I_MEAN&quot;,
+ *              &quot;CH2BA&quot;          =&gt; &quot;CH2B_MEAN&quot;, 
+ *              &quot;CH2B&quot;           =&gt; &quot;CH2B_MEDIAN&quot;, 
+ *              &quot;CH2D_MEAN&quot;      =&gt; &quot;CH2D_MEAN&quot;, # Calculated from CH2I_MEAN - CH2B_MEDIAN
+ *              &quot;CORR&quot;           =&gt; &quot;CORR&quot;, 
+ *              &quot;FLAG&quot;           =&gt; &quot;FLAG&quot;,      # Is converted to Genepix style &gt; 0 -&gt; -100 
+ *              &quot;MRAT&quot;           =&gt; &quot;PIX_RAT2_MEDIAN&quot;, 
+ *              &quot;PERGTBCH1I_1SD&quot; =&gt; &quot;PERGTBCH1I_1SD&quot;, # CH1GTB2 * 100
+ *              &quot;PERGTBCH2I_1SD&quot; =&gt; &quot;PERGTBCH2I_1SD&quot;, # CH2GTB2 * 100
+ *              &quot;REGR&quot;           =&gt; &quot;REGR&quot;, 
+ *              &quot;BGPIX&quot;          =&gt; &quot;TOT_BPIX&quot;, 
+ *              &quot;SPIX&quot;           =&gt; &quot;TOT_SPIX&quot;,
+ *              &quot;TOP&quot;            =&gt; &quot;TOP&quot;, 
+ *              &quot;BOT&quot;            =&gt; &quot;BOT&quot;, 
+ *              &quot;LEFT&quot;           =&gt; &quot;LEFT&quot;, 
+ *              &quot;RIGHT&quot;          =&gt; &quot;RIGHT&quot;,
  *        
- *            
- *             my %kScanalyze2SMDMapping = (&quot;SPOT&quot;           =&gt; &quot;SPOT&quot;,
- *             &quot;CH1I&quot;           =&gt; &quot;CH1I_MEAN&quot;, 
- *             &quot;CH1BA&quot;          =&gt; &quot;CH1B_MEAN&quot;, 
- *             &quot;CH1B&quot;           =&gt; &quot;CH1B_MEDIAN&quot;, 
- *             &quot;CH1D_MEAN&quot;      =&gt; &quot;CH1D_MEAN&quot;, # Calculated from CH1I_MEAN - CH1B_MEDIAN
- *             &quot;CH2I&quot;           =&gt; &quot;CH2I_MEAN&quot;,
- *             &quot;CH2BA&quot;          =&gt; &quot;CH2B_MEAN&quot;, 
- *             &quot;CH2B&quot;           =&gt; &quot;CH2B_MEDIAN&quot;, 
- *             &quot;CH2D_MEAN&quot;      =&gt; &quot;CH2D_MEAN&quot;, # Calculated from CH2I_MEAN - CH2B_MEDIAN
- *             &quot;CORR&quot;           =&gt; &quot;CORR&quot;, 
- *             &quot;FLAG&quot;           =&gt; &quot;FLAG&quot;,      # Is converted to Genepix style &gt; 0 -&gt; -100 
- *             &quot;MRAT&quot;           =&gt; &quot;PIX_RAT2_MEDIAN&quot;, 
- *             &quot;PERGTBCH1I_1SD&quot; =&gt; &quot;PERGTBCH1I_1SD&quot;, # CH1GTB2 * 100
- *             &quot;PERGTBCH2I_1SD&quot; =&gt; &quot;PERGTBCH2I_1SD&quot;, # CH2GTB2 * 100
- *             &quot;REGR&quot;           =&gt; &quot;REGR&quot;, 
- *             &quot;BGPIX&quot;          =&gt; &quot;TOT_BPIX&quot;, 
- *             &quot;SPIX&quot;           =&gt; &quot;TOT_SPIX&quot;,
- *             &quot;TOP&quot;            =&gt; &quot;TOP&quot;, 
- *             &quot;BOT&quot;            =&gt; &quot;BOT&quot;, 
- *             &quot;LEFT&quot;           =&gt; &quot;LEFT&quot;, 
- *             &quot;RIGHT&quot;          =&gt; &quot;RIGHT&quot;,
  *       
  *      
  *     
@@ -244,95 +247,97 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  *   
  *    
  *     
- *          
- *             Spot
- *             Clone ID
- *             Gene Symbol
- *             Gene Name
- *             Cluster ID
- *             Accession
- *             Preferred name
- *             Locuslink ID
- *             Name
- *             Sequence Type
- *             X Grid Coordinate (within sector)
- *             Y Grid Coordinate (within sector)
- *             Sector
- *             Failed
- *             Plate Number
- *             Plate Row
- *             Plate Column
- *             Clone Source
- *             Is Verified
- *             Is Contaminated
- *             Luid
- *             Sum of Ch2 Foreground Pixel Intensities
- *             Sum of Ch1 Foreground Pixel Intensities
- *             Ch2 Signal-to-Noise Ratio
- *             Ch1 Signal-to-Noise Ratio
- *             Ch1 Background Intensity Coefficient of Variation
- *             Ch2 Background Intensity Coefficient of Variation
- *             Ch1 Foreground Intensity Coefficient of Variation
- *             Ch2 Foreground Intensity Coefficient of Variation
- *             Actual Ch1 Background Used in Calculations
- *             Actual Ch2 Background Used in Calculations
- *             Autoflag
- *             Spot Circularity
- *             SUID
- *             Ch1 Intensity (Mean)
- *             Ch1 Net (Median)
- *             Ch1 Intensity (Median)
- *             % of saturated Ch1 pixels
- *             Std Dev of Ch1 Intensity
- *             Channel 1 Background (Mean)
- *             Ch1 Background (Median)
- *             Std Dev of Ch1 Background
- *             Ch1 Net (Mean)
- *             Ch2 Intensity (Mean)
- *             Ch2 Net (Mean)
- *             Ch2 Net (Median)
- *             Ch2 Intensity (Median)
- *             % of saturated Ch2 pixels
- *             Std Dev of Ch2 Intensity
- *             Channel 2 Background (Mean)
- *             Ch2 Background (Median)
- *             Std Dev of Ch2 Background
- *             Ch2 Normalized Background (Median)
- *             Ch2 Normalized Net (Mean)
- *             Ch2 Normalized Intensity (Mean)
- *             Normalized Ch2 Net (Median)
- *             Normalized Ch2 Intensity (Median)
- *             Regression Correlation
- *             Diameter of the spot
- *             Spot Flag
- *             Log(base2) of R/G Normalized Ratio (Mean)
- *             Log(base2) of R/G Normalized Ratio (Median)
- *             R/G Mean (per pixel)
- *             R/G Median (per pixel)
- *             % CH1 PIXELS &gt; BG + 1SD
- *             % CH1 PIXELS &gt; BG + 2SD
- *             % CH2 PIXELS &gt; BG + 1SD
- *             % CH2 PIXELS &gt; BG + 2SD
- *             G/R (Mean)
- *             G/R Normalized (Mean)
- *             R/G (Mean)
- *             R/G (Median)
- *             Std Dev of pixel intensity ratios
- *             R/G Normalized (Mean)
- *             R/G Normalized (Median)
- *             Regression Ratio
- *             Sum of mean intensities
- *             Sum of median intensities
- *             Number of Background Pixels
- *             Number of Spot Pixels
- *             X coordinate (whole array, in microns)
- *             Y coordinate (whole array, in microns)
- *             Box Top
- *             Box Bottom
- *             Box Left
- *             Box Right
- *             Channel 1 Mean Intensity / Median Background Intensity
- *             Channel 2 Normalized (Mean Intensity / Median Background Intensity)  
+ *      
+ *           
+ *              Spot
+ *              Clone ID
+ *              Gene Symbol
+ *              Gene Name
+ *              Cluster ID
+ *              Accession
+ *              Preferred name
+ *              Locuslink ID
+ *              Name
+ *              Sequence Type
+ *              X Grid Coordinate (within sector)
+ *              Y Grid Coordinate (within sector)
+ *              Sector
+ *              Failed
+ *              Plate Number
+ *              Plate Row
+ *              Plate Column
+ *              Clone Source
+ *              Is Verified
+ *              Is Contaminated
+ *              Luid
+ *              Sum of Ch2 Foreground Pixel Intensities
+ *              Sum of Ch1 Foreground Pixel Intensities
+ *              Ch2 Signal-to-Noise Ratio
+ *              Ch1 Signal-to-Noise Ratio
+ *              Ch1 Background Intensity Coefficient of Variation
+ *              Ch2 Background Intensity Coefficient of Variation
+ *              Ch1 Foreground Intensity Coefficient of Variation
+ *              Ch2 Foreground Intensity Coefficient of Variation
+ *              Actual Ch1 Background Used in Calculations
+ *              Actual Ch2 Background Used in Calculations
+ *              Autoflag
+ *              Spot Circularity
+ *              SUID
+ *              Ch1 Intensity (Mean)
+ *              Ch1 Net (Median)
+ *              Ch1 Intensity (Median)
+ *              % of saturated Ch1 pixels
+ *              Std Dev of Ch1 Intensity
+ *              Channel 1 Background (Mean)
+ *              Ch1 Background (Median)
+ *              Std Dev of Ch1 Background
+ *              Ch1 Net (Mean)
+ *              Ch2 Intensity (Mean)
+ *              Ch2 Net (Mean)
+ *              Ch2 Net (Median)
+ *              Ch2 Intensity (Median)
+ *              % of saturated Ch2 pixels
+ *              Std Dev of Ch2 Intensity
+ *              Channel 2 Background (Mean)
+ *              Ch2 Background (Median)
+ *              Std Dev of Ch2 Background
+ *              Ch2 Normalized Background (Median)
+ *              Ch2 Normalized Net (Mean)
+ *              Ch2 Normalized Intensity (Mean)
+ *              Normalized Ch2 Net (Median)
+ *              Normalized Ch2 Intensity (Median)
+ *              Regression Correlation
+ *              Diameter of the spot
+ *              Spot Flag
+ *              Log(base2) of R/G Normalized Ratio (Mean)
+ *              Log(base2) of R/G Normalized Ratio (Median)
+ *              R/G Mean (per pixel)
+ *              R/G Median (per pixel)
+ *              % CH1 PIXELS &gt; BG + 1SD
+ *              % CH1 PIXELS &gt; BG + 2SD
+ *              % CH2 PIXELS &gt; BG + 1SD
+ *              % CH2 PIXELS &gt; BG + 2SD
+ *              G/R (Mean)
+ *              G/R Normalized (Mean)
+ *              R/G (Mean)
+ *              R/G (Median)
+ *              Std Dev of pixel intensity ratios
+ *              R/G Normalized (Mean)
+ *              R/G Normalized (Median)
+ *              Regression Ratio
+ *              Sum of mean intensities
+ *              Sum of median intensities
+ *              Number of Background Pixels
+ *              Number of Spot Pixels
+ *              X coordinate (whole array, in microns)
+ *              Y coordinate (whole array, in microns)
+ *              Box Top
+ *              Box Bottom
+ *              Box Left
+ *              Box Right
+ *              Channel 1 Mean Intensity / Median Background Intensity
+ *              Channel 2 Normalized (Mean Intensity / Median Background Intensity)  
+ *        
  *       
  *      
  *     
