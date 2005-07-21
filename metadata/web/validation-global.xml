@@ -120,7 +120,7 @@
                   />
                   <var>
                     <var-name>maxlength</var-name>
-                    <var-value>15</var-value>
+                    <var-value>50</var-value>
                   </var>
               </field>
 
