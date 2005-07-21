@@ -91,13 +91,13 @@ public class SignupControllerTest extends BaseControllerTestCase {
         }
 
         Set set = new HashSet();
-        testUser.setUserRoles( set );
+        testUser.setRoles( set );
 
         testUser.setPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
         testUser.setConfirmPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
         testUser.setPasswordHint( "test hint" );
 
-        testUser.getUserRoles().add( ur );
+        testUser.getRoles().add( ur );
 
         ModelAndView mav = signupController.onSubmit( request, response, testUser, ( BindException ) null );
 

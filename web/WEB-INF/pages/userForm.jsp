@@ -270,13 +270,13 @@
         </th>
         <td>
         <%--<c:forEach var="role" items="${user.roleList}" varStatus="status">--%>
-        <c:forEach var="role" items="${user.userRoles}" varStatus="status">
+        <c:forEach var="role" items="${user.roles}" varStatus="status">
             <%--<c:out value="${role.label}"/><c:if test="${!status.last}">,</c:if>--%>
-            <c:out value="${role.userName}"/><c:if test="${!status.last}">,</c:if>
+            <c:out value="${role.name}"/><c:if test="${!status.last}">,</c:if>
             <%--<input type="hidden" name="userRoles" --%>
                 <%--value="<c:out value="${role.label}"/>" />--%>
             <input type="hidden" name="userRoles"     
-                value="<c:out value="${role.userName}"/>" />
+                value="<c:out value="${role.name}"/>" />
         </c:forEach>
         </td>
     </tr>
@@ -317,7 +317,7 @@ function passwordChanged(passwordField) {
 <!-- This is here so we can exclude the selectAll call when roles is hidden -->
 function onFormSubmit(theForm) {
 <c:if test="${param.from == 'list'}">
-    selectAll('userRoles');
+    selectAll('roles');
 </c:if>
     return validateUser(theForm);
 }

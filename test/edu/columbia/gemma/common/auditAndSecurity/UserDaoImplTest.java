@@ -63,13 +63,13 @@ public class UserDaoImplTest extends BaseDAOTestCase {
         }
 
         Set set = new HashSet();
-        testUser.setUserRoles( set );
+        testUser.setRoles( set );
 
         testUser.setPassword( "root" );
         testUser.setConfirmPassword( "root" );
         testUser.setPasswordHint( "test hint" );
 
-        testUser.getUserRoles().add( ur );
+        testUser.getRoles().add( ur );
 
         // dao.create( testUser );
     }
