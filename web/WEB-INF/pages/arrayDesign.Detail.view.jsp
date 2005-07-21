@@ -61,11 +61,13 @@
 						<INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
 					</DIV>
 				</TD>
+				<r:isUserInRole role="admin">
 				<TD COLSPAN="2">
 					<DIV align="right">
 						<INPUT type="button" onclick="javascript:selectButton(1)" value="Edit">
 					</DIV>
 				</TD>
+				</r:isUserInRole> 
 			</TR>
 		</TABLE>
 	</BODY>
