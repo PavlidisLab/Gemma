@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Thu Jul 21 18:28:41 EDT 2005'>
+  timestamp = 'Thu Jul 21 18:51:29 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -18998,7 +18998,7 @@ one class.
                                 </UML:AssociationEnd>
                               </UML:Association.connection>
                             </UML:Association>
-                            <UML:Class xmi.id = 'I330c75a3m10535bd323fm2863' name = 'SoftwareApplications'
+                            <UML:Class xmi.id = 'I330c75a3m10535bd323fm2863' name = 'SoftwareApplication'
                               visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
                               isAbstract = 'false' isActive = 'false'>
                               <UML:ModelElement.stereotype>
@@ -19127,7 +19127,7 @@ one class.
                                 </UML:Attribute>
                               </UML:Classifier.feature>
                             </UML:Class>
-                            <UML:Class xmi.id = 'I330c75a3m10535bd323fm286a' name = 'HardwareApplications'
+                            <UML:Class xmi.id = 'I330c75a3m10535bd323fm286a' name = 'HardwareApplication'
                               visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
                               isAbstract = 'false' isActive = 'false'>
                               <UML:ModelElement.stereotype>
