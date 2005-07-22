@@ -25,30 +25,11 @@
 		</TD>
 	</TR>
 	<TR>
-		<TD>
-		<TABLE BORDER="1">
-			<TR>
-				<TD><B>Name</B></TD>
-				<TD><B>Description</B></TD>
-
-			</TR>
-			<%
-        Collection results = ( Collection ) request.getAttribute( "arrayDesigns" );
-        Iterator iter = results.iterator();
-        while ( iter.hasNext() ) {
-            ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
-            %>
-			<TR>
-				<TD><A
-				href="search.htm?_flowId=arrayDesign.Detail&_eventId=select&name=<%=arrayDesign.getName() %>">
-				<%=arrayDesign.getName() %> </A></TD>
-				<TD><%=arrayDesign.getDescription() %></TD>
-			</TR>
-			<%
-        }
-    %>
-		</TABLE>
-		</TD>
+	<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList" export="true">
+		<display:column property="name" sort="true" href="search.htm?_flowId=arrayDesign.Detail&_eventId=" paramId="name" paramProperty="name" titleKey="arrayDesign.name"/>
+		<display:column property="description" sort="true" titleKey="arrayDesign.description"/>
+		<display:setProperty name="basic.empty.showtable" value="true"/>
+	</display:table>	
 	</TR>
 	<TR>
 		<TD>
