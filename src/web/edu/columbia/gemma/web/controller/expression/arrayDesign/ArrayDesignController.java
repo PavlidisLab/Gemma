@@ -18,6 +18,8 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
  * <p>Copyright (c) 2004 - 2005 Columbia University
  * @author keshav
  * @version $Id$
+ * @spring.bean id="arrayDesignController" name="/arrayDesigns.htm"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
 public class ArrayDesignController implements Controller{
     private static Log log = LogFactory.getLog(ArrayDesignController.class);
@@ -37,8 +39,7 @@ public class ArrayDesignController implements Controller{
         this.arrayDesignService = arrayDesignService;
     }
     public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        return new ModelAndView( "arrayDesign.GetAll.results.view", "arrayDesigns", arrayDesignService.getAllArrayDesigns());
     }
     
     
