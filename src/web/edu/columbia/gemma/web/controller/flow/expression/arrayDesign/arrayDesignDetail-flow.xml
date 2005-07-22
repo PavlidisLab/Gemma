@@ -23,7 +23,7 @@ version: $Id$
 	</action-state>
 
 	<view-state id="detail.view" view="arrayDesign.Detail.view">
-		<transition on="back" to="end"/>
+		<transition on="back" to="finish"/>
  		<transition on="edit" to="arrayDesign.Edit"/>
 	</view-state>
 
@@ -35,7 +35,7 @@ version: $Id$
 		<transition on="error" to="error"/>
 	</subflow-state>
 		
-	<end-state id="end" view="redirect:/arrayDesigns.htm" /> 
+	<end-state id="finish" view="redirect:/arrayDesigns.htm" /> 
 	
 	<end-state id="error" view="error.view"/>
 	

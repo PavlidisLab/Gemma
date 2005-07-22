@@ -27,14 +27,14 @@
 		<transition on="submit" to="save" >
 			<action bean="arrayDesign.Edit.formAction" method="bindAndValidate"/>
 		</transition>	
-		<transition on="cancel" to="end" />
+		<transition on="cancel" to="finish" />
 	</view-state>
 	
 	<action-state id="save">
 		<action bean="arrayDesign.Edit.formAction" />
-		<transition on="success" to="end" />
+		<transition on="success" to="finish" />
 	</action-state>
 
-	<end-state id="end"/>
+	<end-state id="finish"/>
 
 </webflow>
