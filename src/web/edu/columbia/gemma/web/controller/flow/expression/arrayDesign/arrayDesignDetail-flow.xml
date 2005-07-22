@@ -23,19 +23,19 @@ version: $Id$
 	</action-state>
 
 	<view-state id="detail.view" view="arrayDesign.Detail.view">
-		<transition on="back" to="finish"/>
+		<transition on="back" to="end"/>
  		<transition on="edit" to="arrayDesign.Edit"/>
 	</view-state>
 
 	<subflow-state id="arrayDesign.Edit" flow="arrayDesign.Edit">
 		<attribute-mapper>
-            <input value="${sourceEvent.parameters.name}" as="name" />
+            <input value="${flowScope.name}" as="name" />
 		</attribute-mapper> 
-		<transition on="finish" to="finish"/>
+		<transition on="finish" to="detail.get"/>
 		<transition on="error" to="error"/>
 	</subflow-state>
 		
-	<end-state id="finish"/>
+	<end-state id="end" view="redirect:/arrayDesigns.htm" /> 
 	
 	<end-state id="error" view="error.view"/>
 	
