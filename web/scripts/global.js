@@ -338,8 +338,8 @@ function highlightTableRows(tableId) {
 
 function highlightFormElements() {
     // add input box highlighting 
-    addFocusHandlers(document.getElementsByTagName("input"));
-    addFocusHandlers(document.getElementsByTagName("textarea"));
+    //addFocusHandlers(document.getElementsByTagName("input"));
+    //addFocusHandlers(document.getElementsByTagName("textarea"));
 }
 
 function addFocusHandlers(elements) {
