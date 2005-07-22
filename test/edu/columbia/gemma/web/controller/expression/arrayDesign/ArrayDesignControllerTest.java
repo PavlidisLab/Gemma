@@ -1,8 +1,15 @@
 package edu.columbia.gemma.web.controller.expression.arrayDesign;
 
+import java.util.Collection;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
@@ -51,11 +58,13 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
     }
 
     /**
-     * Tests the SignupController
-     * 
      * @throws Exception
      */
-    public void testOnSubmit() throws Exception {
-
+    public void testGetArrayDesigns() throws Exception {
+        ArrayDesignController a = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
+        ModelAndView mav = a.handleRequest( ( HttpServletRequest ) null, ( HttpServletResponse ) null );
+        Collection<ArrayDesign> c = (mav.getModel()).values();
+        assertNotNull(c);
+        assertEquals( mav.getViewName(), "arrayDesign.GetAll.results.view" );
     }
 }
