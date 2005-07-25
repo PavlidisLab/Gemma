@@ -82,8 +82,9 @@ public class ExperimentController extends BaseCommandController {
 		Map experimentModel = new HashMap();
 		long experimentID=0;
 		String action = request.getParameter("action");
-		if (request.getParameter("experimentID") != null)
+		if ( request.getParameter("experimentID") != null && request.getParameter("experimentID") != ""){
 			experimentID = new Long(request.getParameter("experimentID")).longValue();
+		}
 		String view = "ExperimentList";
 		if( action==null)
 			action="view";
@@ -173,6 +174,13 @@ public class ExperimentController extends BaseCommandController {
 			ee.setName(request.getParameter("eName").toString());
 			ee.setDescription(request.getParameter("eDesc").toString());
 			String pp = request.getParameter("primaryPubmed").toString();
+			try{
+				Integer pi = new Integer(pp);
+				pp=pi.toString();
+			}
+			catch(java.lang.NumberFormatException nf){
+				pp=null;
+			}
 			if(pp!=null){
 				BibliographicReference br = this.getBibliographicReferenceService().findByExternalId(pp, "PUBMED");
 				if(br==null){
