@@ -1,4 +1,5 @@
-<%@ page contentType="text/html; charset=iso-8859-1" errorPage="" %>
+<%@ include file="/common/taglibs.jsp"%>
+
 <%@ page import="java.util.Collection" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Iterator" %>
@@ -20,14 +21,21 @@
 
 <content tag="heading">Experiment Detail</content>
 
+<a href="ExperimentList.html">Back to Experiment List</a><P>
 <script language="javascript">
 	function doRemove(id){
 		document.fRemove.userID.value = id;
 		document.fRemove.submit();
 	}
+	function validateUpdate(){
+		if( document.dForm.eName.value==""){
+			alert("Experiment must have a name.");
+		}
+		else{
+			document.dForm.submit();
+		}
+	}
 </script>
-
-
 <%
 
 ExpressionExperiment ee = null;
@@ -46,8 +54,6 @@ if( m!=null) {
 			<input type="hidden" name="experimentID" id="experimentID" value="<%=ee.getId()%>">
 			<input type="hidden" name="userID" id="userID">
 		</form>	
-		
-		
 		<%
 		String desc = ee.getDescription();
 		if( desc==null ){
@@ -57,55 +63,41 @@ if( m!=null) {
 		if( err != null ){
 			out.print("<B>ERROR: " + err + "</B><P>&nbsp</P>");
 		}
+		String pu = "(No provider URL)";
+		if( ee.getProvider()!=null){
+			pu = ee.getProvider().getURI();
+		}
+		String pubmedAcc = "";
+		if( ee.getPrimaryPublication() != null)
+			pubmedAcc = ee.getPrimaryPublication().getPubAccession().getAccession();
 		%>
 		<form name="dForm" id="dForm" method="POST" action="ExperimentDetail.html">
 		<input type="hidden" name="action" id="action" value="update">
 		<input type="hidden" name="experimentID" id="experimentID" value="<%=request.getParameter("experimentID")%>">
 		<table width="100%" cellpadding="1" cellspacing="2">
-		<tr>
-			<td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Experiment Details</B></td>
-		</tr>
-	
+		
+		<tr><td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Experiment Details</B></td></tr>
 		<tr>
 			<td bgcolor="white">Name:</td> 
 			<td width="80%" bgcolor="white">
 				<input size="68" type="text" name="eName" id="eName" value="<%=ee.getName()%>">
 			</td>
 		</tr>
-		<tr>
-			<td bgcolor="white">Release Date:</td> 
-			<td bgcolor="white">
-				TODO: Attribute?
-			</td>
-		</tr>
-		<tr>
-			<td bgcolor="white">Submission Date:</td> 
-			<td bgcolor="white">
-				TODO: Attribute?
-			</td>
-		</tr>		
+		<tr><td bgcolor="white">Release Date:</td><td bgcolor="white">TODO: Attribute?</td></tr>
+		<tr><td bgcolor="white">Submission Date:</td><td bgcolor="white">TODO: Attribute?</td></tr>
 		<tr>
 			<td bgcolor="white">Provider URL:</td> 
-			<td bgcolor="white"><%
-			String pu = "";
-			if( ee.getProvider()!=null)
-				pu = ee.getProvider().getURI();
-			%>
-			<input size="68" type="text" name="eProviderURL" id="eProviderURL" value="<%=pu%>">
-			</td>
+			<td bgcolor="white"><%=pu%></td>
 		</tr>	
 		<tr>
 			<td bgcolor="white">PUBMED ID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td> 
-			<td bgcolor="white"><input type="text" name="primaryPubmed" id="primaryPubmed" value="<%
-			if( ee.getPrimaryPublication() != null)
-				out.print( ee.getPrimaryPublication().getPubAccession().getAccession());
-			out.print("\">");
-			if( ee.getPrimaryPublication() != null){%>
-				&nbsp;<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=<%=ee.getPrimaryPublication().getPubAccession().getAccession()%>">View Article</a>
+			<td bgcolor="white"><input type="text" name="primaryPubmed" id="primaryPubmed" value="<%=pubmedAcc%>">
+			<%
+			if( pubmedAcc != "" ){%>
+				&nbsp;<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=<%=pubmedAcc%>">View Article</a>
 			<%
 			}
-			%>
-			
+			%>			
 			</td>
 		</tr>		
 		<tr>
@@ -114,7 +106,7 @@ if( m!=null) {
 		</tr>	
 		<tr>
 			<td></td>
-			<td bgcolor="white"><input type="submit" value="Update Details"></td>
+			<td bgcolor="white"><input type="button" value="Update Details" onclick="validateUpdate()"></td>
 		</tr>
 		</form>
 		
@@ -135,21 +127,19 @@ if( m!=null) {
 			</td>
 		</tr>
 		</form>
-		<tr>
-			<td>Additional Investigators:</td>
-			<td>&nbsp;</td>
-		</tr>
-			<%
-			for(Iterator iter=ee.getInvestigators().iterator(); iter.hasNext(); ){
-				Person p = (Person) iter.next();
-				%>
-				<tr>
-					<td><%=p.getFullName()%>&nbsp;&nbsp;&nbsp;(<a href="javascript:doRemove(<%=p.getId()%>)">remove</a>)</td>
-					<td></td>
-				</tr>
-			<%
-			}
+		
+		<tr><td>Additional Investigators:</td><td>&nbsp;</td></tr>
+		<%
+		for(Iterator iter=ee.getInvestigators().iterator(); iter.hasNext(); ){
+			Person p = (Person) iter.next();
 			%>
+			<tr>
+				<td><%=p.getFullName()%>&nbsp;&nbsp;&nbsp;(<a href="javascript:doRemove(<%=p.getId()%>)">remove</a>)</td>
+				<td></td>
+			</tr>
+		<%
+		}
+		%>
 		<tr>
 			<form name="dFormA" id="dFormA" method="POST" action="ExperimentDetail.html">
 			<input type="hidden" name="action" id="action" value="addParticipant">
@@ -182,87 +172,73 @@ if( m!=null) {
 						replicates = "Unknown";
 						
 					%>
-					<tr>
-						<td>Normalization</td>
-						<td><%=normalization%></td>
-					</tr>	
-					<tr>
-						<td>Quality Control</td>
-						<td><%=qualitycontrol%></td>
-					</tr>	
-					<tr>
-						<td>Replicates</td>
-						<td><%=replicates%></td>
-					</tr>	
-					<tr>
-						<td valign='top'>Design Types:</td>
-						<td>
-							<%
-							for(Iterator iterTypes=ed.getTypes().iterator(); iterTypes.hasNext(); ){
-								OntologyEntry oe = (OntologyEntry) iterTypes.next();
-								out.print(oe.getValue() + "<br>");	
-							}
-							%>
-						</td>
-					</tr>	
-					<tr>
-						<td valign='top'>Factors</td>
-						<td>	
-							<%
-							String categoryName="";
-							String factorList="";
-							if( ed.getExperimentalFactors().size()==0 )
-								out.print("No Factors for this experiment");
-							else{
-								for(Iterator iterFac=ed.getExperimentalFactors().iterator(); iterFac.hasNext(); ){
-									categoryName="";
-									factorList="";
-									String factorValue="";
-									String factorMeasurement="";
-									ExperimentalFactor fac = (ExperimentalFactor) iterFac.next();
-									OntologyEntry category = fac.getCategory();
-									if( category==null)
-										categoryName="Unknown";
+				<tr><td>Normalization</td><td><%=normalization%></td></tr>	
+				<tr><td>Quality Control</td><td><%=qualitycontrol%></td></tr>	
+				<tr><td>Replicates</td><td><%=replicates%></td></tr>	
+		
+				<tr>
+					<td valign='top'>Design Types:</td>
+				 	<td>
+						<%
+						for(Iterator iterTypes=ed.getTypes().iterator(); iterTypes.hasNext(); ){
+							OntologyEntry oe = (OntologyEntry) iterTypes.next();
+							out.print(oe.getValue() + "<br>");	
+						}
+						%>
+					</td>
+				</tr>	
+				<tr>
+					<td valign='top'>Factors</td>
+					<td>	
+						<%
+						String categoryName="";
+						String factorList="";
+						if( ed.getExperimentalFactors().size()==0 )
+							out.print("No Factors for this experiment");
+						else{
+							for(Iterator iterFac=ed.getExperimentalFactors().iterator(); iterFac.hasNext(); ){
+								categoryName="";
+								factorList="";
+								String factorValue="";
+								String factorMeasurement="";
+								ExperimentalFactor fac = (ExperimentalFactor) iterFac.next();
+								OntologyEntry category = fac.getCategory();
+								if( category==null)
+									categoryName="Unknown";
+								else
+									categoryName=category.getValue();
+								for(Iterator iterFacValues=fac.getFactorValues().iterator(); iterFacValues.hasNext(); ){
+									FactorValue fv = (FactorValue) iterFacValues.next();	
+									OntologyEntry fvValue = fv.getValue();
+									if(fvValue==null)
+										factorValue="Unknown Value";
 									else
-										categoryName=category.getValue();
-									for(Iterator iterFacValues=fac.getFactorValues().iterator(); iterFacValues.hasNext(); ){
-										FactorValue fv = (FactorValue) iterFacValues.next();	
-										OntologyEntry fvValue = fv.getValue();
-										if(fvValue==null)
-											factorValue="Unknown Value";
-										else
-											factorValue = fvValue.getValue();
-										if(fv.getMeasurement()==null)
-											factorMeasurement="";
-										else
-											factorMeasurement = fv.getMeasurement().getValue();
-										factorList = factorList + fv.getName() + " (" + factorValue + ") " + factorMeasurement + "<br>";
-									}						
-								}
+										factorValue = fvValue.getValue();
+									if(fv.getMeasurement()==null)
+										factorMeasurement="";
+									else
+										factorMeasurement = fv.getMeasurement().getValue();
+									factorList = factorList + fv.getName() + " (" + factorValue + ") " + factorMeasurement + "<br>";
+								}						
 							}
-							
-							%>
-							<table>
-								<tr><td valign='top'><b><%=categoryName%></b>:</td>
-								<tr><td valign='top'><%=factorList%></td></tr>
-							</table>
-						</td>
-					</tr>	
-							
+						}
+						
+						%>
+						<table>
+							<tr><td valign='top'><b><%=categoryName%></b>:</td>
+							<tr><td valign='top'><%=factorList%></td></tr>
+						</table>
+					</td>
+				</tr>	
+						
 				<%
 				}
 			}
 			%>
 			
 		</tr>	
-		<tr>
-			<td colspan="2" bgcolor="#eeeeee">
-				<B>Quantitation</B>
-			</td>
-		</tr>
-		
+		<tr><td colspan="2" bgcolor="#eeeeee"><B>Quantitation</B></td></tr>
 		<%
-		
 		if( ee.getAnalyses().size()==0) {
 			out.print("<tr><td colspan='2'>No analysis for this experiment</td></tr>");
 		}
@@ -270,12 +246,7 @@ if( m!=null) {
 			out.print("<tr><td colspan='2'>"+ ee.getAnalyses().size()+ "</td></tr>");
 		}
 		%>
-		
-		<tr>
-			<td colspan="2" bgcolor="#eeeeee">
-				<B>DesignElement Data Vectors</B>
-			</td>
-		</tr>
+		<tr><td colspan="2" bgcolor="#eeeeee"><B>DesignElement Data Vectors</B></td></tr>
 		<%
 		
 		if( ee.getDesignElementDataVectors().size()==0){
@@ -289,14 +260,9 @@ if( m!=null) {
 			}	
 		}
 		%>
-		<tr>
-			<td colspan="2" bgcolor="#eeeeee">
-				<B>Bio Assays</B>
-			</td>
-		</tr>
-		
+		<tr><td colspan="2" bgcolor="#eeeeee"><b>Bio Assays</b></td></tr>
 		<%
-		if( ee.getBioAssays()==null ){
+		if( ee.getBioAssays().size()==0){
 			out.print("<tr><td colspan='2'>No BioAssays for this experiment</td></tr>");
 		}
 		else{
