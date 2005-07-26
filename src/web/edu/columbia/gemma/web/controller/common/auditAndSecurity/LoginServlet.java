@@ -147,13 +147,15 @@ public final class LoginServlet extends HttpServlet {
         // If user is already authenticated, it means they probably bookmarked
         // or typed in the URL to login.jsp directly, route them to the main
         // menu is this is the case
-        if ( request.getRemoteUser() != null ) {
-            if ( log.isDebugEnabled() ) {
-                log.debug( "User '" + request.getRemoteUser() + "' already logged in, routing to mainMenu" );
-            }
-            response.sendRedirect( request.getContextPath() + "/mainMenu.html" );
-            return;
-        }
+        
+// *** Removed For Acegi ***
+//        if ( request.getRemoteUser() != null ) {
+//            if ( log.isDebugEnabled() ) {
+//                log.debug( "User '" + request.getRemoteUser() + "' already logged in, routing to mainMenu" );
+//            }
+//            response.sendRedirect( request.getContextPath() + "/mainMenu.html" );
+//            return;
+//        }
 
         String redirectString = SslUtil.getRedirectString( request, getServletContext(), secure.booleanValue() );
 
