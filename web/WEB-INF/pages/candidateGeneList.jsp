@@ -1,8 +1,6 @@
-
-<%@ page contentType="text/html; charset=iso-8859-1" errorPage="" %>
-<%@ page import="java.util.Collection" %>
+<%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.Map" %>
-<%@ page import="java.util.Iterator" %>
+<%@ page import="java.util.Collection" %>
 <%@ page import="edu.columbia.gemma.genome.gene.CandidateGeneList" %>
 <%@ page import="edu.columbia.gemma.genome.gene.CandidateGene" %>
 <html>
@@ -20,35 +18,20 @@
 <input type="hidden" name="newName" id="newName">
 <input type="hidden" name="listID" id="listID">
 
-
-<table bgcolor="#eeeeee" colspacing="1" cellpadding="2">
-<tr>
-	<td width="150"><b>Name</b></td>
-	<td><b>Description</b></td>
 <%
 
 Map m = (Map)request.getAttribute("model");
 if( m!=null) {
-	Collection results=(Collection)m.get("candidateGeneLists");
-
-	Iterator iter = results.iterator();
-	CandidateGeneList cgl = null;
-	while (iter.hasNext()) {
-		cgl=(CandidateGeneList)iter.next();
-		String desc = cgl.getDescription();
-		if( desc == null ){ 
-			desc = "<i>n.a.</i>";
-		}
-		%>
-		<tr>
-			<td bgcolor="white"><a href="candidateGeneListDetail.htm?listID=<%=cgl.getId()%>"><%=cgl.getName()%></a></td>
-			<td bgcolor="white"><%=desc%></td>
-		</tr>
-		<%
-	}
+	request.setAttribute("candidateGeneLists", (Collection)m.get("candidateGeneLists"));
 }
 %>
-</table>
+<display:table name="candidateGeneLists" class="list"  requestURI="/candidateGeneList.htm">
+	<display:setProperty name="basic.empty.showtable" value="true"/>
+	<display:column sortable="true" property="name" href="candidateGeneList.htm" paramId="listID" paramProperty="id"/>
+	<display:column title="List Owner" property="owner.fullName" />
+	<display:column property="description" />
+</display:table >	
+
 
 </form>
 <P>&nbsp;</P>
