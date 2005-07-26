@@ -20,6 +20,7 @@
  */
 package edu.columbia.gemma.common.auditAndSecurity;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
@@ -154,7 +155,8 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
         newRole.setUserName( user.getUserName() );
         newRole = this.getUserRoleService().saveRole( newRole );
         if ( user.getRoles() == null ) user.setRoles( new HashSet() );
-        user.getRoles().add( newRole );
+        Collection<UserRole> roles = user.getRoles();
+        roles.add( newRole );
     }
 
     /**
