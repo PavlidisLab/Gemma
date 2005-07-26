@@ -69,11 +69,13 @@ public class SignupController extends BaseFormController {
 
         user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
 
+        user.setEnabled( true );
+
         // Set the default user role on this new user
-        userService.addRole( user, userRoleService.getRole( Constants.USER_ROLE ) );
+        this.getUserService().addRole( user, userRoleService.getRole( Constants.USER_ROLE ) );
 
         try {
-            userService.saveUser( user );
+            this.getUserService().saveUser( user );
         } catch ( UserExistsException e ) {
             log.warn( e.getMessage() );
 
@@ -86,8 +88,8 @@ public class SignupController extends BaseFormController {
         }
 
         // Set cookies for auto-magical login ;-)
-        String loginCookie = userService.createLoginCookie( user.getUserName() );
-        RequestUtil.setCookie( response, Constants.LOGIN_COOKIE, loginCookie, request.getContextPath() );
+         String loginCookie = this.getUserService().createLoginCookie( user.getUserName() );
+         RequestUtil.setCookie( response, Constants.LOGIN_COOKIE, loginCookie, request.getContextPath() );
 
         saveMessage( request, getText( "user.registered", user.getUserName(), locale ) );
 
