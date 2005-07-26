@@ -1,5 +1,12 @@
 <!--  Requests/responses with url pattern /login.jsp
       are preprocessed/postprocessed through the loginFilter.  --> 
+
+<!-- Acegi -->      
+<filter-mapping>
+    <filter-name>securityFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+          
 <filter-mapping>
 	<filter-name>loginFilter</filter-name>
 	<url-pattern>/login.jsp</url-pattern>
