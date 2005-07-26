@@ -13,7 +13,10 @@ package edu.columbia.gemma.web;
  */
 public class Constants {
     // ~ Static fields/initializers =============================================
-
+    
+    /** The name of the ResourceBundle used in this application */
+    public static final String BUNDLE_KEY = "ApplicationResources";
+    
     /**
      * The application scoped attribute for persistence engine and class that implements it
      */
