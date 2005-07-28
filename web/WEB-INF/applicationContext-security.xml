@@ -97,7 +97,7 @@
          Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
     <bean id="filterInvocationInterceptor" class="net.sf.acegisecurity.intercept.web.FilterSecurityInterceptor">
         <property name="authenticationManager"><ref local="authenticationManager"/></property>
-        <property name="accessDecisionManager"><ref local="businessAccessDecisionManager"/></property>
+        <property name="accessDecisionManager"><ref local="accessDecisionManager"/></property>
         <property name="objectDefinitionSource">
             <value>
                 CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON
@@ -143,10 +143,26 @@
       <property name="objectDefinitionSource">
          <value>
             edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=admin
-            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_WRITE
+            <!-- edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_WRITE-->
          </value>
       </property>
    </bean>
+   
+   
+   <!-- An access decision manager used by filterInvocationInterceptor -->
+   <bean id="accessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
+      <property name="allowIfAllAbstainDecisions"><value>false</value></property>
+      <property name="decisionVoters">
+         <list>
+            <ref local="roleVoter"/>
+            <!-- 
+            <ref local="aclContactReadVoter"/>
+            <ref local="aclContactDeleteVoter"/>
+            -->
+         </list>
+      </property>  
+   </bean>
+   
    <!-- An access decision manager used by the business objects -->
    <bean id="businessAccessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
       <property name="allowIfAllAbstainDecisions"><value>false</value></property>
@@ -156,8 +172,8 @@
             <!-- 
             <ref local="aclContactReadVoter"/>
             <ref local="aclContactDeleteVoter"/>
-            <ref local="aclArrayDesignWriteVoter"/>  
-            -->        
+            -->
+            <ref local="aclArrayDesignWriteVoter"/>          
          </list>
       </property>  
    </bean>
