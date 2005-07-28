@@ -155,10 +155,6 @@
       <property name="decisionVoters">
          <list>
             <ref local="roleVoter"/>
-            <!-- 
-            <ref local="aclContactReadVoter"/>
-            <ref local="aclContactDeleteVoter"/>
-            -->
          </list>
       </property>  
    </bean>
