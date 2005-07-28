@@ -168,14 +168,14 @@
    
    <!-- ===================== DOMAIN OBJECT SECURITY (acl) ==================== -->
    
-   <!-- An access decision voter that reads ACL_CONTACT_ADMIN configuration settings -->
+   <!-- An access decision voter that reads ACL_ARRAYDESIGN_WRITE configuration settings -->
    <bean id="aclArrayDesignWriteVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
       <property name="processConfigAttribute"><value>ACL_ARRAYDESIGN_WRITE</value></property>
       <property name="processDomainObjectClass"><value>edu.columbia.gemma.expression.arrayDesign.ArrayDesign</value></property>
       <property name="aclManager"><ref local="aclManager"/></property>
       <property name="requirePermission">
         <list>
-          <ref local="net.sf.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION"/>
+          <ref local="net.sf.acegisecurity.acl.basic.SimpleAclEntry.WRITE"/>
         </list>
       </property>
    </bean>
