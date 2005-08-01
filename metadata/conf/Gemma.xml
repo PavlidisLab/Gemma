@@ -58,14 +58,18 @@
 
     <!-- NOTE: If you want to use a DataSourceRealm, the Resource must be a
                global resource. Comment this section out if you are not using the jdbc realm. -->
-    <!-- NOTE: You MUST insert data into the userNameCol="user_name" for the userRoleTable. -->           
+    <!-- NOTE: You MUST insert data into the userNameCol="user_name" for the userRoleTable. -->   
+    
+    <!-- comment out if you are not using container managed security with a jdbc realm (ie. if using Acegi Security
+         you can safely comment this out. -->         
+    <!--      
     <Realm className="org.apache.catalina.realm.JDBCRealm" debug="99"
           driverName="com.mysql.jdbc.Driver"
        connectionURL="jdbc:mysql://localhost/gemd?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf-8"
       connectionName="pavlidis" connectionPassword="toast"
            userTable="contact" userNameCol="user_name" userCredCol="password"
        userRoleTable="user_role" roleNameCol="name" />
- 
+     -->
     
     <!--  Define Gemd database as a resource -->   
     <Resource name="jdbc/gemd" auth="Container" type="javax.sql.DataSource"/>
