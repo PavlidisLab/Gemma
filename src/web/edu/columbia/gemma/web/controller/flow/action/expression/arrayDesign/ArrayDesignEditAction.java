@@ -44,16 +44,13 @@ public class ArrayDesignEditAction extends FormAction {
      * @throws IllegalAccessException
      */
     public Object createFormObject( RequestContext context ) throws InstantiationException, IllegalAccessException {
-        log.info( "originating event: " + context.getSourceEvent() );
-        log.info( "flow scope: " + context.getFlowScope() );
-        log.info( "request scope: " + context.getRequestScope() );
 
-        log.info( context.getFlowScope().getRequiredAttribute( "name", String.class ) );
+        if ( log.isInfoEnabled() ) logScopes( context );
+        // String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
 
-        String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
-        // String name = ( String ) context.getSourceEvent().getAttribute( "name" );
+        String name = ( String ) context.getSourceEvent().getAttribute( "name" );
+        context.getFlowScope().setAttribute( "name", name );
 
-        // ad = ( ArrayDesignImpl ) super.createFormObject( context );
         ad = getArrayDesignService().findArrayDesignByName( name );
 
         if ( ad != null ) context.getRequestScope().setAttribute( "arrayDesign", ad );
@@ -82,8 +79,7 @@ public class ArrayDesignEditAction extends FormAction {
      */
     public Event save( RequestContext context ) throws Exception {
 
-        log.info( "flow scope: " + context.getFlowScope().getAttributeMap() );
-        log.info( "request scope: " + context.getRequestScope().getAttributeMap() );
+        if ( log.isInfoEnabled() ) logScopes( context );
 
         ad.setName( ( String ) context.getFlowScope().getAttribute( "name", String.class ) );
         ad.setDescription( ( String ) context.getSourceEvent().getAttribute( "description" ) );
@@ -97,6 +93,13 @@ public class ArrayDesignEditAction extends FormAction {
         getArrayDesignService().updateArrayDesign( ad );
 
         return success();
+    }
+
+    private void logScopes( RequestContext context ) {
+
+        log.info( "originating event: " + context.getSourceEvent() );
+        log.info( "flow scope: " + context.getFlowScope().getAttributeMap() );
+        log.info( "request scope: " + context.getRequestScope().getAttributeMap() );
     }
 
     /**
