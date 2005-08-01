@@ -10,9 +10,12 @@
 	function selectButton(target){
 		if(target == 0){
 			document.backForm._eventId.value="back"
+			document.backForm.action="arrayDesigns.htm"
 		}
 		if(target == 1){
 			document.backForm._eventId.value="edit"
+			document.backForm._flowId.value="arrayDesign.Edit"
+			document.backForm.action="search.htm"
 		}
 		document.backForm.submit();
 	}
@@ -20,8 +23,9 @@
 	<HEAD></HEAD>
 	<BODY>
 		<FORM name="backForm" action="">
-				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
+				<%--<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">--%>
 				<input type="hidden" name="_eventId" value="">
+				<input type="hidden" name="_flowId" value="">
 				<input type="hidden" name="name" value="<%=request.getAttribute("name") %>">
 		</FORM>
 		<TABLE width="100%">
