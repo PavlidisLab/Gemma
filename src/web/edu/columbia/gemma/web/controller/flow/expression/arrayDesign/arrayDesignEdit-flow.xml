@@ -35,6 +35,8 @@
 		<transition on="success" to="finish" />
 	</action-state>
 
-	<end-state id="finish"/>
+	<end-state id="finish" view="redirect:/arrayDesigns.htm" /> 
+	
+	<end-state id="error" view="error.view"/>
 
 </webflow>
