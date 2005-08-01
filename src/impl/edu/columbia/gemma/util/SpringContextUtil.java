@@ -58,7 +58,7 @@ public class SpringContextUtil {
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
         String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
-                servletContext + "-servlet.xml" };
+                "applicationContext-security.xml", servletContext + "-servlet.xml" };
  
         return paths;
     }
