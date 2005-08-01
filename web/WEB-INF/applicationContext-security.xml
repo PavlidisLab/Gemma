@@ -128,7 +128,7 @@
          <value>
             <!-- edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=admin -->
             <!-- edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_WRITE-->
-            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user, AFTER_ACL_COLLECTION_READ
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=admin, user, AFTER_ACL_COLLECTION_READ
          </value>
       </property>
    </bean>
