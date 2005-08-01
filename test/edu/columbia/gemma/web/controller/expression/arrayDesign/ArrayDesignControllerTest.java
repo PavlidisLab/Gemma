@@ -62,9 +62,10 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
      */
     public void testGetArrayDesigns() throws Exception {
         ArrayDesignController a = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
-        ModelAndView mav = a.handleRequest( ( HttpServletRequest ) null, ( HttpServletResponse ) null );
-        Collection<ArrayDesign> c = (mav.getModel()).values();
-        assertNotNull(c);
+        request.setRequestURI( "Gemma/arrayDesigns.htm" );
+        ModelAndView mav = a.handleRequest( ( HttpServletRequest ) request, ( HttpServletResponse ) null );
+        Collection<ArrayDesign> c = ( mav.getModel() ).values();
+        assertNotNull( c );
         assertEquals( mav.getViewName(), "arrayDesign.GetAll.results.view" );
     }
 }
