@@ -110,7 +110,8 @@
             </value>
         </property>
     </bean>
-
+    
+	<!-- if user requests a secure Http resource but has not been authenticated, they will be presented this login form --> 
     <bean id="authenticationProcessingFilterEntryPoint" class="net.sf.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
         <property name="loginFormUrl"><value>/login.jsp</value></property>
         <property name="forceHttps"><value>false</value></property>
