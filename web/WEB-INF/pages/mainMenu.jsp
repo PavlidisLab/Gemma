@@ -19,7 +19,8 @@
 		<a href="<c:url value="/candidateGeneList.htm"/>"><fmt:message key="menu.CandidateGeneList" />
 	</li>
 	<li>
-        <a href="<c:url value="/pubMedSearch.htm"/>"><fmt:message key="menu.flow.PubMedSearch"/></a>
+		<a href="<c:url value="/search.htm?_flowId=pubMed.Search"/>"><fmt:message key="menu.flow.PubMedSearch"/></a>
+<!--        <a href="<c:url value="/pubMedSearch.htm"/>"><fmt:message key="menu.flow.PubMedSearch"/></a>-->
     </li>
     <li>
         <a href="<c:url value="/editProfile.html"/>"><fmt:message key="menu.user"/></a>

@@ -10,7 +10,7 @@
 	function selectButton(target){
 		if(target == 0){
 			document.searchForm._eventId.value="submitPubMed"
-			//document.searchForm._flowId.value="pubMed.Search" set if using generic app controller
+			document.searchForm._flowId.value="pubMed.Search" 
 			if (document.searchForm.pubMedId.value==""){
 				alert("Enter a valid PubMed ID.");
 				return false;
@@ -21,7 +21,7 @@
 		}
 		if(target == 1){
 			document.searchForm._eventId.value="getBibRef"
-			//document.searchForm._flowId.value="bibRef.GetAll" set if using generic app controller
+			document.searchForm._flowId.value="bibRef.GetAll" 
  			document.searchForm.submit();
 		}
 	}
@@ -31,7 +31,7 @@
 </HEAD>
 <BODY>
 <DIV align="left">
-<FORM name="searchForm" action="pubMedSearch.htm"><INPUT type="hidden"
+<FORM name="searchForm" action="search.htm"><INPUT type="hidden"
 	name="_flowExecutionId"
 	value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
 	type="hidden" name="_currentStateId" value="criteria.view"> <INPUT

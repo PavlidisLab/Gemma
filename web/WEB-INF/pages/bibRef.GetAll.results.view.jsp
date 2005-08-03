@@ -11,10 +11,10 @@
 <HEAD>
 </HEAD>
 <BODY>
-<FORM name="newSearchForm" action="pubMedSearch.htm"><INPUT
-	type="hidden" name="_flowExecutionId"
-	value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
-	type="hidden" name="_eventId" value="newSearch"></FORM>
+<FORM name="newSearchForm" action="search.htm">
+    <input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>"> 
+	<input type="hidden" name="_eventId" value="newSearch">
+</FORM>
 <DIV align="left">
 <P>
 <TABLE width="100%">
@@ -56,7 +56,7 @@
             %>
 			<TR>
 				<TD><A
-					href="pubMedSearch.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_eventId=select&pubMedId=<%=pubmedId %>">
+					href="search.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_flowId=pubMed.Detail&_eventId=select&pubMedId=<%=pubmedId %>">
 				<%=pubmedId %> </A></TD>
 			 	<td><%=bibliographicReference.getTitle() %></td>
 				<TD><%=bibliographicReference.getPublication() %></TD>
@@ -69,7 +69,7 @@
         }
     %>
 		</TABLE>
-		</TD>
+		</TD>	
 	</TR>
 	<TR>
 		<TD>

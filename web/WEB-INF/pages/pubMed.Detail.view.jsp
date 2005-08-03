@@ -8,7 +8,7 @@
 <HTML>
 	<HEAD></HEAD>
 	<BODY>
-		<FORM name="backForm" action="pubMedDetail.htm">
+		<FORM name="backForm" action="search.htm">
 				<INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">
 				<INPUT type="hidden" name="_eventId" value="back">
 		</FORM>
