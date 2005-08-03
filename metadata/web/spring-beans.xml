@@ -245,11 +245,6 @@
 </bean>
 
 <!-- Parent Flow (search flow) -->
-<bean id="pubMedSearchController" name="/pubMedSearch.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="cacheSeconds" value="5" />
-	<property name="flow" ref="pubMed.Search" />
-</bean>
 
 <!-- Xml FlowBuilder definition for the search flow -->
 <bean id="pubMed.Search"
@@ -258,7 +253,6 @@
 		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" />
 </bean>
 
-<!-- Next 4 beans are called from pubMedSearch-flow.xml -->
 <bean id="pubMed.Search.criteria.formAction"
 	class="org.springframework.web.flow.action.FormAction">
 	<property name="formObjectName" value="query" />
@@ -292,36 +286,7 @@
 	</property>
 </bean>
 
-<!-- Maps parameters in an event (ie. HttpServletRequestEvent, ContextEvent)
-	to attributes set in flow scope 
--->
-<!-- 
-	<bean id="pubMed.Search.id.set"
-	class="org.springframework.web.flow.action.AttributeMapperAction">
-	<property name="mapping" value="title" />
-	<property name="targetScopeAsString">
-	<value>flow</value>
-	</property>
-	
-	</bean>
--->
-<!-- Mappings executed when mapping input data from a parent flow to a subflow -->
-<!-- 
-	<bean id="pubMed.id.attributeMapper"
-	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
-	<property name="inputMappings">
-	<list>
-	<value>title</value>
-	</list>
-	</property>
-	</bean>
--->
-
 <!-- Subflow (detail flow) -->
-<bean id="pubMedDetailController" name="/pubMedDetail.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
-	<property name="flow" ref="pubMed.Detail" />
-</bean>
 
 <!-- xml FlowBuilder definition for the detail flow -->
 <bean id="pubMed.Detail"
@@ -339,7 +304,8 @@
 </bean>
 
 <!--  ArrayDesign WebFlow -->
-
+<!-- This is currently implemented in mvc.  Uncomment this to use as a flow. -->
+<!-- 
 <bean id="arrayDesign.Search"
 	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
 	<property name="location"
@@ -352,9 +318,10 @@
 		<ref bean="arrayDesignService" />
 	</property>
 </bean>
-
+-->
 <!-- ArrayDesign Detail Subflow -->
-
+<!-- This is currently implemented in mvc.  Uncomment this to use as a flow. -->
+<!-- 
 <bean id="arrayDesign.Detail"
 	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
 	<property name="location"
@@ -367,7 +334,7 @@
 		<ref bean="arrayDesignService" />
 	</property>
 </bean>
-
+-->
 <!--  ArrayDesign Edit subflow -->
 
 <bean id="arrayDesign.Edit"
