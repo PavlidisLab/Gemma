@@ -1,7 +1,6 @@
 package interceptor;
 
-import java.util.Collection;
-import java.util.Random;
+import java.util.Date;
 
 import junit.framework.TestCase;
 
@@ -24,10 +23,9 @@ public class PersistAclInterceptorTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         ad = ArrayDesign.Factory.newInstance();
-        
-        ad.setName((new Random()).toString());
+        ad.setName( ( new Date() ).toString() );
     }
 
     /*
@@ -45,8 +43,8 @@ public class PersistAclInterceptorTest extends TestCase {
      */
     public void testGetArrayDesignsWithDao() throws Exception {
         BeanFactory ctx = SpringContextUtil.getApplicationContext();
-             
-        ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).saveArrayDesign(ad);
+
+        ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).saveArrayDesign( ad );
 
     }
 

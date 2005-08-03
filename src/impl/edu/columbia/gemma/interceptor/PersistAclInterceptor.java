@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Random;
+import java.util.Date;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -52,14 +52,16 @@ public class PersistAclInterceptor implements MethodInterceptor {
         Connection c = makeDatabaseConnection();
 
         Statement s = c.createStatement();
-
+        String dummyId = ( new Date() ).toString();
         try {
             s.executeUpdate( "INSERT INTO acl_object_identity (object_identity, acl_class)" + "VALUES ('"
-                    + fullyQualifiedName + ":" + new Random() + "','net.sf.acegisecurity.acl.basic.SimpleAclEntry')" );
+                    + fullyQualifiedName + ":" + dummyId + "','net.sf.acegisecurity.acl.basic.SimpleAclEntry')" );
         } catch ( SQLException se ) {
             se.printStackTrace();
             System.exit( 1 );
         }
+
+        log.info( "Object persisted successfully." );
 
         return null;
     }
