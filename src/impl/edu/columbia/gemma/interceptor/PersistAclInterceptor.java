@@ -34,7 +34,7 @@ public class PersistAclInterceptor implements MethodInterceptor {
         Object object = null;
         log.info( "Before: invocation=[" + invocation + "]" );
 
-        log.info( invocation.getMethod() );
+        log.info( "The method is: " + invocation.getMethod() );
 
         Object[] arguments = invocation.getArguments();
         for ( Object obj : arguments ) {
