@@ -38,7 +38,7 @@ public class PersistAclInterceptorTest extends TestCase {
     }
 
     /**
-     * Calling the method getArrayDesigns, which should have the PersistAclInterceptor.invoke called on it before the
+     * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it before the
      * actual method invocation.
      * 
      * @throws Exception
