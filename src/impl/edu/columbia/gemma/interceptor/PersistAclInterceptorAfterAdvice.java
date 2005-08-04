@@ -1,18 +1,18 @@
 package edu.columbia.gemma.interceptor;
 
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.AfterReturningAdvice;
 
 /**
- * This is the interceptor to call to persist acl information when an object is created.
+ * This is an 'AfterAdvice' implementation of the 'AroundAdvice' PersistAclInterceptor
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -20,25 +20,25 @@ import org.apache.commons.logging.LogFactory;
  * @author keshav
  * @version $Id$
  */
-public class PersistAclInterceptor implements MethodInterceptor {
-    private static Log log = LogFactory.getLog( PersistAclInterceptor.class.getName() );
+public class PersistAclInterceptorAfterAdvice implements AfterReturningAdvice {
+    private static Log log = LogFactory.getLog( PersistAclInterceptorAfterAdvice.class.getName() );
 
     /**
      * Must implement this method if this class is going to be used as an interceptor
      * 
      * @param invocation
-     * @return Object
+     * @return
      * @throws Throwable
      */
-    public Object invoke( MethodInvocation invocation ) throws Throwable {
-        Object retVal = null;
-        if ( isValidMethodToIntercept( invocation ) ) {
+    public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
+
+        if ( isValidMethodToIntercept( m ) ) {
             Object object = null;
-            log.info( "Before: invocation=[" + invocation + "]" );
+            log.info( "Before: method=[" + m + "]" );
 
-            log.info( "The method is: " + invocation.getMethod() );
+            log.info( "The method is: " + m.getName() );
 
-            Object[] arguments = invocation.getArguments();
+            Object[] arguments = args;
             for ( Object obj : arguments ) {
                 object = obj;
             }
@@ -49,7 +49,7 @@ public class PersistAclInterceptor implements MethodInterceptor {
             log.info( "Connecting to database ... " );
             Connection c = makeDatabaseConnection();
 
-            retVal = invocation.proceed();
+            // retVal = invocation.proceed();
 
             Statement s1 = c.createStatement();
             String last = null;
@@ -93,21 +93,21 @@ public class PersistAclInterceptor implements MethodInterceptor {
             log.info( "Acl persisted successfully." );
 
             c.close();
-
-            return retVal;
+        } else {
+            log.info( "Invalid method to intercept" );
         }
-        return retVal;
+
     }
 
     /**
      * Test to see if this is a valid method to intercept. This will be fleshed out to add the actual methods intercept
      * to the xml configuration file.
      * 
-     * @param invocation
+     * @param m
      * @return
      */
-    private boolean isValidMethodToIntercept( MethodInvocation invocation ) {
-        if ( invocation.getMethod().getName().contains( "save" ) ) return true;
+    private boolean isValidMethodToIntercept( Method m ) {
+        if ( m.getName().contains( "save" ) ) return true;
 
         return false;
 
