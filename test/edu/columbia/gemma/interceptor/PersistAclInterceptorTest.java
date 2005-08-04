@@ -51,10 +51,14 @@ public class PersistAclInterceptorTest extends TestCase {
         ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).saveArrayDesign( ad );
     }
 
-    public void testInvalidMethodToIntercept() throws Exception {
-        log.info( "Testing an invalid method to intercept" );
-
-        ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).getAllArrayDesigns();
-    }
-
+    /**
+     * Tests an invalid method
+     * 
+     * @throws Exception
+     */
+    // public void testInvalidMethodToIntercept() throws Exception {
+    // log.info( "Testing an invalid method to intercept" );
+    //
+    // ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).getAllArrayDesigns();
+    // }
 }
