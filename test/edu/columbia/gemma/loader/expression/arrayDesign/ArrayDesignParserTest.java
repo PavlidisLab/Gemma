@@ -15,7 +15,8 @@ import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.interceptor.ManualAuthenticationProcessing;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.util.SpringContextUtil;
 
@@ -50,6 +51,11 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
 
         BeanFactory ctx = SpringContextUtil.getApplicationContext();
 
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                .getBean( "manualAuthenticationProcessing" );
+        
+        manAuthentication.validateRequest("administrator", "admintoast");
+
         arrayDesignParser = new ArrayDesignParserImpl();
 
         arrayDesignParser.setArrayDesignMappings( ( ArrayDesignMappings ) ctx.getBean( "arrayDesignMappings" ) );
@@ -60,7 +66,7 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
 
         arrayDesignLoader = new ArrayDesignLoaderImpl();
 
-        arrayDesignLoader.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
+        arrayDesignLoader.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
 
     }
 
@@ -106,8 +112,8 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
         ParserAndLoaderTools.loadDatabase( arrayDesignLoader, col );
 
     }
-//TODO implement this.    
-//    public void testParseDelete() throws Exception {
-//        
-//    }
+    // TODO implement this.
+    // public void testParseDelete() throws Exception {
+    //        
+    // }
 }
