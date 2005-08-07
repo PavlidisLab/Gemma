@@ -135,9 +135,9 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
             for ( int i = 0; i < ga.length; i++ ) {
                 if ( ga[i].equals( "admin" ) )
                     return new Integer( SimpleAclEntry.ADMINISTRATION );
-                else if ( ga[i].equals( "user" ) ) return new Integer( SimpleAclEntry.READ );
+                else if ( ga[i].equals( "user" ) ) return new Integer( SimpleAclEntry.READ_WRITE );
             }
-            return new Integer( SimpleAclEntry.READ );
+            return new Integer( SimpleAclEntry.READ_WRITE );
             // return ga[i].getAuthority();
         } else {
             return new Integer( SimpleAclEntry.ADMINISTRATION );
