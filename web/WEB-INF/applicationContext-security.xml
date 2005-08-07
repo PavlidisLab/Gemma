@@ -23,7 +23,7 @@
     <!-- ======================== FILTERS ======================= -->
     
     <bean id="httpSessionContextIntegrationFilter" class="net.sf.acegisecurity.context.HttpSessionContextIntegrationFilter">
-        <property name="context"><value>net.sf.acegisecurity.context.security.SecureContextImpl</value></property>
+        <property name="context"><value>net.sf.acegisecurity.context.SecurityContextImpl</value></property>
     </bean>
     
     <bean id="remoteUserFilter" class="net.sf.acegisecurity.wrapper.ContextHolderAwareRequestFilter"/>
@@ -41,6 +41,11 @@
         <property name="defaultTargetUrl"><value>/</value></property>
         <property name="filterProcessesUrl"><value>/j_security_check</value></property>
     </bean>
+    
+    <bean id="manualAuthenticationProcessing" class="edu.columbia.gemma.interceptor.ManualAuthenticationProcessing">
+      <property name="authenticationManager"><ref bean="authenticationManager"/></property>
+      
+   </bean>
     
     <bean id="authenticationManager" class="net.sf.acegisecurity.providers.ProviderManager">
         <property name="providers">
