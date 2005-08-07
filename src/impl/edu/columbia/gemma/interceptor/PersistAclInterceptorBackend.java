@@ -72,7 +72,18 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
         return false;
 
     }
-
+    
+    /**
+     * Creates the acl_permission object and the acl_object_identity object.
+     * 
+     * @param object
+     * @param recipient
+     * @param permission
+     * @throws NoSuchMethodException
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
     public void addPermission( Object object, String recipient, Integer permission ) throws NoSuchMethodException,
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
