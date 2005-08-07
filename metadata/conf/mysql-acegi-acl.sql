@@ -15,18 +15,13 @@ CREATE TABLE acl_permission (
   recipient varchar(100) NOT NULL,
   mask int(11) NOT NULL,
   PRIMARY KEY  (id)
-  ---  don't forget the comma after PRIMARY KEY UNIQUE KEY recipient (recipient)
 ) TYPE=InnoDB;
 
 --- (id, object identity (of form class:getId()), parent object, acl class)
 INSERT INTO acl_object_identity VALUES (1, 'dummy:1', null, 'net.sf.acegisecurity.acl.basic.SimpleAclEntry');
-INSERT INTO acl_object_identity VALUES (2, 'edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl:1', 1, 'net.sf.acegisecurity.acl.basic.SimpleAclEntry');
-INSERT INTO acl_object_identity VALUES (3, 'edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl:2', 1, 'net.sf.acegisecurity.acl.basic.SimpleAclEntry');
 
 --- (id, acl object identity, recepient (principal username), mask)
 INSERT INTO acl_permission VALUES (null, 1, 'administrator', 1);
-INSERT INTO acl_permission VALUES (null, 2, 'pavlab', 2);
-INSERT INTO acl_permission VALUES (null, 3, 'pavlab', 2);
 
 --- Add the user pavlab to the database.  Due to the fact that this user is used specifically for testing acegi security (acl), I have
 --- put the insert statements in this acegi specific .sql file as opposed to the init-script.sql.
