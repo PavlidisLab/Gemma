@@ -6,7 +6,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignExistsException;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
@@ -18,13 +19,13 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  * @author keshav
  * @version $Id$
  * @spring.bean id="arrayDesignLoader"
- * @spring.property name="arrayDesignDao" ref="arrayDesignDao"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
 public class ArrayDesignLoaderImpl {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignLoaderImpl.class );
 
-    private ArrayDesignDao arrayDesignDao;
+    private ArrayDesignService arrayDesignService;
 
     /**
      * @param adCol
@@ -33,14 +34,19 @@ public class ArrayDesignLoaderImpl {
 
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
-        Collection<ArrayDesign> adColFromDatabase = getArrayDesignDao().findAllArrayDesigns();
+        Collection<ArrayDesign> adColFromDatabase = getArrayDesignService().getAllArrayDesigns();
 
         int count = 0;
         for ( ArrayDesign ad : adCol ) {
-            assert arrayDesignDao != null;
+            assert arrayDesignService != null;
 
             if ( adColFromDatabase.size() == 0 ) {
-                getArrayDesignDao().create( ad );
+                try {
+                    getArrayDesignService().saveArrayDesign( ad );
+                } catch ( ArrayDesignExistsException e ) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
                 count++;
                 ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
 
@@ -55,7 +61,13 @@ public class ArrayDesignLoaderImpl {
                     tmp = ad;
                 }
                 if ( tmp != null ) {
-                    getArrayDesignDao().create( tmp );
+                    try {
+                        getArrayDesignService().saveArrayDesign( tmp );
+                    } catch ( ArrayDesignExistsException e ) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    ;
                     count++;
                     ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
                 }
@@ -67,20 +79,25 @@ public class ArrayDesignLoaderImpl {
      * @param arrayDesign
      */
     public void create( ArrayDesign arrayDesign ) {
-        getArrayDesignDao().create( arrayDesign );
+        try {
+            getArrayDesignService().saveArrayDesign( arrayDesign );
+        } catch ( ArrayDesignExistsException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
-     * @return Returns the arrayDesignDao.
+     * @return Returns the arrayDesignService.
      */
-    public ArrayDesignDao getArrayDesignDao() {
-        return arrayDesignDao;
+    public ArrayDesignService getArrayDesignService() {
+        return arrayDesignService;
     }
 
     /**
-     * @param arrayDesignDao The arrayDesignDao to set.
+     * @param arrayDesignService The arrayDesignService to set.
      */
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 }
