@@ -54,7 +54,7 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
         ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
                 .getBean( "manualAuthenticationProcessing" );
         
-        manAuthentication.validateRequest("administrator", "admintoast");
+        manAuthentication.validateRequest("pavlab", "pavlab");
 
         arrayDesignParser = new ArrayDesignParserImpl();
 
