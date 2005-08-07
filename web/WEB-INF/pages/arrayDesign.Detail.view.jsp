@@ -65,15 +65,17 @@
 						<INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
 					</DIV>
 				</TD>
-				<!--<r:isUserInRole role="admin">-->
-				<authz:authorize ifAnyGranted="admin">
+				<%--<r:isUserInRole role="admin">--%>
+				<%--<authz:authorize ifAnyGranted="admin">--%>
+				<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
 				<TD COLSPAN="2">
 					<DIV align="right">
 						<INPUT type="button" onclick="javascript:selectButton(1)" value="Edit">
 					</DIV>
 				</TD>
-				</authz:authorize>
-				<!--</r:isUserInRole> -->
+				</authz:acl>
+				<%--</authz:authorize>--%>
+				<%--</r:isUserInRole> --%>
 			</TR>
 		</TABLE>
 	</BODY>
