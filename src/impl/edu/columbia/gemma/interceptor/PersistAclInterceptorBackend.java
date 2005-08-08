@@ -52,10 +52,10 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
             String fullyQualifiedName = object.getClass().getName();
             log.info( "The object is: " + fullyQualifiedName );
 
-            if ( m.getName().contains( "save" ) )
+            if ( m.getName().startsWith( "save" ) )
                 addPermission( object, getUsername(), getAuthority() );
 
-            else if ( m.getName().contains( "remove" ) ) deletePermission( object, getUsername() );
+            else if ( m.getName().startsWith( "remove" ) ) deletePermission( object, getUsername() );
 
         }
 
@@ -130,26 +130,29 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
 
         if ( auth.getPrincipal() instanceof UserDetails ) {
             return ( ( UserDetails ) auth.getPrincipal() ).getUsername();
-        } else {
-            return auth.getPrincipal().toString();
         }
+        return auth.getPrincipal().toString();
+
     }
 
+    /**
+     * For the current principal, return the permissions mask. If the current principal has role "admin", they are
+     * granted ADMINISTRATION authority. If they are role "user", they are granted READ_WRITE authority.
+     * 
+     * @return
+     */
     protected Integer getAuthority() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if ( auth.getPrincipal() instanceof UserDetails ) {
-            GrantedAuthority[] ga = auth.getAuthorities();
-            for ( int i = 0; i < ga.length; i++ ) {
-                if ( ga[i].equals( "admin" ) )
-                    return new Integer( SimpleAclEntry.ADMINISTRATION );
-                else if ( ga[i].equals( "user" ) ) return new Integer( SimpleAclEntry.READ_WRITE );
+        GrantedAuthority[] ga = auth.getAuthorities();
+        for ( int i = 0; i < ga.length; i++ ) {
+            if ( ga[i].equals( "admin" ) ) {
+                log.debug("Granting ADMINISTRATION privileges");
+                return new Integer( SimpleAclEntry.ADMINISTRATION );
             }
-            return new Integer( SimpleAclEntry.READ_WRITE );
-            // return ga[i].getAuthority();
-        } else {
-            return new Integer( SimpleAclEntry.ADMINISTRATION );
         }
+        log.debug("Granting READ_WRITE privileges");
+        return new Integer( SimpleAclEntry.READ_WRITE );
 
     }
 
