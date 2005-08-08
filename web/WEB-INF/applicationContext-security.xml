@@ -286,4 +286,13 @@
       <property name="dataSource"><ref bean="dataSource"/></property>
    </bean>
    
+   
+   <!-- ================================================================== -->
+   
+   <!--  Interceptor to persist ACL objects -->
+   <bean id="persistAclInterceptorBackend" class="edu.columbia.gemma.interceptor.PersistAclInterceptorBackend">
+   <property name="basicAclExtendedDao"><ref bean="basicAclExtendedDao"/></property>
+   </bean>
+   
+   
 </beans>
