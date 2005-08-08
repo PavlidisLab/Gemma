@@ -137,6 +137,7 @@
             edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=admin, user
             edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=admin, user
             edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_UPDATE
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_ARRAYDESIGN_DELETE
          </value>
       </property>
    </bean>
@@ -158,7 +159,8 @@
       <property name="decisionVoters">
          <list>
             <ref local="roleVoter"/>
-            <ref local="aclArrayDesignUpdateVoter"/>         
+            <ref local="aclArrayDesignUpdateVoter"/> 
+            <ref local="aclArrayDesignDeleteVoter"/>             
          </list>
       </property>  
    </bean>
@@ -200,6 +202,23 @@
         <property name="aclManager"><ref local="aclManager"/></property>
         <property name="processConfigAttribute">
             <value>ACL_ARRAYDESIGN_UPDATE</value>
+        </property>
+        <property name="processDomainObjectClass">
+            <value>edu.columbia.gemma.expression.arrayDesign.ArrayDesign</value>
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION"/>
+                <ref local="SimpleAclEntry.READ_WRITE"/>
+            </list>
+        </property>
+    </bean>
+    
+    <!-- An access decision voter that reads ACL_USER_UPDATE settings -->
+    <bean id="aclArrayDesignDeleteVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager"><ref local="aclManager"/></property>
+        <property name="processConfigAttribute">
+            <value>ACL_ARRAYDESIGN_DELETE</value>
         </property>
         <property name="processDomainObjectClass">
             <value>edu.columbia.gemma.expression.arrayDesign.ArrayDesign</value>
