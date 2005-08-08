@@ -193,7 +193,7 @@ public class MageLoaderImpl implements Loader {
      * @param entity
      */
     private void loadBioMaterial( BioMaterial entity ) {
-        for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getCharacteristics() ) {
+        for ( OntologyEntry characteristic : ( Collection<OntologyEntry> ) entity.getBioMaterialCharacteristics() ) {
             persistOntologyEntry( characteristic );
         }
 

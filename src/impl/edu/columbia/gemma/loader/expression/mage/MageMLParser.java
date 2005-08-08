@@ -62,7 +62,7 @@ public class MageMLParser {
     /**
      * Create a new MageMLParser
      */
-    public MageMLParser() {
+    public MageMLParser() throws IOException {
 
         mlc = new MageMLConverter();
 
@@ -172,7 +172,7 @@ public class MageMLParser {
                 return null; // that's okay, not everybody has one.
             }
 
-            return ( Collection ) listGetterMethod.invoke( packageOb, new Object[] {} );
+            return ( Collection<Object>) listGetterMethod.invoke( packageOb, new Object[] {} );
 
         } catch ( SecurityException e ) {
             log.error( e, e );
@@ -218,6 +218,7 @@ public class MageMLParser {
         return mageJava != null;
     }
 
+    @Override
     public String toString() {
         assert convertedResult != null;
         StringBuffer buf = new StringBuffer();
