@@ -15,6 +15,7 @@ import net.sf.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.AfterReturningAdvice;
+import org.springframework.dao.DataAccessException;
 
 /**
  * This is an 'AfterAdvice' implementation of the 'AroundAdvice' PersistAclInterceptor
@@ -33,50 +34,37 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
     /**
      * Must implement this method if this class is going to be used as an interceptor
      * 
-     * @param invocation
-     * @return
+     * @param retValue
+     * @param m
+     * @param args - the argument to the method that is invoked.
+     * @param target
      * @throws Throwable
      */
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
 
-        if ( isValidMethodToIntercept( m ) ) {
-            Object object = null;
-            log.info( "Before: method=[" + m + "]" );
+        Object object = null;
+        log.info( "Before: method=[" + m + "]" );
 
-            log.info( "The method is: " + m.getName() );
+        if ( m.getName().contains( "save" ) || m.getName().contains( "remove" ) ) {
 
-            Object[] arguments = args;
-            for ( Object obj : arguments ) {
-                object = obj;
-            }
+            object = args[0];
 
             String fullyQualifiedName = object.getClass().getName();
             log.info( "The object is: " + fullyQualifiedName );
 
-            addPermission( object, getUsername(), getAuthority() );
+            if ( m.getName().contains( "save" ) )
+                addPermission( object, getUsername(), getAuthority() );
+
+            else if ( m.getName().contains( "remove" ) ) deletePermission( object, getUsername() );
 
         }
 
     }
 
     /**
-     * Test to see if this is a valid method to intercept. This will be fleshed out to add the actual methods intercept
-     * to the xml configuration file.
-     * 
-     * @param m
-     * @return
-     */
-    private boolean isValidMethodToIntercept( Method m ) {
-        if ( m.getName().contains( "save" ) ) return true;
-
-        return false;
-
-    }
-    
-    /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
-     * @param object
+     * @param object - represents the domain object.
      * @param recipient
      * @param permission
      * @throws NoSuchMethodException
@@ -97,6 +85,26 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Added permission " + permission + " for recipient " + recipient + " on " + object );
+        }
+    }
+
+    /**
+     * Delete object and acl permissions
+     * 
+     * @param object
+     * @param recipient
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     * @throws NoSuchMethodException
+     * @throws IllegalArgumentException
+     * @throws DataAccessException
+     */
+    public void deletePermission( Object object, String recipient ) throws DataAccessException,
+            IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        basicAclExtendedDao.delete( makeObjectIdentity( object ), recipient );
+
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Deleted object " + object + " ACL permissions for recipient " + recipient );
         }
     }
 
