@@ -118,7 +118,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
         ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
                 .getBean( "manualAuthenticationProcessing" );
 
-        manAuthentication.validateRequest( "administrator", "admintoast" );
+        manAuthentication.validateRequest( "pavlab", "pavlab" );
 
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
 
