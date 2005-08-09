@@ -101,8 +101,8 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
      */
     public void deletePermission( Object object, String recipient ) throws DataAccessException,
             IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        basicAclExtendedDao.delete( makeObjectIdentity( object ), recipient );
-
+        // basicAclExtendedDao.delete( makeObjectIdentity( object ), recipient );
+        basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         if ( log.isDebugEnabled() ) {
             log.debug( "Deleted object " + object + " ACL permissions for recipient " + recipient );
         }
@@ -125,6 +125,11 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
         return new NamedEntityObjectIdentity( object );
     }
 
+    /**
+     * Returns a String username.
+     * 
+     * @return
+     */
     protected String getUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -147,19 +152,25 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
         GrantedAuthority[] ga = auth.getAuthorities();
         for ( int i = 0; i < ga.length; i++ ) {
             if ( ga[i].equals( "admin" ) ) {
-                log.debug("Granting ADMINISTRATION privileges");
+                log.debug( "Granting ADMINISTRATION privileges" );
                 return new Integer( SimpleAclEntry.ADMINISTRATION );
             }
         }
-        log.debug("Granting READ_WRITE privileges");
+        log.debug( "Granting READ_WRITE privileges" );
         return new Integer( SimpleAclEntry.READ_WRITE );
 
     }
 
+    /**
+     * @param basicAclExtendedDao
+     */
     public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
         this.basicAclExtendedDao = basicAclExtendedDao;
     }
 
+    /**
+     * @return
+     */
     public BasicAclExtendedDao getBasicAclExtendedDao() {
         return basicAclExtendedDao;
     }
