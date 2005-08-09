@@ -18,7 +18,8 @@ import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.dao.DataAccessException;
 
 /**
- * This is an 'AfterAdvice' implementation of the 'AroundAdvice' PersistAclInterceptor
+ * An implementation of the 'AroundAdvice' PersistAclInterceptor. Persists acl_permission and acl_object_identity
+ * entries.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
