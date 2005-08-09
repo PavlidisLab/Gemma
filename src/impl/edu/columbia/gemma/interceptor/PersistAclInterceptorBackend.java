@@ -44,14 +44,15 @@ public class PersistAclInterceptorBackend implements AfterReturningAdvice {
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
 
         Object object = null;
-        log.info( "Before: method=[" + m + "]" );
+        log.debug( "Before: method=[" + m + "]" );
+        log.debug( "Target: " + target );
 
         if ( m.getName().contains( "save" ) || m.getName().contains( "remove" ) ) {
 
             object = args[0];
 
             String fullyQualifiedName = object.getClass().getName();
-            log.info( "The object is: " + fullyQualifiedName );
+            log.debug( "The object is: " + fullyQualifiedName );
 
             if ( m.getName().startsWith( "save" ) )
                 addPermission( object, getUsername(), getAuthority() );
