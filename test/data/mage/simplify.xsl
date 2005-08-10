@@ -2,9 +2,9 @@
 	<xsl:output method = "xml" indent = "yes" /> 
 	
 	<xsl:template match = "/" >
-		<MAGE-ML>
+		<BioList>
 			<xsl:apply-templates select = "//MAGE-ML/BioMaterial_package/BioMaterial_assnlist/BioSource" />
-		</MAGE-ML>
+		</BioList>
 	</xsl:template> 
 	
 	<xsl:template match = "BioSource">
