@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.ZipInputStream;
@@ -75,18 +77,25 @@ public class MageLoadTest extends BaseDAOTestCase {
     /*
      * Class under test for void create(Collection)
      */
+    
     public void testCreateCollection() throws Exception {
         log.debug( "Parsing MAGE Jamboree example" );
         ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
                 .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
         istMageExamples.getNextEntry();
+        ZipInputStream istMageXml = new ZipInputStream( MageMLParserTest.class
+                .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
+        InputStream istXsl = MageMLParserTest.class.getResourceAsStream("/data/mage/simplify.xsl");
         MageMLParser mlp = new MageMLParser();
+        mlp.createSimplifiedXml(istMageXml, istXsl);
         mlp.parse( istMageExamples );
+        
         Collection result = mlp.getConvertedData();
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
         ml.create( result );
+        
     }
 
     /**
@@ -97,7 +106,11 @@ public class MageLoadTest extends BaseDAOTestCase {
     public void testCreateCollectionRealA() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
+        InputStream istMageXml = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
+        InputStream istXsl = MageMLParserTest.class.getResourceAsStream("/data/mage/simplify.xsl");
+        
         MageMLParser mlp = new MageMLParser();
+        mlp.createSimplifiedXml(istMageXml, istXsl);
         mlp.parse( istMageExamples );
         Collection result = mlp.getConvertedData();
         log.info( result.size() + " Objects parsed from the MAGE file." );
@@ -111,10 +124,15 @@ public class MageLoadTest extends BaseDAOTestCase {
      * 
      * @throws Exception
      */
+    
     public void testCreateCollectionRealB() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (WMIT)" );
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-WMIT-4.xml" );
+        InputStream istMageXml = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-WMIT-4.xml" );
+        InputStream istXsl = MageMLParserTest.class.getResourceAsStream("/data/mage/simplify.xsl");
+        
         MageMLParser mlp = new MageMLParser();
+        mlp.createSimplifiedXml(istMageXml, istXsl);
         mlp.parse( istMageExamples );
         Collection result = mlp.getConvertedData();
         log.info( result.size() + " Objects parsed from the MAGE file." );
