@@ -27,11 +27,20 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.zip.ZipInputStream;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.biomage.Common.MAGEJava;
 import org.biomage.tools.xmlutils.MAGEContentHandler;
+import org.dom4j.Document;
+import org.dom4j.io.DocumentResult;
+import org.dom4j.io.DocumentSource;
+import org.dom4j.io.SAXReader;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -56,7 +65,7 @@ public class MageMLParser {
     private MAGEJava mageJava;
     private MageMLConverter mlc;
     private String[] mageClasses;
-
+    private Document simplifiedXml;
     private Collection<Object> convertedResult;
 
     /**
@@ -65,7 +74,7 @@ public class MageMLParser {
     public MageMLParser() throws IOException {
 
         mlc = new MageMLConverter();
-
+        
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
         String mageClassesString = rb.getString( "mage.classes" );
         mageClasses = mageClassesString.split( ", " );
@@ -81,6 +90,44 @@ public class MageMLParser {
     }
 
     /**
+     * @param istMageXml Input MAGE-ML 
+     * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
+     */
+    public void createSimplifiedXml(InputStream istMageXml, InputStream istXsl){
+    	try{
+	    	SAXReader reader = new SAXReader();
+			Document xml = reader.read(istMageXml);
+			TransformerFactory factory = TransformerFactory.newInstance();
+	        Transformer transformer = factory.newTransformer( new StreamSource( istXsl ) );
+	        DocumentSource source = new DocumentSource( xml );
+	        DocumentResult result = new DocumentResult();
+	        transformer.transform( source, result );
+	        this.simplifiedXml = result.getDocument();
+    	}catch ( Exception e ) {
+    		log.error( e, e );
+    	}
+    }
+    /**
+     * @param istMageXml Input MAGE-ML (from Zip file)
+     * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
+     */
+    public void createSimplifiedXml(ZipInputStream istMageXml, InputStream istXsl){
+    	try{
+    		istMageXml.getNextEntry();   
+    		SAXReader reader = new SAXReader();
+    		Document xml = reader.read(istMageXml);
+			TransformerFactory factory = TransformerFactory.newInstance();
+	        Transformer transformer = factory.newTransformer( new StreamSource( istXsl ) );
+	        DocumentSource source = new DocumentSource( xml );
+	        DocumentResult result = new DocumentResult();
+	        transformer.transform( source, result );
+	        this.simplifiedXml = result.getDocument();
+    	}catch ( Exception e ) {
+    		log.error( e, e );
+    	}
+    }
+    
+    /**
      * Parse a MAGE-ML stream. This has to be called before any data can be retrieved.
      * 
      * @throws SAXException
@@ -88,7 +135,8 @@ public class MageMLParser {
      * @param stream
      */
     public void parse( InputStream is ) throws IOException, SAXException {
-        parser.parse( new InputSource( is ) );
+    	mlc.setSimplifiedXml(simplifiedXml);
+    	parser.parse( new InputSource( is ) );
         mageJava = cHandler.getMAGEJava();
     }
 
