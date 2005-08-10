@@ -32,6 +32,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.util.zip.ZipInputStream;
+import java.io.InputStream;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -95,6 +102,9 @@ import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
 import org.biomage.tools.ontology.OntologyHelper;
+import org.dom4j.Document;
+import org.dom4j.XPath;
+import org.dom4j.Element;
 
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
@@ -204,6 +214,14 @@ public class MageMLConverter {
     private Map<String, Object> identifiableCache;
 
     /**
+     * Holds the simplified MAGE-ML 
+     */
+    private Document simplifiedXml;
+
+    public void setSimplifiedXml(Document simplifiedXml){
+    	this.simplifiedXml = simplifiedXml;
+    }
+    /**
      * 
      *
      */
@@ -220,6 +238,7 @@ public class MageMLConverter {
         String uri = null;
     }
 
+    
     /**
      * A generic converter that figures out which specific conversion method to call based on the class of the object.
      * 
@@ -540,9 +559,37 @@ public class MageMLConverter {
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Characteristics" ) ) {
             assert associatedObject instanceof List;
-            for ( OntologyEntry entry : ( List<OntologyEntry> ) associatedObject ) {
-                specialConvertOntologyEntryAssociation( entry, gemmaObj );
-            }
+
+            List elmList= simplifiedXml.selectNodes("/BioList/BioSource[@identifier='" + mageObj.getIdentifier() + "']/Characteristics/child::node()");
+	        if( !elmList.isEmpty() ){
+	        	log.info( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM.");
+	        	for ( Iterator iterator = elmList.iterator(); iterator.hasNext(); ) {
+	               	Element elm = (Element)iterator.next();
+	               	edu.columbia.gemma.common.description.BioCharacteristic bc = edu.columbia.gemma.common.description.BioCharacteristic.Factory.newInstance();
+                	bc.setCategory(elm.getName());
+                	bc.setValue(elm.valueOf("@value"));
+                	log.info( "CAT: " + bc.getCategory() + " VAL: " + bc.getValue());
+    	        	
+                	List subList = elm.selectNodes("child::node()");
+	               	Collection<edu.columbia.gemma.common.description.BioCharacteristic> bcConstituents = bc.getConstituents();
+                	if( subList.size()>0 ){
+	               		for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
+	    	               	Element elmSub = (Element)subIter.next();
+	    	               	edu.columbia.gemma.common.description.BioCharacteristic bcCon = edu.columbia.gemma.common.description.BioCharacteristic.Factory.newInstance();
+	    	               	bcCon.setCategory(elmSub.getName());
+	    	               	bcCon.setValue(elmSub.valueOf("@value"));
+	    	               	log.info( "     CAT: " + bcCon.getCategory() + " VAL: " + bcCon.getValue());
+	                    	bcConstituents.add(bcCon);
+	    	            }
+	               		bc.setConstituents(bcConstituents);
+	                }
+                	gemmaObj.getBioCharacteristics().add(bc);
+	            }
+	        }            
+	        
+            //for ( OntologyEntry entry : ( List<OntologyEntry> ) associatedObject ) {
+            //    specialConvertOntologyEntryAssociation( entry, gemmaObj, nodeList );
+            //}
         } else if ( associationName.equals( "MaterialType" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "QualityControlStatistics" ) ) {
@@ -2956,11 +3003,10 @@ public class MageMLConverter {
      * @param entry - the MAGE OntologyEntry to be converted.
      * @param gemmaObj The Gemma object which will have the association to the resulting converted object.
      */
-    private void specialConvertOntologyEntryAssociation( OntologyEntry entry, Object gemmaObj ) {
+    private void specialConvertOntologyEntryAssociation( OntologyEntry entry, Object gemmaObj, List elmList ) {
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Null Gemma object passed" );
         log.debug( "Entering specialConvertOntologyEntryAssociation" );
-
-       // david, maybe add code here.
+        // this won't be called 
     }
 
     /**
