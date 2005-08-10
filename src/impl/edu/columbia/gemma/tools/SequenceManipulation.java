@@ -20,7 +20,6 @@ package edu.columbia.gemma.tools;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -44,6 +43,164 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
  */
 public class SequenceManipulation {
     protected static final Log log = LogFactory.getLog( SequenceManipulation.class );
+
+    /**
+     * Puts "chr" prefix on the chromosome name, if need be.
+     * 
+     * @param chromosome
+     * @return
+     */
+    public static String blatFormatChromosomeName( String chromosome ) {
+        String searchChrom = chromosome;
+        if ( !searchChrom.startsWith( "chr" ) ) searchChrom = "chr" + searchChrom;
+        return searchChrom;
+    }
+
+    /**
+     * Convert a psl-formatted list (comma-delimited) to an int[].
+     * 
+     * @param blatLocations
+     * @return
+     */
+    public static int[] blatLocationsToIntArray( String blatLocations ) {
+        if ( blatLocations == null ) return null;
+        String[] strings = blatLocations.split( "," );
+        int[] result = new int[strings.length];
+        for ( int i = 0; i < strings.length; i++ ) {
+            result[i] = Integer.parseInt( strings[i] );
+        }
+        return result;
+    }
+
+    /**
+     * Convert a CompositeSequence's immobilizedCharacteristics into a single sequence, using a simple merge-join
+     * strategy.
+     * 
+     * @return
+     */
+    public static BioSequence collapse( CompositeSequence compositeSequence ) {
+        Set copyOfProbes = copyCompositeSequenceReporters( compositeSequence );
+        BioSequence collapsed = BioSequence.Factory.newInstance();
+        collapsed.setSequence( "" );
+        while ( !copyOfProbes.isEmpty() ) {
+            Reporter next = findLeftMostProbe( copyOfProbes );
+            int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
+            String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
+            collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
+            copyOfProbes.remove( next );
+        }
+        return collapsed;
+    }
+
+    /**
+     * Removes "chr" prefix from the chromosome name, if it is there.
+     * 
+     * @param chromosome
+     * @return
+     */
+    public static String deBlatFormatChromosomeName( String chromosome ) {
+        String searchChrom = chromosome;
+        if ( searchChrom.startsWith( "chr" ) ) searchChrom = searchChrom.substring( 3 );
+        return searchChrom;
+    }
+
+    /**
+     * Find where the center of a query location is in a gene. This is defined as the location of the center base of the
+     * query sequence relative to the 3' end of the gene.
+     * 
+     * @param starts
+     * @param sizes
+     * @param gene
+     * @return
+     */
+    public static int findCenter( String starts, String sizes ) {
+
+        int[] startArray = blatLocationsToIntArray( starts );
+        int[] sizesArray = blatLocationsToIntArray( sizes );
+
+        return findCenterExonCenterBase( startArray, sizesArray );
+
+    }
+
+    /**
+     * Given a physical location, find out how much of it overlaps with exons of a gene. This could involve more than
+     * one exon.
+     * <p>
+     * 
+     * @param chromosome
+     * @param starts of the locations we are testing.
+     * @param sizes of the locations we are testing.
+     * @param strand to consider. If null, strandedness is ignored.
+     * @param gene Gene we are testing
+     * @return Number of bases which overlap with exons of the gene. A value of zero indicates that the location is
+     *         entirely within an intron. If multiple GeneProducts are associated with this gene, the best (highest)
+     *         overlap is reported).
+     */
+    public static int getGeneExonOverlaps( String chromosome, String starts, String sizes, String strand, Gene gene ) {
+        if ( gene == null ) {
+            log.warn( "Null gene" );
+            return 0;
+        }
+
+        if ( gene.getPhysicalLocation().getChromosome() != null
+                && !gene.getPhysicalLocation().getChromosome().getName().equals(
+                        deBlatFormatChromosomeName( chromosome ) ) ) return 0;
+
+        int bestOverlap = 0;
+        for ( GeneProduct geneProduct : ( Collection<GeneProduct> ) gene.getProducts() ) {
+            int overlap = getGeneProductExonOverlap( starts, sizes, strand, geneProduct );
+            if ( overlap > bestOverlap ) {
+                bestOverlap = overlap;
+            }
+        }
+        return bestOverlap;
+    }
+
+    /**
+     * Compute the overlap of a physical location with a transcript (gene product).
+     * 
+     * @param starts of the locations we are testing.
+     * @param sizes of the locations we are testing.
+     * @param strand the strand to look on. If null, strand is ignored.
+     * @param geneProduct GeneProduct we are testing. If strand of PhysicalLocation is null, we ignore strand.
+     * @return Total number of bases which overlap with exons of the transcript. A value of zero indicates that the
+     *         location is entirely within an intron.
+     */
+    public static int getGeneProductExonOverlap( String starts, String sizes, String strand, GeneProduct geneProduct ) {
+
+        if ( starts == null || sizes == null || geneProduct == null )
+            throw new IllegalArgumentException( "Null data" );
+
+        if ( strand != null && geneProduct.getPhysicalLocation().getStrand() != null
+                && geneProduct.getPhysicalLocation().getStrand() != strand ) {
+            return 0;
+        }
+
+        Collection<PhysicalLocation> exons = geneProduct.getExons();
+
+        int[] startArray = blatLocationsToIntArray( starts );
+        int[] sizesArray = blatLocationsToIntArray( sizes );
+
+        assert startArray.length == sizesArray.length;
+
+        int totalOverlap = 0;
+        int totalLength = 0;
+        for ( int i = 0; i < sizesArray.length; i++ ) {
+            int start = startArray[i];
+            int end = start + sizesArray[i];
+            for ( PhysicalLocation exonLocation : exons ) {
+                int exonStart = exonLocation.getNucleotide().intValue();
+                int exonEnd = exonLocation.getNucleotide().intValue() + exonLocation.getNucleotideLength().intValue();
+                totalOverlap += computeOverlap( start, end, exonStart, exonEnd );
+            }
+            totalLength += end - start;
+        }
+
+        if ( totalOverlap > totalLength )
+            log.warn( "More overlap than length of sequence, trimming because " + totalOverlap + " > " + totalLength );
+
+        return Math.min( totalOverlap, totalLength );
+    }
 
     /**
      * Compute just any overlap the compare sequence has with the target on the right side.
@@ -77,76 +234,11 @@ public class SequenceManipulation {
     }
 
     /**
-     * Given a physical location, find out how much of it overlaps with exons of a gene. This could involve more than
-     * one exon.
-     * <p>
-     * 
-     * @param chromosome
-     * @param starts of the locations we are testing.
-     * @param sizes of the locations we are testing.
-     * @param gene Gene we are testing
-     * @return Number of bases which overlap with exons of the gene. A value of zero indicates that the location is
-     *         entirely within an intron.
-     *         <p>
-     *         FIXME this should take a PhysicalLocation as input.
-     *         <p>
-     *         FIXME this should check the chromosome (commented out for now as a convenience)
-     *         <p>
-     *         FIXME This only checks for one gene product per gene.
+     * @param sizes Blat-formatted string of sizes (comma-delimited)
+     * @return
      */
-    public static int getGeneExonOverlaps( String chromosome, String starts, String sizes, Gene gene ) {
-        if ( gene == null ) return 0;
-        // if ( !gene.getPhysicalLocation().getChromosome().toString().equals( chromosome ) ) return 0;
-        Collection<GeneProduct> products = gene.getProducts();
-        for ( GeneProduct geneProduct : products ) {
-            return getGeneProductExonOverlap( starts, sizes, null, geneProduct );
-        }
-        return 0;
-    }
-
-    /**
-     * Compute the overlap of a physical location with a transcript (gene product).
-     * 
-     * @param starts of the locations we are testing.
-     * @param sizes of the locations we are testing.
-     * @param strand the strand to look on. If null, strand is ignored.
-     * @param geneProduct GeneProduct we are testing. If strand of PhysicalLocation is null, we ignore strand.
-     * @return Total number of bases which overlap with exons of the transcript. A value of zero indicates that the
-     *         location is entirely within an intron.
-     */
-    public static int getGeneProductExonOverlap( String starts, String sizes, String strand, GeneProduct geneProduct ) {
-
-        if ( starts == null || sizes == null || geneProduct == null )
-            throw new IllegalArgumentException( "Null data" );
-
-        if ( strand != null && geneProduct.getPhysicalLocation().getStrand() != null
-                && geneProduct.getPhysicalLocation().getStrand() != strand ) return 0;
-
-        Collection<PhysicalLocation> exons = geneProduct.getExons();
-
-        int[] startArray = blatLocationsToIntArray( starts );
-        int[] sizesArray = blatLocationsToIntArray( sizes );
-
-        assert startArray.length == sizesArray.length;
-
-        int totalOverlap = 0;
-        int totalLength = 0;
-        for ( int i = 0; i < sizesArray.length; i++ ) {
-            int start = startArray[i];
-            int end = start + sizesArray[i];
-            for ( PhysicalLocation exonLocation : exons ) {
-                int exonStart = exonLocation.getNucleotide().intValue();
-                int exonEnd = exonLocation.getNucleotide().intValue() + exonLocation.getNucleotideLength().intValue();
-                totalOverlap += computeOverlap( start, end, exonStart, exonEnd );
-            }
-            totalLength += end - start;
-        }
-
-        if ( totalOverlap > totalLength )
-            log.warn( "More overlap than length of sequence, trimming because " + totalOverlap + " > " + totalLength );
-        totalOverlap = Math.min( totalOverlap, totalLength );
-
-        return totalOverlap;
+    public static int totalSize( String sizes ) {
+        return totalSize( blatLocationsToIntArray( sizes ) );
     }
 
     /**
@@ -195,45 +287,6 @@ public class SequenceManipulation {
     }
 
     /**
-     * Convert a CompositeSequence's immobilizedCharacteristics into a single sequence, using a simple merge-join
-     * strategy.
-     * 
-     * @return
-     */
-    public static BioSequence collapse( CompositeSequence compositeSequence ) {
-        Set copyOfProbes = copyCompositeSequenceReporters( compositeSequence );
-        BioSequence collapsed = BioSequence.Factory.newInstance();
-        collapsed.setSequence( "" );
-        while ( !copyOfProbes.isEmpty() ) {
-            Reporter next = findLeftMostProbe( copyOfProbes );
-            int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
-            String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
-            collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
-            copyOfProbes.remove( next );
-        }
-        return collapsed;
-    }
-
-    /**
-     * From a set of Reporters, find the one with the left-most location.
-     * 
-     * @param copyOfProbes
-     * @return
-     */
-    private static Reporter findLeftMostProbe( Set<Reporter> copyOfProbes ) {
-        int minLocation = Integer.MAX_VALUE;
-        Reporter next = null;
-        for ( Reporter probe : copyOfProbes ) {
-            int loc = probe.getStartInBioChar();
-            if ( loc <= minLocation ) {
-                minLocation = loc;
-                next = probe;
-            }
-        }
-        return next;
-    }
-
-    /**
      * @param compositeSequence
      * @return Set of Reporters for this compositesequence.
      */
@@ -248,40 +301,6 @@ public class SequenceManipulation {
             copyOfProbes.add( copy );
         }
         return copyOfProbes;
-    }
-
-    /**
-     * Convert a psl-formatted list (comma-delimited) to an int[].
-     * 
-     * @param blatLocations
-     * @return
-     */
-    public static int[] blatLocationsToIntArray( String blatLocations ) {
-        if ( blatLocations == null ) return null;
-        String[] strings = blatLocations.split( "," );
-        int[] result = new int[strings.length];
-        for ( int i = 0; i < strings.length; i++ ) {
-            result[i] = Integer.parseInt( strings[i] );
-        }
-        return result;
-    }
-
-    /**
-     * Find where the center of a query location is in a gene. This is defined as the location of the center base of the
-     * query sequence relative to the 3' end of the gene.
-     * 
-     * @param starts
-     * @param sizes
-     * @param gene
-     * @return
-     */
-    public static int findCenter( String starts, String sizes ) {
-
-        int[] startArray = blatLocationsToIntArray( starts );
-        int[] sizesArray = blatLocationsToIntArray( sizes );
-
-        return findCenterExonCenterBase( startArray, sizesArray );
-
     }
 
     /**
@@ -305,6 +324,25 @@ public class SequenceManipulation {
         }
         assert false : "Failed to find center!";
         throw new IllegalStateException( "Should not be here!" );
+    }
+
+    /**
+     * From a set of Reporters, find the one with the left-most location.
+     * 
+     * @param copyOfProbes
+     * @return
+     */
+    private static Reporter findLeftMostProbe( Set<Reporter> copyOfProbes ) {
+        int minLocation = Integer.MAX_VALUE;
+        Reporter next = null;
+        for ( Reporter probe : copyOfProbes ) {
+            int loc = probe.getStartInBioChar();
+            if ( loc <= minLocation ) {
+                minLocation = loc;
+                next = probe;
+            }
+        }
+        return next;
     }
 
     /**

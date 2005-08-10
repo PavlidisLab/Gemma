@@ -73,10 +73,9 @@ public class ProbeThreePrimeLocator {
     private static final int PORT = 3306;
 
     private static final String DATABASE_NAME = "hg17";
-    private double exonOverlapThreshold = 0.50;
     private double identityThreshold = 0.90;
     private double scoreThreshold = 0.90;
-    private String threeprimeMethod = GoldenPath.CENTER;
+    private String threeprimeMethod = GoldenPath.RIGHTEND;
     private static Log log = LogFactory.getLog( ProbeThreePrimeLocator.class.getName() );
 
     public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
@@ -126,6 +125,11 @@ public class ProbeThreePrimeLocator {
                         + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
 
                 count++;
+                try {
+                    Thread.sleep( 5 );
+                } catch ( InterruptedException e ) {
+                    e.printStackTrace();
+                }
                 if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " probes" );
             }
         }
@@ -164,22 +168,26 @@ public class ProbeThreePrimeLocator {
     }
 
     /**
+     * Trim the results down to a set of "best" results. The results are sent to a provided writer
+     * <p>
+     * FIXME handle ties.
+     * 
      * @throws IOException
      * @param results
      * @param writer
      */
-    void getBest( Map<String, Collection<LocationData>> results, BufferedWriter writer ) throws IOException {
+    protected void getBest( Map<String, Collection<LocationData>> results, BufferedWriter writer ) throws IOException {
         for ( String probe : results.keySet() ) {
             Collection<LocationData> probeResults = results.get( probe );
             double maxBlatScore = -1.0;
-            double maxScore = 0.0;
+            int maxScore = 0;
             LocationData best = null;
             double maxOverlap = 0.0;
             int alignLength = 0;
             for ( LocationData ld : probeResults ) {
                 double blatScore = ld.getBr().score();
                 double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
-                double score = blatScore * overlap;
+                int score = ( int ) ( 1000 * blatScore * overlap );
                 if ( score >= maxScore ) {
                     maxScore = score;
                     maxBlatScore = blatScore;
@@ -188,13 +196,25 @@ public class ProbeThreePrimeLocator {
                     alignLength = ld.getBr().getTargetEnd() - ld.getBr().getTargetStart();
                 }
             }
+
+            // examine ties.
+            int numTied = 0;
+            for ( LocationData ld : probeResults ) {
+                double blatScore = ld.getBr().score();
+                double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
+                int score = ( int ) ( 1000 * blatScore * overlap );
+                if ( score == maxScore ) {
+                    numTied++;
+                }
+            }
+
             best.setBestBlatScore( maxBlatScore );
             best.setBestOverlap( maxOverlap );
             best.setNumHits( probeResults.size() );
             best.setAlignLength( alignLength );
+            best.setNumTied( numTied );
             writer.write( best.toString() );
         }
-
     }
 
     /**
@@ -214,7 +234,7 @@ public class ProbeThreePrimeLocator {
             if ( args.length < 2 ) throw new IllegalArgumentException( "usage: input file name, output filename" );
             String filename = args[0];
             File f = new File( filename );
-            if ( !f.canRead() ) throw new IOException();
+            if ( !f.canRead() ) throw new IOException( "Can't read file" );
 
             String outputFileName = args[1];
             File o = new File( outputFileName );
@@ -257,6 +277,14 @@ public class ProbeThreePrimeLocator {
         private int numHits;
         private ThreePrimeData tpd;
         private int alignLength;
+        private int numTied;
+
+        /**
+         * @return Returns the numTied.
+         */
+        public int getNumTied() {
+            return this.numTied;
+        }
 
         /**
          * @param tpd2
@@ -265,6 +293,15 @@ public class ProbeThreePrimeLocator {
         public LocationData( ThreePrimeData tpd, BlatResultImpl blatRes ) {
             this.tpd = tpd;
             this.br = blatRes;
+        }
+
+        /**
+         * @param numTied
+         */
+        public void setNumTied( int numTied ) {
+            this.numTied = numTied;
+            // TODO Auto-generated method stub
+
         }
 
         public BlatResultImpl getBr() {
@@ -353,6 +390,7 @@ public class ProbeThreePrimeLocator {
             buf.append( "\t" + this.br.getTargetName() );
             buf.append( "\t" + this.br.getTargetStart() );
             buf.append( "\t" + this.br.getTargetEnd() );
+            buf.append( "\t" + this.numTied );
             buf.append( "\n" );
             return buf.toString();
         }

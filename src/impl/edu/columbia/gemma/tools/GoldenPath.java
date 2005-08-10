@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -35,11 +34,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.io.ByteArrayConverter;
+import baseCode.util.SQLUtils;
+import edu.columbia.gemma.genome.Chromosome;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.PhysicalLocation;
 import edu.columbia.gemma.genome.gene.GeneProduct;
 
 /**
+ * Perform useful queries against GoldenPath (UCSC) databases.
+ * <p>
  * This is partly temporary, until we have this in our own database.
  * <hr>
  * <p>
@@ -49,7 +52,10 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
  * @version $Id$
  */
 public class GoldenPath {
-    private static final Log log = LogFactory.getLog( GoldenPath.class );
+    /**
+     * 3' distances are measured from the center of the query
+     */
+    public static final String CENTER = "center";
 
     /**
      * 3' distances are measured from the 3' (right) edge of the query
@@ -57,17 +63,20 @@ public class GoldenPath {
     public static final String RIGHTEND = "right";
 
     /**
-     * 3' distances are measured from the center of the query
-     */
-    public static final String CENTER = "center";
-
-    /**
      * 3' distance are measured from the 5' (left) edge of the query.
      */
     private static final String LEFTEND = "left";
 
-    private QueryRunner qr;
+    private static final Log log = LogFactory.getLog( GoldenPath.class );
+
+    /**
+     * If the exon overlap fraction with annotated (known/refseq) exons is less than this value, some additional
+     * checking for mRNAs and ESTs may be done.
+     */
+    private static final double RECHECK_OVERLAP_THRESHOLD = 0.9;
     private Connection conn;
+
+    private QueryRunner qr;
 
     /**
      * @param databaseName
@@ -100,7 +109,7 @@ public class GoldenPath {
     public List<Gene> findKnownGenesByLocation( String chromosome, int start, int end, String strand ) {
         Integer starti = new Integer( start );
         Integer endi = new Integer( end );
-        String searchChrom = trimChromosomeName( chromosome );
+        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds "
                 + " FROM knownGene as kg INNER JOIN"
                 + " kgXref AS kgxr ON kg.name=kgxr.kgID WHERE "
@@ -127,7 +136,7 @@ public class GoldenPath {
     public List<Gene> findRefGenesByLocation( String chromosome, int start, int end, String strand ) {
         Integer starti = new Integer( start );
         Integer endi = new Integer( end );
-        String searchChrom = trimChromosomeName( chromosome );
+        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
                 + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
                 + "(txStart > ?  AND txStart < ?) OR  (txEnd > ? AND  txEnd < ? )) and chrom = ? ";
@@ -140,117 +149,6 @@ public class GoldenPath {
 
         return findGenesByQuery( starti, endi, searchChrom, strand, query );
 
-    }
-
-    /**
-     * @param query Generic method to retrive Genes from the GoldenPath database. The query given must have the
-     *        appropriate form.
-     * @param starti
-     * @param endi
-     * @param searchChrom
-     * @param query
-     * @return List of Genes.
-     * @throws SQLException
-     */
-    private List<Gene> findGenesByQuery( Integer starti, Integer endi, String searchChrom, String strand, String query ) {
-        // Cases:
-        // 1. gene is contained within the region: txStart > start & txEnd < end;
-        // 2. region is conained within the gene: txStart < start & txEnd > end;
-        // 3. region overlaps start of gene: txStart > start & txStart < end.
-        // 4. region overlaps end of gene: txEnd > start & txEnd < end
-        //           
-        try {
-
-            Object[] params;
-            if ( strand != null ) {
-                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom, strand };
-            } else {
-                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom };
-            }
-
-            return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
-
-                public Object handle( ResultSet rs ) throws SQLException {
-                    List<Gene> r = new ArrayList<Gene>();
-                    while ( rs.next() ) {
-
-                        Gene gene = Gene.Factory.newInstance();
-
-                        gene.setNcbiId( rs.getString( 1 ) );
-
-                        gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
-
-                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( new Integer( rs.getInt( 3 ) ) );
-                        pl.setNucleotideLength( new Integer( rs.getInt( 4 ) - rs.getInt( 3 ) ) );
-                        pl.setStrand( rs.getString( 5 ) );
-
-                        // note that we aren't setting the chromosome here; we already know that.
-                        gene.setPhysicalLocation( pl );
-                        r.add( gene );
-
-                        Blob exonStarts = rs.getBlob( 6 );
-                        Blob exonEnds = rs.getBlob( 7 );
-
-                        setExons( gene, exonStarts, exonEnds );
-                    }
-                    return r;
-                }
-
-                /**
-                 * @param gene
-                 * @param exonStarts
-                 * @param exonEnds
-                 * @throws SQLException
-                 */
-                private void setExons( Gene gene, Blob exonStarts, Blob exonEnds ) throws SQLException {
-
-                    String exonStartLocations = blobToString( exonStarts );
-                    String exonEndLocations = blobToString( exonEnds );
-
-                    int[] exonStartsInts = SequenceManipulation.blatLocationsToIntArray( exonStartLocations );
-                    int[] exonEndsInts = SequenceManipulation.blatLocationsToIntArray( exonEndLocations );
-
-                    assert exonStartsInts.length == exonEndsInts.length;
-
-                    GeneProduct gp = GeneProduct.Factory.newInstance();
-                    Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
-                    for ( int i = 0; i < exonEndsInts.length; i++ ) {
-                        int exonStart = exonStartsInts[i];
-                        int exonEnd = exonEndsInts[i];
-                        PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
-                        // FIXME set the chromosome for the location.
-                        exon.setNucleotide( new Integer( exonStart ) );
-                        exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
-                        exons.add( exon );
-                    }
-                    gp.setExons( exons );
-                    gp.setName( gene.getNcbiId() );
-                    Collection<GeneProduct> products = new HashSet();
-                    products.add( gp );
-                    gene.setProducts( products );
-                }
-
-                private String blobToString( Blob exonStarts ) throws SQLException {
-                    byte[] bytes = exonStarts.getBytes( 1L, ( int ) exonStarts.length() );
-                    ByteArrayConverter bac = new ByteArrayConverter();
-                    return bac.byteArrayToAsciiString( bytes );
-                }
-            } );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * @param chromosome
-     * @return
-     */
-    private String trimChromosomeName( String chromosome ) {
-        String searchChrom = chromosome;
-        if ( !searchChrom.startsWith( "chr" ) ) searchChrom = "chr" + searchChrom;
-        return searchChrom;
     }
 
     /**
@@ -282,25 +180,69 @@ public class GoldenPath {
 
         List<ThreePrimeData> results = new ArrayList<ThreePrimeData>();
         for ( Gene gene : genes ) {
-            ThreePrimeData tpd = getThreePrimeDistance( chromosome, queryStart, queryEnd, starts, sizes, gene, method );
+            ThreePrimeData tpd = computeLocationInGene( chromosome, queryStart, queryEnd, starts, sizes, gene, method );
             results.add( tpd );
         }
         return results;
     }
 
     /**
-     * Given a location and a gene, compute the distance from the 3' end of the gene.
+     * Recompute the exonOverlap looking at mRNAs. This lets us be a little less conservative about how we compute exon
+     * overlaps.
      * 
      * @param chromosome
      * @param queryStart
      * @param queryEnd
      * @param starts
      * @param sizes
-     * @param gene
+     * @param exonOverlap Exon overlap we're starting with. We only care to improve on this.
+     * @return The best overlap with any exons from an mRNA in the selected region.
+     * @see getThreePrimeDistances
+     *      <p>
+     *      FIXME it will improve performance to cache the results of these queries, because we often look in the same
+     *      place for other hits.
+     */
+    private int checkRNAs( String chromosome, int queryStart, int queryEnd, String starts, String sizes, int exonOverlap ) {
+        List<Gene> mRNAs = findRNAs( chromosome, queryStart, queryEnd );
+
+        if ( mRNAs.size() > 0 ) {
+            log.debug( mRNAs.size() + " mRNAs found at chr" + chromosome + ":" + queryStart + "-" + queryEnd
+                    + ", trying to improve overlap of  " + exonOverlap );
+
+            int maxOverlap = exonOverlap;
+            for ( Gene mRNA : mRNAs ) {
+                int overlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, mRNA );
+                log.debug( "overlap with " + mRNA.getNcbiId() + "=" + overlap );
+                if ( overlap > maxOverlap ) {
+                    log.debug( "Best mRNA overlap=" + overlap );
+                    maxOverlap = overlap;
+                }
+            }
+
+            exonOverlap = maxOverlap;
+            log.debug( "Overlap with mRNAs is now " + exonOverlap );
+        }
+        return exonOverlap;
+    }
+
+    /**
+     * Given a location and a gene, compute the distance from the 3' end of the gene as well as the amount of overlap.
+     * If the location has low overlaps with known exons (threshold set by RECHECK_OVERLAP_THRESHOLD), we search for
+     * mRNAs in the region. If there are overlapping mRNAs, we use the best overlap value.
+     * 
+     * @param chromosome
+     * @param queryStart
+     * @param queryEnd
+     * @param starts Start locations of alignments of the query.
+     * @param sizes Sizes of alignments of the query.
+     * @param gene Gene with which the overlap and distance is to be computed.
      * @param method
      * @return a ThreePrimeData object containing the results.
+     * @see getThreePrimeDistances
+     *      <p>
+     *      FIXME this should take a PhysicalLocation as an argument.
      */
-    private ThreePrimeData getThreePrimeDistance( String chromosome, int queryStart, int queryEnd, String starts,
+    private ThreePrimeData computeLocationInGene( String chromosome, int queryStart, int queryEnd, String starts,
             String sizes, Gene gene, String method ) {
         ThreePrimeData tpd = new ThreePrimeData( gene );
         PhysicalLocation geneLoc = gene.getPhysicalLocation();
@@ -308,10 +250,14 @@ public class GoldenPath {
         int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
         int exonOverlap = 0;
         if ( starts != null & sizes != null ) {
-            exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, gene );
+            exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, gene );
+            int totalSize = SequenceManipulation.totalSize( sizes );
+            assert exonOverlap <= totalSize;
+            if ( exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
+                exonOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap );
+            }
         }
 
-        assert exonOverlap <= queryEnd - queryStart;
         tpd.setExonOverlap( exonOverlap );
         tpd.setInIntron( exonOverlap == 0 );
 
@@ -345,30 +291,243 @@ public class GoldenPath {
     }
 
     /**
+     * @param query Generic method to retrive Genes from the GoldenPath database. The query given must have the
+     *        appropriate form.
+     * @param starti
+     * @param endi
+     * @param chromosome
+     * @param query
+     * @return List of Genes.
+     * @throws SQLException
+     */
+    private List<Gene> findGenesByQuery( Integer starti, Integer endi, final String chromosome, String strand,
+            String query ) {
+        // Cases:
+        // 1. gene is contained within the region: txStart > start & txEnd < end;
+        // 2. region is conained within the gene: txStart < start & txEnd > end;
+        // 3. region overlaps start of gene: txStart > start & txStart < end.
+        // 4. region overlaps end of gene: txEnd > start & txEnd < end
+        //           
+        try {
+
+            Object[] params;
+            if ( strand != null ) {
+                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome, strand };
+            } else {
+                params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
+            }
+
+            return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+
+                public Object handle( ResultSet rs ) throws SQLException {
+                    List<Gene> r = new ArrayList<Gene>();
+                    while ( rs.next() ) {
+
+                        Gene gene = Gene.Factory.newInstance();
+
+                        gene.setNcbiId( rs.getString( 1 ) );
+
+                        gene.setOfficialSymbol( rs.getString( 2 ) );
+                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
+
+                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                        pl.setNucleotide( new Integer( rs.getInt( 3 ) ) );
+                        pl.setNucleotideLength( new Integer( rs.getInt( 4 ) - rs.getInt( 3 ) ) );
+                        pl.setStrand( rs.getString( 5 ) );
+
+                        Chromosome c = Chromosome.Factory.newInstance();
+                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                        pl.setChromosome( c );
+
+                        // note that we aren't setting the chromosome here; we already know that.
+                        gene.setPhysicalLocation( pl );
+                        r.add( gene );
+
+                        Blob exonStarts = rs.getBlob( 6 );
+                        Blob exonEnds = rs.getBlob( 7 );
+
+                        setExons( gene, exonStarts, exonEnds );
+                    }
+                    return r;
+                }
+
+            } );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Check to see if there are mRNAs that overlap with this region. We promote the mRNAs to the status of genes for
+     * this purpose.
+     * 
+     * @param chromosome
+     * @param regionStart the region to be checked
+     * @param regionEnd
+     * @return The number of mRNAs which overlap the query region.
+     */
+    private List<Gene> findRNAs( final String chromosome, int regionStart, int regionEnd ) {
+        Integer starti = new Integer( regionStart );
+        Integer endi = new Integer( regionEnd );
+        String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
+        String query = "SELECT mrna.qName, mrna.qName, mrna.tStart, mrna.tEnd, mrna.strand, mrna.blockSizes, mrna.tStarts  "
+                + " FROM all_mrna as mrna  WHERE "
+                + "((mrna.tStart > ? AND mrna.tEnd < ?) OR (mrna.tStart < ? AND mrna.tEnd > ?) OR "
+                + "(mrna.tStart > ?  AND mrna.tStart < ?) OR  (mrna.tEnd > ? AND  mrna.tEnd < ? )) and mrna.tName = ? ";
+
+        query = query + " order by mrna.tStart ";
+
+        Object[] params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom };
+        try {
+            return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+
+                public Object handle( ResultSet rs ) throws SQLException {
+                    List<Gene> r = new ArrayList<Gene>();
+                    while ( rs.next() ) {
+
+                        Gene gene = Gene.Factory.newInstance();
+
+                        gene.setNcbiId( rs.getString( 1 ) );
+
+                        gene.setOfficialSymbol( rs.getString( 2 ) );
+                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
+
+                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                        pl.setNucleotide( new Integer( rs.getInt( 3 ) ) );
+                        pl.setNucleotideLength( new Integer( rs.getInt( 4 ) - rs.getInt( 3 ) ) );
+                        pl.setStrand( rs.getString( 5 ) );
+
+                        Chromosome c = Chromosome.Factory.newInstance();
+                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                        pl.setChromosome( c );
+
+                        // note that we aren't setting the chromosome here; we already know that.
+                        gene.setPhysicalLocation( pl );
+                        r.add( gene );
+
+                        Blob blockSizes = rs.getBlob( 6 );
+                        Blob blockStarts = rs.getBlob( 7 );
+
+                        setBlocks( gene, blockSizes, blockStarts );
+
+                    }
+                    return r;
+                }
+            } );
+
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * Handle the format used by the all_mrna and other GoldenPath tables, which go by sizes of blocks and their starts,
+     * not the starts and ends.
+     * <p>
+     * Be sure to pass the right Blob arguments!
+     * 
+     * @param gene
+     * @param blockSizes
+     * @param blockStarts
+     */
+    private void setBlocks( Gene gene, Blob blockSizes, Blob blockStarts ) throws SQLException {
+        if ( blockSizes == null || blockStarts == null ) return;
+
+        String exonSizes = SQLUtils.blobToString( blockSizes );
+        String exonStarts = SQLUtils.blobToString( blockStarts );
+
+        int[] exonSizeInts = SequenceManipulation.blatLocationsToIntArray( exonSizes );
+        int[] exonStartInts = SequenceManipulation.blatLocationsToIntArray( exonStarts );
+
+        assert exonSizeInts.length == exonStartInts.length;
+
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
+        for ( int i = 0; i < exonSizeInts.length; i++ ) {
+            int exonStart = exonStartInts[i];
+            int exonSize = exonSizeInts[i];
+            PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
+            if ( gene.getPhysicalLocation() != null ) exon.setChromosome( gene.getPhysicalLocation().getChromosome() );
+            exon.setNucleotide( new Integer( exonStart ) );
+            exon.setNucleotideLength( new Integer( exonSize ) );
+            exons.add( exon );
+        }
+        gp.setExons( exons );
+        gp.setName( gene.getNcbiId() );
+        Collection<GeneProduct> products = new HashSet<GeneProduct>();
+        products.add( gp );
+        gene.setProducts( products );
+    }
+
+    /**
+     * Fill in the exon information for a gene, given the raw blobs from the GoldenPath database.
+     * <p>
+     * Be sure to pass the right Blob arguments!
+     * 
+     * @param gene
+     * @param exonStarts
+     * @param exonEnds
+     * @throws SQLException
+     */
+    private void setExons( Gene gene, Blob exonStarts, Blob exonEnds ) throws SQLException {
+
+        if ( exonStarts == null || exonEnds == null ) return;
+
+        String exonStartLocations = SQLUtils.blobToString( exonStarts );
+        String exonEndLocations = SQLUtils.blobToString( exonEnds );
+
+        int[] exonStartsInts = SequenceManipulation.blatLocationsToIntArray( exonStartLocations );
+        int[] exonEndsInts = SequenceManipulation.blatLocationsToIntArray( exonEndLocations );
+
+        assert exonStartsInts.length == exonEndsInts.length;
+
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+        Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
+        for ( int i = 0; i < exonEndsInts.length; i++ ) {
+            int exonStart = exonStartsInts[i];
+            int exonEnd = exonEndsInts[i];
+            PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
+            if ( gene.getPhysicalLocation() != null ) exon.setChromosome( gene.getPhysicalLocation().getChromosome() );
+            exon.setNucleotide( new Integer( exonStart ) );
+            exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
+            exons.add( exon );
+        }
+        gp.setExons( exons );
+        gp.setName( gene.getNcbiId() );
+        Collection<GeneProduct> products = new HashSet<GeneProduct>();
+        products.add( gp );
+        gene.setProducts( products );
+    }
+
+    /**
      * Helper data transfer object.
      */
     public class ThreePrimeData {
-
-        private boolean inIntron = false;
-        private int exonOverlap = 0;
 
         /**
          * The distance from the gene (measured from a point defined by the caller)
          */
         private int distance;
+        private int exonOverlap = 0;
 
         private Gene gene;
+
+        private boolean inIntron = false;
 
         public ThreePrimeData( Gene gene ) {
             this.gene = gene;
         }
 
-        public void setDistance( int i ) {
-            this.distance = i;
-        }
-
         public int getDistance() {
             return this.distance;
+        }
+
+        /**
+         * @return Returns the exonOverlap.
+         */
+        public int getExonOverlap() {
+            return this.exonOverlap;
         }
 
         public Gene getGene() {
@@ -379,15 +538,8 @@ public class GoldenPath {
             return this.inIntron;
         }
 
-        public void setInIntron( boolean inIntron ) {
-            this.inIntron = inIntron;
-        }
-
-        /**
-         * @return Returns the exonOverlap.
-         */
-        public int getExonOverlap() {
-            return this.exonOverlap;
+        public void setDistance( int i ) {
+            this.distance = i;
         }
 
         /**
@@ -395,6 +547,10 @@ public class GoldenPath {
          */
         public void setExonOverlap( int exonOverlap ) {
             this.exonOverlap = exonOverlap;
+        }
+
+        public void setInIntron( boolean inIntron ) {
+            this.inIntron = inIntron;
         }
 
     }
