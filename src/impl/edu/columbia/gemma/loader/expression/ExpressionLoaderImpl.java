@@ -22,15 +22,6 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.dom4j.Document;
-import org.dom4j.io.DocumentResult;
-import org.dom4j.io.DocumentSource;
-import org.dom4j.io.SAXReader;
-
-
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamSource;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -46,7 +37,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialCharacteristic;
+import edu.columbia.gemma.common.description.BioCharacteristic;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
@@ -141,17 +132,18 @@ public class ExpressionLoaderImpl implements Loader {
         log.debug( "Entering MageLoaderImpl.create()" );
         if ( defaultOwner == null ) initializeDefaultOwner();
         try {
-
+        	System.out.println("Entered create with " + col.size() + " objects.");
             for ( Object entity : col ) {
 
                 String className = entity.getClass().getName();
-
+                System.out.println("PERSIST: " + className) ;
                 // check if className is on short list of classes to be persisted.
                 // ArrayDesign (we won't usually use this - mage-ml of array designs is gigantic.)
                 // ExpressionExperiment (most interested in this)
                 // 
                 if ( entity instanceof ExpressionExperiment ) {
                     log.debug( "Loading " + className );
+                    System.out.println("Actually trying to persist: " + className) ;
                     loadExpressionExperiment( ( ExpressionExperiment ) entity );
                 } else if ( entity instanceof ArrayDesign ) {
                     // loadArrayDesign( ( ArrayDesign ) entity );
@@ -174,7 +166,7 @@ public class ExpressionLoaderImpl implements Loader {
                 } else if ( entity instanceof BioAssay ) {
                     // loadBioAssay( ( BioAssay ) entity );
                 } else {
-                    throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
+                    //throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
                 }
             }
         } catch ( Exception e ) {
@@ -218,9 +210,9 @@ public class ExpressionLoaderImpl implements Loader {
      * @param entity
      */
     private void loadBioMaterial( BioMaterial entity ) {
-        for ( BioMaterialCharacteristic characteristic : ( Collection<BioMaterialCharacteristic> ) entity
+        for ( BioCharacteristic characteristic : ( Collection<BioCharacteristic> ) entity
                 .getBioCharacteristics() ) {
-            persistBioMaterialCharacteristics( characteristic );
+            persistBioCharacteristic( characteristic );
         }
 
         OntologyEntry materialType = entity.getMaterialType();
@@ -239,9 +231,9 @@ public class ExpressionLoaderImpl implements Loader {
     /**
      * @param characteristic
      */
-    private void persistBioMaterialCharacteristics( BioMaterialCharacteristic characteristic ) {
+    private void persistBioCharacteristic( BioCharacteristic characteristic ) {
         // TODO Auto-generated method stub
-
+    	
     }
 
     /**
