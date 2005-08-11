@@ -1,3 +1,13 @@
 lib
 classes
 applicationContext-hibernate.xml
+web.xml
+applicationContext-dataSource.xml
+Gemma.tld
+beanRefFactory.xml
+applicationContext-conf.xml
+loader-servlet.xml
+validation.xml
+action-servlet.xml
+.struts-config.mex
+applicationContext-localDataSource.xml
