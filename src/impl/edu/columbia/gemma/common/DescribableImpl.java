@@ -18,13 +18,15 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.common;
 
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
  * @see edu.columbia.gemma.common.Describable
  */
 public abstract class DescribableImpl extends edu.columbia.gemma.common.Describable {
