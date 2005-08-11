@@ -32,13 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import java.util.zip.ZipInputStream;
-import java.io.InputStream;
-
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamSource;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -103,7 +96,6 @@ import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
 import org.biomage.tools.ontology.OntologyHelper;
 import org.dom4j.Document;
-import org.dom4j.XPath;
 import org.dom4j.Element;
 
 import edu.columbia.gemma.common.description.DatabaseEntry;
@@ -118,7 +110,6 @@ import edu.columbia.gemma.common.protocol.Software;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.ScaleType;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialCharacteristic;
 import edu.columbia.gemma.expression.biomaterial.Compound;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
@@ -568,7 +559,7 @@ public class MageMLConverter {
 	               	edu.columbia.gemma.common.description.BioCharacteristic bc = edu.columbia.gemma.common.description.BioCharacteristic.Factory.newInstance();
                 	bc.setCategory(elm.getName());
                 	bc.setValue(elm.valueOf("@value"));
-                	log.info( "CAT: " + bc.getCategory() + " VAL: " + bc.getValue());
+                	//log.info( "CAT: " + bc.getCategory() + " VAL: " + bc.getValue());
     	        	
                 	List subList = elm.selectNodes("child::node()");
 	               	Collection<edu.columbia.gemma.common.description.BioCharacteristic> bcConstituents = bc.getConstituents();
@@ -578,7 +569,7 @@ public class MageMLConverter {
 	    	               	edu.columbia.gemma.common.description.BioCharacteristic bcCon = edu.columbia.gemma.common.description.BioCharacteristic.Factory.newInstance();
 	    	               	bcCon.setCategory(elmSub.getName());
 	    	               	bcCon.setValue(elmSub.valueOf("@value"));
-	    	               	log.info( "     CAT: " + bcCon.getCategory() + " VAL: " + bcCon.getValue());
+	    	               	//log.info( "     CAT: " + bcCon.getCategory() + " VAL: " + bcCon.getValue());
 	                    	bcConstituents.add(bcCon);
 	    	            }
 	               		bc.setConstituents(bcConstituents);
