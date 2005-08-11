@@ -22,6 +22,15 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dom4j.Document;
+import org.dom4j.io.DocumentResult;
+import org.dom4j.io.DocumentSource;
+import org.dom4j.io.SAXReader;
+
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamSource;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -87,7 +96,7 @@ public class ExpressionLoaderImpl implements Loader {
     private ExternalDatabaseDao externalDatabaseDao;
 
     private DesignElementDao designElementDao;
-
+    
     /**
      * @param designElementDao The designElementDao to set.
      */
@@ -210,7 +219,7 @@ public class ExpressionLoaderImpl implements Loader {
      */
     private void loadBioMaterial( BioMaterial entity ) {
         for ( BioMaterialCharacteristic characteristic : ( Collection<BioMaterialCharacteristic> ) entity
-                .getBioMaterialCharacteristics() ) {
+                .getBioCharacteristics() ) {
             persistBioMaterialCharacteristics( characteristic );
         }
 
