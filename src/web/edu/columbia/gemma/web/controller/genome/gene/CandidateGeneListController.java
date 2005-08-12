@@ -143,7 +143,7 @@ public class CandidateGeneListController extends BaseCommandController {
 			}
 			cg.setDescription(request.getParameter("description"));
 			cg.getAuditTrail().update("CandidateGene Modified Description", usr);
-			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			this.getCandidateGeneListService().updateCandidateGeneList(cgl);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm?target=candidateGeneListDetail&listID="
 							+ request.getParameter("listID")));
@@ -161,7 +161,7 @@ public class CandidateGeneListController extends BaseCommandController {
 			}
 			cgl.increaseRanking(cg);
 			cg.getAuditTrail().update("CandidateGene Increased Rank", usr);
-			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			this.getCandidateGeneListService().updateCandidateGeneList(cgl);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm?target=candidateGeneListDetail&listID="
 							+ request.getParameter("listID")));
@@ -178,7 +178,7 @@ public class CandidateGeneListController extends BaseCommandController {
 			}
 			cgl.decreaseRanking(cg);
 			cg.getAuditTrail().update("CandidateGene Decreased Rank", usr);
-			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			this.getCandidateGeneListService().updateCandidateGeneList(cgl);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm?target=candidateGeneListDetail&listID="
 							+ request.getParameter("listID")));
@@ -194,7 +194,7 @@ public class CandidateGeneListController extends BaseCommandController {
 			cg.setOwner(usr);
 			cg.setName(cg.getGene().getName());
 			cg.setDescription("");
-			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			this.getCandidateGeneListService().updateCandidateGeneList(cgl);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm?target=candidateGeneListDetail&listID="
 							+ request.getParameter("listID")));
@@ -210,7 +210,7 @@ public class CandidateGeneListController extends BaseCommandController {
 					break;
 			}
 			cgl.removeCandidate(cg);
-			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			this.getCandidateGeneListService().updateCandidateGeneList(cgl);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm?target=candidateGeneListDetail&listID="
 							+ request.getParameter("listID")));
@@ -222,7 +222,7 @@ public class CandidateGeneListController extends BaseCommandController {
 			cgl.setName(request.getParameter("listName").toString());
 			cgl.setDescription(request.getParameter("listDescription")
 					.toString());
-			this.getCandidateGeneListService().saveCandidateGeneList(cgl);
+			this.getCandidateGeneListService().updateCandidateGeneList(cgl);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm?listID="
 							+ request.getParameter("listID")));
@@ -239,7 +239,7 @@ public class CandidateGeneListController extends BaseCommandController {
 		if (action.compareTo("add") == 0) {
 			String newName = request.getParameter("newName");
 			CandidateGeneList cgl = this.getCandidateGeneListService()
-					.createCandidateGeneList(newName);
+					.createByName(newName);
 			return new ModelAndView(new RedirectView(
 					"candidateGeneListActionComplete.htm"));
 
