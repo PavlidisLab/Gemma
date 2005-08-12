@@ -80,7 +80,7 @@ public class GeneController extends BaseCommandController {
 			String pubmedID = request.getParameter("pubmedID");
 			BibliographicReference br = this.getBibliographicReferenceService().findByExternalId(pubmedID, "PUBMED");
 	        if( br==null )
-	        	br = this.getBibliographicReferenceService().createBibliographicReferenceByLookup(pubmedID, "PUBMED");
+	        	br = this.getBibliographicReferenceService().saveBibliographicReferenceByLookup(pubmedID, "PUBMED");
 	        
 			if( br!= null){
 				java.util.Collection cites = g.getCitations();

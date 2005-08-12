@@ -77,7 +77,7 @@ public class BibliographicReferenceServiceImpl extends
         return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
     }
 
-    protected BibliographicReference handleCreateBibliographicReferenceByLookup( java.lang.String id,
+    protected BibliographicReference handleSaveBibliographicReferenceByLookup( java.lang.String id,
             java.lang.String databaseName ) throws java.lang.Exception {
 
         ExternalDatabase ed = this.getExternalDatabaseDao().findByName( databaseName );

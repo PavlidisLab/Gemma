@@ -184,7 +184,7 @@ public class ExperimentController extends BaseCommandController {
 			if(pp!=null){
 				BibliographicReference br = this.getBibliographicReferenceService().findByExternalId(pp, "PUBMED");
 				if(br==null){
-					br = this.getBibliographicReferenceService().createBibliographicReferenceByLookup(pp, "PUBMED");
+					br = this.getBibliographicReferenceService().saveBibliographicReferenceByLookup(pp, "PUBMED");
 				}
 				ee.setPrimaryPublication(br);
 			}
