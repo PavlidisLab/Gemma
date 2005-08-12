@@ -61,7 +61,7 @@ public class GeneServiceImplTest extends BaseDAOTestCase {
 		g.setOfficialSymbol("rab");
 		g.setOfficialName("rabblebong");
 		g.setTaxon(t);
-		g = svc.createGene(g);
+		g = svc.saveGene(g);
 		g.setOfficialName("rabble");
 		g = svc.updateGene(g);
 		

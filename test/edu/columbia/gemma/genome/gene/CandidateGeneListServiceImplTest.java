@@ -86,7 +86,7 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         CandidateGeneListService svc = ( CandidateGeneListService ) ctx.getBean( "candidateGeneListService" );
         svc.setActor( p );
 
-        CandidateGeneList cgl = svc.createCandidateGeneList( "New Candidate List from service test" );
+        CandidateGeneList cgl = svc.createByName( "New Candidate List from service test" );
         Long cgl_id = cgl.getId();
         assertTrue( cgl != null );
         CandidateGene cg = cgl.addCandidate( g );
