@@ -16,30 +16,52 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.common.protocol;
 
-import edu.columbia.gemma.common.Describable;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
 
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
  * @see edu.columbia.gemma.common.protocol.Protocol
  */
 public class ProtocolDaoImpl extends edu.columbia.gemma.common.protocol.ProtocolDaoBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.common.DescribableDaoBase#findOrCreate(edu.columbia.gemma.common.Describable)
-     */
     @Override
-    public Protocol findOrCreate( Describable protocol ) {
-        if ( !( protocol instanceof Protocol ) ) throw new IllegalArgumentException( "Must be a Protocol" );
-        if ( protocol == null || protocol.getName() == null || protocol.getDescription() == null ) return null;
-        Protocol newDescribable = ( Protocol ) find( protocol );
-        if ( newDescribable != null ) return newDescribable;
-        return ( Protocol ) create( ( Protocol ) protocol );
+    public Protocol findOrCreate( Protocol protocol ) {
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( Protocol.class );
+            queryObject.add( Restrictions.eq( "name", protocol.getName() ) ).add(
+                    Restrictions.eq( "description", protocol.getDescription() ) );
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + edu.columbia.gemma.common.protocol.Protocol.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = ( edu.columbia.gemma.common.protocol.Protocol ) results.iterator().next();
+                }
+            }
+            return ( Protocol ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
+
+    @Override
+    public Protocol find( Protocol protocol ) {
+        if ( protocol == null || protocol.getName() == null ) return null;
+        Protocol newProtocol = find( protocol );
+        if ( newProtocol != null ) return newProtocol;
+        return ( Protocol ) create( protocol );
+    }
+
 }
