@@ -29,26 +29,34 @@ import java.util.Collection;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
+ * @author keshav
+ * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.CompositeSequenceService
  */
-public class CompositeSequenceServiceImpl
-    extends edu.columbia.gemma.expression.designElement.CompositeSequenceServiceBase
-{
+public class CompositeSequenceServiceImpl extends
+        edu.columbia.gemma.expression.designElement.CompositeSequenceServiceBase {
 
     /**
      * @see edu.columbia.gemma.expression.designElement.CompositeSequenceService#saveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence)
      */
-    protected void handleSaveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence)
-        throws java.lang.Exception
-    {
-        //@todo implement protected void handleSaveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.expression.designElement.CompositeSequenceService.handleSaveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence) Not implemented!");
+    protected void handleSaveCompositeSequence(
+            edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence )
+            throws java.lang.Exception {
+        // @todo implement protected void
+        // handleSaveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence)
+        throw new java.lang.UnsupportedOperationException(
+                "edu.columbia.gemma.expression.designElement.CompositeSequenceService.handleSaveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence) Not implemented!" );
     }
 
     @Override
     protected Collection handleGetAllCompositeSequences( ArrayDesign arrayDesign ) throws Exception {
         // TODO implement this
-        throw new UnsupportedOperationException("edu.columbia.gemma.expression.designElement.CompositeSequenceService.handleGetAllCompositeSequences(edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign) Not implemented!");
+        throw new UnsupportedOperationException(
+                "edu.columbia.gemma.expression.designElement.CompositeSequenceService.handleGetAllCompositeSequences(edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign) Not implemented!" );
     }
 
 }
