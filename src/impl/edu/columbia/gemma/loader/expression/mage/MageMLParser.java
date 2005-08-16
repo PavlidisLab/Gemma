@@ -18,6 +18,7 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -27,9 +28,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.zip.ZipInputStream;
 
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
 
@@ -38,13 +40,18 @@ import org.apache.commons.logging.LogFactory;
 import org.biomage.Common.MAGEJava;
 import org.biomage.tools.xmlutils.MAGEContentHandler;
 import org.dom4j.Document;
+import org.dom4j.DocumentException;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.DocumentSource;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import baseCode.util.FileTools;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects.
@@ -71,10 +78,10 @@ public class MageMLParser {
     /**
      * Create a new MageMLParser
      */
-    public MageMLParser() throws IOException {
+    public MageMLParser() {
 
         mlc = new MageMLConverter();
-        
+
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
         String mageClassesString = rb.getString( "mage.classes" );
         mageClasses = mageClassesString.split( ", " );
@@ -90,54 +97,98 @@ public class MageMLParser {
     }
 
     /**
-     * @param istMageXml Input MAGE-ML 
-     * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
-     */
-    public void createSimplifiedXml(InputStream istMageXml, InputStream istXsl){
-    	try{
-	    	SAXReader reader = new SAXReader();
-			Document xml = reader.read(istMageXml);
-			TransformerFactory factory = TransformerFactory.newInstance();
-	        Transformer transformer = factory.newTransformer( new StreamSource( istXsl ) );
-	        DocumentSource source = new DocumentSource( xml );
-	        DocumentResult result = new DocumentResult();
-	        transformer.transform( source, result );
-	        this.simplifiedXml = result.getDocument();
-    	}catch ( Exception e ) {
-    		log.error( e, e );
-    	}
-    }
-    /**
-     * @param istMageXml Input MAGE-ML (from Zip file)
-     * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
-     */
-    public void createSimplifiedXml(ZipInputStream istMageXml, InputStream istXsl){
-    	try{
-    		istMageXml.getNextEntry();   
-    		SAXReader reader = new SAXReader();
-    		Document xml = reader.read(istMageXml);
-			TransformerFactory factory = TransformerFactory.newInstance();
-	        Transformer transformer = factory.newTransformer( new StreamSource( istXsl ) );
-	        DocumentSource source = new DocumentSource( xml );
-	        DocumentResult result = new DocumentResult();
-	        transformer.transform( source, result );
-	        this.simplifiedXml = result.getDocument();
-    	}catch ( Exception e ) {
-    		log.error( e, e );
-    	}
-    }
-    
-    /**
-     * Parse a MAGE-ML stream. This has to be called before any data can be retrieved.
+     * This method is public primarily to allow testing.
      * 
+     * @param istMageXml Input MAGE-ML
+     * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
+     */
+    public void createSimplifiedXml( InputStream istMageXml, InputStream istXsl ) throws IOException {
+
+        log.info( "Creating simplified XML" );
+
+        if ( istXsl == null || istXsl.available() == 0 ) {
+            throw new IllegalArgumentException( "Null or no bytes to read from the XSL stream" );
+        }
+
+        if ( istMageXml == null || istMageXml.available() == 0 ) {
+            throw new IllegalArgumentException( "Null or no bytes to read from the MAGE-ML stream" );
+        }
+
+        SAXReader reader = new SAXReader();
+        Document xml;
+        try {
+            xml = reader.read( istMageXml );
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer transformer = factory.newTransformer( new StreamSource( istXsl ) );
+            DocumentSource source = new DocumentSource( xml );
+            DocumentResult result = new DocumentResult();
+            transformer.transform( source, result );
+            if ( result.getDocument() == null ) {
+                throw new IOException( "Simplified XML creation failed" );
+            }
+            this.simplifiedXml = result.getDocument();
+            assert mlc != null;
+            mlc.setSimplifiedXml( this.simplifiedXml );
+
+            if ( log.isDebugEnabled() ) {
+                log.debug( "--------  Simplified XML ---------" );
+                OutputFormat format = OutputFormat.createPrettyPrint();
+                XMLWriter writer = new XMLWriter( System.err, format );
+                writer.write( simplifiedXml );
+                log.debug( "-------------------------------------------" );
+            }
+
+        } catch ( DocumentException e ) {
+            log.error( e, e );
+        } catch ( TransformerConfigurationException e ) {
+            log.error( e, e );
+        } catch ( TransformerException e ) {
+            log.error( e, e );
+        }
+    }
+
+    /**
+     * Parse a MAGE-ML stream. This has to be called before any data can be retrieved. Use of this method means that
+     * calling createSimplifiedXml must also be done by the programmer. This method is public primarily to allow
+     * testing.
+     * 
+     * @param is
      * @throws SAXException
      * @throws IOException
-     * @param stream
      */
     public void parse( InputStream is ) throws IOException, SAXException {
-    	mlc.setSimplifiedXml(simplifiedXml);
-    	parser.parse( new InputSource( is ) );
+        parser.parse( new InputSource( is ) );
         mageJava = cHandler.getMAGEJava();
+    }
+
+    /**
+     * Parse a MAGE-ML file. This has to be called before any data can be retrieved. Creation of the simplified XML DOM
+     * is also taken care of.
+     * 
+     * @param fileName
+     * @throws IOException
+     * @throws SAXException
+     */
+    public void parse( String fileName ) throws IOException, SAXException {
+        InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
+        parser.parse( new InputSource( is ) );
+        mageJava = cHandler.getMAGEJava();
+        is.close();
+
+        createSimplifiedXml( fileName );
+    }
+
+    /**
+     * @param fileName
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    private void createSimplifiedXml( String fileName ) throws IOException, FileNotFoundException {
+        InputStream is;
+        is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
+        InputStream isXsl = this.getClass().getResourceAsStream( "resource/MAGE-simplify.xsl" );
+        createSimplifiedXml( is, isXsl );
+        is.close();
     }
 
     /**
@@ -187,6 +238,7 @@ public class MageMLParser {
      * @param type
      * @return Collection of MAGE domain objects.
      */
+    @SuppressWarnings("unchecked")
     public Collection<Object> getData( Class type ) {
 
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
@@ -220,7 +272,7 @@ public class MageMLParser {
                 return null; // that's okay, not everybody has one.
             }
 
-            return ( Collection<Object>) listGetterMethod.invoke( packageOb, new Object[] {} );
+            return ( Collection<Object> ) listGetterMethod.invoke( packageOb, new Object[] {} );
 
         } catch ( SecurityException e ) {
             log.error( e, e );
