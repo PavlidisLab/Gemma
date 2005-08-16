@@ -36,9 +36,13 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
     public Contact find( Contact contact ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Contact.class );
-            queryObject.add( Restrictions.eq( "address", contact.getAddress() ) ).add(
-                    Restrictions.eq( "email", contact.getEmail() ) )
-                    .add( Restrictions.eq( "phone", contact.getPhone() ) );
+
+            if ( contact.getAddress() != null ) queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
+
+            if ( contact.getEmail() != null ) queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+
+            if ( contact.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
+            
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {

@@ -40,8 +40,11 @@ public class ProtocolDaoImpl extends edu.columbia.gemma.common.protocol.Protocol
     public Protocol find( Protocol protocol ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Protocol.class );
-            queryObject.add( Restrictions.eq( "name", protocol.getName() ) ).add(
-                    Restrictions.eq( "description", protocol.getDescription() ) );
+            queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
+
+            if ( protocol.getDescription() != null )
+                queryObject.add( Restrictions.eq( "description", protocol.getDescription() ) );
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {

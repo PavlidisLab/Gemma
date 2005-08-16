@@ -40,11 +40,17 @@ public class PersonDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.Pe
     public Person find( Person person ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Person.class );
-            queryObject.add( Restrictions.eq( "firstName", person.getFirstName() ) ).add(
-                    Restrictions.eq( "lastName", person.getLastName() ) ).add(
-                    Restrictions.eq( "middleName", person.getMiddleName() ) ).add(
-                    Restrictions.eq( "email", person.getEmail() ) ).add( Restrictions.eq( "phone", person.getPhone() ) )
-                    .add( Restrictions.eq( "address", person.getAddress() ) );
+
+            if ( person.getFirstName() != null )
+                queryObject.add( Restrictions.eq( "firstName", person.getFirstName() ) );
+
+            if ( person.getLastName() != null ) queryObject.add( Restrictions.eq( "lastName", person.getLastName() ) );
+            if ( person.getMiddleName() != null )
+                queryObject.add( Restrictions.eq( "middleName", person.getMiddleName() ) );
+            if ( person.getEmail() != null ) queryObject.add( Restrictions.eq( "email", person.getEmail() ) );
+            if ( person.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", person.getPhone() ) );
+            if ( person.getAddress() != null ) queryObject.add( Restrictions.eq( "address", person.getAddress() ) );
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
