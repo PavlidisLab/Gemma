@@ -90,6 +90,20 @@ public class PrettyPrinter {
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         print( buf, gemmaObj, 0 );
     }
+    
+    /**
+     * 
+     * @param buf
+     * @param gemmeCollection
+     * @param level
+     */
+    private static void print( StringBuffer buf, Collection gemmaCollection, int level )
+            throws IllegalArgumentException, IntrospectionException, IllegalAccessException, InvocationTargetException {
+        for ( Object gemmaObj : gemmaCollection ) {
+            print(buf, gemmaObj, level);
+        }
+    }
+    
 
     /**
      * The only class that does any real work. Recursively print an object and all its associated objects.
@@ -100,12 +114,19 @@ public class PrettyPrinter {
      * @throws IntrospectionException
      * @param buf
      * @param gemmaObj
+     * @param level Used to track indents.
      */
     private static void print( StringBuffer buf, Object gemmaObj, int level ) throws IntrospectionException,
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 
         if ( gemmaObj == null ) return;
         Class gemmaClass = gemmaObj.getClass();
+
+        if ( gemmaObj instanceof Collection ) {
+            print( buf, ( Collection ) gemmaObj, ++level );
+            return;
+        }
+
         if ( !gemmaClass.getName().startsWith( "edu.columbia.gemma" ) ) return;
 
         BeanInfo bif = Introspector.getBeanInfo( gemmaClass );
@@ -127,11 +148,11 @@ public class PrettyPrinter {
             if ( prop.getDisplayName().equals( "mutable" ) ) continue; // shows up in the enums, just clutter.
 
             // generate a 'heading' for this object.
-            if ( first ) buf.append( indent +   gemmaObj.getClass().getSimpleName() + " Properties:\n" );
+            if ( first ) buf.append( indent + gemmaObj.getClass().getSimpleName() + " Properties:\n" );
 
             first = false;
-            buf.append( indent + "   " +  gemmaObj.getClass().getSimpleName() + "." + prop.getName()
-                    + ": " + ( o == null ? "---" : o ) + "\n" );
+            buf.append( indent + "   " + gemmaObj.getClass().getSimpleName() + "." + prop.getName() + ": "
+                    + ( o == null ? "---" : o ) + "\n" );
             print( buf, o, level );
         }
     }
