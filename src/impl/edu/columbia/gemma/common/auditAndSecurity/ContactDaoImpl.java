@@ -60,7 +60,9 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
 
     @Override
     public Contact find( Contact contact ) {
-        if ( contact == null || contact.getName() == null ) return null;
+        if ( contact == null
+                || ( contact.getAddress() == null && contact.getEmail() == null && contact.getPhone() == null ) )
+            return null;
         Contact newContact = find( contact );
         if ( newContact != null ) return newContact;
         return ( Contact ) create( contact );

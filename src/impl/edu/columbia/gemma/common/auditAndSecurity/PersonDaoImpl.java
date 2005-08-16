@@ -66,10 +66,11 @@ public class PersonDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.Pe
 
     @Override
     public Person find( Person person ) {
-        if ( person == null || person.getName() == null ) return null;
+        if ( person == null
+                || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null && person
+                        .getPhone() == null ) ) return null;
         Person newPerson = find( person );
         if ( newPerson != null ) return newPerson;
         return ( Person ) create( person );
     }
-
 }
