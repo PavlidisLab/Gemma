@@ -40,6 +40,7 @@ public class SequenceManipulationTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
+    @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -142,7 +143,7 @@ public class SequenceManipulationTest extends TestCase {
         assertTrue( "Not found", apr.containsKey( "100470_at" ) );
         CompositeSequence t = ( CompositeSequence ) apr.get( "100470_at" );
         assertTrue( "Null", t != null );
-        BioSequence m = SequenceManipulation.collapse( t );
+        SequenceManipulation.collapse( t );
     }
 
     public final void testCollapse() throws Exception {

@@ -1,4 +1,4 @@
-package edu.columbia.gemma.loader.smd;
+package edu.columbia.gemma.loader.expression.smd;
 
 import junit.framework.TestCase;
 

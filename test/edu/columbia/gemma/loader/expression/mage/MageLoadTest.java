@@ -28,6 +28,9 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.protocol.HardwareDao;
+import edu.columbia.gemma.common.protocol.ProtocolDao;
+import edu.columbia.gemma.common.protocol.SoftwareDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
@@ -62,6 +65,9 @@ public class MageLoadTest extends MageBaseTest {
         ml.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
         ml.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
         ml.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
+        ml.setProtocolDao( ( ProtocolDao ) ctx.getBean( "protocolDao" ) );
+        ml.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
+        ml.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
     }
 
     @Override

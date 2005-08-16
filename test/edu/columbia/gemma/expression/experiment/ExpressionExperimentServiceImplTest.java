@@ -1,18 +1,12 @@
 package edu.columbia.gemma.expression.experiment;
 
-import edu.columbia.gemma.BaseDAOTestCase;
-
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
-import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
-import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
-
 import java.util.Collection;
 
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.orm.hibernate.SessionHolder;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+
+import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
+import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 
 /**
  * <hr>
@@ -24,7 +18,6 @@ import org.hibernate.SessionFactory;
  */
 public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
 
-    private ExpressionExperimentDao eDao = null;
     private ExpressionExperiment ee = null;
     private PersonDao pDao = null;
     private Person nobody = null;
@@ -33,8 +26,6 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
     private long eeID;
     long nobodyID;
     long adminID;
-    private SessionFactory sessionFactory = null;
-    private Session s = null;
 
     protected void setUp() throws Exception {
 
@@ -52,6 +43,7 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
         svc = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
     }
 
+    @SuppressWarnings("unchecked")
     public void testExpressionExperiment() {
 
         ee = ExpressionExperiment.Factory.newInstance();

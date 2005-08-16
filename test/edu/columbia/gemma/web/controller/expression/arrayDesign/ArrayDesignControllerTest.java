@@ -25,9 +25,9 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
  */
 public class ArrayDesignControllerTest extends BaseControllerTestCase {
 
-    private MockServletContext mockCtx;
+    // private MockServletContext mockCtx;
     private MockHttpServletRequest request;
-    private MockHttpServletResponse response;
+    // private MockHttpServletResponse response;
 
     ArrayDesignController arrayDesignController;
 
@@ -37,10 +37,10 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
 
     public void setUp() throws Exception {
 
-        mockCtx = new MockServletContext();
+        // mockCtx = new MockServletContext();
 
         request = new MockHttpServletRequest();
-        response = new MockHttpServletResponse();
+        // response = new MockHttpServletResponse();
 
         arrayDesignController = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
 
@@ -60,10 +60,11 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
     /**
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testGetArrayDesigns() throws Exception {
         ArrayDesignController a = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
         request.setRequestURI( "Gemma/arrayDesigns.htm" );
-        ModelAndView mav = a.handleRequest( ( HttpServletRequest ) request, ( HttpServletResponse ) null );
+        ModelAndView mav = a.handleRequest( request, ( HttpServletResponse ) null );
         Collection<ArrayDesign> c = ( mav.getModel() ).values();
         assertNotNull( c );
         assertEquals( mav.getViewName(), "arrayDesign.GetAll.results.view" );
