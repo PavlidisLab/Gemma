@@ -1,6 +1,7 @@
 package edu.columbia.gemma.web.controller.genome.gene;
 
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +57,8 @@ public class GeneFinderController extends SimpleFormController {
         this.candidateGeneListService = candidateGeneListService;
     }    
 
+    @Override
+    @SuppressWarnings("unused")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -67,7 +70,7 @@ public class GeneFinderController extends SimpleFormController {
         String listID = request.getParameter("listID");
         if(act==null)
         	act="all";
-        Map geneModel = new HashMap();
+        Map<String, Collection> geneModel = new HashMap<String, Collection>();
         
         if( searchType.compareTo("all")==0 ){
         	geneModel.put( "genes", this.getGeneService().getAllGenes());

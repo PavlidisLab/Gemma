@@ -40,28 +40,27 @@ public class ReloadController implements Controller {
 
         if ( referer != null ) {
             log.info( "reload complete, reloading user back to: " + referer );
-            List messages = new ArrayList();
+            List<String> messages = new ArrayList<String>();
             messages.add( "Reloading options completed successfully." );
             request.getSession().setAttribute( "messages", messages );
             response.sendRedirect( response.encodeRedirectURL( referer ) );
             return null;
-        } else {
-            response.setContentType( "text/html" );
-
-            PrintWriter out = response.getWriter();
-
-            out.println( "<html>" );
-            out.println( "<head>" );
-            out.println( "<title>Context Reloaded</title>" );
-            out.println( "</head>" );
-            out.println( "<body bgcolor=\"white\">" );
-            out.println( "<script type=\"text/javascript\">" );
-            out.println( "alert('Context Reload Succeeded! Click OK to continue.');" );
-            out.println( "history.back();" );
-            out.println( "</script>" );
-            out.println( "</body>" );
-            out.println( "</html>" );
         }
+        response.setContentType( "text/html" );
+
+        PrintWriter out = response.getWriter();
+
+        out.println( "<html>" );
+        out.println( "<head>" );
+        out.println( "<title>Context Reloaded</title>" );
+        out.println( "</head>" );
+        out.println( "<body bgcolor=\"white\">" );
+        out.println( "<script type=\"text/javascript\">" );
+        out.println( "alert('Context Reload Succeeded! Click OK to continue.');" );
+        out.println( "history.back();" );
+        out.println( "</script>" );
+        out.println( "</body>" );
+        out.println( "</html>" );
 
         return null;
     }

@@ -113,11 +113,12 @@ public class BaseFormController extends SimpleFormController {
         return super.processFormSubmission( request, response, command, errors );
     }
 
+    @SuppressWarnings("unchecked")
     public void saveMessage( HttpServletRequest request, String msg ) {
-        List messages = ( List ) request.getSession().getAttribute( "messages" );
+        List<String> messages = ( List<String> ) request.getSession().getAttribute( "messages" );
 
         if ( messages == null ) {
-            messages = new ArrayList();
+            messages = new ArrayList<String>();
         }
 
         messages.add( msg );
@@ -153,6 +154,7 @@ public class BaseFormController extends SimpleFormController {
     /**
      * Set up a custom property editor for converting form inputs to real objects
      */
+    @SuppressWarnings("unused")
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         NumberFormat nf = NumberFormat.getNumberInstance();
         binder.registerCustomEditor( Integer.class, null, new CustomNumberEditor( Integer.class, nf, true ) );
@@ -174,7 +176,7 @@ public class BaseFormController extends SimpleFormController {
 
         message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
 
-        Map model = new HashMap();
+        Map<String, Object> model = new HashMap<String, Object>();
         model.put( "user", user );
 
         // TODO: once you figure out how to get the global resource bundle in

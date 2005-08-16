@@ -40,10 +40,9 @@ public class ArrayDesignEditAction extends FormAction {
      * the request. SourceEvent can contain parameters provided as input by the client.
      * 
      * @param context
-     * @throws InstantiationException
-     * @throws IllegalAccessException
      */
-    public Object createFormObject( RequestContext context ) throws InstantiationException, IllegalAccessException {
+    @Override
+    public Object createFormObject( RequestContext context ) {
 
         if ( log.isInfoEnabled() ) logScopes( context );
         // String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
@@ -64,6 +63,8 @@ public class ArrayDesignEditAction extends FormAction {
      * @param context
      * @param binder
      */
+    @Override
+    @SuppressWarnings( { "boxing", "unused" })
     protected void initBinder( RequestContext context, DataBinder binder ) {
 
         this.setBindOnSetupForm( true );

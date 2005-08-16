@@ -23,15 +23,15 @@ import edu.columbia.gemma.web.Constants;
  * It is designed to be used as follows:
  * 
  * <pre>
- * 
- *  
  *   
  *    
- *     &lt;tag:constants /&gt;
+ *     
+ *      
+ *       &lt;tag:constants /&gt;
+ *       
+ *      
  *     
  *    
- *   
- *  
  * </pre>
  * 
  * </p>
@@ -43,6 +43,7 @@ import edu.columbia.gemma.web.Constants;
  * </p>
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
+ * @pavlidis
  * @version $Id$
  * @jsp.tag name="constants" body-content="empty" tei-class="edu.columbia.gemma.web.taglib.ConstantsTei"
  */
@@ -159,7 +160,7 @@ public class ConstantsTag extends TagSupport {
     /**
      * Maps lowercase JSP scope names to their PageContext integer constant values.
      */
-    private static final Map scopes = new HashMap();
+    private static final Map<String, Integer> scopes = new HashMap<String, Integer>();
 
     /**
      * Initialize the scope names map and the encode variable with the Java 1.4 method if available.
@@ -179,12 +180,12 @@ public class ConstantsTag extends TagSupport {
      * @throws JspException if the scopeName is not a valid name.
      */
     public int getScope( String scopeName ) throws JspException {
-        Integer scope = ( Integer ) scopes.get( scopeName.toLowerCase() );
+        Integer localScope = scopes.get( scopeName.toLowerCase() );
 
-        if ( scope == null ) {
+        if ( localScope == null ) {
             throw new JspException( "Scope '" + scopeName + "' not a valid option" );
         }
 
-        return scope.intValue();
+        return localScope.intValue();
     }
 }

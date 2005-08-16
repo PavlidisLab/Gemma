@@ -78,12 +78,14 @@ public class PubMedXmlController extends SimpleFormController {
 
     /**
      * Useful for debugging, specifically with Tomcat security issues.
+     * <p>
+     * TODO put in an mvcUtils class if used elsewhere. I found this helpful when working with Spring's MVC.
+     * <p>
+     * TODO remove unused response param.
      * 
      * @param request
      * @param response
      */
-
-    // TODO put in an mvcUtils class if used elsewhere. I found this helpful when working with Spring's MVC.
     public void logHttp( HttpServletRequest request, HttpServletResponse response ) {
         log.info( "Context Path: " + request.getContextPath() );
         log.info( "Requested Uri: " + request.getRequestURI() );
@@ -97,7 +99,7 @@ public class PubMedXmlController extends SimpleFormController {
      * @return ModelAndView
      * @throws Exception
      */
-
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         String view = null;
@@ -115,7 +117,8 @@ public class PubMedXmlController extends SimpleFormController {
             request.setAttribute( "model", myModel );
             view = resolveView( request, response, br, myModel );
         } catch ( NumberFormatException e ) {
-            throw new NumberFormatException(); // FIXME - user gets an error page because they didn't input a valid integer.
+            throw new NumberFormatException(); // FIXME - user gets an error page because they didn't input a valid
+            // integer.
         } catch ( NullPointerException e ) {
             alreadyViewed = false;
             pubMedId = null;
@@ -162,14 +165,14 @@ public class PubMedXmlController extends SimpleFormController {
 
     /**
      * Check to see if the InternalResourceView has already been viewed. Sets the return view.
+     * <p>
+     * TODO there must be a better (Springish) way to do this. This uses global variables.
      * 
      * @param request
      * @param response
      * @param myModel
      * @throws Exception
      */
-
-    // TODO there must be a better (Springish) way to do this. This uses global variables.
     private String resolveView( HttpServletRequest request, HttpServletResponse response, Object object, Map model )
             throws Exception {
 

@@ -27,7 +27,7 @@ import edu.columbia.gemma.web.Constants;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @web.servlet name="login" display-name="Login Servlet" load-on-startup="1" 
+ * @web.servlet name="login" display-name="Login Servlet" load-on-startup="1"
  * @web.servlet-init-param name="authURL" value="j_security_check"
  *                         <p>
  *                         Change the following value to false if you don't require SSL for login
@@ -37,6 +37,7 @@ import edu.columbia.gemma.web.Constants;
  * @web.servlet-init-param name="algorithm" value="SHA"
  * @web.servlet-mapping url-pattern="/authorize/*"
  */
+@SuppressWarnings("unchecked")
 public final class LoginServlet extends HttpServlet {
     private static String authURL = "j_security_check";
     private static String httpsPort = null;
@@ -94,10 +95,10 @@ public final class LoginServlet extends HttpServlet {
 
         // Orion starts Servlets before Listeners, so check if the config
         // object already exists
-        Map config = ( HashMap ) ctx.getAttribute( Constants.CONFIG );
+        Map<String, Object> config = ( HashMap<String, Object> ) ctx.getAttribute( Constants.CONFIG );
 
         if ( config == null ) {
-            config = new HashMap();
+            config = new HashMap<String, Object>();
         }
 
         // update the config object with the init-params from this servlet
@@ -115,9 +116,8 @@ public final class LoginServlet extends HttpServlet {
      * @param request The HTTP request we are processing
      * @param response The HTTP response we are creating
      * @exception IOException if an input/output error occurs
-     * @exception ServletException if a servlet exception occurs
      */
-    public void doGet( HttpServletRequest request, HttpServletResponse response ) throws IOException, ServletException {
+    public void doGet( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         execute( request, response );
     }
 
@@ -127,9 +127,8 @@ public final class LoginServlet extends HttpServlet {
      * @param request The HTTP request we are processing
      * @param response The HTTP response we are creating
      * @exception IOException if an input/output error occurs
-     * @exception ServletException if a servlet exception occurs
      */
-    public void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException, ServletException {
+    public void doPost( HttpServletRequest request, HttpServletResponse response ) throws IOException {
         execute( request, response );
     }
 
@@ -147,15 +146,15 @@ public final class LoginServlet extends HttpServlet {
         // If user is already authenticated, it means they probably bookmarked
         // or typed in the URL to login.jsp directly, route them to the main
         // menu is this is the case
-        
-// *** Removed For Acegi ***
-//        if ( request.getRemoteUser() != null ) {
-//            if ( log.isDebugEnabled() ) {
-//                log.debug( "User '" + request.getRemoteUser() + "' already logged in, routing to mainMenu" );
-//            }
-//            response.sendRedirect( request.getContextPath() + "/mainMenu.html" );
-//            return;
-//        }
+
+        // *** Removed For Acegi ***
+        // if ( request.getRemoteUser() != null ) {
+        // if ( log.isDebugEnabled() ) {
+        // log.debug( "User '" + request.getRemoteUser() + "' already logged in, routing to mainMenu" );
+        // }
+        // response.sendRedirect( request.getContextPath() + "/mainMenu.html" );
+        // return;
+        // }
 
         String redirectString = SslUtil.getRedirectString( request, getServletContext(), secure.booleanValue() );
 

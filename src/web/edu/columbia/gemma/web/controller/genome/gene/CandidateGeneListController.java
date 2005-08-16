@@ -1,5 +1,6 @@
 package edu.columbia.gemma.web.controller.genome.gene;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -88,10 +89,12 @@ public class CandidateGeneListController extends BaseCommandController {
 		this.userService = userService;
 	}
 
+    @Override
+    @SuppressWarnings("unused")
 	public ModelAndView handleRequestInternal(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 
-		Map candidateGeneListModel = new HashMap();
+		Map<String, Object> candidateGeneListModel = new HashMap<String, Object>();
 		String view = "candidateGeneList";
 		String action = request.getParameter("action");
 		String target = request.getParameter("target");

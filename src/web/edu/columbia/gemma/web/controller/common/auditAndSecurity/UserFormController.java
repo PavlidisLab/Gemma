@@ -48,6 +48,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
 public class UserFormController extends BaseFormController {
     private UserRoleService userRoleService;
 
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         if ( log.isDebugEnabled() ) {
@@ -132,32 +133,30 @@ public class UserFormController extends BaseFormController {
 
             // return to main Menu
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );
-        } else {
-            if ( StringUtils.isBlank( request.getParameter( "version" ) ) ) {
-                saveMessage( request, getText( "user.added", user.getFullName(), locale ) );
-
-                // Send an account information e-mail
-                message.setSubject( getText( "signup.email.subject", locale ) );
-                sendUserMessage( user, getText( "newuser.email.message", user.getFullName(), locale ), RequestUtil
-                        .getAppURL( request ) );
-
-                return showNewForm( request, response );
-            } else {
-                saveMessage( request, getText( "user.updated.byAdmin", user.getFullName(), locale ) );
-            }
         }
+        if ( StringUtils.isBlank( request.getParameter( "version" ) ) ) {
+            saveMessage( request, getText( "user.added", user.getFullName(), locale ) );
+
+            // Send an account information e-mail
+            message.setSubject( getText( "signup.email.subject", locale ) );
+            sendUserMessage( user, getText( "newuser.email.message", user.getFullName(), locale ), RequestUtil
+                    .getAppURL( request ) );
+
+            return showNewForm( request, response );
+        }
+        saveMessage( request, getText( "user.updated.byAdmin", user.getFullName(), locale ) );
 
         return showForm( request, response, errors );
     }
 
+    @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
             if ( !StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
                 return new ModelAndView( new RedirectView( "mainMenu.html" ) );
-            } else {
-                return new ModelAndView( getSuccessView() );
             }
+            return new ModelAndView( getSuccessView() );
         }
 
         return super.processFormSubmission( request, response, command, errors );
@@ -200,6 +199,8 @@ public class UserFormController extends BaseFormController {
         return user;
     }
 
+    @Override
+    @SuppressWarnings("unused")
     protected void onBind( HttpServletRequest request, Object command ) throws Exception {
         // if the user is being deleted, turn off validation
         if ( request.getParameter( "delete" ) != null ) {
@@ -209,6 +210,7 @@ public class UserFormController extends BaseFormController {
         }
     }
 
+    @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {

@@ -1,5 +1,6 @@
 package edu.columbia.gemma.web.controller.entrez.pubmed;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,12 +42,13 @@ public class PubMedArticleListController extends SimpleFormController {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
         String view = "pubMedList";
         int maxResults = Integer.parseInt( request.getParameter( "maxResults" ) );
-        Map bibRefModel = new HashMap();
+        Map<String, Collection> bibRefModel = new HashMap<String, Collection>();
         switch ( maxResults ) {
             case 10:
                 bibRefModel.put( "bibRefs", getBibliographicReferenceService().getAllBibliographicReferences() );

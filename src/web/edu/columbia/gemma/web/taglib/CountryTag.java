@@ -25,6 +25,7 @@ import edu.columbia.gemma.util.LabelValue;
  * </p>
  * 
  * @author Jens Fischer, Matt Raible
+ * @author pavlidis
  * @version $Id$
  * @jsp.tag name="country" body-content="empty"
  */
@@ -172,17 +173,17 @@ public class CountryTag extends TagSupport {
         final String EMPTY = "";
         final Locale[] available = Locale.getAvailableLocales();
 
-        List countries = new ArrayList();
+        List<LabelValue> countries = new ArrayList<LabelValue>();
 
         for ( int i = 0; i < available.length; i++ ) {
             final String iso = available[i].getCountry();
-            final String name = available[i].getDisplayCountry( locale );
+            final String localName = available[i].getDisplayCountry( locale );
 
-            if ( !EMPTY.equals( iso ) && !EMPTY.equals( name ) ) {
-                LabelValue country = new LabelValue( name, iso );
+            if ( !EMPTY.equals( iso ) && !EMPTY.equals( localName ) ) {
+                LabelValue country = new LabelValue( localName, iso );
 
                 if ( !countries.contains( country ) ) {
-                    countries.add( new LabelValue( name, iso ) );
+                    countries.add( new LabelValue( localName, iso ) );
                 }
             }
         }
@@ -195,8 +196,8 @@ public class CountryTag extends TagSupport {
     /**
      * Class to compare LabelValues using their labels with locale-sensitive behaviour.
      */
-    public class LabelValueComparator implements Comparator {
-        private Comparator c;
+    public class LabelValueComparator implements Comparator<LabelValue> {
+        private Comparator<Object> c;
 
         /**
          * Creates a new LabelValueComparator object.
@@ -214,9 +215,9 @@ public class CountryTag extends TagSupport {
          * @param o2 The second LabelValue to compare.
          * @return The value returned by comparing the localized labels.
          */
-        public final int compare( Object o1, Object o2 ) {
-            LabelValue lhs = ( LabelValue ) o1;
-            LabelValue rhs = ( LabelValue ) o2;
+        public final int compare( LabelValue o1, LabelValue o2 ) {
+            LabelValue lhs = o1;
+            LabelValue rhs = o2;
 
             return c.compare( lhs.getLabel(), rhs.getLabel() );
         }
