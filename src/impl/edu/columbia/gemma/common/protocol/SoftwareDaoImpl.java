@@ -28,40 +28,39 @@ import org.hibernate.criterion.Restrictions;
  * 
  * @author pavlidis
  * @version $Id$
- * @see edu.columbia.gemma.common.protocol.Hardware
+ * @see edu.columbia.gemma.common.protocol.Software
  */
-public class HardwareDaoImpl extends edu.columbia.gemma.common.protocol.HardwareDaoBase {
+public class SoftwareDaoImpl extends edu.columbia.gemma.common.protocol.SoftwareDaoBase {
 
     @Override
-    public Hardware findOrCreate( Hardware hardware ) {
+    public Software findOrCreate( Software software ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Hardware.class );
-            queryObject.add( Restrictions.eq( "name", hardware.getName() ) ).add(
-                    Restrictions.eq( "make", hardware.getMake() ) )
-                    .add( Restrictions.eq( "model", hardware.getModel() ) );
+            Criteria queryObject = super.getSession( false ).createCriteria( Software.class );
+            queryObject.add( Restrictions.eq( "make", software.getName() ) ).add(
+                    Restrictions.eq( "model", software.getDescription() ) );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + edu.columbia.gemma.common.protocol.Hardware.class.getName()
+                            "More than one instance of '" + edu.columbia.gemma.common.protocol.Software.class.getName()
                                     + "' was found when executing query" );
+
                 } else if ( results.size() == 1 ) {
-                    result = ( edu.columbia.gemma.common.protocol.Hardware ) results.iterator().next();
+                    result = ( edu.columbia.gemma.common.protocol.Software ) results.iterator().next();
                 }
             }
-            return ( Hardware ) result;
+            return ( Software ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
     }
 
     @Override
-    public Hardware find( Hardware hardware ) {
-        if ( hardware == null || hardware.getMake() == null || hardware.getModel() == null ) return null;
-        Hardware newHardware = find( hardware );
-        if ( newHardware != null ) return newHardware;
-        return ( Hardware ) create( hardware );
+    public Software find( Software software ) {
+        if ( software == null || software.getName() == null ) return null;
+        Software newSoftware = find( software );
+        if ( newSoftware != null ) return newSoftware;
+        return ( Software ) create( software );
     }
-
 }
