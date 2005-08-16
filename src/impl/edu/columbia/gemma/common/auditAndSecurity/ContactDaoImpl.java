@@ -33,7 +33,7 @@ import org.hibernate.criterion.Restrictions;
 public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.ContactDaoBase {
 
     @Override
-    public Contact findOrCreate( Contact contact ) {
+    public Contact find( Contact contact ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Contact.class );
             queryObject.add( Restrictions.eq( "address", contact.getAddress() ) ).add(
@@ -59,7 +59,7 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
     }
 
     @Override
-    public Contact find( Contact contact ) {
+    public Contact findOrCreate( Contact contact ) {
         if ( contact == null
                 || ( contact.getAddress() == null && contact.getEmail() == null && contact.getPhone() == null ) )
             return null;

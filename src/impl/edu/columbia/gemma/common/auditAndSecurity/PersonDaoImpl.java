@@ -37,7 +37,7 @@ import edu.columbia.gemma.common.auditAndSecurity.Person;
 public class PersonDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.PersonDaoBase {
 
     @Override
-    public Person findOrCreate( Person person ) {
+    public Person find( Person person ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Person.class );
             queryObject.add( Restrictions.eq( "firstName", person.getFirstName() ) ).add(
@@ -65,7 +65,7 @@ public class PersonDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.Pe
     }
 
     @Override
-    public Person find( Person person ) {
+    public Person findOrCreate( Person person ) {
         if ( person == null
                 || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null && person
                         .getPhone() == null ) ) return null;

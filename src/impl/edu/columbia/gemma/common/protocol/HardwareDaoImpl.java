@@ -33,7 +33,7 @@ import org.hibernate.criterion.Restrictions;
 public class HardwareDaoImpl extends edu.columbia.gemma.common.protocol.HardwareDaoBase {
 
     @Override
-    public Hardware findOrCreate( Hardware hardware ) {
+    public Hardware find( Hardware hardware ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Hardware.class );
             queryObject.add( Restrictions.eq( "name", hardware.getName() ) ).add(
@@ -57,7 +57,7 @@ public class HardwareDaoImpl extends edu.columbia.gemma.common.protocol.Hardware
     }
 
     @Override
-    public Hardware find( Hardware hardware ) {
+    public Hardware findOrCreate( Hardware hardware ) {
         if ( hardware == null || hardware.getMake() == null || hardware.getModel() == null ) return null;
         Hardware newHardware = find( hardware );
         if ( newHardware != null ) return newHardware;

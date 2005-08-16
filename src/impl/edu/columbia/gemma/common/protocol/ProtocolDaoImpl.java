@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.common.protocol;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -32,8 +34,10 @@ import org.hibernate.criterion.Restrictions;
  */
 public class ProtocolDaoImpl extends edu.columbia.gemma.common.protocol.ProtocolDaoBase {
 
+    private static Log log = LogFactory.getLog( ProtocolDaoImpl.class.getName() );
+
     @Override
-    public Protocol findOrCreate( Protocol protocol ) {
+    public Protocol find( Protocol protocol ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Protocol.class );
             queryObject.add( Restrictions.eq( "name", protocol.getName() ) ).add(
@@ -57,10 +61,17 @@ public class ProtocolDaoImpl extends edu.columbia.gemma.common.protocol.Protocol
     }
 
     @Override
-    public Protocol find( Protocol protocol ) {
-        if ( protocol == null || protocol.getName() == null ) return null;
+    public Protocol findOrCreate( Protocol protocol ) {
+        if ( protocol == null || protocol.getName() == null ) {
+            log.warn( "Protocol was null or had no name : " + protocol );
+            return null;
+        }
         Protocol newProtocol = find( protocol );
-        if ( newProtocol != null ) return newProtocol;
+        if ( newProtocol != null ) {
+            log.debug( "Found existing protocol: " + protocol );
+            return newProtocol;
+        }
+        log.debug( "Creating new protocol: " + protocol );
         return ( Protocol ) create( protocol );
     }
 

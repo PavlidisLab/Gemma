@@ -33,11 +33,11 @@ import org.hibernate.criterion.Restrictions;
 public class SoftwareDaoImpl extends edu.columbia.gemma.common.protocol.SoftwareDaoBase {
 
     @Override
-    public Software findOrCreate( Software software ) {
+    public Software find( Software software ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Software.class );
-            queryObject.add( Restrictions.eq( "make", software.getName() ) ).add(
-                    Restrictions.eq( "model", software.getDescription() ) );
+            queryObject.add( Restrictions.eq( "name", software.getName() ) ).add(
+                    Restrictions.eq( "description", software.getDescription() ) );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -57,7 +57,7 @@ public class SoftwareDaoImpl extends edu.columbia.gemma.common.protocol.Software
     }
 
     @Override
-    public Software find( Software software ) {
+    public Software findOrCreate( Software software ) {
         if ( software == null || software.getName() == null ) return null;
         Software newSoftware = find( software );
         if ( newSoftware != null ) return newSoftware;
