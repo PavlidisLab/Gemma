@@ -26,7 +26,8 @@ package edu.columbia.gemma.expression.designElement;
 
 import java.util.Collection;
 
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * <hr>
@@ -39,7 +40,9 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
  */
 public class CompositeSequenceServiceImpl extends
         edu.columbia.gemma.expression.designElement.CompositeSequenceServiceBase {
-
+    private static final Log log = LogFactory
+            .getLog( edu.columbia.gemma.expression.designElement.CompositeSequenceServiceImpl.class );
+    
     /**
      * @see edu.columbia.gemma.expression.designElement.CompositeSequenceService#saveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence)
      */
@@ -51,12 +54,10 @@ public class CompositeSequenceServiceImpl extends
         throw new java.lang.UnsupportedOperationException(
                 "edu.columbia.gemma.expression.designElement.CompositeSequenceService.handleSaveCompositeSequence(edu.columbia.gemma.expression.designElement.CompositeSequence compositeSequence) Not implemented!" );
     }
-
+    
     @Override
-    protected Collection handleGetAllCompositeSequences( ArrayDesign arrayDesign ) throws Exception {
-        // TODO implement this
-        throw new UnsupportedOperationException(
-                "edu.columbia.gemma.expression.designElement.CompositeSequenceService.handleGetAllCompositeSequences(edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign) Not implemented!" );
+    protected Collection handleGetAllCompositeSequences() throws Exception {
+        return this.getCompositeSequenceDao().findAllCompositeSequences();
     }
 
 }
