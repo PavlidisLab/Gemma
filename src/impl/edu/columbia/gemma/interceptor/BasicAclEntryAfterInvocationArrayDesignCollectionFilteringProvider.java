@@ -193,19 +193,19 @@ public class BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider 
                     // Object domainObject = collectionIter.next();
 
                     // keshav - this is used to get compositeSequences based on arrayDesign (owner).
-                    Object tmpDomainObject = collectionIter.next(); // compositeSequence
+                    Object targetDomainObject = collectionIter.next(); // compositeSequence
                     Object domainObject = null; // arrayDesign
 
                     Method m = null;
                     try {
-                        m = tmpDomainObject.getClass().getMethod( "getArrayDesign", new Class[] {} );
+                        m = targetDomainObject.getClass().getMethod( "getArrayDesign", new Class[] {} );
                     } catch ( SecurityException e ) {
                         e.printStackTrace();
                     } catch ( NoSuchMethodException e ) {
                         e.printStackTrace();
                     }
                     try {
-                        domainObject = m.invoke( tmpDomainObject, new Object[] {} );
+                        domainObject = m.invoke( targetDomainObject, new Object[] {} );
                     } catch ( IllegalArgumentException e ) {
                         e.printStackTrace();
                     } catch ( IllegalAccessException e ) {
@@ -237,7 +237,7 @@ public class BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider 
 
                                         if ( logger.isDebugEnabled() ) {
                                             // logger.debug( "Principal is authorised for element: " + domainObject
-                                            logger.debug( "Principal is authorised for element: " + tmpDomainObject
+                                            logger.debug( "Principal is authorised for element: " + targetDomainObject
                                                     + " due to ACL: " + processableAcl.toString() );
                                         }
                                     }
@@ -251,7 +251,7 @@ public class BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider 
 
                         if ( logger.isDebugEnabled() ) {
                             // logger.debug( "Principal is NOT authorised for element: " + domainObject );
-                            logger.debug( "Principal is NOT authorised for element: " + tmpDomainObject );
+                            logger.debug( "Principal is NOT authorised for element: " + targetDomainObject );
                         }
                     }
                 }
