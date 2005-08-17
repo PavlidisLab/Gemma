@@ -177,17 +177,11 @@ $Id$
         </property>
     </bean>
     
-    <!-- Process AFTER_ACL_PARENT_COLLECTION_READ -->
+    <!-- Process AFTER_ACL_ARRAYDESIGN_COLLECTION_READ -->
     <bean id="afterAclArrayDesignCollectionRead" 
         class="edu.columbia.gemma.interceptor.BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider">
         <property name="aclManager"><ref local="aclManager"/></property>
-        <property name="requirePermission">
-            <list>
-                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
-                <ref bean="SimpleAclEntry.READ_WRITE"/>
-                <ref bean="SimpleAclEntry.READ"/>
-            </list>
-        </property>
+        <!-- requirePermission not necessary here because permission is based on 'owner', arrayDesign -->
     </bean>
    
    <!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
