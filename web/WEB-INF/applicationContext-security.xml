@@ -127,97 +127,17 @@ $Id$
 	
     <!-- ===================== AUTHORIZATION ==================== -->
     
-    <!-- ===================== SERVICE LAYER SECURITY (role based) ==================== -->
-    
-    <bean id="serviceSecurityInterceptor" class="net.sf.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor">
-      <property name="authenticationManager"><ref bean="authenticationManager"/></property>
-      <property name="accessDecisionManager"><ref local="businessAccessDecisionManager"/></property>
-      <property name="afterInvocationManager"><ref local="afterInvocationManager"/></property>
-      <property name="objectDefinitionSource">
-         <value>
-            <!-- after acl example configuration        
-         	edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=admin, user, AFTER_ACL_COLLECTION_READ-->
-            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=admin, user
-            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=admin, user
-            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_EDIT
-            edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_ARRAYDESIGN_EDIT
-         </value>
-      </property>
-   </bean>
-   
+    <!-- see applicationContext-hibernate.xml for andromda generated acegi -->
    
    <!-- An access decision manager used by filterInvocationInterceptor -->
    <bean id="accessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
       <property name="allowIfAllAbstainDecisions"><value>false</value></property>
       <property name="decisionVoters">
          <list>
-            <ref local="roleVoter"/>
+            <ref bean="roleVoter"/>
          </list>
       </property>  
    </bean>
-   
-   <!-- An access decision manager used by the serviceSecurityInterceptor -->
-   <bean id="businessAccessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
-      <property name="allowIfAllAbstainDecisions"><value>false</value></property>
-      <property name="decisionVoters">
-         <list>
-            <ref local="roleVoter"/>
-            <ref local="aclArrayDesignEditVoter"/>              
-         </list>
-      </property>  
-   </bean>
-   
-   <!-- ===================== ROLE BASED VOTING ==================== -->
-    
-    <bean id="roleVoter" class="net.sf.acegisecurity.vote.RoleVoter">
-        <property name="rolePrefix"><value/></property>
-    </bean>
-   
-   <!-- ===================== DOMAIN OBJECT SECURITY (acl) ==================== -->
-   
-   <!-- ~~~~~~~~~~~~~~~~~~ "BEFORE INVOCATION" AUTHORIZATION DEFINITIONS ~~~~~~~~~~~~~~~~ -->
-
-   <!-- ACL permission masks used by this application -->
-   
-   <bean id="SimpleAclEntry.ADMINISTRATION" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
-        </property>
-    </bean>
-        
-    <bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
-        </property>
-    </bean>
-    
-    <bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-        <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
-        </property>
-    </bean>
-    
-    <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
-    
-    <!-- One voter should be used for editing (create, update), however this can change if these tasks require different
-         permissions -->
-         
-    <!-- An access decision voter that reads ACL_USER_EDIT settings -->
-    <bean id="aclArrayDesignEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
-        <property name="aclManager"><ref local="aclManager"/></property>
-        <property name="processConfigAttribute">
-            <value>ACL_ARRAYDESIGN_EDIT</value>
-        </property>
-        <property name="processDomainObjectClass">
-            <value>edu.columbia.gemma.expression.arrayDesign.ArrayDesign</value>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION"/>
-                <ref local="SimpleAclEntry.READ_WRITE"/>
-            </list>
-        </property>
-    </bean>
    
    <!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
     
@@ -235,9 +155,9 @@ $Id$
         <property name="aclManager"><ref local="aclManager"/></property>
         <property name="requirePermission">
             <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION"/>
-                <ref local="SimpleAclEntry.READ_WRITE"/>
-                <ref local="SimpleAclEntry.READ"/>
+                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
+                <ref bean="SimpleAclEntry.READ_WRITE"/>
+                <ref bean="SimpleAclEntry.READ"/>
             </list>
         </property>
     </bean>
@@ -249,9 +169,9 @@ $Id$
         <property name="aclManager"><ref local="aclManager"/></property>
         <property name="requirePermission">
             <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION"/>
-                <ref local="SimpleAclEntry.READ_WRITE"/>
-                <ref local="SimpleAclEntry.READ"/>
+                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
+                <ref bean="SimpleAclEntry.READ_WRITE"/>
+                <ref bean="SimpleAclEntry.READ"/>
             </list>
         </property>
     </bean>
