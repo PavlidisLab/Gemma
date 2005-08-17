@@ -146,6 +146,7 @@ $Id$
             <list>
                 <ref local="afterAclRead"/>
                 <ref local="afterAclCollectionRead"/>
+                <ref local="afterAclArrayDesignCollectionRead"/>
             </list>
         </property>
     </bean>
@@ -166,6 +167,19 @@ $Id$
          have authorization priviliges based on -->
     <bean id="afterAclCollectionRead" 
         class="net.sf.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
+        <property name="aclManager"><ref local="aclManager"/></property>
+        <property name="requirePermission">
+            <list>
+                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
+                <ref bean="SimpleAclEntry.READ_WRITE"/>
+                <ref bean="SimpleAclEntry.READ"/>
+            </list>
+        </property>
+    </bean>
+    
+    <!-- Process AFTER_ACL_PARENT_COLLECTION_READ -->
+    <bean id="afterAclArrayDesignCollectionRead" 
+        class="edu.columbia.gemma.interceptor.BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider">
         <property name="aclManager"><ref local="aclManager"/></property>
         <property name="requirePermission">
             <list>
