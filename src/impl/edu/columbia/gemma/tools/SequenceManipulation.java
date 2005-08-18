@@ -41,6 +41,7 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
  * @author pavlidis
  * @version $Id$
  */
+@SuppressWarnings("unchecked")
 public class SequenceManipulation {
     protected static final Log log = LogFactory.getLog( SequenceManipulation.class );
 

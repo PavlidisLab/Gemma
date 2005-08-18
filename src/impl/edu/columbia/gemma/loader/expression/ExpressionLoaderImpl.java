@@ -31,6 +31,15 @@ import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.protocol.Hardware;
+import edu.columbia.gemma.common.protocol.HardwareApplication;
+import edu.columbia.gemma.common.protocol.HardwareDao;
+import edu.columbia.gemma.common.protocol.Protocol;
+import edu.columbia.gemma.common.protocol.ProtocolApplication;
+import edu.columbia.gemma.common.protocol.ProtocolDao;
+import edu.columbia.gemma.common.protocol.Software;
+import edu.columbia.gemma.common.protocol.SoftwareApplication;
+import edu.columbia.gemma.common.protocol.SoftwareDao;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
@@ -51,6 +60,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.util.PrettyPrinter;
 
 /**
  * A generic class to persist Gemma-domain objects from the Expression package: arrayDesigns, expressionExperiments and
@@ -68,7 +78,11 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @spring.property name="bioMaterialDao" ref="bioMaterialDao"
  * @spring.property name="arrayDesignDao" ref="arrayDesignDao"
  * @spring.property name="designElementDao" ref="designElementDao"
+ * @spring.property name="protocolDao" ref="protocolDao"
+ * @spring.property name="softwareDao" ref="softwareDao"
+ * @spring property name="hardwareDao" ref="hardwareDao"
  */
+@SuppressWarnings("unchecked")
 public class ExpressionLoaderImpl implements Loader {
     private static Log log = LogFactory.getLog( ExpressionLoaderImpl.class.getName() );
 
@@ -87,7 +101,13 @@ public class ExpressionLoaderImpl implements Loader {
     private ExternalDatabaseDao externalDatabaseDao;
 
     private DesignElementDao designElementDao;
-    
+
+    private ProtocolDao protocolDao;
+
+    private SoftwareDao softwareDao;
+
+    private HardwareDao hardwareDao;
+
     /**
      * @param designElementDao The designElementDao to set.
      */
@@ -100,6 +120,13 @@ public class ExpressionLoaderImpl implements Loader {
      */
     public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
+    }
+
+    /**
+     * @param protocolDao The protocolDao to set
+     */
+    public void setProtocolDao( ProtocolDao protocolDao ) {
+        this.protocolDao = protocolDao;
     }
 
     /**
@@ -132,18 +159,17 @@ public class ExpressionLoaderImpl implements Loader {
         log.debug( "Entering MageLoaderImpl.create()" );
         if ( defaultOwner == null ) initializeDefaultOwner();
         try {
-        	System.out.println("Entered create with " + col.size() + " objects.");
+            log.debug( "Entered create with " + col.size() + " objects." );
             for ( Object entity : col ) {
 
                 String className = entity.getClass().getName();
-                System.out.println("PERSIST: " + className) ;
+                // log.debug( "PERSIST: " + className );
                 // check if className is on short list of classes to be persisted.
                 // ArrayDesign (we won't usually use this - mage-ml of array designs is gigantic.)
                 // ExpressionExperiment (most interested in this)
                 // 
                 if ( entity instanceof ExpressionExperiment ) {
-                    log.debug( "Loading " + className );
-                    System.out.println("Actually trying to persist: " + className) ;
+                    log.debug( "Persisting " + className );
                     loadExpressionExperiment( ( ExpressionExperiment ) entity );
                 } else if ( entity instanceof ArrayDesign ) {
                     // loadArrayDesign( ( ArrayDesign ) entity );
@@ -156,7 +182,7 @@ public class ExpressionLoaderImpl implements Loader {
                 } else if ( entity instanceof QuantitationType ) {
                     // loadQuantitationType( ( QuantitationType ) entity );
                 } else if ( entity instanceof BioMaterial ) {
-                    log.debug( "Loading " + className );
+                    log.debug( "Persisting " + className );
                     loadBioMaterial( ( BioMaterial ) entity );
                 } else if ( entity instanceof ExternalDatabase ) {
                     // probably won't use this much; or get from associations via ontologyentry.
@@ -166,7 +192,7 @@ public class ExpressionLoaderImpl implements Loader {
                 } else if ( entity instanceof BioAssay ) {
                     // loadBioAssay( ( BioAssay ) entity );
                 } else {
-                    //throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
+                    // throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
                 }
             }
         } catch ( Exception e ) {
@@ -209,11 +235,10 @@ public class ExpressionLoaderImpl implements Loader {
     /**
      * @param entity
      */
+    @SuppressWarnings("unchecked")
     private void loadBioMaterial( BioMaterial entity ) {
-        for ( BioCharacteristic characteristic : ( Collection<BioCharacteristic> ) entity
-                .getBioCharacteristics() ) {
-            persistBioCharacteristic( characteristic );
-        }
+
+        // log.debug( PrettyPrinter.print( entity ) );
 
         OntologyEntry materialType = entity.getMaterialType();
         if ( materialType != null ) {
@@ -223,17 +248,85 @@ public class ExpressionLoaderImpl implements Loader {
         for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
             OntologyEntry action = treatment.getAction();
             persistOntologyEntry( action );
+
+            for ( ProtocolApplication protocolApplication : ( Collection<ProtocolApplication> ) treatment
+                    .getProtocolApplications() ) {
+                fillInProtocolApplication( protocolApplication );
+            }
         }
 
         bioMaterialDao.create( entity );
     }
 
     /**
-     * @param characteristic
+     * @param protocolApplication
      */
-    private void persistBioCharacteristic( BioCharacteristic characteristic ) {
-        // TODO Auto-generated method stub
-    	
+    private void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
+        if ( protocolApplication == null ) return;
+
+        log.debug( "Filling in protocolApplication" );
+
+        Protocol protocol = protocolApplication.getProtocol();
+        if ( protocol == null )
+            throw new IllegalStateException( "Must have protocol associated with ProtocolApplication" );
+
+        if ( protocol.getName() == null ) throw new IllegalStateException( "Protocol must have a name" );
+
+        fillInProtocol( protocol );
+        protocolApplication.setProtocol( protocolDao.findOrCreate( protocol ) );
+
+        for ( Person performer : ( Collection<Person> ) protocolApplication.getPerformers() ) {
+            log.debug( "Filling in performer" );
+            performer.setId( personDao.findOrCreate( performer ).getId() );
+        }
+
+        for ( SoftwareApplication softwareApplication : ( Collection<SoftwareApplication> ) protocolApplication
+                .getSoftwareApplications() ) {
+            Software software = softwareApplication.getSoftware();
+            if ( software == null )
+                throw new IllegalStateException( "Must have software associated with SoftwareApplication" );
+
+            OntologyEntry type = software.getType();
+            persistOntologyEntry( type );
+            software.setType( type );
+
+            softwareApplication.setSoftware( softwareDao.findOrCreate( software ) );
+
+        }
+
+        for ( HardwareApplication HardwareApplication : ( Collection<HardwareApplication> ) protocolApplication
+                .getHardwareApplications() ) {
+            Hardware hardware = HardwareApplication.getHardware();
+            if ( hardware == null )
+                throw new IllegalStateException( "Must have hardware associated with HardwareApplication" );
+
+            OntologyEntry type = hardware.getType();
+            persistOntologyEntry( type );
+            hardware.setType( type );
+
+            HardwareApplication.setHardware( hardwareDao.findOrCreate( hardware ) );
+        }
+    }
+
+    /**
+     * @param protocol
+     */
+    private void fillInProtocol( Protocol protocol ) {
+        if ( protocol == null ) {
+            log.warn( "Null protocol" );
+            return;
+        }
+        OntologyEntry type = protocol.getType();
+        persistOntologyEntry( type );
+        protocol.setType( type );
+
+        for ( Software software : ( Collection<Software> ) protocol.getSoftwareUsed() ) {
+            software.setId( softwareDao.findOrCreate( software ).getId() );
+        }
+
+        for ( Hardware hardware : ( Collection<Hardware> ) protocol.getHardwares() ) {
+            hardware.setId( hardwareDao.findOrCreate( hardware ).getId() );
+        }
     }
 
     /**
@@ -265,6 +358,7 @@ public class ExpressionLoaderImpl implements Loader {
      * @param ontologyEntry
      */
     private void persistOntologyEntry( OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry == null ) return;
         fillInPersistentExternalDatabase( ontologyEntry );
         ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
         for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
@@ -276,7 +370,6 @@ public class ExpressionLoaderImpl implements Loader {
      * @param entity
      */
     private void loadArrayDesign( ArrayDesign entity ) {
-
         arrayDesignDao.create( entity );
     }
 
@@ -340,7 +433,7 @@ public class ExpressionLoaderImpl implements Loader {
         }
 
         // manually persist: experimentaldesign->bioassay->factorvalue->value and bioassay->arraydesign
-        for ( BioAssay bA : ( Collection<BioAssay> ) ( ( ExpressionExperiment ) entity ).getBioAssays() ) {
+        for ( BioAssay bA : ( Collection<BioAssay> ) entity.getBioAssays() ) {
             for ( FactorValue factorValue : ( Collection<FactorValue> ) bA.getBioAssayFactorValues() ) {
                 for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
                     persistOntologyEntry( value );
@@ -357,7 +450,7 @@ public class ExpressionLoaderImpl implements Loader {
 
         // manually persist expressionExperiment-->designElementDataVector-->DesignElement
         // FIXME - make sure this looks at the arraydesign.
-        for ( DesignElementDataVector vect : ( Collection<DesignElementDataVector> ) ( ( ExpressionExperiment ) entity )
+        for ( DesignElementDataVector vect : ( Collection<DesignElementDataVector> ) entity
                 .getDesignElementDataVectors() ) {
             DesignElement persistentDesignElement = designElementDao.find( vect.getDesignElement() );
             if ( persistentDesignElement == null ) {
@@ -438,6 +531,20 @@ public class ExpressionLoaderImpl implements Loader {
      */
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    /**
+     * @param hardwareDao The hardwareDao to set.
+     */
+    public void setHardwareDao( HardwareDao hardwareDao ) {
+        this.hardwareDao = hardwareDao;
+    }
+
+    /**
+     * @param softwareDao The softwareDao to set.
+     */
+    public void setSoftwareDao( SoftwareDao softwareDao ) {
+        this.softwareDao = softwareDao;
     }
 
 }

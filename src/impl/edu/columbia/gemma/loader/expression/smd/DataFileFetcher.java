@@ -19,9 +19,7 @@
 package edu.columbia.gemma.loader.expression.smd;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,15 +33,11 @@ import java.util.TreeMap;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
 import baseCode.util.NetUtils;
-
 import edu.columbia.gemma.loader.expression.smd.model.SMDBioAssay;
 import edu.columbia.gemma.loader.expression.smd.model.SMDExperiment;
 import edu.columbia.gemma.loader.expression.smd.model.SMDFile;

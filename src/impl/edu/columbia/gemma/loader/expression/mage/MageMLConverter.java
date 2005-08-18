@@ -575,6 +575,7 @@ public class MageMLConverter {
         List<Element> elmList = simplifiedXml.selectNodes( "/BioList/BioMaterial[@identifier='"
                 + mageObj.getIdentifier() + "']/Characteristics/child::node()" );
 
+        // just debugging information.
         if ( elmList.isEmpty() ) {
             List<Element> check = simplifiedXml.selectNodes( "/BioList/BioMaterial[@identifier='"
                     + mageObj.getIdentifier() + "']" );
@@ -588,12 +589,27 @@ public class MageMLConverter {
             return;
         }
 
+        // FIXME : add the ontology entry associations.
+
         log.debug( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM." );
         for ( Element elm : elmList ) {
             edu.columbia.gemma.common.description.BioCharacteristic bioCharacteristic = edu.columbia.gemma.common.description.BioCharacteristic.Factory
                     .newInstance();
             bioCharacteristic.setCategory( elm.getName() );
             bioCharacteristic.setValue( elm.valueOf( "@value" ) );
+
+            if ( elm.valueOf( "@CategoryDatabaseAccession" ).length() > 0 ) {
+                log.warn( "Got category accession: " + elm.valueOf( "@CategoryDatabaseAccession" ) );
+            } else {
+                // if this is a MO acc, tidy it up.
+            }
+            
+            if ( elm.valueOf( "@CategoryDatabaseIdentifier" ).length() > 0 ) {
+                log.warn( "Got category database: " + elm.valueOf( "@CategoryDatabaseIdentifier" ) );
+            } else {
+                // figure out if it is MO.
+            }
+
             log.debug( "CAT: " + bioCharacteristic.getCategory() + " VAL: " + bioCharacteristic.getValue() );
 
             List subList = elm.selectNodes( "child::node()" );
@@ -1889,7 +1905,7 @@ public class MageMLConverter {
             result = ( new SimpleDateFormat() ).parse( dateString );
 
         } catch ( ParseException e ) {
-            if ( dateString.equals( "n\\a" ) ) {
+            if ( dateString.equals( "n\\a" ) || dateString.equals( "n/a" ) ) {
                 return null;
             }
             log.debug( "Trying alternative date formats" );
