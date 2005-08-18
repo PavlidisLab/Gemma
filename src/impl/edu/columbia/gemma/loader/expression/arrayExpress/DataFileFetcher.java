@@ -42,23 +42,17 @@ public class DataFileFetcher {
 
     Untar untarrer;
     MageMLConverter converter;
-    public DataFileFetcher()  {
+
+    public DataFileFetcher() {
         untarrer = new Untar();
         UntarCompressionMethod method = new UntarCompressionMethod();
         method.setValue( "gzip" );
         untarrer.setCompression( method );
-        try {
-            converter = new MageMLConverter();
-        } catch ( IOException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        converter = new MageMLConverter();
     }
 
     /*
      * Have to get the biodatacube, including the dimensions.
      */
-    
-    
-    
+
 }

@@ -80,6 +80,7 @@ public class GeoConverter {
     /**
      * @param seriesMap
      */
+    @SuppressWarnings("unchecked")
     public Collection convert( Map<String, Object> map ) {
         Collection results = new HashSet();
         for ( String name : map.keySet() ) {
@@ -92,6 +93,7 @@ public class GeoConverter {
     /**
      * @param geoObject
      */
+    @SuppressWarnings("unchecked")
     public Object convert( Object geoObject ) {
         if ( geoObject == null ) {
             log.warn( "Null object" );
@@ -102,7 +104,7 @@ public class GeoConverter {
         } else if ( geoObject instanceof GeoSeries ) {
             return convert( ( GeoSeries ) geoObject );
         } else if ( geoObject instanceof Map ) {
-            return convert( ( Map ) geoObject );
+            return convert( ( Map<String, Object> ) geoObject );
         } else if ( geoObject instanceof GeoSubset ) {
             return convert( ( GeoSubset ) geoObject );
         } else {
@@ -150,6 +152,7 @@ public class GeoConverter {
     /**
      * @param series
      */
+    @SuppressWarnings("unchecked")
     private ExpressionExperiment convert( GeoSeries series ) {
         if ( series == null ) return null;
         log.info( "Converting series: " + series.getGeoAccesssion() );
