@@ -5,10 +5,11 @@ import java.util.Collection;
 import org.easymock.MockControl;
 import org.springframework.beans.factory.BeanFactory;
 
+
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.interceptor.ManualAuthenticationProcessing;
+import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**

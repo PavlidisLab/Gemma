@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
+
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
@@ -16,8 +17,8 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
-import edu.columbia.gemma.interceptor.ManualAuthenticationProcessing;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
