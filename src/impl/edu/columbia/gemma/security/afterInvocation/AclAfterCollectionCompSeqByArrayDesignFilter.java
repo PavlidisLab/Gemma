@@ -15,8 +15,6 @@
 
 package edu.columbia.gemma.security.afterInvocation;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -35,6 +33,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
+
 /**
  * For this particular AfterInvocationProvider, composite sequence authorization is determined based on the secured
  * array design acl. ie. composite sequence security is determined from an owning array desgin's security. Copyright (c)
@@ -47,12 +48,10 @@ import org.springframework.beans.factory.InitializingBean;
  *          keshav Exp $
  * @see AfterInvocationProvider
  */
-public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvocationProvider,
-        InitializingBean {
+public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvocationProvider, InitializingBean {
     // ~ Static fields/initializers =============================================
 
-    protected static final Log logger = LogFactory
-            .getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
+    protected static final Log logger = LogFactory.getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
 
     // ~ Instance fields ========================================================
 
@@ -151,29 +150,12 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
                 Iterator collectionIter = filterer.iterator();
 
                 while ( collectionIter.hasNext() ) {
-                    // Object domainObject = collectionIter.next();
 
                     // keshav - this is used to get compositeSequences based on arrayDesign (owner).
-                    Object targetDomainObject = collectionIter.next(); // compositeSequence
-                    Object domainObject = null; // arrayDesign
+                    CompositeSequence targetDomainObject = ( CompositeSequence ) collectionIter.next();
 
-                    Method m = null;
-                    try {
-                        m = targetDomainObject.getClass().getMethod( "getArrayDesign", new Class[] {} );
-                    } catch ( SecurityException e ) {
-                        e.printStackTrace();
-                    } catch ( NoSuchMethodException e ) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        domainObject = m.invoke( targetDomainObject, new Object[] {} );
-                    } catch ( IllegalArgumentException e ) {
-                        e.printStackTrace();
-                    } catch ( IllegalAccessException e ) {
-                        e.printStackTrace();
-                    } catch ( InvocationTargetException e ) {
-                        e.printStackTrace();
-                    }// end keshav
+                    ArrayDesign domainObject = targetDomainObject.getArrayDesign();
+                    // end keshav
 
                     boolean hasPermission = false;
 
