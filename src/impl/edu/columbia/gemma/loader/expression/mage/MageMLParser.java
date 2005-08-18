@@ -102,7 +102,8 @@ public class MageMLParser {
      * @param istMageXml Input MAGE-ML
      * @param istXSL XSL for transforming the MAGE-ML into a simpler format preserving key structure
      */
-    public void createSimplifiedXml( InputStream istMageXml, InputStream istXsl ) throws IOException {
+    public void createSimplifiedXml( InputStream istMageXml, InputStream istXsl ) throws IOException,
+            TransformerException {
 
         log.info( "Creating simplified XML" );
 
@@ -142,8 +143,6 @@ public class MageMLParser {
             log.error( e, e );
         } catch ( TransformerConfigurationException e ) {
             log.error( e, e );
-        } catch ( TransformerException e ) {
-            log.error( e, e );
         }
     }
 
@@ -169,7 +168,7 @@ public class MageMLParser {
      * @throws IOException
      * @throws SAXException
      */
-    public void parse( String fileName ) throws IOException, SAXException {
+    public void parse( String fileName ) throws IOException, SAXException, TransformerException {
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
         parser.parse( new InputSource( is ) );
         mageJava = cHandler.getMAGEJava();
@@ -183,7 +182,7 @@ public class MageMLParser {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private void createSimplifiedXml( String fileName ) throws IOException, FileNotFoundException {
+    private void createSimplifiedXml( String fileName ) throws IOException, FileNotFoundException, TransformerException {
         InputStream is;
         is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
         InputStream isXsl = this.getClass().getResourceAsStream( "resource/MAGE-simplify.xsl" );

@@ -20,6 +20,7 @@ package edu.columbia.gemma.loader.expression.mage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -94,9 +95,11 @@ import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.QuantitationType.StandardQuantitationType;
+import org.biomage.tools.ontology.OntologyHelper;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import edu.columbia.gemma.common.description.BioCharacteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -190,6 +193,11 @@ public class MageMLConverter {
     private static final String MGED_ONTOLOGY_URL = "http://mged.sourceforge.net/ontologies/MGEDontology.php";
 
     /**
+     * 
+     */
+    private static final String MGED_DATABASE_IDENTIFIER = "MGED Ontology";
+
+    /**
      * Different ways to refer to the MAGE Ontology
      */
     public Set<String> mgedOntologyAliases;
@@ -200,15 +208,18 @@ public class MageMLConverter {
     private Map<String, Map> bioAssayDimensions;
 
     /**
-     * Used to hold references to Identifiables, so we don't convert them over and over again.
-     */
-    private Map<String, Object> identifiableCache;
-
-    /**
      * Holds the simplified MAGE-ML
      */
     private Document simplifiedXml;
 
+    /**
+     * 
+     */
+    private OntologyHelper mgedOntologyHelper;
+
+    /**
+     * @param simplifiedXml
+     */
     public void setSimplifiedXml( Document simplifiedXml ) {
         this.simplifiedXml = simplifiedXml;
     }
@@ -217,13 +228,21 @@ public class MageMLConverter {
      * Constructor
      */
     public MageMLConverter() {
-        identifiableCache = new HashMap<String, Object>();
         bioAssayDimensions = new HashMap<String, Map>();
         mgedOntologyAliases = new HashSet<String>();
 
         mgedOntologyAliases.add( "MGED Ontology" );
         mgedOntologyAliases.add( "MO" );
         mgedOntologyAliases.add( "ebi.ac.uk:Database:MO" );
+
+        URL ontologyDaml = this.getClass().getResource( "resource/MGEDOntology.daml" );
+        try {
+            log.info( "Reading MGED Ontology" );
+            mgedOntologyHelper = new OntologyHelper( ontologyDaml.getPath() );
+        } catch ( Exception e ) { // yup, that's what this constructor throws.
+            log.error( e, e );
+        }
+
     }
 
     /**
@@ -582,44 +601,26 @@ public class MageMLConverter {
             if ( check.isEmpty() ) {
                 log.error( "Failed to find identifier " + mageObj.getIdentifier() + " in simplified DOM." );
             } else {
-                log
-                        .info( "Found identifier " + mageObj.getIdentifier()
-                                + " in simplified DOM but no 'Characteristics'" );
+                log.debug( "Found identifier " + mageObj.getIdentifier()
+                        + " in simplified DOM but no 'Characteristics'" );
             }
             return;
         }
 
-        // FIXME : add the ontology entry associations.
-
         log.debug( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM." );
         for ( Element elm : elmList ) {
-            edu.columbia.gemma.common.description.BioCharacteristic bioCharacteristic = edu.columbia.gemma.common.description.BioCharacteristic.Factory
-                    .newInstance();
+            BioCharacteristic bioCharacteristic = BioCharacteristic.Factory.newInstance();
             bioCharacteristic.setCategory( elm.getName() );
             bioCharacteristic.setValue( elm.valueOf( "@value" ) );
 
-            if ( elm.valueOf( "@CategoryDatabaseAccession" ).length() > 0 ) {
-                log.warn( "Got category accession: " + elm.valueOf( "@CategoryDatabaseAccession" ) );
-            } else {
-                // if this is a MO acc, tidy it up.
-            }
-            
-            if ( elm.valueOf( "@CategoryDatabaseIdentifier" ).length() > 0 ) {
-                log.warn( "Got category database: " + elm.valueOf( "@CategoryDatabaseIdentifier" ) );
-            } else {
-                // figure out if it is MO.
-            }
-
-            log.debug( "CAT: " + bioCharacteristic.getCategory() + " VAL: " + bioCharacteristic.getValue() );
+            specialFillInBioCharacteristicOntologyEntries( bioCharacteristic, elm );
 
             List subList = elm.selectNodes( "child::node()" );
-            Collection<edu.columbia.gemma.common.description.BioCharacteristic> bcConstituents = bioCharacteristic
-                    .getConstituents();
+            Collection<BioCharacteristic> bcConstituents = bioCharacteristic.getConstituents();
             if ( subList.size() > 0 ) {
                 for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
                     Element elmSub = ( Element ) subIter.next();
-                    edu.columbia.gemma.common.description.BioCharacteristic bcConstitutent = edu.columbia.gemma.common.description.BioCharacteristic.Factory
-                            .newInstance();
+                    BioCharacteristic bcConstitutent = BioCharacteristic.Factory.newInstance();
                     bcConstitutent.setCategory( elmSub.getName() );
                     bcConstitutent.setValue( elmSub.valueOf( "@value" ) );
                     log.debug( " CAT: " + bcConstitutent.getCategory() + " VAL: " + bcConstitutent.getValue() );
@@ -628,6 +629,116 @@ public class MageMLConverter {
                 bioCharacteristic.setConstituents( bcConstituents );
             }
             gemmaObj.getBioCharacteristics().add( bioCharacteristic );
+        }
+    }
+
+    /**
+     * @param bioCharacteristic
+     * @param elm
+     */
+    private void specialFillInBioCharacteristicOntologyEntries( BioCharacteristic bioCharacteristic, Element elm ) {
+        boolean isCategoryMo = false;
+        boolean isValueMo = false;
+        boolean hasCategoryAcc = true;
+        boolean hasValueAcc = true;
+        String categoryDb = elm.valueOf( "@CategoryDatabaseIdentifier" );
+        String categoryAcc = elm.valueOf( "@CategoryDatabaseAccession" );
+        String valueDb = elm.valueOf( "@ValueDatabaseIdentifier" );
+        String valueAcc = elm.valueOf( "@ValueDatabaseAccession" );
+
+        if ( categoryDb.length() > 0 ) {
+            isCategoryMo = this.mgedOntologyAliases.contains( categoryDb );
+            if ( isCategoryMo ) {
+                categoryDb = MGED_DATABASE_IDENTIFIER;
+            }
+        } else if ( mgedOntologyHelper.isInstantiable( bioCharacteristic.getCategory() ) ) {
+            isCategoryMo = true;
+            categoryDb = MGED_DATABASE_IDENTIFIER;
+        } else {
+
+            log.debug( "No category database" );
+        }
+
+        if ( categoryAcc.length() > 0 ) {
+            if ( isCategoryMo ) {
+                categoryAcc = formMgedOntologyAccession( categoryAcc );
+            }
+        } else if ( isCategoryMo ) {
+            categoryAcc = formMgedOntologyAccession( bioCharacteristic.getCategory() );
+        } else {
+            hasCategoryAcc = false;
+            log.debug( "No category accession value." );
+        }
+
+        if ( valueDb.length() > 0 ) {
+            isValueMo = this.mgedOntologyAliases.contains( valueDb );
+            if ( isValueMo ) {
+                valueDb = MGED_DATABASE_IDENTIFIER;
+            }
+        } else if ( isCategoryMo ) {
+            if ( mgedOntologyHelper.isInstantiable( bioCharacteristic.getValue() ) ) {
+                isValueMo = true;
+                valueDb = MGED_DATABASE_IDENTIFIER;
+            } else if ( mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ).contains(
+                    bioCharacteristic.getValue() ) ) {
+                isValueMo = true;
+                valueDb = MGED_DATABASE_IDENTIFIER;
+            }
+        } else {
+
+            log.debug( "No value database" );
+        }
+
+        if ( valueAcc.length() > 0 ) {
+            if ( isValueMo ) {
+                valueAcc = formMgedOntologyAccession( valueAcc );
+            }
+        } else if ( isValueMo ) {
+            valueAcc = formMgedOntologyAccession( valueAcc );
+        } else {
+            hasValueAcc = false;
+            log.debug( "No value accession" );
+        }
+
+        if ( hasCategoryAcc ) {
+            ExternalDatabase categoryExternalDatabase = ExternalDatabase.Factory.newInstance();
+            categoryExternalDatabase.setName( categoryDb );
+            edu.columbia.gemma.common.description.OntologyEntry categoryOntologyEntry = edu.columbia.gemma.common.description.OntologyEntry.Factory
+                    .newInstance();
+            categoryOntologyEntry.setAccession( categoryAcc );
+            categoryOntologyEntry.setExternalDatabase( categoryExternalDatabase );
+            categoryOntologyEntry.setCategory( bioCharacteristic.getCategory() );
+            categoryOntologyEntry.setValue( bioCharacteristic.getCategory() );
+            bioCharacteristic.setCategoryTerm( categoryOntologyEntry );
+        }
+
+        if ( hasValueAcc ) {
+            ExternalDatabase valueExternalDatabase = ExternalDatabase.Factory.newInstance();
+            valueExternalDatabase.setName( valueDb );
+            edu.columbia.gemma.common.description.OntologyEntry valueOntologyEntry = edu.columbia.gemma.common.description.OntologyEntry.Factory
+                    .newInstance();
+            valueOntologyEntry.setAccession( categoryAcc );
+            valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
+            valueOntologyEntry.setCategory( bioCharacteristic.getValue() );
+            valueOntologyEntry.setValue( bioCharacteristic.getValue() );
+            bioCharacteristic.setValueTerm( valueOntologyEntry );
+        }
+
+        log.info( "CAT: " + bioCharacteristic.getCategory() + " VAL: " + bioCharacteristic.getValue() + " CATdb: "
+                + categoryDb + " VALdb: " + valueDb + " CATacc: " + categoryAcc + " VALacc: " + valueAcc );
+    }
+
+    /**
+     * @param name Possibly mal-formed accession
+     * @return property formed accession identifier for the term.
+     */
+    private String formMgedOntologyAccession( String name ) {
+        if ( name.startsWith( MGED_ONTOLOGY_URL ) ) {
+            return name;
+        } else if ( name.startsWith( "#" ) ) {
+            return MGED_ONTOLOGY_URL + name;
+        } else {
+            return MGED_ONTOLOGY_URL + "#" + name;
         }
     }
 
@@ -1480,7 +1591,6 @@ public class MageMLConverter {
             gemmaObj.setName( mageObj.getIdentifier() );
         }
 
-        identifiableCache.put( mageObj.getIdentifier(), gemmaObj );
         convertDescribable( mageObj, gemmaObj );
     }
 
@@ -2646,43 +2756,6 @@ public class MageMLConverter {
         return gemmaGetter;
     }
 
-    // /**
-    // * @param gemmaObj
-    // * @return true if the object has an OntologyEntry.
-    // */
-    // private Method findOntologyEntryGetter( Object gemmaObj ) {
-    // Method[] methods = gemmaObj.getClass().getMethods();
-    // for ( Method method : methods ) {
-    // Class type = method.getReturnType();
-    // if ( type == edu.columbia.gemma.common.description.OntologyEntry.class
-    // && method.getName().startsWith( "get" ) ) {
-    // log.info( "Found ontologyEntry getter method: " + method.getName() + " for "
-    // + gemmaObj.getClass().getSimpleName() );
-    // return method;
-    // }
-    // }
-    // return null;
-    // }
-
-    // /**
-    // * @param gemmaObj
-    // * @return true if the object has an OntologyEntry.
-    // */
-    // private Method findOntologyEntrySetter( Object gemmaObj ) {
-    // Method[] methods = gemmaObj.getClass().getMethods();
-    // for ( Method method : methods ) {
-    // Class[] types = method.getParameterTypes();
-    // if ( types.length != 1 ) continue;
-    // if ( types[0] == edu.columbia.gemma.common.description.OntologyEntry.class
-    // && method.getName().startsWith( "set" ) ) {
-    // log.info( "Found ontologyEntry setter method: " + method.getName() + " for "
-    // + gemmaObj.getClass().getSimpleName() );
-    // return method;
-    // }
-    // }
-    // return null;
-    // }
-
     /**
      * Find a setter for a property.
      * 
@@ -2822,51 +2895,6 @@ public class MageMLConverter {
         }
         return associatedObject;
     }
-
-    // /**
-    // * @param gemmaObj
-    // * @param category
-    // * @param value
-    // */
-    // private void setAssociatedOntologyEntry( Object gemmaObj, String category, String value ) {
-    // Method getter = findOntologyEntryGetter( gemmaObj );
-    // if ( getter == null ) return;
-    // try {
-    // edu.columbia.gemma.common.description.OntologyEntry entry = ( edu.columbia.gemma.common.description.OntologyEntry
-    // ) getter
-    // .invoke( gemmaObj, new Object[] {} );
-    // entry.setCategory( category );
-    // entry.setValue( value );
-    // } catch ( IllegalArgumentException e ) {
-    // log.error( e, e );
-    // } catch ( IllegalAccessException e ) {
-    // log.error( e, e );
-    // } catch ( InvocationTargetException e ) {
-    // log.error( e, e );
-    // }
-    // }
-
-    // /**
-    // * @param gemmaObj
-    // * @param externalDatabase
-    // */
-    // private void setAssociatedOntologyEntryDatabase( Object gemmaObj, ExternalDatabase externalDatabase ) {
-    // Method getter = findOntologyEntryGetter( gemmaObj );
-    // if ( getter == null ) return;
-    // try {
-    // log.info( "Associating database " + externalDatabase + " with " + gemmaObj );
-    // edu.columbia.gemma.common.description.OntologyEntry entry = ( edu.columbia.gemma.common.description.OntologyEntry
-    // ) getter
-    // .invoke( gemmaObj, new Object[] {} );
-    // entry.setExternalDatabase( externalDatabase );
-    // } catch ( IllegalArgumentException e ) {
-    // log.error( e, e );
-    // } catch ( IllegalAccessException e ) {
-    // log.error( e, e );
-    // } catch ( InvocationTargetException e ) {
-    // log.error( e, e );
-    // }
-    // }
 
     /**
      * Generic method to fill in a Gemma object where the association in Mage has cardinality of >1.

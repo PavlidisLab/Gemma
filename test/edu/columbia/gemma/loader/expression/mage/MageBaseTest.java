@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 
+import javax.xml.transform.TransformerException;
+
 import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
@@ -24,7 +26,7 @@ public class MageBaseTest extends BaseDAOTestCase {
      * @param resourceName
      * @throws IOException
      */
-    protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException {
+    protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
         ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class.getResourceAsStream( resourceName ) );
         istMageExamples.getNextEntry();
         InputStream istXsl = MageMLParser.class.getResourceAsStream( "resource/MAGE-simplify.xsl" );
@@ -42,7 +44,7 @@ public class MageBaseTest extends BaseDAOTestCase {
      * @param resourceName
      * @throws IOException
      */
-    protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException {
+    protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( resourceName );
         InputStream istXsl = MageMLParser.class.getResourceAsStream( "resource/MAGE-simplify.xsl" );
         assert istMageExamples != null;
