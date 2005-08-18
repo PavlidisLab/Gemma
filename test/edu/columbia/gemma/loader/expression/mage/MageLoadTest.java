@@ -79,7 +79,7 @@ public class MageLoadTest extends MageBaseTest {
      * Class under test for void create(Collection)
      */
     public void testCreateCollection() throws Exception {
-        log.debug( "Parsing MAGE Jamboree example" );
+        log.info( "Parsing MAGE Jamboree example" );
 
         MageMLParser mlp = new MageMLParser();
 
@@ -104,7 +104,7 @@ public class MageLoadTest extends MageBaseTest {
      * @throws Exception
      */
     public void testCreateCollectionRealA() throws Exception {
-        log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );
+        log.info( "Parsing MAGE from ArrayExpress (AFMX)" );
 
         MageMLParser mlp = new MageMLParser();
 
@@ -124,9 +124,8 @@ public class MageLoadTest extends MageBaseTest {
      * 
      * @throws Exception
      */
-
     public void testCreateCollectionRealB() throws Exception {
-        log.debug( "Parsing MAGE from ArrayExpress (WMIT)" );
+        log.info( "Parsing MAGE from ArrayExpress (WMIT)" );
 
         MageMLParser mlp = new MageMLParser();
 

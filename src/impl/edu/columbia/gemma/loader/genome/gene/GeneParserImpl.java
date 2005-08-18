@@ -33,7 +33,7 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
 public class GeneParserImpl extends BasicLineMapParser implements Parser {
     protected static final Log log = LogFactory.getLog( Parser.class );
     private GeneMappings geneMappings = null;
-    private Map map;
+    private Map<String, Gene> map;
 
     String[] keys = null;
     Method methodToInvoke = null;
@@ -43,7 +43,7 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
      * 
      */
     public GeneParserImpl() {
-        map = new HashMap();
+        map = new HashMap<String, Gene>();
     }
 
     /**
@@ -137,12 +137,14 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
         return ( ( Gene ) newItem ).getNcbiId();
     }
 
+    @SuppressWarnings("unused")
     public Collection createOrGetDependencies( Object[] dependencies, Map objectMap ) {
         // TODO code this to create the objects that Gene is associated with. These
         // associations should not be from compositions relationships.
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unused")
     public Map parseFromHttp( String url ) throws IOException, ConfigurationException {
         // TODO code this to parse directly from the web.
         throw new UnsupportedOperationException();
