@@ -45,7 +45,7 @@ $Id$
         <property name="filterProcessesUrl"><value>/j_security_check</value></property>
     </bean>
     
-    <bean id="manualAuthenticationProcessing" class="edu.columbia.gemma.interceptor.ManualAuthenticationProcessing">
+    <bean id="manualAuthenticationProcessing" class="edu.columbia.gemma.security.ui.ManualAuthenticationProcessing">
       <property name="authenticationManager"><ref bean="authenticationManager"/></property>
       
    </bean>
@@ -179,7 +179,7 @@ $Id$
     
     <!-- Process AFTER_ACL_ARRAYDESIGN_COLLECTION_READ -->
     <bean id="afterAclArrayDesignCollectionRead" 
-        class="edu.columbia.gemma.interceptor.BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider">
+        class="edu.columbia.gemma.security.afterInvocation.AclAfterCollectionCompSeqByArrayDesignFilter">
         <property name="aclManager"><ref local="aclManager"/></property>
         <!-- requirePermission not necessary here because permission is based on 'owner', arrayDesign -->
     </bean>
@@ -206,7 +206,7 @@ $Id$
    <!-- ================================================================== -->
    
    <!--  Interceptor to persist ACL objects -->
-   <bean id="persistAclInterceptorBackend" class="edu.columbia.gemma.interceptor.PersistAclInterceptorBackend">
+   <bean id="persistAclInterceptorBackend" class="edu.columbia.gemma.security.interceptor.PersistAclInterceptorBackend">
    <property name="basicAclExtendedDao"><ref bean="basicAclExtendedDao"/></property>
    </bean>
    
