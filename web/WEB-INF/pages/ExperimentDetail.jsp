@@ -218,7 +218,7 @@ if( m!=null) {
 										factorMeasurement="";
 									else
 										factorMeasurement = fv.getMeasurement().getValue();
-									factorList = factorList + fv.getName() + " (" + factorValue + ") " + factorMeasurement + "<br>";
+									factorList = factorList + " (" + factorValue + ") " + factorMeasurement + "<br>";
 								}						
 							}
 						}
@@ -292,7 +292,7 @@ if( m!=null) {
 						if( fv.getMeasurement()!=null ){
 							factorMeasurement = "(" + fv.getMeasurement().getValue() + ")";
 						}
-						out.print( fv.getName() + ": " + factorValue + " " + factorMeasurement );
+						out.print(": " + factorValue + " " + factorMeasurement );
 						
 					}
 				}
