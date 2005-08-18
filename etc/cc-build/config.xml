@@ -1,30 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <cruisecontrol>
-    <project name="Gemma" buildafterfailed="true" >
-        <listeners>
-            <currentbuildstatuslistener file="logs/Gemma/buildstatus.txt"/>
-        </listeners>
-        <bootstrappers>
-            <cvsbootstrapper localworkingcopy="checkout/Gemma" />
-        </bootstrappers>
-        <modificationset quietperiod="10">
-            <cvs 
-                cvsroot=":ext:pavlidis@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab"/>
-        </modificationset>
-        <schedule interval="600">
-            <maven mavenscript="/usr/local/bin/maven" 
-                projectfile="checkout/Gemma/project.xml" goal="cc-build"/>
-        </schedule>
-        <log dir="logs/Gemma"/>
-        <publishers>
-            <email mailhost="localhost" 
-                returnaddress="pavlidise@dbmi.columbia.edu" 
-                buildresultsurl="http://microarray.cu-genome.org/cruisecontrol/buildresults/Gemma" 
-                skipusers="true" spamwhilebroken="true">
-                <always address="pavlidis@dbmi.columbia.edu"/>
-                <failure address="pavlidis@dbmi.columbia.edu"/>
-            </email>
-            <artifactspublisher dir="checkout/Gemma/target" 
-                dest="artifacts/Gemma"/>
-        </publishers>
-    </project>
+  <project name="Gemma">
+    <bootstrappers>
+      <currentbuildstatusbootstrapper file="/proj/cruise-work/logs/Gemma/buildstatus.txt">
+      </currentbuildstatusbootstrapper>
+    </bootstrappers>
+    <modificationset>
+      <cvs localWorkingCopy="/proj/cruise-work/checkout/Gemma" cvsroot=":ext:pavlidis@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab">
+      </cvs>
+    </modificationset>
+    <schedule interval="300">
+      <maven goal="scm:update-project|clean test|site:deploy" projectfile="/proj/cruise-work/checkout/Gemma/project.xml" mavenscript="C:\java\apps\Maven1.0.2/bin/maven.bat">
+      </maven>
+    </schedule>
+    <log dir="/proj/cruise-work/logs/Gemma" encoding="ISO-8859-1">
+      <merge dir="/proj/cruise-work/checkout/Gemma/target/test-reports">
+      </merge>
+    </log>
+    <publishers>
+      <currentbuildstatuspublisher file="/proj/cruise-work/logs/Gemma/buildstatus.txt">
+      </currentbuildstatuspublisher>
+      <htmlemail spamwhilebroken="false" reportsuccess="always" css="/proj/cruisecontrol/reporting/jsp/webcontent/css" mailhost="localhost" buildresultsurl="" subjectprefix="[BUILD]" defaultsuffix="@dbmi.columbia.edu" xsldir="/proj/cruisecontrol/reporting/jsp/webcontent/xsl" logdir="/proj/cruise-work/logs/Gemma" skipusers="false" returnaddress="pavlidis@dbmi.columbia.edu">
+        <failure address="pavlidis@dbmi.columbia.edu">
+        </failure>
+        <success address="pavlidis@dbmi.columbia.edu">
+        </success>
+      </htmlemail>
+    </publishers>
+    <plugins>
+    </plugins>
+  </project>
 </cruisecontrol>
