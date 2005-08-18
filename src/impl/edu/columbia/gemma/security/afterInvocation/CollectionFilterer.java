@@ -23,7 +23,7 @@ public class CollectionFilterer implements Filterer {
     // ~ Static fields/initializers =============================================
 
     protected static final Log logger = LogFactory
-            .getLog( AclAfterCollectionArrayDesignFiltering.class );
+            .getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
 
     // ~ Instance fields ========================================================
 

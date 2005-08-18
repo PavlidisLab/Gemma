@@ -47,12 +47,12 @@ import org.springframework.beans.factory.InitializingBean;
  *          keshav Exp $
  * @see AfterInvocationProvider
  */
-public class AclAfterCollectionArrayDesignFiltering implements AfterInvocationProvider,
+public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvocationProvider,
         InitializingBean {
     // ~ Static fields/initializers =============================================
 
     protected static final Log logger = LogFactory
-            .getLog( AclAfterCollectionArrayDesignFiltering.class );
+            .getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
 
     // ~ Instance fields ========================================================
 
