@@ -553,16 +553,6 @@
                 <classloader>root</classloader>
             </properties>
         </dependency>
-        <dependency>
-            <groupId>antlr</groupId>
-            <artifactId>antlr</artifactId>
-            <version>2.7.2</version>
-            <jar>antlr-2.7.2.jar</jar>
-            <type>jar</type>
-              <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
     </dependencies>
     <build>
         <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
