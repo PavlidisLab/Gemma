@@ -1,14 +1,22 @@
 package edu.columbia.gemma.loader.loaderutils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.File;
 
-public class Fetcher {
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public interface Fetcher {
 
-    protected static Log log = LogFactory.getLog( Fetcher.class.getName() );
-    protected String localBasePath = null;
-    protected String baseDir = null;
-    protected boolean success = false;
-    protected boolean force = false;
+    /**
+     * Fetch a file from the indicated by the
+     * 
+     * @param identifier
+     */
+    public File fetch( String identifier );
 
 }

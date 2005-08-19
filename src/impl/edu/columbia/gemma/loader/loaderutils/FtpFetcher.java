@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-public class FtpFetcher extends Fetcher {
+public abstract class FtpFetcher extends AbstractFetcher {
 
     protected FTPClient f;
 
@@ -21,7 +21,6 @@ public class FtpFetcher extends Fetcher {
         if ( !newDir.exists() ) {
             success = newDir.mkdir();
             if ( !success ) {
-                f.disconnect();
                 throw new IOException( "Could not create output directory " + newDir );
             }
             log.info( "Created directory " + newDir.getAbsolutePath() );
