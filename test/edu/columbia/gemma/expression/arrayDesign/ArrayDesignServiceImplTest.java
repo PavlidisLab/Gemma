@@ -1,14 +1,15 @@
 package edu.columbia.gemma.expression.arrayDesign;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.easymock.MockControl;
 import org.springframework.beans.factory.BeanFactory;
 
-
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
+import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 
@@ -18,9 +19,9 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * Copyright (c) 2004 Columbia University
  * 
  * @author pavlidis
- * @version $Id$ 
- * TODO this test class contains lots of tests for acegi security. I have commented out many of the other tests for now, but will add them
- * back in soon.
+ * @version $Id$ TODO this test class contains
+ *          lots of tests for acegi security. I have commented out many of the other tests for now, but will add them
+ *          back in soon.
  */
 public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
 
@@ -191,34 +192,38 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
      * 
      * @throws Exception
      */
-    // public void testSaveArrayDesignWithoutMock() throws Exception {
-    // BeanFactory ctx = SpringContextUtil.getApplicationContext();
-    //
-    // ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-    // .getBean( "manualAuthenticationProcessing" );
-    //
-    // manAuthentication.validateRequest( "KiranKeshav", "keshav" );
-    //
-    // ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-    //
-    // ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-    // arrayDesign.setName( "AD Foo" );
-    // arrayDesign.setDescription( "a test ArrayDesign" );
-    //
-    // CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-    // cs1.setName( "DE Bar1" );
-    //
-    // CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-    // cs2.setName( "DE Bar2" );
-    //
-    // Collection<DesignElement> col = new HashSet();
-    // col.add( cs1 );
-    // col.add( cs2 );
-    //
-    // arrayDesign.setDesignElements( col );
-    //
-    // ads.saveArrayDesign( arrayDesign );
-    // }
+//    public void testSaveArrayDesignWithoutMock() throws Exception {
+//        BeanFactory ctx = SpringContextUtil.getApplicationContext();
+//
+//        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+//                .getBean( "manualAuthenticationProcessing" );
+//
+//        manAuthentication.validateRequest( "KiranKeshav", "keshav" );
+//
+//        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+//
+//        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+//        arrayDesign.setName( "AD Foo" );
+//        arrayDesign.setDescription( "a test ArrayDesign" );
+//
+//        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
+//        cs1.setName( "DE Bar1" );
+//
+//        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
+//        cs2.setName( "DE Bar2" );
+//
+//        Collection<DesignElement> col = new HashSet();
+//        col.add( cs1 );
+//        col.add( cs2 );
+//        // Note this sequence. Remember, inverse="true" if using this. If you do not make
+//        // an explicit call to cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
+//        cs1.setArrayDesign( arrayDesign );
+//        cs2.setArrayDesign( arrayDesign );
+//        arrayDesign.setDesignElements( col );
+//
+//        ads.saveArrayDesign( arrayDesign );
+//    }
+
     /**
      * Tests getting all design elements given authorization on an array design. Mock objects not used because I need
      * the objects from the database.
