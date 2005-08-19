@@ -505,6 +505,15 @@
             </properties>
         </dependency>
         <dependency>
+            <groupId>antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>2.7.2</version>
+            <type>jar</type>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
             <groupId>servlet</groupId>
             <artifactId>servlet</artifactId>
             <jar>servlet.jar</jar>
