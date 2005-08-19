@@ -110,7 +110,7 @@ public class ArrayDesignMappings {
      * @return ArrayDesign
      */
     private ArrayDesign checkAndGetExistingArrayDesign( String name ) {
-        log.info( "*******" + arrayDesignMap.containsKey( name ) );
+     
         if ( arrayDesignMap.containsKey( name ) ) return arrayDesignMap.get( name );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
