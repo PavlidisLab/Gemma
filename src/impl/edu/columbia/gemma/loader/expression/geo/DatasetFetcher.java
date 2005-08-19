@@ -58,7 +58,7 @@ public class DatasetFetcher extends FtpFetcher {
      * @throws SocketException
      * @throws IOException
      */
-    public GeoFile retrieveByFTP( String accession ) throws SocketException, IOException {
+    public GeoFile fetch( String accession ) throws SocketException, IOException {
         log.info( "Seeking GDS file for " + accession );
 
         if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
@@ -82,9 +82,9 @@ public class DatasetFetcher extends FtpFetcher {
                     + outputFileName );
             return file;
         }
-        log.error("Couldn't find file.");
+        log.error( "Couldn't find file." );
         return null;
-       
+
     }
 
 }

@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.BioCharacteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
@@ -46,7 +47,6 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
-import edu.columbia.gemma.common.description.BioCharacteristic;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
@@ -60,7 +60,6 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.loader.loaderutils.Loader;
-import edu.columbia.gemma.util.PrettyPrinter;
 
 /**
  * A generic class to persist Gemma-domain objects from the Expression package: arrayDesigns, expressionExperiments and
@@ -86,69 +85,27 @@ import edu.columbia.gemma.util.PrettyPrinter;
 public class ExpressionLoaderImpl implements Loader {
     private static Log log = LogFactory.getLog( ExpressionLoaderImpl.class.getName() );
 
-    private Person defaultOwner = null;
-
-    private PersonDao personDao;
-
-    private OntologyEntryDao ontologyEntryDao;
-
-    private ExpressionExperimentDao expressionExperimentDao;
+    private ArrayDesignDao arrayDesignDao;
 
     private BioMaterialDao bioMaterialDao;
 
-    private ArrayDesignDao arrayDesignDao;
+    private Person defaultOwner = null;
+
+    private DesignElementDao designElementDao;
+
+    private ExpressionExperimentDao expressionExperimentDao;
 
     private ExternalDatabaseDao externalDatabaseDao;
 
-    private DesignElementDao designElementDao;
+    private HardwareDao hardwareDao;
+
+    private OntologyEntryDao ontologyEntryDao;
+
+    private PersonDao personDao;
 
     private ProtocolDao protocolDao;
 
     private SoftwareDao softwareDao;
-
-    private HardwareDao hardwareDao;
-
-    /**
-     * @param designElementDao The designElementDao to set.
-     */
-    public void setDesignElementDao( DesignElementDao designElementDao ) {
-        this.designElementDao = designElementDao;
-    }
-
-    /**
-     * @param arrayDesignDao The arrayDesignDao to set.
-     */
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    /**
-     * @param protocolDao The protocolDao to set
-     */
-    public void setProtocolDao( ProtocolDao protocolDao ) {
-        this.protocolDao = protocolDao;
-    }
-
-    /**
-     * 
-     *
-     */
-    public ExpressionLoaderImpl() {
-
-    }
-
-    /**
-     * Fetch the fallback owner to use for newly-imported data.
-     */
-    private void initializeDefaultOwner() {
-        Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
-
-        assert matchingPersons.size() == 1;
-
-        defaultOwner = matchingPersons.iterator().next();
-
-        if ( defaultOwner == null ) throw new NullPointerException( "Default Person 'nobody' not found in database." );
-    }
 
     /*
      * (non-Javadoc) TODO: finish implementing this.
@@ -172,7 +129,7 @@ public class ExpressionLoaderImpl implements Loader {
                     log.debug( "Persisting " + className );
                     loadExpressionExperiment( ( ExpressionExperiment ) entity );
                 } else if ( entity instanceof ArrayDesign ) {
-                    // loadArrayDesign( ( ArrayDesign ) entity );
+                    loadArrayDesign( ( ArrayDesign ) entity );
                 } else if ( entity instanceof BioSequence ) {
                     // deal with in cascade from array design? Do nothing, probably.
                 } else if ( entity instanceof CompositeSequence ) {
@@ -200,62 +157,177 @@ public class ExpressionLoaderImpl implements Loader {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
+     */
+    public void create( Object obj ) {
+        log.info( "Persisting " + obj.getClass().getName() + " " + obj );
+        if ( obj instanceof ExpressionExperiment ) {
+            this.loadExpressionExperiment( ( ExpressionExperiment ) obj );
+        } else if ( obj instanceof BioMaterial ) {
+            this.loadBioMaterial( ( BioMaterial ) obj );
+        } else if ( obj instanceof BioAssay ) {
+            this.loadBioAssay( ( BioAssay ) obj );
+        } else if ( obj instanceof ArrayDesign ) {
+            this.loadArrayDesign( ( ArrayDesign ) obj );
+        } else {
+            throw new UnsupportedOperationException( "Can't deal with " + obj.getClass().getName() );
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Loader#removeAll()
+     */
+    public void removeAll() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Loader#removeAll(java.util.Collection)
+     */
+    public void removeAll( Collection collection ) {
+        for ( Object object : collection ) {
+            // find the right dao; and delete it.
+        }
+
+    }
+
+    /**
+     * @param arrayDesignDao The arrayDesignDao to set.
+     */
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
+
     // private void loadBioAssayData(BioAssayData data) {
     // throw new UnsupportedOperationException( "Can't deal with " + data.getClass().getName() + " yet" );
     // }
 
     /**
-     * @param assay
+     * @param bioMaterialDao The bioMaterialDao to set.
      */
-    private void loadBioAssay( BioAssay assay ) {
-        throw new UnsupportedOperationException( "Can't deal with " + assay.getClass().getName() + " yet" );
+    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
+        this.bioMaterialDao = bioMaterialDao;
     }
 
     /**
-     * @param file
+     * @param designElementDao The designElementDao to set.
      */
-    private void loadLocalFile( LocalFile file ) {
-        throw new UnsupportedOperationException( "Can't deal with " + file.getClass().getName() + " yet" );
+    public void setDesignElementDao( DesignElementDao designElementDao ) {
+        this.designElementDao = designElementDao;
     }
 
     /**
-     * @param database
+     * @param expressionExperimentDao The expressionExperimentDao to set.
      */
-    private void loadExternalDatabase( ExternalDatabase database ) {
-        throw new UnsupportedOperationException( "Can't deal with " + database.getClass().getName() + " yet" );
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
     }
 
     /**
-     * @param entity
+     * @param externalDatabaseDao The externalDatabaseDao to set.
      */
-    private void loadQuantitationType( QuantitationType entity ) {
-        throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() + " yet" );
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**
-     * @param entity
+     * @param hardwareDao The hardwareDao to set.
      */
-    @SuppressWarnings("unchecked")
-    private void loadBioMaterial( BioMaterial entity ) {
+    public void setHardwareDao( HardwareDao hardwareDao ) {
+        this.hardwareDao = hardwareDao;
+    }
 
-        // log.debug( PrettyPrinter.print( entity ) );
+    /**
+     * @param ontologyEntryDao
+     */
+    public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
+        this.ontologyEntryDao = ontologyEntryDao;
+    }
 
-        OntologyEntry materialType = entity.getMaterialType();
-        if ( materialType != null ) {
-            entity.setMaterialType( ontologyEntryDao.findOrCreate( materialType ) );
+    /**
+     * @param personDao
+     */
+    public void setPersonDao( PersonDao personDao ) {
+        this.personDao = personDao;
+    }
+
+    /**
+     * @param protocolDao The protocolDao to set
+     */
+    public void setProtocolDao( ProtocolDao protocolDao ) {
+        this.protocolDao = protocolDao;
+    }
+
+    /**
+     * @param softwareDao The softwareDao to set.
+     */
+    public void setSoftwareDao( SoftwareDao softwareDao ) {
+        this.softwareDao = softwareDao;
+    }
+
+    /**
+     * Fill in the categoryTerm and valueTerm associations of a
+     * 
+     * @param bioCharacteristics Collection of biocharacteristics
+     */
+    private void fillInOntologyEntries( Collection<BioCharacteristic> bioCharacteristics ) {
+        for ( BioCharacteristic bioCharacteristic : bioCharacteristics ) {
+            persistOntologyEntry( bioCharacteristic.getCategoryTerm() );
+            persistOntologyEntry( bioCharacteristic.getValueTerm() );
+        }
+    }
+
+    /**
+     * @param databaseEntry
+     */
+    private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
+        ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
+        if ( externalDatabase == null ) {
+            log.debug( "No externalDatabase" );
+            return null;
+        }
+        databaseEntry.setExternalDatabase( externalDatabaseDao.findOrCreate( externalDatabase ) );
+        return databaseEntry;
+    }
+
+    /**
+     * @param ontologyEntry
+     */
+    private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
+        this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
+        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
+            fillInPersistentExternalDatabase( associatedOntologyEntry );
+        }
+    }
+
+    /**
+     * @param protocol
+     */
+    private void fillInProtocol( Protocol protocol ) {
+        if ( protocol == null ) {
+            log.warn( "Null protocol" );
+            return;
+        }
+        OntologyEntry type = protocol.getType();
+        persistOntologyEntry( type );
+        protocol.setType( type );
+
+        for ( Software software : ( Collection<Software> ) protocol.getSoftwareUsed() ) {
+            software.setId( softwareDao.findOrCreate( software ).getId() );
         }
 
-        for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
-            OntologyEntry action = treatment.getAction();
-            persistOntologyEntry( action );
-
-            for ( ProtocolApplication protocolApplication : ( Collection<ProtocolApplication> ) treatment
-                    .getProtocolApplications() ) {
-                fillInProtocolApplication( protocolApplication );
-            }
+        for ( Hardware hardware : ( Collection<Hardware> ) protocol.getHardwares() ) {
+            hardware.setId( hardwareDao.findOrCreate( hardware ).getId() );
         }
-
-        bioMaterialDao.create( entity );
     }
 
     /**
@@ -309,61 +381,16 @@ public class ExpressionLoaderImpl implements Loader {
     }
 
     /**
-     * @param protocol
+     * Fetch the fallback owner to use for newly-imported data.
      */
-    private void fillInProtocol( Protocol protocol ) {
-        if ( protocol == null ) {
-            log.warn( "Null protocol" );
-            return;
-        }
-        OntologyEntry type = protocol.getType();
-        persistOntologyEntry( type );
-        protocol.setType( type );
+    private void initializeDefaultOwner() {
+        Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
 
-        for ( Software software : ( Collection<Software> ) protocol.getSoftwareUsed() ) {
-            software.setId( softwareDao.findOrCreate( software ).getId() );
-        }
+        assert matchingPersons.size() == 1;
 
-        for ( Hardware hardware : ( Collection<Hardware> ) protocol.getHardwares() ) {
-            hardware.setId( hardwareDao.findOrCreate( hardware ).getId() );
-        }
-    }
+        defaultOwner = matchingPersons.iterator().next();
 
-    /**
-     * @param databaseEntry
-     */
-    private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
-        ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
-        if ( externalDatabase == null ) {
-            log.debug( "No externalDatabase" );
-            return null;
-        }
-        databaseEntry.setExternalDatabase( externalDatabaseDao.findOrCreate( externalDatabase ) );
-        return databaseEntry;
-    }
-
-    /**
-     * @param ontologyEntry
-     */
-    private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
-        this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
-        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
-            fillInPersistentExternalDatabase( associatedOntologyEntry );
-        }
-    }
-
-    /**
-     * Ontology entr
-     * 
-     * @param ontologyEntry
-     */
-    private void persistOntologyEntry( OntologyEntry ontologyEntry ) {
-        if ( ontologyEntry == null ) return;
-        fillInPersistentExternalDatabase( ontologyEntry );
-        ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
-        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
-            persistOntologyEntry( associatedOntologyEntry );
-        }
+        if ( defaultOwner == null ) throw new NullPointerException( "Default Person 'nobody' not found in database." );
     }
 
     /**
@@ -371,6 +398,41 @@ public class ExpressionLoaderImpl implements Loader {
      */
     private void loadArrayDesign( ArrayDesign entity ) {
         arrayDesignDao.create( entity );
+    }
+
+    /**
+     * @param assay
+     */
+    private void loadBioAssay( BioAssay assay ) {
+        throw new UnsupportedOperationException( "Can't deal with " + assay.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param entity
+     */
+    @SuppressWarnings("unchecked")
+    private void loadBioMaterial( BioMaterial entity ) {
+
+        // log.debug( PrettyPrinter.print( entity ) );
+
+        OntologyEntry materialType = entity.getMaterialType();
+        if ( materialType != null ) {
+            entity.setMaterialType( ontologyEntryDao.findOrCreate( materialType ) );
+        }
+
+        for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
+            OntologyEntry action = treatment.getAction();
+            persistOntologyEntry( action );
+
+            for ( ProtocolApplication protocolApplication : ( Collection<ProtocolApplication> ) treatment
+                    .getProtocolApplications() ) {
+                fillInProtocolApplication( protocolApplication );
+            }
+        }
+
+        fillInOntologyEntries( entity.getBioCharacteristics() );
+
+        bioMaterialDao.create( entity );
     }
 
     /**
@@ -463,88 +525,39 @@ public class ExpressionLoaderImpl implements Loader {
         expressionExperimentDao.create( entity );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
+    /**
+     * @param database
      */
-    public void create( Object obj ) {
-        log.info( "Persisting " + obj.getClass().getName() + " " + obj );
-        if ( obj instanceof ExpressionExperiment ) {
-            this.loadExpressionExperiment( ( ExpressionExperiment ) obj );
-        } else if ( obj instanceof BioMaterial ) {
-            this.loadBioMaterial( ( BioMaterial ) obj );
-        } else if ( obj instanceof BioAssay ) {
-            this.loadBioAssay( ( BioAssay ) obj );
-        } else if ( obj instanceof ArrayDesign ) {
-            this.loadArrayDesign( ( ArrayDesign ) obj );
-        } else {
-            throw new UnsupportedOperationException( "Can't deal with " + obj.getClass().getName() );
+    private void loadExternalDatabase( ExternalDatabase database ) {
+        throw new UnsupportedOperationException( "Can't deal with " + database.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param file
+     */
+    private void loadLocalFile( LocalFile file ) {
+        throw new UnsupportedOperationException( "Can't deal with " + file.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param entity
+     */
+    private void loadQuantitationType( QuantitationType entity ) {
+        throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() + " yet" );
+    }
+
+    /**
+     * Ontology entr
+     * 
+     * @param ontologyEntry
+     */
+    private void persistOntologyEntry( OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry == null ) return;
+        fillInPersistentExternalDatabase( ontologyEntry );
+        ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
+        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
+            persistOntologyEntry( associatedOntologyEntry );
         }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Loader#removeAll()
-     */
-    public void removeAll() {
-        // TODO Auto-generated method stub
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Loader#removeAll(java.util.Collection)
-     */
-    public void removeAll( Collection collection ) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
-        this.ontologyEntryDao = ontologyEntryDao;
-    }
-
-    public void setPersonDao( PersonDao personDao ) {
-        this.personDao = personDao;
-    }
-
-    /**
-     * @param bioMaterialDao The bioMaterialDao to set.
-     */
-    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
-        this.bioMaterialDao = bioMaterialDao;
-    }
-
-    /**
-     * @param expressionExperimentDao The expressionExperimentDao to set.
-     */
-    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
-        this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    /**
-     * @param externalDatabaseDao The externalDatabaseDao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * @param hardwareDao The hardwareDao to set.
-     */
-    public void setHardwareDao( HardwareDao hardwareDao ) {
-        this.hardwareDao = hardwareDao;
-    }
-
-    /**
-     * @param softwareDao The softwareDao to set.
-     */
-    public void setSoftwareDao( SoftwareDao softwareDao ) {
-        this.softwareDao = softwareDao;
     }
 
 }

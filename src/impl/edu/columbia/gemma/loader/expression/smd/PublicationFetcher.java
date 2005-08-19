@@ -31,7 +31,7 @@ public class PublicationFetcher extends FtpFetcher {
     public static void main( String[] args ) {
         try {
             PublicationFetcher foo = new PublicationFetcher();
-            foo.retrieveByFTP( 5 );
+            foo.fetch( 5 );
         } catch ( IOException e ) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -61,15 +61,15 @@ public class PublicationFetcher extends FtpFetcher {
      * @throws IOException
      * @throws SAXException
      */
-    public void retrieveByFTP() throws IOException, SAXException {
-        this.retrieveByFTP( 0 );
+    public void fetch() throws IOException, SAXException {
+        this.fetch( 0 );
     }
 
     /**
      * @throws SAXException
      * @throws IOException
      */
-    public void retrieveByFTP( int limit ) throws IOException, SAXException {
+    public void fetch( int limit ) throws IOException, SAXException {
         if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
         FTPFile[] files = f.listFiles( baseDir );

@@ -75,7 +75,7 @@ public class ExperimentFetcher extends FtpFetcher {
      * @throws IOException
      * @throws SAXException
      */
-    public void retrieveByFTP() throws IOException, SAXException {
+    public void fetch() throws IOException, SAXException {
         if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
         for ( Iterator<SMDPublication> iter = pubs.getIterator(); iter.hasNext(); ) {
@@ -151,9 +151,9 @@ public class ExperimentFetcher extends FtpFetcher {
     public static void main( String[] args ) {
         try {
             PublicationFetcher foo = new PublicationFetcher();
-            foo.retrieveByFTP( args != null && args.length > 0 ? Integer.parseInt( args[0] ) : 15 );
+            foo.fetch( args != null && args.length > 0 ? Integer.parseInt( args[0] ) : 15 );
             ExperimentFetcher bar = new ExperimentFetcher( foo );
-            bar.retrieveByFTP();
+            bar.fetch();
 
             log.info( bar );
         } catch ( IOException e ) {

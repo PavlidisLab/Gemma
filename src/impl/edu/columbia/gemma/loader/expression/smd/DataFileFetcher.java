@@ -89,7 +89,7 @@ public class DataFileFetcher extends FtpFetcher {
      * @throws SocketException
      * @throws IOException
      */
-    public void retrieveByFTP( SMDExperiment expM ) throws SocketException, IOException {
+    public void fetch( SMDExperiment expM ) throws SocketException, IOException {
         log.info( "Seeking experiment data files for " + expM.getName() );
 
         if ( !f.isConnected() ) SmdUtil.connect( FTP.BINARY_FILE_TYPE );
@@ -152,13 +152,13 @@ public class DataFileFetcher extends FtpFetcher {
             DataFileFetcher fb = new DataFileFetcher();
             PublicationFetcher foo = new PublicationFetcher();
 
-            foo.retrieveByFTP( 10 );
+            foo.fetch( 10 );
             ExperimentFetcher bar = new ExperimentFetcher( foo );
-            bar.retrieveByFTP();
+            bar.fetch();
 
             for ( Iterator<SMDExperiment> iter = bar.getExperimentsIterator(); iter.hasNext(); ) {
                 SMDExperiment element = iter.next();
-                fb.retrieveByFTP( element );
+                fb.fetch( element );
             }
         } catch ( IOException e ) {
             e.printStackTrace();

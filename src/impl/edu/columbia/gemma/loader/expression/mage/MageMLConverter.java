@@ -115,6 +115,7 @@ import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.Compound;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
+import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
@@ -205,7 +206,7 @@ public class MageMLConverter {
     /**
      * Stores the dimension information for the bioassays
      */
-    private Map<String, Map> bioAssayDimensions;
+    private Map<String, Map<String, List>> bioAssayDimensions;
 
     /**
      * Holds the simplified MAGE-ML
@@ -228,7 +229,7 @@ public class MageMLConverter {
      * Constructor
      */
     public MageMLConverter() {
-        bioAssayDimensions = new HashMap<String, Map>();
+        bioAssayDimensions = new HashMap<String, Map<String, List>>();
         mgedOntologyAliases = new HashSet<String>();
 
         mgedOntologyAliases.add( "MGED Ontology" );
@@ -492,7 +493,7 @@ public class MageMLConverter {
         }
 
         DesignElementDimension ded = mageObj.getDesignElementDimension();
-        List designElements = null;
+        List<DesignElement> designElements = null;
 
         BioAssayDimension bad = mageObj.getBioAssayDimension();
         if ( bad != null ) {
@@ -506,22 +507,63 @@ public class MageMLConverter {
                 if ( ded instanceof FeatureDimension ) {
                     log.info( "Got a feature dimension: " + ded.getIdentifier() );
                     designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
-                    bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
+             //       bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
                 } else if ( ded instanceof CompositeSequenceDimension ) {
                     log.info( "Got a compositesequence dimension: " + ded.getIdentifier() );
                     designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
-                    bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
+               //     bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
                 } else if ( ded instanceof ReporterDimension ) {
                     log.info( "Got a reporter dimension: " + ded.getIdentifier() );
                     designElements = ( ( ReporterDimension ) ded ).getReporters();
-                    bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
+               //     bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
                 }
-
+                bioAssayDimensions.get( name ).put( "DesignElementDimension", designElements );
                 bioAssayDimensions.get( name ).put( "QuantitationTypeDimension", quantitationTypes );
 
             }
         }
 
+    }
+    
+
+    /**
+     * @param bioAssay
+     * @return
+     */
+    public List<DesignElement> getBioAssayDesignElementDimension( BioAssay bioAssay ) {
+        return bioAssayDimensions.get( bioAssay.getName() ).get( "DesignElementDimension" );
+    }
+
+    // /**
+    // * @param bioAssay
+    // * @return
+    // */
+    // public List<DesignElement> getBioAssayCompositeSequenceDimension( BioAssay bioAssay ) {
+    // return bioAssayDimensions.get( bioAssay.getName() ).get( "CompositeSequenceDimension" );
+    // }
+    //
+    // /**
+    // * @param bioAssay
+    // * @return
+    // */
+    // public List<DesignElement> getBioAssayReporterDimension( BioAssay bioAssay ) {
+    // return bioAssayDimensions.get( bioAssay.getName() ).get( "ReporterDimension" );
+    // }
+    //
+    // /**
+    // * @param bioAssay
+    // * @return
+    // */
+    // public List<DesignElement> getBioAssayFeatureDimension( BioAssay bioAssay ) {
+    // return bioAssayDimensions.get( bioAssay.getName() ).get( "FeatureDimension" );
+    //    }
+
+    /**
+     * @param bioAssay
+     * @return
+     */
+    public List<QuantitationType> getBioAssayQuantitationTypeDimension( BioAssay bioAssay ) {
+        return bioAssayDimensions.get( bioAssay.getName() ).get( "QuantitationTypeDimension" );
     }
 
     /**
@@ -532,6 +574,7 @@ public class MageMLConverter {
      */
     @SuppressWarnings("unused")
     public Object convertBioAssayDimension( BioAssayDimension mageObj ) {
+        log.warn( "Calling convertBioAssayDimension -- noop" );
         return null;
     }
 

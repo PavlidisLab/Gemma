@@ -58,7 +58,7 @@ public class GeoDatasetService {
      */
     public void fetchAndLoad( String geoDataSetAccession ) throws ConfigurationException, SocketException, IOException {
         DatasetFetcher df = new DatasetFetcher();
-        GeoFile result = df.retrieveByFTP( geoDataSetAccession );
+        GeoFile result = df.fetch( geoDataSetAccession );
 
         if ( result == null ) return;
 
