@@ -97,17 +97,20 @@
 				</property>
 				<property name="sessionFactory">
 					org.springframework.orm.hibernate3.LocalSessionFactoryBean
-				</property>
-				<!-- 
+				</property> 		
 				<property name="acegiServiceSecurity">
 					true
 				</property>
+				
+				<!--
 				<property name="acegiServiceSecurityInterceptor">
 					 net.sf.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor
 				</property>
+				-->
 				<property name="acegiAuthenticationManager">
 					authenticationManager
 				</property>
+				<!-- 
 				<property name="acegiServiceAccessDecisionManager">
 					 net.sf.acegisecurity.vote.AffirmativeBased
 				</property>
