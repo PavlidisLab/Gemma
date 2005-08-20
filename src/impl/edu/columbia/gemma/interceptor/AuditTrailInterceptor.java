@@ -27,6 +27,9 @@ import edu.columbia.gemma.security.interceptor.PersistAclInterceptorBackend;
  * @spring.property name="auditTrailDao" ref="auditTrailDao"
  */
 public class AuditTrailInterceptor implements MethodInterceptor {
+    public static final String saveMethodPrefix = "save";
+    public static final String updateMethodPrefix = "update";
+
     private static Log log = LogFactory.getLog( PersistAclInterceptorBackend.class.getName() );
 
     private AuditTrailDao auditTrailDao = null;
@@ -46,7 +49,8 @@ public class AuditTrailInterceptor implements MethodInterceptor {
     }
 
     /**
-     * 'Around advice' method.
+     * 'Around advice' method. Inspects the service method, then either creates a new AuditTrail or adds an AuditEvent
+     * to an existing AuditTrail for the target object.
      * 
      * @param invocation
      * @return Object
@@ -57,58 +61,63 @@ public class AuditTrailInterceptor implements MethodInterceptor {
         Method method = invocation.getMethod();
         String mname = method.getName();
 
-        log.debug( "before invocation.proceed(): method=[" + mname + "]" );
+        Object retVal = null;
 
-        Object retVal = invocation.proceed();
+        retVal = invocation.proceed();
 
-        log.debug( "after invocation.proceed(): retVal= " + retVal );
+        if ( mname.startsWith( saveMethodPrefix ) || mname.startsWith( updateMethodPrefix ) ) {
+            log.debug( "before invocation.proceed(): method=[" + mname + "]" );
 
-        Object[] arguments = invocation.getArguments();
-        Object argument = arguments[0];
+            log.debug( "after invocation.proceed(): retVal= " + retVal );
 
-        Method mutator = argument.getClass().getMethod( "getAuditTrail" );
+            Object[] arguments = invocation.getArguments();
+            Object argument = arguments[0];// domain object
 
-        assert mutator != null : mutator + " does not exist";
+            Method mutator = argument.getClass().getMethod( "getAuditTrail" );
 
-        AuditTrail auditTrail = ( AuditTrail ) mutator.invoke( argument, new Object[] {} );
+            assert mutator != null : mutator + " does not exist";
 
-        // Check if an auditTrail has been started for this object.
-        if ( auditTrail == null ) {
-            auditTrail = AuditTrail.Factory.newInstance();
-            auditTrail.start();
+            AuditTrail auditTrail = ( AuditTrail ) mutator.invoke( argument, new Object[] {} );
 
-        } else {
+            // Check if an auditTrail has been started for this object.
+            if ( auditTrail == null ) {
+                auditTrail = AuditTrail.Factory.newInstance();
+                auditTrail.start();
 
-            // TODO get hook to the performer.
-            Collection<AuditEvent> auditEvents = auditTrail.getEvents();
-            AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-            auditEvent.setDate( new Date() );
-            // auditEvent.setNote();
-            // auditEvent.setPerformer();
+            } else {
 
-            if ( mname.startsWith( "save" ) )
-                auditEvent.setAction( AuditAction.CREATE );
-            else if ( mname.toString().startsWith( "update" ) ) auditEvent.setAction( AuditAction.UPDATE );
-            // else if ( mname.toString().startsWith( "remove" ) ) auditEvent.setAction( AuditAction.DELETE );
+                // TODO get hook to the performer.
+                Collection<AuditEvent> auditEvents = auditTrail.getEvents();
+                AuditEvent auditEvent = AuditEvent.Factory.newInstance();
+                auditEvent.setDate( new Date() );
+                // auditEvent.setNote();
+                // auditEvent.setPerformer();
 
-            auditEvents.add( auditEvent );
+                if ( mname.startsWith( saveMethodPrefix ) )
+                    auditEvent.setAction( AuditAction.CREATE );
+                else if ( mname.toString().startsWith( updateMethodPrefix ) )
+                    auditEvent.setAction( AuditAction.UPDATE );
 
-            auditTrail.setEvents( auditEvents );
-        }
+                auditEvents.add( auditEvent );
 
-        Method accessor = null;
-        Method[] methods = argument.getClass().getMethods();
-
-        for ( int i = 0; i < methods.length; i++ ) {
-            if ( methods[i].getName().equals( "setAuditTrail" ) ) {
-                accessor = methods[i];
-                break;
+                auditTrail.setEvents( auditEvents );
             }
+
+            Method accessor = null;
+            Method[] methods = argument.getClass().getMethods();
+
+            for ( int i = 0; i < methods.length; i++ ) {
+                if ( methods[i].getName().equals( "setAuditTrail" ) ) {
+                    accessor = methods[i];
+                    break;
+                }
+            }
+
+            assert accessor.getName().equals( "setAuditTrail" ) : argument.getClass()
+                    + "does not contain setAuditTrail";
+            accessor.invoke( argument, new Object[] { auditTrail } );
+
         }
-
-        assert accessor.getName().equals( "setAuditTrail" ) : argument.getClass() + "does not contain setAuditTrail";
-        accessor.invoke( argument, new Object[] { auditTrail } );
-
         return retVal;
     }
 }
