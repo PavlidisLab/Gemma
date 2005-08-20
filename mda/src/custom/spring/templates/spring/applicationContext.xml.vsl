@@ -1,0 +1,322 @@
+#parse("templates/spring/SpringGlobals.vm")
+<?xml version="1.0" encoding="$xmlEncoding"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <!-- ========================= GENERAL DEFINITIONS ========================= -->
+
+    <!-- Message source for this context, loaded from localized "messages_xx" files -->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename"><value>messages</value></property>
+    </bean>
+
+    <!-- applicationContext merge-point -->
+
+#set ($daosEnabled = $daosEnabled && !$entities.empty)
+## only generate this stuff if 'daos' has been defined in a namespace
+#if ($daosEnabled)
+    <!-- Hibernate SessionFactory -->
+    <bean id="sessionFactory" class="$sessionFactory">
+        <property name="dataSource"><ref bean="dataSource"/></property>
+        <property name="mappingResources">
+            <list>
+#foreach($entity in $entities)
+#if ($entity.requiresHibernateMapping)
+                <value>${entity.packagePath}/${entity.entityName}.hbm.xml</value>
+#end
+#end
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+#if ($stringUtils.isNotBlank($hibernatePoolSize))
+                <prop key="hibernate.pool.size">$hibernatePoolSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateTransactionManagerStrategy))
+                <prop key="hibernate.transaction.manager.strategy">$hibernateTransactionManagerStrategy</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateUserTransactionName))
+                <prop key="hibernate.jta.UserTransaction">$hibernateUserTransactionName</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateTransactionManagerLookup))
+                <prop key="hibernate.transaction.manager_lookup_class">$hibernateTransactionManagerLookup</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateUseOuterJoin))
+                <prop key="hibernate.use_outer_join">$hibernateUseOuterJoin</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateShowSql))
+                <prop key="hibernate.show_sql">$hibernateShowSql</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJndiName))
+                <prop key="hibernate.session_factory_name">$hibernateJndiName</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateDialect))
+                <prop key="hibernate.dialect">$hibernateDialect</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateDefaultSchema))
+                <prop key="hibernate.default_schema">$hibernateDefaultSchema</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateMaxFetchDepth))
+                <prop key="hibernate.max_fetch_depth">$hibernateMaxFetchDepth</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcFetchSize))
+                <prop key="hibernate.jdbc.fetch_size">$hibernateJdbcFetchSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcBatchSize))
+                <prop key="hibernate.jdbc.batch_size">$hibernateJdbcBatchSize</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcUseScrollableResultSet))
+                <prop key="hibernate.jdbc.use_scrollable_resultset">$hibernateJdbcUseScrollableResultSet</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateJdbcUseStreamsForBinary))
+                <prop key="hibernate.use_streams_for_binary">$hibernateJdbcUseStreamsForBinary</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateHbm2DDLAuto))
+                <prop key="hibernate.hbm2ddl.auto">$hibernateHbm2DDLAuto</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateQuerySubstitutions))
+                <prop key="hibernate.query.substitutions">$hibernateQuerySubstitutions</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateUseQueryCache))
+                <prop key="hibernate.cache.use_query_cache">$hibernateUseQueryCache</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateCacheProvider))
+                <prop key="hibernate.cache.provider_class">$hibernateCacheProvider</prop>
+#end
+#if ($stringUtils.isNotBlank($hibernateQueryCacheFactory))
+                <prop key="hibernate.cache.query_cache_factory">$hibernateQueryCacheFactory</prop>
+#end
+            </props>
+        </property>
+    </bean>
+
+    <!-- The Hibernate interceptor -->
+    <bean id="hibernateInterceptor" class="${hibernateUtils.springHibernatePackage}.HibernateInterceptor">
+        <property name="sessionFactory"><ref bean="sessionFactory"/></property>
+    </bean>
+
+#foreach($entity in $entities)
+     <!-- $entity.name Entity Proxy -->
+     <bean id="$entity.getBeanName(false)" class="org.springframework.aop.framework.ProxyFactoryBean">
+         <property name="target"><ref bean="$entity.getBeanName(true)"/></property>
+         <property name="proxyInterfaces">
+             <value>$entity.fullyQualifiedDaoName</value>
+         </property>
+         <property name="interceptorNames">
+             <list>
+                 <value>hibernateInterceptor</value>
+             </list>
+         </property>
+     </bean>
+
+    <!-- $entity.name Entity Implementation  -->
+    <bean id="$entity.getBeanName(true)" class="$entity.fullyQualifiedDaoImplementationName">
+        <property name="sessionFactory"><ref local="sessionFactory"/></property>
+## Because of a bug in Spring with circular references (and using AOP proxies),
+## we need to use the lookup-method as a work-a-round for dependencies
+## which represent circular references
+#foreach($entityRef in $entity.entityReferences)
+#if (!$entityRef.circularReference)
+        <property name="$entityRef.daoName"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+#end
+#foreach($entityRef in $entity.entityReferences)
+#set ($daoReferenceName = $entityRef.targetElement.getBeanName(false))
+#if ($entityRef.circularReference)
+        <lookup-method name="$entityRef.daoGetterName" bean="$entityRef.targetElement.getBeanName(false)"/>
+#end
+#end
+    </bean>
+
+#end
+#end
+    <!-- ========================= Start of SERVICE DEFINITIONS ========================= -->
+
+#set ($enableSpringTransactions = ($enableSpringTransactionsWhenEjbsEnabled.equalsIgnoreCase("true") || !$ejbsEnabled) && !$services.empty) 
+#if ($enableSpringTransactions)
+    <!-- Service Transactional Interceptor -->
+    <bean id="serviceTransactionInterceptor" class="org.springframework.transaction.interceptor.TransactionInterceptor">
+        <property name="transactionManager"><ref bean="transactionManager"/></property>
+        <property name="transactionAttributeSource">
+            <value>
+#foreach ($service in $services)
+#foreach ($operation in $service.operations)
+                ${service.fullyQualifiedName}.${operation.name}=${operation.transactionType}
+#end
+#end
+            </value>
+        </property>
+    </bean>
+
+#end
+#foreach($service in $services)
+    <!-- $service.name Service Implementation  -->
+    <bean id="$service.getBeanName(true)" class="$service.fullyQualifiedImplementationName">
+#if ($daosEnabled)
+#foreach($entityRef in $service.entityReferences)
+        <property name="$entityRef.daoName"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+## also initialize daos of parent services
+#if($service.generalization)
+#foreach($entityRef in $service.generalization.entityReferences)
+        <property name="$entityRef.daoName"><ref bean="$entityRef.targetElement.getBeanName(false)"/></property>
+#end
+#end
+#end
+## Because of a bug in Spring with circular references (and using AOP proxies),
+## we need to use the lookup-method as a work-a-round for dependencies
+## which represent circular references
+#foreach($serviceRef in $service.serviceReferences)
+#if (!$serviceRef.circularReference)
+        <property name="$serviceRef.name"><ref bean="$serviceRef.targetElement.beanName"/></property>
+#end
+#end
+#foreach($serviceRef in $service.serviceReferences)
+#if ($serviceRef.circularReference)
+        <lookup-method name="$serviceRef.getterName" bean="$serviceRef.targetElement.beanName"/>
+#end
+#end
+    </bean>
+
+    <!-- $service.name Service Proxy  -->
+    <bean id="$service.getBeanName(false)" class="org.springframework.aop.framework.ProxyFactoryBean">
+         <property name="target"><ref bean="$service.getBeanName(true)"/></property>
+         <property name="proxyInterfaces">
+             <value>$service.fullyQualifiedName</value>
+         </property>
+         <property name="interceptorNames">
+             <list>
+#if ($acegiServiceSecurityEnabled)
+                 <value>serviceSecurityInterceptor</value>
+#end
+#if ($enableSpringTransactions)
+                 <value>serviceTransactionInterceptor</value>
+#end
+#if ($daosEnabled && $service.hibernateInterceptorEnabled)
+                 <value>hibernateInterceptor</value>
+#end
+             </list>
+         </property>
+     </bean>
+
+#end
+    <!-- ========================= End of SERVICE DEFINITIONS ========================= -->
+        
+#if ($acegiServiceSecurityEnabled)
+<!-- ================= Start of ACEGI SERVICE SECURITY DEFINITIONS ================ -->
+#set ($enableAcegiSecurity = !$ejbsEnabled && !$services.empty)
+    
+	<!-- acegi serviceSecurityInterceptor --> 
+    <bean id="serviceSecurityInterceptor" class="$acegiServiceSecurityInterceptor">
+#if ($stringUtils.isNotBlank($acegiAuthenticationManager))    
+        <property name="authenticationManager"><ref bean="$acegiAuthenticationManager"/></property>
+#end        
+        <property name="accessDecisionManager"><ref bean="businessAccessDecisionManager"/></property>
+        <property name="afterInvocationManager"><ref bean="afterInvocationManager"/></property>
+#if ($stringUtils.isNotBlank($acegiRunAsManager))
+        <property name="runAsManager"><ref bean="$acegiRunAsManager"/></property>
+#end        
+        <property name="objectDefinitionSource">
+            <value>
+#foreach ($service in $services)
+#foreach ($operation in $service.operations)
+#if(${operation.acegiAclType} != "OMIT")				
+                ${service.fullyQualifiedName}.${operation.name}=${operation.acegiAclType}  
+#end
+#end
+#end
+            </value>
+        </property>
+    </bean>
+    
+    <!-- An access decision manager used by the serviceSecurityInterceptor -->
+	<bean id="businessAccessDecisionManager" class="$acegiServiceAccessDecisionManager">
+        <property name="allowIfAllAbstainDecisions">
+            <value>false</value>
+        </property>
+        <property name="decisionVoters">
+            <list>
+            	<ref local="roleVoter"/>
+#foreach($service in $services)
+#foreach($operation in $service.operations)
+#if(${operation.acegiAclType} != "user, admin" && $stringUtils.isNotBlank(${operation.acegiVoterName}))            
+                <ref bean="${operation.acegiVoterName}"/>
+#end
+#end
+#end                
+            </list>
+        </property>
+    </bean>
+    
+    <!-- ===================== VOTING ==================== -->
+    
+    <!-- role-based voting -->
+    <bean id="roleVoter" class="net.sf.acegisecurity.vote.RoleVoter">
+        <property name="rolePrefix"><value/></property>
+    </bean>
+    
+    <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
+         
+    <!-- An access decision voters that read processConfigAttribute settings -->
+#foreach($service in $services)
+#foreach($operation in $service.operations)
+#if(${operation.acegiAclType} != "user, admin" && $stringUtils.isNotBlank(${operation.acegiVoterName}))			    
+    <bean id="${operation.acegiVoterName}" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager"><ref bean="aclManager"/></property>
+        <property name="processConfigAttribute">
+#if ($stringUtils.isNotBlank(${operation.acegiAclType}))        
+            <value>${operation.acegiAclType}</value>
+#end            
+        </property>
+        <property name="processDomainObjectClass">       
+            <value>${operation.acegiDomainObject}</value>            
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION"/>
+                <ref local="SimpleAclEntry.READ_WRITE"/>
+            </list>
+        </property>
+    </bean>
+#end    
+#end
+#end
+
+	<!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~ -->
+
+   <!-- ACL permission masks -->
+   
+   <bean id="SimpleAclEntry.ADMINISTRATION" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
+        </property>
+    </bean>
+        
+    <bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
+        </property>
+    </bean>
+    
+    <bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
+        </property>
+    </bean>
+    
+    <bean id="SimpleAclEntry.CREATE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
+        </property>
+    </bean>
+    
+    <bean id="SimpleAclEntry.DELETE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
+        </property>
+    </bean>
+
+    <!-- ================== End of ACEGI SERVICE SECURITY DEFINITIONS ================= -->
+#end
+</beans>
