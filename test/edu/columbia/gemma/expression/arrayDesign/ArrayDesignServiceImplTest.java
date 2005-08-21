@@ -7,6 +7,8 @@ import org.easymock.MockControl;
 import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
 import edu.columbia.gemma.expression.designElement.DesignElement;
@@ -192,45 +194,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
      * 
      * @throws Exception
      */
-//    public void testSaveArrayDesignWithoutMock() throws Exception {
-//        BeanFactory ctx = SpringContextUtil.getApplicationContext();
-//
-//        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-//                .getBean( "manualAuthenticationProcessing" );
-//
-//        manAuthentication.validateRequest( "KiranKeshav", "keshav" );
-//
-//        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-//
-//        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-//        arrayDesign.setName( "AD Foo" );
-//        arrayDesign.setDescription( "a test ArrayDesign" );
-//
-//        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-//        cs1.setName( "DE Bar1" );
-//
-//        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-//        cs2.setName( "DE Bar2" );
-//
-//        Collection<DesignElement> col = new HashSet();
-//        col.add( cs1 );
-//        col.add( cs2 );
-//        // Note this sequence. Remember, inverse="true" if using this. If you do not make
-//        // an explicit call to cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
-//        cs1.setArrayDesign( arrayDesign );
-//        cs2.setArrayDesign( arrayDesign );
-//        arrayDesign.setDesignElements( col );
-//
-//        ads.saveArrayDesign( arrayDesign );
-//    }
-
-    /**
-     * Tests getting all design elements given authorization on an array design. Mock objects not used because I need
-     * the objects from the database.
-     * 
-     * @throws Exception
-     */
-    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
+    public void testSaveArrayDesignWithoutMock() throws Exception {
         BeanFactory ctx = SpringContextUtil.getApplicationContext();
 
         ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
@@ -239,13 +203,51 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
         manAuthentication.validateRequest( "pavlab", "pavlab" );
 
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
 
-        Collection<CompositeSequence> col = css.getAllCompositeSequences();
-        log.info( col.size() );
-        for ( CompositeSequence cs : col ) {
-            log.debug( cs );
-        }
+        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+        arrayDesign.setName( "AD Foo" );
+        arrayDesign.setDescription( "a test ArrayDesign" );
 
+        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
+        cs1.setName( "DE Bar1" );
+
+        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
+        cs2.setName( "DE Bar2" );
+
+        Collection<DesignElement> col = new HashSet();
+        col.add( cs1 );
+        col.add( cs2 );
+        // Note this sequence. Remember, inverse="true" if using this. If you do not make
+        // an explicit call to cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
+        cs1.setArrayDesign( arrayDesign );
+        cs2.setArrayDesign( arrayDesign );
+        arrayDesign.setDesignElements( col );
+
+        ads.saveArrayDesign( arrayDesign );
     }
+
+    /**
+     * Tests getting all design elements given authorization on an array design. Mock objects not used because I need
+     * the objects from the database.
+     * 
+     * @throws Exception
+     */
+//    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
+//        BeanFactory ctx = SpringContextUtil.getApplicationContext();
+//
+//        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+//                .getBean( "manualAuthenticationProcessing" );
+//
+//        manAuthentication.validateRequest( "pavlab", "pavlab" );
+//
+//        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+//        CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
+//
+//        Collection<CompositeSequence> col = css.getAllCompositeSequences();
+//        log.info( col.size() );
+//        for ( CompositeSequence cs : col ) {
+//            log.debug( cs );
+//        }
+//
+//    }
 }
