@@ -18,12 +18,14 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -88,6 +90,7 @@ import org.biomage.Measurement.Measurement.Type;
 import org.biomage.Protocol.Hardware;
 import org.biomage.Protocol.Protocol;
 import org.biomage.QuantitationType.DerivedSignal;
+import org.biomage.QuantitationType.Failed;
 import org.biomage.QuantitationType.MeasuredSignal;
 import org.biomage.QuantitationType.PValue;
 import org.biomage.QuantitationType.PresentAbsent;
@@ -239,7 +242,9 @@ public class MageMLConverter {
         URL ontologyDaml = this.getClass().getResource( "resource/MGEDOntology.daml" );
         try {
             log.info( "Reading MGED Ontology" );
-            mgedOntologyHelper = new OntologyHelper( ontologyDaml.getPath() );
+            File test = new File( ontologyDaml.getFile() );
+            assert test.canRead() : "Could not read MGED Ontology DAML file";
+            mgedOntologyHelper = new OntologyHelper( ontologyDaml.getFile() );
         } catch ( Exception e ) { // yup, that's what this constructor throws.
             log.error( e, e );
         }
@@ -479,6 +484,9 @@ public class MageMLConverter {
      * in the MAGE file (for example, in the ArrayExpress MAGE files for experiments done on Affymetrix platforms). In
      * these cases we have to get the feature dimension from somewhere else.
      * <p>
+     * In MAGE, there can be more than one QuantitationType dimension associated with a single BioAssay, because there
+     * can be more than on BioAssayData (Measured, Derived, Physical).
+     * <p>
      * There also seems to be no particular standard as to whether the external data files contain compositesequence or
      * reporter or feature data. Feature data makes the most sense. For Affy files that seems to be what you get (so
      * far).
@@ -487,50 +495,59 @@ public class MageMLConverter {
      */
     public void convertBioAssayDataAssociations( BioAssayData mageObj ) {
         QuantitationTypeDimension qtd = mageObj.getQuantitationTypeDimension();
-        List quantitationTypes = null;
+        List<edu.columbia.gemma.common.quantitationtype.QuantitationType> convertedQuantitationTypes = new ArrayList<edu.columbia.gemma.common.quantitationtype.QuantitationType>();
         if ( qtd != null ) {
-            quantitationTypes = qtd.getQuantitationTypes();
+            List<QuantitationType> quantitationTypes = ( List<QuantitationType> ) qtd.getQuantitationTypes();
+            for ( QuantitationType type : quantitationTypes ) {
+                edu.columbia.gemma.common.quantitationtype.QuantitationType convertedType = convertQuantitationType( type );
+                convertedQuantitationTypes.add( convertedType );
+            }
         }
 
         DesignElementDimension ded = mageObj.getDesignElementDimension();
         List<DesignElement> designElements = null;
 
-        BioAssayDimension bad = mageObj.getBioAssayDimension();
-        if ( bad != null ) {
-            List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
-            for ( BioAssay bioAssay : bioAssays ) {
-                String name = bioAssay.getName();
-                if ( bioAssayDimensions.get( name ) == null ) {
-                    bioAssayDimensions.put( name, new HashMap<String, List>() );
-                }
+        BioAssayDimension bioAssayDim = mageObj.getBioAssayDimension();
+        if ( bioAssayDim == null ) return;
 
-                if ( ded instanceof FeatureDimension ) {
-                    log.info( "Got a feature dimension: " + ded.getIdentifier() );
-                    designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
-             //       bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
-                } else if ( ded instanceof CompositeSequenceDimension ) {
-                    log.info( "Got a compositesequence dimension: " + ded.getIdentifier() );
-                    designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
-               //     bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
-                } else if ( ded instanceof ReporterDimension ) {
-                    log.info( "Got a reporter dimension: " + ded.getIdentifier() );
-                    designElements = ( ( ReporterDimension ) ded ).getReporters();
-               //     bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
-                }
-                bioAssayDimensions.get( name ).put( "DesignElementDimension", designElements );
-                bioAssayDimensions.get( name ).put( "QuantitationTypeDimension", quantitationTypes );
-
+        List<BioAssay> bioAssays = ( List<BioAssay> ) bioAssayDim.getBioAssays();
+        for ( BioAssay bioAssay : bioAssays ) {
+            String bioAssayName = bioAssay.getName();
+            if ( bioAssayDimensions.get( bioAssayName ) == null ) {
+                bioAssayDimensions.put( bioAssayName, new HashMap<String, List>() );
             }
+
+            if ( ded instanceof FeatureDimension ) {
+                log.info( "Got a feature dimension: " + ded.getIdentifier() );
+                designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
+                // bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
+            } else if ( ded instanceof CompositeSequenceDimension ) {
+                log.info( "Got a compositesequence dimension: " + ded.getIdentifier() );
+                designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
+                // bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
+            } else if ( ded instanceof ReporterDimension ) {
+                log.info( "Got a reporter dimension: " + ded.getIdentifier() );
+                designElements = ( ( ReporterDimension ) ded ).getReporters();
+                // bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
+            }
+            bioAssayDimensions.get( bioAssayName ).put( "DesignElementDimension", designElements );
+            bioAssayDimensions.get( bioAssayName ).put( "QuantitationTypeDimension", convertedQuantitationTypes );
+
         }
 
     }
-    
 
     /**
+     * Given a Gemma bioassay, return the associated DesignElementDimension.
+     * 
      * @param bioAssay
-     * @return
+     * @return A List of DesignElements representing the DesignElementDimension for the BioAssay. If there is no such
+     *         bioAssay in the current data, returns null.
      */
-    public List<DesignElement> getBioAssayDesignElementDimension( BioAssay bioAssay ) {
+    public List<DesignElement> getBioAssayDesignElementDimension(
+            edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay ) {
+        if ( bioAssay == null ) throw new IllegalArgumentException();
+        if ( !bioAssayDimensions.containsKey( bioAssay.getName() ) ) return null;
         return bioAssayDimensions.get( bioAssay.getName() ).get( "DesignElementDimension" );
     }
 
@@ -538,7 +555,8 @@ public class MageMLConverter {
     // * @param bioAssay
     // * @return
     // */
-    // public List<DesignElement> getBioAssayCompositeSequenceDimension( BioAssay bioAssay ) {
+    // public List<DesignElement> getBioAssayCompositeSequenceDimension( edu.columbia.gemma.expression.bioAssay.BioAssay
+    // bioAssay ) {
     // return bioAssayDimensions.get( bioAssay.getName() ).get( "CompositeSequenceDimension" );
     // }
     //
@@ -546,7 +564,8 @@ public class MageMLConverter {
     // * @param bioAssay
     // * @return
     // */
-    // public List<DesignElement> getBioAssayReporterDimension( BioAssay bioAssay ) {
+    // public List<DesignElement> getBioAssayReporterDimension( edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay
+    // ) {
     // return bioAssayDimensions.get( bioAssay.getName() ).get( "ReporterDimension" );
     // }
     //
@@ -554,15 +573,17 @@ public class MageMLConverter {
     // * @param bioAssay
     // * @return
     // */
-    // public List<DesignElement> getBioAssayFeatureDimension( BioAssay bioAssay ) {
+    // public List<DesignElement> getBioAssayFeatureDimension( edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay
+    // ) {
     // return bioAssayDimensions.get( bioAssay.getName() ).get( "FeatureDimension" );
-    //    }
+    // }
 
     /**
      * @param bioAssay
      * @return
      */
-    public List<QuantitationType> getBioAssayQuantitationTypeDimension( BioAssay bioAssay ) {
+    public List<QuantitationType> getBioAssayQuantitationTypeDimension(
+            edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay ) {
         return bioAssayDimensions.get( bioAssay.getName() ).get( "QuantitationTypeDimension" );
     }
 
@@ -680,6 +701,10 @@ public class MageMLConverter {
      * @param elm
      */
     private void specialFillInBioCharacteristicOntologyEntries( BioCharacteristic bioCharacteristic, Element elm ) {
+        if ( bioCharacteristic == null ) {
+            log.warn( "Null bioCharacteristic passed, ignoring" );
+            return;
+        }
         boolean isCategoryMo = false;
         boolean isValueMo = false;
         boolean hasCategoryAcc = true;
@@ -694,12 +719,11 @@ public class MageMLConverter {
             if ( isCategoryMo ) {
                 categoryDb = MGED_DATABASE_IDENTIFIER;
             }
-        } else if ( mgedOntologyHelper.isInstantiable( bioCharacteristic.getCategory() ) ) {
+        } else if ( mgedOntologyHelper.classExists( bioCharacteristic.getCategory() ) ) {
             isCategoryMo = true;
             categoryDb = MGED_DATABASE_IDENTIFIER;
         } else {
-
-            log.debug( "No category database" );
+            log.info( "No category database for " + bioCharacteristic.getCategory() );
         }
 
         if ( categoryAcc.length() > 0 ) {
@@ -710,37 +734,34 @@ public class MageMLConverter {
             categoryAcc = formMgedOntologyAccession( bioCharacteristic.getCategory() );
         } else {
             hasCategoryAcc = false;
-            log.debug( "No category accession value." );
+            log.info( "No category accession value for " + bioCharacteristic.getCategory() );
         }
 
-        if ( valueDb.length() > 0 ) {
-            isValueMo = this.mgedOntologyAliases.contains( valueDb );
-            if ( isValueMo ) {
-                valueDb = MGED_DATABASE_IDENTIFIER;
-            }
-        } else if ( isCategoryMo ) {
-            if ( mgedOntologyHelper.isInstantiable( bioCharacteristic.getValue() ) ) {
+        if ( bioCharacteristic.getValue().length() > 0 ) {
+            if ( valueDb.length() > 0 ) {
+                isValueMo = this.mgedOntologyAliases.contains( valueDb );
+                if ( isValueMo ) {
+                    valueDb = MGED_DATABASE_IDENTIFIER;
+                }
+            } else if ( isCategoryMo
+                    && mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ).contains(
+                            bioCharacteristic.getValue() ) ) {
                 isValueMo = true;
                 valueDb = MGED_DATABASE_IDENTIFIER;
-            } else if ( mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ).contains(
-                    bioCharacteristic.getValue() ) ) {
-                isValueMo = true;
-                valueDb = MGED_DATABASE_IDENTIFIER;
+            } else {
+                log.info( "No value database available for " + bioCharacteristic.getValue() );
             }
-        } else {
 
-            log.debug( "No value database" );
-        }
-
-        if ( valueAcc.length() > 0 ) {
-            if ( isValueMo ) {
-                valueAcc = formMgedOntologyAccession( valueAcc );
+            if ( valueAcc.length() > 0 ) {
+                if ( isValueMo ) {
+                    valueAcc = formMgedOntologyAccession( valueAcc );
+                }
+            } else if ( isValueMo ) {
+                valueAcc = formMgedOntologyAccession( bioCharacteristic.getValue() );
+            } else {
+                hasValueAcc = false;
+                log.info( "No value accession available for " + bioCharacteristic.getValue() );
             }
-        } else if ( isValueMo ) {
-            valueAcc = formMgedOntologyAccession( valueAcc );
-        } else {
-            hasValueAcc = false;
-            log.debug( "No value accession" );
         }
 
         if ( hasCategoryAcc ) {
@@ -760,15 +781,16 @@ public class MageMLConverter {
             valueExternalDatabase.setName( valueDb );
             edu.columbia.gemma.common.description.OntologyEntry valueOntologyEntry = edu.columbia.gemma.common.description.OntologyEntry.Factory
                     .newInstance();
-            valueOntologyEntry.setAccession( categoryAcc );
+            valueOntologyEntry.setAccession( valueAcc );
             valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
             valueOntologyEntry.setCategory( bioCharacteristic.getValue() );
             valueOntologyEntry.setValue( bioCharacteristic.getValue() );
             bioCharacteristic.setValueTerm( valueOntologyEntry );
         }
 
-        log.info( "CAT: " + bioCharacteristic.getCategory() + " VAL: " + bioCharacteristic.getValue() + " CATdb: "
-                + categoryDb + " VALdb: " + valueDb + " CATacc: " + categoryAcc + " VALacc: " + valueAcc );
+        log.info( "CAT: '" + bioCharacteristic.getCategory() + "'   VAL: '" + bioCharacteristic.getValue()
+                + "'   CATdb: '" + categoryDb + "'  VALdb: '" + valueDb + "'   CATacc: '" + categoryAcc
+                + "'   VALacc: " + valueAcc );
     }
 
     /**
@@ -864,8 +886,8 @@ public class MageMLConverter {
         } else if ( associationName.equals( "Type" ) ) { // ontology entry, we map to a enumerated type.
             assert associatedObject instanceof OntologyEntry;
             specialConvertSequenceType( ( OntologyEntry ) associatedObject, gemmaObj );
-        } else if ( associationName.equals( "Species" ) ) { // ontology entry, we map to a enumerated type.
-            simpleFillIn( associatedObject, gemmaObj, getter );
+        } else if ( associationName.equals( "Species" ) ) {
+            simpleFillIn( associatedObject, gemmaObj, getter, "Taxon" );
         } else if ( associationName.equals( "SeqFeatures" ) ) {
             ; // list of Sequence features, we ignore
         } else if ( associationName.equals( "OntologyEntries" ) ) {
@@ -2152,6 +2174,19 @@ public class MageMLConverter {
 
         edu.columbia.gemma.common.quantitationtype.QuantitationType result = edu.columbia.gemma.common.quantitationtype.QuantitationType.Factory
                 .newInstance();
+
+        if ( mageObj instanceof SpecializedQuantitationType ) {
+            // FIXME
+        } else if ( mageObj instanceof MeasuredSignal ) {
+
+        } else if ( mageObj instanceof DerivedSignal ) {
+
+        } else if ( mageObj instanceof Ratio ) {
+
+        } else if ( mageObj instanceof Failed ) {
+
+        }
+
         result.setIsBackground( mageObj.getIsBackground().booleanValue() );
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
@@ -3122,6 +3157,7 @@ public class MageMLConverter {
             List<org.biomage.DesignElement.CompositeSequence> reps = rg.getCompositeSequences();
             for ( org.biomage.DesignElement.CompositeSequence compseq : reps ) {
                 CompositeSequence csconv = convertCompositeSequence( compseq );
+                csconv.setArrayDesign( gemmaObj );
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }
         }
@@ -3181,6 +3217,7 @@ public class MageMLConverter {
             for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
                 org.biomage.DesignElement.Reporter reporter = ( org.biomage.DesignElement.Reporter ) iterator.next();
                 Reporter csconv = convertReporter( reporter );
+                csconv.setArrayDesign( gemmaObj );
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }
         }

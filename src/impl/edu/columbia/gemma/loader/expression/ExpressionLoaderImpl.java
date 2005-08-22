@@ -58,6 +58,8 @@ import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.FactorValue;
+import edu.columbia.gemma.genome.Taxon;
+import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.loader.loaderutils.Loader;
 
@@ -80,6 +82,7 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @spring.property name="protocolDao" ref="protocolDao"
  * @spring.property name="softwareDao" ref="softwareDao"
  * @spring property name="hardwareDao" ref="hardwareDao"
+ * @spring property name="taxonDao" ref="taxonDao"
  */
 @SuppressWarnings("unchecked")
 public class ExpressionLoaderImpl implements Loader {
@@ -107,16 +110,17 @@ public class ExpressionLoaderImpl implements Loader {
 
     private SoftwareDao softwareDao;
 
+    private TaxonDao taxonDao;
+
     /*
      * (non-Javadoc) TODO: finish implementing this.
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
     public void create( Collection col ) {
-        log.debug( "Entering MageLoaderImpl.create()" );
         if ( defaultOwner == null ) initializeDefaultOwner();
         try {
-            log.debug( "Entered create with " + col.size() + " objects." );
+            log.debug( "Entering + " + this.getClass().getName() + ".create() with " + col.size() + " objects." );
             for ( Object entity : col ) {
 
                 String className = entity.getClass().getName();
@@ -275,6 +279,24 @@ public class ExpressionLoaderImpl implements Loader {
     }
 
     /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
+    }
+
+    /**
+     * @param bioSequence
+     */
+    private void fillInBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null ) return;
+        Taxon t = bioSequence.getTaxon();
+        if ( t != null ) {
+            t = taxonDao.findOrCreate( t );
+        }
+    }
+
+    /**
      * Fill in the categoryTerm and valueTerm associations of a
      * 
      * @param bioCharacteristics Collection of biocharacteristics
@@ -397,7 +419,33 @@ public class ExpressionLoaderImpl implements Loader {
      * @param entity
      */
     private void loadArrayDesign( ArrayDesign entity ) {
-        arrayDesignDao.create( entity );
+
+        ArrayDesign existing = arrayDesignDao.find( entity );
+        if ( existing != null ) {
+            log.warn( "Array design " + entity + " already exists." );
+            Collection<DesignElement> existingDesignElements = existing.getDesignElements();
+            if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
+                log.warn( "Number of design elements in existing version "
+                        + "is the same. No further processing will be done." );
+                return;
+            } else if ( entity.getDesignElements().size() == 0 ) {
+                log.warn( "No design elements in new version, no further processing will be done." );
+                return;
+            }
+        }
+
+        log.debug( "Filling in design elements for " + entity );
+        for ( DesignElement designElement : ( Collection<DesignElement> ) entity.getDesignElements() ) {
+            if ( designElement instanceof CompositeSequence ) {
+                CompositeSequence cs = ( CompositeSequence ) designElement;
+                fillInBioSequence( cs.getBiologicalCharacteristic() );
+            } else if ( designElement instanceof Reporter ) {
+                Reporter reporter = ( Reporter ) designElement;
+                fillInBioSequence( reporter.getImmobilizedCharacteristic() );
+            }
+        }
+        log.info( "Creating arrayDesign " + entity );
+        arrayDesignDao.findOrCreate( entity );
     }
 
     /**

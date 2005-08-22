@@ -23,8 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import edu.columbia.gemma.common.protocol.Protocol;
-
 /**
  * <hr>
  * <p>
@@ -68,7 +66,7 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
             log.debug( "Array design must have a name to use as comparison key" );
             return null;
         }
-        ArrayDesign newArrayDesign = this.findByName( arrayDesign.getName() );
+        ArrayDesign newArrayDesign = this.find( arrayDesign );
         if ( newArrayDesign != null ) {
             return newArrayDesign;
         }
