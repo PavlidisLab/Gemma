@@ -20,6 +20,10 @@ package edu.columbia.gemma.expression.arrayDesign;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import edu.columbia.gemma.common.protocol.Protocol;
 
 /**
  * <hr>
@@ -33,6 +37,30 @@ import org.apache.commons.logging.LogFactory;
 public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoBase {
 
     private static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
+
+    @Override
+    public ArrayDesign find( ArrayDesign arrayDesign ) {
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( ArrayDesign.class );
+            queryObject.add( Restrictions.eq( "name", arrayDesign.getName() ) );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + ArrayDesign.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = ( ArrayDesign ) results.iterator().next();
+                }
+            }
+            return ( ArrayDesign ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
 
     @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
