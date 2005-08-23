@@ -6,6 +6,7 @@
 </head>
 <body id="login"/>
 
+<%-- programmatically enforces SSL security --%>
 <Gemma:secure mode="secured"/>
 
 <c:import url="/loginMenu.jsp"/>
