@@ -6,6 +6,8 @@
 </head>
 <body id="login"/>
 
+<Gemma:secure mode="secured"/>
+
 <c:import url="/loginMenu.jsp"/>
 
 <p><fmt:message key="welcome.message"/></p>
