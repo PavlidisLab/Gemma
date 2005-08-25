@@ -141,7 +141,7 @@ public class ExpressionLoaderImpl implements Loader {
                 } else if ( entity instanceof Reporter ) {
                     // cascade from array design, do nothing
                 } else if ( entity instanceof QuantitationType ) {
-                    // loadQuantitationType( ( QuantitationType ) entity );
+                    loadQuantitationType( ( QuantitationType ) entity );
                 } else if ( entity instanceof BioMaterial ) {
                     log.debug( "Persisting " + className );
                     loadBioMaterial( ( BioMaterial ) entity );
@@ -149,9 +149,9 @@ public class ExpressionLoaderImpl implements Loader {
                     // probably won't use this much; or get from associations via ontologyentry.
                     // loadExternalDatabase( ( ExternalDatabase ) entity );
                 } else if ( entity instanceof LocalFile ) {
-                    // loadLocalFile( ( LocalFile ) entity );
+                    loadLocalFile( ( LocalFile ) entity );
                 } else if ( entity instanceof BioAssay ) {
-                    // loadBioAssay( ( BioAssay ) entity );
+                    loadBioAssay( ( BioAssay ) entity );
                 } else {
                     // throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
                 }

@@ -27,11 +27,13 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoFile;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
+import edu.columbia.gemma.loader.loaderutils.Loader;
 
 /**
  * <hr>
@@ -44,7 +46,7 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 public class GeoDatasetService {
 
     private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
-    private ExpressionLoaderImpl expLoader;
+    private Loader expLoader;
 
     /**
      * Given a GEO data set id:
@@ -58,7 +60,7 @@ public class GeoDatasetService {
      */
     public void fetchAndLoad( String geoDataSetAccession ) throws ConfigurationException, SocketException, IOException {
         DatasetFetcher df = new DatasetFetcher();
-        GeoFile result = df.fetch( geoDataSetAccession );
+        Collection<LocalFile> result = df.fetch( geoDataSetAccession );
 
         if ( result == null ) return;
 
@@ -78,7 +80,7 @@ public class GeoDatasetService {
         SeriesFetcher sf = new SeriesFetcher();
         for ( GeoSeries series : seriesSet ) {
             log.info( "Processing series " + series );
-            GeoFile fullSeries = sf.retrieveByFTP( series.getGeoAccesssion() );
+            Collection<LocalFile> fullSeries = sf.fetch( series.getGeoAccesssion() );
             gfp.parse( fullSeries.getLocalPath() );
         }
 

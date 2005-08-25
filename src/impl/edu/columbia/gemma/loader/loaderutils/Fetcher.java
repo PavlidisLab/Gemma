@@ -1,6 +1,8 @@
 package edu.columbia.gemma.loader.loaderutils;
 
-import java.io.File;
+import java.util.Collection;
+
+import edu.columbia.gemma.common.description.LocalFile;
 
 /**
  * <hr>
@@ -13,10 +15,17 @@ import java.io.File;
 public interface Fetcher {
 
     /**
-     * Fetch a file from the indicated by the
+     * Fetch files according to the identifier provided.
      * 
      * @param identifier
      */
-    public File fetch( String identifier );
+    public Collection<LocalFile> fetch( String identifier );
+
+    /**
+     * Set whether existing files should be overwritten.
+     * 
+     * @param force
+     */
+    public void setForce( boolean force );
 
 }

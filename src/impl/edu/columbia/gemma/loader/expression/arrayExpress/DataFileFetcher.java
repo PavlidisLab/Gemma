@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -40,7 +42,9 @@ import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 
 import baseCode.util.FileTools;
 import baseCode.util.NetUtils;
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
+import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
 import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
@@ -55,7 +59,7 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcher extends FtpFetcher {
+public class DataFileFetcher extends FtpArchiveFetcher {
 
     private final Untar untarrer;
 
@@ -79,25 +83,25 @@ public class DataFileFetcher extends FtpFetcher {
      * @throws SocketException
      * @throws IOException
      */
-    public Collection<File> fetch( String identifier, final boolean discardArchive ) throws SocketException,
-            IOException {
-        if ( f == null || !f.isConnected() ) f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
-
-        File newDir = mkdir( identifier );
-        final String outputFileName = formLocalFilePath( identifier, newDir );
-        final String seekFile = formRemoteFilePath( identifier );
-
-        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
-            @SuppressWarnings("synthetic-access")
-            public Boolean call() throws FileNotFoundException, IOException {
-                log.info( "Fetching " + seekFile );
-                return new Boolean( NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force ) );
-            }
-        } );
-
-        Executors.newSingleThreadExecutor().execute( future );
+    public Collection<LocalFile> fetch( String identifier ) {
 
         try {
+            if ( f == null || !f.isConnected() ) f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+
+            File newDir = mkdir( identifier );
+            final String outputFileName = formLocalFilePath( identifier, newDir );
+            final String seekFile = formRemoteFilePath( identifier );
+
+            FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+                @SuppressWarnings("synthetic-access")
+                public Boolean call() throws FileNotFoundException, IOException {
+                    log.info( "Fetching " + seekFile );
+                    return new Boolean( NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force ) );
+                }
+            } );
+
+            Executors.newSingleThreadExecutor().execute( future );
+
             while ( !future.isDone() ) {
                 try {
                     Thread.sleep( 1000 );
@@ -109,8 +113,8 @@ public class DataFileFetcher extends FtpFetcher {
             if ( future.get().booleanValue() ) {
                 log.info( "Unpacking " + outputFileName );
                 unPack( newDir, outputFileName );
-                cleanUp( discardArchive, outputFileName );
-                Collection<File> result = listFiles( identifier, newDir );
+                cleanUp( outputFileName );
+                Collection<LocalFile> result = listFiles( identifier, newDir );
                 return result;
             }
             log.error( "Couldn't fetch file for " + identifier );
@@ -129,11 +133,24 @@ public class DataFileFetcher extends FtpFetcher {
     }
 
     /**
+     * @param files
+     * @return
+     */
+    public File getMageMlFile( Collection<File> files ) {
+        for ( File file : files ) {
+            if ( file.getAbsolutePath().endsWith( ".xml" ) ) {
+                return file;
+            }
+        }
+        return null;
+    }
+
+    /**
      * @param discardArchive
      * @param outputFileName
      */
-    private void cleanUp( boolean discardArchive, String outputFileName ) {
-        if ( discardArchive ) ( new File( outputFileName ) ).delete();
+    private void cleanUp( String outputFileName ) {
+        if ( this.doDelete ) ( new File( outputFileName ) ).delete();
     }
 
     /**
@@ -143,13 +160,17 @@ public class DataFileFetcher extends FtpFetcher {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    private Collection<File> listFiles( String identifier, File newDir ) throws IOException {
+    private Collection<LocalFile> listFiles( String identifier, File newDir ) throws IOException {
         log.info( "Got files for experiment " + identifier + ":" );
-        Collection<File> result = new HashSet<File>();
+        Collection<LocalFile> result = new HashSet<LocalFile>();
         for ( File file : ( Collection<File> ) FileTools.listDirectoryFiles( newDir ) ) {
             if ( file.getPath().endsWith( ".mageml.tgz" ) ) continue;
             log.info( "\t" + file.getCanonicalPath() );
-            result.add( file );
+            LocalFile newFile = LocalFile.Factory.newInstance();
+            newFile.setLocalURI( file.getPath() );
+            newFile.setRemoteURI( formRemoteFilePath( identifier ) );
+            newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
+            result.add( newFile );
         }
         return result;
     }

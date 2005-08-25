@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -30,6 +32,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
 import baseCode.util.NetUtils;
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.geo.model.GeoFile;
 import edu.columbia.gemma.loader.expression.geo.util.GeoUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
@@ -58,29 +61,35 @@ public class DatasetFetcher extends FtpFetcher {
      * @throws SocketException
      * @throws IOException
      */
-    public GeoFile fetch( String accession ) throws SocketException, IOException {
+    public Collection<LocalFile> fetch( String accession ) {
         log.info( "Seeking GDS file for " + accession );
 
-        if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
-        // create a place to store the files.
-        File newDir = mkdir( accession );
+        try {
+            if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
+            String seekFile = baseDir + "/" + accession + ".soft.gz";
+            File newDir = mkdir( accession );
+            String outputFileName = newDir + "/" + accession + ".soft.gz";
+            success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
 
-        String outputFileName = newDir + "/" + accession + ".soft.gz";
+            if ( success ) {
+                // get meta-data about the file.
+                LocalFile file = LocalFile.Factory.newInstance();
+                file.setVersion( new SimpleDateFormat().format( new Date() ) );
+                file.setRemoteURI( seekFile );
+                file.setLocalURI( outputFileName );
+                // file.setSize( outputFile.length() );
 
-        String seekFile = baseDir + "/" + accession + ".soft.gz";
-        success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
+                log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + " .Output file is "
+                        + outputFileName );
 
-        if ( success ) {
-            // get meta-data about the file.
-            GeoFile file = new GeoFile();
-            file.setDownloadDate( new SimpleDateFormat().format( new Date() ) );
-            file.setDownloadURL( seekFile );
-            file.setLocalPath( outputFileName );
-            // file.setSize( outputFile.length() );
+                // no need to unpack the file, we process as is.
 
-            log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + " .Output file is "
-                    + outputFileName );
-            return file;
+                Collection<LocalFile> result = new HashSet<LocalFile>();
+                result.add( file );
+                return result;
+            }
+        } catch ( IOException e ) {
+            log.error( e, e );
         }
         log.error( "Couldn't find file." );
         return null;
