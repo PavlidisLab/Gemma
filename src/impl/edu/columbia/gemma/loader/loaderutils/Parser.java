@@ -3,7 +3,7 @@ package edu.columbia.gemma.loader.loaderutils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Collection;
 
 /**
  * Interface for classes that allow parsing of files and streams.
@@ -41,8 +41,8 @@ public interface Parser {
     public void parse( String filename ) throws IOException;
 
     /**
-     * @return an Iterator that can be used to look at the results, after they have parsed from the input.
+     * @return the results of the parse.
      */
-    public Iterator<Object> iterator();
+    public Collection<Object> getResults();
 
 }

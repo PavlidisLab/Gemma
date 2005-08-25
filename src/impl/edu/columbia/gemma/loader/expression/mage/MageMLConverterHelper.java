@@ -701,10 +701,14 @@ public class MageMLConverterHelper {
      * @param elm
      */
     private void specialFillInBioCharacteristicOntologyEntries( BioCharacteristic bioCharacteristic, Element elm ) {
+        assert mgedOntologyHelper != null;
         if ( bioCharacteristic == null ) {
             log.warn( "Null bioCharacteristic passed, ignoring" );
             return;
         }
+
+        if ( bioCharacteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
+
         boolean isCategoryMo = false;
         boolean isValueMo = false;
         boolean hasCategoryAcc = true;
@@ -744,6 +748,7 @@ public class MageMLConverterHelper {
                     valueDb = MGED_DATABASE_IDENTIFIER;
                 }
             } else if ( isCategoryMo
+                    && mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ) != null
                     && mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ).contains(
                             bioCharacteristic.getValue() ) ) {
                 isValueMo = true;

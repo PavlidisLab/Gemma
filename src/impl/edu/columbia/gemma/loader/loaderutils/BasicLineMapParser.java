@@ -22,8 +22,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -69,10 +69,10 @@ public abstract class BasicLineMapParser extends BasicLineParser {
     }
 
     /**
-     * Returns a keyset iterator for the Map.
+     * Returns keyset for the map.
      */
-    public Iterator<Object> iterator() {
-        return results.keySet().iterator();
+    public Collection<Object> getResults() {
+        return results.keySet();
     }
 
     /*

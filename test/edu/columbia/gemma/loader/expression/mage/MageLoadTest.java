@@ -77,28 +77,33 @@ public class MageLoadTest extends MageBaseTest {
         super.tearDown();
     }
 
-    /*
-     * Class under test for void create(Collection)
-     */
-    public void testCreateCollection() throws Exception {
-        log.info( "Parsing MAGE Jamboree example" );
-
-        MageMLParser mlp = new MageMLParser();
-
-        zipXslSetup( mlp, "/data/mage/mageml-example.zip" );
-
-        ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
-                .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
-        istMageExamples.getNextEntry();
-        mlp.parse( istMageExamples );
-
-        Collection result = mlp.getConvertedData();
-        log.info( result.size() + " Objects parsed from the MAGE file." );
-        log.info( "Tally:\n" + mlp );
-        istMageExamples.close();
-        ml.create( result );
-
-    }
+    // /*
+    // * Class under test for void create(Collection)
+    // */
+    // public void testCreateCollection() throws Exception {
+    // log.info( "Parsing MAGE Jamboree example" );
+    //
+    // MageMLParser mlp = new MageMLParser();
+    //
+    // zipXslSetup( mlp, "/data/mage/mageml-example.zip" );
+    //
+    // ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
+    // .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
+    // istMageExamples.getNextEntry();
+    // mlp.parse( istMageExamples );
+    //
+    // Collection<Object> parseResult = mlp.getResults();
+    //
+    // MageMLConverter mlc = new MageMLConverter( mlp.getSimplifiedXml() );
+    //
+    // Collection<Object> result = mlc.convert( parseResult );
+    //
+    // log.info( result.size() + " Objects parsed from the MAGE file." );
+    // log.info( "Tally:\n" + mlp );
+    //        istMageExamples.close();
+    //        ml.persist( result );
+    //
+    //    }
 
     /**
      * A real example of an experimental package.
@@ -114,11 +119,16 @@ public class MageLoadTest extends MageBaseTest {
 
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
-        Collection result = mlp.getConvertedData();
+        Collection<Object> parseResult = mlp.getResults();
+
+        MageMLConverter mlc = new MageMLConverter( mlp.getSimplifiedXml() );
+
+        Collection<Object> result = mlc.convert( parseResult );
+
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
-        ml.create( result );
+        ml.persist( result );
     }
 
     /**
@@ -135,11 +145,15 @@ public class MageLoadTest extends MageBaseTest {
 
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-WMIT-4.xml" );
         mlp.parse( istMageExamples );
-        Collection result = mlp.getConvertedData();
+        Collection<Object> parseResult = mlp.getResults();
+
+        MageMLConverter mlc = new MageMLConverter( mlp.getSimplifiedXml() );
+
+        Collection<Object> result = mlc.convert( parseResult );
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
-        ml.create( result );
+        ml.persist( result );
     }
 
 }

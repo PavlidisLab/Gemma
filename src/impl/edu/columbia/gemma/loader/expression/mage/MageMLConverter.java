@@ -42,8 +42,11 @@ public class MageMLConverter implements Converter {
     public MageMLConverter( Document xml ) {
         super();
         this.simplifiedXml = xml;
+        if ( xml == null ) {
+            log.warn( "Null Document for simplified MAGE ML result" );
+        }
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
-        String mageClassesString = rb.getString( "mage.classes" );
+        String mageClassesString = rb.getString( "mage.classes" ); // FIXME : use config array
         mageClasses = mageClassesString.split( ", " );
         this.mageConverterHelper = new MageMLConverterHelper();
         mageConverterHelper.setSimplifiedXml( this.simplifiedXml );

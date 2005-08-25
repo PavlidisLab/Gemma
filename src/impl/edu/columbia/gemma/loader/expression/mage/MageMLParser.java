@@ -28,7 +28,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -339,8 +338,8 @@ public class MageMLParser implements Parser {
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Parser#iterator()
      */
-    public Iterator<Object> iterator() {
-        return mageDomainObjects.iterator();
+    public Collection<Object> getResults() {
+        return mageDomainObjects;
     }
 
     /**

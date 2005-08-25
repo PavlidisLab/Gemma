@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -102,8 +101,8 @@ public abstract class BasicLineParser implements LineParser {
 
     }
 
-    public Iterator<Object> iterator() {
-        return results.iterator();
+    public Collection<Object> getResults() {
+        return results;
     }
 
 }

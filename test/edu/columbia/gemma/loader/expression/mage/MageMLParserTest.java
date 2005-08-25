@@ -81,45 +81,42 @@ public class MageMLParserTest extends MageBaseTest {
         mlp = null;
     }
 
-    public void testMageExamplesTest() throws Exception {
-        log.debug( "Parsing MAGE Jamboree example" );
-        
-        zipXslSetup( mlp, "/data/mage/mageml-example.zip" );
-        
-        ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
-                .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
-        istMageExamples.getNextEntry();
-        mlp.parse( istMageExamples );
-        Collection result = mlp.getConvertedData();
-        log.info( result.size() + " Objects parsed from the MAGE file." );
-        log.info( "Tally:\n" + mlp );
-        istMageExamples.close();
-        // type expectedValue = null;
-        // assertEquals( expectedValue, actualValue );
-    }
+//    public void testMageExamplesTest() throws Exception {
+//        log.debug( "Parsing MAGE Jamboree example" );
+//
+//        zipXslSetup( mlp, "/data/mage/mageml-example.zip" );
+//
+//        ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
+//                .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
+//        istMageExamples.getNextEntry();
+//        mlp.parse( istMageExamples );
+//
+//        log.info( "Tally:\n" + mlp );
+//        istMageExamples.close();
+//        // type expectedValue = null;
+//        // assertEquals( expectedValue, actualValue );
+//    }
 
     public void testParseCollectionRealA() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );
-        
+
         xslSetup( mlp, "/data/mage/E-AFMX-13.xml" );
-        
+
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
-        Collection result = mlp.getConvertedData();
-        log.info( result.size() + " Objects parsed from the MAGE file." );
+
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
     }
 
     public void testParseCollectionRealB() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (WMIT)" );
-        
+
         xslSetup( mlp, "/data/mage/E-WMIT-4.xml" );
-        
+
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-WMIT-4.xml" );
         mlp.parse( istMageExamples );
-        Collection result = mlp.getConvertedData();
-        log.info( result.size() + " Objects parsed from the MAGE file." );
+
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
     }
