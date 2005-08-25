@@ -28,11 +28,11 @@ public class MageMLConverter implements Converter {
 
     private static Log log = LogFactory.getLog( MageMLConverter.class.getName() );
 
-    private MageMLConverterHelper mageConverterHelper;
     private Collection<Object> convertedResult;
+    private boolean isConverted = false;
     private String[] mageClasses;
 
-    private boolean isConverted = false;
+    private MageMLConverterHelper mageConverterHelper;
 
     private Document simplifiedXml;
 
@@ -90,42 +90,6 @@ public class MageMLConverter implements Converter {
         return convertedResult;
     }
 
-    /**
-     * Generic method to extract desired data, converted to the Gemma domain objects.
-     * 
-     * @param type
-     * @return
-     */
-    private Collection<Object> getConvertedDataForType( Class type, Collection<Object> mageDomainObjects ) {
-        if ( mageDomainObjects == null ) return null;
-
-        Collection<Object> localResult = new ArrayList<Object>();
-
-        for ( Object element : mageDomainObjects ) {
-            if ( element == null ) continue;
-            if ( !( element.getClass().isAssignableFrom( type ) ) ) continue;
-
-            Object converted = mageConverterHelper.convert( element );
-            if ( converted != null ) localResult.add( mageConverterHelper.convert( element ) );
-        }
-        return localResult;
-    }
-
-    /**
-     * @return all the converted BioAssay objects.
-     */
-    public List<BioAssay> getConvertedBioAssays() {
-        assert isConverted;
-        List<BioAssay> result = new ArrayList<BioAssay>();
-        for ( Object object : convertedResult ) {
-            if ( object instanceof BioAssay ) {
-                result.add( ( BioAssay ) object );
-            }
-        }
-        log.info( "Found " + result.size() + " bioassays" );
-        return result;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -146,6 +110,21 @@ public class MageMLConverter implements Converter {
         return this.mageConverterHelper.getBioAssayQuantitationTypeDimension( bioAssay );
     }
 
+    /**
+     * @return all the converted BioAssay objects.
+     */
+    public List<BioAssay> getConvertedBioAssays() {
+        assert isConverted;
+        List<BioAssay> result = new ArrayList<BioAssay>();
+        for ( Object object : convertedResult ) {
+            if ( object instanceof BioAssay ) {
+                result.add( ( BioAssay ) object );
+            }
+        }
+        log.info( "Found " + result.size() + " bioassays" );
+        return result;
+    }
+
     @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();
@@ -163,6 +142,27 @@ public class MageMLConverter implements Converter {
         }
 
         return buf.toString();
+    }
+
+    /**
+     * Generic method to extract desired data, converted to the Gemma domain objects.
+     * 
+     * @param type
+     * @return
+     */
+    private Collection<Object> getConvertedDataForType( Class type, Collection<Object> mageDomainObjects ) {
+        if ( mageDomainObjects == null ) return null;
+
+        Collection<Object> localResult = new ArrayList<Object>();
+
+        for ( Object element : mageDomainObjects ) {
+            if ( element == null ) continue;
+            if ( !( element.getClass().isAssignableFrom( type ) ) ) continue;
+
+            Object converted = mageConverterHelper.convert( element );
+            if ( converted != null ) localResult.add( mageConverterHelper.convert( element ) );
+        }
+        return localResult;
     }
 
 }

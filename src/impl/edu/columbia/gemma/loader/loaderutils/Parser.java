@@ -38,11 +38,11 @@ public interface Parser {
      * @param filename Absolute path to the file
      * @throws IOException
      */
-    public abstract void parse( String filename ) throws IOException;
+    public void parse( String filename ) throws IOException;
 
     /**
      * @return an Iterator that can be used to look at the results, after they have parsed from the input.
      */
-    public Iterator iterator();
+    public Iterator<Object> iterator();
 
 }
