@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +28,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -38,9 +40,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
- 
 import org.biomage.Common.MAGEJava;
-import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.tools.xmlutils.MAGEContentHandler;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -54,10 +54,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import edu.columbia.gemma.expression.bioAssay.BioAssay;
-import edu.columbia.gemma.expression.designElement.DesignElement;
-
 import baseCode.util.FileTools;
+import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects.
@@ -69,25 +67,22 @@ import baseCode.util.FileTools;
  * @author pavlidis
  * @version $Id$
  */
-public class MageMLParser {
+public class MageMLParser implements Parser {
 
     protected static final Log log = LogFactory.getLog( MageMLParser.class );
 
     private MAGEContentHandler cHandler;
-    private Collection<Object> convertedResult;
-    private boolean isConverted;
     private String[] mageClasses;
     private MAGEJava mageJava;
-    private MageMLConverter mlc;
     private XMLReader parser;
     private Document simplifiedXml;
+
+    private Collection<Object> mageDomainObjects;
 
     /**
      * Create a new MageMLParser
      */
     public MageMLParser() {
-
-        mlc = new MageMLConverter();
 
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
         String mageClassesString = rb.getString( "mage.classes" );
@@ -104,55 +99,17 @@ public class MageMLParser {
     }
 
     /**
-     * @return all the converted BioAssay objects.
+     * @return
      */
-    public List<BioAssay> getConvertedBioAssays() {
-        assert isConverted;
-        List<BioAssay> result = new ArrayList<BioAssay>();
-        for ( Object object : convertedResult ) {
-            if ( object instanceof BioAssay ) {
-                result.add( ( BioAssay ) object );
-            }
-        }
-        log.info( "Found " + result.size() + " bioassays" );
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.expression.mage.MageMLConverter#getBioAssayDesignElementDimension(org.biomage.BioAssay.BioAssay)
-     */
-    public List<DesignElement> getBioAssayDesignElementDimension( BioAssay bioAssay ) {
-        assert isConverted;
-        return this.mlc.getBioAssayDesignElementDimension( bioAssay );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay)
-     */
-    public List<QuantitationType> getBioAssayQuantitationTypeDimension( BioAssay bioAssay ) {
-        assert isConverted;
-        return this.mlc.getBioAssayQuantitationTypeDimension( bioAssay );
-    }
-
-    /**
-     * Convert all of the data from the parsed stream (convenience method)
-     * 
-     * @return Collection of Gemma domain objects.
-     */
-    public Collection getConvertedData() {
-        if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
+    private void getDomainObjects() {
+        assert isParsed() : "Need to parse first";
         Package[] allPackages = Package.getPackages();
 
-        if ( convertedResult == null ) {
-            convertedResult = new ArrayList<Object>();
+        if ( this.mageDomainObjects == null ) {
+            this.mageDomainObjects = new ArrayList<Object>();
         } else {
-            convertedResult.clear();
+            this.mageDomainObjects.clear();
         }
-
         // this is a little inefficient because it tries every possible package and class. - fix is to get just
         // the mage
         // packages!
@@ -165,18 +122,17 @@ public class MageMLParser {
             for ( int j = 0; j < mageClasses.length; j++ ) {
                 try {
                     Class c = Class.forName( name + "." + mageClasses[j] );
-                    Collection<Object> d = getConvertedData( c );
+                    // Collection<Object> d = getConvertedData( c );
+                    Collection<Object> d = getDomainObjectsForClass( c );
                     if ( d != null && d.size() > 0 ) {
                         log.info( "Adding " + d.size() + " converted " + name + "." + mageClasses[j] + "s" );
-                        convertedResult.addAll( d );
+                        mageDomainObjects.addAll( d );
                     }
                 } catch ( ClassNotFoundException e ) {
                     // log.error( "Class not found: " + name + "." + mageClasses[j] );
                 }
             }
         }
-        this.isConverted = true;
-        return convertedResult;
     }
 
     /**
@@ -185,23 +141,29 @@ public class MageMLParser {
      * 
      * @param fileName
      * @throws IOException
-     * @throws SAXException
      */
-    public void parse( String fileName ) throws IOException, SAXException, TransformerException {
+    public void parse( String fileName ) throws IOException {
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
-        parser.parse( new InputSource( is ) );
+        try {
+            parser.parse( new InputSource( is ) );
+            createSimplifiedXml( fileName );
+        } catch ( SAXException e ) {
+            log.error( e, e );
+            throw new IOException( e.getMessage() );
+        } catch ( TransformerException e ) {
+            log.error( e, e );
+            throw new IOException( e.getMessage() );
+        }
         mageJava = cHandler.getMAGEJava();
         is.close();
-
-        createSimplifiedXml( fileName );
+        this.getDomainObjects();
     }
 
     @Override
     public String toString() {
-        assert isConverted;
         StringBuffer buf = new StringBuffer();
         Map<String, Integer> tally = new HashMap<String, Integer>();
-        for ( Object element : convertedResult ) {
+        for ( Object element : mageDomainObjects ) {
             String clazz = element.getClass().getName();
             if ( !tally.containsKey( clazz ) ) {
                 tally.put( clazz, new Integer( 0 ) );
@@ -230,29 +192,6 @@ public class MageMLParser {
     }
 
     /**
-     * Generic method to extract desired data, converted to the Gemma domain objects.
-     * 
-     * @param type
-     * @return
-     */
-    private Collection<Object> getConvertedData( Class type ) {
-        if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
-        Collection<Object> dataToConvert = getData( type );
-
-        if ( dataToConvert == null ) return null;
-
-        Collection<Object> localResult = new ArrayList<Object>();
-
-        for ( Object element : dataToConvert ) {
-            if ( element != null ) {
-                Object converted = mlc.convert( element );
-                if ( converted != null ) localResult.add( mlc.convert( element ) );
-            }
-        }
-        return localResult;
-    }
-
-    /**
      * Generic method to extract the desired MAGE objects. This is based on the assumption that each MAGE domain package
      * has a "getXXXX_package" method, which in turn has a "getXXX_list" method for each class it contains. Other
      * objects are only extracted during the process of conversion to Gemma objects. (This is basically a helper method)
@@ -262,7 +201,7 @@ public class MageMLParser {
      * @return Collection of MAGE domain objects.
      */
     @SuppressWarnings("unchecked")
-    private Collection<Object> getData( Class type ) {
+    private Collection<Object> getDomainObjectsForClass( Class type ) {
 
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
 
@@ -350,9 +289,6 @@ public class MageMLParser {
                 throw new IOException( "Simplified XML creation failed" );
             }
             this.simplifiedXml = result.getDocument();
-            assert mlc != null;
-            mlc.setSimplifiedXml( this.simplifiedXml );
-
             if ( log.isDebugEnabled() ) {
                 log.debug( "--------  Simplified XML ---------" );
                 OutputFormat format = OutputFormat.createPrettyPrint();
@@ -377,8 +313,41 @@ public class MageMLParser {
      * @throws SAXException
      * @throws IOException
      */
-    protected void parse( InputStream is ) throws IOException, SAXException {
-        parser.parse( new InputSource( is ) );
+    public void parse( InputStream is ) throws IOException {
+        try {
+            parser.parse( new InputSource( is ) );
+        } catch ( SAXException e ) {
+            log.error( e, e );
+            throw new IOException( e.getMessage() );
+        }
         mageJava = cHandler.getMAGEJava();
+        getDomainObjects();
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.io.File)
+     */
+    public void parse( File f ) throws IOException {
+        InputStream is = new FileInputStream( f );
+        parse( is );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#iterator()
+     */
+    public Iterator<Object> iterator() {
+        return mageDomainObjects.iterator();
+    }
+
+    /**
+     * @return Returns the simplifiedXml.
+     */
+    public Document getSimplifiedXml() {
+        return this.simplifiedXml;
+    }
+
 }
