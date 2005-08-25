@@ -19,7 +19,7 @@ import org.springframework.beans.factory.BeanFactory;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.Parser;
+import edu.columbia.gemma.loader.loaderutils.ParserByMap;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -32,7 +32,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class GeneLoaderCLI {
-    protected static final Log log = LogFactory.getLog( Parser.class );
+    protected static final Log log = LogFactory.getLog( ParserByMap.class );
 
     /**
      * Command line interface to run the gene parser/loader
@@ -82,7 +82,7 @@ public class GeneLoaderCLI {
                 printHelp( opt );
 
             } else if ( cl.hasOption( 'p' ) ) {
-                geneParser.parseFile( cl.getOptionValue( 'p' ) );
+                geneParser.parseToMap( cl.getOptionValue( 'p' ) );
             } else if ( cl.hasOption( 'l' ) ) {
                 geneLoader = new GeneLoaderImpl();
                 geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
@@ -95,10 +95,10 @@ public class GeneLoaderCLI {
                 // log.info( "Timer started" );
                 //
                 for ( int i = 0; i < filenames.length - 1; i++ ) {
-                    geneParser.parseFile( filenames[i] );
+                    geneParser.parseToMap( filenames[i] );
                     i++;
                 }
-                map = geneParser.parseFile( filenames[filenames.length - 1] );
+                map = geneParser.parseToMap( filenames[filenames.length - 1] );
                 // geneLoader.create( map.values() );
                 //
                 // stopwatch.stop();

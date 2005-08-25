@@ -8,7 +8,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
-import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * <hr>
@@ -20,7 +20,7 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @spring.bean id="geneLoader"
  * @spring.property name="geneDao" ref="geneDao"
  */
-public class GeneLoaderImpl implements Loader {
+public class GeneLoaderImpl implements Persister {
     protected static final Log log = LogFactory.getLog( GeneLoaderImpl.class );
 
     private GeneDao geneDao;
@@ -30,7 +30,7 @@ public class GeneLoaderImpl implements Loader {
      * 
      * @param col
      */
-    public void create( Collection col ) {
+    public void persist( Collection col ) {
         assert geneDao != null;
         for ( Iterator iter = col.iterator(); iter.hasNext(); ) {
             Gene g = ( Gene ) iter.next();
@@ -44,7 +44,7 @@ public class GeneLoaderImpl implements Loader {
      * 
      * @param gene
      */
-    public void create( Object obj ) {
+    public void persist( Object obj ) {
         // TODO Auto-generated method stub
     }
 

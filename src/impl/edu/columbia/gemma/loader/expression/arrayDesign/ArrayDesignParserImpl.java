@@ -22,7 +22,7 @@ import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.loader.association.Gene2GOAssociationMappings;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
-import edu.columbia.gemma.loader.loaderutils.Parser;
+import edu.columbia.gemma.loader.loaderutils.ParserByMap;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
@@ -36,7 +36,7 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  * @spring.property name="contactDao" ref="contactDao"
  * @spring.property name="localFileDao" ref="localFileDao"
  */
-public class ArrayDesignParserImpl extends BasicLineMapParser implements Parser {
+public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserByMap {
     protected static final Log log = LogFactory.getLog( ArrayDesignParserImpl.class );
 
     private Map arrayDesignMap = null;
@@ -171,7 +171,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements Parser 
         return arrayDesignMap;
     }
 
-    public Map parseFile( String filename ) throws IOException {
+    public Map parseToMap( String filename ) throws IOException { 
         // TODO implement
         throw new UnsupportedOperationException();
     }

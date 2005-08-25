@@ -21,7 +21,6 @@ package edu.columbia.gemma.loader.expression.arrayExpress;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -45,7 +44,6 @@ import baseCode.util.NetUtils;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
-import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
  * ArrayExpress stores files in an FTP site as tarred-gzipped archives. Each tar file contains the MAGE file and the
@@ -136,9 +134,9 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @param files
      * @return
      */
-    public File getMageMlFile( Collection<File> files ) {
-        for ( File file : files ) {
-            if ( file.getAbsolutePath().endsWith( ".xml" ) ) {
+    public LocalFile getMageMlFile( Collection<LocalFile> files ) {
+        for ( LocalFile file : files ) {
+            if ( file.getLocalURI().endsWith( ".xml" ) ) {
                 return file;
             }
         }

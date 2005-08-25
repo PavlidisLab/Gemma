@@ -1,10 +1,12 @@
 package edu.columbia.gemma.loader.loaderutils;
 
+import java.net.URI;
 import java.util.Collection;
 
 import edu.columbia.gemma.common.description.LocalFile;
 
 /**
+ * Interface for classes that can fetch files from a remote location and copy them to a specified location.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -27,5 +29,17 @@ public interface Fetcher {
      * @param force
      */
     public void setForce( boolean force );
+
+    // /**
+    // * @param uri The base URI. This is concatenated with the identifier to form the file URIs to be handled by this.
+    // */
+    // public void setBaseUri( URI uri );
+    //
+    // /**
+    // * @param uri The location where fetched files will be placed. If it does not exist, and a directory can be
+    // created,
+    // * it will be created by this.
+    // */
+    // public void setTargetUri( URI uri );
 
 }

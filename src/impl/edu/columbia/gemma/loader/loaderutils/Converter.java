@@ -18,9 +18,9 @@
  */
 package edu.columbia.gemma.loader.loaderutils;
 
+import java.util.Collection;
+
 /**
- * A Parser that processes its input line-by-line. One of the parse methods must be called before data becomes
- * available.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -28,13 +28,14 @@ package edu.columbia.gemma.loader.loaderutils;
  * @author pavlidis
  * @version $Id$
  */
-public interface LineParser extends Parser {
+public interface Converter {
 
     /**
-     * Handle the parsing of a single line from the input.
+     * Given a collection of source domain objects, conver them into Gemma domain objects.
      * 
-     * @param line
+     * @param sourceDomainObjects
+     * @return
      */
-    abstract Object parseOneLine( String line );
+    public Collection<Object> convert( Collection<Object> sourceDomainObjects );
 
 }

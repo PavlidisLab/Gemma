@@ -22,7 +22,7 @@ import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.Parser;
+import edu.columbia.gemma.loader.loaderutils.ParserByMap;
 
 /**
  * <hr>
@@ -45,7 +45,7 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
  * @author keshav
  * @version $Id$
  */
-public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements Parser {
+public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements ParserByMap {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserImpl.class );
 
     Method methodToInvoke = null;
@@ -92,7 +92,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @return Map
      * @throws IOException
      */
-    public Map parseFile( String filename ) throws IOException {
+    public Map parseToMap( String filename ) throws IOException {
         // TODO implement
         throw new UnsupportedOperationException();
     }

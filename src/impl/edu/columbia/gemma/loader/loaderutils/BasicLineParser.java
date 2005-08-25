@@ -44,7 +44,7 @@ public abstract class BasicLineParser implements LineParser {
 
     protected static final Log log = LogFactory.getLog( BasicLineParser.class );
 
-    private Collection results;
+    private Collection<Object> results;
 
     /**
      * How often we tell the user what is happening.
@@ -52,7 +52,7 @@ public abstract class BasicLineParser implements LineParser {
     protected static final int ALERT_FREQUENCY = 10000;
 
     public BasicLineParser() {
-        results = new HashSet();
+        results = new HashSet<Object>();
     }
 
     /*
@@ -102,7 +102,7 @@ public abstract class BasicLineParser implements LineParser {
 
     }
 
-    public Iterator<?> iterator() {
+    public Iterator<Object> iterator() {
         return results.iterator();
     }
 

@@ -20,16 +20,16 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.util.Collection;
 
-import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
-public class GeoLoaderImpl implements Loader {
+public class GeoLoaderImpl implements Persister {
 
-    public void create( Collection col ) {
+    public void persist( Collection col ) {
         // TODO Auto-generated method stub
 
     }
 
-    public void create( Object obj ) {
+    public void persist( Object obj ) {
         // TODO Auto-generated method stub
 
     }

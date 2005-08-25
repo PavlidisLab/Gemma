@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.Parser;
+import edu.columbia.gemma.loader.loaderutils.ParserByMap;
 
 /**
  * Parse gene files (ncbi, etc).
@@ -30,8 +30,8 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
  * @spring.bean id="geneParser"
  * @spring.property name="geneMappings" ref="geneMappings"
  */
-public class GeneParserImpl extends BasicLineMapParser implements Parser {
-    protected static final Log log = LogFactory.getLog( Parser.class );
+public class GeneParserImpl extends BasicLineMapParser implements ParserByMap {
+    protected static final Log log = LogFactory.getLog( ParserByMap.class );
     private GeneMappings geneMappings = null;
     private Map<String, Gene> map;
 
@@ -72,7 +72,7 @@ public class GeneParserImpl extends BasicLineMapParser implements Parser {
      * @return Map
      * @throws IOException
      */
-    public Map parseFile( String filename ) throws IOException {
+    public Map parseToMap( String filename ) throws IOException {
         log.info( "filename: " + filename );
 
         File file = new File( filename );

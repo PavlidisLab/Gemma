@@ -20,7 +20,7 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.Parser;
+import edu.columbia.gemma.loader.loaderutils.ParserByMap;
 
 /**
  * <hr>
@@ -33,7 +33,7 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
  * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  * @spring.property name="localFileDao" ref="localFileDao"
  */
-public class OntologyEntryParserImpl implements Parser {
+public class OntologyEntryParserImpl implements ParserByMap {
     protected static final Log log = LogFactory.getLog( OntologyEntryParserImpl.class );
 
     private ExternalDatabaseDao externalDatabaseDao;
@@ -210,7 +210,7 @@ public class OntologyEntryParserImpl implements Parser {
         throw new UnsupportedOperationException();
     }
 
-    public Map parseFile( String filename ) throws IOException {
+    public Map parseToMap( String filename ) throws IOException {
 
         throw new UnsupportedOperationException();
     }

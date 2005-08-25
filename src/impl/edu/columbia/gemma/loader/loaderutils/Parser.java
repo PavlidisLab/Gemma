@@ -1,29 +1,48 @@
 package edu.columbia.gemma.loader.loaderutils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Map;
-
-import org.apache.commons.configuration.ConfigurationException;
+import java.util.Iterator;
 
 /**
+ * Interface for classes that allow parsing of files and streams.
  * <hr>
  * <p>
- * Copyright (c) 2004 - 2005 Columbia University
+ * Copyright (c) 2004-2005 Columbia University
  * 
- * @author keshav
+ * @author pavlidis
  * @version $Id$
  */
 public interface Parser {
 
-    public Map parse( InputStream is, Method lineParseMethod ) throws IOException;
+    /**
+     * Parse a {@link InputStream}.
+     * 
+     * @throws IOException
+     * @param stream
+     */
+    public void parse( InputStream is ) throws IOException;
 
-    public Map parseFile( String filename ) throws IOException;
+    /**
+     * Parse a {@link File}
+     * 
+     * @param f
+     * @throws IOException
+     */
+    public void parse( File f ) throws IOException;
 
-    public Map parseFromHttp( String url ) throws IOException, ConfigurationException;
+    /**
+     * Parse a file identified by its path.
+     * 
+     * @param filename Absolute path to the file
+     * @throws IOException
+     */
+    public abstract void parse( String filename ) throws IOException;
 
-    public Collection createOrGetDependencies( Object[] dependencies, Map objectMap );
+    /**
+     * @return an Iterator that can be used to look at the results, after they have parsed from the input.
+     */
+    public Iterator iterator();
 
 }

@@ -71,7 +71,7 @@ public abstract class BasicLineMapParser extends BasicLineParser {
     /**
      * Returns a keyset iterator for the Map.
      */
-    public Iterator<?> iterator() {
+    public Iterator<Object> iterator() {
         return results.keySet().iterator();
     }
 

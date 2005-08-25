@@ -61,7 +61,7 @@ import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
-import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * A generic class to persist Gemma-domain objects from the Expression package: arrayDesigns, expressionExperiments and
@@ -85,7 +85,7 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
  * @spring property name="taxonDao" ref="taxonDao"
  */
 @SuppressWarnings("unchecked")
-public class ExpressionLoaderImpl implements Loader {
+public class ExpressionLoaderImpl implements Persister {
     private static Log log = LogFactory.getLog( ExpressionLoaderImpl.class.getName() );
 
     private ArrayDesignDao arrayDesignDao;
@@ -117,7 +117,7 @@ public class ExpressionLoaderImpl implements Loader {
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
-    public void create( Collection col ) {
+    public void persist( Collection col ) {
         if ( defaultOwner == null ) initializeDefaultOwner();
         try {
             log.debug( "Entering + " + this.getClass().getName() + ".create() with " + col.size() + " objects." );
@@ -166,7 +166,7 @@ public class ExpressionLoaderImpl implements Loader {
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
      */
-    public void create( Object obj ) {
+    public void persist( Object obj ) {
         log.info( "Persisting " + obj.getClass().getName() + " " + obj );
         if ( obj instanceof ExpressionExperiment ) {
             this.loadExpressionExperiment( ( ExpressionExperiment ) obj );

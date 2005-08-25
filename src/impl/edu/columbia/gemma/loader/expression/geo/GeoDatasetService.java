@@ -33,7 +33,7 @@ import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoFile;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
-import edu.columbia.gemma.loader.loaderutils.Loader;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * <hr>
@@ -46,7 +46,7 @@ import edu.columbia.gemma.loader.loaderutils.Loader;
 public class GeoDatasetService {
 
     private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
-    private Loader expLoader;
+    private Persister expLoader;
 
     /**
      * Given a GEO data set id:
@@ -81,7 +81,7 @@ public class GeoDatasetService {
         for ( GeoSeries series : seriesSet ) {
             log.info( "Processing series " + series );
             Collection<LocalFile> fullSeries = sf.fetch( series.getGeoAccesssion() );
-            gfp.parse( fullSeries.getLocalPath() );
+            gfp.parseToMap( fullSeries.getLocalPath() );
         }
 
         ExpressionExperiment expexp = gfp.convertDataSet();
@@ -90,7 +90,7 @@ public class GeoDatasetService {
 
         log.info( "Loading expressionExperiment: " + expexp.getAccession().getAccession() );
         assert expLoader != null;
-        expLoader.create( expexp );
+        expLoader.persist( expexp );
     }
 
     public void setExpressionLoader( ExpressionLoaderImpl expressionLoader ) {
