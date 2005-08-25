@@ -35,6 +35,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
 
 /**
@@ -68,6 +69,7 @@ public class MageLoadTest extends MageBaseTest {
         ml.setProtocolDao( ( ProtocolDao ) ctx.getBean( "protocolDao" ) );
         ml.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
         ml.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
+        ml.setTaxonDao( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
     }
 
     @Override
