@@ -27,11 +27,14 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.common.protocol.HardwareDao;
 import edu.columbia.gemma.common.protocol.ProtocolDao;
 import edu.columbia.gemma.common.protocol.SoftwareDao;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
@@ -70,6 +73,9 @@ public class MageLoadTest extends MageBaseTest {
         ml.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
         ml.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
         ml.setTaxonDao( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
+        ml.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
+        ml.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
+        ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
     }
 
     @Override
@@ -100,10 +106,10 @@ public class MageLoadTest extends MageBaseTest {
     //
     // log.info( result.size() + " Objects parsed from the MAGE file." );
     // log.info( "Tally:\n" + mlp );
-    //        istMageExamples.close();
-    //        ml.persist( result );
+    // istMageExamples.close();
+    // ml.persist( result );
     //
-    //    }
+    // }
 
     /**
      * A real example of an experimental package.
