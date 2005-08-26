@@ -19,8 +19,11 @@
 package edu.columbia.gemma.loader.expression.mage;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -35,6 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -98,7 +104,7 @@ import org.biomage.QuantitationType.PresentAbsent;
 import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
-import org.biomage.tools.ontology.OntologyHelper;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
 
@@ -129,6 +135,7 @@ import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.biosequence.PolymerType;
 import edu.columbia.gemma.genome.biosequence.SequenceType;
+import edu.columbia.gemma.loader.loaderutils.MgedOntologyHelper;
 import edu.columbia.gemma.util.ReflectionUtil;
 
 /**
@@ -221,7 +228,12 @@ public class MageMLConverterHelper {
     /**
      * 
      */
-    private OntologyHelper mgedOntologyHelper;
+    private MgedOntologyHelper mgedOntologyHelper;
+
+    /**
+     * Places where, according to the current configuration, local MAGE bioDataCube external files are stored.
+     */
+    private Collection<String> localExternalDataPaths;
 
     /**
      * @param simplifiedXml
@@ -235,22 +247,49 @@ public class MageMLConverterHelper {
      */
     public MageMLConverterHelper() {
         bioAssayDimensions = new HashMap<String, Map<String, List>>();
-        mgedOntologyAliases = new HashSet<String>();
 
+        initMGEDOntologyAliases();
+
+        initLocalExternalDataPaths();
+
+        initMGEDOntology();
+
+    }
+
+    /**
+     * 
+     */
+    private void initMGEDOntology() {
+        URL ontologyDaml = this.getClass().getResource( "resource/MGEDOntology.daml" );
+
+        log.info( "Reading MGED Ontology" );
+        File test = new File( ontologyDaml.getFile() );
+        assert test.canRead() : "Could not read MGED Ontology DAML file";
+        mgedOntologyHelper = new MgedOntologyHelper( ontologyDaml.getFile() );
+
+    }
+
+    /**
+     * 
+     */
+    private void initLocalExternalDataPaths() {
+        localExternalDataPaths = new HashSet<String>();
+        try {
+            Configuration config = new PropertiesConfiguration( "Gemma.properties" );
+            localExternalDataPaths.add( ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" ) );
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( "Failed to load configuration", e );
+        }
+    }
+
+    /**
+     * 
+     */
+    private void initMGEDOntologyAliases() {
+        mgedOntologyAliases = new HashSet<String>();
         mgedOntologyAliases.add( "MGED Ontology" );
         mgedOntologyAliases.add( "MO" );
         mgedOntologyAliases.add( "ebi.ac.uk:Database:MO" );
-
-        URL ontologyDaml = this.getClass().getResource( "resource/MGEDOntology.daml" );
-        try {
-            log.info( "Reading MGED Ontology" );
-            File test = new File( ontologyDaml.getFile() );
-            assert test.canRead() : "Could not read MGED Ontology DAML file";
-            mgedOntologyHelper = new OntologyHelper( ontologyDaml.getFile() );
-        } catch ( Exception e ) { // yup, that's what this constructor throws.
-            log.error( e, e );
-        }
-
     }
 
     /**
@@ -453,26 +492,59 @@ public class MageMLConverterHelper {
 
         BioDataValues data = mageObj.getBioDataValues();
         LocalFile result = LocalFile.Factory.newInstance();
-        result.setLocalURI( "Nowhere yet" );
 
         if ( data instanceof BioDataCube ) {
             DataExternal dataExternal = ( ( BioDataCube ) data ).getDataExternal();
             if ( dataExternal == null ) {
                 log.warn( "BioDataCube with no external data" );
+                return null;
+            }
+            URI localURI = findLocalMageExternalDataFile( dataExternal.getFilenameURI() );
+
+            if ( localURI == null ) {
+                result.setLocalURI( dataExternal.getFilenameURI() );
             } else {
-                // this is not really the remote uri - just
-                // whatever is in the mage document.
-                result.setRemoteURI( dataExternal.getFilenameURI() );
+                log.warn( "Local file not found, filling in " + dataExternal.getFilenameURI() );
+                result.setLocalURI( localURI.toString() );
             }
 
+            // this is not really the remote uri - just
+            // whatever is in the mage document.
+            result.setRemoteURI( dataExternal.getFilenameURI() );
+
         } else if ( data instanceof BioDataTuples ) {
-            log.warn( "Not ready to deal with BioDataTuples from Mage" );
+            log.error( "Not ready to deal with BioDataTuples from Mage" );
+            return null;
         } else {
             throw new IllegalArgumentException( "Unkonwn BioDataValue class" );
         }
 
         convertBioAssayDataAssociations( mageObj );
         return result;
+    }
+
+    /**
+     * Given a URI, try to find the corresponding local file. The only part of the URI that is looked at is the file
+     * name. We then look in known local directory paths that are used to store MAGE-ML derived files.
+     * 
+     * @param seekURI
+     * @return FIXME this is broken, need to do much smarter path search....just the idea for now.
+     */
+    private URI findLocalMageExternalDataFile( String seekURI ) {
+        String fileName = seekURI.substring( seekURI.lastIndexOf( "/" ) + 1 );
+        log.info( "Seeking external data file " + fileName );
+        for ( String path : this.localExternalDataPaths ) {
+            File f = new File( path + "/" + fileName );
+            log.info( "Looking in " + f.getAbsolutePath() );
+            if ( f.exists() ) {
+                try {
+                    return new URI( "file", "", path, "" );
+                } catch ( URISyntaxException e ) {
+                    log.error( e, e );
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -699,17 +771,25 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * @param bioCharacteristic
-     * @param elm
+     * Fill in the associated OntologyEntry (controlled vocabulary terms) for a characteristic. If no accession or
+     * database is given, we look in the MGED Ontology (MO) for a matching term.
+     * <p>
+     * Unfortunately, in MO the instances don't necessarily match up with the categories - annotators seem to use
+     * whatever instance for whatever category. For example, technically a BioSampleType can only be "extract" or
+     * "not_extract", but our tests include a file that has "fresh_sample" as the value for BioSampleType. Therefore we
+     * have to check the instances of <em>other</em> classes as well.
+     * 
+     * @param characteristic
+     * @param elm that holds the parsed accession and database identifiers.
      */
-    private void specialFillInCharacteristicOntologyEntries( Characteristic bioCharacteristic, Element elm ) {
+    private void specialFillInCharacteristicOntologyEntries( Characteristic characteristic, Element elm ) {
         assert mgedOntologyHelper != null;
-        if ( bioCharacteristic == null ) {
-            log.warn( "Null bioCharacteristic passed, ignoring" );
+        if ( characteristic == null ) {
+            log.warn( "Null characteristic passed, ignoring" );
             return;
         }
 
-        if ( bioCharacteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
+        if ( characteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
 
         boolean isCategoryMo = false;
         boolean isValueMo = false;
@@ -725,11 +805,11 @@ public class MageMLConverterHelper {
             if ( isCategoryMo ) {
                 categoryDb = MGED_DATABASE_IDENTIFIER;
             }
-        } else if ( mgedOntologyHelper.classExists( bioCharacteristic.getCategory() ) ) {
+        } else if ( mgedOntologyHelper.classExists( characteristic.getCategory() ) ) {
             isCategoryMo = true;
             categoryDb = MGED_DATABASE_IDENTIFIER;
         } else {
-            log.info( "No category database for " + bioCharacteristic.getCategory() );
+            log.info( "No category database for '" + characteristic.getCategory() + "'" );
         }
 
         if ( categoryAcc.length() > 0 ) {
@@ -737,26 +817,38 @@ public class MageMLConverterHelper {
                 categoryAcc = formMgedOntologyAccession( categoryAcc );
             }
         } else if ( isCategoryMo ) {
-            categoryAcc = formMgedOntologyAccession( bioCharacteristic.getCategory() );
+            categoryAcc = formMgedOntologyAccession( characteristic.getCategory() );
         } else {
             hasCategoryAcc = false;
-            log.info( "No category accession value for " + bioCharacteristic.getCategory() );
+            log.info( "No category accession value for '" + characteristic.getCategory() + "'" );
         }
 
-        if ( bioCharacteristic.getValue().length() > 0 ) {
+        if ( characteristic.getValue().length() > 0 ) {
             if ( valueDb.length() > 0 ) {
                 isValueMo = this.mgedOntologyAliases.contains( valueDb );
                 if ( isValueMo ) {
                     valueDb = MGED_DATABASE_IDENTIFIER;
                 }
             } else if ( isCategoryMo
-                    && mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ) != null
-                    && mgedOntologyHelper.getInstances( bioCharacteristic.getCategory() ).contains(
-                            bioCharacteristic.getValue() ) ) {
+                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ) != null
+                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ).contains(
+                            characteristic.getValue() ) ) {
                 isValueMo = true;
                 valueDb = MGED_DATABASE_IDENTIFIER;
+
+            } else if ( isCategoryMo ) {
+                String instanceCategory = this.mgedOntologyHelper.getClassNameForInstance( characteristic.getValue() );
+                if ( instanceCategory != null ) {
+                    log.info( "'" + characteristic.getValue() + "' is actually an instance of '" + instanceCategory
+                            + "', not '" + characteristic.getCategory() + "', but we just go with the flow." );
+                    isValueMo = true;
+                    valueDb = MGED_DATABASE_IDENTIFIER;
+                } else {
+                    log.info( "No value database available for '" + characteristic.getValue() + "'" );
+                }
+
             } else {
-                log.info( "No value database available for " + bioCharacteristic.getValue() );
+                log.info( "No value database available for '" + characteristic.getValue() + "'" );
             }
 
             if ( valueAcc.length() > 0 ) {
@@ -764,10 +856,9 @@ public class MageMLConverterHelper {
                     valueAcc = formMgedOntologyAccession( valueAcc );
                 }
             } else if ( isValueMo ) {
-                valueAcc = formMgedOntologyAccession( bioCharacteristic.getValue() );
+                valueAcc = formMgedOntologyAccession( characteristic.getValue() );
             } else {
                 hasValueAcc = false;
-                log.info( "No value accession available for " + bioCharacteristic.getValue() );
             }
         }
 
@@ -778,9 +869,9 @@ public class MageMLConverterHelper {
                     .newInstance();
             categoryOntologyEntry.setAccession( categoryAcc );
             categoryOntologyEntry.setExternalDatabase( categoryExternalDatabase );
-            categoryOntologyEntry.setCategory( bioCharacteristic.getCategory() );
-            categoryOntologyEntry.setValue( bioCharacteristic.getCategory() );
-            bioCharacteristic.setCategoryTerm( categoryOntologyEntry );
+            categoryOntologyEntry.setCategory( characteristic.getCategory() );
+            categoryOntologyEntry.setValue( characteristic.getCategory() );
+            characteristic.setCategoryTerm( categoryOntologyEntry );
         }
 
         if ( hasValueAcc ) {
@@ -790,14 +881,14 @@ public class MageMLConverterHelper {
                     .newInstance();
             valueOntologyEntry.setAccession( valueAcc );
             valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
-            valueOntologyEntry.setCategory( bioCharacteristic.getValue() );
-            valueOntologyEntry.setValue( bioCharacteristic.getValue() );
-            bioCharacteristic.setValueTerm( valueOntologyEntry );
+            valueOntologyEntry.setCategory( characteristic.getValue() );
+            valueOntologyEntry.setValue( characteristic.getValue() );
+            characteristic.setValueTerm( valueOntologyEntry );
         }
 
-        log.info( "CAT: '" + bioCharacteristic.getCategory() + "'   VAL: '" + bioCharacteristic.getValue()
-                + "'   CATdb: '" + categoryDb + "'  VALdb: '" + valueDb + "'   CATacc: '" + categoryAcc
-                + "'   VALacc: " + valueAcc );
+        log.debug( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
+                + "'   CatDb: '" + categoryDb + "'  ValDb: '" + valueDb + "'   CatAcc: '" + categoryAcc
+                + "'   ValAcc: " + valueAcc );
     }
 
     /**

@@ -19,10 +19,10 @@
 package edu.columbia.gemma.loader.loaderutils;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.biomage.Common.Extendable;
-
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
@@ -58,21 +57,43 @@ public class MgedOntologyHelper {
 
     private static Log log = LogFactory.getLog( MgedOntologyHelper.class.getName() );
     protected static final String PARSER_NAME = "org.apache.xerces.parsers.SAXParser";
-    private Map<String, ClassInformation> classIndex = new HashMap<String, ClassInformation>();
-    private Collection<InstanceInformation> instanceIndex = new ArrayList<InstanceInformation>();
+
     private org.biomage.Description.Database mgedMO = null;
     // Added exception map
     private Map<String, String> modelToOntologyClassMap = new HashMap<String, String>();
 
-    private Collection propertyIndex = new ArrayList();
+    Map<String, ClassInformation> classIndex = new HashMap<String, ClassInformation>();
+    Collection<InstanceInformation> instanceIndex = new HashSet<InstanceInformation>();
+    Collection<PropertyInformation> propertyIndex = new HashSet<PropertyInformation>();
 
-    private Collection<ClassInformation> rootClasses = new ArrayList<ClassInformation>();
+    private Collection<ClassInformation> rootClasses = new HashSet<ClassInformation>();
+
+    /**
+     * Get a list of all classes.
+     * 
+     * @return
+     */
+    public Collection getClassNames() {
+        return this.classIndex.keySet();
+    }
+
+    /**
+     * Given a candidate instance name, return the class it belongs to.
+     * 
+     * @param instanceName
+     * @return a String name of the class, null if it is not found in any class.
+     */
+    public String getClassNameForInstance( String instanceName ) {
+        for ( ClassInformation clazz : this.classIndex.values() ) {
+            if ( this.getInstanceNamesForClass( clazz.getName() ).contains( instanceName ) ) return clazz.getName();
+        }
+        return null;
+    }
 
     /**
      * @param uri
-     * @throws Exception
      */
-    public MgedOntologyHelper( String uri ) throws Exception {
+    public MgedOntologyHelper( String uri ) {
         this.parse( uri );
 
         // An empty Database object to hold the MAGE Ontology identifere for MO references
@@ -89,6 +110,8 @@ public class MgedOntologyHelper {
     }
 
     /**
+     * Not sure what this does.
+     * 
      * @param referingClassName
      * @param ontEntryName
      * @return
@@ -156,7 +179,7 @@ public class MgedOntologyHelper {
 
     /**
      * @param className
-     * @return
+     * @return true if className is a valid MO class.
      */
     public boolean classExists( String className ) {
         return classIndex.containsKey( className );
@@ -171,7 +194,6 @@ public class MgedOntologyHelper {
     public Collection<String> getEnumValues( String mgedPropertyName ) {
         Iterator it = propertyIndex.iterator();
 
-        // Why is propertyIndex an ArrayList instead of a HashMap ? Order ?
         PropertyInformation propInfo = null;
         while ( it.hasNext() && propInfo == null ) {
             propInfo = ( PropertyInformation ) it.next();
@@ -192,12 +214,12 @@ public class MgedOntologyHelper {
     }
 
     /**
-     * Return a list of names (Strings) for possible instances of this MGED Ontology Class
+     * Return a collection of names (Strings) for possible instances of this MGED Ontology Class
      * 
      * @param mgedClassName
      * @return
      */
-    public Collection<String> getInstances( String mgedClassName ) {
+    public Collection<String> getInstanceNamesForClass( String mgedClassName ) {
         ClassInformation classInfo = classIndex.get( mgedClassName );
 
         if ( classInfo != null ) {
@@ -358,7 +380,7 @@ public class MgedOntologyHelper {
         ClassInformation classInfo = classIndex.get( ontClass );
         Collection subClasses = classInfo.getSubClasses();
 
-        Collection<String> subClassNames = new ArrayList<String>( subClasses.size() );
+        Collection<String> subClassNames = new HashSet<String>( subClasses.size() );
 
         Iterator it = subClasses.iterator();
         while ( it.hasNext() ) {
@@ -399,20 +421,16 @@ public class MgedOntologyHelper {
 
         try {
             parser = XMLReaderFactory.createXMLReader( PARSER_NAME );
+            OntologyDAMLHandler theHandler = new OntologyDAMLHandler();
+            parser.setContentHandler( theHandler );
+            parser.setErrorHandler( theHandler );
+            parser.parse( uri );
         } catch ( SAXException e ) {
             log.error( e, e );
-        }
-
-        OntologyDAMLHandler theHandler = new OntologyDAMLHandler();
-        parser.setContentHandler( theHandler );
-        parser.setErrorHandler( theHandler );
-
-        try {
-            parser.parse( uri );
+            throw new RuntimeException( e );
         } catch ( IOException e ) {
             log.error( e, e );
-        } catch ( SAXException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         }
 
         buildClassTree();
@@ -543,13 +561,13 @@ public class MgedOntologyHelper {
      * @version $Id$
      */
     private class ClassInformation {
-        private Collection<InstanceInformation> instances = new ArrayList<InstanceInformation>();
+        private Collection<InstanceInformation> instances = new HashSet<InstanceInformation>();
         private String name;
 
-        private Collection<String> parentNames = new ArrayList<String>();
+        private Collection<String> parentNames = new HashSet<String>();
         private List<ClassInformation> parents = new ArrayList<ClassInformation>();
         private Map<Object, PropertyInformation> properties = new HashMap<Object, PropertyInformation>();
-        private Collection<ClassInformation> subClasses = new ArrayList<ClassInformation>();
+        private Collection<ClassInformation> subClasses = new HashSet<ClassInformation>();
 
         public ClassInformation( String _name ) {
             name = _name;
@@ -585,7 +603,7 @@ public class MgedOntologyHelper {
             }
 
             Iterator it = instances.iterator();
-            Collection<String> names = new ArrayList<String>();
+            Collection<String> names = new HashSet<String>();
 
             while ( it.hasNext() ) {
                 InstanceInformation instance = ( InstanceInformation ) it.next();
@@ -723,6 +741,7 @@ public class MgedOntologyHelper {
 
         private boolean withinEnum = false;
 
+        @SuppressWarnings("unused")
         public void characters( char[] ch, int start, int length ) {
         }
 
@@ -838,7 +857,7 @@ public class MgedOntologyHelper {
                 } else { // enum
                     withinEnum = true;
                     currentProperty.typeName = "enum";
-                    currentProperty.enumValues = new ArrayList();
+                    currentProperty.enumValues = new HashSet<String>();
                 }
             }
 
@@ -847,9 +866,11 @@ public class MgedOntologyHelper {
             }
         }
 
+        @SuppressWarnings("unused")
         public void startPrefixMapping( String prefix, String uri ) {
         }
 
+        @SuppressWarnings("unused")
         public void warning( SAXParseException exception ) {
         }
 
@@ -859,7 +880,7 @@ public class MgedOntologyHelper {
     }
 
     private class PathStack {
-        private List<String> list = new ArrayList();
+        private List<String> list = new ArrayList<String>();
 
         public boolean endsWith( String ending ) {
             return this.getAsString().endsWith( ending );
