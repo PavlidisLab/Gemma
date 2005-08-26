@@ -55,25 +55,25 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#getUsers(edu.columbia.gemma.common.auditAndSecurity.User)
      */
-    protected java.util.List handleGetUsers( edu.columbia.gemma.common.auditAndSecurity.User user )
+    protected java.util.Collection handleGetUsers( edu.columbia.gemma.common.auditAndSecurity.User user )
             throws java.lang.Exception {
-        return this.getUserDao().findAllUsers();
+        return this.getUserDao().findAll();
     }
 
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#FindById(long)
      */
-    protected User handleFindById( long id )
-            throws java.lang.Exception {
-        return this.getUserDao().findById(id);
+    protected User handleFindById( long id ) throws java.lang.Exception {
+        return this.getUserDao().findById( id );
     }
+
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#saveUser(edu.columbia.gemma.common.auditAndSecurity.User)
      */
     protected User handleSaveUser( edu.columbia.gemma.common.auditAndSecurity.User user ) throws UserExistsException {
 
         try {
-            user.setConfirmPassword(user.getPassword());
+            user.setConfirmPassword( user.getPassword() );
             return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
