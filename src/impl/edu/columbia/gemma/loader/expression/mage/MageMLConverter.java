@@ -23,6 +23,7 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
  * 
  * @author pavlidis
  * @version $Id$
+ * @spring.bean id="mageMLConverter"
  */
 public class MageMLConverter implements Converter {
 

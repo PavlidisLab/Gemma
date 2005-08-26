@@ -65,6 +65,7 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
  * @see edu.columbia.gemma.loader.mage.MageMLConverter
  * @author pavlidis
  * @version $Id$
+ * @spring.bean id="mageMLParser"
  */
 public class MageMLParser implements Parser {
 
