@@ -44,7 +44,7 @@ public class ExpressionExperimentServiceImpl
     protected java.util.Collection handleGetAllExpressionExperiments()
         throws java.lang.Exception
     {
-        return this.getExpressionExperimentDao().getAll();
+        return this.getExpressionExperimentDao().findAll();
     }
 
     /**

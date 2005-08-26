@@ -30,31 +30,16 @@ public class OntologyEntryLoaderImpl {
      * @param oeCol
      * @param dbEntry TODO
      */
+    @SuppressWarnings("unchecked")
     public void create( Collection<OntologyEntry> oeCol ) {
-
+        assert ontologyEntryDao != null;
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
-
-        Collection<OntologyEntry> oeColFromDatabase = getOntologyEntryDao().findAllOntologyEntries();
 
         int count = 0;
         for ( OntologyEntry oe : oeCol ) {
-            assert ontologyEntryDao != null;
-
-            if ( oeColFromDatabase.size() == 0 ) {
-                getOntologyEntryDao().create( oe );
-                count++;
-                ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
-
-            } else {
-                for ( OntologyEntry oeFromDatabase : oeColFromDatabase ) {
-                    if ( ( !oe.getAccession().equals( oeFromDatabase.getAccession() ) )
-                            && ( !oe.getExternalDatabase().equals( oeFromDatabase.getExternalDatabase() ) ) ) {
-                        getOntologyEntryDao().create( oe );
-                        count++;
-                        ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
-                    }
-                }
-            }
+            ontologyEntryDao.findOrCreate( oe );
+            count++;
+            ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
         }
     }
 

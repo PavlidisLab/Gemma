@@ -146,15 +146,17 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
     /**
      * @return Collection
      */
-    private Collection getLocalFileEntries() {
-        return this.getLocalFileDao().findAllLocalFiles();
+    @SuppressWarnings("unchecked")
+    private Collection<LocalFile> getLocalFileEntries() {
+        return this.getLocalFileDao().findAll();
     }
 
     /**
      * @return Collection
      */
+    @SuppressWarnings("unchecked")
     private Collection<Contact> getContacts() {
-        return this.getContactDao().findAllContacts();
+        return this.getContactDao().findAll();
     }
 
     /**

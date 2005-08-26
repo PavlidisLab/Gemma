@@ -170,11 +170,11 @@ public class OntologyEntryParserImpl implements ParserByMap {
      */
     public Collection getExternalDatabaseEntries() {
 
-        return this.getExternalDatabaseDao().findAllExternalDb();
+        return this.getExternalDatabaseDao().findAll();
     }
 
     private Collection getLocalFileEntries() {
-        return this.getLocalFileDao().findAllLocalFiles();
+        return this.getLocalFileDao().findAll();
     }
 
     /**

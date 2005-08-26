@@ -35,7 +35,7 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
      * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
     protected java.util.Collection handleGetAllArrayDesigns() throws java.lang.Exception {
-        return this.getArrayDesignDao().getAllArrayDesigns();
+        return this.getArrayDesignDao().findAll();
     }
 
     /**
