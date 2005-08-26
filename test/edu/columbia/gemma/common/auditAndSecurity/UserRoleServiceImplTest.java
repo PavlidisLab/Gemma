@@ -48,7 +48,7 @@ public class UserRoleServiceImplTest extends BaseServiceTestCase {
             allRoles.add(ur);
         }
         
-        userRoleDaoMock.findAllRoles();
+        userRoleDaoMock.findAll();
         control.setReturnValue(allRoles);
         
         control.replay();

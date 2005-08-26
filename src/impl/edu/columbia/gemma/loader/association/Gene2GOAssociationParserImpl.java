@@ -197,7 +197,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @return Collection
      */
     private Collection getOntologyEntries() {
-        return this.getOntologyEntryDao().findAllOntologyEntries();
+        return this.getOntologyEntryDao().findAll();
     }
 
     /**

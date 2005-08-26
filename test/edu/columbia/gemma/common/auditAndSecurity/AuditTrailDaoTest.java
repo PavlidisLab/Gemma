@@ -93,7 +93,7 @@ public class AuditTrailDaoTest extends BaseDAOTestCase {
     public void testfindAllAuditTrails() {
         log.info( "Retreiving all audit events" );
 
-        Collection<AuditTrail> trails = getAuditTrailDao().findAllAuditTrails();
+        Collection<AuditTrail> trails = getAuditTrailDao().findAll();
         for ( AuditTrail at : trails ) {
             log.info( at );
             Collection<AuditEvent> events = at.getEvents();
