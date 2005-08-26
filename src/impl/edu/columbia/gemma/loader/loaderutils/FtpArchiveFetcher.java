@@ -44,7 +44,8 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * 
      * @see edu.columbia.gemma.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
      */
-    public void setDeleteAfterUnpack( @SuppressWarnings("hiding")
+    @SuppressWarnings("hiding")
+    public void setDeleteAfterUnpack( 
     boolean doDelete ) {
         this.doDelete = doDelete;
     }
