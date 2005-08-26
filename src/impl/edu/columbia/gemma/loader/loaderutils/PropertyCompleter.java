@@ -20,36 +20,36 @@ import org.apache.commons.beanutils.PropertyUtils;
 public class PropertyCompleter {
 
     /**
-     * Given a detached Object and an already persisted one of the same type, fill in any missing attributes of the
-     * persisted object with ones from the detached object. If update is true, then any slots that are already filled in
-     * for the persisted object will be clobbered with the non-null values from the detached object.
+     * Given a source Object and a source one of the same type, fill in any missing attributes of the target object with
+     * ones from the source object. If update is true, then any slots that are already filled in for the target object
+     * will be clobbered with the non-null values from the source object.
      * 
-     * @param persistentObject
-     * @param detachedObject
+     * @param targetObject
+     * @param sourceObject
      * @param update
      */
-    public static void complete( Object persistentObject, Object detachedObject, boolean update ) {
-        if ( persistentObject == null || detachedObject == null )
+    public static void complete( Object targetObject, Object sourceObject, boolean update ) {
+        if ( targetObject == null || sourceObject == null )
             throw new IllegalArgumentException( "Args must be non-null" );
 
-        if ( persistentObject.getClass() != detachedObject.getClass() )
+        if ( targetObject.getClass() != sourceObject.getClass() )
             throw new IllegalArgumentException( "Args must be of the same type" );
 
-        PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors( persistentObject );
+        PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors( targetObject );
         for ( int i = 0; i < props.length; i++ ) {
             PropertyDescriptor descriptor = props[i];
             Method setter = descriptor.getWriteMethod();
             if ( setter == null ) continue;
             Method getter = descriptor.getReadMethod();
-           
-            try {
-                Object detachedValue = getter.invoke( detachedObject, new Object[] {} );
-                if ( detachedValue == null ) continue;
 
-                Object persistedValue = getter.invoke( persistentObject, new Object[] {} );
+            try {
+                Object sourceValue = getter.invoke( sourceObject, new Object[] {} );
+                if ( sourceValue == null ) continue;
+
+                Object persistedValue = getter.invoke( targetObject, new Object[] {} );
 
                 if ( persistedValue == null || update ) {
-                    setter.invoke( persistentObject, new Object[] { detachedValue } );
+                    setter.invoke( targetObject, new Object[] { sourceValue } );
                 }
 
             } catch ( IllegalArgumentException e ) {
