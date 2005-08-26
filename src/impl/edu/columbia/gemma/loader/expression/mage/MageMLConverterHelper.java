@@ -809,7 +809,7 @@ public class MageMLConverterHelper {
             isCategoryMo = true;
             categoryDb = MGED_DATABASE_IDENTIFIER;
         } else {
-            log.info( "No category database for '" + characteristic.getCategory() + "'" );
+            log.debug( "No category database for '" + characteristic.getCategory() + "'" );
         }
 
         if ( categoryAcc.length() > 0 ) {
@@ -820,7 +820,7 @@ public class MageMLConverterHelper {
             categoryAcc = formMgedOntologyAccession( characteristic.getCategory() );
         } else {
             hasCategoryAcc = false;
-            log.info( "No category accession value for '" + characteristic.getCategory() + "'" );
+            log.debug( "No category accession value for '" + characteristic.getCategory() + "'" );
         }
 
         if ( characteristic.getValue().length() > 0 ) {
@@ -839,16 +839,16 @@ public class MageMLConverterHelper {
             } else if ( isCategoryMo ) {
                 String instanceCategory = this.mgedOntologyHelper.getClassNameForInstance( characteristic.getValue() );
                 if ( instanceCategory != null ) {
-                    log.info( "'" + characteristic.getValue() + "' is actually an instance of '" + instanceCategory
+                    log.debug( "'" + characteristic.getValue() + "' is actually an instance of '" + instanceCategory
                             + "', not '" + characteristic.getCategory() + "', but we just go with the flow." );
                     isValueMo = true;
                     valueDb = MGED_DATABASE_IDENTIFIER;
                 } else {
-                    log.info( "No value database available for '" + characteristic.getValue() + "'" );
+                    log.debug( "No value database available for '" + characteristic.getValue() + "'" );
                 }
 
             } else {
-                log.info( "No value database available for '" + characteristic.getValue() + "'" );
+                log.debug( "No value database available for '" + characteristic.getValue() + "'" );
             }
 
             if ( valueAcc.length() > 0 ) {
@@ -886,7 +886,7 @@ public class MageMLConverterHelper {
             characteristic.setValueTerm( valueOntologyEntry );
         }
 
-        log.debug( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
+        log.info( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
                 + "'   CatDb: '" + categoryDb + "'  ValDb: '" + valueDb + "'   CatAcc: '" + categoryAcc
                 + "'   ValAcc: " + valueAcc );
     }
@@ -2275,7 +2275,7 @@ public class MageMLConverterHelper {
 
         // note that PrimitiveType and Scale are set via associations.
         if ( mageObj instanceof SpecializedQuantitationType ) {
-            result.setGeneralType( GeneralType.QUANTITATIVE ); // probably foolish.
+            result.setGeneralType( GeneralType.UNKNOWN );
             result.setType( StandardQuantitationType.OTHER );
         } else if ( mageObj instanceof MeasuredSignal ) {
             result.setGeneralType( GeneralType.QUANTITATIVE );
@@ -2296,7 +2296,7 @@ public class MageMLConverterHelper {
             result.setGeneralType( GeneralType.QUANTITATIVE );
             result.setType( StandardQuantitationType.CONFIDENCEINDICATOR );
         } else {
-            result.setGeneralType( GeneralType.QUANTITATIVE );
+            result.setGeneralType( GeneralType.UNKNOWN );
             result.setType( StandardQuantitationType.OTHER );
         }
 
