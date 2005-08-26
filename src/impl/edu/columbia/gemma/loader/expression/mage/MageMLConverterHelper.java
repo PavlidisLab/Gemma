@@ -89,6 +89,7 @@ import org.biomage.Measurement.Measurement.KindCV;
 import org.biomage.Measurement.Measurement.Type;
 import org.biomage.Protocol.Hardware;
 import org.biomage.Protocol.Protocol;
+import org.biomage.QuantitationType.ConfidenceIndicator;
 import org.biomage.QuantitationType.DerivedSignal;
 import org.biomage.QuantitationType.Failed;
 import org.biomage.QuantitationType.MeasuredSignal;
@@ -97,12 +98,11 @@ import org.biomage.QuantitationType.PresentAbsent;
 import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
-import org.biomage.QuantitationType.StandardQuantitationType;
 import org.biomage.tools.ontology.OntologyHelper;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
-import edu.columbia.gemma.common.description.BioCharacteristic;
+import edu.columbia.gemma.common.description.Characteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -112,8 +112,10 @@ import edu.columbia.gemma.common.measurement.MeasurementType;
 import edu.columbia.gemma.common.protocol.Parameter;
 import edu.columbia.gemma.common.protocol.ProtocolApplication;
 import edu.columbia.gemma.common.protocol.Software;
+import edu.columbia.gemma.common.quantitationtype.GeneralType;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.ScaleType;
+import edu.columbia.gemma.common.quantitationtype.StandardQuantitationType;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.Compound;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
@@ -673,18 +675,18 @@ public class MageMLConverterHelper {
 
         log.debug( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM." );
         for ( Element elm : elmList ) {
-            BioCharacteristic bioCharacteristic = BioCharacteristic.Factory.newInstance();
+            Characteristic bioCharacteristic = Characteristic.Factory.newInstance();
             bioCharacteristic.setCategory( elm.getName() );
             bioCharacteristic.setValue( elm.valueOf( "@value" ) );
 
-            specialFillInBioCharacteristicOntologyEntries( bioCharacteristic, elm );
+            specialFillInCharacteristicOntologyEntries( bioCharacteristic, elm );
 
             List subList = elm.selectNodes( "child::node()" );
-            Collection<BioCharacteristic> bcConstituents = bioCharacteristic.getConstituents();
+            Collection<Characteristic> bcConstituents = bioCharacteristic.getConstituents();
             if ( subList.size() > 0 ) {
                 for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
                     Element elmSub = ( Element ) subIter.next();
-                    BioCharacteristic bcConstitutent = BioCharacteristic.Factory.newInstance();
+                    Characteristic bcConstitutent = Characteristic.Factory.newInstance();
                     bcConstitutent.setCategory( elmSub.getName() );
                     bcConstitutent.setValue( elmSub.valueOf( "@value" ) );
                     log.debug( " CAT: " + bcConstitutent.getCategory() + " VAL: " + bcConstitutent.getValue() );
@@ -692,7 +694,7 @@ public class MageMLConverterHelper {
                 }
                 bioCharacteristic.setConstituents( bcConstituents );
             }
-            gemmaObj.getBioCharacteristics().add( bioCharacteristic );
+            gemmaObj.getCharacteristics().add( bioCharacteristic );
         }
     }
 
@@ -700,7 +702,7 @@ public class MageMLConverterHelper {
      * @param bioCharacteristic
      * @param elm
      */
-    private void specialFillInBioCharacteristicOntologyEntries( BioCharacteristic bioCharacteristic, Element elm ) {
+    private void specialFillInCharacteristicOntologyEntries( Characteristic bioCharacteristic, Element elm ) {
         assert mgedOntologyHelper != null;
         if ( bioCharacteristic == null ) {
             log.warn( "Null bioCharacteristic passed, ignoring" );
@@ -2180,16 +2182,31 @@ public class MageMLConverterHelper {
         edu.columbia.gemma.common.quantitationtype.QuantitationType result = edu.columbia.gemma.common.quantitationtype.QuantitationType.Factory
                 .newInstance();
 
+        // note that PrimitiveType and Scale are set via associations.
         if ( mageObj instanceof SpecializedQuantitationType ) {
-            // FIXME
+            result.setGeneralType( GeneralType.QUANTITATIVE ); // probably foolish.
+            result.setType( StandardQuantitationType.OTHER );
         } else if ( mageObj instanceof MeasuredSignal ) {
-
+            result.setGeneralType( GeneralType.QUANTITATIVE );
+            result.setType( StandardQuantitationType.MEASUREDSIGNAL );
         } else if ( mageObj instanceof DerivedSignal ) {
-
+            result.setGeneralType( GeneralType.QUANTITATIVE );
+            result.setType( StandardQuantitationType.DERIVEDSIGNAL );
         } else if ( mageObj instanceof Ratio ) {
-
+            result.setGeneralType( GeneralType.QUANTITATIVE );
+            result.setType( StandardQuantitationType.RATIO );
         } else if ( mageObj instanceof Failed ) {
-
+            result.setGeneralType( GeneralType.CATEGORICAL );
+            result.setType( StandardQuantitationType.FAILED );
+        } else if ( mageObj instanceof PresentAbsent ) {
+            result.setGeneralType( GeneralType.CATEGORICAL );
+            result.setType( StandardQuantitationType.PRESENTABSENT );
+        } else if ( mageObj instanceof ConfidenceIndicator ) {
+            result.setGeneralType( GeneralType.QUANTITATIVE );
+            result.setType( StandardQuantitationType.CONFIDENCEINDICATOR );
+        } else {
+            result.setGeneralType( GeneralType.QUANTITATIVE );
+            result.setType( StandardQuantitationType.OTHER );
         }
 
         result.setIsBackground( mageObj.getIsBackground().booleanValue() );
@@ -2326,7 +2343,7 @@ public class MageMLConverterHelper {
         } else if ( val.equalsIgnoreCase( "ln" ) ) {
             return ScaleType.LN;
         } else if ( val.equalsIgnoreCase( "log" ) ) {
-            return ScaleType.LN;
+            return ScaleType.LOGBASEUNKNOWN;
         } else if ( val.equalsIgnoreCase( "percent" ) ) {
             return ScaleType.PERCENT;
         } else if ( val.equalsIgnoreCase( "fraction" ) ) {
@@ -2434,7 +2451,7 @@ public class MageMLConverterHelper {
      * @see convertQuantitationType
      */
     public edu.columbia.gemma.common.quantitationtype.QuantitationType convertStandardQuantitationType(
-            StandardQuantitationType mageObj ) {
+            org.biomage.QuantitationType.StandardQuantitationType mageObj ) {
         return convertQuantitationType( mageObj );
     }
 
@@ -2443,7 +2460,8 @@ public class MageMLConverterHelper {
      * @param gemmaObj
      * @param getter
      */
-    public void convertStandardQuantitationTypeAssociations( StandardQuantitationType mageObj,
+    public void convertStandardQuantitationTypeAssociations(
+            org.biomage.QuantitationType.StandardQuantitationType mageObj,
             edu.columbia.gemma.common.quantitationtype.QuantitationType gemmaObj, Method getter ) {
         convertQuantitationTypeAssociations( mageObj, gemmaObj, getter );
     }

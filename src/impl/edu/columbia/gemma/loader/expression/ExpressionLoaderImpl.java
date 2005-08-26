@@ -25,11 +25,12 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
-import edu.columbia.gemma.common.description.BioCharacteristic;
+import edu.columbia.gemma.common.description.Characteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.common.protocol.Hardware;
@@ -42,9 +43,11 @@ import edu.columbia.gemma.common.protocol.Software;
 import edu.columbia.gemma.common.protocol.SoftwareApplication;
 import edu.columbia.gemma.common.protocol.SoftwareDao;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
@@ -90,6 +93,8 @@ public class ExpressionLoaderImpl implements Persister {
 
     private ArrayDesignDao arrayDesignDao;
 
+    private BioAssayDao bioAssayDao;
+
     private BioMaterialDao bioMaterialDao;
 
     private Person defaultOwner = null;
@@ -102,11 +107,15 @@ public class ExpressionLoaderImpl implements Persister {
 
     private HardwareDao hardwareDao;
 
+    private LocalFileDao localFileDao;
+
     private OntologyEntryDao ontologyEntryDao;
 
     private PersonDao personDao;
 
     private ProtocolDao protocolDao;
+
+    private QuantitationTypeDao quantitationTypeDao;
 
     private SoftwareDao softwareDao;
 
@@ -117,7 +126,7 @@ public class ExpressionLoaderImpl implements Persister {
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
-    public void persist( Collection col ) {
+    public void persist( Collection<Object> col ) {
         if ( defaultOwner == null ) initializeDefaultOwner();
         try {
             log.debug( "Entering + " + this.getClass().getName() + ".create() with " + col.size() + " objects." );
@@ -182,33 +191,18 @@ public class ExpressionLoaderImpl implements Persister {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Loader#removeAll()
-     */
-    public void removeAll() {
-        // TODO Auto-generated method stub
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Loader#removeAll(java.util.Collection)
-     */
-    public void removeAll( Collection collection ) {
-        for ( Object object : collection ) {
-            // find the right dao; and delete it.
-        }
-
-    }
-
     /**
      * @param arrayDesignDao The arrayDesignDao to set.
      */
     public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
+    }
+
+    /**
+     * @param bioAssayDao The bioAssayDao to set.
+     */
+    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
+        this.bioAssayDao = bioAssayDao;
     }
 
     // private void loadBioAssayData(BioAssayData data) {
@@ -251,6 +245,13 @@ public class ExpressionLoaderImpl implements Persister {
     }
 
     /**
+     * @param localFileDao The localFileDao to set.
+     */
+    public void setLocalFileDao( LocalFileDao localFileDao ) {
+        this.localFileDao = localFileDao;
+    }
+
+    /**
      * @param ontologyEntryDao
      */
     public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
@@ -269,6 +270,13 @@ public class ExpressionLoaderImpl implements Persister {
      */
     public void setProtocolDao( ProtocolDao protocolDao ) {
         this.protocolDao = protocolDao;
+    }
+
+    /**
+     * @param quantitationTypeDao The quantitationTypeDao to set.
+     */
+    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
     }
 
     /**
@@ -299,12 +307,12 @@ public class ExpressionLoaderImpl implements Persister {
     /**
      * Fill in the categoryTerm and valueTerm associations of a
      * 
-     * @param bioCharacteristics Collection of biocharacteristics
+     * @param Characteristics Collection of Characteristics
      */
-    private void fillInOntologyEntries( Collection<BioCharacteristic> bioCharacteristics ) {
-        for ( BioCharacteristic bioCharacteristic : bioCharacteristics ) {
-            persistOntologyEntry( bioCharacteristic.getCategoryTerm() );
-            persistOntologyEntry( bioCharacteristic.getValueTerm() );
+    private void fillInOntologyEntries( Collection<Characteristic> Characteristics ) {
+        for ( Characteristic Characteristic : Characteristics ) {
+            persistOntologyEntry( Characteristic.getCategoryTerm() );
+            persistOntologyEntry( Characteristic.getValueTerm() );
         }
     }
 
@@ -418,7 +426,7 @@ public class ExpressionLoaderImpl implements Persister {
     /**
      * @param entity
      */
-    private void loadArrayDesign( ArrayDesign entity ) {
+    private ArrayDesign loadArrayDesign( ArrayDesign entity ) {
 
         ArrayDesign existing = arrayDesignDao.find( entity );
         if ( existing != null ) {
@@ -427,10 +435,10 @@ public class ExpressionLoaderImpl implements Persister {
             if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
                 log.warn( "Number of design elements in existing version "
                         + "is the same. No further processing will be done." );
-                return;
+                return existing;
             } else if ( entity.getDesignElements().size() == 0 ) {
                 log.warn( "No design elements in new version, no further processing will be done." );
-                return;
+                return existing;
             }
         }
 
@@ -445,14 +453,19 @@ public class ExpressionLoaderImpl implements Persister {
             }
         }
         log.info( "Creating arrayDesign " + entity );
-        arrayDesignDao.findOrCreate( entity );
+        return arrayDesignDao.findOrCreate( entity );
     }
 
     /**
+     * FIXME: do a findOrCreate
+     * 
      * @param assay
      */
-    private void loadBioAssay( BioAssay assay ) {
-        throw new UnsupportedOperationException( "Can't deal with " + assay.getClass().getName() + " yet" );
+    private BioAssay loadBioAssay( BioAssay assay ) {
+        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
+            arrayDesign.setId( loadArrayDesign( arrayDesign ).getId() );
+        }
+        return ( BioAssay ) bioAssayDao.create( assay );
     }
 
     /**
@@ -478,7 +491,7 @@ public class ExpressionLoaderImpl implements Persister {
             }
         }
 
-        fillInOntologyEntries( entity.getBioCharacteristics() );
+        fillInOntologyEntries( entity.getCharacteristics() );
 
         bioMaterialDao.create( entity );
     }
@@ -581,17 +594,22 @@ public class ExpressionLoaderImpl implements Persister {
     }
 
     /**
+     * FIXME: do a findOrCreate
+     * 
      * @param file
      */
     private void loadLocalFile( LocalFile file ) {
-        throw new UnsupportedOperationException( "Can't deal with " + file.getClass().getName() + " yet" );
+        localFileDao.create( file );
     }
 
     /**
+     * FIXME: do a findOrCreate
+     * 
      * @param entity
      */
     private void loadQuantitationType( QuantitationType entity ) {
-        throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() + " yet" );
+        entity.getGeneralType();
+        quantitationTypeDao.create( entity );
     }
 
     /**
