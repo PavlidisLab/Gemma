@@ -38,6 +38,13 @@ public class MageMLConverter implements Converter {
     private Document simplifiedXml;
 
     /**
+     * default constructor
+     */
+    public MageMLConverter() {
+        // spring needs a no-arg constructor.
+    }
+
+    /**
      * @param xml Simplified XML created by a MageMLParser.
      */
     public MageMLConverter( Document xml ) {
