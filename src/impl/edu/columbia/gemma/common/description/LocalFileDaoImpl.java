@@ -43,19 +43,16 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
      */
     @SuppressWarnings("boxing")
     @Override
-    public LocalFile findOrCreate( edu.columbia.gemma.common.description.LocalFile localFile ) {
+    public LocalFile find( edu.columbia.gemma.common.description.LocalFile localFile ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( LocalFile.class );
 
-            if ( localFile.getLocalURI() != null ) {
-                queryObject.add( Restrictions.eq( "localURI", localFile.getLocalURI() ) );
-            } else {
-                if ( localFile.getSize() != 0 ) queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
+            queryObject.add( Restrictions.eq( "localURI", localFile.getLocalURI() ) );
 
-                if ( localFile.getRemoteURI() != null )
-                    queryObject.add( Restrictions.eq( "description", localFile.getRemoteURI() ) );
+            if ( localFile.getSize() != 0 ) queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
 
-            }
+            if ( localFile.getRemoteURI() != null )
+                queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURI() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -79,19 +76,19 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
      * @see edu.columbia.gemma.common.description.LocalFile#find(edu.columbia.gemma.common.description.LocalFile)
      */
     @Override
-    public edu.columbia.gemma.common.description.LocalFile find(
+    public edu.columbia.gemma.common.description.LocalFile findOrCreate(
             edu.columbia.gemma.common.description.LocalFile localFile ) {
         if ( localFile == null || localFile.getLocalURI() == null
                 || ( localFile.getRemoteURI() == null && localFile.getSize() == 0 ) ) {
-            log.warn( "localFile was null or had no name : " + localFile );
+            log.error( "localFile was null or had no valid business keys : " + localFile.getLocalURI() );
             return null;
         }
         LocalFile newlocalFile = find( localFile );
         if ( newlocalFile != null ) {
-            log.debug( "Found existing localFile: " + localFile );
+            log.debug( "Found existing localFile: " + localFile.getLocalURI() );
             return newlocalFile;
         }
-        log.debug( "Creating new localFile: " + localFile );
+        log.debug( "Creating new localFile: " + localFile.getLocalURI() );
         return create( localFile );
     }
 
