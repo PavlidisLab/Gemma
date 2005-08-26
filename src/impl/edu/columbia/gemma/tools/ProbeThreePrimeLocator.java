@@ -89,7 +89,7 @@ public class ProbeThreePrimeLocator {
         int count = 0;
         int skipped = 0;
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
-        for ( Iterator<?> iter = brp.iterator(); iter.hasNext(); ) {
+        for ( Iterator<Object> iter = brp.getResults().iterator(); iter.hasNext(); ) {
             BlatResultImpl blatRes = ( BlatResultImpl ) iter.next(); // fixme, this should not be an impl
 
             if ( blatRes.score() < scoreThreshold || blatRes.identity() < identityThreshold ) {

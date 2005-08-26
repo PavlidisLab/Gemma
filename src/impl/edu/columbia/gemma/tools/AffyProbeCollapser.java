@@ -51,7 +51,7 @@ public class AffyProbeCollapser {
 
         apr.parse( is );
 
-        for ( Iterator<?> iter = apr.iterator(); iter.hasNext(); ) {
+        for ( Iterator<Object> iter = apr.getResults().iterator(); iter.hasNext(); ) {
             String probeSetname = ( String ) iter.next();
             CompositeSequence apset = ( CompositeSequence ) apr.get( probeSetname );
 
