@@ -308,7 +308,13 @@ $Id$
     <bean id="afterAclArrayDesignCollectionRead" 
         class="edu.columbia.gemma.security.afterInvocation.AclAfterCollectionCompSeqByArrayDesignFilter">
         <property name="aclManager"><ref local="aclManager"/></property>
-        <!-- requirePermission not necessary here because permission is based on 'owner', arrayDesign -->
+        <property name="requirePermission">
+            <list>
+                <ref bean="SimpleAclEntry.ADMINISTRATION"/>
+                <ref bean="SimpleAclEntry.READ_WRITE"/>
+                <ref bean="SimpleAclEntry.READ"/>
+            </list>
+        </property>
     </bean>
    
    <!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
