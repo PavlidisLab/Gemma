@@ -16,6 +16,7 @@ import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.mage.MageMLParserTest;
 import edu.columbia.gemma.loader.genome.gene.GeneParserTest;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleterTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
 import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
@@ -42,7 +43,7 @@ public class AllTests {
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
-        
+
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );
 
@@ -53,7 +54,6 @@ public class AllTests {
         suite.addTestSuite( PubMedXMLFetcherTest.class );
         suite.addTestSuite( PubMedXMLParserTest.class );
 
-     
         suite.addTestSuite( MageMLParserTest.class );
 
         // suite.addTestSuite( LoaderControllerTest.class );
@@ -77,8 +77,10 @@ public class AllTests {
         suite.addTestSuite( UserDaoImplTest.class );
 
         suite.addTestSuite( SignupControllerTest.class );
-        
+
         suite.addTestSuite( GeneParserTest.class );
+
+        suite.addTestSuite( BeanPropertyCompleterTest.class );
         // $JUnit-END$
 
         return suite;
