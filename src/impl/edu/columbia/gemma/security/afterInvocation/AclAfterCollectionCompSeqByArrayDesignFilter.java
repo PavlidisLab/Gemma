@@ -164,6 +164,7 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
                     if ( domainObject == null ) {
                         hasPermission = true;
                     } else {
+                        //get acl for domainObject that has been granted to the user.
                         acls = aclManager.getAcls( domainObject, authentication );
                     }
 
