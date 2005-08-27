@@ -2,6 +2,7 @@ package edu.columbia.gemma.loader.expression.smd;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -13,6 +14,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.smd.model.SMDPublication;
 import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
@@ -27,22 +29,6 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
  * @version $Id$
  */
 public class PublicationFetcher extends FtpFetcher {
-
-    public static void main( String[] args ) {
-        try {
-            PublicationFetcher foo = new PublicationFetcher();
-            foo.fetch( 5 );
-        } catch ( IOException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( SAXException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( ConfigurationException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
 
     private Set<SMDPublication> publications;
 
@@ -115,6 +101,16 @@ public class PublicationFetcher extends FtpFetcher {
         log.info( publications.size() + " publications retrieved." );
 
         f.disconnect();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
+     */
+    public Collection<LocalFile> fetch( String identifier ) {
+        // TODO Auto-generated method stub FIXME
+        throw new UnsupportedOperationException();
     }
 
 }

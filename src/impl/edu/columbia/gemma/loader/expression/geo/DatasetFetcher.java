@@ -76,7 +76,7 @@ public class DatasetFetcher extends FtpFetcher {
                 LocalFile file = LocalFile.Factory.newInstance();
                 file.setVersion( new SimpleDateFormat().format( new Date() ) );
                 file.setRemoteURI( seekFile );
-                file.setLocalURI( outputFileName );
+                file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
                 // file.setSize( outputFile.length() );
 
                 log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + " .Output file is "

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,6 +39,7 @@ import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
 import baseCode.util.NetUtils;
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.smd.model.SMDBioAssay;
 import edu.columbia.gemma.loader.expression.smd.model.SMDExperiment;
 import edu.columbia.gemma.loader.expression.smd.model.SMDFile;
@@ -54,7 +56,7 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
  * @version $Id$
  */
 public class DataFileFetcher extends FtpFetcher {
-
+ 
     private Map<Integer, String> cuts;
     private Set<SMDFile> localFiles;
 
@@ -181,5 +183,13 @@ public class DataFileFetcher extends FtpFetcher {
      */
     public void setForce( boolean force ) {
         this.force = force;
+    }
+
+    /* (non-Javadoc)
+     * @see edu.columbia.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
+     */
+    public Collection<LocalFile> fetch( String identifier ) {
+        // TODO Auto-generated method stub FIXME
+      throw new UnsupportedOperationException();
     }
 }

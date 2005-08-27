@@ -1,14 +1,10 @@
 package edu.columbia.gemma.loader.expression.arrayExpress;
 
-import java.io.File;
 import java.util.Collection;
-import java.util.List;
 
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
 import edu.columbia.gemma.loader.expression.mage.MageBaseTest;
-import edu.columbia.gemma.loader.expression.mage.MageMLProcessor;
 
 /**
  * <hr>

@@ -20,6 +20,8 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -31,8 +33,8 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
-import edu.columbia.gemma.loader.expression.geo.model.GeoFile;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
+import edu.columbia.gemma.loader.loaderutils.Converter;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
@@ -47,12 +49,13 @@ public class GeoDatasetService {
 
     private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
     private Persister expLoader;
+    private Converter converter;
 
     /**
      * Given a GEO data set id:
      * <ol>
      * <li>Download, parse and convert the GDS file</li>
-     * <li>Download, parse and convert the associated GSE file(s)</li>
+     * <li>Download, parse and convert the associated GSE family file(s)</li>
      * <li>Load the resulting data into Gemma</li>
      * </ol>
      * 
@@ -64,11 +67,17 @@ public class GeoDatasetService {
 
         if ( result == null ) return;
 
-        String localPath = result.getLocalPath();
+        LocalFile dataSetFile = ( result.iterator() ).next();
+        String dataSetPath;
+        try {
+            dataSetPath = ( new URI( dataSetFile.getLocalURI() ) ).getPath();
+        } catch ( URISyntaxException e ) {
+            throw new IllegalStateException( e );
+        }
 
         GeoFamilyParser gfp = new GeoFamilyParser();
 
-        gfp.parse( localPath );
+        gfp.parse( dataSetPath ); // this is like the "preparse" step.
 
         Map<String, GeoDataset> datasetMap = gfp.getDatasets();
         if ( !datasetMap.containsKey( geoDataSetAccession ) )
@@ -80,11 +89,20 @@ public class GeoDatasetService {
         SeriesFetcher sf = new SeriesFetcher();
         for ( GeoSeries series : seriesSet ) {
             log.info( "Processing series " + series );
-            Collection<LocalFile> fullSeries = sf.fetch( series.getGeoAccesssion() );
-            gfp.parseToMap( fullSeries.getLocalPath() );
+            Collection<LocalFile> fullSeries = sf.fetch( series.getGeoAccesssion() ); // fetch series referred to by
+            // the dataset.
+            LocalFile seriesFile = ( fullSeries.iterator() ).next();
+            String seriesPath;
+            try {
+                seriesPath = ( new URI( seriesFile.getLocalURI() ) ).getPath();
+            } catch ( URISyntaxException e ) {
+                throw new IllegalStateException( e );
+            }
+            gfp.parse( seriesPath );
         }
 
-        ExpressionExperiment expexp = gfp.convertDataSet();
+        ExpressionExperiment expexp = ( ExpressionExperiment ) converter.convert( gfp.getDatasets().values()
+                .iterator().next() );
 
         if ( expexp == null ) throw new NullPointerException( "Got a null expressionExpression " );
 
@@ -93,8 +111,18 @@ public class GeoDatasetService {
         expLoader.persist( expexp );
     }
 
-    public void setExpressionLoader( ExpressionLoaderImpl expressionLoader ) {
+    /**
+     * @param expressionLoader
+     */
+    public void setPersister( ExpressionLoaderImpl expressionLoader ) {
         this.expLoader = expressionLoader;
+    }
+
+    /**
+     * @param geoConv to set
+     */
+    public void setConverter( GeoConverter geoConv ) {
+        this.converter = geoConv;
     }
 
 }

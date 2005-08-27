@@ -49,12 +49,14 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
 import edu.columbia.gemma.loader.expression.geo.util.GeoConstants;
+import edu.columbia.gemma.loader.loaderutils.Converter;
 
 /**
  * Convert GEO domain objects into Gemma objects.
  * <p>
- * GEO has three basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays) and Series (Experiments). Note
- * that a sample can belong to more than one series.
+ * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
+ * (which are curated Experiments). Note that a sample can belong to more than one series. A series can belong to more
+ * than one dataSet. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -62,7 +64,7 @@ import edu.columbia.gemma.loader.expression.geo.util.GeoConstants;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoConverter {
+public class GeoConverter implements Converter {
 
     private static Log log = LogFactory.getLog( GeoConverter.class.getName() );
 
@@ -80,11 +82,9 @@ public class GeoConverter {
     /**
      * @param seriesMap
      */
-    @SuppressWarnings("unchecked")
-    public Collection convert( Map<String, Object> map ) {
-        Collection results = new HashSet();
-        for ( String name : map.keySet() ) {
-            Object geoObject = map.get( name );
+    public Collection<Object> convert( Collection geoObjects ) {
+        Collection<Object> results = new HashSet<Object>();
+        for ( Object geoObject : geoObjects ) {
             results.add( convert( geoObject ) );
         }
         return results;
@@ -93,7 +93,6 @@ public class GeoConverter {
     /**
      * @param geoObject
      */
-    @SuppressWarnings("unchecked")
     public Object convert( Object geoObject ) {
         if ( geoObject == null ) {
             log.warn( "Null object" );
@@ -103,10 +102,10 @@ public class GeoConverter {
             return convert( ( GeoDataset ) geoObject );
         } else if ( geoObject instanceof GeoSeries ) {
             return convert( ( GeoSeries ) geoObject );
-        } else if ( geoObject instanceof Map ) {
-            return convert( ( Map<String, Object> ) geoObject );
         } else if ( geoObject instanceof GeoSubset ) {
             return convert( ( GeoSubset ) geoObject );
+        } else if ( geoObject instanceof GeoSample ) {
+            return convert( ( GeoSample ) geoObject );
         } else {
             throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() );
         }
@@ -152,7 +151,6 @@ public class GeoConverter {
     /**
      * @param series
      */
-    @SuppressWarnings("unchecked")
     private ExpressionExperiment convert( GeoSeries series ) {
         if ( series == null ) return null;
         log.info( "Converting series: " + series.getGeoAccesssion() );
@@ -164,7 +162,7 @@ public class GeoConverter {
         ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
         expExp.setAccession( convertDatabaseEntry( series ) );
 
-        expExp.setExperimentalDesigns( new HashSet() );
+        expExp.setExperimentalDesigns( new HashSet<ExperimentalDesign>() );
         expExp.getExperimentalDesigns().add( design );
 
         Collection<GeoSample> samples = series.getSamples();
@@ -183,7 +181,7 @@ public class GeoConverter {
         result.setAddress( contact.getCity() );
         result.setPhone( contact.getPhone() );
         result.setName( contact.getName() );
-        // FIXME - set security, etc.
+        // FIXME - set other stuff
         return result;
     }
 
@@ -214,10 +212,10 @@ public class GeoConverter {
     /**
      * @param sample
      */
-    private void convert( GeoSample sample ) {
+    private BioMaterial convert( GeoSample sample ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
-            return;
+            return null;
         }
         log.info( "Converting sample: " + sample.getGeoAccesssion() );
         BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
@@ -230,6 +228,8 @@ public class GeoConverter {
         for ( GeoPlatform platform : platforms ) {
             convert( platform );
         }
+
+        return bioMaterial;
     }
 
     /**

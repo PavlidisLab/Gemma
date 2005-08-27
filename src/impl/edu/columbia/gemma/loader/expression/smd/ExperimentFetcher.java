@@ -20,6 +20,7 @@ package edu.columbia.gemma.loader.expression.smd;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.smd.model.SMDBioAssay;
 import edu.columbia.gemma.loader.expression.smd.model.SMDExperiment;
 import edu.columbia.gemma.loader.expression.smd.model.SMDPublication;
@@ -163,6 +165,16 @@ public class ExperimentFetcher extends FtpFetcher {
         } catch ( ConfigurationException e ) {
             e.printStackTrace();
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
+     */
+    public Collection<LocalFile> fetch( String identifier ) {
+        // TODO Auto-generated method stub // FIXME
+        throw new UnsupportedOperationException();
     }
 
 }

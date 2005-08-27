@@ -1,12 +1,15 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +23,6 @@ import org.apache.commons.logging.LogFactory;
 
 import baseCode.util.FileTools;
 import baseCode.util.StringUtil;
-import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
 import edu.columbia.gemma.loader.expression.geo.model.GeoData;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
@@ -29,8 +31,17 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
+import edu.columbia.gemma.loader.loaderutils.Parser;
 
-public class GeoFamilyParser {
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class GeoFamilyParser implements Parser {
 
     /**
      * 
@@ -39,7 +50,6 @@ public class GeoFamilyParser {
 
     private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
 
-    private GeoConverter converter;
     private String currentDatasetAccession;
     private String currentPlatformAccession;
     private String currentSampleAccession;
@@ -86,24 +96,49 @@ public class GeoFamilyParser {
         datasetColumns = new HashMap<String, String>();
         datasetMap = new HashMap<String, GeoDataset>();
         subsetMap = new HashMap<String, GeoSubset>();
-        converter = new GeoConverter();
-    }
-
-    public Map getPlatforms() {
-        return this.platformMap;
-    }
-
-    public Map getSamples() {
-        return this.sampleMap;
-    }
-
-    public Map getSeries() {
-        return this.seriesMap;
     }
 
     /**
-     * @param is
-     * @throws IOException
+     * @return
+     */
+    public Map<String, GeoDataset> getDatasets() {
+        return this.datasetMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoPlatform> getPlatforms() {
+        return this.platformMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoSample> getSamples() {
+        return this.sampleMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoSeries> getSeries() {
+        return this.seriesMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.io.File)
+     */
+    public void parse( File f ) throws IOException {
+        this.parse( new FileInputStream( f ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
         if ( is == null ) {
@@ -127,20 +162,10 @@ public class GeoFamilyParser {
 
     }
 
-    /**
-     * Execute conversion of the parsed objects into Gemma domain objects.
-     */
-    public ExpressionExperiment convertDataSet() {
-        log.info( "Converting...." );
-        for ( GeoDataset dataset : datasetMap.values() ) {
-            return ( ExpressionExperiment ) converter.convert( dataset );
-        }
-        return null;
-    }
-
-    /**
-     * @param fileName
-     * @throws IOException
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.lang.String)
      */
     public void parse( String fileName ) throws IOException {
         InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
@@ -158,15 +183,15 @@ public class GeoFamilyParser {
                     new Class[] { value.getClass() } );
             adder.invoke( target, new Object[] { value } );
         } catch ( SecurityException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         } catch ( IllegalArgumentException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         } catch ( NoSuchMethodException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         }
     }
 
@@ -180,9 +205,9 @@ public class GeoFamilyParser {
         try {
             BeanUtils.setProperty( contact, property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         }
     }
 
@@ -211,9 +236,9 @@ public class GeoFamilyParser {
         try {
             BeanUtils.setProperty( dataset, property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
         }
     }
 
@@ -399,6 +424,9 @@ public class GeoFamilyParser {
         }
     }
 
+    /**
+     * @param line
+     */
     private void parseRegularLine( String line ) {
         if ( line.startsWith( "!" ) ) {
             String value = extractValue( line );
@@ -423,7 +451,7 @@ public class GeoFamilyParser {
                     for ( int i = 0; i < numExtraChannelsNeeded; i++ ) {
                         sampleMap.get( currentSampleAccession ).addChannel();
                     }
-                    sampleSet( currentSampleAccession, "channelCount", Integer.parseInt( value ) );
+                    sampleSet( currentSampleAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
                 } else if ( startsWithIgnoreCase( line, "!Sample_source_name" ) ) {
                     int channel = extractChannelNumber( line );
                     sampleChannelSet( currentSampleAccession, "sourceName", channel, value );
@@ -768,6 +796,11 @@ public class GeoFamilyParser {
         addTo( platform, property, value );
     }
 
+    /**
+     * @param accession
+     * @param property
+     * @param value
+     */
     private void platformContactSet( String accession, String property, Object value ) {
         GeoPlatform platform = platformMap.get( accession );
         contactSet( platform, property, value );
@@ -829,6 +862,11 @@ public class GeoFamilyParser {
         }
     }
 
+    /**
+     * @param accession
+     * @param property
+     * @param value
+     */
     private void sampleContactSet( String accession, String property, Object value ) {
         GeoSample sample = sampleMap.get( accession );
         contactSet( sample, property, value );
@@ -862,6 +900,11 @@ public class GeoFamilyParser {
         addTo( series, property, value );
     }
 
+    /**
+     * @param accession
+     * @param property
+     * @param value
+     */
     private void seriesContactSet( String accession, String property, Object value ) {
         GeoSeries series = seriesMap.get( accession );
         contactSet( series, property, value );
@@ -921,11 +964,14 @@ public class GeoFamilyParser {
         }
     }
 
-    /**
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#getResults()
      */
-    public Map<String, GeoDataset> getDatasets() {
-        return this.datasetMap;
+    public Collection<Object> getResults() {
+        // TODO Auto-generated method stub // FIXME
+        throw new UnsupportedOperationException();
     }
 
 }
