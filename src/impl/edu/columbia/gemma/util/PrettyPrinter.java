@@ -29,15 +29,15 @@ public class PrettyPrinter {
     protected static final Log log = LogFactory.getLog( PrettyPrinter.class );
 
     /**
-     * Print out a collection of Gemma data objects in a relatively pleasing format.
+     * Print out a collection of beans in a relatively pleasing format.
      * 
-     * @param gemmaObjs Collection of objects.
+     * @param beans Collection of beans.
      * @return String representing the objects.
      */
-    public static String print( Collection<Object> gemmaObjs ) {
+    public static String print( Collection<Object> beans ) {
         StringBuffer buf = new StringBuffer();
         try {
-            for ( Iterator<Object> iter = gemmaObjs.iterator(); iter.hasNext(); ) {
+            for ( Iterator<Object> iter = beans.iterator(); iter.hasNext(); ) {
                 Object gemmaObj = iter.next();
 
                 if ( gemmaObj == null ) log.error( "Null object in collection" );
@@ -90,9 +90,8 @@ public class PrettyPrinter {
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         print( buf, gemmaObj, 0 );
     }
-    
+
     /**
-     * 
      * @param buf
      * @param gemmeCollection
      * @param level
@@ -100,10 +99,9 @@ public class PrettyPrinter {
     private static void print( StringBuffer buf, Collection gemmaCollection, int level )
             throws IllegalArgumentException, IntrospectionException, IllegalAccessException, InvocationTargetException {
         for ( Object gemmaObj : gemmaCollection ) {
-            print(buf, gemmaObj, level);
+            print( buf, gemmaObj, level );
         }
     }
-    
 
     /**
      * The only class that does any real work. Recursively print an object and all its associated objects.
@@ -116,14 +114,14 @@ public class PrettyPrinter {
      * @param gemmaObj
      * @param level Used to track indents.
      */
-    private static void print( StringBuffer buf, Object gemmaObj, int level ) throws IntrospectionException,
+    private static void print( StringBuffer buf, Object bean, int level ) throws IntrospectionException,
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
 
-        if ( gemmaObj == null ) return;
-        Class gemmaClass = gemmaObj.getClass();
+        if ( bean == null ) return;
+        Class gemmaClass = bean.getClass();
 
-        if ( gemmaObj instanceof Collection ) {
-            print( buf, ( Collection ) gemmaObj, ++level );
+        if ( bean instanceof Collection ) {
+            print( buf, ( Collection ) bean, ++level );
             return;
         }
 
@@ -142,16 +140,16 @@ public class PrettyPrinter {
         for ( int i = 0; i < props.length; i++ ) {
             PropertyDescriptor prop = props[i];
 
-            Object o = prop.getReadMethod().invoke( gemmaObj, new Object[] {} );
+            Object o = prop.getReadMethod().invoke( bean, new Object[] {} );
 
             if ( prop.getDisplayName().equals( "class" ) ) continue; // everybody has it.
             if ( prop.getDisplayName().equals( "mutable" ) ) continue; // shows up in the enums, just clutter.
 
             // generate a 'heading' for this object.
-            if ( first ) buf.append( indent + gemmaObj.getClass().getSimpleName() + " Properties:\n" );
+            if ( first ) buf.append( indent + bean.getClass().getSimpleName() + " Properties:\n" );
 
             first = false;
-            buf.append( indent + "   " + gemmaObj.getClass().getSimpleName() + "." + prop.getName() + ": "
+            buf.append( indent + "   " + bean.getClass().getSimpleName() + "." + prop.getName() + ": "
                     + ( o == null ? "---" : o ) + "\n" );
             print( buf, o, level );
         }
