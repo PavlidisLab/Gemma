@@ -305,9 +305,8 @@
         </dependency>
         <dependency>
             <groupId>cglib</groupId>
-            <artifactId>cglib-full</artifactId>
-            <version>2.0.2</version>
-            <jar>cglib-full-2.0.2.jar</jar>
+            <artifactId>cglib-nodep</artifactId>
+            <version>2.1_2</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
