@@ -12,7 +12,7 @@ import junit.framework.TestCase;
  * @author pavlidis
  * @version $Id$
  */
-public class PropertyCompleterTest extends TestCase {
+public class BeanPropertyCompleterTest extends TestCase {
 
     /*
      * @see TestCase#setUp()
@@ -36,7 +36,7 @@ public class PropertyCompleterTest extends TestCase {
         b.setValue( "bar" );
         b.setExternalDatabase( d );
 
-        PropertyCompleter.complete( a, b, false );
+        BeanPropertyCompleter.complete( a, b, false );
 
         assertTrue( a.getExternalDatabase() == d );
 
@@ -57,7 +57,7 @@ public class PropertyCompleterTest extends TestCase {
         b.setValue( "barbie" );
         b.setExternalDatabase( d );
 
-        PropertyCompleter.complete( a, b, true );
+        BeanPropertyCompleter.complete( a, b, true );
 
         assertTrue( a.getValue().equals( "barbie" ) );
 
@@ -78,7 +78,7 @@ public class PropertyCompleterTest extends TestCase {
         b.setValue( "barbie" );
         b.setExternalDatabase( d );
 
-        PropertyCompleter.complete( a, b, true );
+        BeanPropertyCompleter.complete( a, b, true );
 
         assertTrue( a.getCategory().equals( "foo" ) );
 
@@ -86,7 +86,7 @@ public class PropertyCompleterTest extends TestCase {
 
     public final void testCompleteUnsameType() throws Exception {
         try {
-            PropertyCompleter.complete( new String(), new Double( 1.0 ), false );
+            BeanPropertyCompleter.complete( new String(), new Double( 1.0 ), false );
             fail( "Should have thrown an exception" );
         } catch ( IllegalArgumentException e ) {
 
