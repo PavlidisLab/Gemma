@@ -24,6 +24,7 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
     public void testFetchAndLoad() throws Exception {
         GeoDatasetService gds = new GeoDatasetService();
         ExpressionLoaderImpl ml = new ExpressionLoaderImpl();
+        GeoConverter geoConv = new GeoConverter();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
         ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
         ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
@@ -32,7 +33,8 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         // ml.setTreatmentDao( ( TreatmentDao ) ctx.getBean( "treatmentDao" ) );
         ml.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
         ml.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
-        gds.setExpressionLoader( ml );
+        gds.setPersister( ml );
+        gds.setConverter(geoConv);
         gds.fetchAndLoad( "GDS100" );
     }
 

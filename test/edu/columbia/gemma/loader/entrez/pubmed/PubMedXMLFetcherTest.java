@@ -34,7 +34,7 @@ public class PubMedXMLFetcherTest extends TestCase {
 
     public final void testRetrieveByHTTPNotFound() throws Exception {
         try {
-            BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
+            pmf.retrieveByHTTP( 1517311444 );
             fail( "Should have gotten a 'Not found' exception" );
         } catch ( SAXParseException e ) {
         } catch ( IOException e ) {
