@@ -127,7 +127,93 @@ $Id$
 	
     <!-- ===================== AUTHORIZATION ==================== -->
     
-    <!-- see applicationContext-hibernate.xml for andromda generated acegi -->
+    <!-- acegi serviceSecurityInterceptor --> 
+    <bean id="serviceSecurityInterceptor" class="net.sf.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor">
+        <property name="authenticationManager"><ref bean="authenticationManager"/></property>
+        <property name="accessDecisionManager"><ref bean="businessAccessDecisionManager"/></property>
+        <property name="afterInvocationManager"><ref bean="afterInvocationManager"/></property>
+        <property name="objectDefinitionSource">
+            <value>
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.getAllExpressionExperiments=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findById=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.createExpressionExperiment=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.updateExpressionExperiment=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.removeExpressionExperiment=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByInvestigator=user, admin  
+                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.getExperimentalDesigns=user, admin  
+                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.saveExperimentalDesign=user, admin  
+                edu.columbia.gemma.expression.experiment.ExperimentalFactorService.getAllExperimentalFactors=user, admin  
+                edu.columbia.gemma.expression.experiment.ExperimentalFactorService.saveExperimentalFactor=user, admin  
+                edu.columbia.gemma.expression.experiment.FactorValueService.getAllFactorValues=user, admin  
+                edu.columbia.gemma.expression.experiment.FactorValueService.saveFactorValue=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService.getAllExpressionExperimentSubSets=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService.saveExpressionExperimentSubSet=user, admin  
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.saveCompositeSequence=user, admin  
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.getAllCompositeSequences=user, admin, AFTER_ACL_ARRAYDESIGN_COLLECTION_READ  
+                edu.columbia.gemma.expression.designElement.ReporterService.saveReporter=user, admin  
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user, admin  
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=user, admin  
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_ARRAYDESIGN_EDIT  
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user, admin  
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_EDIT  
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.saveBioAssay=user, admin  
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.getAllBioAssays=user, admin  
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.saveBioAssayDataVector=user, admin  
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.saveDesignElementDataVector=user, admin  
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.getBioMaterials=user, admin  
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.saveBioMaterial=user, admin  
+                edu.columbia.gemma.expression.biomaterial.TreatmentService.getTreatments=user, admin  
+                edu.columbia.gemma.expression.biomaterial.TreatmentService.saveTreatment=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReference=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.alreadyExists=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.getBibliographicReferenceByTitle=user, admin  
+                edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReferenceByLookup=user, admin  
+                edu.columbia.gemma.common.description.ExternalDatabaseService.find=user, admin  
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.savePerson=user, admin  
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.getAllPersons=user, admin  
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.removePerson=user, admin  
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.findByName=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.createByName=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.updateCandidateGeneList=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.removeCandidateGeneList=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByContributer=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByGeneOfficialName=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByListOwner=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.setActor=user, admin  
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.updateGene=ACL_GENE_EDIT  
+                edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.removeGene=ACL_GENE_EDIT  
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbolInexact=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.findByID=user, admin  
+                edu.columbia.gemma.genome.gene.GeneService.saveGene=user, admin  
+            </value>
+        </property>
+    </bean>
+    
+    <!-- An access decision manager used by the serviceSecurityInterceptor -->
+	<bean id="businessAccessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
+        <property name="allowIfAllAbstainDecisions">
+            <value>false</value>
+        </property>
+        <property name="decisionVoters">
+            <list>
+            	<ref local="roleVoter"/>
+                <ref bean="arrayDesignEditVoter"/>
+                <ref bean="geneEditVoter"/>
+            </list>
+        </property>
+    </bean>
    
    <!-- An access decision manager used by filterInvocationInterceptor -->
    <bean id="accessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
@@ -138,9 +224,50 @@ $Id$
          </list>
       </property>  
    </bean>
-   
-   <!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
     
+    <!-- ===================== VOTING ==================== -->
+    
+    <!-- role-based voting -->
+    <bean id="roleVoter" class="net.sf.acegisecurity.vote.RoleVoter">
+        <property name="rolePrefix"><value/></property>
+    </bean>
+    
+    <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
+         
+    <!-- An access decision voters that read processConfigAttribute settings -->
+    <bean id="arrayDesignEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager"><ref bean="aclManager"/></property>
+        <property name="processConfigAttribute">
+            <value>ACL_ARRAYDESIGN_EDIT</value>
+        </property>
+        <property name="processDomainObjectClass">       
+            <value>edu.columbia.gemma.expression.arrayDesign.ArrayDesign</value>            
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION"/>
+                <ref local="SimpleAclEntry.READ_WRITE"/>
+            </list>
+        </property>
+    </bean>
+    <bean id="geneEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager"><ref bean="aclManager"/></property>
+        <property name="processConfigAttribute">
+            <value>ACL_GENE_EDIT</value>
+        </property>
+        <property name="processDomainObjectClass">       
+            <value>edu.columbia.gemma.genome.Gene</value>            
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION"/>
+                <ref local="SimpleAclEntry.READ_WRITE"/>
+            </list>
+        </property>
+    </bean>
+    
+   <!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
+      
     <bean id="afterInvocationManager" class="net.sf.acegisecurity.afterinvocation.AfterInvocationProviderManager">
         <property name="providers">
             <list>
@@ -202,13 +329,45 @@ $Id$
       <property name="dataSource"><ref bean="dataSource"/></property>
    </bean>
    
+	<!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~~~~ -->
+
+   <!-- ACL permission masks -->
    
+   <bean id="SimpleAclEntry.ADMINISTRATION" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
+        </property>
+    </bean>
+        
+    <bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
+        </property>
+    </bean>
+    
+    <bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
+        </property>
+    </bean>
+    
+    <bean id="SimpleAclEntry.CREATE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
+        </property>
+    </bean>
+    
+    <bean id="SimpleAclEntry.DELETE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
+        </property>
+    </bean>
+
    <!-- ================================================================== -->
    
    <!--  Interceptor to persist ACL objects -->
    <bean id="persistAclInterceptorBackend" class="edu.columbia.gemma.security.interceptor.PersistAclInterceptorBackend">
    <property name="basicAclExtendedDao"><ref bean="basicAclExtendedDao"/></property>
    </bean>
-   
    
 </beans>
