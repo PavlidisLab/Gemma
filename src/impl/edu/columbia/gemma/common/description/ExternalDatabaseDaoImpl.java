@@ -25,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -66,7 +68,10 @@ public class ExternalDatabaseDaoImpl extends edu.columbia.gemma.common.descripti
     public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase ) {
         if ( externalDatabase == null || externalDatabase.getName() == null ) return null;
         ExternalDatabase newExternalDatabase = find( externalDatabase );
-        if ( newExternalDatabase != null ) return newExternalDatabase;
+        if ( newExternalDatabase != null ) {
+            BeanPropertyCompleter.complete( newExternalDatabase, externalDatabase );
+            return newExternalDatabase;
+        }
         log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
         return ( ExternalDatabase ) create( externalDatabase );
     }

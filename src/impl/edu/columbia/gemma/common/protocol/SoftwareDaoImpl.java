@@ -21,6 +21,8 @@ package edu.columbia.gemma.common.protocol;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -60,7 +62,10 @@ public class SoftwareDaoImpl extends edu.columbia.gemma.common.protocol.Software
     public Software findOrCreate( Software software ) {
         if ( software == null || software.getName() == null ) return null;
         Software newSoftware = find( software );
-        if ( newSoftware != null ) return newSoftware;
+        if ( newSoftware != null ) {
+            BeanPropertyCompleter.complete( newSoftware, software );
+            return newSoftware;
+        }
         return ( Software ) create( software );
     }
 }

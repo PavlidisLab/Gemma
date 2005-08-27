@@ -24,6 +24,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import edu.columbia.gemma.common.auditAndSecurity.Person;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
  * <hr>
@@ -76,7 +77,10 @@ public class PersonDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.Pe
                 || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null && person
                         .getPhone() == null ) ) return null;
         Person newPerson = find( person );
-        if ( newPerson != null ) return newPerson;
+        if ( newPerson != null ) {
+            BeanPropertyCompleter.complete( newPerson, person );
+            return newPerson;
+        }
         return ( Person ) create( person );
     }
 

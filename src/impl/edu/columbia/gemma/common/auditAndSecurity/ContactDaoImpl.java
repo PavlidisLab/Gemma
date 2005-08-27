@@ -21,6 +21,8 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -42,7 +44,7 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
             if ( contact.getEmail() != null ) queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
 
             if ( contact.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
-            
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -68,7 +70,10 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
                 || ( contact.getAddress() == null && contact.getEmail() == null && contact.getPhone() == null ) )
             return null;
         Contact newContact = find( contact );
-        if ( newContact != null ) return newContact;
+        if ( newContact != null ) {
+            BeanPropertyCompleter.complete( newContact, contact );
+            return newContact;
+        }
         return ( Contact ) create( contact );
     }
 }

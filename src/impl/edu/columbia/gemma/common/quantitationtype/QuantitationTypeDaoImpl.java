@@ -28,6 +28,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
  * @see edu.columbia.gemma.common.quantitationtype.QuantitationType
@@ -77,7 +78,8 @@ public class QuantitationTypeDaoImpl extends edu.columbia.gemma.common.quantitat
         }
         QuantitationType newQuantitationType = find( quantitationType );
         if ( newQuantitationType != null ) {
-            log.debug( "Found existing quantitationType: " + quantitationType );
+            log.debug( "Found existing quantitationType: " + newQuantitationType );
+            BeanPropertyCompleter.complete( newQuantitationType, quantitationType );
             return newQuantitationType;
         }
         log.debug( "Creating new quantitationType: " + quantitationType );

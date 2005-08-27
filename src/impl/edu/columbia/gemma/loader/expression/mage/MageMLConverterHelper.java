@@ -275,8 +275,14 @@ public class MageMLConverterHelper {
     private void initLocalExternalDataPaths() {
         localExternalDataPaths = new HashSet<String>();
         try {
+            // FIXME eventually there may be more configuration locations.
             Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-            localExternalDataPaths.add( ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" ) );
+            String path = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
+            File p = new File( path );
+            if ( !p.canRead() ) {
+                log.error( "Cannot read from " + path );
+            }
+            localExternalDataPaths.add( path );
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( "Failed to load configuration", e );
         }
@@ -793,8 +799,8 @@ public class MageMLConverterHelper {
 
         boolean isCategoryMo = false;
         boolean isValueMo = false;
-        boolean hasCategoryAcc = true;
-        boolean hasValueAcc = true;
+        boolean hasCategoryAcc = false;
+        boolean hasValueAcc = false;
         String categoryDb = elm.valueOf( "@CategoryDatabaseIdentifier" );
         String categoryAcc = elm.valueOf( "@CategoryDatabaseAccession" );
         String valueDb = elm.valueOf( "@ValueDatabaseIdentifier" );

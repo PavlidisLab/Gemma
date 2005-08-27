@@ -42,8 +42,10 @@ public class DesignElementDaoImpl extends edu.columbia.gemma.expression.designEl
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( DesignElement.class );
 
-            // FIXME this will not work, it needs to look at the ArrayDesign too!
             queryObject.add( Restrictions.ilike( "category", designElement.getName() ) );
+
+            queryObject.createCriteria( "arrayDesign" ).add(
+                    Restrictions.eq( "name", designElement.getArrayDesign().getName() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;

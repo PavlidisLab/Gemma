@@ -25,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -85,7 +87,8 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
         }
         LocalFile newlocalFile = find( localFile );
         if ( newlocalFile != null ) {
-            log.debug( "Found existing localFile: " + localFile.getLocalURI() );
+            log.debug( "Found existing localFile: " + newlocalFile.getLocalURI() );
+            BeanPropertyCompleter.complete( newlocalFile, localFile );
             return newlocalFile;
         }
         log.debug( "Creating new localFile: " + localFile.getLocalURI() );

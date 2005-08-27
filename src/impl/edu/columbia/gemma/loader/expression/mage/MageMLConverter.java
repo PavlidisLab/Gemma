@@ -1,5 +1,6 @@
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,10 +50,11 @@ public class MageMLConverter implements Converter {
      */
     public MageMLConverter( Document xml ) {
         super();
-        this.simplifiedXml = xml;
         if ( xml == null ) {
             log.warn( "Null Document for simplified MAGE ML result" );
         }
+        this.simplifiedXml = xml;
+
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
         String mageClassesString = rb.getString( "mage.classes" ); // FIXME : use config array
         mageClasses = mageClassesString.split( ", " );

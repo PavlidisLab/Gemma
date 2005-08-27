@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -43,15 +45,14 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( OntologyEntry.class );
 
-            /* FIXME Warning: unfortunately, the accession numbers are not unique for MGED! So we aren't using them. */
             /* go by accession/database if present, otherwise by category/value */
-//            if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
-//                queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).add(
-//                        Restrictions.eq( "externalDatabase", ontologyEntry.getExternalDatabase() ) );
-//            } else {
-                queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
-                        Restrictions.ilike( "value", ontologyEntry.getValue() ) );
-            //}
+            // if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
+            // queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).add(
+            // Restrictions.eq( "externalDatabase", ontologyEntry.getExternalDatabase() ) );
+            // } else {
+            queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
+                    Restrictions.ilike( "value", ontologyEntry.getValue() ) );
+            // }
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -77,23 +78,25 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
 
         OntologyEntry newOntologyEntry = find( ontologyEntry );
         if ( newOntologyEntry != null ) {
-            log.debug( "Found existing ontologyEntry: "
-                    + newOntologyEntry
-                    + " externalDatabase="
-                    + newOntologyEntry.getExternalDatabase()
-                    + ", Database Id="
-                    + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
-                            .getId() ) );
-            return newOntologyEntry;
-        }
-        log
-                .debug( "Creating new ontologyEntry: "
-                        + ontologyEntry
+            if ( log.isDebugEnabled() )
+                log.debug( "Found existing ontologyEntry: "
+                        + newOntologyEntry
                         + " externalDatabase="
-                        + ontologyEntry.getExternalDatabase()
+                        + newOntologyEntry.getExternalDatabase()
                         + ", Database Id="
                         + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
                                 .getId() ) );
+            BeanPropertyCompleter.complete( newOntologyEntry, ontologyEntry );
+            return newOntologyEntry;
+        }
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating new ontologyEntry: "
+                    + ontologyEntry
+                    + " externalDatabase="
+                    + ontologyEntry.getExternalDatabase()
+                    + ", Database Id="
+                    + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
+                            .getId() ) );
         return ( OntologyEntry ) create( ontologyEntry );
     }
 }

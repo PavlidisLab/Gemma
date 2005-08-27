@@ -23,6 +23,8 @@ package edu.columbia.gemma.common.description;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -63,7 +65,10 @@ public class DatabaseEntryDaoImpl extends edu.columbia.gemma.common.description.
     public DatabaseEntry findOrCreate( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null || databaseEntry.getAccession() == null ) return null;
         DatabaseEntry newDatabaseEntry = find( databaseEntry );
-        if ( newDatabaseEntry != null ) return newDatabaseEntry;
+        if ( newDatabaseEntry != null ) {
+            BeanPropertyCompleter.complete( newDatabaseEntry, databaseEntry );
+            return newDatabaseEntry;
+        }
         return create( databaseEntry );
     }
 }

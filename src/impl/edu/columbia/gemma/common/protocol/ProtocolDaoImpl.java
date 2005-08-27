@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -71,7 +73,8 @@ public class ProtocolDaoImpl extends edu.columbia.gemma.common.protocol.Protocol
         }
         Protocol newProtocol = find( protocol );
         if ( newProtocol != null ) {
-            log.debug( "Found existing protocol: " + protocol );
+            log.debug( "Found existing protocol: " + newProtocol );
+            BeanPropertyCompleter.complete( newProtocol, protocol );
             return newProtocol;
         }
         log.debug( "Creating new protocol: " + protocol );

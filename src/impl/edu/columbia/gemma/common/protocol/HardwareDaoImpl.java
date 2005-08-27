@@ -21,6 +21,8 @@ package edu.columbia.gemma.common.protocol;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -60,7 +62,10 @@ public class HardwareDaoImpl extends edu.columbia.gemma.common.protocol.Hardware
     public Hardware findOrCreate( Hardware hardware ) {
         if ( hardware == null || hardware.getMake() == null || hardware.getModel() == null ) return null;
         Hardware newHardware = find( hardware );
-        if ( newHardware != null ) return newHardware;
+        if ( newHardware != null ) {
+            BeanPropertyCompleter.complete( newHardware, hardware );
+            return newHardware;
+        }
         return ( Hardware ) create( hardware );
     }
 
