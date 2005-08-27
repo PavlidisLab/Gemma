@@ -31,7 +31,7 @@ insert into contact (CLASS, NAME, EMAIL) values ("edu.columbia.gemma.common.audi
 insert into user_role (NAME, USER_NAME) values ("user", "pavlab");
 
 --- Mask integer 0  = no permissions
---- Mask integer 1  = administor
+--- Mask integer 1  = administrator
 --- Mask integer 2  = read
 --- Mask integer 6  = read and write permissions
 --- Mask integer 14 = read and write and create permissions
