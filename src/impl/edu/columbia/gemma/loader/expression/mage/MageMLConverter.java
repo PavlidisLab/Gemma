@@ -172,10 +172,19 @@ public class MageMLConverter implements Converter {
             if ( element == null ) continue;
             if ( !( element.getClass().isAssignableFrom( type ) ) ) continue;
 
-            Object converted = mageConverterHelper.convert( element );
+            Object converted = convert( element );
             if ( converted != null ) localResult.add( mageConverterHelper.convert( element ) );
         }
         return localResult;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
+     */
+    public Object convert( Object mageObject ) {
+        return mageConverterHelper.convert( mageObject );
     }
 
 }

@@ -21,6 +21,7 @@ package edu.columbia.gemma.loader.loaderutils;
 import java.util.Collection;
 
 /**
+ * Defines a class that can convert objects from one type to another.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -37,5 +38,13 @@ public interface Converter {
      * @return
      */
     public Collection<Object> convert( Collection<Object> sourceDomainObjects );
+
+    /**
+     * Convert a single object.
+     * 
+     * @param sourceDomainObject
+     * @return
+     */
+    public Object convert( Object sourceDomainObject );
 
 }
