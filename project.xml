@@ -572,6 +572,7 @@
             </includes>
             <excludes>
                 <exclude>**/LoaderControllerTest.java</exclude>
+                  <exclude>**/MageBaseTest.java</exclude>
             </excludes>
             <resources>
                 <resource>
