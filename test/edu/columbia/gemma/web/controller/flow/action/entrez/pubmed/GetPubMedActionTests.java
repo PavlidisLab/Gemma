@@ -22,6 +22,10 @@ import edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedActi
  */
 public class GetPubMedActionTests extends AbstractFlowExecutionTests {
 
+    public GetPubMedActionTests() {
+        setDependencyCheck(false);
+    }
+    
     public void testDoExecuteActionError() throws Exception {
         // set up mock object
         MockControl control = MockControl.createControl( BibliographicReferenceService.class );
@@ -85,7 +89,7 @@ public class GetPubMedActionTests extends AbstractFlowExecutionTests {
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "/edu/columbia/gemma/web/flow/entrez/pubmed/pubMedDetail-flow.xml",
-                "/edu/columbia/gemma/web/flow/entrez/pubmed/pubMedSearch-flow.xml" };
+        return new String[] { "/edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml",
+                "/edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" };
     }
 }
