@@ -360,7 +360,7 @@
         <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-webflow</artifactId>
-            <jar>spring-webflow.jar</jar>
+            <version>pr5</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -368,8 +368,8 @@
         </dependency>
         <dependency>
             <groupId>spring</groupId>
-            <artifactId>spring-webflow-support</artifactId>
-            <jar>spring-webflow-support.jar</jar>
+            <artifactId>spring-binding</artifactId>
+          <version>1.0-dev-20050727232106</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
