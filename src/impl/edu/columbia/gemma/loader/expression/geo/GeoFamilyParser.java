@@ -408,10 +408,16 @@ public class GeoFamilyParser implements Parser {
 
         Map<String, List<String>> platformDataMap = platformMap.get( currentPlatformAccession ).getData();
 
-        if ( platformMap.get( currentPlatformAccession ).getColumnNames().size() != tokens.length ) {
-            log.error( "Incorrect number of tokens from '" + line + "' (" + tokens.length + ", expected "
-                    + platformMap.get( currentPlatformAccession ).getColumnNames().size() + ")" );
+        int numColumns = platformMap.get( currentPlatformAccession ).getColumnNames().size();
+
+        if ( numColumns < tokens.length ) {
+            log.error( "Too many fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
             return;
+        } else if ( numColumns > tokens.length ) {
+            // sometimes there is a trailing tab in the line. Unfortunately this is not a great way to get around that
+            // problem.
+//            log.error( "Too few fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
+//            return;
         }
 
         for ( int i = 0; i < tokens.length; i++ ) {

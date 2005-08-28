@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
@@ -46,21 +48,28 @@ public class PubMedArticleListController extends SimpleFormController {
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
+        // FIXME maxresults not used.
         String view = "pubMedList";
-        int maxResults = Integer.parseInt( request.getParameter( "maxResults" ) );
+
         Map<String, Collection> bibRefModel = new HashMap<String, Collection>();
-        switch ( maxResults ) {
-            case 10:
-                bibRefModel.put( "bibRefs", getBibliographicReferenceService().getAllBibliographicReferences() );
-                break;
-            case 50:
-                break;
-            case 100:
-                break;
+        try {
+            int maxResults = Integer.parseInt( request.getParameter( "maxResults" ) );
+            switch ( maxResults ) {
+                case 10:
+                    bibRefModel.put( "bibRefs", getBibliographicReferenceService().getAllBibliographicReferences() );
+                    break;
+                case 50:
+                    break;
+                case 100:
+                    break;
+            }
+
+        } catch ( NumberFormatException e ) {
+            // FIXME: error code.
+            if ( errors != null ) errors.rejectValue( "maxResult", "foo", "Not a valid number" );
+            return null;
         }
-
         return new ModelAndView( view, "model", bibRefModel );
-
     }
 
     /**
