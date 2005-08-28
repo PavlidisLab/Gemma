@@ -44,7 +44,7 @@ public class GetPubMedActionTests extends AbstractFlowExecutionTests {
 
         // FIXME
         // this.assertModelAttributeNull( "bibliographicReference" );
-        // this.assertAttributeNotPresent( context.getRequestScope(), "bibliographicReference" );
+        // was: this.assertAttributeNotPresent( context.getRequestScope(), "bibliographicReference" );
         control.verify();
     }
 
@@ -68,7 +68,7 @@ public class GetPubMedActionTests extends AbstractFlowExecutionTests {
 
         // FIXME
         // this.assertModelAttributeNotNull( "bibliographicReference" );
-        // assertAttributePresent( context.getRequestScope(), "bibliographicReference" );
+        // was: assertAttributePresent( context.getRequestScope(), "bibliographicReference" );
         control.verify();
     }
 

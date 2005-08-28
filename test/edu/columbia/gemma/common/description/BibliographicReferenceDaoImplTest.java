@@ -48,10 +48,9 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         de.setAccession( "foo" );
         deb.setAccession( "bar" );
 
-        String random = ( new Date() ).toString();
         ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDbName( "database" );
-       
+
         exdbdao.create( ed );
 
         de.setExternalDatabase( ed );
@@ -60,7 +59,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         dedao.create( deb );
 
         testBibRef.setPubAccession( de );
-       
+
         dao.create( testBibRef );
     }
 
@@ -84,7 +83,7 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
         for ( Iterator it = q.iterate(); it.hasNext(); ) {
             BibliographicReference b = ( BibliographicReference ) it.next();
-            assertEquals( testBibRef, b );
+            assertEquals( testBibRef.getPubAccession(), b.getPubAccession() );
         }
         sess.flush();
         trans.commit();
