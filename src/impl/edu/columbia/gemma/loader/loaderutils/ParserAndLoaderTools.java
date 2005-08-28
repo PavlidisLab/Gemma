@@ -42,8 +42,8 @@ public class ParserAndLoaderTools {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        try {
-            loader.getClass().getMethod( "create", new Class[] { Collection.class } ).invoke( loader,
+        try { // FIXME - this hard-coded method name can be a problem.
+            loader.getClass().getMethod( "persist", new Class[] { Collection.class } ).invoke( loader,
                     new Object[] { col } );
         } catch ( IllegalArgumentException e ) {
             // TODO Auto-generated catch block
