@@ -1,6 +1,6 @@
 package edu.columbia.gemma;
 
-import org.springframework.test.web.flow.AbstractFlowExecutionTests;
+import org.springframework.webflow.test.AbstractFlowExecutionTests;
 
 import edu.columbia.gemma.util.SpringContextUtil;
 

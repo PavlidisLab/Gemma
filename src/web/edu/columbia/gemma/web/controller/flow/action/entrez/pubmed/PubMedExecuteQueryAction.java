@@ -7,10 +7,10 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.Errors;
-import org.springframework.web.flow.Event;
-import org.springframework.web.flow.RequestContext;
-import org.springframework.web.flow.action.AbstractAction;
-import org.springframework.web.flow.action.FormObjectAccessor;
+import org.springframework.webflow.Event;
+import org.springframework.webflow.RequestContext;
+import org.springframework.webflow.action.AbstractAction;
+import org.springframework.webflow.action.FormObjectAccessor;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;

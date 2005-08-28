@@ -3,8 +3,8 @@ package edu.columbia.gemma.web.controller.flow.entrez.pubmed;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.web.flow.Event;
-import org.springframework.web.flow.ViewDescriptor;
+import org.springframework.webflow.Event;
+import org.springframework.webflow.ViewDescriptor;
 
 import edu.columbia.gemma.BaseFlowTestCase;
 

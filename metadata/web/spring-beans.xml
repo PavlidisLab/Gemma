@@ -358,7 +358,7 @@
 </bean>
 
 <bean id="expressionExperiment.Search"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentSearch-flow.xml" />
 </bean>
@@ -371,27 +371,27 @@
 </bean>
 
 <bean id="expressionExperiment.Search.id.set"
-	class="org.springframework.web.flow.action.AttributeMapperAction">
-	<property name="mapping" value="flowScope.experimentID" />
+    class="org.springframework.webflow.action.AttributeMapperAction">
+    <property name="attributeMapper" ><ref bean="expressionExperiment.id.attributeMapper" /></property>
 </bean>
 
 <bean id="expressionExperiment.id.attributeMapper"
-	class="org.springframework.web.flow.support.ParameterizableFlowAttributeMapper">
-	<property name="inputMappings">
-		<map>
-			<entry key="${flowScope.experimentID}" value="experimentID" />
-		</map>
-	</property>
+    class="org.springframework.binding.support.ParameterizableAttributeMapper">
+    <property name="mappingsMap">
+        <map>
+            <entry key="${flowScope.experimentID}" value="experimentID" />
+        </map>
+    </property>
 </bean>
 
 <!--  ExpressionExperiment Detail subflow -->
 <bean id="expressionExperimentDetailController" name="/expressionExperimentDetail.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
+	class="org.springframework.webflow.mvc.FlowController">
 	<property name="flow" ref="expressionExperiment.Detail" />
 </bean>
 
 <bean id="expressionExperiment.Detail"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentDetail-flow.xml" />
 </bean>

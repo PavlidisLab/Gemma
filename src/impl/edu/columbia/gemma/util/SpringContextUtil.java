@@ -44,6 +44,10 @@ public class SpringContextUtil {
         if ( ctx == null ) {
             String[] paths = getConfigLocations();
             ctx = new ClassPathXmlApplicationContext( paths );
+            if ( ctx != null )
+                log.info( "Got context" );
+            else
+                log.error( "Failed to load context" );
         }
         return ctx;
     }
@@ -57,9 +61,10 @@ public class SpringContextUtil {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
+        // FIXME: these files need to be found automatically, not hard-coded.
         String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml" };
- 
+                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
+
         return paths;
     }
 

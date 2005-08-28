@@ -3,10 +3,10 @@ package edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
-import org.springframework.web.flow.Event;
-import org.springframework.web.flow.RequestContext;
-import org.springframework.web.flow.ScopeType;
-import org.springframework.web.flow.action.FormAction;
+import org.springframework.webflow.Event;
+import org.springframework.webflow.RequestContext;
+import org.springframework.webflow.ScopeType;
+import org.springframework.webflow.action.FormAction;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl;

@@ -2,9 +2,9 @@ package edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign;
 
 import java.util.Collection;
 
-import org.springframework.web.flow.Event;
-import org.springframework.web.flow.RequestContext;
-import org.springframework.web.flow.action.AbstractAction;
+import org.springframework.webflow.Event;
+import org.springframework.webflow.RequestContext;
+import org.springframework.webflow.action.AbstractAction;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 
