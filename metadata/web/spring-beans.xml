@@ -226,7 +226,7 @@
 	an HttpServletFlowExecutionManager (ie. see pubMedSearchFrontController).
 -->
 <bean id="frontController" name="/search.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
+	class="org.springframework.webflow.mvc.FlowController">
 	<property name="cacheSeconds" value="5" />
 	<property name="flowExecutionManager" ref="flowExecutionManager"/>
 </bean>
@@ -238,9 +238,9 @@
 	on the views!
 -->
 <bean id="flowExecutionManager" 
-	class="org.springframework.web.flow.execution.servlet.ServletFlowExecutionManager">
+	class="org.springframework.webflow.execution.servlet.ServletFlowExecutionManager">
 	<property name="storage">
-		<bean class="org.springframework.web.flow.execution.servlet.HttpSessionContinuationFlowExecutionStorage"/>
+		<bean class="org.springframework.webflow.execution.servlet.HttpSessionContinuationFlowExecutionStorage"/>
 	</property>
 </bean>
 
@@ -248,13 +248,13 @@
 
 <!-- Xml FlowBuilder definition for the search flow -->
 <bean id="pubMed.Search"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" />
 </bean>
 
 <bean id="pubMed.Search.criteria.formAction"
-	class="org.springframework.web.flow.action.FormAction">
+	class="org.springframework.webflow.action.FormAction">
 	<property name="formObjectName" value="query" />
 	<property name="formObjectClass"
 		value="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
@@ -290,7 +290,7 @@
 
 <!-- xml FlowBuilder definition for the detail flow -->
 <bean id="pubMed.Detail"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml" />
 </bean>
@@ -307,7 +307,7 @@
 <!-- This is currently implemented in mvc.  Uncomment this to use as a flow. -->
 <!-- 
 <bean id="arrayDesign.Search"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignSearch-flow.xml" />
 </bean>
@@ -323,7 +323,7 @@
 <!-- This is currently implemented in mvc.  Uncomment this to use as a flow. -->
 <!-- 
 <bean id="arrayDesign.Detail"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignDetail-flow.xml" />
 </bean>
@@ -338,7 +338,7 @@
 <!--  ArrayDesign Edit subflow -->
 
 <bean id="arrayDesign.Edit"
-	class="org.springframework.web.flow.config.XmlFlowFactoryBean">
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
 </bean>
@@ -352,7 +352,7 @@
 
 <!--  ExpressionExperiment flow -->
 <bean id="expressionExperimentSearchController" name="/expressionExperimentSearch.htm"
-	class="org.springframework.web.flow.mvc.FlowController">
+	class="org.springframework.webflow.mvc.FlowController">
 	<property name="cacheSeconds" value="5" />
 	<property name="flow" ref="expressionExperiment.Search" />
 </bean>
