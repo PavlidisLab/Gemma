@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -43,6 +44,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import edu.columbia.gemma.tools.ProbeThreePrimeLocator.LocationData;
 
 /**
  * <hr>
@@ -130,6 +133,7 @@ public class ProbeGeneMapperGui extends JFrame {
             okButton.setBounds( 200, 13, 51, 26 );
             okButton.addActionListener( new ActionListener() {
 
+                @SuppressWarnings( { "unused", "synthetic-access" })
                 public void actionPerformed( ActionEvent e ) {
                     inputFile = new File( inputFileNameTextField.getText() );
                     outputFile = new File( outputFileNameTextField.getText() );
@@ -153,8 +157,8 @@ public class ProbeGeneMapperGui extends JFrame {
         try {
             String bestOutputFileName = outputFile.getAbsolutePath().replaceFirst( "\\.", ".best." );
             log.info( "Saving best to " + bestOutputFileName );
-            Map results = ptpl
-                    .run( new FileInputStream( inputFile ), new BufferedWriter( new FileWriter( outputFile ) ) );
+            Map<String, Collection<LocationData>> results = ptpl.run( new FileInputStream( inputFile ),
+                    new BufferedWriter( new FileWriter( outputFile ) ) );
             File o = new File( bestOutputFileName );
             ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
         } catch ( FileNotFoundException e ) {
@@ -184,6 +188,7 @@ public class ProbeGeneMapperGui extends JFrame {
             cancelButton.setText( "Cancel" );
             cancelButton.setBounds( 256, 13, 73, 26 );
             cancelButton.addActionListener( new ActionListener() {
+                @SuppressWarnings("unused")
                 public void actionPerformed( ActionEvent e ) {
                     exit();
                 }
@@ -260,6 +265,7 @@ public class ProbeGeneMapperGui extends JFrame {
             inputFileBrowseButton.setBounds( 451, 8, 87, 26 );
             inputFileBrowseButton.addActionListener( new ActionListener() {
 
+                @SuppressWarnings( { "unused", "synthetic-access" })
                 public void actionPerformed( ActionEvent e ) {
 
                     JFileChooser fc = new JFileChooser();
@@ -305,7 +311,7 @@ public class ProbeGeneMapperGui extends JFrame {
             outputFileBrowseButton.setBounds( 454, 4, 87, 26 );
 
             outputFileBrowseButton.addActionListener( new ActionListener() {
-
+                @SuppressWarnings({"unused","synthetic-access"})
                 public void actionPerformed( ActionEvent e ) {
                     JFileChooser fc = new JFileChooser();
                     fc.showSaveDialog( jContentPane.getParent() );
@@ -357,6 +363,7 @@ public class ProbeGeneMapperGui extends JFrame {
             locationMethodComboBox.addItem( "3' end" );
             locationMethodComboBox.addActionListener( new java.awt.event.ActionListener() {
 
+                @SuppressWarnings("unused")
                 public void actionPerformed( java.awt.event.ActionEvent e ) {
                     if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( GoldenPath.CENTER ) ) {
                         method = GoldenPath.CENTER;
@@ -388,7 +395,7 @@ public class ProbeGeneMapperGui extends JFrame {
         ProbeGeneMapperGui pgmg = new ProbeGeneMapperGui();
 
         pgmg.pack();
-        pgmg.show();
+        pgmg.setVisible( true );
 
     }
 

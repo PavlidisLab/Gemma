@@ -17,5 +17,5 @@ public interface GoldenPathHumanDao {
 
     public boolean connectToDatabase() throws HibernateException, SQLException;
 
-    public Collection retreiveFromDatabase() throws HibernateException, SQLException;
+    public Collection retrieveFromDatabase() throws HibernateException, SQLException;
 }

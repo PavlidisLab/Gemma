@@ -33,7 +33,6 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.io.ByteArrayConverter;
 import baseCode.util.SQLUtils;
 import edu.columbia.gemma.genome.Chromosome;
 import edu.columbia.gemma.genome.Gene;
@@ -300,6 +299,7 @@ public class GoldenPath {
      * @return List of Genes.
      * @throws SQLException
      */
+    @SuppressWarnings("unchecked")
     private List<Gene> findGenesByQuery( Integer starti, Integer endi, final String chromosome, String strand,
             String query ) {
         // Cases:
@@ -319,6 +319,7 @@ public class GoldenPath {
 
             return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
+                @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
                     List<Gene> r = new ArrayList<Gene>();
                     while ( rs.next() ) {
@@ -366,6 +367,7 @@ public class GoldenPath {
      * @param regionEnd
      * @return The number of mRNAs which overlap the query region.
      */
+    @SuppressWarnings("unchecked")
     private List<Gene> findRNAs( final String chromosome, int regionStart, int regionEnd ) {
         Integer starti = new Integer( regionStart );
         Integer endi = new Integer( regionEnd );
@@ -381,6 +383,7 @@ public class GoldenPath {
         try {
             return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
+                @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
                     List<Gene> r = new ArrayList<Gene>();
                     while ( rs.next() ) {

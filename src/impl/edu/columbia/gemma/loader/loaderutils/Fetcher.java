@@ -1,6 +1,5 @@
 package edu.columbia.gemma.loader.loaderutils;
 
-import java.net.URI;
 import java.util.Collection;
 
 import edu.columbia.gemma.common.description.LocalFile;

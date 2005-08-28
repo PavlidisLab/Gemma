@@ -39,6 +39,11 @@ public abstract class AbstractFetcher implements Fetcher {
             }
             log.info( "Created directory " + newDir.getAbsolutePath() );
         }
+
+        if ( !newDir.canWrite() ) {
+            throw new IOException( "Cannot write to target directory " + newDir.getAbsolutePath() );
+        }
+
         return newDir;
     }
 

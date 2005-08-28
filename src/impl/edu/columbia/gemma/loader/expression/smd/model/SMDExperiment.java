@@ -26,43 +26,21 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  * Information comes from a SMD "expset_XXX.meta" file. These are sorta-XML files that look like this:
  * 
  * <pre>
- * 
- *  
- *   
- *    
- *     
- *      
- *       
- *        
- *         
- *          
- *           
- *                         &lt;experiment_set&gt;
- *                        !Name=PLA2G2A and human gastric cancers
- *                        !ExptSetNo=1743
- *                        !Description=We analyzed gene expression patterns in human gastric cancers by using cDNA microarrays representing approximately 30,300 genes. Expression of PLA2G2A, a gene previously implicated as a modifier of the Apc(Mi\
- *                        n/+) (multiple intestinal neoplasia 1) mutant phenotype in the mouse, was significantly correlated with patient survival. We confirmed this observation in an independent set of patient samples by using quantitative RT-PCR. Beyond\
- *                        its potential diagnostic and prognostic significance, this result suggests the intriguing possibility that the activity of PLA2G2A may suppress progression or metastasis of human gastric cancer.
- *                        &lt;experiment&gt;
- *                        !Name=GC (HKG10L)
- *                        !Exptid=16709
- *                        &lt;/experiment&gt;
- *                        &lt;experiment&gt;
- *                        !Name=GC (HKG10N)
- *                        !Exptid=16253
- *                        &lt;/experiment&gt;
- *                       ....
- *            
- *           
- *          
- *         
- *        
- *       
- *      
- *     
- *    
- *   
- *  
+ *     &lt;experiment_set&gt;
+ *     !Name=PLA2G2A and human gastric cancers
+ *                                  !ExptSetNo=1743
+ *                                  !Description=We analyzed gene expression patterns in human gastric cancers by using cDNA microarrays representing approximately 30,300 genes. Expression of PLA2G2A, a gene previously implicated as a modifier of the Apc(Mi\
+ *                                  n/+) (multiple intestinal neoplasia 1) mutant phenotype in the mouse, was significantly correlated with patient survival. We confirmed this observation in an independent set of patient samples by using quantitative RT-PCR. Beyond\
+ *                                  its potential diagnostic and prognostic significance, this result suggests the intriguing possibility that the activity of PLA2G2A may suppress progression or metastasis of human gastric cancer.
+ *                                  &lt;experiment&gt;
+ *                                  !Name=GC (HKG10L)
+ *                                  !Exptid=16709
+ *                                  &lt;/experiment&gt;
+ *                                  &lt;experiment&gt;
+ *                                  !Name=GC (HKG10N)
+ *                                  !Exptid=16253
+ *                                  &lt;/experiment&gt;
+ *                                 ....
  * </pre>
  * 
  * <p>
@@ -85,15 +63,6 @@ import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
  * @version $Id$
  */
 public class SMDExperiment {
-
-    /**
-     * <hr>
-     * <p>
-     * Copyright (c) 2004 Columbia University
-     * 
-     * @author pavlidis
-     * @version $Id$
-     */
 
     private String name;
     private int number;
@@ -160,22 +129,24 @@ public class SMDExperiment {
 
         boolean inSet = false;
         boolean inExp = false;
-        private StringBuffer expSetBuf;
-        private StringBuffer expBuf;
+        StringBuffer expSetBuf;
+        StringBuffer expBuf;
 
-        public void startElement( String uri, String name, String qName, Attributes atts ) {
+        @SuppressWarnings("unused")
+        public void startElement( String uri, String value, String qName, Attributes atts ) {
 
-            if ( name.equals( "experiment_set" ) ) {
+            if ( value.equals( "experiment_set" ) ) {
                 inSet = true;
                 expSetBuf = new StringBuffer();
-            } else if ( name.equals( "experiment" ) ) {
+            } else if ( value.equals( "experiment" ) ) {
                 inExp = true;
                 expBuf = new StringBuffer();
             } else {
-                throw new IllegalStateException( "Unexpected tag '" + name + "' encountered." );
+                throw new IllegalStateException( "Unexpected tag '" + value + "' encountered." );
             }
         }
 
+        @SuppressWarnings({"unused","synthetic-access"})
         public void endElement( String uri, String tagName, String qName ) {
             if ( tagName.equals( "experiment_set" ) && !inExp ) {
                 inSet = false;

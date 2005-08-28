@@ -98,6 +98,7 @@ public class PubMedXMLParser {
                 throw exception;
             }
 
+             @SuppressWarnings("unused")
             public void fatalError( SAXParseException exception ) throws SAXException {
             }
         } );

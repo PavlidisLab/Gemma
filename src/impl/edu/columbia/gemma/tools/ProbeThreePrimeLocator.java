@@ -26,15 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -139,33 +136,33 @@ public class ProbeThreePrimeLocator {
         return allRes;
     }
 
-    /**
-     * @param hitGenes
-     * @param hitTranscripts
-     */
-    private String createTranscriptSignature( Set<String> hitTranscripts, Set<String> hitGenes ) {
-        List<String> sortedTranscripts = new ArrayList<String>();
-        sortedTranscripts.addAll( hitTranscripts );
-        Collections.sort( sortedTranscripts );
-
-        List<String> sortedGenes = new ArrayList<String>();
-        sortedGenes.addAll( hitGenes );
-        Collections.sort( sortedGenes );
-
-        StringBuffer transcriptSignatureBuf = new StringBuffer();
-        for ( String transcript : sortedTranscripts ) {
-            if ( transcript.length() == 0 ) continue;
-            transcriptSignatureBuf.append( transcript );
-            transcriptSignatureBuf.append( "__" );
-        }
-
-        for ( String gene : sortedGenes ) {
-            if ( gene.length() == 0 ) continue;
-            transcriptSignatureBuf.append( gene );
-            transcriptSignatureBuf.append( "__" );
-        }
-        return transcriptSignatureBuf.toString();
-    }
+    // /**
+    // * @param hitGenes
+    // * @param hitTranscripts
+    // */
+    // private String createTranscriptSignature( Set<String> hitTranscripts, Set<String> hitGenes ) {
+    // List<String> sortedTranscripts = new ArrayList<String>();
+    // sortedTranscripts.addAll( hitTranscripts );
+    // Collections.sort( sortedTranscripts );
+    //
+    // List<String> sortedGenes = new ArrayList<String>();
+    // sortedGenes.addAll( hitGenes );
+    // Collections.sort( sortedGenes );
+    //
+    // StringBuffer transcriptSignatureBuf = new StringBuffer();
+    // for ( String transcript : sortedTranscripts ) {
+    // if ( transcript.length() == 0 ) continue;
+    // transcriptSignatureBuf.append( transcript );
+    // transcriptSignatureBuf.append( "__" );
+    // }
+    //
+    // for ( String gene : sortedGenes ) {
+    // if ( gene.length() == 0 ) continue;
+    // transcriptSignatureBuf.append( gene );
+    // transcriptSignatureBuf.append( "__" );
+    // }
+    // return transcriptSignatureBuf.toString();
+    // }
 
     /**
      * Trim the results down to a set of "best" results. The results are sent to a provided writer
@@ -300,10 +297,11 @@ public class ProbeThreePrimeLocator {
          */
         public void setNumTied( int numTied ) {
             this.numTied = numTied;
-            // TODO Auto-generated method stub
-
         }
 
+        /**
+         * @return
+         */
         public BlatResultImpl getBr() {
             return this.br;
         }

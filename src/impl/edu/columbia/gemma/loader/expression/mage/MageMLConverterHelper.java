@@ -19,7 +19,6 @@
 package edu.columbia.gemma.loader.expression.mage;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -104,7 +103,6 @@ import org.biomage.QuantitationType.PresentAbsent;
 import org.biomage.QuantitationType.QuantitationType;
 import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
-
 import org.dom4j.Document;
 import org.dom4j.Element;
 

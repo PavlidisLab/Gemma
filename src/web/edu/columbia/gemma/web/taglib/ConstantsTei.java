@@ -29,7 +29,7 @@ public class ConstantsTei extends TagExtraInfo {
      */
     public VariableInfo[] getVariableInfo( TagData data ) {
         // loop through and expose all attributes
-        List vars = new ArrayList();
+        List<VariableInfo> vars = new ArrayList<VariableInfo>();
 
         try {
             String clazz = data.getAttributeString( "className" );
@@ -60,6 +60,6 @@ public class ConstantsTei extends TagExtraInfo {
             cnf.printStackTrace();
         }
 
-        return ( VariableInfo[] ) vars.toArray( new VariableInfo[] {} );
+        return vars.toArray( new VariableInfo[] {} );
     }
 }

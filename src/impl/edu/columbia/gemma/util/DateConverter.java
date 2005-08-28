@@ -16,7 +16,9 @@ import org.apache.commons.lang.StringUtils;
  * <a href="DateConverter.java.html"><i>View Source</i></a>
  * </p>
  * 
+ * @author pavlidis
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
+ * @version $Id$
  */
 public class DateConverter implements Converter {
     private static DateFormat df = new SimpleDateFormat( DateUtil.getDatePattern() );
@@ -25,15 +27,15 @@ public class DateConverter implements Converter {
         if ( value == null ) {
             return null;
         } else if ( type == Date.class ) {
-            return convertToDate( type, value );
+            return convertToDate( value );
         } else if ( type == String.class ) {
-            return convertToString( type, value );
+            return convertToString( value );
         }
 
         throw new ConversionException( "Could not convert " + value.getClass().getName() + " to " + type.getName() );
     }
 
-    protected Object convertToDate( Class type, Object value ) {
+    protected Object convertToDate( Object value ) {
         if ( value instanceof String ) {
             try {
                 if ( StringUtils.isEmpty( value.toString() ) ) {
@@ -46,10 +48,10 @@ public class DateConverter implements Converter {
             }
         }
 
-        throw new ConversionException( "Could not convert " + value.getClass().getName() + " to " + type.getName() );
+        throw new ConversionException( "Could not convert " + value.getClass().getName() + " to Date " );
     }
 
-    protected Object convertToString( Class type, Object value ) {
+    protected Object convertToString( Object value ) {
         if ( value instanceof Date ) {
             try {
                 return df.format( value );

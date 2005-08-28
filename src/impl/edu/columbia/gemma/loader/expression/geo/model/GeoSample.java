@@ -20,10 +20,8 @@ package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <hr>
@@ -44,7 +42,7 @@ public class GeoSample extends GeoData {
     String platformId; // refers to a platform object.
 
     Collection<GeoPlatform> platforms;
-    
+
     // SAGE items.
     String anchor;
     int tagCount;
@@ -56,12 +54,11 @@ public class GeoSample extends GeoData {
         contact = new GeoContact();
         platforms = new HashSet<GeoPlatform>();
     }
-    
-    
-    public void addPlatform(GeoPlatform platform) {
-        this.platforms.add(platform);
+
+    public void addPlatform( GeoPlatform platform ) {
+        this.platforms.add( platform );
     }
-    
+
     public Collection<GeoPlatform> getPlatforms() {
         return this.platforms;
     }
@@ -139,8 +136,6 @@ public class GeoSample extends GeoData {
     public void setDescription( String description ) {
         this.description = description;
     }
-
-   
 
     /**
      * @return Returns the hybProtocol.
@@ -241,6 +236,5 @@ public class GeoSample extends GeoData {
     public void setTitle( String title ) {
         this.title = title;
     }
-
 
 }

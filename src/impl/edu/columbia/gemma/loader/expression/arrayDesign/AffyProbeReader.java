@@ -52,6 +52,7 @@ public class AffyProbeReader extends BasicLineMapParser {
      * 
      * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
      */
+    @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
         String[] sArray = line.split( "\t" );
         if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );

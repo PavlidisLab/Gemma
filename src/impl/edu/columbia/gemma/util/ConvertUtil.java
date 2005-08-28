@@ -154,6 +154,7 @@ public final class ConvertUtil {
      * @return
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public static Object convertLists( Object o ) throws Exception {
         if ( o == null ) {
             return null;
@@ -165,7 +166,7 @@ public final class ConvertUtil {
 
         for ( int i = 0; i < origDescriptors.length; i++ ) {
             String name = origDescriptors[i].getName();
-
+ 
             if ( origDescriptors[i].getPropertyType().equals( List.class ) ) {
                 List<Object> list = ( List<Object> ) PropertyUtils.getProperty( o, name );
                 for ( int j = 0; j < list.size(); j++ ) {

@@ -40,10 +40,12 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
     // CandidateGeneList manipulation
     Person actor = null;
 
-    protected void handleSetActor( Person actor ) {
-        this.actor = actor;
+    @Override
+    protected void handleSetActor( Person actor1 ) {
+        this.actor = actor1;
     }
 
+    @Override
     protected CandidateGeneList handleCreateByName( String newName ) throws java.lang.Exception {
         assert ( this.actor != null );
 
@@ -58,20 +60,23 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
         cgl.setAuditTrail( auditTrail );
         cgl.setName( newName );
         cgl.setOwner( actor );
-        //this.getCandidateGeneListDao().create( cgl );
+        // this.getCandidateGeneListDao().create( cgl );
         this.saveCandidateGeneList( cgl );
         return cgl;
     }
 
+    @Override
     protected CandidateGeneList handleSaveCandidateGeneList( CandidateGeneList candidateGeneList ) throws Exception {
         this.getCandidateGeneListDao().create( candidateGeneList );
         return candidateGeneList;
     }
 
+    @Override
     protected void handleRemoveCandidateGeneList( CandidateGeneList candidateGeneList ) throws java.lang.Exception {
         this.getCandidateGeneListDao().remove( candidateGeneList );
     }
 
+    @Override
     protected void handleUpdateCandidateGeneList( CandidateGeneList candidateGeneList ) throws java.lang.Exception {
         assert ( actor != null );
         candidateGeneList.getAuditTrail().update( "CandidateGeneList Saved", actor );
@@ -79,23 +84,27 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
     }
 
     // Finder methods
-
+    @Override
     public Collection handleFindByGeneOfficialName( String officialName ) {
         return this.getCandidateGeneListDao().findByGeneOfficialName( officialName );
     }
 
+    @Override
     public Collection handleFindByContributer( Person person ) {
         return this.getCandidateGeneListDao().findByContributer( person );
     }
 
+    @Override
     public Collection handleGetAll() {
         return this.getCandidateGeneListDao().findAll();
     }
 
+    @Override
     public CandidateGeneList handleFindByID( long id ) {
         return this.getCandidateGeneListDao().findByID( id );
     }
 
+    @Override
     public Collection handleFindByListOwner( Person owner ) {
         return this.getCandidateGeneListDao().findByListOwner( owner );
     }

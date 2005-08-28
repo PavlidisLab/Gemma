@@ -22,6 +22,14 @@ import java.util.Collection;
 
 import edu.columbia.gemma.loader.loaderutils.Persister;
 
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
 public class GeoLoaderImpl implements Persister {
 
     public void persist( Collection col ) {
@@ -30,16 +38,6 @@ public class GeoLoaderImpl implements Persister {
     }
 
     public void persist( Object obj ) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void removeAll() {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void removeAll( Collection collection ) {
         // TODO Auto-generated method stub
 
     }

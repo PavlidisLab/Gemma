@@ -603,6 +603,7 @@ public class ExpressionLoaderImpl implements Persister {
     /**
      * @param database
      */
+     @SuppressWarnings("unused")
     private ExternalDatabase loadExternalDatabase( ExternalDatabase database ) {
         throw new UnsupportedOperationException( "Can't deal with " + database.getClass().getName() + " yet" );
     }

@@ -29,16 +29,14 @@ public class GoldenPathHumanDaoHibernate extends HibernateDaoSupport implements 
     protected static final Log log = LogFactory.getLog( GoldenPathHumanDaoHibernate.class );
     private Connection c;
     private HibernateTemplate ht;
-    private Query q;
     private Session s;
     private SessionFactory sf;
-
 
     /*
      * TODO map classes from these other databases. The actual DAO's that will be used will be the ones corresponding to
      * tables in the database.
      */
-    
+
     /**
      * Makes the database connection. The main purpose of this method is to verify that the datasources to the external
      * databases are establishing a connection.
@@ -60,10 +58,8 @@ public class GoldenPathHumanDaoHibernate extends HibernateDaoSupport implements 
     /**
      * TODO implement this when you actually have the pojo's mapped to tables (use Andromda schema2Xmi)
      */
-    public Collection retreiveFromDatabase() throws HibernateException, SQLException {
-        q = null;
+    public Collection retrieveFromDatabase() throws HibernateException {
         return null;
-
     }
 
 }
