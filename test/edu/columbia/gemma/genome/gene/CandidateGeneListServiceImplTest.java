@@ -21,7 +21,6 @@ import edu.columbia.gemma.genome.gene.CandidateGeneList;
 public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
 
     private TaxonDao daoTaxon = null;
-    private int foo = 2;
     private GeneDao daoGene = null;
     private Gene g, g2, g3, g4 = null;;
     private Person p = null;
