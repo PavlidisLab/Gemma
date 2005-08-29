@@ -29,7 +29,7 @@ public class CandidateGeneListImplTest extends BaseDAOTestCase {
     
     protected void setUp() throws Exception {
         super.setUp();
-        Taxon t = Taxon.Factory.newInstance();
+        t = Taxon.Factory.newInstance();
         t.setCommonName("mouse");
 		t.setScientificName("mouse");
     }
