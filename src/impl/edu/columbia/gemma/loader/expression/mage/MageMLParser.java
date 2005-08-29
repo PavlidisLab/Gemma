@@ -57,7 +57,7 @@ import baseCode.util.FileTools;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
- * Class to parse MAGE-ML files and convert them into Gemma domain objects.
+ * Class to parse MAGE-ML files and convert them into Source domain objects SDO.
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
@@ -65,7 +65,7 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
  * @see edu.columbia.gemma.loader.mage.MageMLConverter
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLParser"
+ * @spring.bean id="mageMLParser" singleton="false"
  */
 public class MageMLParser implements Parser {
 
