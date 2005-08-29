@@ -2,8 +2,6 @@ package edu.columbia.gemma.expression.experiment;
 
 import java.util.Collection;
 
-import org.hibernate.Session;
-
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -30,10 +28,6 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
     protected void setUp() throws Exception {
 
         super.setUp();
-
-        // sessionFactory = (SessionFactory) ctx.getBean("sessionFactory");
-        // s = sessionFactory.openSession();
-        // TransactionSynchronizationManager.bindResource(sessionFactory, new SessionHolder(s));
 
         pDao = ( PersonDao ) ctx.getBean( "personDao" );
         nobody = ( Person ) pDao.load( new Long( 1 ) );
