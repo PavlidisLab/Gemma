@@ -1,16 +1,14 @@
 package edu.columbia.gemma.genome.gene;
 
 import java.util.Collection;
-
 import java.util.Iterator;
-import org.hibernate.SessionFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 
@@ -23,6 +21,8 @@ import edu.columbia.gemma.genome.TaxonDao;
  * @version $Id$
  */
 public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
+    private final Log log = LogFactory.getLog( CandidateGeneListDAOImplTest.class );
+    
     private CandidateGeneListDao daoCGL = null;
     private TaxonDao daoTaxon = null;
     private GeneDao daoGene = null;
@@ -30,13 +30,10 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     private Gene g2 = null;
     private Taxon t = null;
     private CandidateGeneList cgl = null;
-    private final Log log = LogFactory.getLog( CandidateGeneListDAOImplTest.class );
-    private SessionFactory sf = null;
-
+    
     protected void setUp() throws Exception {
         super.setUp();
 
-        sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
         daoCGL = ( CandidateGeneListDao ) ctx.getBean( "candidateGeneListDao" );
         daoGene = ( GeneDao ) ctx.getBean( "geneDao" );
         daoTaxon = ( TaxonDao ) ctx.getBean( "taxonDao" );
@@ -77,6 +74,7 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     }
 
     public final void testAddGeneToList() throws Exception {
+        log.info("testing adding gene to list");
         CandidateGene cg = cgl.addCandidate( g );
         daoCGL.update( cgl );
         assertEquals( cgl.getCandidates().size(), 1 );
@@ -85,6 +83,7 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     }
 
     public final void testRemoveGeneFromList() throws Exception {
+        log.info("testing removing gene from list");
         CandidateGene cg = cgl.addCandidate( g2 );
         daoCGL.update( cgl );
         cgl.removeCandidate( cg );
@@ -93,6 +92,7 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     }
 
     public final void testRankingChanges() throws Exception {
+        log.info("testing ranking changes");
         CandidateGene cg1 = cgl.addCandidate( g );
         CandidateGene cg2 = cgl.addCandidate( g2 );
         cgl.increaseRanking( cg2 );
