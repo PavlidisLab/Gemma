@@ -46,6 +46,7 @@ public class BaseDAOTestCase extends TestCase {
      * @return
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     protected Object populate( Object obj ) throws Exception {
         // loop through all the beans methods and set its properties from
         // its .properties file
