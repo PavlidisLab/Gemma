@@ -27,8 +27,9 @@ public class ProtocolServiceTest extends BaseServiceTestCase {
     /**
      * TODO add test implementation details.
      */
+    @SuppressWarnings("unused")
     public void testfindOrCreate() {
-        Protocol protocol = ( Protocol ) protocolDao.findOrCreate( Protocol.Factory.newInstance() );
+        Protocol protocol = protocolDao.findOrCreate( Protocol.Factory.newInstance() );
 
     }
     
@@ -36,8 +37,9 @@ public class ProtocolServiceTest extends BaseServiceTestCase {
      * TODO add test implementation details.
      *
      */
+    @SuppressWarnings("unused")
     public void testFind(){
-        Protocol protocol = (Protocol) protocolDao.find(Protocol.Factory.newInstance());
+        Protocol protocol = protocolDao.find(Protocol.Factory.newInstance());
     }
 
 }
