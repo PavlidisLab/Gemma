@@ -90,6 +90,7 @@ public class AuditTrailDaoTest extends BaseDAOTestCase {
     /**
      * this method retrieves all
      */
+    @SuppressWarnings("unchecked")
     public void testfindAllAuditTrails() {
         log.info( "Retreiving all audit events" );
 
