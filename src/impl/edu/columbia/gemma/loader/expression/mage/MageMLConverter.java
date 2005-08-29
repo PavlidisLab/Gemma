@@ -17,13 +17,15 @@ import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 
 /**
+ * Class to parse MAGE-ML files and convert them into Gemma domain objects SDO.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLConverter"
+ * @spring.bean id="mageMLConverter" singleton="false"
+ * @spring.property name="mageMLConverterHelper" ref="mageMLConverterHelper"
  */
 public class MageMLConverter implements Converter {
 
@@ -38,27 +40,30 @@ public class MageMLConverter implements Converter {
     private Document simplifiedXml;
 
     /**
-     * default constructor
+     * @return Returns the simplifiedXml.
      */
-    public MageMLConverter() {
-        // spring needs a no-arg constructor.
+    public Document getSimplifiedXml() {
+        return simplifiedXml;
     }
 
     /**
-     * @param xml Simplified XML created by a MageMLParser.
+     * @param simplifiedXml The simplifiedXml to set. TODO do not make MageMLConverterHelper available to spring. Remove
+     *        the call to getMageMLConverterHelper()
      */
-    public MageMLConverter( Document xml ) {
-        super();
-        if ( xml == null ) {
-            log.warn( "Null Document for simplified MAGE ML result" );
-        }
-        this.simplifiedXml = xml;
+    public void setSimplifiedXml( Document simplifiedXml ) {
+        this.simplifiedXml = simplifiedXml;
+        getMageMLConverterHelper().setSimplifiedXml( this.simplifiedXml ); // will be null if you put in
+        // constructor
+    }
 
+    /**
+     * default constructor
+     */
+    public MageMLConverter() {
+        super();
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
         String mageClassesString = rb.getString( "mage.classes" ); // FIXME : use config array
         mageClasses = mageClassesString.split( ", " );
-        this.mageConverterHelper = new MageMLConverterHelper();
-        mageConverterHelper.setSimplifiedXml( this.simplifiedXml );
     }
 
     /*
@@ -68,7 +73,6 @@ public class MageMLConverter implements Converter {
      */
     public Collection<Object> convert( Collection<Object> sourceDomainObjects ) {
         Package[] allPackages = Package.getPackages();
-
         if ( convertedResult == null ) {
             convertedResult = new ArrayList<Object>();
         } else {
@@ -94,7 +98,6 @@ public class MageMLConverter implements Converter {
                         convertedResult.addAll( convertedObjects );
                     }
                 } catch ( ClassNotFoundException e ) {
-                    // log.error( "Class not found: " + name + "." + mageClasses[j] );
                 }
             }
         }
@@ -184,6 +187,20 @@ public class MageMLConverter implements Converter {
      */
     public Object convert( Object mageObject ) {
         return mageConverterHelper.convert( mageObject );
+    }
+
+    /**
+     * @return Returns the mageConverterHelper.
+     */
+    public MageMLConverterHelper getMageMLConverterHelper() {
+        return mageConverterHelper;
+    }
+
+    /**
+     * @param mageConverterHelper The mageConverterHelper to set.
+     */
+    public void setMageMLConverterHelper( MageMLConverterHelper mageConverterHelper ) {
+        this.mageConverterHelper = mageConverterHelper;
     }
 
 }
