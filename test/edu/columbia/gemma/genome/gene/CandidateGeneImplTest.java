@@ -9,11 +9,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * 
+ * 
+ *
  * <hr>
- * <p>
- * Copyright (c) 2005 Columbia University
+ * <p>Copyright (c) 2004 - 2005 Columbia University
  * @author daq2101
- * $id$
+ * @version $Id$
  */
 public class CandidateGeneImplTest extends BaseDAOTestCase{
     private final Log log = LogFactory.getLog(CandidateGeneImplTest.class);
