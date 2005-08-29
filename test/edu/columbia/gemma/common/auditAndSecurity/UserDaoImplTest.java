@@ -4,8 +4,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.SessionFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -24,18 +22,17 @@ public class UserDaoImplTest extends BaseDAOTestCase {
 
     private UserDao dao = null;
     private final Log log = LogFactory.getLog( UserDaoImplTest.class );
-    private SessionFactory sf = null;
     private User testUser = null;
     private UserRole ur = null;
 
     public final void testCreateUser() throws Exception {
         dao.create( testUser );
     }
-
+    
+    @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
         super.setUp();
 
-        sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
         dao = ( UserDao ) ctx.getBean( "userDao" );
 
         // User Object
