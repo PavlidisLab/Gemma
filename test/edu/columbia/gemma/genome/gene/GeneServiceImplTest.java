@@ -18,25 +18,30 @@
  */
 package edu.columbia.gemma.genome.gene;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.genome.Gene;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
-import java.util.Collection;
 
 /**
- * @see edu.columbia.gemma.genome.gene.GeneService
+ * 
+ * 
+ *
+ * <hr>
+ * <p>Copyright (c) 2004 - 2005 Columbia University
+ * @author daq2101
+ * @version $Id$
  */
 public class GeneServiceImplTest extends BaseDAOTestCase {
 
 	private final Log log = LogFactory.getLog(CandidateGeneImplTest.class);
 	private Taxon t = null;
 	private Gene g = null;
-	private GeneDao gDAO = null;
 	private TaxonDao tDAO=null;
 	
 	protected void setUp() throws Exception {		
@@ -50,6 +55,7 @@ public class GeneServiceImplTest extends BaseDAOTestCase {
 		
 	}
 	public void testGeneServiceImpl(){
+        log.info("testing gene service implementation");
 		Collection cON=null;
 		Collection cOS=null;
 		Collection cOSI=null;
