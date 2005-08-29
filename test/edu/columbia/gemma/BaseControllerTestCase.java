@@ -1,14 +1,10 @@
 package edu.columbia.gemma;
 
-import java.util.ResourceBundle;
+import junit.framework.TestCase;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.util.SpringContextUtil;
-
-import junit.framework.TestCase;
 
 /**
  * <hr>
