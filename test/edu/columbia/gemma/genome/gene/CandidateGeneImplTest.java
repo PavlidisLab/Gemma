@@ -12,14 +12,14 @@ import org.apache.commons.logging.LogFactory;
  * <hr>
  * <p>
  * Copyright (c) 2005 Columbia University
- * @author David Quigley
+ * @author daq2101
+ * $id$
  */
 public class CandidateGeneImplTest extends BaseDAOTestCase{
-
     private final Log log = LogFactory.getLog(CandidateGeneImplTest.class);
     
 	public void testSetCandidateGene() {
-	  
+	log.info("test setting of CandidateGene");  
 	    // SET UP
         Gene g = null;
         Taxon t = null;
