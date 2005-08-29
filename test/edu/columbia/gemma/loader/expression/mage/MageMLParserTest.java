@@ -19,16 +19,11 @@
 package edu.columbia.gemma.loader.expression.mage;
 
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import edu.columbia.gemma.loader.expression.mage.MageMLParser;
 
 /**
  * <hr>
@@ -81,21 +76,21 @@ public class MageMLParserTest extends MageBaseTest {
         mlp = null;
     }
 
-//    public void testMageExamplesTest() throws Exception {
-//        log.debug( "Parsing MAGE Jamboree example" );
-//
-//        zipXslSetup( mlp, "/data/mage/mageml-example.zip" );
-//
-//        ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
-//                .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
-//        istMageExamples.getNextEntry();
-//        mlp.parse( istMageExamples );
-//
-//        log.info( "Tally:\n" + mlp );
-//        istMageExamples.close();
-//        // type expectedValue = null;
-//        // assertEquals( expectedValue, actualValue );
-//    }
+    // public void testMageExamplesTest() throws Exception {
+    // log.debug( "Parsing MAGE Jamboree example" );
+    //
+    // zipXslSetup( mlp, "/data/mage/mageml-example.zip" );
+    //
+    // ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class
+    // .getResourceAsStream( "/data/mage/mageml-example.zip" ) );
+    // istMageExamples.getNextEntry();
+    // mlp.parse( istMageExamples );
+    //
+    // log.info( "Tally:\n" + mlp );
+    // istMageExamples.close();
+    // // type expectedValue = null;
+    // // assertEquals( expectedValue, actualValue );
+    // }
 
     public void testParseCollectionRealA() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );

@@ -29,10 +29,8 @@ public class MageBaseTest extends BaseDAOTestCase {
     protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
         ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class.getResourceAsStream( resourceName ) );
         istMageExamples.getNextEntry();
-        InputStream istXsl = MageMLParser.class.getResourceAsStream( "resource/MAGE-simplify.xsl" );
         assert istMageExamples != null;
-        assert istXsl != null;
-        mlp.createSimplifiedXml( istMageExamples, istXsl );
+        mlp.createSimplifiedXml( istMageExamples );
         istMageExamples.close();
     }
 
@@ -46,10 +44,8 @@ public class MageBaseTest extends BaseDAOTestCase {
      */
     protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException, TransformerException {
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( resourceName );
-        InputStream istXsl = MageMLParser.class.getResourceAsStream( "resource/MAGE-simplify.xsl" );
         assert istMageExamples != null;
-        assert istXsl != null;
-        mlp.createSimplifiedXml( istMageExamples, istXsl );
+        mlp.createSimplifiedXml( istMageExamples );
         istMageExamples.close();
     }
 

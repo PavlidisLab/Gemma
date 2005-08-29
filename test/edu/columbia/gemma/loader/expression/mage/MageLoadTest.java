@@ -20,7 +20,6 @@ package edu.columbia.gemma.loader.expression.mage;
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
