@@ -55,7 +55,8 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
      * @throws SAXException
      * @throws IOException
      */
-    public void testParseAndLoad() throws SAXException, IOException {
+    @SuppressWarnings("unchecked")
+    public void testParseAndLoad() throws IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
 
         String url = "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz";
