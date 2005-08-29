@@ -50,6 +50,7 @@ import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
  */
 public class MageLoadTest extends MageBaseTest {
     private static Log log = LogFactory.getLog( MageLoadTest.class.getName() );
+    MageMLConverter mageMLConverter = null;
     ExpressionLoaderImpl ml;
 
     /*
@@ -60,6 +61,7 @@ public class MageLoadTest extends MageBaseTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        this.setMageMLConverter( ( MageMLConverter ) ctx.getBean( "mageMLConverter" ) );
         ml = new ExpressionLoaderImpl();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
         ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
@@ -120,15 +122,13 @@ public class MageLoadTest extends MageBaseTest {
 
         MageMLParser mlp = new MageMLParser();
 
-        xslSetup( mlp, "/data/mage/E-AFMX-13.xml" );
+        xslSetup( mlp, "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
 
-        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
+        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
 
-        MageMLConverter mlc = new MageMLConverter( mlp.getSimplifiedXml() );
-
-        Collection<Object> result = mlc.convert( parseResult );
+        Collection<Object> result = getMageMLConverter().convert( parseResult );
 
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
@@ -152,13 +152,27 @@ public class MageLoadTest extends MageBaseTest {
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
 
-        MageMLConverter mlc = new MageMLConverter( mlp.getSimplifiedXml() );
-
-        Collection<Object> result = mlc.convert( parseResult );
+        getMageMLConverter().setSimplifiedXml(mlp.getSimplifiedXml());
+        
+        Collection<Object> result = getMageMLConverter().convert( parseResult );
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
         ml.persist( result );
+    }
+
+    /**
+     * @return Returns the mageMLConverter.
+     */
+    public MageMLConverter getMageMLConverter() {
+        return mageMLConverter;
+    }
+
+    /**
+     * @param mageMLConverter The mageMLConverter to set.
+     */
+    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
+        this.mageMLConverter = mageMLConverter;
     }
 
 }
