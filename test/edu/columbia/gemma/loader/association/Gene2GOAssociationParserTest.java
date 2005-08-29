@@ -57,11 +57,12 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
      * @throws IOException
      * @throws ConfigurationException
      */
-    public void testParseAndLoad() throws NoSuchMethodException, IOException, ConfigurationException {
+    @SuppressWarnings("unchecked")
+    public void testParseAndLoad() throws NoSuchMethodException, IOException{
         log
                 .info( "Testing class: Gene2GOAssocationParser method: public Method findParseLineMethod( Map g2GOMap, String name) throws NoSuchMethodException" );
 
-        String url = "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene2go.gz";
+        //String url = "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene2go.gz";
 
         OntologyEntry oe = OntologyEntry.Factory.newInstance();
         oe.setAccession( "GO:xxxxx" );
