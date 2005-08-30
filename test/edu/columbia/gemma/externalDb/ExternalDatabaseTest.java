@@ -1,14 +1,10 @@
 package edu.columbia.gemma.externalDb;
 
-import java.sql.SQLException;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.externalDb.GoldenPathHumanDao;
-import edu.columbia.gemma.externalDb.GoldenPathHumanDaoHibernate;
 
 /**
  * Tests connections to external databases.
