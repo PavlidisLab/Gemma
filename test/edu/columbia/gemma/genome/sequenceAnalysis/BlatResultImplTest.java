@@ -31,14 +31,14 @@ import junit.framework.TestCase;
  */
 public class BlatResultImplTest extends TestCase {
 
-    BlatResultImpl brtest = null;
+    BlatResult brtest = null;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        brtest = ( BlatResultImpl ) BlatResult.Factory.newInstance();
+        brtest = BlatResult.Factory.newInstance();
 
     }
 
