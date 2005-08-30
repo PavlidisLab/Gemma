@@ -1,22 +1,32 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.util;
 
 /*
  * RandomGUID from http://www.javaexchange.com/aboutRandomGUID.html
- * @version 1.2.1 11/05/02
- * @author Marc A. Mnich
- *
- * From www.JavaExchange.com, Open Software licensing
- *
- * 11/05/02 -- Performance enhancement from Mike Dubman.  
- *             Moved InetAddr.getLocal to static block.  Mike has measured
- *             a 10 fold improvement in run time.
- * 01/29/02 -- Bug fix: Improper seeding of nonsecure Random object
- *             caused duplicate GUIDs to be produced.  Random object
- *             is now only created once per JVM.
- * 01/19/02 -- Modified random seeding and added new constructor
- *             to allow secure random feature.
- * 01/14/02 -- Added random function seeding with JVM run time
- *
+ * 
+ * @version 1.2.1 11/05/02 @author Marc A. Mnich From www.JavaExchange.com, Open Software licensing 11/05/02 --
+ *          Performance enhancement from Mike Dubman. Moved InetAddr.getLocal to static block. Mike has measured a 10
+ *          fold improvement in run time. 01/29/02 -- Bug fix: Improper seeding of nonsecure Random object caused
+ *          duplicate GUIDs to be produced. Random object is now only created once per JVM. 01/19/02 -- Modified random
+ *          seeding and added new constructor to allow secure random feature. 01/14/02 -- Added random function seeding
+ *          with JVM run time
  */
 
 import java.net.InetAddress;
@@ -26,7 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 
-/*
+/**
  * In the multitude of java GUID generators, I found none that guaranteed randomness. GUIDs are guaranteed to be
  * globally unique by using ethernet MACs, IP addresses, time elements, and sequential numbers. GUIDs are not expected
  * to be random and most often are easy/possible to guess given a sample from a given generator. SQL Server, for example
@@ -57,7 +67,6 @@ import java.util.Random;
  * performance, you may want to stick to byte[] arrays. I believe that it is important that the algorithm for generating
  * random GUIDs be open for inspection and modification. This class is free for all uses. - Marc
  */
-
 public class RandomGUID extends Object {
 
     public String valueBeforeMD5 = "";
