@@ -21,7 +21,9 @@ package edu.columbia.gemma.loader.genome;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImpl;
+import edu.columbia.gemma.genome.Chromosome;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
+import edu.columbia.gemma.genome.sequenceAnalysis.BlatResult;
 import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
@@ -74,12 +76,12 @@ public class BlatResultParser extends BasicLineParser {
             if ( f.length != NUM_BLAT_FIELDS )
                 throw new IllegalArgumentException( "Only" + f.length + " fields in row" );
 
-            // BlatResult result = BlatResult.Factory.newInstance();
-            BlatResultImpl result = new BlatResultImpl(); // FIXME this should not be an Impl.
+            BlatResult result = BlatResult.Factory.newInstance();
 
             String name = ( "BlatResult:" + f[QNAME_FIELD] + ":" + f[QSTART_FIELD] + ":" + f[TSTART_FIELD] + ":" + f[TNAME_FIELD] );
             result.setId( new Long( name.hashCode() ) );
-            result.setQuerySize( Integer.parseInt( f[QSIZE_FIELD] ) );
+            result.setQuerySequence( BioSequence.Factory.newInstance() );
+            result.getQuerySequence().setLength( Integer.parseInt( f[QSIZE_FIELD] ) );
             result.setMatches( Integer.parseInt( f[MATCHES_FIELD] ) );
             result.setMismatches( Integer.parseInt( f[MISMATCHES_FIELD] ) );
             result.setRepMatches( Integer.parseInt( f[REPMATCHES_FIELD] ) );
@@ -89,21 +91,24 @@ public class BlatResultParser extends BasicLineParser {
             result.setTargetGapBases( Integer.parseInt( f[TGAPBASES_FIELD] ) );
             result.setTargetGapCount( Integer.parseInt( f[TGAPCOUNT_FIELD] ) );
             result.setStrand( f[STRAND_FIELD] );
-            // result.setTargetChromosome( // ); // FIXME
+            result.setTargetChromosome( Chromosome.Factory.newInstance() );
             result.setQueryStart( Integer.parseInt( f[QSTART_FIELD] ) );
             result.setQueryEnd( Integer.parseInt( f[QEND_FIELD] ) );
             result.setTargetStart( Integer.parseInt( f[TSTART_FIELD] ) );
             result.setTargetEnd( Integer.parseInt( f[TEND_FIELD] ) );
             result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
-            result.setBlockSizes( f[BLOCKSIZES_FIELD] ); // FIXME
+            result.setBlockSizes( f[BLOCKSIZES_FIELD] ); // FIXME - there should be an aligned regions association.
             result.setQueryStarts( f[QSTARTS_FIELD] );
             result.setTargetStarts( f[TSTARTS_FIELD] );
 
-            result.setQueryName( f[QNAME_FIELD] );
+            result.getQuerySequence().setName( f[QNAME_FIELD] );
 
             String chrom = f[TNAME_FIELD];
             if ( chrom.startsWith( "chr" ) ) chrom = chrom.substring( chrom.indexOf( "chr" ) + 3 );
-            result.setTargetName( chrom );
+            result.getTargetChromosome().setName( chrom );
+            result.getTargetChromosome().setSequence( BioSequence.Factory.newInstance() );
+            result.getTargetChromosome().getSequence().setName( chrom );
+            result.getTargetChromosome().getSequence().setLength( Integer.parseInt( f[TSIZE_FIELD] ) );
             return result;
         } catch ( NumberFormatException e ) {
             log.error( "Invalid number format", e );

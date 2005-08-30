@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.sequenceAnalysis.BlatResult;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImpl;
 import edu.columbia.gemma.loader.genome.BlatResultParser;
 import edu.columbia.gemma.tools.GoldenPath.ThreePrimeData;
@@ -87,7 +88,7 @@ public class ProbeThreePrimeLocator {
         int skipped = 0;
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
         for ( Iterator<Object> iter = brp.getResults().iterator(); iter.hasNext(); ) {
-            BlatResultImpl blatRes = ( BlatResultImpl ) iter.next(); // fixme, this should not be an impl
+            BlatResult blatRes = ( BlatResult ) iter.next();
 
             if ( blatRes.score() < scoreThreshold || blatRes.identity() < identityThreshold ) {
                 skipped++;
@@ -98,9 +99,9 @@ public class ProbeThreePrimeLocator {
             String probeName = sa[0];
             String arrayName = sa[1];
 
-            List<ThreePrimeData> tpds = bp.getThreePrimeDistances( blatRes.getTargetName(), blatRes.getTargetStart(),
-                    blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(), blatRes.getStrand(),
-                    threeprimeMethod );
+            List<ThreePrimeData> tpds = bp.getThreePrimeDistances( blatRes.getTargetChromosome().getName(), blatRes
+                    .getTargetStart(), blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(),
+                    blatRes.getStrand(), threeprimeMethod );
 
             if ( tpds == null ) continue;
 
@@ -116,9 +117,10 @@ public class ProbeThreePrimeLocator {
                 allRes.get( probeName ).add( ld );
 
                 output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
-                        + blatRes.getQuerySize() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t"
-                        + blatRes.score() + "\t" + gene.getOfficialSymbol() + "\t" + gene.getNcbiId() + "\t"
-                        + tpd.getDistance() + "\t" + tpd.getExonOverlap() + "\t" + blatRes.getTargetName() + "\t"
+                        + blatRes.getQuerySequence().getLength() + "\t"
+                        + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t" + blatRes.score() + "\t"
+                        + gene.getOfficialSymbol() + "\t" + gene.getNcbiId() + "\t" + tpd.getDistance() + "\t"
+                        + tpd.getExonOverlap() + "\t" + blatRes.getTargetChromosome().getName() + "\t"
                         + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
 
                 count++;
@@ -183,7 +185,8 @@ public class ProbeThreePrimeLocator {
             int alignLength = 0;
             for ( LocationData ld : probeResults ) {
                 double blatScore = ld.getBr().score();
-                double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
+                double overlap = ( double ) ld.getTpd().getExonOverlap()
+                        / ( double ) ( ld.getBr().getQuerySequence().getLength() );
                 int score = ( int ) ( 1000 * blatScore * overlap );
                 if ( score >= maxScore ) {
                     maxScore = score;
@@ -198,7 +201,7 @@ public class ProbeThreePrimeLocator {
             int numTied = 0;
             for ( LocationData ld : probeResults ) {
                 double blatScore = ld.getBr().score();
-                double overlap = ( double ) ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySize() );
+                double overlap = ld.getTpd().getExonOverlap() / ( double ) ( ld.getBr().getQuerySequence().getLength() );
                 int score = ( int ) ( 1000 * blatScore * overlap );
                 if ( score == maxScore ) {
                     numTied++;
@@ -218,8 +221,8 @@ public class ProbeThreePrimeLocator {
      * @param blatRes
      * @return
      */
-    protected String[] splitBlatQueryName( BlatResultImpl blatRes ) {
-        String qName = blatRes.getQueryName();
+    protected String[] splitBlatQueryName( BlatResult blatRes ) {
+        String qName = blatRes.getQuerySequence().getName();
         String[] sa = qName.split( ":" );
         if ( sa.length < 2 ) throw new IllegalArgumentException( "Expected query name in format 'xxx:xxx'" );
         return sa;
@@ -268,7 +271,7 @@ public class ProbeThreePrimeLocator {
      * @version $Id$
      */
     class LocationData {
-        private BlatResultImpl br;
+        private BlatResult br;
         private double maxBlatScore;
         private double maxOverlap;
         private int numHits;
@@ -287,7 +290,7 @@ public class ProbeThreePrimeLocator {
          * @param tpd2
          * @param blatRes
          */
-        public LocationData( ThreePrimeData tpd, BlatResultImpl blatRes ) {
+        public LocationData( ThreePrimeData tpd, BlatResult blatRes ) {
             this.tpd = tpd;
             this.br = blatRes;
         }
@@ -302,7 +305,7 @@ public class ProbeThreePrimeLocator {
         /**
          * @return
          */
-        public BlatResultImpl getBr() {
+        public BlatResult getBr() {
             return this.br;
         }
 
@@ -385,7 +388,7 @@ public class ProbeThreePrimeLocator {
             buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap() );
             buf.append( "\t" + tpd.getDistance() );
             buf.append( "\t" + this.alignLength );
-            buf.append( "\t" + this.br.getTargetName() );
+            buf.append( "\t" + this.br.getTargetSequence().getName() );
             buf.append( "\t" + this.br.getTargetStart() );
             buf.append( "\t" + this.br.getTargetEnd() );
             buf.append( "\t" + this.numTied );
