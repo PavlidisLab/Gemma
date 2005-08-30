@@ -59,16 +59,42 @@ import edu.columbia.gemma.loader.genome.BlatResultParser;
  */
 public class Blat {
 
-    private String gfClientExe = "C:/bin/cygwini686/gfClient.exe";
     private static final Log log = LogFactory.getLog( Blat.class );
-    private String host = "localhost";
-    private String seqDir = "/";
-    private String port = "177777";
-    private String gfServerExe = "C:/bin/cygwini686/gfServer.exe";
-    private String seqFiles;
-    private boolean doShutdown = true;
-
     private static String os = System.getProperty( "os.name" ).toLowerCase();
+    static {
+        if ( !os.toLowerCase().startsWith( "windows" ) ) {
+            try {
+                log.info( "Loading gfClient library, looking in " + System.getProperty( "java.library.path" ) );
+                System.loadLibrary( "Blat" );
+                log.info( "Loaded Blat library successfully" );
+            } catch ( UnsatisfiedLinkError e ) {
+                log.error( e, e );
+                throw new ExceptionInInitializerError( "Unable to locate or load the Blat native library: "
+                        + e.getMessage() );
+            }
+        }
+    }
+    private boolean doShutdown = true;
+    private String gfClientExe = "C:/bin/cygwini686/gfClient.exe";
+    private String gfServerExe = "C:/bin/cygwini686/gfServer.exe";
+    private String host = "localhost";
+    private String port = "177777";
+    private String seqDir = "/";
+
+    private String seqFiles;
+
+    private Process serverProcess;
+
+    /**
+     * Create a blat object with settings read from the config file.
+     */
+    public Blat() {
+        try {
+            init();
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( "Could not load configuration", e );
+        }
+    }
 
     /**
      * @param host
@@ -85,29 +111,74 @@ public class Blat {
     }
 
     /**
-     * Create a blat object with settings read from the config file.
+     * @return Returns the gfClientExe.
      */
-    public Blat() {
-        try {
-            init();
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Could not load configuration", e );
-        }
+    public String getGfClientExe() {
+        return this.gfClientExe;
     }
 
     /**
-     * @throws ConfigurationException
+     * @return Returns the gfServerExe.
      */
-    private void init() throws ConfigurationException {
-        URL configFileLocation = ConfigurationUtils.locate( "Gemma.properties" );
-        if ( configFileLocation == null ) throw new ConfigurationException( "Doesn't exist" );
-        Configuration config = new PropertiesConfiguration( configFileLocation );
-        this.port = config.getString( "gfClient.port" );
-        this.host = config.getString( "gfClient.host" );
-        this.seqDir = config.getString( "gfClient.seqDir" );
-        this.seqFiles = config.getString( "gfClient.seqFiles" );
-        this.gfClientExe = config.getString( "gfClient.exe" );
-        this.gfServerExe = config.getString( "gfServer.exe" );
+    public String getGfServerExe() {
+        return this.gfServerExe;
+    }
+
+    /**
+     * @return Returns the host.
+     */
+    public String getHost() {
+        return this.host;
+    }
+
+    /**
+     * @return Returns the port.
+     */
+    public String getPort() {
+        return this.port;
+    }
+
+    /**
+     * @return Returns the seqDir.
+     */
+    public String getSeqDir() {
+        return this.seqDir;
+    }
+
+    /**
+     * @return Returns the seqFiles.
+     */
+    public String getSeqFiles() {
+        return this.seqFiles;
+    }
+
+    /**
+     * Run a BLAT search using the gfClient.
+     * 
+     * @param b
+     * @return Collection of BlatResult objects.
+     * @throws IOException
+     */
+    public Collection<Object> GfClient( BioSequence b ) throws IOException {
+        assert seqDir != null;
+        assert port != null;
+        // write the sequence to a temporary file.
+        File querySequenceFile = File.createTempFile( "pattern", ".fa" );
+
+        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
+        out.write( ">" + b.getName() + "\n" + b.getSequence() );
+        out.close();
+        log.info( "Wrote sequence to " + querySequenceFile.getPath() );
+
+        String outputPath = getTmpPslFilePath();
+
+        Collection<Object> results = gfClient( querySequenceFile, outputPath );
+
+        // clean up.
+        querySequenceFile.delete();
+        ( new File( outputPath ) ).delete();
+        return results;
+
     }
 
     /**
@@ -148,108 +219,9 @@ public class Blat {
     }
 
     /**
-     * Get a temporary file name.
-     * 
-     * @throws IOException
-     */
-    private String getTmpPslFilePath() throws IOException {
-        return File.createTempFile( "pattern", ".psl" ).getPath();
-    }
-
-    /**
-     * Run a BLAT search using the gfClient.
-     * 
-     * @param b
-     * @return Collection of BlatResult objects.
-     * @throws IOException
-     */
-    public Collection<Object> GfClient( BioSequence b ) throws IOException {
-        assert seqDir != null;
-        assert port != null;
-        // write the sequence to a temporary file.
-        File querySequenceFile = File.createTempFile( "pattern", ".fa" );
-
-        BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
-        out.write( ">" + b.getName() + "\n" + b.getSequence() );
-        out.close();
-        log.info( "Wrote sequence to " + querySequenceFile.getPath() );
-
-        String outputPath = getTmpPslFilePath();
-
-        gfClient( querySequenceFile, outputPath );
-
-        querySequenceFile.delete();
-        return processPsl( outputPath );
-
-    }
-
-    /**
-     * @param querySequenceFile
-     * @param outputPath
-     * @throws IOException
-     */
-    private void gfClient( File querySequenceFile, String outputPath ) throws IOException {
-        if ( !os.startsWith( "windows" ) ) {
-            jniGfClientCall( querySequenceFile, outputPath );
-        } else {
-            execGfClient( querySequenceFile, outputPath );
-        }
-    }
-
-    /**
-     * @param outputPath
-     * @return
-     */
-    private Collection<Object> processPsl( String outputPath ) throws IOException {
-        BlatResultParser brp = new BlatResultParser();
-        brp.parse( outputPath );
-        return brp.getResults();
-    }
-
-    /**
-     * @param querySequenceFile
-     * @param outputPath
-     * @return
-     */
-    private String jniGfClientCall( File querySequenceFile, String outputPath ) throws IOException {
-        try {
-            this.GfClientCall( host, port, seqDir, querySequenceFile.getPath(), outputPath );
-        } catch ( UnsatisfiedLinkError e ) {
-            log.error( e, e );
-            // throw new RuntimeException( "Failed call to native gfClient: " + e.getMessage() );
-            log.info( "Falling back on exec()" );
-            this.execGfClient( querySequenceFile, outputPath );
-        }
-        return outputPath;
-    }
-
-    /**
-     * Stop the server, if it was started by this.
-     */
-    public void stopServer() throws IOException {
-        if ( !doShutdown ) {
-            return;
-        }
-        log.info( "Shutting down gfServer" );
-        Process server = Runtime.getRuntime().exec(
-                this.getGfServerExe() + " stop " + this.getHost() + " " + this.getPort() + this.getSeqDir()
-                        + this.getSeqFiles() );
-        try {
-            server.waitFor();
-            int exit = server.exitValue();
-            log.info( "Server shut down with exit value " + exit );
-        } catch ( InterruptedException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
      * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
      */
     public void startServer() throws IOException {
-
         try {
             new Socket( host, Integer.parseInt( port ) );
             log.info( "There is already a server on port " + port );
@@ -258,20 +230,49 @@ public class Blat {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
             String cmd = this.getGfServerExe() + " start " + this.getHost() + " " + this.getPort() + " "
-                    + this.getSeqDir() + this.getSeqFiles();
+                    + this.getSeqFiles();
             log.info( "Starting gfServer with command " + cmd );
-            Runtime.getRuntime().exec( cmd );
+            this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
         }
+    }
+
+    /**
+     * Rather forcibly stop the gfServer, if it was started by this.
+     */
+    public void stopServer() {
+        if ( false && !doShutdown ) {
+            return;
+        }
+        log.info( "Shutting down gfServer" );
+
+        if ( serverProcess == null ) return;
+        serverProcess.destroy();
+
+        // this doesn't work.
+        // Process server = Runtime.getRuntime().exec(
+        // this.getGfServerExe() + " stop " + this.getHost() + " " + this.getPort() );
+        //
+        // //
+        // try {
+        // server.waitFor();
+        // int exit = server.exitValue();
+        // log.info( "Server shut down with exit value " + exit );
+        // } catch ( InterruptedException e ) {
+        // // TODO Auto-generated catch block
+        // e.printStackTrace();
+        // }
 
     }
 
     /**
+     * Run a gfClient query, using a call to exec(). This runs in a separate thread.
+     * 
      * @param querySequenceFile
      * @param outputPath
      * @return
      */
-    private String execGfClient( File querySequenceFile, String outputPath ) throws IOException {
-        final String cmd = gfClientExe + " " + host + " " + port + " " + seqDir + " "
+    private Collection<Object> execGfClient( File querySequenceFile, String outputPath ) throws IOException {
+        final String cmd = gfClientExe + " -nohead " + host + " " + port + " " + seqDir + " "
                 + querySequenceFile.getAbsolutePath() + " " + outputPath;
 
         FutureTask<Process> future = new FutureTask<Process>( new Callable<Process>() {
@@ -339,8 +340,28 @@ public class Blat {
             log.error( e, e );
             throw new RuntimeException( "GfClient Failed (Interrupted)", e );
         }
-        return outputPath;
-        // FIXME, process the results.
+        return processPsl( outputPath );
+    }
+
+    /**
+     * Get a temporary file name.
+     * 
+     * @throws IOException
+     */
+    private String getTmpPslFilePath() throws IOException {
+        return File.createTempFile( "pattern", ".psl" ).getPath();
+    }
+
+    /**
+     * @param querySequenceFile
+     * @param outputPath
+     * @return processed results.
+     * @throws IOException
+     */
+    private Collection<Object> gfClient( File querySequenceFile, String outputPath ) throws IOException {
+        if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath );
+
+        return execGfClient( querySequenceFile, outputPath );
     }
 
     /**
@@ -352,60 +373,46 @@ public class Blat {
      */
     private native void GfClientCall( String h, String p, String dir, String input, String output );
 
-    static {
-        if ( !os.toLowerCase().startsWith( "windows" ) ) {
-            try {
-                log.info( "Loading gfClient library, looking in " + System.getProperty( "java.library.path" ) );
-                System.loadLibrary( "Blat" );
-                log.info( "Loaded Blat library successfully" );
-            } catch ( UnsatisfiedLinkError e ) {
-                log.error( e, e );
-                throw new ExceptionInInitializerError( "Unable to locate or load the Blat native library: "
-                        + e.getMessage() );
-            }
+    /**
+     * @throws ConfigurationException
+     */
+    private void init() throws ConfigurationException {
+        URL configFileLocation = ConfigurationUtils.locate( "Gemma.properties" );
+        if ( configFileLocation == null ) throw new ConfigurationException( "Doesn't exist" );
+        Configuration config = new PropertiesConfiguration( configFileLocation );
+        this.port = config.getString( "gfClient.port" );
+        this.host = config.getString( "gfClient.host" );
+        this.seqDir = config.getString( "gfClient.seqDir" );
+        this.seqFiles = config.getString( "gfClient.seqFiles" );
+        this.gfClientExe = config.getString( "gfClient.exe" );
+        this.gfServerExe = config.getString( "gfServer.exe" );
+    }
+
+    /**
+     * @param querySequenceFile
+     * @param outputPath
+     * @return processed results.
+     */
+    private Collection<Object> jniGfClientCall( File querySequenceFile, String outputPath ) throws IOException {
+        try {
+            this.GfClientCall( host, port, seqDir, querySequenceFile.getPath(), outputPath );
+        } catch ( UnsatisfiedLinkError e ) {
+            log.error( e, e );
+            // throw new RuntimeException( "Failed call to native gfClient: " + e.getMessage() );
+            log.info( "Falling back on exec()" );
+            this.execGfClient( querySequenceFile, outputPath );
         }
+        return this.processPsl( outputPath );
     }
 
     /**
-     * @return Returns the gfClientExe.
+     * @param outputPath
+     * @return processed results.
      */
-    public String getGfClientExe() {
-        return this.gfClientExe;
-    }
-
-    /**
-     * @return Returns the gfServerExe.
-     */
-    public String getGfServerExe() {
-        return this.gfServerExe;
-    }
-
-    /**
-     * @return Returns the host.
-     */
-    public String getHost() {
-        return this.host;
-    }
-
-    /**
-     * @return Returns the port.
-     */
-    public String getPort() {
-        return this.port;
-    }
-
-    /**
-     * @return Returns the seqDir.
-     */
-    public String getSeqDir() {
-        return this.seqDir;
-    }
-
-    /**
-     * @return Returns the seqFiles.
-     */
-    public String getSeqFiles() {
-        return this.seqFiles;
+    private Collection<Object> processPsl( String outputPath ) throws IOException {
+        BlatResultParser brp = new BlatResultParser();
+        brp.parse( outputPath );
+        return brp.getResults();
     }
 
 }
