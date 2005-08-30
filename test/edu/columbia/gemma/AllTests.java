@@ -39,6 +39,7 @@ import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
 import edu.columbia.gemma.security.interceptor.PersistAclInterceptorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
+import edu.columbia.gemma.tools.BlatTest;
 import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
@@ -147,6 +148,7 @@ public class AllTests {
         // tools
         suite.addTestSuite( GoldenPathTest.class );
         suite.addTestSuite( SequenceManipulationTest.class );
+        suite.addTestSuite( BlatTest.class );
 
         // web.controller.common.auditAndSecurity
         suite.addTestSuite( SignupControllerTest.class );
