@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -377,15 +378,53 @@ public class Blat {
      * @throws ConfigurationException
      */
     private void init() throws ConfigurationException {
-        URL configFileLocation = ConfigurationUtils.locate( "Gemma.properties" );
-        if ( configFileLocation == null ) throw new ConfigurationException( "Doesn't exist" );
-        Configuration config = new PropertiesConfiguration( configFileLocation );
-        this.port = config.getString( "gfClient.port" );
-        this.host = config.getString( "gfClient.host" );
-        this.seqDir = config.getString( "gfClient.seqDir" );
-        this.seqFiles = config.getString( "gfClient.seqFiles" );
-        this.gfClientExe = config.getString( "gfClient.exe" );
-        this.gfServerExe = config.getString( "gfServer.exe" );
+
+        URL universalConfigFileLocation = ConfigurationUtils.locate( "Gemma.properties" );
+        if ( universalConfigFileLocation == null ) throw new ConfigurationException( "Cannot find config file" );
+        Configuration universalConfig = new PropertiesConfiguration( universalConfigFileLocation );
+
+        URL userSpecificConfigFileLocation = ConfigurationUtils.locate( "build.properties" );
+        Configuration userConfig = new PropertiesConfiguration( userSpecificConfigFileLocation );
+
+        if ( userConfig == null ) {
+            this.host = universalConfig.getString( "gfClient.host" );
+            this.seqDir = universalConfig.getString( "gfClient.seqDir" );
+            this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
+            this.gfClientExe = universalConfig.getString( "gfClient.exe" );
+            this.gfServerExe = universalConfig.getString( "gfServer.exe" );
+        }
+
+        try {
+            this.port = userConfig.getString( "gfClient.port" );
+        } catch ( NoSuchElementException e ) {
+            this.port = universalConfig.getString( "gfClient.port" );
+        }
+        try {
+            this.host = userConfig.getString( "gfClient.host" );
+        } catch ( NoSuchElementException e ) {
+            this.host = universalConfig.getString( "gfClient.host" );
+        }
+        try {
+            this.seqDir = userConfig.getString( "gfClient.seqDir" );
+        } catch ( NoSuchElementException e ) {
+            this.seqDir = universalConfig.getString( "gfClient.seqDir" );
+        }
+        try {
+            this.gfClientExe = userConfig.getString( "gfClient.exe" );
+        } catch ( NoSuchElementException e ) {
+            this.gfClientExe = universalConfig.getString( "gfClient.exe" );
+        }
+        try {
+            this.gfServerExe = userConfig.getString( "gfServer.exe" );
+        } catch ( NoSuchElementException e ) {
+            this.gfServerExe = universalConfig.getString( "gfServer.exe" );
+        }
+        try {
+            this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
+        } catch ( NoSuchElementException e ) {
+            this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
+        }
+
     }
 
     /**
