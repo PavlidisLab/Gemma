@@ -1,8 +1,5 @@
 package edu.columbia.gemma.common.description;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
@@ -14,7 +11,6 @@ import edu.columbia.gemma.BaseDAOTestCase;
  * @version $Id$
  */
 public class DatabaseEntryDaoImplTest extends BaseDAOTestCase {
-    private static Log log = LogFactory.getLog( DatabaseEntryDaoImplTest.class.getName() );
     DatabaseEntryDao deDao;
     DatabaseEntry de;
 

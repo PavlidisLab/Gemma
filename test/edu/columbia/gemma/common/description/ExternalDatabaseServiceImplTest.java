@@ -2,9 +2,7 @@ package edu.columbia.gemma.common.description;
 
 import org.easymock.MockControl;
 
-import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 
 /**
  * <hr>

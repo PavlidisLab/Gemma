@@ -2,16 +2,14 @@ package edu.columbia.gemma.loader.expression.arrayDesign;
 
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Map;
+
+import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
-import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReader;
-
-import junit.framework.TestCase;
 
 /**
  * <hr>
@@ -34,7 +32,7 @@ public class AffyProbeReaderTest extends TestCase {
         apr = new AffyProbeReader();
         apr.setSequenceField( 5 );
         is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-probes-test.txt" );
-        
+
     }
 
     /*
@@ -50,9 +48,9 @@ public class AffyProbeReaderTest extends TestCase {
      * Class under test for Map read(InputStream)
      */
     public final void testReadInputStream() throws Exception {
-        
-        assertTrue("InputStream was null", is != null );
-        
+
+        assertTrue( "InputStream was null", is != null );
+
         apr.parse( is );
 
         String expectedValue = "TCACGGCAGGACAACGAGAAAGCCC"; // 10
