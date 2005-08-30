@@ -420,7 +420,7 @@ public class Blat {
             this.gfServerExe = universalConfig.getString( "gfServer.exe" );
         }
         try {
-            this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
+            this.seqFiles = userConfig.getString( "gfClient.seqFiles" );
         } catch ( NoSuchElementException e ) {
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
         }
