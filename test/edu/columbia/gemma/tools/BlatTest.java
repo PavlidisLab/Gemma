@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResult;
+import edu.columbia.gemma.tools.Blat.BlattableGenome;
 
 /**
  * <hr>
@@ -65,20 +66,20 @@ public class BlatTest extends TestCase {
         File foo = File.createTempFile( "bla", "foo" );
         foo.deleteOnExit();
         b = new Blat();
-        b.startServer();
+        b.startServer( b.getHumanServerPort() );
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        b.stopServer();
+        b.stopServer( b.getHumanServerPort() );
     }
 
     /*
      * Test method for 'edu.columbia.gemma.tools.Blat.Blat(String, String, String)'
      */
     public void testBlat() throws Exception {
-        Collection<Object> results = b.GfClient( bs );
+        Collection<Object> results = b.GfClient( bs, BlattableGenome.HUMAN );
         assertTrue( results.size() == 1 );
         BlatResult br = ( BlatResult ) results.iterator().next();
         assertEquals( 789, br.getMatches() );

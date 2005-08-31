@@ -45,6 +45,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResult;
 import edu.columbia.gemma.loader.genome.BlatResultParser;
@@ -62,6 +63,11 @@ public class Blat {
 
     private static final Log log = LogFactory.getLog( Blat.class );
     private static String os = System.getProperty( "os.name" ).toLowerCase();
+
+    public static enum BlattableGenome {
+        HUMAN, MOUSE, RAT
+    };
+
     static {
         if ( !os.toLowerCase().startsWith( "windows" ) ) {
             try {
@@ -79,12 +85,18 @@ public class Blat {
     private String gfClientExe = "C:/bin/cygwini686/gfClient.exe";
     private String gfServerExe = "C:/bin/cygwini686/gfServer.exe";
     private String host = "localhost";
-    private int port = 177777;
     private String seqDir = "/";
 
     private String seqFiles;
 
     private Process serverProcess;
+    private int humanServerPort;
+    private int mouseServerPort;
+    private int ratServerPort;
+
+    private String humanServerHost;
+    private String mouseServerHost;
+    private String ratServerHost;
 
     /**
      * Create a blat object with settings read from the config file.
@@ -102,12 +114,12 @@ public class Blat {
      * @param port
      * @param seqDir
      */
-    public Blat( String host, int port, String seqDir ) {
+    public Blat( String host, int humanServerPort, String seqDir ) {
 
-        if ( host == null || port <= 0 || seqDir == null )
+        if ( host == null || humanServerPort <= 0 || seqDir == null )
             throw new IllegalArgumentException( "All values must be non-null" );
         this.host = host;
-        this.port = port;
+        this.humanServerPort = humanServerPort;
         this.seqDir = seqDir;
     }
 
@@ -133,13 +145,6 @@ public class Blat {
     }
 
     /**
-     * @return Returns the port.
-     */
-    public int getPort() {
-        return this.port;
-    }
-
-    /**
      * @return Returns the seqDir.
      */
     public String getSeqDir() {
@@ -160,9 +165,8 @@ public class Blat {
      * @return Collection of BlatResult objects.
      * @throws IOException
      */
-    public Collection<Object> GfClient( BioSequence b ) throws IOException {
+    public Collection<Object> GfClient( BioSequence b, BlattableGenome genome ) throws IOException {
         assert seqDir != null;
-        assert port >= 0;
         // write the sequence to a temporary file.
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
 
@@ -173,11 +177,29 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath();
 
-        Collection<Object> results = gfClient( querySequenceFile, outputPath );
+        Collection<Object> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
 
         cleanUpTmpFiles( querySequenceFile, outputPath );
         return results;
 
+    }
+
+    /**
+     * @param genome
+     * @return
+     */
+    private int choosePortForQuery( BlattableGenome genome ) {
+        switch ( genome ) {
+            case HUMAN:
+                return humanServerPort;
+            case MOUSE:
+                return mouseServerPort;
+            case RAT:
+                return ratServerPort;
+            default:
+                return humanServerPort;
+
+        }
     }
 
     /**
@@ -195,7 +217,8 @@ public class Blat {
      * @return map of the input sequence names to a corresponding collection of blat result(s)
      * @throws IOException
      */
-    public Map<String, Collection<BlatResult>> GfClient( Collection<BioSequence> sequences ) throws IOException {
+    public Map<String, Collection<BlatResult>> GfClient( Collection<BioSequence> sequences, BlattableGenome genome )
+            throws IOException {
         Map<String, Collection<BlatResult>> results = new HashMap<String, Collection<BlatResult>>();
 
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
@@ -209,7 +232,7 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath();
 
-        gfClient( querySequenceFile, outputPath );
+        gfClient( querySequenceFile, outputPath, this.choosePortForQuery( genome ) );
 
         Collection<Object> rawResults = this.processPsl( outputPath );
         for ( Object object : rawResults ) {
@@ -230,7 +253,7 @@ public class Blat {
     /**
      * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
      */
-    public void startServer() throws IOException {
+    public void startServer( int port ) throws IOException {
         try {
             new Socket( host, port );
             log.info( "There is already a server on port " + port );
@@ -238,7 +261,7 @@ public class Blat {
         } catch ( UnknownHostException e ) {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
-            String cmd = this.getGfServerExe() + " -canStop start " + this.getHost() + " " + this.getPort() + " "
+            String cmd = this.getGfServerExe() + " -canStop start " + this.getHost() + " " + port + " "
                     + this.getSeqFiles();
             log.info( "Starting gfServer with command " + cmd );
             this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
@@ -248,7 +271,7 @@ public class Blat {
     /**
      * Stop the gfServer, if it was started by this.
      */
-    public void stopServer() {
+    public void stopServer( int port ) {
         if ( false && !doShutdown ) {
             return;
         }
@@ -258,11 +281,10 @@ public class Blat {
         // serverProcess.destroy();
         try {
             // this doesn't work unless the server was invoked with the option "-canStop"
-            Process server = Runtime.getRuntime().exec(
-                    this.getGfServerExe() + " stop " + this.getHost() + " " + this.getPort() );
+            Process server = Runtime.getRuntime().exec( this.getGfServerExe() + " stop " + this.getHost() + " " + port );
             server.waitFor();
             int exit = server.exitValue();
-            log.info( "Server shut down with exit value " + exit );
+            log.info( "Server on port " + port + " shut down with exit value " + exit );
         } catch ( InterruptedException e ) {
             log.error( e, e );
         } catch ( IOException e ) {
@@ -278,8 +300,9 @@ public class Blat {
      * @param outputPath
      * @return
      */
-    private Collection<Object> execGfClient( File querySequenceFile, String outputPath ) throws IOException {
-        final String cmd = gfClientExe + " -nohead " + host + " " + port + " " + seqDir + " "
+    private Collection<Object> execGfClient( File querySequenceFile, String outputPath, int portToUse )
+            throws IOException {
+        final String cmd = gfClientExe + " -nohead " + host + " " + portToUse + " " + seqDir + " "
                 + querySequenceFile.getAbsolutePath() + " " + outputPath;
 
         FutureTask<Process> future = new FutureTask<Process>( new Callable<Process>() {
@@ -365,10 +388,10 @@ public class Blat {
      * @return processed results.
      * @throws IOException
      */
-    private Collection<Object> gfClient( File querySequenceFile, String outputPath ) throws IOException {
-        if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath );
+    private Collection<Object> gfClient( File querySequenceFile, String outputPath, int portToUse ) throws IOException {
+        if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
 
-        return execGfClient( querySequenceFile, outputPath );
+        return execGfClient( querySequenceFile, outputPath, portToUse );
     }
 
     /**
@@ -399,7 +422,12 @@ public class Blat {
 
         if ( userConfig == null ) {
             log.debug( "Reading global config" );
-            this.port = universalConfig.getInt( "gfClient.port" );
+            this.humanServerPort = universalConfig.getInt( "gfClient.humanServerPort" );
+            this.mouseServerPort = universalConfig.getInt( "gfClient.mouseServerPort" );
+            this.ratServerPort = universalConfig.getInt( "gfClient.ratServerPort" );
+            this.humanServerHost = universalConfig.getString( "gfClient.humanServerHost" );
+            this.mouseServerHost = universalConfig.getString( "gfClient.mouseServerHost" );
+            this.ratServerHost = universalConfig.getString( "gfClient.ratServerHost" );
             this.host = universalConfig.getString( "gfClient.host" );
             this.seqDir = universalConfig.getString( "gfClient.seqDir" );
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
@@ -408,11 +436,48 @@ public class Blat {
         }
 
         try {
-            this.port = userConfig.getInt( "gfClient.port" );
-            if ( port <= 0 ) throw new NoSuchElementException();
+            this.humanServerPort = userConfig.getInt( "gfClient.humanServerPort" );
+            if ( humanServerPort <= 0 ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
-            this.port = universalConfig.getInt( "gfClient.port" );
+            this.humanServerPort = universalConfig.getInt( "gfClient.humanServerPort" );
         }
+
+        try {
+            this.mouseServerPort = userConfig.getInt( "gfClient.mouseServerPort" );
+            if ( mouseServerPort <= 0 ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.mouseServerPort = universalConfig.getInt( "gfClient.mouseServerPort" );
+        }
+
+        try {
+            this.ratServerPort = userConfig.getInt( "gfClient.ratServerPort" );
+            if ( ratServerPort <= 0 ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.ratServerPort = universalConfig.getInt( "gfClient.ratServerPort" );
+        }
+
+        try {
+            this.humanServerHost = userConfig.getString( "gfClient.humanServerHost" );
+            if ( humanServerHost == null ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.humanServerHost = universalConfig.getString( "gfClient.humanServerHost" );
+        }
+
+        try {
+            this.mouseServerHost = userConfig.getString( "gfClient.mouseServerHost" );
+            if ( mouseServerHost == null ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.mouseServerHost = universalConfig.getString( "gfClient.mouseServerHost" );
+        }
+
+        try {
+            this.ratServerHost = userConfig.getString( "gfClient.ratServerHost" );
+            if ( ratServerHost == null ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.ratServerHost = universalConfig.getString( "gfClient.ratServerHost" );
+        }
+
+        
         try {
             this.host = userConfig.getString( "gfClient.host" );
             if ( host == null ) throw new NoSuchElementException();
@@ -444,10 +509,6 @@ public class Blat {
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
         }
 
-        if ( host == null || port <= 0 || seqDir == null ) {
-            throw new ConfigurationException( "Could not configure the gfClient" );
-        }
-
         if ( gfServerExe == null || seqFiles == null ) {
             log.warn( "You will not be able to start the server due to a configuration error." );
         }
@@ -456,8 +517,6 @@ public class Blat {
             throw new ConfigurationException( "BLAT client calls will not work under windows." );
         }
 
-        log.info( "Host:" + host + " Port:" + port + " Sequence files: " + seqFiles );
-
     }
 
     /**
@@ -465,14 +524,15 @@ public class Blat {
      * @param outputPath
      * @return processed results.
      */
-    private Collection<Object> jniGfClientCall( File querySequenceFile, String outputPath ) throws IOException {
+    private Collection<Object> jniGfClientCall( File querySequenceFile, String outputPath, int portToUse )
+            throws IOException {
         try {
-            this.GfClientCall( host, Integer.toString( port ), seqDir, querySequenceFile.getPath(), outputPath );
+            this.GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
         } catch ( UnsatisfiedLinkError e ) {
             log.error( e, e );
             // throw new RuntimeException( "Failed call to native gfClient: " + e.getMessage() );
             log.info( "Falling back on exec()" );
-            this.execGfClient( querySequenceFile, outputPath );
+            this.execGfClient( querySequenceFile, outputPath, portToUse );
         }
         return this.processPsl( outputPath );
     }
@@ -485,6 +545,27 @@ public class Blat {
         BlatResultParser brp = new BlatResultParser();
         brp.parse( outputPath );
         return brp.getResults();
+    }
+
+    /**
+     * @return Returns the humanServerPort.
+     */
+    public int getHumanServerPort() {
+        return this.humanServerPort;
+    }
+
+    /**
+     * @return Returns the mouseServerPort.
+     */
+    public int getMouseServerPort() {
+        return this.mouseServerPort;
+    }
+
+    /**
+     * @return Returns the ratServerPort.
+     */
+    public int getRatServerPort() {
+        return this.ratServerPort;
     }
 
 }
