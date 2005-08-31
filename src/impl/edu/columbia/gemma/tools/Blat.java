@@ -79,7 +79,7 @@ public class Blat {
     private String gfClientExe = "C:/bin/cygwini686/gfClient.exe";
     private String gfServerExe = "C:/bin/cygwini686/gfServer.exe";
     private String host = "localhost";
-    private String port = "177777";
+    private int port = 177777;
     private String seqDir = "/";
 
     private String seqFiles;
@@ -102,9 +102,9 @@ public class Blat {
      * @param port
      * @param seqDir
      */
-    public Blat( String host, String port, String seqDir ) {
+    public Blat( String host, int port, String seqDir ) {
 
-        if ( host == null || port == null || seqDir == null )
+        if ( host == null || port <= 0 || seqDir == null )
             throw new IllegalArgumentException( "All values must be non-null" );
         this.host = host;
         this.port = port;
@@ -135,7 +135,7 @@ public class Blat {
     /**
      * @return Returns the port.
      */
-    public String getPort() {
+    public int getPort() {
         return this.port;
     }
 
@@ -162,7 +162,7 @@ public class Blat {
      */
     public Collection<Object> GfClient( BioSequence b ) throws IOException {
         assert seqDir != null;
-        assert port != null;
+        assert port >= 0;
         // write the sequence to a temporary file.
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
 
@@ -224,11 +224,9 @@ public class Blat {
      */
     public void startServer() throws IOException {
         try {
-            new Socket( host, Integer.parseInt( port ) );
+            new Socket( host, port );
             log.info( "There is already a server on port " + port );
             this.doShutdown = false;
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Invalid port " + port, e );
         } catch ( UnknownHostException e ) {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
@@ -389,7 +387,7 @@ public class Blat {
         Configuration userConfig = new PropertiesConfiguration( userSpecificConfigFileLocation );
 
         if ( userConfig == null ) {
-            this.port = universalConfig.getString( "gfClient.port" );
+            this.port = universalConfig.getInt( "gfClient.port" );
             this.host = universalConfig.getString( "gfClient.host" );
             this.seqDir = universalConfig.getString( "gfClient.seqDir" );
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
@@ -398,9 +396,9 @@ public class Blat {
         }
 
         try {
-            this.port = userConfig.getString( "gfClient.port" );
+            this.port = userConfig.getInt( "gfClient.port" );
         } catch ( NoSuchElementException e ) {
-            this.port = universalConfig.getString( "gfClient.port" );
+            this.port = universalConfig.getInt( "gfClient.port" );
         }
         try {
             this.host = userConfig.getString( "gfClient.host" );
@@ -437,7 +435,7 @@ public class Blat {
      */
     private Collection<Object> jniGfClientCall( File querySequenceFile, String outputPath ) throws IOException {
         try {
-            this.GfClientCall( host, port, seqDir, querySequenceFile.getPath(), outputPath );
+            this.GfClientCall( host, Integer.toString( port ), seqDir, querySequenceFile.getPath(), outputPath );
         } catch ( UnsatisfiedLinkError e ) {
             log.error( e, e );
             // throw new RuntimeException( "Failed call to native gfClient: " + e.getMessage() );
