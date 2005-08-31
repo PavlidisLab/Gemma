@@ -380,11 +380,16 @@ public class Blat {
     private void init() throws ConfigurationException {
 
         URL universalConfigFileLocation = ConfigurationUtils.locate( "Gemma.properties" );
-        if ( universalConfigFileLocation == null ) throw new ConfigurationException( "Cannot find config file" );
+        if ( universalConfigFileLocation == null )
+            throw new ConfigurationException( "Cannot find config file Gemam.properties" );
         Configuration universalConfig = new PropertiesConfiguration( universalConfigFileLocation );
 
         URL userSpecificConfigFileLocation = ConfigurationUtils.locate( "build.properties" );
-        Configuration userConfig = new PropertiesConfiguration( userSpecificConfigFileLocation );
+
+        Configuration userConfig = null;
+        if ( userSpecificConfigFileLocation != null ) {
+            userConfig = new PropertiesConfiguration( userSpecificConfigFileLocation );
+        }
 
         if ( userConfig == null ) {
             this.port = universalConfig.getInt( "gfClient.port" );
@@ -426,6 +431,8 @@ public class Blat {
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
         }
 
+        log.info( "Host:" + host + " Port:" + port );
+
     }
 
     /**
@@ -446,7 +453,7 @@ public class Blat {
     }
 
     /**
-     * @param outputPath
+     * @param outputPath to the Blat output file in psl format
      * @return processed results.
      */
     private Collection<Object> processPsl( String outputPath ) throws IOException {
