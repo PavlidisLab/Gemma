@@ -88,6 +88,7 @@ public abstract class BasicLineParser implements LineParser {
         }
         FileInputStream stream = new FileInputStream( file );
         parse( stream );
+        stream.close();
     }
 
     /*
