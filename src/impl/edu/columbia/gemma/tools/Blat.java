@@ -389,6 +389,7 @@ public class Blat {
         Configuration userConfig = new PropertiesConfiguration( userSpecificConfigFileLocation );
 
         if ( userConfig == null ) {
+            this.port = universalConfig.getString( "gfClient.port" );
             this.host = universalConfig.getString( "gfClient.host" );
             this.seqDir = universalConfig.getString( "gfClient.seqDir" );
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
