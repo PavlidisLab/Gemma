@@ -227,6 +227,8 @@ public class Blat {
             new Socket( host, Integer.parseInt( port ) );
             log.info( "There is already a server on port " + port );
             this.doShutdown = false;
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Invalid port " + port, e );
         } catch ( UnknownHostException e ) {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
@@ -259,7 +261,7 @@ public class Blat {
         // int exit = server.exitValue();
         // log.info( "Server shut down with exit value " + exit );
         // } catch ( InterruptedException e ) {
-        // // TODO Auto-generated catch block
+        // 
         // e.printStackTrace();
         // }
 
