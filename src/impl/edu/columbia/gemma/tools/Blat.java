@@ -175,11 +175,19 @@ public class Blat {
 
         Collection<Object> results = gfClient( querySequenceFile, outputPath );
 
-        // clean up.
-        querySequenceFile.delete();
-        ( new File( outputPath ) ).delete();
+        cleanUpTmpFiles( querySequenceFile, outputPath );
         return results;
 
+    }
+
+    /**
+     * @param querySequenceFile
+     * @param outputPath
+     */
+    private void cleanUpTmpFiles( File querySequenceFile, String outputPath ) {
+        if ( !querySequenceFile.delete() || !( new File( outputPath ) ).delete() ) {
+            log.warn( "Could not clean up temporary files." );
+        }
     }
 
     /**
@@ -230,7 +238,7 @@ public class Blat {
         } catch ( UnknownHostException e ) {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
-            String cmd = this.getGfServerExe() + " start " + this.getHost() + " " + this.getPort() + " "
+            String cmd = this.getGfServerExe() + " -canStop start " + this.getHost() + " " + this.getPort() + " "
                     + this.getSeqFiles();
             log.info( "Starting gfServer with command " + cmd );
             this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
@@ -238,7 +246,7 @@ public class Blat {
     }
 
     /**
-     * Rather forcibly stop the gfServer, if it was started by this.
+     * Stop the gfServer, if it was started by this.
      */
     public void stopServer() {
         if ( false && !doShutdown ) {
@@ -247,21 +255,19 @@ public class Blat {
         log.info( "Shutting down gfServer" );
 
         if ( serverProcess == null ) return;
-        serverProcess.destroy();
-
-        // this doesn't work.
-        // Process server = Runtime.getRuntime().exec(
-        // this.getGfServerExe() + " stop " + this.getHost() + " " + this.getPort() );
-        //
-        // //
-        // try {
-        // server.waitFor();
-        // int exit = server.exitValue();
-        // log.info( "Server shut down with exit value " + exit );
-        // } catch ( InterruptedException e ) {
-        // 
-        // e.printStackTrace();
-        // }
+        // serverProcess.destroy();
+        try {
+            // this doesn't work unless the server was invoked with the option "-canStop"
+            Process server = Runtime.getRuntime().exec(
+                    this.getGfServerExe() + " stop " + this.getHost() + " " + this.getPort() );
+            server.waitFor();
+            int exit = server.exitValue();
+            log.info( "Server shut down with exit value " + exit );
+        } catch ( InterruptedException e ) {
+            log.error( e, e );
+        } catch ( IOException e ) {
+            log.error( e, e );
+        }
 
     }
 
@@ -392,6 +398,7 @@ public class Blat {
         }
 
         if ( userConfig == null ) {
+            log.debug( "Reading global config" );
             this.port = universalConfig.getInt( "gfClient.port" );
             this.host = universalConfig.getString( "gfClient.host" );
             this.seqDir = universalConfig.getString( "gfClient.seqDir" );
@@ -402,36 +409,54 @@ public class Blat {
 
         try {
             this.port = userConfig.getInt( "gfClient.port" );
+            if ( port <= 0 ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
             this.port = universalConfig.getInt( "gfClient.port" );
         }
         try {
             this.host = userConfig.getString( "gfClient.host" );
+            if ( host == null ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
             this.host = universalConfig.getString( "gfClient.host" );
         }
         try {
             this.seqDir = userConfig.getString( "gfClient.seqDir" );
         } catch ( NoSuchElementException e ) {
+            if ( seqDir == null ) throw new NoSuchElementException();
             this.seqDir = universalConfig.getString( "gfClient.seqDir" );
         }
         try {
             this.gfClientExe = userConfig.getString( "gfClient.exe" );
+            if ( gfClientExe == null ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
             this.gfClientExe = universalConfig.getString( "gfClient.exe" );
         }
         try {
             this.gfServerExe = userConfig.getString( "gfServer.exe" );
+            if ( gfServerExe == null ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
             this.gfServerExe = universalConfig.getString( "gfServer.exe" );
         }
         try {
             this.seqFiles = userConfig.getString( "gfClient.seqFiles" );
+            if ( seqFiles == null ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
             this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
         }
 
-        log.info( "Host:" + host + " Port:" + port );
+        if ( host == null || port <= 0 || seqDir == null ) {
+            throw new ConfigurationException( "Could not configure the gfClient" );
+        }
+
+        if ( gfServerExe == null || seqFiles == null ) {
+            log.warn( "You will not be able to start the server due to a configuration error." );
+        }
+
+        if ( gfClientExe == null && os.startsWith( "windows" ) ) {
+            throw new ConfigurationException( "BLAT client calls will not work under windows." );
+        }
+
+        log.info( "Host:" + host + " Port:" + port + " Sequence files: " + seqFiles );
 
     }
 
