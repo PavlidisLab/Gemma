@@ -133,7 +133,7 @@ public class RequestUtil {
         }
 
         Enumeration e = aRequest.getAttributeNames();
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<String, Object>();
 
         while ( e.hasMoreElements() ) {
             String name = ( String ) e.nextElement();
