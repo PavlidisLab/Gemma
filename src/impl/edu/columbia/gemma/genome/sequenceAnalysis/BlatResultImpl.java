@@ -31,42 +31,6 @@ package edu.columbia.gemma.genome.sequenceAnalysis;
  */
 public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.BlatResult {
 
-    private String targetName;
-    private String queryName;
-    private int querySize;
-
-    /**
-     * @deprecated - only here temporarily
-     * @return
-     */
-    public String getQueryName() {
-        return this.queryName;
-    }
-
-    /**
-     * @deprecated - only here temporarily
-     * @param queryName
-     */
-    public void setQueryName( String queryName ) {
-        this.queryName = queryName;
-    }
-
-    /**
-     * @deprecated - only here temporarily
-     * @return
-     */
-    public String getTargetName() {
-        return this.targetName;
-    }
-
-    /**
-     * @deprecated - only here temporarily
-     * @param targetName
-     */
-    public void setTargetName( String targetName ) {
-        this.targetName = targetName;
-    }
-
     /**
      * Based on the JKSrc method in psl.c. However, we do not double-penalize for mismatches (they are not subtracted
      * from the matches). The gap penalties are implemented as in psl.c.
@@ -74,9 +38,11 @@ public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.B
      * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
      * @see edu.columbia.gemma.sequence.sequenceAnalysis.BlatResult#score()
      */
+    @Override
     public double score() {
+        assert this.getQuerySequence() != null;
         return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
-                / this.getQuerySize();
+                / this.getQuerySequence().getLength();
     }
 
     /**
@@ -85,6 +51,7 @@ public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.B
      * @return Value between 0 and 1.
      * @see http:// genome.ucsc.edu/FAQ/FAQblat#blat5
      */
+    @Override
     public double identity() {
         int sizeMul = 1; // assuming DNA; use 3 for protein.
         int qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
@@ -103,23 +70,6 @@ public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.B
                 / ( sizeMul * ( this.getMatches() + this.getRepMatches() + this.getMismatches() ) );
         assert milliBad >= 0 && milliBad <= 1000;
         return 100.0 - milliBad * 0.1;
-    }
-
-    /**
-     * @deprecated - only here temporarily
-     * @param i
-     */
-    public void setQuerySize( int i ) {
-        this.querySize = i;
-
-    }
-
-    /**
-     * @deprecated - only here temporarily
-     * @param i
-     */
-    public int getQuerySize() {
-        return this.querySize;
     }
 
 }
