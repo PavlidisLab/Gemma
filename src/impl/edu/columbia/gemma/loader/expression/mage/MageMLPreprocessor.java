@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +61,7 @@ public class MageMLPreprocessor implements Preprocessor {
 
         log.debug( "There are " + quantitationTypes.size() + " quantitation types for bioassay " + bioAssay );
 
-        List<QuantitationType> arrayList = new ArrayList();// used ArrayList because it is equivalent to Vector
+        // used ArrayList because it is equivalent to Vector
                                                             // (ordered and more efficient than LinkedList).
         for ( QuantitationType qt : quantitationTypes ) {
             log.debug( "QuantitationType: " + qt );
@@ -70,6 +72,16 @@ public class MageMLPreprocessor implements Preprocessor {
         log.debug( "There are " + designElements.size() + " design elements for bioassay " + bioAssay );
         for ( DesignElement de : designElements ) {
             log.debug( "DesignElement: " + de );
+        }
+        
+        //parsing first raw file (there are 11 others ie. 1 per BioAssay).
+        InputStream is = this.getClass().getResourceAsStream( "/data/mage/E-AFMX-13/031128_jm 29 c1 72hrao_031128_JM 29 C1 72hrAO_CEL_externaldata.txt" );
+        RawDataParser rdp = new RawDataParser();
+        try {
+            rdp.parse(is);
+        } catch ( IOException e ) {
+            System.err.print("error with parse method when parsing raw data file");
+            e.printStackTrace();
         }
 
     }
