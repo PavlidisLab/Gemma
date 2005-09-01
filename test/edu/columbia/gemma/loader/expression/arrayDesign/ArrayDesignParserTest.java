@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.expression.arrayDesign;
 
 import java.io.InputStream;
@@ -7,8 +25,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
-
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
@@ -18,8 +34,6 @@ import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
@@ -39,8 +53,6 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
     private ArrayDesignLoaderImpl arrayDesignLoader = null;
 
     private Map map = null;
-
-    private Map map2 = null;
 
     private Collection<ArrayDesign> col = null;
 
