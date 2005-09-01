@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.listener;
 
 import java.util.HashSet;
@@ -16,14 +34,17 @@ import edu.columbia.gemma.web.Constants;
 
 /**
  * UserCounterListener class used to count the current number of active users for the applications. Does this by
- * counting how many user objects are stuffed into the session. It Also grabs these users and exposes them in the
+ * counting how many user objects are stuffed into the session. It also grabs these users and exposes them in the
  * servlet context.
+ * <p>
+ * Contains code from Appfuse.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @web.listener
  */
@@ -33,7 +54,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
     private int counter;
     private final transient Log log = LogFactory.getLog( UserCounterListener.class );
     private transient ServletContext servletContext;
-    private Set users;
+    private Set<Object> users;
 
     /**
      * This method is designed to catch when user's login and record their name
@@ -47,7 +68,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
     }
 
     /**
-     * When user's logout, remove their name from the hashMap
+     * When users logout, remove their name from the hashMap
      * 
      * @see javax.servlet.http.HttpSessionAttributeListener#attributeRemoved(javax.servlet.http.HttpSessionBindingEvent)
      */
@@ -57,25 +78,44 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         }
     }
 
-    /**
+    /*
+     * (non-Javadoc)
+     * 
      * @see javax.servlet.http.HttpSessionAttributeListener#attributeReplaced(javax.servlet.http.HttpSessionBindingEvent)
      */
+    @SuppressWarnings("unused")
     public void attributeReplaced( HttpSessionBindingEvent event ) {
         // I don't really care if the user changes their information
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
+     */
+    @SuppressWarnings("unused")
     public synchronized void contextDestroyed( ServletContextEvent event ) {
         servletContext = null;
         users = null;
         counter = 0;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)
+     */
     public synchronized void contextInitialized( ServletContextEvent sce ) {
         servletContext = sce.getServletContext();
         servletContext.setAttribute( ( COUNT_KEY ), Integer.toString( counter ) );
     }
 
+    /**
+     * @param user
+     */
+    @SuppressWarnings("unchecked")
     synchronized void addUsername( Object user ) {
+        assert servletContext.getAttribute( USERS_KEY ) instanceof Set : "USERS_KEY is not a java.util.Set";
         users = ( Set ) servletContext.getAttribute( USERS_KEY );
 
         if ( users == null ) {
@@ -93,11 +133,16 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         incrementUserCounter();
     }
 
+    /**
+     * 
+     */
     synchronized void decrementUserCounter() {
-        int counter = Integer.parseInt( ( String ) servletContext.getAttribute( COUNT_KEY ) );
+        // N.B. I'm pretty sure this was a bug, it was hiding the class property 'counter'. PP 8/28/2005
+        counter = Integer.parseInt( ( String ) servletContext.getAttribute( COUNT_KEY ) );
         counter--;
 
         if ( counter < 0 ) {
+            log.warn( "User count went negative" );
             counter = 0;
         }
 
@@ -108,6 +153,9 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         }
     }
 
+    /**
+     * 
+     */
     synchronized void incrementUserCounter() {
         counter = Integer.parseInt( ( String ) servletContext.getAttribute( COUNT_KEY ) );
         counter++;
@@ -118,7 +166,12 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         }
     }
 
+    /**
+     * @param user
+     */
+    @SuppressWarnings("unchecked")
     synchronized void removeUsername( Object user ) {
+        assert servletContext.getAttribute( USERS_KEY ) instanceof Set : "USERS_KEY is not a java.util.Set";
         users = ( Set ) servletContext.getAttribute( USERS_KEY );
 
         if ( users != null ) {
