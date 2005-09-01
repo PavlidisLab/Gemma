@@ -95,9 +95,9 @@ public class MageMLParserTest extends MageBaseTest {
     public void testParseCollectionRealA() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );
 
-        xslSetup( mlp, "/data/mage/E-AFMX-13.xml" );
+        xslSetup( mlp, "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
 
-        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13.xml" );
+        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
 
         log.info( "Tally:\n" + mlp );
