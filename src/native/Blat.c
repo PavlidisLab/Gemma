@@ -13,9 +13,9 @@ JNIEXPORT jobject JNICALL Java_edu_columbia_gemma_tools_Blat_GfClientCall
   const char *seqDir =  (*env)->GetStringUTFChars(env, jseqDir, 0);
   const char *queryFile = (*env)->GetStringUTFChars(env, jqueryFile, 0);
   const char *outputFile = (*env)->GetStringUTFChars(env, joutputFile, 0);
+  fprintf(stderr, "Hello world\n");  
+  gfClientMinimal(hostname, port, seqDir, queryFile, outputFile);
   
-  gfClient(hostname, port, seqDir, queryFile, outputFile, "dna", "dna");
-  printf("Hello world\n");
   (*env)->ReleaseStringUTFChars(env, jhostname, hostname);
   (*env)->ReleaseStringUTFChars(env, jport, port);
   (*env)->ReleaseStringUTFChars(env, jseqDir, seqDir);
@@ -23,11 +23,3 @@ JNIEXPORT jobject JNICALL Java_edu_columbia_gemma_tools_Blat_GfClientCall
   (*env)->ReleaseStringUTFChars(env, joutputFile, outputFile);
   return;
 }
-
-/* this is here to make cygwin happy... oh well, not needed afterall when we link to the gfClient lib */
-//int main (int argc, char **argv) {}
-/*void gfClient(const char *hostName, const char *portName, const char *tSeqDir, const char *inName,
-	      const char *outName, const char *tTypeName, const char *qTypeName) {
-  fprintf(stdout, "wow!\n");
-}
-*/

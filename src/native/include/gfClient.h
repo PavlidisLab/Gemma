@@ -2,8 +2,7 @@
 #define GFCLIENT_H
 #include <jni.h>
 
-void gfClient(const char *hostName, const char *portName, const char *tSeqDir, const char *inName,
-             const char *outName, const char *tTypeName, const char *qTypeName);
+void gfClientMinimal(const char *hostName, const char *portName, const char *tseqDir, const char *inName, const char *outName);
 
 #endif /* GFCLIENT_H */
 
