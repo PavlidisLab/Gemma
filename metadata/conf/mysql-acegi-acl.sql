@@ -25,8 +25,7 @@ INSERT INTO ACL_PERMISSION VALUES (null, 1, 'administrator', 1);
 
 --- Add the user pavlab to the database.  Due to the fact that this user is used specifically for testing acegi security (acl), I have
 --- put the insert statements in this acegi specific .sql file as opposed to the init-script.sql.
-insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME) values ("PersonImpl", "aPersonWithUserPriviledges", "lastname", "firstname", "middlename");
-insert into CONTACT (CLASS, NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED) values ("UserImpl", "aUserWithUserPriviledges", "pavlab", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1);
+insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED) values ("UserImpl", "admin", "lastname", "firstname", "pavlab_middlename", "pavlab", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1);
 insert into CONTACT (CLASS, NAME, EMAIL) values ("edu.columbia.gemma.common.auditAndSecurity.ContactImpl", "contact", "keshav@cu-genome.org");
 insert into USER_ROLE (NAME, USER_NAME) values ("user", "pavlab");
 
