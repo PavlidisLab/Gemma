@@ -45,7 +45,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResult;
 import edu.columbia.gemma.loader.genome.BlatResultParser;
@@ -265,6 +264,19 @@ public class Blat {
                     + this.getSeqFiles();
             log.info( "Starting gfServer with command " + cmd );
             this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
+
+            try {
+                Thread.sleep( 100 );
+                int exit = serverProcess.exitValue();
+                if ( exit != 0 ) {
+                    throw new IOException( "Could not start server" );
+                }
+            } catch ( IllegalThreadStateException e1 ) {
+                log.info( "Server seems to have started" );
+            } catch ( InterruptedException e1 ) {
+                ;
+            }
+
         }
     }
 
@@ -355,6 +367,7 @@ public class Blat {
                 while ( ( l = br.readLine() ) != null ) {
                     buf.append( l + "\n" );
                 }
+                br.close();
 
                 log.error( "GfClient Error : " + future.get().exitValue() );
                 log.error( "Command was '" + cmd + "'" );
@@ -477,7 +490,6 @@ public class Blat {
             this.ratServerHost = universalConfig.getString( "gfClient.ratServerHost" );
         }
 
-        
         try {
             this.host = userConfig.getString( "gfClient.host" );
             if ( host == null ) throw new NoSuchElementException();
