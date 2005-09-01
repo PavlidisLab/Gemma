@@ -54,10 +54,11 @@ public class MageMLPreprocessorTest extends BaseServiceTestCase {
     public void setup() throws Exception {
         System.out.println( "here" );
         super.setUp();
+        // in case of premature termination of test, make sure the streams are closed.
 
     }
 
-    public void tearDown() {
+    public void tearDown() throws Exception {
         ctx = null;
     }
 
@@ -65,8 +66,7 @@ public class MageMLPreprocessorTest extends BaseServiceTestCase {
      * Tests the conversion of source domain objects (SDO) to gemma domain objects (GDO)
      * 
      * @throws IOException
-     * @throws TransformerException
-     * TODO a work in progress
+     * @throws TransformerException TODO a work in progress
      */
     @SuppressWarnings("unchecked")
     public void testPreprocess() throws IOException, TransformerException {
@@ -88,6 +88,7 @@ public class MageMLPreprocessorTest extends BaseServiceTestCase {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLPreprocessorTest.class
                 .getResourceAsStream( "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
+
         getMageMLParser().parse( istMageExamples );
 
         /* create the simplified xml file using the mageMLParser */
@@ -129,14 +130,25 @@ public class MageMLPreprocessorTest extends BaseServiceTestCase {
         /* PREPROCESSING */
         log.debug( "***** PREPROCESSING ***** \n" );
         List<BioAssay> bioAssays = getMageMLConverter().getConvertedBioAssays();
-        for ( BioAssay ba : bioAssays ) {
-            List qtypes = getMageMLConverter().getBioAssayQuantitationTypeDimension( ba );
-            
-            List designElements = getMageMLConverter().getBioAssayDesignElementDimension( ba );
-            
-            // get all raw files
-            getMageMLPreprocessor().preprocess( ba, qtypes, designElements );
-        }
+
+        // for ( BioAssay ba : bioAssays ) {
+        // List qtypes = getMageMLConverter().getBioAssayQuantitationTypeDimension( ba );
+        //            
+        // List designElements = getMageMLConverter().getBioAssayDesignElementDimension( ba );
+        //            
+        // // get all raw files
+        // getMageMLPreprocessor().preprocess( ba, qtypes, designElements );
+        // }
+
+        /* for testing purposes - going through each bioassay could take to long */
+        BioAssay tmpBioAssay = bioAssays.get( 0 );
+
+        List qtypes = getMageMLConverter().getBioAssayQuantitationTypeDimension( tmpBioAssay );
+
+        List designElements = getMageMLConverter().getBioAssayDesignElementDimension( tmpBioAssay );
+
+        /* get all raw files */
+        getMageMLPreprocessor().preprocess( tmpBioAssay, qtypes, designElements );
 
     }
 
