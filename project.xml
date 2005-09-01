@@ -585,7 +585,7 @@
                     <filtering>false</filtering>
                 </resource>
                 <resource>
-                    <directory>${basedir}/web</directory>
+                    <directory>${basedir}/src/web</directory>
                     <includes>
                         <include>**/*.xml</include>
                     </includes>
