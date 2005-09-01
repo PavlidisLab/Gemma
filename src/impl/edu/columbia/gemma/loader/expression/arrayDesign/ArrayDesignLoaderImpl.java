@@ -30,7 +30,7 @@ public class ArrayDesignLoaderImpl {
     /**
      * @param adCol
      */
-    public void create( Collection<ArrayDesign> adCol ) {
+    public void persist( Collection<ArrayDesign> adCol ) {
 
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
@@ -78,7 +78,7 @@ public class ArrayDesignLoaderImpl {
     /**
      * @param arrayDesign
      */
-    public void create( ArrayDesign arrayDesign ) {
+    public void persist( ArrayDesign arrayDesign ) {
         try {
             getArrayDesignService().saveArrayDesign( arrayDesign );
         } catch ( ArrayDesignExistsException e ) {
