@@ -50,13 +50,6 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        BeanFactory ctx = SpringContextUtil.getApplicationContext();
-
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-                .getBean( "manualAuthenticationProcessing" );
-        
-        manAuthentication.validateRequest("pavlab", "pavlab");
-
         arrayDesignParser = new ArrayDesignParserImpl();
 
         arrayDesignParser.setArrayDesignMappings( ( ArrayDesignMappings ) ctx.getBean( "arrayDesignMappings" ) );
