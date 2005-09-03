@@ -561,6 +561,12 @@
                 <classloader>root</classloader>
             </properties>
         </dependency>
+        <dependency>
+            <groupId>rserve</groupId>
+            <artifactId>JRclient</artifactId>
+            <version>RE817</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <build>
         <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
@@ -615,10 +621,14 @@
                 </includes>
                 <filtering>false</filtering>
             </resource>
+	    <resource>  
+	     <directory>${basedir}/src/web</directory>
+	     <includes><include>**/*-flow.xml</include></includes>
+	     <filtering>false</filtering>
+	     </resource>
             <resource>
                 <directory>${basedir}/src/gen</directory>
                 <includes>
-                    <include>**/*-flow.xml</include>
                     <include>**/*.hbm.xml</include>
                     <include>ehcache.xml</include>
                     <include>hibernate.cfg.xml</include>
