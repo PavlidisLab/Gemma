@@ -46,6 +46,8 @@ public class BlatTest extends TestCase {
     BioSequence bs;
     Blat b;
 
+    boolean serverStarted = false;
+
     /*
      * @see TestCase#setUp()
      */
@@ -66,7 +68,13 @@ public class BlatTest extends TestCase {
         File foo = File.createTempFile( "bla", "foo" );
         foo.deleteOnExit();
         b = new Blat();
-        b.startServer( b.getHumanServerPort() );
+
+        try {
+            b.startServer( b.getHumanServerPort() );
+            serverStarted = true;
+        } catch ( RuntimeException e ) {
+            serverStarted = false;
+        }
     }
 
     @Override
@@ -79,6 +87,10 @@ public class BlatTest extends TestCase {
      * Test method for 'edu.columbia.gemma.tools.Blat.Blat(String, String, String)'
      */
     public void testBlat() throws Exception {
+        if ( !serverStarted ) {
+            log.warn( "BLAT server isn't running (or could not be started), skipping test." );
+            return;
+        }
         Collection<Object> results = b.GfClient( bs, BlattableGenome.HUMAN );
         assertTrue( results.size() == 1 );
         BlatResult br = ( BlatResult ) results.iterator().next();
