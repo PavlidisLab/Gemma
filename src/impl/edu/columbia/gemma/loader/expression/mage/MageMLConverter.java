@@ -160,7 +160,7 @@ public class MageMLConverter implements Converter {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         Map<String, Integer> tally = new HashMap<String, Integer>();
         for ( Object element : convertedResult ) {
             String clazz = element.getClass().getName();

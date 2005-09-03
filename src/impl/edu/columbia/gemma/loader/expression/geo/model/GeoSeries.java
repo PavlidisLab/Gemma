@@ -145,8 +145,11 @@ public class GeoSeries extends GeoData {
         this.summary = summary;
     }
 
-    public void addToSummary( String summary ) {
-        this.summary = this.summary + " " + summary;
+    /**
+     * @param text to add onto the summary. A space is added to the end of the previous summary first.
+     */
+    public void addToSummary( String text ) {
+        this.summary = this.summary + " " + text;
     }
 
     /**

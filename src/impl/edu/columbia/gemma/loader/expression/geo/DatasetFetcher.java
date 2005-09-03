@@ -20,7 +20,6 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -33,7 +32,6 @@ import org.apache.commons.net.ftp.FTP;
 
 import baseCode.util.NetUtils;
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.loader.expression.geo.model.GeoFile;
 import edu.columbia.gemma.loader.expression.geo.util.GeoUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 

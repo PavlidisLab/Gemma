@@ -363,7 +363,7 @@ public class Blat {
                 InputStream result = future.get().getErrorStream();
                 BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
                 String l = null;
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 while ( ( l = br.readLine() ) != null ) {
                     buf.append( l + "\n" );
                 }

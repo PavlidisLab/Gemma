@@ -125,7 +125,7 @@ public class ExperimentFetcher extends FtpFetcher {
      * Print out a tabbed listing of all the experiments found.
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         for ( Iterator<SMDPublication> iter = pubs.getIterator(); iter.hasNext(); ) {
             SMDPublication pubM = iter.next();

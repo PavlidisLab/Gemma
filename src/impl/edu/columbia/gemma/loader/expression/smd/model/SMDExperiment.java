@@ -129,18 +129,18 @@ public class SMDExperiment {
 
         boolean inSet = false;
         boolean inExp = false;
-        StringBuffer expSetBuf;
-        StringBuffer expBuf;
+        StringBuilder expSetBuf;
+        StringBuilder expBuf;
 
         @SuppressWarnings("unused")
         public void startElement( String uri, String value, String qName, Attributes atts ) {
 
             if ( value.equals( "experiment_set" ) ) {
                 inSet = true;
-                expSetBuf = new StringBuffer();
+                expSetBuf = new StringBuilder();
             } else if ( value.equals( "experiment" ) ) {
                 inExp = true;
-                expBuf = new StringBuffer();
+                expBuf = new StringBuilder();
             } else {
                 throw new IllegalStateException( "Unexpected tag '" + value + "' encountered." );
             }

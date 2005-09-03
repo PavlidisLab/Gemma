@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.BufferedReader;
@@ -184,14 +202,19 @@ public class GeoFamilyParser implements Parser {
             adder.invoke( target, new Object[] { value } );
         } catch ( SecurityException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( IllegalArgumentException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( NoSuchMethodException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -206,8 +229,10 @@ public class GeoFamilyParser implements Parser {
             BeanUtils.setProperty( contact, property, value );
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -237,8 +262,10 @@ public class GeoFamilyParser implements Parser {
             BeanUtils.setProperty( dataset, property, value );
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -416,8 +443,8 @@ public class GeoFamilyParser implements Parser {
         } else if ( numColumns > tokens.length ) {
             // sometimes there is a trailing tab in the line. Unfortunately this is not a great way to get around that
             // problem.
-//            log.error( "Too few fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
-//            return;
+            // log.error( "Too few fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
+            // return;
         }
 
         for ( int i = 0; i < tokens.length; i++ ) {
@@ -823,9 +850,11 @@ public class GeoFamilyParser implements Parser {
         try {
             BeanUtils.setProperty( platform, property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -862,9 +891,11 @@ public class GeoFamilyParser implements Parser {
         try {
             BeanUtils.setProperty( sample.getChannel( channel ), property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -889,9 +920,11 @@ public class GeoFamilyParser implements Parser {
         try {
             BeanUtils.setProperty( sample, property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -927,9 +960,11 @@ public class GeoFamilyParser implements Parser {
         try {
             BeanUtils.setProperty( series, property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 
@@ -964,9 +999,11 @@ public class GeoFamilyParser implements Parser {
         try {
             BeanUtils.setProperty( subset, property, value );
         } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            e.printStackTrace();
+            log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 

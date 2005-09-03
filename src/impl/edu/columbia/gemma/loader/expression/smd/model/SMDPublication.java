@@ -140,17 +140,17 @@ public class SMDPublication {
     private class PublicationMetaHandler extends DefaultHandler {
         boolean inSet = false;
         boolean inPub = false;
-        private StringBuffer expSetBuf;
-        private StringBuffer pubBuf;
+        private StringBuilder expSetBuf;
+        private StringBuilder pubBuf;
 
         public void startElement( String uri, String name, String qName, Attributes atts ) {
 
             if ( name.equals( "experiment_set" ) ) {
                 inSet = true;
-                expSetBuf = new StringBuffer();
+                expSetBuf = new StringBuilder();
             } else if ( name.equals( "publication" ) ) {
                 inPub = true;
-                pubBuf = new StringBuffer();
+                pubBuf = new StringBuilder();
             } else {
                 throw new IllegalStateException( "Unexpected tag '" + name + "' encountered." );
             }

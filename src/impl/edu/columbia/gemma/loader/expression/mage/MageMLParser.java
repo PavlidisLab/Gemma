@@ -90,6 +90,7 @@ public class MageMLParser implements Parser {
 
         try {
             parser = XMLReaderFactory.createXMLReader( "org.apache.xerces.parsers.SAXParser" );
+            // parser.setProperty( "http://xml.org/sax/features/validation", Boolean.FALSE );
         } catch ( SAXException e ) {
             log.error( e, e );
         }
@@ -170,7 +171,7 @@ public class MageMLParser implements Parser {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         Map<String, Integer> tally = new HashMap<String, Integer>();
         for ( Object element : mageDomainObjects ) {
             String clazz = element.getClass().getName();

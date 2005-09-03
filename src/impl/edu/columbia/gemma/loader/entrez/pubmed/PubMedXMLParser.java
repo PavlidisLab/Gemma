@@ -167,7 +167,7 @@ public class PubMedXMLParser {
         }
 
         NodeList authorList = doc.getElementsByTagName( "AuthorList" ).item( 0 ).getChildNodes();
-        StringBuffer al = new StringBuffer();
+        StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
 
             Node item = authorList.item( i );
@@ -266,7 +266,7 @@ public class PubMedXMLParser {
      * @throws IOException
      */
     protected String getTextValue( Element ele ) throws IOException {
-        StringBuffer value = new StringBuffer();
+        StringBuilder value = new StringBuilder();
         NodeList nl = ele.getChildNodes();
         for ( int i = 0; i < nl.getLength(); i++ ) {
             Node item = nl.item( i );

@@ -182,8 +182,7 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * @see edu.columbia.gemma.loader.mage.MageMLParser
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLConverterHelper" singleton="false"
- * TODO remove springdoclet tags
+ * @spring.bean id="mageMLConverterHelper" singleton="false" TODO remove springdoclet tags
  */
 @SuppressWarnings("unchecked")
 public class MageMLConverterHelper {
@@ -1417,7 +1416,7 @@ public class MageMLConverterHelper {
         if ( gemmaObj == null ) throw new IllegalArgumentException( "Must pass in a valid object" );
 
         // This is a bit cheesy, we just concatenate the descriptions together.
-        StringBuffer descBuf = new StringBuffer();
+        StringBuilder descBuf = new StringBuilder();
         List<Description> descriptions = mageObj.getDescriptions();
         for ( Description description : descriptions ) {
             descBuf.append( description.getText() );

@@ -151,7 +151,7 @@ public class ProbeThreePrimeLocator {
     // sortedGenes.addAll( hitGenes );
     // Collections.sort( sortedGenes );
     //
-    // StringBuffer transcriptSignatureBuf = new StringBuffer();
+    // StringBuilder transcriptSignatureBuf = new StringBuilder();
     // for ( String transcript : sortedTranscripts ) {
     // if ( transcript.length() == 0 ) continue;
     // transcriptSignatureBuf.append( transcript );
@@ -379,7 +379,7 @@ public class ProbeThreePrimeLocator {
         }
 
         public String toString() {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             String[] sa = splitBlatQueryName( this.getBr() );
             String probeName = sa[0];
             String arrayName = sa[1];
