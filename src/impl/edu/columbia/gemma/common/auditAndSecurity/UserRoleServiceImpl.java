@@ -20,9 +20,6 @@
  */
 package edu.columbia.gemma.common.auditAndSecurity;
 
-import java.util.Collection;
-import java.util.NoSuchElementException;
-
 /**
  * Implementation of UserRole services.
  * <hr>
@@ -48,11 +45,11 @@ public class UserRoleServiceImpl extends edu.columbia.gemma.common.auditAndSecur
      */
     protected edu.columbia.gemma.common.auditAndSecurity.UserRole handleGetRole( java.lang.String roleName )
             throws java.lang.Exception {
-//        Collection roles = this.getUserRoleDao().findRolesByRoleName( roleName );
-//        if (roles.size() == 0) throw new NoSuchElementException("No such UserRole: " + roleName);
-//        return ( UserRole ) roles.iterator().next();
+        // Collection roles = this.getUserRoleDao().findRolesByRoleName( roleName );
+        // if (roles.size() == 0) throw new NoSuchElementException("No such UserRole: " + roleName);
+        // return ( UserRole ) roles.iterator().next();
         UserRole newRole = UserRole.Factory.newInstance();
-        newRole.setName(roleName);
+        newRole.setName( roleName );
         return newRole;
     }
 
@@ -61,7 +58,7 @@ public class UserRoleServiceImpl extends edu.columbia.gemma.common.auditAndSecur
      */
     protected UserRole handleSaveRole( edu.columbia.gemma.common.auditAndSecurity.UserRole role )
             throws java.lang.Exception {
-        return (UserRole)this.getUserRoleDao().create( role );
+        return ( UserRole ) this.getUserRoleDao().create( role );
     }
 
     /**
