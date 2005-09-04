@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Tue Aug 30 17:16:37 EDT 2005'>
+  timestamp = 'Sun Sep 04 16:16:03 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -12,9 +12,9 @@
       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
       <UML:ModelElement.taggedValue>
         <UML:TaggedValue xmi.id = 'Id2a49dm1025ed2a6cbmm7252' isSpecification = 'false'>
-          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
-          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>remove.by</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
           <UML:TaggedValue.type>
@@ -21225,17 +21225,25 @@ etc. in order to capture the scores and other parameters that document why we th
                                 <UML:Class xmi.idref = 'I830624m101c472e35bmm5042'/>
                               </UML:AssociationEnd.participant>
                             </UML:AssociationEnd>
-                            <UML:AssociationEnd xmi.id = 'I8fcfaem101dcbbe403mm47b0' visibility = 'public'
-                              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-                              targetScope = 'instance' changeability = 'changeable'>
+                            <UML:AssociationEnd xmi.id = 'I8fcfaem101dcbbe403mm47b0' name = 'geneProducts'
+                              visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
+                              aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
-                                <UML:Multiplicity xmi.id = 'I8fcfaem101dcbbe403mm47ae'>
+                                <UML:Multiplicity xmi.id = 'I7635a5f3m10622b4b4b3m2fc6'>
                                   <UML:Multiplicity.range>
-                                    <UML:MultiplicityRange xmi.id = 'I8fcfaem101dcbbe403mm47af' lower = '1'
-                                      upper = '1'/>
+                                    <UML:MultiplicityRange xmi.id = 'I7635a5f3m10622b4b4b3m2fc7' lower = '1'
+                                      upper = '-1'/>
                                   </UML:Multiplicity.range>
                                 </UML:Multiplicity>
                               </UML:AssociationEnd.multiplicity>
+                              <UML:ModelElement.taggedValue>
+                                <UML:TaggedValue xmi.id = 'I7635a5f3m10622b4b4b3m2fc8' isSpecification = 'false'>
+                                  <UML:TaggedValue.dataValue>A collection of GeneProducts that this BioSequence2GeneProduct corresponds to. A BioSequence can align to one or more GeneProducts.</UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.type>
+                                    <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                  </UML:TaggedValue.type>
+                                </UML:TaggedValue>
+                              </UML:ModelElement.taggedValue>
                               <UML:AssociationEnd.participant>
                                 <UML:Class xmi.idref = 'Ia948c2m101cef0df55mm4efd'/>
                               </UML:AssociationEnd.participant>
@@ -24046,7 +24054,7 @@ etc. in order to capture the scores and other parameters that document why we th
                               isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm51cf' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'aggregate'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'I8fcfaem101dcbbe403mm3aec'>
@@ -24201,7 +24209,7 @@ etc. in order to capture the scores and other parameters that document why we th
                               isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
                               <UML:Association.connection>
                                 <UML:AssociationEnd xmi.id = 'Ia948c2m101cef0df55mm5176' visibility = 'public'
-                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'aggregate'
+                                  isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
                                   targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
                                     <UML:Multiplicity xmi.id = 'I8fcfaem101dcbbe403mm3aea'>
