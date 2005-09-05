@@ -39,9 +39,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
  * @author pavlidis
  * @version $Id$
  */
-public class AffyAnalyze {
-
-    RCommand rc;
+public class AffyAnalyze extends RCommander {
 
     /**
      * Name of the variable where the affybatch data are stored in the R namespace.
@@ -51,20 +49,28 @@ public class AffyAnalyze {
     private static Log log = LogFactory.getLog( AffyAnalyze.class.getName() );
 
     public AffyAnalyze() {
-        rc = RCommand.newInstance();
+        super();
         rc.voidEval( "library(affy)" );
-    }
-
-    public void finalize() {
-        rc.disconnect();
     }
 
     /**
      * Available normalization methods.
      */
     public enum normalizeMethod {
-        QUANTILE, MEDIAN, MEAN
+        CONSTANT, CONTRASTS, INVARIANTSET, LOESS, QSPLINE, QUANTILES, QUANTILES_ROBUST
     };
+
+    public enum backgroundMethod {
+        MAS, RMA, NONE
+    };
+
+    public enum pmCorrectMethod {
+        MAS, PMONLY, SUBTRACTMM
+    }
+
+    public enum expressSummaryStatMethod {
+        AVEDIFF, LIWONG, MAS, MEDIANPOLISH, PLAYEROUT
+    }
 
     /**
      * Create a (minimal) AffyBatch object from a matrix. The object is retained in the R namespace.
@@ -78,23 +84,15 @@ public class AffyAnalyze {
 
         if ( celMatrix == null ) throw new IllegalArgumentException( "Null matrix" );
 
-        int rows = celMatrix.rows();
-        int cols = celMatrix.columns();
-
-        if ( rows == 0 || cols == 0 ) throw new IllegalArgumentException( "Empty matrix?" );
-
-        double[] unrolledMatrix = unrollMatrix( celMatrix );
-
         try {
-            rc.voidEval( "rows<-" + rows );
-            rc.voidEval( "cols<-" + cols );
-            rc.assign( "unrolledMatrix", unrolledMatrix );
+            String matrixName = rc.assignMatrix( celMatrix );
+
             rc.assign( "cdfName", arrayDesign.getName() ); // Example "Mouse430_2".
-            rc.voidEval( "datamatrix<-matrix(unrolledMatrix, nrow=rows, ncol=cols)" );
-            rc.voidEval( "rm(unrolledMatrix)" ); // maybe this saves memory...
-            String affyBatchRCmd = AFFYBATCH_VARIABLE_NAME + "<-new(\"AffyBatch\", exprs=datamatrix, cdfName=cdfName )";
+
+            String affyBatchRCmd = AFFYBATCH_VARIABLE_NAME + "<-new(\"AffyBatch\", exprs=" + matrixName
+                    + ", cdfName=cdfName )";
             rc.voidEval( affyBatchRCmd );
-            rc.voidEval( "rm(datamatrix)" ); // maybe saves memory...
+            rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
 
             // String res = rc.eval( "class(" + AFFYBATCH_VARIABLE_NAME + ")" ).asString();
             // assert ( res.equals( "AffyBatch" ) );
@@ -105,31 +103,6 @@ public class AffyAnalyze {
             log.error( "Last error from R was " + error );
             throw new RuntimeException( e );
         }
-    }
-
-    /**
-     * Copy a matrix into an array, so that rows are represented consecutively in the array.
-     * 
-     * @param celMatrix
-     * @return array representation of the matrix.
-     */
-    private double[] unrollMatrix( DenseDoubleMatrix2DNamed celMatrix ) {
-        // unroll the matrix into an array (RServe has no interface for passing a 2-d array). Unfortunately this makes a
-        // copy of the data...and R will probably make yet
-        // another copy. If there was a way to get the raw element array from the DenseDoubleMatrix2DNamed, that would
-        // be better.
-        int rows = celMatrix.rows();
-        int cols = celMatrix.columns();
-        double[] unrolledMatrix = new double[rows * cols];
-
-        int k = 0;
-        for ( int i = 0; i < rows; i++ ) {
-            for ( int j = 0; j < cols; j++ ) {
-                unrolledMatrix[k] = celMatrix.getQuick( i, j );
-                k++;
-            }
-        }
-        return unrolledMatrix;
     }
 
     /**
@@ -180,39 +153,12 @@ public class AffyAnalyze {
         rc.voidEval( "v<-rma(" + AFFYBATCH_VARIABLE_NAME + ")" );
         log.info( "Done with RMA" );
         rc.voidEval( "m<-exprs(v)" );
-        REXP r = rc.eval( "m" );
-        double[][] results = r.asDoubleMatrix();
 
-        // getting the row names.
-        List rowNamesREXP = rc.eval( "dimnames(m)[1][[1]]" ).asVector();
-        assert ( rowNamesREXP != null );
-        List<String> rowNames = new ArrayList<String>();
-        for ( Iterator iter = rowNamesREXP.iterator(); iter.hasNext(); ) {
-            REXP element = ( REXP ) iter.next();
-            String rowName = element.asString();
-            rowNames.add( rowName );
-        }
-
-        // This doesn't work: we get null from the first line.
-        // List colNamesREXP = rc.eval( "dimnames(m)[2][[1]]" ).asVector();
-        // assert ( colNamesREXP != null );
-        // List<String> colNames = new ArrayList<String>();
-        // for ( Iterator iter = colNamesREXP.iterator(); iter.hasNext(); ) {
-        // REXP element = ( REXP ) iter.next();
-        // String rowName = element.asString();
-        // colNames.add( rowName );
-        // }
+        DenseDoubleMatrix2DNamed resultObject = rc.retrieveMatrix( "m" );
 
         // clean up.
         rc.voidEval( "rm(v)" );
         rc.voidEval( "rm(m)" );
-
-        DenseDoubleMatrix2DNamed resultObject = new DenseDoubleMatrix2DNamed( results );
-        resultObject.setRowNames( rowNames );
-
-        // note that we assume that rma gives us back the columns in the order we provided them. This could be
-        // dangerous!
-        resultObject.setColumnNames( celMatrix.getColNames() );
 
         return resultObject;
 
@@ -223,10 +169,41 @@ public class AffyAnalyze {
      * @param arrayDesign
      * @return
      */
-    public DenseDoubleMatrix2DNamed normalize( DenseDoubleMatrix2DNamed celMatrix, ArrayDesign arrayDesign ) {
+    public DenseDoubleMatrix2DNamed pmAdjust( DenseDoubleMatrix2DNamed celMatrix, ArrayDesign arrayDesign,
+            pmCorrectMethod method ) {
         AffyBatch( celMatrix, arrayDesign );
 
-        // FIXME : implement
+        switch ( method ) {
+        // FIXME
+        }
+        return null;
+    }
+
+    /**
+     * @param celMatrix
+     * @param arrayDesign
+     * @return
+     */
+    public DenseDoubleMatrix2DNamed summarize( DenseDoubleMatrix2DNamed celMatrix, ArrayDesign arrayDesign,
+            expressSummaryStatMethod method ) {
+        AffyBatch( celMatrix, arrayDesign );
+        switch ( method ) {
+        // FIXME
+        }
+        return null;
+    }
+
+    /**
+     * @param celMatrix
+     * @param arrayDesign
+     * @return
+     */
+    public DenseDoubleMatrix2DNamed normalize( DenseDoubleMatrix2DNamed celMatrix, ArrayDesign arrayDesign,
+            normalizeMethod method ) {
+        AffyBatch( celMatrix, arrayDesign );
+        switch ( method ) {
+        // FIXME
+        }
         return null;
     }
 
@@ -237,9 +214,12 @@ public class AffyAnalyze {
      * @param arrayDesign
      * @return
      */
-    public DenseDoubleMatrix2DNamed backgroundTreat( DenseDoubleMatrix2DNamed celMatrix, ArrayDesign arrayDesign ) {
+    public DenseDoubleMatrix2DNamed backgroundTreat( DenseDoubleMatrix2DNamed celMatrix, ArrayDesign arrayDesign,
+            backgroundMethod method ) {
         AffyBatch( celMatrix, arrayDesign );
-        // FIXME : implement
+        switch ( method ) {
+        // FIXME
+        }
         return null;
     }
 

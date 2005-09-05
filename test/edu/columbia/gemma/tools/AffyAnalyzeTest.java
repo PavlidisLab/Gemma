@@ -113,7 +113,7 @@ public class AffyAnalyzeTest extends TestCase {
             log.warn( "Could not connect to RServe, skipping test." );
             return;
         }
-        aa.normalize( celmatrix, arrayDesign );
+        // aa.normalize( celmatrix, arrayDesign );
     }
 
     /*
@@ -124,7 +124,7 @@ public class AffyAnalyzeTest extends TestCase {
             log.warn( "Could not connect to RServe, skipping test." );
             return;
         }
-        aa.backgroundTreat( celmatrix, arrayDesign );
+        // aa.backgroundTreat( celmatrix, arrayDesign );
     }
 
 }
