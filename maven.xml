@@ -112,19 +112,18 @@
 			src="${basedir}/target/docs/umldoc.tar" />
 			<delete file="${basedir}/target/docs/umldoc.tar" />
 
-    <!-- Make sure the destination directory exists before trying to copy -->
+    	<!-- Make sure the destination directory exists before trying to copy -->
         <exec dir="." executable="${maven.ssh.executable}">
-	  <arg line="${maven.ssh.args} -l ${maven.username} ${pom.siteAddress} 'mkdir -p ${maven.homepage}'"/>
-    </exec>
-    <exec dir="${maven.build.dir}" executable="${maven.scp.executable}">
-      <arg line="${maven.scp.args} ${maven.build.dir}/docs/umldoc.tar.gz ${maven.username}@${pom.siteAddress}:${maven.homepage}"/>
-    </exec>
+	  		<arg line="${maven.ssh.args} -l ${maven.username} ${pom.siteAddress} 'mkdir -p ${maven.homepage}'"/>
+    	</exec>
+   		<exec dir="${maven.build.dir}" executable="${maven.scp.executable}">
+      		<arg line="${maven.scp.args} ${maven.build.dir}/docs/umldoc.tar.gz ${maven.username}@${pom.siteAddress}:${maven.homepage}"/>
+    	</exec>
 
-    <exec dir="." executable="${maven.ssh.executable}">
-      <arg line="${maven.ssh.args} -l ${maven.username} ${pom.siteAddress} 'cd ${maven.homepage};${maven.site.gunzip.executable} umldoc.tar.gz;${maven.site.tar.executable} xUvf umldoc.tar;rm umldoc.tar'"/>
-    </exec>
-    <delete file="${maven.build.dir}/docs/umldoc.tar.gz"/>
-
+    	<exec dir="." executable="${maven.ssh.executable}">
+      		<arg line="${maven.ssh.args} -l ${maven.username} ${pom.siteAddress} 'cd ${maven.homepage};${maven.site.gunzip.executable} umldoc.tar.gz;${maven.site.tar.executable} xUvf umldoc.tar;rm umldoc.tar'"/>
+    	</exec>
+    	<delete file="${maven.build.dir}/docs/umldoc.tar.gz"/>
 	</goal>
  
 
