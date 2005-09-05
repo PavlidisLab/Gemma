@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
 import baseCode.util.RCommand;
 import junit.framework.TestCase;
@@ -37,13 +38,13 @@ import junit.framework.TestCase;
 public class QuantileNormalizerTest extends TestCase {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
-    DenseDoubleMatrix2DNamed tester;
+    DoubleMatrixNamed tester;
 
     public void setUp() throws Exception {
 
         log.debug( "Reading test data" );
         DoubleMatrixReader reader = new DoubleMatrixReader();
-        tester = ( DenseDoubleMatrix2DNamed ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
+        tester = ( DoubleMatrixNamed ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
         assert tester != null;
         log.debug( "Setup done" );
     }
@@ -59,7 +60,7 @@ public class QuantileNormalizerTest extends TestCase {
      */
     public void testNormalize() {
         QuantileNormalizer qn = new QuantileNormalizer();
-        DenseDoubleMatrix2DNamed result = qn.normalize( tester );
+        DoubleMatrixNamed result = qn.normalize( tester );
 
         // d<-read.table("testdata.txt", header=T, row.names=1)
         // normalize.quantiles(as.matrix(d))[1,10]
