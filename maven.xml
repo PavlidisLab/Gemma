@@ -105,23 +105,26 @@
 
 	<goal name="copyumldocs"
 		description="Copy UML docs to the site">
-		<ant:tar tarfile="${basedir}/target/umldoc.tar"
+		    <property name="maven.homepage" value="${pom.siteDirectory}"/>
+		<tar tarfile="${basedir}/target/docs/umldoc.tar"
 			basedir="${basedir}/docs/uml" />
-		<ant:gzip zipfile="${basedir}/target/docs/umldoc.tar.gz"
+		<gzip zipfile="${basedir}/target/docs/umldoc.tar.gz"
 			src="${basedir}/target/docs/umldoc.tar" />
-	  <ant:scp trust="yes"
-    		 todir="${user}@${server}:${siteDirectory}" 
-    		 keyfile="${sshdir}"
-    		 passphrase="${passphrase}"
-    		 port="22"
-             verbose="yes">
-     	<fileset file="${basedir}/target/docs/umldoc.tar.gz"/>
-    </ant:scp> 
-    <ant:sshexec host="${server}"
-	username="${user}"
-	keyfile="${user.home}/.ssh/id_dsa"
-	passphrase="${passphrase}"
-	command="tar -zxvf ${user}@${server}:${siteDirectory}/umldoc.tar.gz"/>
+			<delete file="${basedir}/target/docs/umldoc.tar" />
+
+    <!-- Make sure the destination directory exists before trying to copy -->
+        <exec dir="." executable="${maven.ssh.executable}">
+	  <arg line="${maven.ssh.args} -l ${maven.username} ${pom.siteAddress} 'mkdir -p ${maven.homepage}'"/>
+    </exec>
+    <exec dir="${maven.build.dir}" executable="${maven.scp.executable}">
+      <arg line="${maven.scp.args} ${maven.build.dir}/docs/umldoc.tar.gz ${maven.username}@${pom.siteAddress}:${maven.homepage}"/>
+    </exec>
+
+    <exec dir="." executable="${maven.ssh.executable}">
+      <arg line="${maven.ssh.args} -l ${maven.username} ${pom.siteAddress} 'cd ${maven.homepage};${maven.site.gunzip.executable} umldoc.tar.gz;${maven.site.tar.executable} xUvf umldoc.tar;rm umldoc.tar'"/>
+    </exec>
+    <delete file="${maven.build.dir}/docs/umldoc.tar.gz"/>
+
 	</goal>
  
 
