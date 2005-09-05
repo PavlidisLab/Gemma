@@ -42,9 +42,6 @@ import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReader;
  */
 public class AffyProbeCollapser {
 
-    public AffyProbeCollapser() {
-    }
-
     public void collapse( String arrayName, InputStream is, Writer writer ) throws IOException {
 
         AffyProbeReader apr = new AffyProbeReader();

@@ -7,11 +7,3 @@ lib: blat
 
 install:
 	libtool --mode=install install -c libBlat.la /usr/local/lib/libBlat.la
-
-
-
-libj: blat
-	libtool --mode=link gcc -g -O -o libBlat.la Blat.lo  -rpath ${JAVA_HOME}/jre/lib/${MACHTYPE} -lGfClient
-
-installj:
-	libtool --mode=install install -c libBlat.la ${JAVA_HOME}/jre/lib/${MACHTYPE}/libBlat.la

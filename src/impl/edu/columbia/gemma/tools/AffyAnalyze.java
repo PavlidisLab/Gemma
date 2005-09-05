@@ -83,11 +83,44 @@ public class AffyAnalyze {
 
         if ( rows == 0 || cols == 0 ) throw new IllegalArgumentException( "Empty matrix?" );
 
+        double[] unrolledMatrix = unrollMatrix( celMatrix );
+
+        try {
+            rc.voidEval( "rows<-" + rows );
+            rc.voidEval( "cols<-" + cols );
+            rc.assign( "unrolledMatrix", unrolledMatrix );
+            rc.assign( "cdfName", arrayDesign.getName() ); // Example "Mouse430_2".
+            rc.voidEval( "datamatrix<-matrix(unrolledMatrix, nrow=rows, ncol=cols)" );
+            rc.voidEval( "rm(unrolledMatrix)" ); // maybe this saves memory...
+            String affyBatchRCmd = AFFYBATCH_VARIABLE_NAME + "<-new(\"AffyBatch\", exprs=datamatrix, cdfName=cdfName )";
+            rc.voidEval( affyBatchRCmd );
+            rc.voidEval( "rm(datamatrix)" ); // maybe saves memory...
+
+            // String res = rc.eval( "class(" + AFFYBATCH_VARIABLE_NAME + ")" ).asString();
+            // assert ( res.equals( "AffyBatch" ) );
+
+        } catch ( RSrvException e ) {
+            log.error( e, e );
+            String error = rc.getLastError();
+            log.error( "Last error from R was " + error );
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Copy a matrix into an array, so that rows are represented consecutively in the array.
+     * 
+     * @param celMatrix
+     * @return array representation of the matrix.
+     */
+    private double[] unrollMatrix( DenseDoubleMatrix2DNamed celMatrix ) {
         // unroll the matrix into an array (RServe has no interface for passing a 2-d array). Unfortunately this makes a
         // copy of the data...and R will probably make yet
         // another copy. If there was a way to get the raw element array from the DenseDoubleMatrix2DNamed, that would
         // be better.
-        double[] unrolledMatrix = new double[celMatrix.rows() * celMatrix.columns()];
+        int rows = celMatrix.rows();
+        int cols = celMatrix.columns();
+        double[] unrolledMatrix = new double[rows * cols];
 
         int k = 0;
         for ( int i = 0; i < rows; i++ ) {
@@ -96,26 +129,7 @@ public class AffyAnalyze {
                 k++;
             }
         }
-
-        try {
-            rc.voidEval( "rows<-" + rows );
-            rc.voidEval( "cols<-" + cols );
-            rc.assign( "unrolledMatrix", unrolledMatrix );
-            rc.assign( "cdfName", arrayDesign.getName() ); // Example "Mouse430_2".
-            rc.voidEval( "datamatrix<-matrix(unrolledMatrix, nrow=rows, ncol=cols)" );
-            rc.voidEval( "rm(unrolledMatrix)" );
-            String affyBatchRCmd = AFFYBATCH_VARIABLE_NAME + "<-new(\"AffyBatch\", exprs=datamatrix, cdfName=cdfName )";
-            rc.voidEval( affyBatchRCmd );
-
-            String res = rc.eval( "class(" + AFFYBATCH_VARIABLE_NAME + ")" ).asString();
-            assert ( res.equals( "AffyBatch" ) );
-
-        } catch ( RSrvException e ) {
-            log.error( e, e );
-            String error = rc.getLastError();
-            log.error( "Last error from R was " + error );
-            throw new RuntimeException( e );
-        }
+        return unrolledMatrix;
     }
 
     /**
@@ -169,6 +183,7 @@ public class AffyAnalyze {
         REXP r = rc.eval( "m" );
         double[][] results = r.asDoubleMatrix();
 
+        // getting the row names.
         List rowNamesREXP = rc.eval( "dimnames(m)[1][[1]]" ).asVector();
         assert ( rowNamesREXP != null );
         List<String> rowNames = new ArrayList<String>();
@@ -194,6 +209,9 @@ public class AffyAnalyze {
 
         DenseDoubleMatrix2DNamed resultObject = new DenseDoubleMatrix2DNamed( results );
         resultObject.setRowNames( rowNames );
+
+        // note that we assume that rma gives us back the columns in the order we provided them. This could be
+        // dangerous!
         resultObject.setColumnNames( celMatrix.getColNames() );
 
         return resultObject;
