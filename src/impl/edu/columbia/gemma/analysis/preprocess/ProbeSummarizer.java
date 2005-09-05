@@ -18,7 +18,7 @@
  */
 package edu.columbia.gemma.analysis.preprocess;
 
-import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * <hr>
@@ -34,5 +34,5 @@ public interface ProbeSummarizer {
      * @param dataMatrix
      * @return
      */
-    public DenseDoubleMatrix2DNamed summarize( DenseDoubleMatrix2DNamed dataMatrix );
+    public DoubleMatrixNamed summarize( DoubleMatrixNamed dataMatrix );
 }

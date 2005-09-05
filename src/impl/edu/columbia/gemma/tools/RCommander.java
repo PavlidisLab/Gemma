@@ -16,9 +16,12 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.analysis.preprocess;
+package edu.columbia.gemma.tools;
 
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import baseCode.util.RCommand;
 
 /**
  * <hr>
@@ -28,11 +31,22 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
  * @author pavlidis
  * @version $Id$
  */
-public interface Normalizer {
+public abstract class RCommander {
 
-    /**
-     * @param dataMatrix
-     * @return
-     */
-    public DoubleMatrixNamed normalize( DoubleMatrixNamed dataMatrix );
+    protected static Log log = LogFactory.getLog( RCommander.class.getName() );
+
+    protected RCommand rc;
+
+    public RCommander() {
+        this.init();
+    }
+
+    protected void init() {
+        rc = RCommand.newInstance();
+    }
+
+    public void finalize() {
+        rc.disconnect();
+    }
+
 }

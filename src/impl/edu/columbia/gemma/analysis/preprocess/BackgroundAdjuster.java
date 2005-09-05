@@ -18,7 +18,7 @@
  */
 package edu.columbia.gemma.analysis.preprocess;
 
-import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * <hr>
@@ -35,5 +35,5 @@ public interface BackgroundAdjuster {
      * @param background
      * @return
      */
-    public DenseDoubleMatrix2DNamed adjust( DenseDoubleMatrix2DNamed signal, DenseDoubleMatrix2DNamed background );
+    public DoubleMatrixNamed adjust( DoubleMatrixNamed signal, DoubleMatrixNamed background );
 }

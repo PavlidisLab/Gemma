@@ -18,8 +18,8 @@
  */
 package edu.columbia.gemma.analysis.preprocess;
 
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import edu.columbia.gemma.tools.RCommander;
-import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 
 /**
  * <hr>
@@ -41,7 +41,7 @@ public class QuantileNormalizer extends RCommander implements Normalizer {
      * 
      * @see edu.columbia.gemma.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed)
      */
-    public DenseDoubleMatrix2DNamed normalize( DenseDoubleMatrix2DNamed dataMatrix ) {
+    public DoubleMatrixNamed normalize( DoubleMatrixNamed dataMatrix ) {
         log.debug( "Normalizing..." );
         String matrixvar = rc.assignMatrix( dataMatrix );
         rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
