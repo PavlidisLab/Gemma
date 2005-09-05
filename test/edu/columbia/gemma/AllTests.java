@@ -2,6 +2,8 @@ package edu.columbia.gemma;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import edu.columbia.gemma.analysis.preprocess.QuantileNormalizerTest;
+import edu.columbia.gemma.analysis.preprocess.RMATest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailDaoTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserDaoImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
@@ -39,6 +41,7 @@ import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
 import edu.columbia.gemma.security.interceptor.PersistAclInterceptorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
+import edu.columbia.gemma.tools.AffyBatchTest;
 import edu.columbia.gemma.tools.BlatTest;
 import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
@@ -65,6 +68,10 @@ public class AllTests {
 
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
+
+        // analysis
+        suite.addTestSuite( QuantileNormalizerTest.class );
+        suite.addTestSuite( RMATest.class );
 
         // common.auditAndSecurity
         suite.addTestSuite( AuditTrailDaoTest.class );
@@ -146,6 +153,7 @@ public class AllTests {
         suite.addTestSuite( QtlDaoImplTest.class );
 
         // tools
+        suite.addTestSuite( AffyBatchTest.class );
         suite.addTestSuite( GoldenPathTest.class );
         suite.addTestSuite( SequenceManipulationTest.class );
         suite.addTestSuite( BlatTest.class );

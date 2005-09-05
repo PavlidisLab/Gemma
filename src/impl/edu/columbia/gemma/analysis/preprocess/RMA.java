@@ -6,6 +6,7 @@ import edu.columbia.gemma.tools.AffyBatch;
 import edu.columbia.gemma.tools.RCommander;
 
 /**
+ * Perform Robust Multiarray Average analysis of Affymetrix microarray data.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -23,9 +24,10 @@ public class RMA extends RCommander implements ProbeSummarizer {
         ab = new AffyBatch();
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * You must call setArrayDesign() before calling this method.
      * 
+     * @param dataMatrix The CEL value matrix
      * @see edu.columbia.gemma.analysis.preprocess.ProbeSummarizer#summarize(baseCode.dataStructure.matrix.DoubleMatrixNamed)
      */
     public DoubleMatrixNamed summarize( DoubleMatrixNamed dataMatrix ) {
@@ -50,6 +52,7 @@ public class RMA extends RCommander implements ProbeSummarizer {
      * @param arrayDesign2
      */
     public void setArrayDesign( ArrayDesign arrayDesign2 ) {
+        if ( arrayDesign2 == null ) throw new IllegalArgumentException( "arrayDesign must not be null" );
         this.arrayDesign = arrayDesign2;
     }
 
