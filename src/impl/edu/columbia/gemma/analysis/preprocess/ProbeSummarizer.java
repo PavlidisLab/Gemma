@@ -21,6 +21,7 @@ package edu.columbia.gemma.analysis.preprocess;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
+ * Represents probe-level summary methods for Affymetrix microarrays.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University

@@ -22,6 +22,16 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import edu.columbia.gemma.tools.RCommander;
 
 /**
+ * Perform quantile normalization on a matrix, as described in:
+ * <p>
+ * Bolstad, B (2001) _Probe Level Quantile Normalization of High Density Oligonucleotide Array Data_. Unpublished
+ * manuscript <a href="http://oz.berkeley.edu/~bolstad/stuff/qnorm.pdf">PDF</a>
+ * </p>
+ * <p>
+ * Bolstad, B. M., Irizarry R. A., Astrand, M, and Speed, T. P. (2003) _A Comparison of Normalization Methods for High
+ * Density Oligonucleotide Array Data Based on Bias and Variance._ Bioinformatics 19(2) ,pp 185-193. <a
+ * href="http://www.stat.berkeley.edu/~bolstad/normalize/normalize.html">web page</a>
+ * </p>
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University

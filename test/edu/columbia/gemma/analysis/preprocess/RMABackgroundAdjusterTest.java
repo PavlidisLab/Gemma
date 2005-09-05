@@ -1,18 +1,34 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.analysis.preprocess;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
-import baseCode.dataStructure.matrix.NamedMatrix;
 import baseCode.io.reader.DoubleMatrixReader;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import junit.framework.TestCase;
 
 /**
  * <hr>
@@ -22,10 +38,10 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
  * @author pavlidis
  * @version $Id$
  */
-public class RMATest extends TestCase {
+public class RMABackgroundAdjusterTest extends TestCase {
 
     private static Log log = LogFactory.getLog( RMATest.class.getName() );
-    RMA aa;
+    RMABackgroundAdjuster aa;
     DoubleMatrixNamed celmatrix;
     ArrayDesign arrayDesign;
     InputStream is;
@@ -37,6 +53,7 @@ public class RMATest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
+        super.setUp();
         // test data are from the affybatch.example in the affy package.
         DoubleMatrixReader reader = new DoubleMatrixReader();
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
@@ -47,7 +64,7 @@ public class RMATest extends TestCase {
         arrayDesign.setName( "cdfenv.example" );
 
         try {
-            aa = new RMA();
+            aa = new RMABackgroundAdjuster();
             connected = true;
         } catch ( RuntimeException e ) {
             connected = false;
@@ -62,24 +79,25 @@ public class RMATest extends TestCase {
     }
 
     /*
-     * Test method for 'edu.columbia.gemma.tools.AffyAnalyze.rma(DoubleMatrixNamed, ArrayDesign)'
+     * Test method for 'edu.columbia.gemma.analysis.preprocess.RMABackgroundAdjuster.adjust(DoubleMatrixNamed,
+     * DoubleMatrixNamed)'
      */
-    public void testRma() {
+    public void testAdjust() {
         if ( !connected ) {
             log.warn( "Could not connect to RServe, skipping test." );
             return;
         }
         aa.setArrayDesign( arrayDesign );
-        DoubleMatrixNamed result = aa.summarize( celmatrix );
+        DoubleMatrixNamed result = aa.adjust( celmatrix, null );
         assertTrue( result != null );
-        assertEquals( 10000, result.rows() );
+        assertEquals( 150, result.rows() );
         assertEquals( 3, result.columns() );
         assertEquals( "A28102_at", result.getRowName( 0 ) );
 
         // values come from
         // exprs(bg.correct.rma(affybatch.example))[11,3]
 
-        assertEquals( 7.000993, result.get( 10, 2 ), 0.0001 );
+        assertEquals( 936, result.get( 10, 2 ), 0.0001 );
     }
 
 }
