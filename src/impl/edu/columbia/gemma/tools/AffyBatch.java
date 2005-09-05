@@ -19,9 +19,11 @@
 package edu.columbia.gemma.tools;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import baseCode.util.RCommand;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 
 /**
+ * Class to create AffyBatch objects for use in BioConductor analyses.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -36,6 +38,11 @@ public class AffyBatch extends RCommander {
         rc.voidEval( "library(affy)" );
     }
 
+    public AffyBatch( RCommand rc ) {
+        super( rc );
+        rc.voidEval( "library(affy)" );
+    }
+
     /**
      * Available normalization methods.
      */
@@ -47,9 +54,7 @@ public class AffyBatch extends RCommander {
         MAS, RMA, NONE
     };
 
-    public enum pmCorrectMethod {
-        MAS, PMONLY, SUBTRACTMM
-    }
+ 
 
     public enum expressSummaryStatMethod {
         AVEDIFF, LIWONG, MAS, MEDIANPOLISH, PLAYEROUT

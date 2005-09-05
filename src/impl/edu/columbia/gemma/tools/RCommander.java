@@ -41,12 +41,25 @@ public abstract class RCommander {
         this.init();
     }
 
+    /**
+     * @param rc2
+     */
+    public RCommander( RCommand connection ) {
+        if ( connection != null && connection.isConnected() ) {
+            this.rc = connection;
+        }
+    }
+
     protected void init() {
         rc = RCommand.newInstance();
     }
 
     public void finalize() {
         rc.disconnect();
+    }
+
+    public RCommand getRCommandObject() {
+        return rc;
     }
 
 }
