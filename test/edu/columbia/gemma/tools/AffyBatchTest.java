@@ -22,12 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
 import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import baseCode.dataStructure.matrix.NamedMatrix;
 import baseCode.io.reader.DoubleMatrixReader;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 
@@ -39,9 +39,9 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
  * @author pavlidis
  * @version $Id$
  */
-public class AffyAnalyzeTest extends TestCase {
-    private static Log log = LogFactory.getLog( AffyAnalyzeTest.class.getName() );
-    AffyAnalyze aa;
+public class AffyBatchTest extends TestCase {
+    private static Log log = LogFactory.getLog( AffyBatchTest.class.getName() );
+    AffyBatch aa;
     DenseDoubleMatrix2DNamed celmatrix;
     ArrayDesign arrayDesign;
     InputStream is;
@@ -64,7 +64,7 @@ public class AffyAnalyzeTest extends TestCase {
         arrayDesign.setName( "cdfenv.example" );
 
         try {
-            aa = new AffyAnalyze();
+            aa = new AffyBatch();
             connected = true;
         } catch ( RuntimeException e ) {
             connected = false;
@@ -87,44 +87,7 @@ public class AffyAnalyzeTest extends TestCase {
             log.warn( "Could not connect to RServe, skipping test." );
             return;
         }
-        aa.AffyBatch( celmatrix, arrayDesign );
-    }
-
-    /*
-     * Test method for 'edu.columbia.gemma.tools.AffyAnalyze.rma(DenseDoubleMatrix2DNamed, ArrayDesign)'
-     */
-    public void testRma() {
-        if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
-            return;
-        }
-        NamedMatrix result = aa.rma( celmatrix, arrayDesign );
-        assertTrue( result != null );
-        assertEquals( 150, result.rows() );
-        assertEquals( 3, result.columns() );
-        assertEquals( "A28102_at", result.getRowName( 0 ) );
-    }
-
-    /*
-     * Test method for 'edu.columbia.gemma.tools.AffyAnalyze.normalize(DenseDoubleMatrix2DNamed, ArrayDesign)'
-     */
-    public void testNormalize() {
-        if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
-            return;
-        }
-        // aa.normalize( celmatrix, arrayDesign );
-    }
-
-    /*
-     * Test method for 'edu.columbia.gemma.tools.AffyAnalyze.backgroundTreat(DenseDoubleMatrix2DNamed, ArrayDesign)'
-     */
-    public void testBackgroundTreat() {
-        if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
-            return;
-        }
-        // aa.backgroundTreat( celmatrix, arrayDesign );
+        aa.makeAffyBatch( celmatrix, arrayDesign );
     }
 
 }
