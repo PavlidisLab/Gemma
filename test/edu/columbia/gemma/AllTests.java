@@ -3,7 +3,9 @@ package edu.columbia.gemma;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import edu.columbia.gemma.analysis.preprocess.QuantileNormalizerTest;
+import edu.columbia.gemma.analysis.preprocess.RMABackgroundAdjusterTest;
 import edu.columbia.gemma.analysis.preprocess.RMATest;
+import edu.columbia.gemma.analysis.preprocess.TwoColorArrayLoessNormalizerTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailDaoTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserDaoImplTest;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleServiceImplTest;
@@ -72,6 +74,8 @@ public class AllTests {
         // analysis
         suite.addTestSuite( QuantileNormalizerTest.class );
         suite.addTestSuite( RMATest.class );
+        suite.addTestSuite( RMABackgroundAdjusterTest.class );
+        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
 
         // common.auditAndSecurity
         suite.addTestSuite( AuditTrailDaoTest.class );

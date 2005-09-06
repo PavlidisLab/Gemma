@@ -65,7 +65,8 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
         DoubleMatrixNamed resultObject = rc.retrieveMatrix( "m" );
 
         // clean up.
-        rc.voidEval( "rm(m)" );
+        rc.remove( abName );
+        rc.remove( "m" );
 
         return resultObject;
     }
