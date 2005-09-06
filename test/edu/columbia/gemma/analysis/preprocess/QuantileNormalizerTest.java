@@ -18,14 +18,13 @@
  */
 package edu.columbia.gemma.analysis.preprocess;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
-import baseCode.util.RCommand;
-import junit.framework.TestCase;
 
 /**
  * <hr>
@@ -39,27 +38,27 @@ public class QuantileNormalizerTest extends TestCase {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
     DoubleMatrixNamed tester;
+    QuantileNormalizer qn;
 
     public void setUp() throws Exception {
-
-        log.debug( "Reading test data" );
         DoubleMatrixReader reader = new DoubleMatrixReader();
         tester = ( DoubleMatrixNamed ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
         assert tester != null;
+        qn = new QuantileNormalizer();
         log.debug( "Setup done" );
     }
 
     public void tearDown() throws Exception {
         super.tearDown();
-
         tester = null;
+        qn.cleanup();
     }
 
     /*
      * Test method for 'edu.columbia.gemma.analysis.preprocess.QuantileNormalizer.normalize(DenseDoubleMatrix2DNamed)'
      */
     public void testNormalize() {
-        QuantileNormalizer qn = new QuantileNormalizer();
+
         DoubleMatrixNamed result = qn.normalize( tester );
 
         // d<-read.table("testdata.txt", header=T, row.names=1)

@@ -76,6 +76,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
+        aa.cleanup();
     }
 
     /*
@@ -90,9 +91,8 @@ public class RMABackgroundAdjusterTest extends TestCase {
         aa.setArrayDesign( arrayDesign );
         DoubleMatrixNamed result = aa.adjust( celmatrix, null );
         assertTrue( result != null );
-        assertEquals( 150, result.rows() );
+        assertEquals( 10000, result.rows() );
         assertEquals( 3, result.columns() );
-        assertEquals( "A28102_at", result.getRowName( 0 ) );
 
         // values come from
         // exprs(bg.correct.rma(affybatch.example))[11,3]

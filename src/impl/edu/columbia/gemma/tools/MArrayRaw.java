@@ -59,7 +59,7 @@ public class MArrayRaw extends RCommander {
     public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green, DoubleMatrixNamed redBg,
             DoubleMatrixNamed greenBg, DoubleMatrixNamed weights ) {
         log.debug( "Making marrayRaw object" );
-        String rawObjectName = "marrayraw." + red.hashCode();
+        String rawObjectName = "marrayraw." + RCommand.variableIdentityNumber( red );
 
         String redMaName = rc.assignMatrix( red );
         String greenMaName = rc.assignMatrix( green );
@@ -102,7 +102,7 @@ public class MArrayRaw extends RCommander {
     public String makeMArrayLayout( int gridRows, int gridColumns, int rowsPerGrid, int colsPerGrid ) {
         log.debug( "Making layout" );
         int numSpots = gridRows * gridColumns * rowsPerGrid * colsPerGrid;
-        String arrayLayoutName = "layout." + this.hashCode();
+        String arrayLayoutName = "layout." + RCommand.variableIdentityNumber( this );
         String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + gridRows + ", maNgc=" + gridColumns
                 + ", maNsr=" + rowsPerGrid + ", maNsc=" + colsPerGrid + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
@@ -121,7 +121,7 @@ public class MArrayRaw extends RCommander {
     public String makeMArrayLayout( int numSpots ) {
         log.debug( "Making layout" );
 
-        String arrayLayoutName = "layout." + this.hashCode();
+        String arrayLayoutName = "layout." + RCommand.variableIdentityNumber( this );
         String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + 1 + ", maNgc=" + 1 + ", maNsr=" + 1
                 + ", maNsc=" + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
@@ -138,7 +138,7 @@ public class MArrayRaw extends RCommander {
      */
     public String makeMArrayInfo( List<String> labels ) {
         log.debug( "Making info" );
-        String infoName = "info." + labels.hashCode();
+        String infoName = "info." + RCommand.variableIdentityNumber( labels );
         String labelsVarName = rc.assignStringList( labels );
         String makeInfoCmd = infoName + "<-new(\"marrayInfo\", maLabels=" + labelsVarName + ")";
         rc.voidEval( makeInfoCmd );

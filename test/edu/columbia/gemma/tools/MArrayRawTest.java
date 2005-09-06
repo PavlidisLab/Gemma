@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.tools;
 
 import java.util.ArrayList;
@@ -18,12 +36,14 @@ import junit.framework.TestCase;
  * @version $Id$
  */
 public class MArrayRawTest extends TestCase {
+    MArrayRaw r;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
+        r = new MArrayRaw();
 
     }
 
@@ -32,6 +52,7 @@ public class MArrayRawTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
+        r.cleanup();
     }
 
     public void testMakeMArrayRaw() throws Exception {
@@ -44,18 +65,16 @@ public class MArrayRawTest extends TestCase {
                 .getResourceAsStream( "/data/swirldata/maRb.sample.txt.gz" ) ) );
         DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maRf.sample.txt.gz" ) ) );
-        MArrayRaw r = new MArrayRaw();
+
         r.makeMArrayLayout( 4, 4, 22, 24 );
         r.makeMArrayRaw( maRf, maGf, maRb, maGb, null );
     }
 
     public void testMakeMArrayLayout() throws Exception {
-        MArrayRaw r = new MArrayRaw();
         r.makeMArrayLayout( 4, 4, 22, 24 );
     }
 
     public void testMakeMarrayInfo() throws Exception {
-        MArrayRaw r = new MArrayRaw();
         List<String> l = new ArrayList<String>();
         l.add( "foo" );
         l.add( "bar" );

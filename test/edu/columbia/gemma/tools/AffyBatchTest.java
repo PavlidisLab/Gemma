@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 
@@ -42,7 +42,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 public class AffyBatchTest extends TestCase {
     private static Log log = LogFactory.getLog( AffyBatchTest.class.getName() );
     AffyBatch aa;
-    DenseDoubleMatrix2DNamed celmatrix;
+    DoubleMatrixNamed celmatrix;
     ArrayDesign arrayDesign;
     InputStream is;
 
@@ -58,7 +58,7 @@ public class AffyBatchTest extends TestCase {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
         if ( is == null ) throw new IOException();
-        celmatrix = ( DenseDoubleMatrix2DNamed ) reader.read( is );
+        celmatrix = ( DoubleMatrixNamed ) reader.read( is );
         is.close();
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "cdfenv.example" );
@@ -80,7 +80,7 @@ public class AffyBatchTest extends TestCase {
     }
 
     /*
-     * Test method for 'edu.columbia.gemma.tools.AffyAnalyze.AffyBatch(DenseDoubleMatrix2DNamed, ArrayDesign)'
+     * Test method for 'edu.columbia.gemma.tools.AffyAnalyze.AffyBatch(DoubleMatrixNamed, ArrayDesign)'
      */
     public void testAffyBatch() {
         if ( !connected ) {

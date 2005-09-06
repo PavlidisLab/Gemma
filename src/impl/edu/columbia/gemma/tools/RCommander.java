@@ -54,8 +54,17 @@ public abstract class RCommander {
         rc = RCommand.newInstance();
     }
 
-    public void finalize() {
+    /**
+     * Users should call this method when they are ready to release this object.F
+     *
+     */
+    public void cleanup() {
         rc.disconnect();
+    }
+
+    protected void finalize() throws Throwable {
+        super.finalize();
+        cleanup();
     }
 
     public RCommand getRCommandObject() {
