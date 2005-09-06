@@ -44,7 +44,6 @@ public class MArrayRawTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         r = new MArrayRaw();
-
     }
 
     /*

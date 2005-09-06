@@ -76,6 +76,7 @@ public class AffyBatchTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
+        aa.cleanup();
         aa = null;
     }
 
