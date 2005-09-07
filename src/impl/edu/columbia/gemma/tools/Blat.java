@@ -360,19 +360,10 @@ public class Blat {
                 throw new RuntimeException( "GfClient Failed" );
             } else if ( future.get().exitValue() != 0 ) {
 
-                InputStream result = future.get().getErrorStream();
-                BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
-                String l = null;
-                StringBuilder buf = new StringBuilder();
-                while ( ( l = br.readLine() ) != null ) {
-                    buf.append( l + "\n" );
-                }
-                br.close();
+                StringBuilder buf = getErrOutput( future );
 
-                log.error( "GfClient Error : " + future.get().exitValue() );
-                log.error( "Command was '" + cmd + "'" );
-                log.error( "Error message was: " + buf );
-                throw new RuntimeException( "GfClient Error : " + future.get().exitValue() );
+                throw new RuntimeException( "GfClient Error on command : " + cmd + " exit value: "
+                        + future.get().exitValue() + " error:" + buf );
             } else {
                 log.info( "GfClient Success" );
             }
@@ -384,6 +375,25 @@ public class Blat {
             throw new RuntimeException( "GfClient Failed (Interrupted)", e );
         }
         return processPsl( outputPath );
+    }
+
+    /**
+     * @param future
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * @throws IOException
+     */
+    private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException, IOException {
+        InputStream result = future.get().getErrorStream();
+        BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
+        String l = null;
+        StringBuilder buf = new StringBuilder();
+        while ( ( l = br.readLine() ) != null ) {
+            buf.append( l + "\n" );
+        }
+        br.close();
+        return buf;
     }
 
     /**

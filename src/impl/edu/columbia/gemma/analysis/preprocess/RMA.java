@@ -16,7 +16,7 @@ import edu.columbia.gemma.tools.RCommander;
  */
 public class RMA extends RCommander implements ProbeSummarizer {
 
-    private ArrayDesign arrayDesign;
+    private ArrayDesign arrayDesign = null;
     private AffyBatch ab;
 
     public enum pmCorrectMethod {

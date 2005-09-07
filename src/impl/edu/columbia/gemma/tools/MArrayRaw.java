@@ -48,6 +48,17 @@ public class MArrayRaw extends RCommander {
     }
 
     /**
+     * Create marrayRaw object when background and weights are not used or already taken account of.
+     * 
+     * @param red Matrix of red channel intensities
+     * @param green Matrix of green channel intensities
+     * @return
+     */
+    public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green ) {
+        return this.makeMArrayRaw( red, green, null, null, null );
+    }
+
+    /**
      * @param red Matrix of red channel intensities
      * @param green Matrix of green channel intensities
      * @param redBg Matrix of red background intensities
@@ -58,13 +69,21 @@ public class MArrayRaw extends RCommander {
     @SuppressWarnings("unchecked")
     public String makeMArrayRaw( DoubleMatrixNamed red, DoubleMatrixNamed green, DoubleMatrixNamed redBg,
             DoubleMatrixNamed greenBg, DoubleMatrixNamed weights ) {
+
+        if ( red == null || green == null ) throw new IllegalArgumentException( "Signal matrices must not be null" );
+
         log.debug( "Making marrayRaw object" );
         String rawObjectName = "marrayraw." + RCommand.variableIdentityNumber( red );
 
         String redMaName = rc.assignMatrix( red );
         String greenMaName = rc.assignMatrix( green );
-        String redBgName = rc.assignMatrix( redBg );
-        String greenBgName = rc.assignMatrix( greenBg );
+
+        // if the redBg or greenBg are null
+        String redBgName = null;
+        if ( redBg != null ) redBgName = rc.assignMatrix( redBg );
+
+        String greenBgName = null;
+        if ( greenBg != null ) greenBgName = rc.assignMatrix( greenBg );
 
         String rowNameVar = makeMArrayInfo( red.getRowNames() );
         String colNameVar = makeMArrayInfo( red.getColNames() );
@@ -73,14 +92,15 @@ public class MArrayRaw extends RCommander {
         if ( weights != null ) weightsName = rc.assignMatrix( weights );
 
         String makeRawCmd = rawObjectName + "<-new(\"marrayRaw\", maRf=" + redMaName + ", maGf=" + greenMaName
-                + ", maRb=" + redBgName + ", maGb=" + greenBgName + ( weights == null ? "" : ", maW=" + weightsName )
+                + ( redBg == null ? "" : ", maRb=" + redBgName ) + ( greenBg == null ? "" : ", maGb=" + greenBgName )
+                + ( weights == null ? "" : ", maW=" + weightsName )
                 + ( this.layoutName == null ? "" : ", maLayout=" + this.layoutName ) + ", maGnames=" + rowNameVar
                 + ", maTargets=" + colNameVar + ")";
 
         rc.voidEval( makeRawCmd );
 
         // sanity check.
-        double[] c = rc.eval( "maGb(" + rawObjectName + ")[1,]" ).asDoubleArray();
+        double[] c = rc.eval( "maGf(" + rawObjectName + ")[1,]" ).asDoubleArray();
         if ( c == null || c.length == 0 ) {
             throw new RuntimeException(
                     "marrayRaw value was not propertly set: " + rc.getLastError() == null ? "(no error message)" : rc

@@ -34,8 +34,8 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
  */
 public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjuster {
 
-    private ArrayDesign arrayDesign;
-    private AffyBatch ab;
+    private ArrayDesign arrayDesign = null;
+    private AffyBatch ab = null;
 
     public RMABackgroundAdjuster() {
         super();

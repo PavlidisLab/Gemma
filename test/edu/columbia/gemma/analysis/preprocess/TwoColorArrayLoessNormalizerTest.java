@@ -20,10 +20,9 @@ package edu.columbia.gemma.analysis.preprocess;
 
 import java.util.zip.GZIPInputStream;
 
+import junit.framework.TestCase;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
-import edu.columbia.gemma.tools.MArrayRaw;
-import junit.framework.TestCase;
 
 /**
  * <hr>
@@ -56,11 +55,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
      * Test method for 'edu.columbia.gemma.analysis.preprocess.TwoColorArrayLoessNormalizer.normalize(DoubleMatrixNamed,
      * DoubleMatrixNamed, DoubleMatrixNamed, DoubleMatrixNamed, DoubleMatrixNamed)'
      */
-    public void testNormalizeDoubleMatrixNamedDoubleMatrixNamedDoubleMatrixNamedDoubleMatrixNamedDoubleMatrixNamed()
-            throws Exception {
-
-        // we mimic this analysis in R like this:
-        // maGb<-read.table("maGb.saml
+    public void testNormalize() throws Exception {
 
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrixNamed maGb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
@@ -74,11 +69,22 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
 
         DoubleMatrixNamed result = normalizer.normalize( maRf, maGf, maRb, maGb, null );
 
-        // g[100,3] = -0.2841363
         assertEquals( 8448, result.rows() );
         assertEquals( 4, result.columns() );
         // assertEquals( -0.2841363, result.get( 99, 2 ), 0.0001 ); // loess normaliation isn't deterministic in marray.
 
+    }
+
+    public void testNormalizeNoBg() throws Exception {
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+        DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/swirldata/maRf.sample.txt.gz" ) ) );
+        DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/swirldata/maGf.sample.txt.gz" ) ) );
+        DoubleMatrixNamed result = normalizer.normalize( maRf, maGf );
+
+        assertEquals( 8448, result.rows() );
+        assertEquals( 4, result.columns() );
     }
 
 }
