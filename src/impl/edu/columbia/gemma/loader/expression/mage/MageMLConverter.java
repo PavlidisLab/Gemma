@@ -69,6 +69,7 @@ public class MageMLConverter implements Converter {
      *        the call to getMageMLConverterHelper()
      */
     public void setSimplifiedXml( Document simplifiedXml ) {
+        assert getMageMLConverterHelper() != null;
         this.simplifiedXml = simplifiedXml;
         getMageMLConverterHelper().setSimplifiedXml( this.simplifiedXml ); // will be null if you put in
         // constructor
@@ -204,6 +205,7 @@ public class MageMLConverter implements Converter {
      * @see edu.columbia.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     public Object convert( Object mageObject ) {
+        if ( mageObject == null ) return null;
         return mageConverterHelper.convert( mageObject );
     }
 
