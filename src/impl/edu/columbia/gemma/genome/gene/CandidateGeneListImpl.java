@@ -22,7 +22,11 @@
 package edu.columbia.gemma.genome.gene;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
 
@@ -35,9 +39,12 @@ import edu.columbia.gemma.genome.Gene;
  * @version $Id$
  */
 public class CandidateGeneListImpl extends edu.columbia.gemma.genome.gene.CandidateGeneList {
+
+    private static Log log = LogFactory.getLog( CandidateGeneListImpl.class.getName() );
+
     /**
-     * Adds a candidate to the list, intitializing the list as an ArrayList if none exists. Lists are ranked in
-     * ascending order starting at 0.
+     * Adds a candidate to the list, intitializing the list as a List if none exists. Lists are ranked in ascending
+     * order starting at 0.
      * 
      * @param gene the Gene to create as a CandidateGene. <b>Note:</b> The ranking has no inherent meaning. The user
      *        should not have to figure out the new ranking explicitly. This is why you pass in a Gene instead of having
@@ -130,17 +137,15 @@ public class CandidateGeneListImpl extends edu.columbia.gemma.genome.gene.Candid
     }
 
     /**
-     * Adds removes the passed candidate from the list.
+     * Adds removes a candidate from the list.
      * 
-     * @param candidateGene The gene to remove
+     * @param candidateGene The candidate to remove
      * @see edu.columbia.gemma.genome.gene.CandidateGeneList#removeCandidate(CandidateGene)
      */
     public void removeCandidate( CandidateGene candidateGene ) {
         if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidateGene cannot be null" );
-        if ( this.getCandidates() == null ) throw new IllegalArgumentException( "Cannot remove from an empty list." );
-        if ( !this.getCandidates().contains( candidateGene ) )
-            throw new IllegalArgumentException( "This candidate not found on this list." );
+        if ( this.getCandidates() == null )
+            throw new IllegalArgumentException( "Cannot remove from an empty CandidateGeneList." );
         this.getCandidates().remove( candidateGene );
     }
-
 }
