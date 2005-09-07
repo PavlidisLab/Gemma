@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.genome.gene;
 
 import java.util.Collection;
@@ -22,7 +40,7 @@ import edu.columbia.gemma.genome.TaxonDao;
  */
 public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     private final Log log = LogFactory.getLog( CandidateGeneListDAOImplTest.class );
-    
+
     private CandidateGeneListDao daoCGL = null;
     private TaxonDao daoTaxon = null;
     private GeneDao daoGene = null;
@@ -30,7 +48,7 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     private Gene g2 = null;
     private Taxon t = null;
     private CandidateGeneList cgl = null;
-    
+
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -74,29 +92,28 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
     }
 
     public final void testAddGeneToList() throws Exception {
-        log.info("testing adding gene to list");
+        log.info( "testing adding gene to list" );
         CandidateGene cg = cgl.addCandidate( g );
-        daoCGL.update( cgl );
         assertEquals( cgl.getCandidates().size(), 1 );
         assertEquals( cg.getGene().getName(), "testmygene" );
-        cgl.removeCandidate( cg );
     }
 
     public final void testRemoveGeneFromList() throws Exception {
-        log.info("testing removing gene from list");
+        log.info( "testing removing gene from list" );
         CandidateGene cg = cgl.addCandidate( g2 );
-        daoCGL.update( cgl );
+        log.info( cgl.getCandidates().size() + " candidates to start" );
+        cg = ( CandidateGene ) cgl.getCandidates().iterator().next(); // get the persistent object.
+        log.info( cgl.getCandidates().size() + " candidates just before deleting" );
         cgl.removeCandidate( cg );
-        daoCGL.update( cgl );
+        log.info( cgl.getCandidates().size() + " candidates left" );
         assert ( cgl.getCandidates().size() == 0 );
     }
 
     public final void testRankingChanges() throws Exception {
-        log.info("testing ranking changes");
+        log.info( "testing ranking changes" );
         CandidateGene cg1 = cgl.addCandidate( g );
         CandidateGene cg2 = cgl.addCandidate( g2 );
         cgl.increaseRanking( cg2 );
-        daoCGL.update( cgl );
         Collection c = cgl.getCandidates();
         for ( Iterator iter = c.iterator(); iter.hasNext(); ) {
             cg1 = ( CandidateGene ) iter.next();
