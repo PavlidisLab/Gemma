@@ -34,7 +34,7 @@ public class UserController implements Controller {
             log.debug( "entering 'handleRequest' method..." );
         }
         
-        return new ModelAndView( "userList", Constants.USER_LIST, userService.getUsers( User.Factory.newInstance() ) );
+        return new ModelAndView( "userList", Constants.USER_LIST, userService.getUsers() );
     }
 
     public void setUserService( UserService userService ) {

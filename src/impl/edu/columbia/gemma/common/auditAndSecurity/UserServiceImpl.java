@@ -55,8 +55,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#getUsers(edu.columbia.gemma.common.auditAndSecurity.User)
      */
-    // FIXME - why is there a 'user' parameter.
-    protected java.util.Collection handleGetUsers( edu.columbia.gemma.common.auditAndSecurity.User user )
+    protected java.util.Collection handleGetUsers()
             throws java.lang.Exception {
         return this.getUserDao().findAll();
     }
