@@ -61,21 +61,22 @@ import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.FactorValue;
+import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
- * A generic class to persist Gemma-domain objects from the Expression package: arrayDesigns, expressionExperiments and
- * the like.
+ * A generic class to persist Gemma-domain objects. (work in progress)
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="expressionDataLoader"
+ * @spring.bean id="persisterHelper"
  * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
  * @spring.property name="personDao" ref="personDao"
  * @spring.property name="expressionExperimentDao" ref="expressionExperimentDao"
@@ -85,11 +86,13 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
  * @spring.property name="protocolDao" ref="protocolDao"
  * @spring.property name="softwareDao" ref="softwareDao"
  * @spring property name="hardwareDao" ref="hardwareDao"
+ * @spring property name="geneDao" ref="geneDao"
  * @spring property name="taxonDao" ref="taxonDao"
+ * @spring property name="externalDatabaseDao" ref="externalDatabaseDao"
  */
 @SuppressWarnings("unchecked")
-public class ExpressionLoaderImpl implements Persister {
-    private static Log log = LogFactory.getLog( ExpressionLoaderImpl.class.getName() );
+public class PersisterHelper implements Persister {
+    private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
 
     private ArrayDesignDao arrayDesignDao;
 
@@ -104,6 +107,8 @@ public class ExpressionLoaderImpl implements Persister {
     private ExpressionExperimentDao expressionExperimentDao;
 
     private ExternalDatabaseDao externalDatabaseDao;
+
+    private GeneDao geneDao;
 
     private HardwareDao hardwareDao;
 
@@ -122,76 +127,97 @@ public class ExpressionLoaderImpl implements Persister {
     private TaxonDao taxonDao;
 
     /*
-     * (non-Javadoc) TODO: finish implementing this.
-     * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
-    public void persist( Collection<Object> col ) {
+    public Collection<Object> persist( Collection<Object> col ) {
         if ( defaultOwner == null ) initializeDefaultOwner();
         try {
             log.debug( "Entering + " + this.getClass().getName() + ".create() with " + col.size() + " objects." );
             for ( Object entity : col ) {
-
-                String className = entity.getClass().getName();
-                // log.debug( "PERSIST: " + className );
-                // check if className is on short list of classes to be persisted.
-                // ArrayDesign (we won't usually use this - mage-ml of array designs is gigantic.)
-                // ExpressionExperiment (most interested in this)
-                // 
-                if ( entity instanceof ExpressionExperiment ) {
-                    log.debug( "Persisting " + className );
-                    loadExpressionExperiment( ( ExpressionExperiment ) entity );
-                } else if ( entity instanceof ArrayDesign ) {
-                    loadArrayDesign( ( ArrayDesign ) entity );
-                } else if ( entity instanceof BioSequence ) {
-                    // deal with in cascade from array design? Do nothing, probably.
-                } else if ( entity instanceof CompositeSequence ) {
-                    // cascade from array design, do nothing
-                } else if ( entity instanceof Reporter ) {
-                    // cascade from array design, do nothing
-                } else if ( entity instanceof QuantitationType ) {
-                    log.debug( "Persisting " + className );
-                    loadQuantitationType( ( QuantitationType ) entity );
-                } else if ( entity instanceof BioMaterial ) {
-                    log.debug( "Persisting " + className );
-                    persistBioMaterial( ( BioMaterial ) entity );
-                } else if ( entity instanceof ExternalDatabase ) {
-                    // probably won't use this much; or get from associations via ontologyentry.
-                    // loadExternalDatabase( ( ExternalDatabase ) entity );
-                } else if ( entity instanceof LocalFile ) {
-                    log.debug( "Persisting " + className );
-                    loadLocalFile( ( LocalFile ) entity );
-                } else if ( entity instanceof BioAssay ) {
-                    log.debug( "Persisting " + className );
-                    persistBioAssay( ( BioAssay ) entity );
-                } else {
-                    // throw new UnsupportedOperationException( "Sorry, can't deal with " + className );
-                }
+                persist( entity );
             }
         } catch ( Exception e ) {
             log.error( e, e );
         }
+        return col;
     }
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc) TODO: finish implementing this.
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
      */
-    public void persist( Object obj ) {
-        log.info( "Persisting " + obj.getClass().getName() + " " + obj );
-        if ( obj instanceof ExpressionExperiment ) {
-            this.loadExpressionExperiment( ( ExpressionExperiment ) obj );
-        } else if ( obj instanceof BioMaterial ) {
-            this.persistBioMaterial( ( BioMaterial ) obj );
-        } else if ( obj instanceof BioAssay ) {
-            this.persistBioAssay( ( BioAssay ) obj );
-        } else if ( obj instanceof ArrayDesign ) {
-            this.loadArrayDesign( ( ArrayDesign ) obj );
+    public Object persist( Object entity ) {
+        if ( entity == null ) return null;
+        log.debug( "Persisting " + entity.getClass().getName() + " " + entity );
+        if ( entity instanceof ExpressionExperiment ) {
+            return persistExpressionExperiment( ( ExpressionExperiment ) entity );
+        } else if ( entity instanceof ArrayDesign ) {
+            return persistArrayDesign( ( ArrayDesign ) entity );
+        } else if ( entity instanceof BioSequence ) {
+            return null;
+            // deal with in cascade from array design? Do nothing, probably.
+        } else if ( entity instanceof Protocol ) {
+            return null;
+        } else if ( entity instanceof CompositeSequence ) {
+            return null;
+            // cascade from array design, do nothing
+        } else if ( entity instanceof Reporter ) {
+            return null;
+            // cascade from array design, do nothing
+        } else if ( entity instanceof Hardware ) {
+            return null;
+        } else if ( entity instanceof QuantitationType ) {
+            return persistQuantitationType( ( QuantitationType ) entity );
+        } else if ( entity instanceof BioMaterial ) {
+            return persistBioMaterial( ( BioMaterial ) entity );
+        } else if ( entity instanceof ExternalDatabase ) {
+            return persistExternalDatabase( ( ExternalDatabase ) entity );
+        } else if ( entity instanceof LocalFile ) {
+            return persistLocalFile( ( LocalFile ) entity );
+        } else if ( entity instanceof BioAssay ) {
+            return persistBioAssay( ( BioAssay ) entity );
+        } else if ( entity instanceof OntologyEntry ) {
+            return persistOntologyEntry( ( OntologyEntry ) entity );
+        } else if ( entity instanceof Gene ) {
+            return persistGene( ( Gene ) entity );
         } else {
-            throw new UnsupportedOperationException( "Can't deal with " + obj.getClass().getName() );
+            log.error( "Can't deal with " + entity.getClass().getName() );
+            return null;
+            // throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() );
         }
 
+    }
+
+    /**
+     * @param assay
+     */
+    public BioAssay persistBioAssay( BioAssay assay ) {
+
+        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getBioAssayFactorValues() ) {
+            for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
+                persistOntologyEntry( value );
+            }
+        }
+
+        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
+            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
+        }
+
+        for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
+            file.setId( this.persistLocalFile( file ).getId() );
+        }
+
+        LocalFile f = assay.getRawDataFile();
+        LocalFile persistentLocalFile = persistLocalFile( f );
+        if ( persistentLocalFile != null ) {
+            f.setId( persistentLocalFile.getId() );
+        } else {
+            log.error( "Null local file for " + f.getLocalURI() );
+            throw new RuntimeException( "Null local file for" + f.getLocalURI() );
+        }
+
+        return bioAssayDao.findOrCreate( assay );
     }
 
     /**
@@ -429,7 +455,7 @@ public class ExpressionLoaderImpl implements Persister {
     /**
      * @param entity
      */
-    private ArrayDesign loadArrayDesign( ArrayDesign entity ) {
+    private ArrayDesign persistArrayDesign( ArrayDesign entity ) {
 
         ArrayDesign existing = arrayDesignDao.find( entity );
         if ( existing != null ) {
@@ -457,37 +483,6 @@ public class ExpressionLoaderImpl implements Persister {
         }
         log.info( "Creating arrayDesign " + entity );
         return arrayDesignDao.findOrCreate( entity );
-    }
-
-    /**
-     * @param assay
-     */
-    private BioAssay persistBioAssay( BioAssay assay ) {
-
-        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getBioAssayFactorValues() ) {
-            for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
-                persistOntologyEntry( value );
-            }
-        }
-
-        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
-            arrayDesign.setId( loadArrayDesign( arrayDesign ).getId() );
-        }
-
-        for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
-            file.setId( this.loadLocalFile( file ).getId() );
-        }
-
-        LocalFile f = assay.getRawDataFile();
-        LocalFile persistentLocalFile = loadLocalFile( f );
-        if ( persistentLocalFile != null ) {
-            f.setId( persistentLocalFile.getId() );
-        } else {
-            log.error( "Null local file for " + f.getLocalURI() );
-            throw new RuntimeException( "Null local file for" + f.getLocalURI() );
-        }
-
-        return bioAssayDao.findOrCreate( assay );
     }
 
     /**
@@ -524,7 +519,7 @@ public class ExpressionLoaderImpl implements Persister {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private void loadExpressionExperiment( ExpressionExperiment entity ) {
+    private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
         }
@@ -592,34 +587,34 @@ public class ExpressionLoaderImpl implements Persister {
             }
 
             ArrayDesign ad = persistentDesignElement.getArrayDesign();
-            ad.setId( this.loadArrayDesign( ad ).getId() );
+            ad.setId( this.persistArrayDesign( ad ).getId() );
 
             vect.setDesignElement( persistentDesignElement );
         }
 
-        expressionExperimentDao.create( entity );
+        return ( ExpressionExperiment ) expressionExperimentDao.create( entity );
     }
 
     /**
      * @param database
      */
-     @SuppressWarnings("unused")
-    private ExternalDatabase loadExternalDatabase( ExternalDatabase database ) {
+    @SuppressWarnings("unused")
+    private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
         throw new UnsupportedOperationException( "Can't deal with " + database.getClass().getName() + " yet" );
+    }
+
+    /**
+     * @param gene
+     */
+    private Object persistGene( Gene gene ) {
+        return geneDao.findOrCreate( gene );
     }
 
     /**
      * @param file
      */
-    private LocalFile loadLocalFile( LocalFile file ) {
+    private LocalFile persistLocalFile( LocalFile file ) {
         return localFileDao.findOrCreate( file );
-    }
-
-    /**
-     * @param entity
-     */
-    private QuantitationType loadQuantitationType( QuantitationType entity ) {
-        return quantitationTypeDao.findOrCreate( entity );
     }
 
     /**
@@ -635,6 +630,13 @@ public class ExpressionLoaderImpl implements Persister {
             persistOntologyEntry( associatedOntologyEntry );
         }
         return ontologyEntry;
+    }
+
+    /**
+     * @param entity
+     */
+    private QuantitationType persistQuantitationType( QuantitationType entity ) {
+        return quantitationTypeDao.findOrCreate( entity );
     }
 
 }

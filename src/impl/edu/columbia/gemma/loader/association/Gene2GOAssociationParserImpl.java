@@ -24,9 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -41,7 +39,7 @@ import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.ParserByMap;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * FIXME separate parsing from persisting. This class should implement Parser and yield a collection of
@@ -55,10 +53,11 @@ import edu.columbia.gemma.loader.loaderutils.ParserByMap;
  * @spring.bean id="gene2GOAssociationParser"
  * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
  * @spring.property name="geneDao" ref="geneDao"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author keshav
  * @version $Id$
  */
-public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements ParserByMap {
+public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements Persister {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserImpl.class );
 
     Method methodToInvoke = null;
@@ -72,6 +71,8 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     private Gene2GOAssociationMappings gene2GOAssociationMappings = null;
 
     private String filename;
+
+    private PersisterHelper persisterHelper;
 
     int i = 0;
 
@@ -110,7 +111,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @return Map
      * @throws IOException
      */
-    public Map parseToMap( String filename ) throws IOException {
+    public Map parseToMap( String f ) throws IOException {
         // TODO implement
         throw new UnsupportedOperationException();
     }
@@ -137,120 +138,29 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
         return this.parse( gZipInputStream, lineParseMethod );
     }
 
-    /**
-     * @param dependencies
-     * @param gene2GOAssMap
-     * @return Collection
-     * @see Parser
-     */
-    public Collection createOrGetDependencies( Object[] dependencies, Map gene2GOAssMap ) {
-        Set gene2GOKeysSet = null;
-
-        Gene gene = null;
-
-        OntologyEntry ontologyEntry = null;
-
-        for ( Object obj : dependencies ) {
-            Class c = obj.getClass();
-            if ( c.getName().endsWith( "GeneImpl" ) )
-                gene = createOrGetGene( ( Gene ) obj );
-            else if ( c.getName().endsWith( "OntologyEntryImpl" ) ) {
-                ontologyEntry = createOrGetOntologyEntry( ( OntologyEntry ) obj );
-            } else {
-                throw new IllegalArgumentException( "Make sure you have specified valid dependencies" );
-            }
+    public Collection<Object> persist( Collection<Object> col ) {
+        for ( Object object : col ) {
+            persist( object );
         }
-        log.info( "creating Gemma objects ... " );
-
-        gene2GOKeysSet = gene2GOAssMap.keySet();
-
-        Collection<Gene2GOAssociation> gene2GOAssCol = new HashSet<Gene2GOAssociation>();
-
-        // create Gemma domain objects
-        for ( Object key : gene2GOKeysSet ) {
-            Gene2GOAssociation g2GO = Gene2GOAssociation.Factory.newInstance();
-
-            g2GO.setGene( gene );
-
-            g2GO.setAssociatedGene( gene );
-
-            g2GO.setAssociatedOntologyEntry( ontologyEntry );
-
-            gene2GOAssCol.add( g2GO );
-
-        }
-        return gene2GOAssCol;
-
+        return col;
     }
 
-    /**
-     * @param oe
-     * @return OntologyEntry
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Persister#persist(java.lang.Object)
      */
-    private OntologyEntry createOrGetOntologyEntry( OntologyEntry oe ) {
+    public Object persist( Object obj ) {
+        if ( obj == null ) return null;
+        assert obj instanceof Gene2GOAssociation;
+        Gene2GOAssociation g2go = ( Gene2GOAssociation ) obj;
+        g2go.setGene( ( Gene ) persisterHelper.persist( g2go.getGene() ) );
+        g2go
+                .setAssociatedOntologyEntry( ( OntologyEntry ) persisterHelper.persist( g2go
+                        .getAssociatedOntologyEntry() ) );
 
-        PersisterHelper ph = new PersisterHelper();
+        return g2go;
 
-        if ( getOntologyEntries().size() == 0 )
-            ph.persist( oe );
-        else {
-            Collection<OntologyEntry> ontologyEntries = getOntologyEntries();
-
-            for ( OntologyEntry ontologyEntry : ontologyEntries ) {
-                if ( ontologyEntry.getAccession().equals( oe.getAccession() )
-                        && ontologyEntry.getExternalDatabase().getName().equalsIgnoreCase(
-                                oe.getExternalDatabase().getName() ) ) {
-                    log.info( "ontology entry: " + ontologyEntry.getExternalDatabase().getName() + "Accession: "
-                            + ontologyEntry.getAccession() + " already exists" );
-                    return ontologyEntry;
-                }
-            }
-            this.getOntologyEntryDao().create( oe );
-            log.info( "ontology entry: " + oe.getExternalDatabase().getName() + "Accession: " + oe.getAccession()
-                    + "created" );
-
-        }
-        return oe;
-    }
-
-    /**
-     * @return Collection
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<OntologyEntry> getOntologyEntries() {
-        return this.getOntologyEntryDao().findAll();
-    }
-
-    /**
-     * @param g
-     * @return Gene
-     */
-    private Gene createOrGetGene( Gene g ) {
-        if ( getGenes().size() == 0 )
-            this.getGeneDao().create( g );
-
-        else {
-            Collection<Gene> genes = getGenes();
-
-            for ( Gene gene : genes ) {
-                if ( gene.getNcbiId().equals( g.getNcbiId() ) ) {
-
-                    log.info( "gene with ncbi id " + gene.getNcbiId() + " already exists" );
-                    return gene;
-                }
-            }
-            this.getGeneDao().create( g );
-            log.info( "gene with ncbi id " + g.getNcbiId() + " created" );
-        }
-        return g;
-    }
-
-    /**
-     * @return Collection<Gene>
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<Gene> getGenes() {
-        return this.getGeneDao().findAllGenes();
     }
 
     @Override
@@ -330,6 +240,13 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      */
     public void setGene2GOAssociationMappings( Gene2GOAssociationMappings gene2GOAssociationMappings ) {
         this.gene2GOAssociationMappings = gene2GOAssociationMappings;
+    }
+
+    /**
+     * @param persisterHelper The persisterHelper to set.
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
 }

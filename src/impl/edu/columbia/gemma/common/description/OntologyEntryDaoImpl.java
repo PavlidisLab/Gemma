@@ -40,19 +40,17 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
 
     @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
-        if ( ontologyEntry.getAccession() == null && ontologyEntry.getExternalDatabase() == null
-                && ontologyEntry.getCategory() == null && ontologyEntry.getValue() == null ) return null;
+
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( OntologyEntry.class );
 
-            /* go by accession/database if present, otherwise by category/value */
-            // if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
-            // queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).add(
-            // Restrictions.eq( "externalDatabase", ontologyEntry.getExternalDatabase() ) );
-            // } else {
-            queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
-                    Restrictions.ilike( "value", ontologyEntry.getValue() ) );
-            // }
+            if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
+                queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).add(
+                        Restrictions.eq( "externalDatabase", ontologyEntry.getExternalDatabase() ) );
+            } else {
+                queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
+                        Restrictions.ilike( "value", ontologyEntry.getValue() ) );
+            }
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -76,6 +74,10 @@ public class OntologyEntryDaoImpl extends edu.columbia.gemma.common.description.
     @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
 
+        if ( ( ontologyEntry.getAccession() == null || ontologyEntry.getExternalDatabase() == null )
+                && ( ontologyEntry.getCategory() == null || ontologyEntry.getValue() == null ) ) {
+            throw new IllegalArgumentException( "Either accession, or category+value must be filled in." );
+        }
         OntologyEntry newOntologyEntry = find( ontologyEntry );
         if ( newOntologyEntry != null ) {
             if ( log.isDebugEnabled() )

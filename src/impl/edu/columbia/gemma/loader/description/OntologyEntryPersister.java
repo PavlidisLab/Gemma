@@ -24,8 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.OntologyEntry;
-import edu.columbia.gemma.common.description.OntologyEntryDao;
-import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
@@ -38,23 +37,17 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="ontologyEntryLoader"
- * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public class OntologyEntryPersister implements Persister {
 
     protected static final Log log = LogFactory.getLog( OntologyEntryPersister.class );
 
-    private OntologyEntryDao ontologyEntryDao;
+    private PersisterHelper persisterHelper;
 
     public Collection<Object> persist( Collection<Object> oeCol ) {
-        assert ontologyEntryDao != null;
-        log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
-
-        int count = 0;
         for ( Object oe : oeCol ) {
             persist( oe );
-            ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
-            count++;
         }
         return oeCol;
     }
@@ -64,27 +57,13 @@ public class OntologyEntryPersister implements Persister {
      */
     public Object persist( Object oe ) {
         assert oe instanceof OntologyEntry;
-        return ontologyEntryDao.findOrCreate( ( OntologyEntry ) oe );
+        return persisterHelper.persist( oe );
     }
 
     /**
-     * @param ontologyEntry
+     * @param persisterHelper The persisterHelper to set.
      */
-    public void create( OntologyEntry ontologyEntry ) {
-        getOntologyEntryDao().create( ontologyEntry );
-    }
-
-    /**
-     * @return Returns the ontologyEntryDao.
-     */
-    public OntologyEntryDao getOntologyEntryDao() {
-        return ontologyEntryDao;
-    }
-
-    /**
-     * @param ontologyEntryDao The ontologyEntryDao to set.
-     */
-    public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
-        this.ontologyEntryDao = ontologyEntryDao;
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 }

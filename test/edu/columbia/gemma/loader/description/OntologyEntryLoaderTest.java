@@ -19,21 +19,20 @@
 package edu.columbia.gemma.loader.description;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.bio.geneset.GONames;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.common.description.LocalFileDao;
-import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
@@ -46,22 +45,12 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  * @author keshav
  * @version $Id$
  */
-public class OntologyEntryLoaderTest extends BaseServiceTestCase {
+public class OntologyEntryLoaderTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderTest.class );
 
-    GONames goNames = null;
+    OntologyEntryPersister ontologyEntryPersister = null;
 
-    Map oeMap = null;
-
-    Map oeMap2 = null;
-
-    Collection<Object> oeCol = null;
-
-    Collection<Object> oeCol2 = null;
-
-    OntologyEntryPersister ontologyEntryLoader = null;
-
-    OntologyEntryParserImpl ontologyEntryParser = null;
+    OntologyEntryParser ontologyEntryParser = null;
 
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
@@ -97,25 +86,20 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
         dependencies[1] = lf;
         dependencies[2] = lf2;
 
-        oeMap = ontologyEntryParser.parseFromHttp( url );
+        InputStream is = new GZIPInputStream( ParserAndLoaderTools.retrieveByHTTP( url ) );
+        ontologyEntryParser.parse( is );
+        Collection<Object> ontologyEntries = ontologyEntryParser.getResults();
 
         // throw out most of the results so this test is faster
-        Map<Object, Object> testMap = new HashMap<Object, Object>();
+        Collection<Object> testSet = new HashSet<Object>();
         int count = 0;
-        for ( Object object : oeMap.keySet() ) {
-            testMap.put( object, oeMap.get( object ) );
+        for ( Object object : ontologyEntries ) {
+            testSet.add( object );
             count++;
             if ( count >= 10 ) break;
         }
 
-        oeCol = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap );
-
-        ParserAndLoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
-
-        // try loading them again?
-        oeCol2 = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap2 );
-
-        ParserAndLoaderTools.loadDatabase( ontologyEntryLoader, oeCol2 );
+        ontologyEntryPersister.persist( testSet );
 
     }
 
@@ -125,14 +109,11 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        ontologyEntryParser = new OntologyEntryParserImpl();
+        ontologyEntryParser = new OntologyEntryParser();
 
-        ontologyEntryLoader = new OntologyEntryPersister();
+        ontologyEntryPersister = new OntologyEntryPersister();
 
-        // "tomcatesque" functionality
-        ontologyEntryParser.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
-        ontologyEntryParser.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
-        ontologyEntryLoader.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
+        ontologyEntryPersister.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
     }
 
     /**
@@ -143,15 +124,7 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         // TODO remove all ontology entries as well on tear down
 
-        ontologyEntryLoader = null;
-
-        oeMap = null;
-
-        oeMap2 = null;
-
-        oeCol = null;
-
-        oeCol2 = null;
+        ontologyEntryPersister = null;
 
     }
 

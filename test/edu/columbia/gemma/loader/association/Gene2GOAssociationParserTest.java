@@ -28,10 +28,8 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 
-import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.association.Gene2GOAssociation;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
@@ -40,8 +38,8 @@ import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
@@ -53,7 +51,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @author keshav
  * @version $Id$
  */
-public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
+public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserTest.class );
 
     Gene2GOAssociationParserImpl gene2GOAssParser = null;
@@ -120,7 +118,7 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         gene2GOMap = gene2GOAssParser.parse( gZipIs, m );
 
-        gene2GOCol = gene2GOAssParser.createOrGetDependencies( dependencies, gene2GOMap );
+        gene2GOCol = gene2GOAssParser.persist( gene2GOMap.values() );
 
         ParserAndLoaderTools.loadDatabase( gene2GOAssLoader, gene2GOCol );
 
@@ -133,14 +131,14 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        BeanFactory ctx = SpringContextUtil.getApplicationContext();
-
         gene2GOAssParser = new Gene2GOAssociationParserImpl( "gene2go" );
 
         // constructor injection
         Gene2GOAssociationMappings g2GOMappings = new Gene2GOAssociationMappings( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
 
         gene2GOAssParser.setGene2GOAssociationMappings( g2GOMappings );
+
+        gene2GOAssParser.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
 
         gene2GOAssParser.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
 

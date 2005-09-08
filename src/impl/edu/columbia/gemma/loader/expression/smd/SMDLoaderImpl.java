@@ -24,24 +24,14 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
 
 public class SMDLoaderImpl implements Persister {
 
-    public void persist( Collection col ) {
+    public Collection<Object> persist( Collection col ) {
         // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
-    public void persist( Object obj ) {
+    public Object persist( Object obj ) {
         // TODO Auto-generated method stub
-
-    }
-
-    public void removeAll() {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void removeAll( Collection collection ) {
-        // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
 }
