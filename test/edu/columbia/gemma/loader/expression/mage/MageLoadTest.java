@@ -38,7 +38,7 @@ import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 
 /**
  * <hr>
@@ -51,7 +51,7 @@ import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
 public class MageLoadTest extends MageBaseTest {
     private static Log log = LogFactory.getLog( MageLoadTest.class.getName() );
     MageMLConverter mageMLConverter = null;
-    ExpressionLoaderImpl ml;
+    PersisterHelper ml;
 
     /*
      * (non-Javadoc)
@@ -62,7 +62,7 @@ public class MageLoadTest extends MageBaseTest {
     protected void setUp() throws Exception {
         super.setUp();
         this.setMageMLConverter( ( MageMLConverter ) ctx.getBean( "mageMLConverter" ) );
-        ml = new ExpressionLoaderImpl();
+        ml = new PersisterHelper();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
         ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
         ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );

@@ -33,6 +33,7 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
@@ -50,7 +51,7 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
 
     private ArrayDesignParserImpl arrayDesignParser = null;
 
-    private ArrayDesignLoaderImpl arrayDesignLoader = null;
+    private ArrayDesignPersister arrayDesignLoader = null;
 
     private Map map = null;
 
@@ -70,10 +71,9 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
 
         arrayDesignParser.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
 
-        arrayDesignLoader = new ArrayDesignLoaderImpl();
+        arrayDesignLoader = new ArrayDesignPersister();
 
-        arrayDesignLoader.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-
+        arrayDesignLoader.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
     }
 
     /**

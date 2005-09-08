@@ -28,12 +28,10 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
-
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.QtlDao;
 import edu.columbia.gemma.genome.Taxon;
-import edu.columbia.gemma.genome.TaxonDao;
 
 /**
  * <hr>
@@ -47,7 +45,6 @@ public class GeneServiceImplTest extends TestCase {
 
     private Taxon t = null;
     private Gene g = null;
-    private TaxonDao tDAO = null;
     private GeneDao geneDaoMock;
     private QtlDao qtlDaoMock;
     GeneServiceImpl svc;
@@ -56,8 +53,6 @@ public class GeneServiceImplTest extends TestCase {
     Collection<Gene> justRabble = new HashSet<Gene>();
 
     protected void setUp() throws Exception {
-
-        tDAO = createMock( TaxonDao.class );
         geneDaoMock = createMock( GeneDao.class );
         qtlDaoMock = createMock( QtlDao.class );
         svc = new GeneServiceImpl();

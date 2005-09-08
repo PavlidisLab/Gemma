@@ -26,7 +26,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
-import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 
 /**
  * <hr>
@@ -41,7 +41,7 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
     /** This is an integration test */
     public void testFetchAndLoad() throws Exception {
         GeoDatasetService gds = new GeoDatasetService();
-        ExpressionLoaderImpl ml = new ExpressionLoaderImpl();
+        PersisterHelper ml = new PersisterHelper();
         GeoConverter geoConv = new GeoConverter();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
         ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );

@@ -16,78 +16,71 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.expression.experiment;
 
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
  * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService
  */
-public class ExpressionExperimentServiceImpl
-    extends edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase
-{
+public class ExpressionExperimentServiceImpl extends
+        edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase {
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#saveExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
      */
-    protected void handleSaveExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment expressionExperiment)
-        throws java.lang.Exception
-    {
-    	this.getExpressionExperimentDao().update(expressionExperiment);
+    protected void handleSaveExpressionExperiment(
+            edu.columbia.gemma.expression.experiment.ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception {
+        this.getExpressionExperimentDao().update( expressionExperiment );
     }
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getAllExpressionExperiments()
      */
-    protected java.util.Collection handleGetAllExpressionExperiments()
-        throws java.lang.Exception
-    {
+    protected java.util.Collection handleGetAllExpressionExperiments() throws java.lang.Exception {
         return this.getExpressionExperimentDao().findAll();
     }
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#findByInvestigator()
      */
-    protected java.util.Collection handleFindByInvestigator(long id)
-        throws java.lang.Exception
-    {
-        return this.getExpressionExperimentDao().findByInvestigator(id);
+    protected java.util.Collection handleFindByInvestigator( long id ) throws java.lang.Exception {
+        return this.getExpressionExperimentDao().findByInvestigator( id );
     }
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#findById()
      */
-    protected ExpressionExperiment handleFindById(long id)
-        throws java.lang.Exception
-    {
-        return this.getExpressionExperimentDao().findById(id);
+    protected ExpressionExperiment handleFindById( long id ) throws java.lang.Exception {
+        return this.getExpressionExperimentDao().findById( id );
     }
-    
+
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#removeExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
      */
-    protected void handleRemoveExpressionExperiment(ExpressionExperiment expressionExperiment)
-        throws java.lang.Exception
-    {
-        this.getExpressionExperimentDao().remove(expressionExperiment);
+    protected void handleRemoveExpressionExperiment( ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception {
+        this.getExpressionExperimentDao().remove( expressionExperiment );
     }
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#createExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
      */
-    protected ExpressionExperiment handleCreateExpressionExperiment(ExpressionExperiment expressionExperiment)
-        throws java.lang.Exception
-    {
-        return (ExpressionExperiment)this.getExpressionExperimentDao().create(expressionExperiment);
+    protected ExpressionExperiment handleCreateExpressionExperiment( ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception {
+        return ( ExpressionExperiment ) this.getExpressionExperimentDao().create( expressionExperiment );
     }
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#updateExpressionExperiment(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
      */
-    protected void handleUpdateExpressionExperiment( ExpressionExperiment expressionExperiment ) 
-    	throws java.lang.Exception {
-        this.getExpressionExperimentDao().update(expressionExperiment);
+    protected void handleUpdateExpressionExperiment( ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception {
+        this.getExpressionExperimentDao().update( expressionExperiment );
     }
 }
