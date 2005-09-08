@@ -43,7 +43,6 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="mageMLConverter" singleton="false"
- * @spring.property name="mageMLConverterHelper" ref="mageMLConverterHelper"
  */
 public class MageMLConverter implements Converter {
 
@@ -65,14 +64,12 @@ public class MageMLConverter implements Converter {
     }
 
     /**
-     * @param simplifiedXml The simplifiedXml to set. TODO do not make MageMLConverterHelper available to spring. Remove
-     *        the call to getMageMLConverterHelper()
+     * @param simplifiedXml The simplifiedXml to set.
      */
     public void setSimplifiedXml( Document simplifiedXml ) {
-        assert getMageMLConverterHelper() != null;
+        assert mageConverterHelper != null;
         this.simplifiedXml = simplifiedXml;
-        getMageMLConverterHelper().setSimplifiedXml( this.simplifiedXml ); // will be null if you put in
-        // constructor
+        mageConverterHelper.setSimplifiedXml( this.simplifiedXml );
     }
 
     /**
@@ -82,6 +79,7 @@ public class MageMLConverter implements Converter {
         super();
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
         String mageClassesString = rb.getString( "mage.classes" ); // FIXME : use config array
+        this.mageConverterHelper = new MageMLConverterHelper();
         mageClasses = mageClassesString.split( ", " );
     }
 
@@ -207,20 +205,6 @@ public class MageMLConverter implements Converter {
     public Object convert( Object mageObject ) {
         if ( mageObject == null ) return null;
         return mageConverterHelper.convert( mageObject );
-    }
-
-    /**
-     * @return Returns the mageConverterHelper.
-     */
-    public MageMLConverterHelper getMageMLConverterHelper() {
-        return mageConverterHelper;
-    }
-
-    /**
-     * @param mageConverterHelper The mageConverterHelper to set.
-     */
-    public void setMageMLConverterHelper( MageMLConverterHelper mageConverterHelper ) {
-        this.mageConverterHelper = mageConverterHelper;
     }
 
 }

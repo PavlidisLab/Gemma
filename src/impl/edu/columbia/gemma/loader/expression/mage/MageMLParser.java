@@ -228,8 +228,10 @@ public class MageMLParser implements Parser {
 
         } catch ( DocumentException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( TransformerConfigurationException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         }
     }
 

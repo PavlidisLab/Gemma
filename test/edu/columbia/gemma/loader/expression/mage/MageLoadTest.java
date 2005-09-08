@@ -127,7 +127,7 @@ public class MageLoadTest extends MageBaseTest {
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
-
+        getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
         Collection<Object> result = getMageMLConverter().convert( parseResult );
 
         log.info( result.size() + " Objects parsed from the MAGE file." );
@@ -152,8 +152,8 @@ public class MageLoadTest extends MageBaseTest {
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
 
-        getMageMLConverter().setSimplifiedXml(mlp.getSimplifiedXml());
-        
+        getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
+
         Collection<Object> result = getMageMLConverter().convert( parseResult );
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
