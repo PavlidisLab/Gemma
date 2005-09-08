@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
-import edu.columbia.gemma.loader.expression.ExpressionLoaderImpl;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.loaderutils.Converter;
@@ -114,7 +114,7 @@ public class GeoDatasetService {
     /**
      * @param expressionLoader
      */
-    public void setPersister( ExpressionLoaderImpl expressionLoader ) {
+    public void setPersister( PersisterHelper expressionLoader ) {
         this.expLoader = expressionLoader;
     }
 

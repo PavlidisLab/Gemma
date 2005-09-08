@@ -46,7 +46,7 @@ public class OntologyEntryPersister implements Persister {
 
     private OntologyEntryDao ontologyEntryDao;
 
-    public void persist( Collection<Object> oeCol ) {
+    public Collection<Object> persist( Collection<Object> oeCol ) {
         assert ontologyEntryDao != null;
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
@@ -56,14 +56,15 @@ public class OntologyEntryPersister implements Persister {
             ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
             count++;
         }
+        return oeCol;
     }
 
     /**
      * @param oe
      */
-    public void persist( Object oe ) {
+    public Object persist( Object oe ) {
         assert oe instanceof OntologyEntry;
-        ontologyEntryDao.findOrCreate( ( OntologyEntry ) oe );
+        return ontologyEntryDao.findOrCreate( ( OntologyEntry ) oe );
     }
 
     /**

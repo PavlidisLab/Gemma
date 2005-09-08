@@ -47,7 +47,7 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
     /**
      * @param oeCol
      */
-    public void persist( Collection<Object> g2GoCol ) {
+    public Collection<Object> persist( Collection<Object> g2GoCol ) {
 
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
@@ -77,15 +77,16 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
                 }
             }
         }
+        return g2GoCol;
     }
 
     /**
      * @param object
      */
-    public void persist( Object object ) {
+    public Object persist( Object object ) {
         assert object instanceof Gene2GOAssociation;
         Gene2GOAssociation g2Go = ( Gene2GOAssociation ) object;
-        getGene2GOAssociationDao().create( g2Go );
+        return getGene2GOAssociationDao().create( g2Go );
     }
 
     /**

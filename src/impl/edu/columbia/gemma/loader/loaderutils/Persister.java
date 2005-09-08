@@ -39,15 +39,17 @@ public interface Persister {
      * key.
      * 
      * @param col
+     * @return The persistent versions of the objects.
      */
-    public void persist( Collection<Object> col );
+    public Collection<Object> persist( Collection<Object> col );
 
     /**
      * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
      * or converted into a reference to a persistent object identified by the objects business key.
      * 
      * @param obj
+     * @resutln the persistent version of the object.
      */
-    public void persist( Object obj );
+    public Object persist( Object obj );
 
 }

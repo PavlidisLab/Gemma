@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.genome.gene;
 
 import java.util.Collection;
@@ -30,13 +48,11 @@ public class GeneLoaderImpl implements Persister {
      * 
      * @param col
      */
-    public void persist( Collection col ) {
-        assert geneDao != null;
-        for ( Iterator iter = col.iterator(); iter.hasNext(); ) {
-            Gene g = ( Gene ) iter.next();
-
-            if ( !( geneDao.findByNcbiId( Integer.parseInt( g.getNcbiId() ) ).size() > 0 ) ) geneDao.create( g );
+    public Collection<Object> persist( Collection<Object> col ) {
+        for ( Object object : col ) {
+            this.persist( object );
         }
+        return col;
     }
 
     /**
@@ -44,8 +60,9 @@ public class GeneLoaderImpl implements Persister {
      * 
      * @param gene
      */
-    public void persist( Object obj ) {
-        // TODO Auto-generated method stub
+    public Object persist( Object obj ) {
+        assert obj instanceof Gene;
+        return geneDao.findOrCreate( ( Gene ) obj );
     }
 
     /**

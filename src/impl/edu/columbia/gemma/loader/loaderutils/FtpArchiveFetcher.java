@@ -33,10 +33,6 @@ import org.apache.commons.net.ftp.FTPClient;
 public abstract class FtpArchiveFetcher extends AbstractFetcher implements ArchiveFetcher {
     protected FTPClient f;
     protected static Log log = LogFactory.getLog( FtpArchiveFetcher.class.getName() );
-    protected String localBasePath = null;
-    protected String baseDir = null;
-    protected boolean success = false;
-
     protected boolean doDelete = false;
 
     /*
@@ -45,8 +41,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * @see edu.columbia.gemma.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
      */
     @SuppressWarnings("hiding")
-    public void setDeleteAfterUnpack( 
-    boolean doDelete ) {
+    public void setDeleteAfterUnpack( boolean doDelete ) {
         this.doDelete = doDelete;
     }
 

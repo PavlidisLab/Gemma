@@ -38,6 +38,7 @@ import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.ParserByMap;
@@ -188,8 +189,10 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      */
     private OntologyEntry createOrGetOntologyEntry( OntologyEntry oe ) {
 
+        PersisterHelper ph = new PersisterHelper();
+
         if ( getOntologyEntries().size() == 0 )
-            this.getOntologyEntryDao().create( oe );
+            ph.persist( oe );
         else {
             Collection<OntologyEntry> ontologyEntries = getOntologyEntries();
 

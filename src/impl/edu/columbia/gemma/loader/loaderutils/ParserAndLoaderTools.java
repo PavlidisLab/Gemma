@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.loaderutils;
 
 import java.io.IOException;
@@ -35,32 +53,15 @@ public class ParserAndLoaderTools {
      * @param loader
      * @param col
      */
-    public static final void loadDatabase( Object loader, Collection col ) {
+    public static final void loadDatabase( Persister loader, Collection<Object> col ) {
         assert ( loader != null );
         assert ( col != null );
+        if ( col.size() == 0 ) return;
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        try { // FIXME - this hard-coded method name can be a problem.
-            loader.getClass().getMethod( "persist", new Class[] { Collection.class } ).invoke( loader,
-                    new Object[] { col } );
-        } catch ( IllegalArgumentException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( SecurityException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( IllegalAccessException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( InvocationTargetException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch ( NoSuchMethodException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        loader.persist( col );
 
         stopWatch.stop();
 
@@ -102,6 +103,12 @@ public class ParserAndLoaderTools {
         return null;
     }
 
+    /**
+     * @param obj
+     * @param fileName
+     * @return
+     * @throws NoSuchMethodException
+     */
     public static Method findParseLineMethod( Object obj, String fileName ) throws NoSuchMethodException {
         String[] f = StringUtils.split( fileName, System.getProperty( "file.separator" ) );
         String suffixOfFilename = f[f.length - 1];

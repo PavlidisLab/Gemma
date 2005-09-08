@@ -32,14 +32,14 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
  */
 public class GeoLoaderImpl implements Persister {
 
-    public void persist( Collection col ) {
+    public Collection<Object> persist( Collection col ) {
         // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
-    public void persist( Object obj ) {
+    public Object persist( Object obj ) {
         // TODO Auto-generated method stub
-
+        throw new UnsupportedOperationException();
     }
 
 }
