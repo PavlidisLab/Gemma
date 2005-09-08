@@ -151,7 +151,7 @@ public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
         gene2GOAssLoader = new Gene2GOAssociationLoaderImpl();
 
         gene2GOAssLoader.setGene2GOAssociationDao( ( Gene2GOAssociationDao ) ctx.getBean( "gene2GOAssociationDao" ) );
-
+        gene2GOAssLoader.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
     }
 
     /**
