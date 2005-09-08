@@ -18,19 +18,20 @@
  */
 package edu.columbia.gemma.genome.gene;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
+
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.easymock.MockControl;
-import static org.easymock.EasyMock.*;
-import edu.columbia.gemma.common.Describable;
-import edu.columbia.gemma.common.auditAndSecurity.AuditAction;
-import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
+
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;

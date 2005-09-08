@@ -1,11 +1,29 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.common.description;
 
-import org.easymock.MockControl;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import junit.framework.TestCase;
 
-import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.common.description.DatabaseEntry;
-import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.common.description.BibliographicReference;
 /**
  * <hr>
  * <p>
@@ -14,59 +32,53 @@ import edu.columbia.gemma.common.description.BibliographicReference;
  * @author pavlidis
  * @version $Id$
  */
-public class BibliographicReferenceServiceImplTest extends BaseServiceTestCase {
+public class BibliographicReferenceServiceImplTest extends TestCase {
 
     private BibliographicReferenceServiceImpl svc = null;
     private BibliographicReferenceDao brdao = null;
     private ExternalDatabaseDao eddao = null;
     private DatabaseEntry de = null;
     private ExternalDatabase extDB = null;
-    private MockControl controlBR;
-    private MockControl controlED;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         svc = new BibliographicReferenceServiceImpl();
-        controlBR = MockControl.createControl( BibliographicReferenceDao.class );
-        controlED = MockControl.createControl( ExternalDatabaseDao.class );
-        
-        brdao = ( BibliographicReferenceDao ) controlBR.getMock();
-        eddao = ( ExternalDatabaseDao ) controlED.getMock();
-        
-        svc.setBibliographicReferenceDao(brdao);
-        svc.setExternalDatabaseDao(eddao);
+
+        brdao = createMock( BibliographicReferenceDao.class );
+        eddao = createMock( ExternalDatabaseDao.class );
+
+        svc.setBibliographicReferenceDao( brdao );
+        svc.setExternalDatabaseDao( eddao );
         extDB = ExternalDatabase.Factory.newInstance();
-        extDB.setName("PUBMED");
-        
+        extDB.setName( "PUBMED" );
+
         de = DatabaseEntry.Factory.newInstance();
-        de.setAccession("12345");
-        de.setExternalDatabase(extDB);
+        de.setAccession( "12345" );
+        de.setExternalDatabase( extDB );
     }
 
     /*
      * @see TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-    	super.tearDown();
+        super.tearDown();
     }
 
     public final void testFindByExternalId() {
-       
-        
+
         BibliographicReference mockBR = BibliographicReference.Factory.newInstance();
-        mockBR.setPubAccession(de);
-        mockBR.setTitle("My Title");
-        brdao.findByExternalId("12345", "PUBMED");
-		controlBR.setReturnValue( mockBR );
-		
-        controlBR.replay();
-        BibliographicReference brRet = svc.findByExternalId("12345", "PUBMED");
-        controlBR.verify();
+        mockBR.setPubAccession( de );
+        mockBR.setTitle( "My Title" );
+        brdao.findByExternalId( "12345", "PUBMED" );
+        expectLastCall().andReturn( mockBR );
+
+        replay( brdao );
+        svc.findByExternalId( "12345", "PUBMED" );
+        verify( brdao );
     }
-    
 
 }
