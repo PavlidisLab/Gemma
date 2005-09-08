@@ -109,7 +109,7 @@ public class GeneServiceImplTest extends TestCase {
 
     public void testFindAll() {
         reset( geneDaoMock );
-        geneDaoMock.findAllGenes();
+        geneDaoMock.loadAll();
         expectLastCall().andReturn( allThree );
         replay( geneDaoMock );
         svc.getAllGenes();

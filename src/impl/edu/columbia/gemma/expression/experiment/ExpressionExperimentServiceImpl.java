@@ -43,7 +43,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getAllExpressionExperiments()
      */
     protected java.util.Collection handleGetAllExpressionExperiments() throws java.lang.Exception {
-        return this.getExpressionExperimentDao().findAll();
+        return this.getExpressionExperimentDao().loadAll();
     }
 
     /**

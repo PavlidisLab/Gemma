@@ -62,7 +62,7 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
 
     @Override
     public Collection handleGetAll() {
-        return this.getCandidateGeneListDao().findAll();
+        return this.getCandidateGeneListDao().loadAll();
     }
 
     @Override

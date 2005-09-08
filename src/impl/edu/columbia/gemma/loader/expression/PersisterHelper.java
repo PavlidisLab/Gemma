@@ -85,12 +85,14 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
  * @spring.property name="designElementDao" ref="designElementDao"
  * @spring.property name="protocolDao" ref="protocolDao"
  * @spring.property name="softwareDao" ref="softwareDao"
- * @spring property name="hardwareDao" ref="hardwareDao"
- * @spring property name="geneDao" ref="geneDao"
- * @spring property name="taxonDao" ref="taxonDao"
- * @spring property name="externalDatabaseDao" ref="externalDatabaseDao"
+ * @spring.property name="hardwareDao" ref="hardwareDao"
+ * @spring.property name="geneDao" ref="geneDao"
+ * @spring.property name="taxonDao" ref="taxonDao"
+ * @spring.property name="localFileDao" ref="localFileDao"
+ * @spring.property name="bioAssayDao" ref="bioAssayDao"
+ * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
+ * @spring.property name="quantitationTypeDao" ref="quantitationTypeDao"
  */
-@SuppressWarnings("unchecked")
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
 
@@ -192,6 +194,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param assay
      */
+    @SuppressWarnings("unchecked")
     public BioAssay persistBioAssay( BioAssay assay ) {
 
         for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getBioAssayFactorValues() ) {
@@ -349,6 +352,7 @@ public class PersisterHelper implements Persister {
      * @param databaseEntry
      */
     private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
+        assert externalDatabaseDao != null;
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
         if ( externalDatabase == null ) {
             log.debug( "No externalDatabase" );
@@ -361,6 +365,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param ontologyEntry
      */
+    @SuppressWarnings("unchecked")
     private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
         this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
         for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
@@ -371,6 +376,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param protocol
      */
+    @SuppressWarnings("unchecked")
     private void fillInProtocol( Protocol protocol ) {
         if ( protocol == null ) {
             log.warn( "Null protocol" );
@@ -392,6 +398,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param protocolApplication
      */
+    @SuppressWarnings("unchecked")
     private void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
         if ( protocolApplication == null ) return;
 
@@ -442,6 +449,7 @@ public class PersisterHelper implements Persister {
     /**
      * Fetch the fallback owner to use for newly-imported data.
      */
+    @SuppressWarnings("unchecked")
     private void initializeDefaultOwner() {
         Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
 
@@ -455,6 +463,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param entity
      */
+    @SuppressWarnings("unchecked")
     private ArrayDesign persistArrayDesign( ArrayDesign entity ) {
 
         ArrayDesign existing = arrayDesignDao.find( entity );
@@ -519,6 +528,7 @@ public class PersisterHelper implements Persister {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
+    @SuppressWarnings("unchecked")
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
@@ -622,6 +632,7 @@ public class PersisterHelper implements Persister {
      * 
      * @param ontologyEntry
      */
+    @SuppressWarnings("unchecked")
     private OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
         fillInPersistentExternalDatabase( ontologyEntry );
@@ -637,6 +648,13 @@ public class PersisterHelper implements Persister {
      */
     private QuantitationType persistQuantitationType( QuantitationType entity ) {
         return quantitationTypeDao.findOrCreate( entity );
+    }
+
+    /**
+     * @param geneDao The geneDao to set.
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
     }
 
 }

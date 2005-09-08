@@ -84,9 +84,4 @@ public class PersonDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.Pe
         return ( Person ) create( person );
     }
 
-    @Override
-    public java.util.Collection findAll( final int transform ) {
-        return this.findAll( transform, "from edu.columbia.gemma.common.auditAndSecurity.Person as contact" );
-    }
-
 }

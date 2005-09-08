@@ -28,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -47,7 +46,7 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  */
 public class OntologyEntryLoaderTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderTest.class );
-
+    String url = "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz";
     OntologyEntryPersister ontologyEntryPersister = null;
 
     OntologyEntryParser ontologyEntryParser = null;
@@ -61,9 +60,6 @@ public class OntologyEntryLoaderTest extends BaseDAOTestCase {
      */
     // @SuppressWarnings("unchecked")
     public void testParseAndLoad() throws IOException {
-        log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
-
-        String url = "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz";
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GO" );
@@ -112,8 +108,9 @@ public class OntologyEntryLoaderTest extends BaseDAOTestCase {
         ontologyEntryParser = new OntologyEntryParser();
 
         ontologyEntryPersister = new OntologyEntryPersister();
+        PersisterHelper ph = ( PersisterHelper ) ctx.getBean( "persisterHelper" );
 
-        ontologyEntryPersister.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
+        ontologyEntryPersister.setPersisterHelper( ph );
     }
 
     /**

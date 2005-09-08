@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
-import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
@@ -37,11 +37,13 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
  * @version $Id$
  * @spring.bean id="gene2GOAssociationLoader"
  * @spring.property name="gene2GOAssociationDao" ref="gene2GOAssociationDao"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public class Gene2GOAssociationLoaderImpl implements Persister {
 
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationLoaderImpl.class );
 
+    private PersisterHelper persisterHelper;
     private Gene2GOAssociationDao gene2GOAssociationDao;
 
     /**
@@ -51,31 +53,12 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
 
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
-        Collection<Gene2GOAssociation> g2GoColFromDatabase = getGene2GOAssociationDao().findAllGene2GOAssociations();
-
-        int count = 0;
+        assert gene2GOAssociationDao != null;
         for ( Object ob : g2GoCol ) {
-            assert gene2GOAssociationDao != null;
+            if ( ob == null ) continue;
             assert ob instanceof Gene2GOAssociation;
             Gene2GOAssociation g2Go = ( Gene2GOAssociation ) ob;
-
-            if ( g2GoColFromDatabase.size() == 0 ) {
-
-                persist( g2Go );
-                count++;
-                ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Gene2GOAssociation objects" );
-
-            } else {
-                for ( Gene2GOAssociation g2GoFromDatabase : g2GoColFromDatabase ) {
-                    if ( ( !g2Go.getGene().equals( g2GoFromDatabase.getGene() ) )
-                            && ( !g2Go.getAssociatedOntologyEntry().equals(
-                                    g2GoFromDatabase.getAssociatedOntologyEntry() ) ) ) {
-                        persist( g2Go );
-                        count++;
-                        ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Gene2GOAssociation objects" );
-                    }
-                }
-            }
+            persist( g2Go );
         }
         return g2GoCol;
     }
@@ -85,8 +68,22 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
      */
     public Object persist( Object object ) {
         assert object instanceof Gene2GOAssociation;
-        Gene2GOAssociation g2Go = ( Gene2GOAssociation ) object;
-        return getGene2GOAssociationDao().create( g2Go );
+        return persistGene2GOAssociation( ( Gene2GOAssociation ) object );
+    }
+
+    /**
+     * @param persisterHelper The persisterHelper to set.
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    private Object persistGene2GOAssociation( Gene2GOAssociation entity ) {
+        assert persisterHelper != null;
+        persisterHelper.persist( entity.getAssociatedGene() );
+        persisterHelper.persist( entity.getAssociatedOntologyEntry() );
+        persisterHelper.persist( entity.getSource() );
+        return getGene2GOAssociationDao().create( entity );
     }
 
     /**

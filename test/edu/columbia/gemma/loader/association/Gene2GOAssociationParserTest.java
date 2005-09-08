@@ -93,7 +93,7 @@ public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
 
         Taxon t = Taxon.Factory.newInstance();
 
-        Collection<Taxon> taxa = taxonDao.findAllTaxa();
+        Collection<Taxon> taxa = taxonDao.loadAll();
         if ( taxa.size() == 0 ) {
             t.setCommonName( "Human" );
             g.setTaxon( t );

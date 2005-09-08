@@ -49,7 +49,7 @@ public class UserRoleServiceImplTest extends TestCase {
             allRoles.add( ur );
         }
 
-        userRoleDaoMock.findAll();
+        userRoleDaoMock.loadAll();
         expectLastCall().andReturn( allRoles );
 
         replay( userRoleDaoMock );

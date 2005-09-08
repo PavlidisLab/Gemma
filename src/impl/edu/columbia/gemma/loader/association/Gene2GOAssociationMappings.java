@@ -63,7 +63,7 @@ public class Gene2GOAssociationMappings {
      * initializes the taxa.
      */
     private void initializeTaxa() {
-        Collection<Taxon> taxa = taxonDao.findAllTaxa();
+        Collection<Taxon> taxa = taxonDao.loadAll();
         taxaMap = new HashMap<Integer, Taxon>();
 
         for ( Taxon t : taxa ) {

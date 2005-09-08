@@ -75,7 +75,7 @@ public class GeneMappings {
      * Initialize a taxa map.
      */
     private void initializeTaxa() {
-        Collection<Taxon> taxa = taxonDao.findAllTaxa();
+        Collection<Taxon> taxa = taxonDao.loadAll();
         taxaMap = new HashMap<Integer, Taxon>();
 
         for ( Taxon t : taxa ) {

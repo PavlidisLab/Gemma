@@ -250,7 +250,8 @@ public class GeoConverter implements Converter {
 
         assert identifier != null;
         assert externalRefs != null;
-        assert externalRefs.size() == identifiers.size() : "Unequal numbers of identifiers and external references!";
+        assert externalRefs.size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
+                + externalRefs.size() + " != " + identifiers.size();
 
         Iterator<String> refIter = externalRefs.iterator();
         Iterator<String> descIter = descriptions.iterator();

@@ -29,11 +29,4 @@ package edu.columbia.gemma.common.auditAndSecurity;
  */
 public class UserDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.UserDaoBase {
 
-    /**
-     * @see edu.columbia.gemma.common.auditAndSecurity.User#findAll(int)
-     */
-    @Override
-    public java.util.Collection findAll( final int transform ) {
-        return this.findAll( transform, "from edu.columbia.gemma.common.auditAndSecurity.User as contact" );
-    }
 }

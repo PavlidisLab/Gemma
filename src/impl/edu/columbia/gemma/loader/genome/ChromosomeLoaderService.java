@@ -168,7 +168,7 @@ public class ChromosomeLoaderService implements BulkCreator {
      * @return Map TODO put in taxonutils after making taxaMap in createFromRow static
      */
     private Map findAllTaxa() {
-        Collection taxa = this.taxonDao.findAllTaxa();
+        Collection taxa = this.taxonDao.loadAll();
         Map taxaMap = new HashMap();
         Iterator iter = taxa.iterator();
         int id = 1;

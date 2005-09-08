@@ -45,7 +45,7 @@ public class PersonServiceImpl extends edu.columbia.gemma.common.auditAndSecurit
      * @see edu.columbia.gemma.common.auditAndSecurity.PersonService#getAllPersons()
      */
     protected java.util.Collection handleGetAllPersons() throws java.lang.Exception {
-        return this.getPersonDao().findAll();
+        return this.getPersonDao().loadAll();
     }
 
     /**

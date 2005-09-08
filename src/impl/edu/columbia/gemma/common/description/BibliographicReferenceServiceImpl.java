@@ -24,6 +24,8 @@
  */
 package edu.columbia.gemma.common.description;
 
+import java.util.Collection;
+
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 
 /**
@@ -91,26 +93,6 @@ public class BibliographicReferenceServiceImpl extends
         return ( BibliographicReference ) this.getBibliographicReferenceDao().create( br );
     }
 
-    /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences()
-     */
-    protected java.util.Collection handleGetAllBibliographicReferences() throws java.lang.Exception {
-        return getBibliographicReferenceDao().findAllBibliographicReferences();
-    }
-
-    /**
-     * @see edu.columbia.gemma.common.description.BibliographicReferenceService#getAllBibliographicReferences(int
-     *      maxResults)
-     */
-    // TODO can you create a finder method for this where the parameter maxResults
-    // does not end up as a named parameter. I want to use Hibernate's maxResults(int max)
-    // method.
-    protected java.util.Collection handleGetAllBibliographicReferences(
-            edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
-            throws java.lang.Exception {
-        return getBibliographicReferenceDao().findAllBibliographicReferences();
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -137,6 +119,28 @@ public class BibliographicReferenceServiceImpl extends
             edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
             throws java.lang.Exception {
         getBibliographicReferenceDao().create( BibliographicReference );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleGetAllBibliographicReferences()
+     */
+    @Override
+    protected Collection handleGetAllBibliographicReferences() throws Exception {
+        return this.getBibliographicReferenceDao().loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleGetAllBibliographicReferences(edu.columbia.gemma.common.description.BibliographicReference)
+     */
+    @Override
+    protected Collection handleGetAllBibliographicReferences( BibliographicReference bibliographicReference )
+            throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

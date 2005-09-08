@@ -77,7 +77,7 @@ public class GeneLoaderImpl implements Persister {
      */
     public void removeAll() {
         assert geneDao != null;
-        Collection col = geneDao.findAllGenes();
+        Collection col = geneDao.loadAll();
         geneDao.remove( col );
     }
 

@@ -174,7 +174,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
      */
     @SuppressWarnings("unchecked")
     private Collection<Contact> getContacts() {
-        return this.getContactDao().findAll();
+        return this.getContactDao().loadAll();
     }
 
     /**

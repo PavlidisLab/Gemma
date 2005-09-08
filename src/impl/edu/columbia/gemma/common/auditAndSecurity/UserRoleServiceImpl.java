@@ -35,7 +35,7 @@ public class UserRoleServiceImpl extends edu.columbia.gemma.common.auditAndSecur
      * @see edu.columbia.gemma.common.auditAndSecurity.UserRoleService#getRoles()
      */
     protected java.util.Collection handleGetRoles() throws java.lang.Exception {
-        return this.getUserRoleDao().findAll();
+        return this.getUserRoleDao().loadAll();
     }
 
     /**
