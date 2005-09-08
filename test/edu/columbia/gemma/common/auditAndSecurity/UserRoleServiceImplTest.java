@@ -1,12 +1,14 @@
 package edu.columbia.gemma.common.auditAndSecurity;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.easymock.MockControl;
-
-import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import junit.framework.TestCase;
 
 /**
  * <hr>
@@ -16,20 +18,19 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
  * @author pavlidis
  * @version $Id$
  */
-public class UserRoleServiceImplTest extends BaseServiceTestCase {
+public class UserRoleServiceImplTest extends TestCase {
 
     private UserRoleServiceImpl userRoleService = new UserRoleServiceImpl();
     private UserRoleDao userRoleDaoMock;
-    private MockControl control;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        control = MockControl.createControl( UserRoleDao.class );
-        userRoleDaoMock = ( UserRoleDao ) control.getMock();
-        userRoleService.setUserRoleDao(userRoleDaoMock);
+
+        userRoleDaoMock = createMock( UserRoleDao.class );
+        userRoleService.setUserRoleDao( userRoleDaoMock );
     }
 
     /*
@@ -40,48 +41,48 @@ public class UserRoleServiceImplTest extends BaseServiceTestCase {
     }
 
     public void testHandleGetRoles() {
-        Collection allRoles = new HashSet();
-        for(int i = 0; i < 5; i++ ) {
+        Collection<UserRole> allRoles = new HashSet<UserRole>();
+        for ( int i = 0; i < 5; i++ ) {
             UserRole ur = UserRole.Factory.newInstance();
-            ur.setName("admin" + i);
-            ur.setUserName("paul" + i);
-            allRoles.add(ur);
+            ur.setName( "admin" + i );
+            ur.setUserName( "paul" + i );
+            allRoles.add( ur );
         }
-        
+
         userRoleDaoMock.findAll();
-        control.setReturnValue(allRoles);
-        
-        control.replay();
+        expectLastCall().andReturn( allRoles );
+
+        replay( userRoleDaoMock );
         userRoleService.getRoles();
-        control.verify();
-        
+        verify( userRoleDaoMock );
+
     }
 
     // this commented out because the getRole method no longer calls the Dao.
-//    public void testHandleGetRole() {
-//        UserRole ur = UserRole.Factory.newInstance();
-//        ur.setName("admin");
-//   //     ur.setUserName("paul");
-//        Collection allRoles = new HashSet();
-//        allRoles.add(ur);
-//        userRoleDaoMock.findRolesByRoleName("admin");
-//        control.setReturnValue(allRoles);
-//        
-//        control.replay();
-//        userRoleService.getRole("admin");
-//        control.verify();
-//    }
+    // public void testHandleGetRole() {
+    // UserRole ur = UserRole.Factory.newInstance();
+    // ur.setName("admin");
+    // // ur.setUserName("paul");
+    // Collection allRoles = new HashSet();
+    // allRoles.add(ur);
+    // userRoleDaoMock.findRolesByRoleName("admin");
+    // control.setReturnValue(allRoles);
+    //        
+    // control.replay();
+    // userRoleService.getRole("admin");
+    // control.verify();
+    // }
 
     public void testHandleSaveRole() {
         UserRole ur = UserRole.Factory.newInstance();
-        ur.setName("admin");
-        ur.setUserName("paul");
-        userRoleDaoMock.create(ur);
-        control.setReturnValue(ur);
-        
-        control.replay();
-        userRoleService.saveRole(ur);
-        control.verify();
+        ur.setName( "admin" );
+        ur.setUserName( "paul" );
+        userRoleDaoMock.create( ur );
+        expectLastCall().andReturn( ur );
+
+        replay( userRoleDaoMock );
+        userRoleService.saveRole( ur );
+        verify( userRoleDaoMock );
     }
 
     public void testHandleRemoveRole() {
