@@ -23,7 +23,6 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import junit.framework.TestCase;
-import edu.columbia.gemma.BaseServiceTestCase;
 
 /**
  * <hr>
