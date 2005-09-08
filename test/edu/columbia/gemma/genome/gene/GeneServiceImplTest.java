@@ -18,76 +18,112 @@
  */
 package edu.columbia.gemma.genome.gene;
 
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
+
 import java.util.Collection;
+import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import junit.framework.TestCase;
 
-import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.genome.QtlDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2005 Columbia University
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
  * @author daq2101
  * @version $Id$
  */
-public class GeneServiceImplTest extends BaseDAOTestCase {
+public class GeneServiceImplTest extends TestCase {
 
-	private final Log log = LogFactory.getLog(CandidateGeneImplTest.class);
-	private Taxon t = null;
-	private Gene g = null;
-	private TaxonDao tDAO=null;
-	
-	protected void setUp() throws Exception {		
-		
-		tDAO = (TaxonDao)ctx.getBean("taxonDao");
+    private Taxon t = null;
+    private Gene g = null;
+    private TaxonDao tDAO = null;
+    private GeneDao geneDaoMock;
+    private QtlDao qtlDaoMock;
+    GeneServiceImpl svc;
+    Collection<Gene> allThree = new HashSet<Gene>();
+    Collection<Gene> justRab = new HashSet<Gene>();
+    Collection<Gene> justRabble = new HashSet<Gene>();
+
+    protected void setUp() throws Exception {
+
+        tDAO = createMock( TaxonDao.class );
+        geneDaoMock = createMock( GeneDao.class );
+        qtlDaoMock = createMock( QtlDao.class );
+        svc = new GeneServiceImpl();
+        svc.setGeneDao( geneDaoMock );
+        svc.setQtlDao( qtlDaoMock );
         t = Taxon.Factory.newInstance();
-		t.setCommonName("moose");
-		t.setScientificName("moose");
-		tDAO.create(t);
-		
-		
-	}
-	public void testGeneServiceImpl(){
-        log.info("testing gene service implementation");
-		Collection cON=null;
-		Collection cOS=null;
-		Collection cOSI=null;
-		Collection cAll=null;
-		GeneService svc = (GeneService)ctx.getBean("geneService");
-	    
-		g = Gene.Factory.newInstance();
-		g.setName("rabble");
-		g.setOfficialSymbol("rab");
-		g.setOfficialName("rabblebong");
-		g.setTaxon(t);
-		g = svc.saveGene(g);
-		g.setOfficialName("rabble");
-		g = svc.updateGene(g);
-		
-		cON = svc.findByOfficialName("rabble");
-	    cOS = svc.findByOfficialSymbol("rab");
-	    cOSI = svc.findByOfficialSymbolInexact("ra%");
-	    long geneID = g.getId().longValue();
-	    Gene gLookup = svc.findByID(geneID);
-	    cAll = svc.getAllGenes();
-		
-		assertTrue( cON != null && cON.size()==1);
-		assertTrue( cOS != null && cOS.size()==1);
-		assertTrue( cOSI != null && cOSI.size()>0);
-		assertTrue( cAll != null && cAll.size()>0);
-		assertTrue( gLookup != null && gLookup.getId().longValue() == geneID);
-		
-		svc.removeGene("rabble");
-	}
-	
-	protected void tearDown() throws Exception{
-		tDAO.remove(t);
-	}
+        t.setCommonName( "moose" );
+        t.setScientificName( "moose" );
+        // tDAO.create( t );
+
+        g = Gene.Factory.newInstance();
+        g.setOfficialName( "rabble" );
+        g.setOfficialSymbol( "rab" );
+        allThree.add( g );
+        justRab.add( g );
+
+        g = Gene.Factory.newInstance();
+        g.setOfficialName( "rabblebong" );
+        g.setTaxon( t );
+        allThree.add( g );
+        g = Gene.Factory.newInstance();
+        g.setOfficialName( "rabble" );
+        allThree.add( g );
+        justRabble.add( g );
+
+    }
+
+    public void testFindByOfficialName() {
+        reset( geneDaoMock );
+        geneDaoMock.findByOfficialName( "rabble" );
+        expectLastCall().andReturn( justRab );
+        replay( geneDaoMock );
+        svc.findByOfficialName( "rabble" );
+        verify( geneDaoMock );
+    }
+
+    public void testFindByOfficialSymbol() {
+        reset( geneDaoMock );
+        geneDaoMock.findByOfficalSymbol( "rabble" );
+        expectLastCall().andReturn( justRab );
+        replay( geneDaoMock );
+        svc.findByOfficialSymbol( "rabble" );
+        verify( geneDaoMock );
+    }
+
+    public void testFindByOfficialSymbolInexact() {
+        reset( geneDaoMock );
+        geneDaoMock.findByOfficialSymbolInexact( "ra%" );
+        expectLastCall().andReturn( allThree );
+        replay( geneDaoMock );
+        svc.findByOfficialSymbolInexact( "ra%" );
+        verify( geneDaoMock );
+    }
+
+    public void testFindAll() {
+        reset( geneDaoMock );
+        geneDaoMock.findAllGenes();
+        expectLastCall().andReturn( allThree );
+        replay( geneDaoMock );
+        svc.getAllGenes();
+        verify( geneDaoMock );
+    }
+
+    protected void tearDown() throws Exception {
+        justRab.clear();
+        justRabble.clear();
+        allThree.clear();
+    }
 }
