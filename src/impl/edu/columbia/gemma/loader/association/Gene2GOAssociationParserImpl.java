@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.association;
 
 import java.io.IOException;
@@ -25,23 +43,18 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.ParserByMap;
 
 /**
+ * FIXME separate parsing from persisting. This class should implement Parser and yield a collection of
+ * Gene2GoAssociations.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
  * @author keshav
- * @version $Id$
+ * @author pavlidis
  * @spring.bean id="gene2GOAssociationParser"
  * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
  * @spring.property name="geneDao" ref="geneDao"
  * @spring.property name="gene2GOAssociationMappings" ref="gene2GOAssociationMappings"
- */
-
-/**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2005 Columbia University
- * 
  * @author keshav
  * @version $Id$
  */
@@ -50,7 +63,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
 
     Method methodToInvoke = null;
 
-    Map<String, Gene2GOAssociation> g2GOMap = null;
+    Map<Object, Gene2GOAssociation> g2GOMap = null;
 
     private OntologyEntryDao ontologyEntryDao = null;
 
@@ -63,14 +76,14 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     int i = 0;
 
     public Gene2GOAssociationParserImpl() {
-        g2GOMap = new HashMap();
+        g2GOMap = new HashMap<Object, Gene2GOAssociation>();
     }
 
     /**
      * @param name
      */
     public Gene2GOAssociationParserImpl( String name ) {
-        g2GOMap = new HashMap();
+        g2GOMap = new HashMap<Object, Gene2GOAssociation>();
         filename = name;
     }
 
@@ -196,7 +209,8 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     /**
      * @return Collection
      */
-    private Collection getOntologyEntries() {
+    @SuppressWarnings("unchecked")
+    private Collection<OntologyEntry> getOntologyEntries() {
         return this.getOntologyEntryDao().findAll();
     }
 
@@ -227,6 +241,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     /**
      * @return Collection<Gene>
      */
+    @SuppressWarnings("unchecked")
     private Collection<Gene> getGenes() {
         return this.getGeneDao().findAllGenes();
     }
@@ -241,22 +256,18 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
             Object obj = methodToInvoke.invoke( getGene2GOAssociationMappings(), new Object[] { line } );
             if ( obj == null ) return obj;
             g2GO = ( Gene2GOAssociation ) obj;
-            g2GOMap.put( g2GO.getAssociatedGene() + " " + g2GO.getAssociatedOntologyEntry() + " "
-                    + g2GO.getEvidenceCode(), g2GO );
+            g2GOMap.put( getKey( g2GO ), g2GO );
 
             return g2GO;
 
         } catch ( IllegalArgumentException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e, e );
             return null;
         } catch ( IllegalAccessException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e, e );
             return null;
         } catch ( InvocationTargetException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e, e );
             return null;
         }
 
@@ -267,8 +278,9 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
      * @return Object
      */
     protected Object getKey( Object newItem ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( !( newItem instanceof Gene2GOAssociation ) ) throw new IllegalArgumentException();
+        Gene2GOAssociation g2GO = ( Gene2GOAssociation ) newItem;
+        return g2GO.getAssociatedGene() + " " + g2GO.getAssociatedOntologyEntry() + " " + g2GO.getEvidenceCode();
     }
 
     /**

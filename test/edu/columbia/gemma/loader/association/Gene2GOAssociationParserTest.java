@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.association;
 
 import java.io.IOException;
@@ -8,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -58,11 +75,11 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
      * @throws ConfigurationException
      */
     @SuppressWarnings("unchecked")
-    public void testParseAndLoad() throws NoSuchMethodException, IOException{
+    public void testParseAndLoad() throws NoSuchMethodException, IOException {
         log
                 .info( "Testing class: Gene2GOAssocationParser method: public Method findParseLineMethod( Map g2GOMap, String name) throws NoSuchMethodException" );
 
-        //String url = "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene2go.gz";
+        // String url = "ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/gene2go.gz";
 
         OntologyEntry oe = OntologyEntry.Factory.newInstance();
         oe.setAccession( "GO:xxxxx" );
@@ -98,7 +115,8 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
         GZIPInputStream gZipIs = new GZIPInputStream( is );
 
-        Method m = ParserAndLoaderTools.findParseLineMethod( gene2GOAssParser.getGene2GOAssociationMappings(), "gene2go" );
+        Method m = ParserAndLoaderTools.findParseLineMethod( gene2GOAssParser.getGene2GOAssociationMappings(),
+                "gene2go" );
 
         gene2GOMap = gene2GOAssParser.parse( gZipIs, m );
 
