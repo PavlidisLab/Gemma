@@ -1,14 +1,29 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.common.description;
 
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 
@@ -22,7 +37,6 @@ import edu.columbia.gemma.BaseDAOTestCase;
  */
 public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
-    private final Log log = LogFactory.getLog( BibliographicReferenceDaoImplTest.class );
     private BibliographicReferenceDao dao = null;
     private DatabaseEntryDao dedao = null;
     private ExternalDatabaseDao exdbdao = null;
@@ -62,8 +76,11 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
     }
 
     protected void tearDown() throws Exception {
+        // dedao.remove( de );
+        // dedao.remove( deb );
         dao.remove( testBibRef );
         exdbdao.remove( ed );
+
         dao = null;
         dedao = null;
         exdbdao = null;
@@ -95,17 +112,17 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
     public final void testFindByExternalIdentString() {
 
         testBibRef = dao.findByExternalId( de );
-
         assertTrue( testBibRef != null );
         assertTrue( dao.findByExternalId( deb ) == null );
 
-        try {
-            dao.create( testBibRef );
-            fail( "Create didn't throw DataIntegrityViolationException" );
-        } catch ( DataIntegrityViolationException e ) {
-            assertNotNull( e );
-            log.info( "Good, expected exception: " + e.getMessage() );
-        }
+        // create assigns a new id, so this just creates yet another bibliographic reference.
+        // try {
+        // dao.create( testBibRef );
+        // fail( "Create didn't throw DataIntegrityViolationException" );
+        // } catch ( DataIntegrityViolationException e ) {
+        // assertNotNull( e );
+        // log.info( "Good, expected exception" );
+        // }
 
     }
 

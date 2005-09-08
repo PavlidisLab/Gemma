@@ -26,12 +26,12 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
     long adminID;
 
     protected void setUp() throws Exception {
-
         super.setUp();
-
         pDao = ( PersonDao ) ctx.getBean( "personDao" );
         nobody = ( Person ) pDao.load( new Long( 1 ) );
         admin = ( Person ) pDao.load( new Long( 2 ) );
+        assert admin != null;
+        assert nobody != null;
         nobodyID = nobody.getId().longValue();
         adminID = admin.getId().longValue();
         svc = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );

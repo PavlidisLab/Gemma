@@ -3,7 +3,11 @@ package edu.columbia.gemma.expression.arrayDesign;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.easymock.MockControl;
+import junit.framework.TestCase;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
@@ -25,19 +29,17 @@ import edu.columbia.gemma.util.SpringContextUtil;
  *          lots of tests for acegi security. I have commented out many of the other tests for now, but will add them
  *          back in soon.
  */
-public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
+public class ArrayDesignServiceImplTest extends TestCase {
 
     private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
     private ArrayDesignDao arrayDesignDaoMock = null;
-    private MockControl control;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        control = MockControl.createControl( ArrayDesignDao.class );
-        arrayDesignDaoMock = ( ArrayDesignDao ) control.getMock();
+        arrayDesignDaoMock = createMock( ArrayDesignDao.class );
         arrayDesignService.setArrayDesignDao( arrayDesignDaoMock );
     }
 
@@ -66,11 +68,11 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
     //
     // // set the behavior for the DAO: get all array designs will retrive the collection.
     // arrayDesignDaoMock.getAllArrayDesigns();
-    // control.setReturnValue( m );
+    // expectLastCall().andReturn( m );
     //
-    // control.replay(); // switch from record mode to replay
+    // replay(); // switch from record mode to replay
     // arrayDesignService.getAllArrayDesigns();
-    // control.verify(); // verify that expectations were met
+    // verify(); // verify that expectations were met
     // }
     // /**
     // * @throws Exception TODO add security to this test, then add it back to list of tests.
@@ -82,11 +84,11 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
     //
     // // The expected behavior
     // arrayDesignDaoMock.create( tad );
-    // control.setReturnValue( tad );
+    // expectLastCall().andReturn( tad );
     //
-    // control.replay(); // switch from record mode to replay
+    // replay(); // switch from record mode to replay
     // arrayDesignService.saveArrayDesign( tad );
-    // control.verify(); // verify that expectations were met.
+    // verify(); // verify that expectations were met.
     // }
     /**
      * Test removing an arrayDesign without having the correct authorization privileges. You should get an
@@ -214,7 +216,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( "DE Bar2" );
 
-        Collection<DesignElement> col = new HashSet();
+        Collection<DesignElement> col = new HashSet<DesignElement>();
         col.add( cs1 );
         col.add( cs2 );
         // Note this sequence. Remember, inverse="true" if using this. If you do not make
@@ -232,22 +234,22 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
      * 
      * @throws Exception
      */
-//    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
-//        BeanFactory ctx = SpringContextUtil.getApplicationContext();
-//
-//        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-//                .getBean( "manualAuthenticationProcessing" );
-//
-//        manAuthentication.validateRequest( "pavlab", "pavlab" );
-//
-//        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-//        CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
-//
-//        Collection<CompositeSequence> col = css.getAllCompositeSequences();
-//        log.info( col.size() );
-//        for ( CompositeSequence cs : col ) {
-//            log.debug( cs );
-//        }
-//
-//    }
+    // public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
+    // BeanFactory ctx = SpringContextUtil.getApplicationContext();
+    //
+    // ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+    // .getBean( "manualAuthenticationProcessing" );
+    //
+    // manAuthentication.validateRequest( "pavlab", "pavlab" );
+    //
+    // ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+    // CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
+    //
+    // Collection<CompositeSequence> col = css.getAllCompositeSequences();
+    // log.info( col.size() );
+    // for ( CompositeSequence cs : col ) {
+    // log.debug( cs );
+    // }
+    //
+    // }
 }
