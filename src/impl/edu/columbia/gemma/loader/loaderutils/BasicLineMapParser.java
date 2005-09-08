@@ -90,16 +90,18 @@ public abstract class BasicLineMapParser extends BasicLineParser {
         while ( ( line = br.readLine() ) != null ) {
             Object newItem = parseOneLine( line );
 
-            if ( newItem != null ) {
-                Object key = getKey( newItem );
-                assert key != null;
-                results.put( key, newItem );
-                count++;
-                if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..., last had key " + key );
-
-            } else {
-                log.debug( "Null object returned" ); // this could be a header or a tolerated parse error.
+            if ( newItem == null ) {
+                log.debug( "Null object returned" ); // this could be a header or a tolerated parse error
+                continue;
             }
+
+            Object key = getKey( newItem );
+            if ( key == null ) {
+                throw new IllegalStateException( "Got null key for item " + count );
+            }
+            results.put( key, newItem );
+            count++;
+            if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..., last had key " + key );
 
         }
         log.info( "Read in " + count + " items." );
