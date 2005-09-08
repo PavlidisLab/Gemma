@@ -60,7 +60,7 @@ public class Gene2GOAssociationParserTest extends BaseServiceTestCase {
 
     Gene2GOAssociationLoaderImpl gene2GOAssLoader = null;
 
-    Collection<Gene2GOAssociation> gene2GOCol = null;
+    Collection<Object> gene2GOCol = null;
 
     Map gene2GOMap = null;
 

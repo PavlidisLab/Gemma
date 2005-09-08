@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.expression.arrayDesign;
 
 import java.io.IOException;
@@ -59,7 +77,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
         arrayDesignMap = new HashMap();
     }
 
-    public Collection<ArrayDesign> createOrGetDependencies( Object[] dependencies, Map adMap ) {
+    public Collection<Object> createOrGetDependencies( Object[] dependencies, Map adMap ) {
         Set adKeysSet = null;
 
         Contact contact = null;
@@ -83,7 +101,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
 
         adKeysSet = adMap.keySet();
 
-        Collection<ArrayDesign> arrayDesignCol = new HashSet<ArrayDesign>();
+        Collection<Object> arrayDesignCol = new HashSet<Object>();
 
         // create Gemma domain objects
         for ( Object key : adKeysSet ) {
@@ -173,7 +191,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
         return arrayDesignMap;
     }
 
-    public Map parseToMap( String filename ) throws IOException { 
+    public Map parseToMap( String filename ) throws IOException {
         // TODO implement
         throw new UnsupportedOperationException();
     }

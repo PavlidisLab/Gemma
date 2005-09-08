@@ -1,13 +1,30 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.description;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
-import org.xml.sax.SAXException;
 
 import baseCode.bio.geneset.GONames;
 import edu.columbia.gemma.BaseServiceTestCase;
@@ -16,10 +33,8 @@ import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
-import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
@@ -40,11 +55,11 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
     Map oeMap2 = null;
 
-    Collection<OntologyEntry> oeCol = null;
+    Collection<Object> oeCol = null;
 
-    Collection<OntologyEntry> oeCol2 = null;
+    Collection<Object> oeCol2 = null;
 
-    OntologyEntryLoaderImpl ontologyEntryLoader = null;
+    OntologyEntryPersister ontologyEntryLoader = null;
 
     OntologyEntryParserImpl ontologyEntryParser = null;
 
@@ -55,7 +70,7 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
      * @throws SAXException
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public void testParseAndLoad() throws IOException {
         log.info( "Testing class: baseCode.GONames throws SAXException, IOException" );
 
@@ -84,13 +99,20 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
 
         oeMap = ontologyEntryParser.parseFromHttp( url );
 
+        // throw out most of the results so this test is faster
+        Map<Object, Object> testMap = new HashMap<Object, Object>();
+        int count = 0;
+        for ( Object object : oeMap.keySet() ) {
+            testMap.put( object, oeMap.get( object ) );
+            count++;
+            if ( count >= 10 ) break;
+        }
+
         oeCol = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap );
 
         ParserAndLoaderTools.loadDatabase( ontologyEntryLoader, oeCol );
 
-        // parse second file. make sure the duplicates are not persisted again.
-        oeMap2 = ontologyEntryParser.parseFromHttp( url );
-
+        // try loading them again?
         oeCol2 = ontologyEntryParser.createOrGetDependencies( dependencies, oeMap2 );
 
         ParserAndLoaderTools.loadDatabase( ontologyEntryLoader, oeCol2 );
@@ -103,11 +125,9 @@ public class OntologyEntryLoaderTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        BeanFactory ctx = SpringContextUtil.getApplicationContext();
-
         ontologyEntryParser = new OntologyEntryParserImpl();
 
-        ontologyEntryLoader = new OntologyEntryLoaderImpl();
+        ontologyEntryLoader = new OntologyEntryPersister();
 
         // "tomcatesque" functionality
         ontologyEntryParser.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );

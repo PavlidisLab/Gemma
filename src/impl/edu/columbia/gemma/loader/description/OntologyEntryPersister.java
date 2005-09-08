@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.description;
 
 import java.util.Collection;
@@ -8,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * A service to load OntologyEntries (from any user interface).
@@ -16,31 +35,35 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  * Copyright (c) 2004 - 2005 Columbia University
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @spring.bean id="ontologyEntryLoader"
  * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
  */
-public class OntologyEntryLoaderImpl {
+public class OntologyEntryPersister implements Persister {
 
-    protected static final Log log = LogFactory.getLog( OntologyEntryLoaderImpl.class );
+    protected static final Log log = LogFactory.getLog( OntologyEntryPersister.class );
 
     private OntologyEntryDao ontologyEntryDao;
 
-    /**
-     * @param oeCol
-     * @param dbEntry TODO
-     */
-    @SuppressWarnings("unchecked")
-    public void create( Collection<OntologyEntry> oeCol ) {
+    public void persist( Collection<Object> oeCol ) {
         assert ontologyEntryDao != null;
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
         int count = 0;
-        for ( OntologyEntry oe : oeCol ) {
-            ontologyEntryDao.findOrCreate( oe );
-            count++;
+        for ( Object oe : oeCol ) {
+            persist( oe );
             ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Ontology Entries" );
+            count++;
         }
+    }
+
+    /**
+     * @param oe
+     */
+    public void persist( Object oe ) {
+        assert oe instanceof OntologyEntry;
+        ontologyEntryDao.findOrCreate( ( OntologyEntry ) oe );
     }
 
     /**

@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.expression.arrayDesign;
 
 import java.util.Collection;
@@ -9,6 +27,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignExistsException;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * A service to load ArrayDesigns (from any user interface).
@@ -21,7 +40,7 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  * @spring.bean id="arrayDesignLoader"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
-public class ArrayDesignLoaderImpl {
+public class ArrayDesignLoaderImpl implements Persister {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignLoaderImpl.class );
 
@@ -30,23 +49,21 @@ public class ArrayDesignLoaderImpl {
     /**
      * @param adCol
      */
-    public void persist( Collection<ArrayDesign> adCol ) {
+    @SuppressWarnings("unchecked")
+    public void persist( Collection<Object> adCol ) {
 
         log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
 
         Collection<ArrayDesign> adColFromDatabase = getArrayDesignService().getAllArrayDesigns();
 
         int count = 0;
-        for ( ArrayDesign ad : adCol ) {
+        for ( Object ob : adCol ) {
             assert arrayDesignService != null;
+            assert ob instanceof ArrayDesign;
+            ArrayDesign ad = ( ArrayDesign ) ob;
 
             if ( adColFromDatabase.size() == 0 ) {
-                try {
-                    getArrayDesignService().saveArrayDesign( ad );
-                } catch ( ArrayDesignExistsException e ) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                persist( ad );
                 count++;
                 ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
 
@@ -61,13 +78,7 @@ public class ArrayDesignLoaderImpl {
                     tmp = ad;
                 }
                 if ( tmp != null ) {
-                    try {
-                        getArrayDesignService().saveArrayDesign( tmp );
-                    } catch ( ArrayDesignExistsException e ) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    ;
+                    persist( tmp );
                     count++;
                     ParserAndLoaderTools.objectsPersistedUpdate( count, 1000, "Array Design Entries" );
                 }
@@ -76,14 +87,15 @@ public class ArrayDesignLoaderImpl {
     }
 
     /**
-     * @param arrayDesign
+     * @param object
+     * @throws ArrayDesignExistsException
      */
-    public void persist( ArrayDesign arrayDesign ) {
+    public void persist( Object object ) {
+        assert object instanceof ArrayDesign;
         try {
-            getArrayDesignService().saveArrayDesign( arrayDesign );
+            getArrayDesignService().saveArrayDesign( ( ArrayDesign ) object );
         } catch ( ArrayDesignExistsException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error( e, e );
         }
     }
 

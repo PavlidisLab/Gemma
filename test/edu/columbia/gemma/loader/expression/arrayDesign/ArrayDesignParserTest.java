@@ -54,7 +54,7 @@ public class ArrayDesignParserTest extends BaseServiceTestCase {
 
     private Map map = null;
 
-    private Collection<ArrayDesign> col = null;
+    private Collection<Object> col = null;
 
     /**
      * set up

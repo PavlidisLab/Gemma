@@ -72,7 +72,7 @@ public class OntologyEntryParserImpl implements ParserByMap {
      * @param ontologyEntryTermsMap
      * @return Collection
      */
-    public Collection createOrGetDependencies( Object[] dependencies, Map ontologyEntryTermsMap ) {
+    public Collection<Object> createOrGetDependencies( Object[] dependencies, Map ontologyEntryTermsMap ) {
         Set goTermsKeysSet = null;
         ExternalDatabase externalDatabase = null;
 
@@ -96,7 +96,7 @@ public class OntologyEntryParserImpl implements ParserByMap {
 
         goTermsKeysSet = ontologyEntryTermsMap.keySet();
 
-        Collection<OntologyEntry> ontologyEntryCol = new HashSet<OntologyEntry>();
+        Collection<Object> ontologyEntryCol = new HashSet<Object>();
 
         // create Gemma domain objects
         for ( Object key : goTermsKeysSet ) {
@@ -168,8 +168,8 @@ public class OntologyEntryParserImpl implements ParserByMap {
     /**
      * @return Collection
      */
-    public Collection getExternalDatabaseEntries() {
-
+    @SuppressWarnings("unchecked")
+    public Collection<ExternalDatabase> getExternalDatabaseEntries() {
         return this.getExternalDatabaseDao().findAll();
     }
 

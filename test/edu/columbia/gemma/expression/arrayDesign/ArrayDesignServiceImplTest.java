@@ -1,20 +1,15 @@
 package edu.columbia.gemma.expression.arrayDesign;
 
+import static org.easymock.EasyMock.createMock;
+
 import java.util.Collection;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
+
 import org.springframework.beans.factory.BeanFactory;
 
-import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
-import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
@@ -25,9 +20,10 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * Copyright (c) 2004 Columbia University
  * 
  * @author pavlidis
- * @version $Id$ TODO this test class contains
- *          lots of tests for acegi security. I have commented out many of the other tests for now, but will add them
- *          back in soon.
+ * @version $Id$
+ *          <p>
+ *          TODO this test class contains lots of tests for acegi security. I have commented out many of the other tests
+ *          for now, but will add them back in soon.
  */
 public class ArrayDesignServiceImplTest extends TestCase {
 

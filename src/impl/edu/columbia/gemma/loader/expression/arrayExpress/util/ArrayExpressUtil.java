@@ -56,6 +56,14 @@ public class ArrayExpressUtil {
     }
 
     /**
+     * @param f
+     * @throws IOException
+     */
+    public static void disconnect( FTPClient f ) throws IOException {
+        f.disconnect();
+    }
+
+    /**
      * @return
      */
     public static String getHost() {

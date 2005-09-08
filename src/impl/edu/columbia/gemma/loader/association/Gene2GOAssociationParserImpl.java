@@ -54,7 +54,6 @@ import edu.columbia.gemma.loader.loaderutils.ParserByMap;
  * @spring.bean id="gene2GOAssociationParser"
  * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
  * @spring.property name="geneDao" ref="geneDao"
- * @spring.property name="gene2GOAssociationMappings" ref="gene2GOAssociationMappings"
  * @author keshav
  * @version $Id$
  */
@@ -77,6 +76,11 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
 
     public Gene2GOAssociationParserImpl() {
         g2GOMap = new HashMap<Object, Gene2GOAssociation>();
+        try {
+            gene2GOAssociationMappings = new Gene2GOAssociationMappings();
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**

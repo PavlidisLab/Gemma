@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.association.EvidenceCode;
+import edu.columbia.gemma.association.GOEvidenceCode;
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
@@ -24,7 +24,6 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean name="gene2GOAssociationsMappings"
  */
 public class Gene2GOAssociationMappings {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationMappings.class );
@@ -90,7 +89,7 @@ public class Gene2GOAssociationMappings {
         for ( String evidenceCode : evidenceCodes ) {
 
             if ( values[EVIDENCE_CODE].equalsIgnoreCase( evidenceCode ) ) {
-                g2GOAss.setEvidenceCode( EvidenceCode.fromString( evidenceCode ) );
+                g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( evidenceCode ) );
                 // log.info("Evidence code is: " + evidenceCode + " value: " + values[EVIDENCE_CODE]);
                 break;
             }
@@ -103,7 +102,7 @@ public class Gene2GOAssociationMappings {
      * Initialize the evidenceCodes from the enumeration values
      */
     private void initializeEvidenceCodes() {
-        evidenceCodes = EvidenceCode.names();
+        evidenceCodes = GOEvidenceCode.names();
     }
 
 }

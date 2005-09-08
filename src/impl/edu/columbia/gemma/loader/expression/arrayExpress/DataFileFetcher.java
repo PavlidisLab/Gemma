@@ -59,19 +59,11 @@ import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
  */
 public class DataFileFetcher extends FtpArchiveFetcher {
 
-    private final Untar untarrer;
+    private Untar untarrer;
 
     public DataFileFetcher() throws ConfigurationException {
-        untarrer = new Untar();
-        untarrer.setProject( new Project() );
-        UntarCompressionMethod method = new UntarCompressionMethod();
-        method.setValue( "gzip" );
-        untarrer.setCompression( method );
-
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-        localBasePath = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
-        baseDir = ( String ) config.getProperty( "arrayExpress.experiments.baseDir" );
-
+        initConfig();
+        initArchiveHandler();
     }
 
     /**
@@ -155,6 +147,51 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @param identifier
      * @param newDir
      * @return
+     */
+    private String formLocalFilePath( String identifier, File newDir ) {
+        String outputFileName = newDir + System.getProperty( "file.separator" ) + "E-" + identifier + ".mageml.tgz";
+        return outputFileName;
+    }
+
+    /**
+     * @param identifier
+     * @return
+     */
+    private String formRemoteFilePath( String identifier ) {
+        String dirName = identifier.replaceFirst( "-\\d+", "" );
+        String seekFile = baseDir + "/" + dirName + "/" + "E-" + identifier + "/" + "E-" + identifier + ".mageml.tgz";
+        return seekFile;
+    }
+
+    /**
+     * 
+     */
+    private void initArchiveHandler() {
+        untarrer = new Untar();
+        untarrer.setProject( new Project() );
+        UntarCompressionMethod method = new UntarCompressionMethod();
+        method.setValue( "gzip" );
+        untarrer.setCompression( method );
+    }
+
+    /**
+     * @throws ConfigurationException
+     */
+    private void initConfig() throws ConfigurationException {
+        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
+        localBasePath = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
+        baseDir = ( String ) config.getProperty( "arrayExpress.experiments.baseDir" );
+
+        if ( localBasePath == null || localBasePath.length() == 0 )
+            throw new ConfigurationException( "localBasePath was null or empty" );
+        if ( baseDir == null || baseDir.length() == 0 )
+            throw new ConfigurationException( "baseDir was null or empty" );
+    }
+
+    /**
+     * @param identifier
+     * @param newDir
+     * @return
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
@@ -202,25 +239,5 @@ public class DataFileFetcher extends FtpArchiveFetcher {
             // log.info( FileTools.listDirectoryFiles( newDir ).size() - 1 + " files unpacked " );
             log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
         }
-    }
-
-    /**
-     * @param identifier
-     * @param newDir
-     * @return
-     */
-    private String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + System.getProperty( "file.separator" ) + "E-" + identifier + ".mageml.tgz";
-        return outputFileName;
-    }
-
-    /**
-     * @param identifier
-     * @return
-     */
-    private String formRemoteFilePath( String identifier ) {
-        String dirName = identifier.replaceFirst( "-\\d+", "" );
-        String seekFile = baseDir + "/" + dirName + "/" + "E-" + identifier + "/" + "E-" + identifier + ".mageml.tgz";
-        return seekFile;
     }
 }
