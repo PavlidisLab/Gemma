@@ -1,10 +1,34 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.expression.experiment;
 
-import java.util.Collection;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import java.util.Collection;
+import java.util.HashSet;
+
+import junit.framework.TestCase;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 
 /**
  * <hr>
@@ -14,31 +38,27 @@ import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
  * @author daq2101
  * @version $Id$
  */
-public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
-
+public class ExpressionExperimentServiceImplTest extends TestCase {
+    Collection<ExpressionExperiment> c;
+    Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
-    private PersonDao pDao = null;
     private Person nobody = null;
     private Person admin = null;
-    private ExpressionExperimentService svc = null;
-    private long eeID;
-    long nobodyID;
-    long adminID;
+    private ExpressionExperimentServiceImpl svc = null;
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        pDao = ( PersonDao ) ctx.getBean( "personDao" );
-        nobody = ( Person ) pDao.load( new Long( 1 ) );
-        admin = ( Person ) pDao.load( new Long( 2 ) );
-        assert admin != null;
-        assert nobody != null;
-        nobodyID = nobody.getId().longValue();
-        adminID = admin.getId().longValue();
-        svc = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
-    }
+    private ExpressionExperimentDao eeDao;
 
     @SuppressWarnings("unchecked")
-    public void testExpressionExperiment() {
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        svc = new ExpressionExperimentServiceImpl();
+
+        eeDao = createMock( ExpressionExperimentDao.class );
+        svc.setExpressionExperimentDao( eeDao );
+
+        nobody = Person.Factory.newInstance();
+        admin = Person.Factory.newInstance();
 
         ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
@@ -48,36 +68,48 @@ public class ExpressionExperimentServiceImplTest extends BaseDAOTestCase {
         ee.getInvestigators().add( admin );
         ee = svc.createExpressionExperiment( ee );
 
-        eeID = ee.getId().longValue();
+        c = new HashSet<ExpressionExperiment>();
+        ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
+        numberTwelve.setId( new Long( 12 ) );
 
-        Collection c = svc.findByInvestigator( adminID );
-        assertTrue( c.size() > 0 );
+        c.add( numberTwelve );
+        c.add( ExpressionExperiment.Factory.newInstance() );
+        c.add( ExpressionExperiment.Factory.newInstance() );
 
-        c = svc.getAllExpressionExperiments();
-        assertTrue( c.size() > 0 );
+        cJustTwelve = new HashSet<ExpressionExperiment>();
+        cJustTwelve.add( numberTwelve );
 
-        ee = svc.findById( eeID );
-        assertTrue( ee != null && ee.getId().longValue() == eeID );
-        c = ee.getInvestigators();
-        // if( c != null)
-        // System.out.println( c.size() );
-        assertTrue( c != null && c.size() > 0 );
-        ee.setName( "Test Experiment modified" );
-        svc.saveExpressionExperiment( ee );
-        svc.removeExpressionExperiment( ee );
+    }
 
-        ee = svc.findById( eeID );
-        assertNull( ee );
+    public void testExpressionExperimentFindByInvestigator() {
 
+        reset( eeDao );
+        eeDao.findByInvestigator( 12 );
+        expectLastCall().andReturn( cJustTwelve );
+        replay( eeDao );
+        svc.findByInvestigator( 12 );
+        verify( eeDao );
+    }
+
+    public void testExpressionExperimentFindAll() {
+        reset( eeDao );
+        eeDao.findAll();
+        expectLastCall().andReturn( c );
+        replay( eeDao );
+        svc.getAllExpressionExperiments();
+        verify( eeDao );
+    }
+
+    public void testExpressionExperimentFindById() {
+        reset( eeDao );
+        eeDao.findById( 13 );
+        expectLastCall().andReturn( null );
+        replay( eeDao );
+        svc.findById( 13 );
+        verify( eeDao );
     }
 
     protected void tearDown() throws Exception {
         super.tearDown();
-        // SessionHolder holder = (SessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
-        // s = holder.getSession();
-        // s.flush();
-        // TransactionSynchronizationManager.unbindResource(sessionFactory);
-        // s.close();
-
     }
 }
