@@ -37,12 +37,32 @@ import java.util.Date;
  * @version $Id$
  */
 public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase {
-    // CandidateGeneList manipulation
+
     Person actor = null;
 
     @Override
-    protected void handleSetActor( Person actor1 ) {
-        this.actor = actor1;
+    public Collection handleFindByContributer( Person person ) {
+        return this.getCandidateGeneListDao().findByContributer( person );
+    }
+
+    @Override
+    public Collection handleFindByGeneOfficialName( String officialName ) {
+        return this.getCandidateGeneListDao().findByGeneOfficialName( officialName );
+    }
+
+    @Override
+    public CandidateGeneList handleFindByID( long id ) {
+        return this.getCandidateGeneListDao().findByID( id );
+    }
+
+    @Override
+    public Collection handleFindByListOwner( Person owner ) {
+        return this.getCandidateGeneListDao().findByListOwner( owner );
+    }
+
+    @Override
+    public Collection handleGetAll() {
+        return this.getCandidateGeneListDao().findAll();
     }
 
     @Override
@@ -54,21 +74,12 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
         auditEvent.setAction( AuditAction.CREATE );
         auditEvent.setDate( new Date() );
-        auditEvent.setNote( "CandidateGeneList Created" );
         auditEvent.setPerformer( actor );
         auditTrail.addEvent( auditEvent );
         cgl.setAuditTrail( auditTrail );
         cgl.setName( newName );
         cgl.setOwner( actor );
-        // this.getCandidateGeneListDao().create( cgl );
-        this.saveCandidateGeneList( cgl );
-        return cgl;
-    }
-
-    @Override
-    protected CandidateGeneList handleSaveCandidateGeneList( CandidateGeneList candidateGeneList ) throws Exception {
-        this.getCandidateGeneListDao().create( candidateGeneList );
-        return candidateGeneList;
+        return this.saveCandidateGeneList( cgl );
     }
 
     @Override
@@ -77,36 +88,20 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
     }
 
     @Override
+    protected CandidateGeneList handleSaveCandidateGeneList( CandidateGeneList candidateGeneList ) throws Exception {
+        return ( CandidateGeneList ) this.getCandidateGeneListDao().create( candidateGeneList );
+    }
+
+    @Override
+    protected void handleSetActor( Person actor1 ) {
+        this.actor = actor1;
+    }
+
+    @Override
     protected void handleUpdateCandidateGeneList( CandidateGeneList candidateGeneList ) throws java.lang.Exception {
         assert ( actor != null );
         candidateGeneList.getAuditTrail().update( "CandidateGeneList Saved", actor );
         this.getCandidateGeneListDao().update( candidateGeneList );
-    }
-
-    // Finder methods
-    @Override
-    public Collection handleFindByGeneOfficialName( String officialName ) {
-        return this.getCandidateGeneListDao().findByGeneOfficialName( officialName );
-    }
-
-    @Override
-    public Collection handleFindByContributer( Person person ) {
-        return this.getCandidateGeneListDao().findByContributer( person );
-    }
-
-    @Override
-    public Collection handleGetAll() {
-        return this.getCandidateGeneListDao().findAll();
-    }
-
-    @Override
-    public CandidateGeneList handleFindByID( long id ) {
-        return this.getCandidateGeneListDao().findByID( id );
-    }
-
-    @Override
-    public Collection handleFindByListOwner( Person owner ) {
-        return this.getCandidateGeneListDao().findByListOwner( owner );
     }
 
 }

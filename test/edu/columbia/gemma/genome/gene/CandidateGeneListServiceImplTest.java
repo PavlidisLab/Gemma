@@ -1,14 +1,43 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.genome.gene;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.easymock.MockControl;
+import static org.easymock.EasyMock.*;
+import edu.columbia.gemma.common.Describable;
+import edu.columbia.gemma.common.auditAndSecurity.AuditAction;
+import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
+import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
-import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
-import edu.columbia.gemma.genome.gene.CandidateGeneList;
 
 /**
  * <hr>
@@ -16,25 +45,133 @@ import edu.columbia.gemma.genome.gene.CandidateGeneList;
  * Copyright (c) 2004, 2005 Columbia University
  * 
  * @author daq2101
+ * @author pavlidis
  * @version $Id$
  */
-public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
+public class CandidateGeneListServiceImplTest extends TestCase {
 
-    private TaxonDao daoTaxon = null;
-    private GeneDao daoGene = null;
-    private Gene g, g2, g3, g4 = null;;
+    private static Log log = LogFactory.getLog( CandidateGeneListServiceImplTest.class.getName() );
+
+    private CandidateGeneDao candidateGeneDaoMock;;
+    private CandidateGeneListDao candidateGeneListDaoMock;
+    private Gene g, g2, g3, g4 = null;
+
+    private GeneDao geneDaoMock;
     private Person p = null;
-    private PersonDao daoPerson = null;
+    private PersonDao personDaoMock;
+    private CandidateGeneListServiceImpl svc;
     private Taxon t = null;
 
+    private TaxonDao taxonDaoMock;
+
+    public void testCandidateGeneListServiceCreateByName() throws Exception {
+        reset( candidateGeneListDaoMock );
+        // test create CandidateGeneList
+        CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
+        cgl.setName( "New Candidate List from service test" );
+
+        candidateGeneListDaoMock.create( cgl );
+        expectLastCall().andReturn( cgl );
+
+        replay( candidateGeneListDaoMock );
+        svc.saveCandidateGeneList( cgl );
+        // svc.createByName( "New Candidate List from service test" );
+        verify( candidateGeneListDaoMock );
+
+    }
+
+    public void testCandidateGeneListServiceImplB() throws Exception {
+        reset( candidateGeneListDaoMock );
+        CandidateGeneList cgl = this.createTestList();
+
+        candidateGeneListDaoMock.findByID( 190409 );
+        expectLastCall().andReturn( cgl );
+        replay( candidateGeneListDaoMock );
+        svc.findByID( 190409 );
+        verify( candidateGeneListDaoMock );
+
+    }
+
+    public void testCandidateGeneListServiceImplFindByContributer() throws Exception {
+        reset( candidateGeneListDaoMock );
+        CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
+        Collection<CandidateGeneList> cByName = new HashSet<CandidateGeneList>();
+        cByName.add( cgl );
+        candidateGeneListDaoMock.findByContributer( p );
+        expectLastCall().andReturn( cByName );
+        replay( candidateGeneListDaoMock );
+        svc.findByContributer( p );
+        verify( candidateGeneListDaoMock );
+    }
+
+    // Fragments of other test I haven't bother to mock.
+    //        
+    // Collection cAll = svc.getAll();
+    //
+    // log.debug( "All: " + cAll.size() + " candidate lists." );
+    // Long cgl_id = cgl.getId();
+    //
+    // cgl = svc.findByID( cgl_id.longValue() );
+    //
+    // assertTrue( cByContributer != null && cByContributer.size() >= 1 );
+    // assertTrue( cAll != null && cAll.size() >= 1 );
+    //
+    // // test remove CandidateGeneList
+    //
+    // svc.removeCandidateGeneList( cgl );
+    //
+    // cgl = svc.findByID( cgl_id.longValue() );
+    // assertNull( cgl );
+
+    public void testCandidateGeneListServiceImplFindByGeneOfficialName() throws Exception {
+        reset( candidateGeneListDaoMock );
+        CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
+        Collection<CandidateGeneList> cByName = new HashSet<CandidateGeneList>();
+        cByName.add( cgl );
+
+        candidateGeneListDaoMock.findByGeneOfficialName( "test gene two" );
+        expectLastCall().andReturn( cByName );
+        replay( candidateGeneListDaoMock );
+        svc.findByGeneOfficialName( "test gene two" );
+        verify( candidateGeneListDaoMock );
+    }
+
+    private CandidateGeneList createTestList() {
+        CandidateGeneList cgl = CandidateGeneList.Factory.newInstance();
+        cgl.setId( new Long( 190409 ) );
+
+        CandidateGene cg = cgl.addCandidate( g );
+        cg.setAuditTrail( AuditTrail.Factory.newInstance() );
+        cg.getAuditTrail().start( "Created CandidateGene", p );
+
+        CandidateGene cg2 = cgl.addCandidate( g2 );
+        cg2.setAuditTrail( AuditTrail.Factory.newInstance() );
+        cg2.getAuditTrail().start( "Created CandidateGene", p );
+
+        CandidateGene cg3 = cgl.addCandidate( g3 );
+        cg3.setAuditTrail( AuditTrail.Factory.newInstance() );
+        cg3.getAuditTrail().start( "Created CandidateGene", p );
+
+        CandidateGene cg4 = cgl.addCandidate( g4 );
+        cg4.setAuditTrail( AuditTrail.Factory.newInstance() );
+        cg4.getAuditTrail().start( "Created CandidateGene", p );
+
+        cgl.setName( "New CL Test" );
+        return cgl;
+    }
+
     protected void setUp() throws Exception {
-        daoTaxon = ( TaxonDao ) ctx.getBean( "taxonDao" );
-        daoGene = ( GeneDao ) ctx.getBean( "geneDao" );
-        daoPerson = ( PersonDao ) ctx.getBean( "personDao" );
+
+        personDaoMock = createMock( PersonDao.class );
+        taxonDaoMock = createMock( TaxonDao.class );
+        geneDaoMock = createMock( GeneDao.class );
+        candidateGeneDaoMock = createMock( CandidateGeneDao.class );
+        candidateGeneListDaoMock = createMock( CandidateGeneListDao.class );
+
         t = Taxon.Factory.newInstance();
         t.setScientificName( "test testicus" );
         t.setCommonName( "common test" );
-        daoTaxon.create( t );
+        taxonDaoMock.create( t );
 
         g = Gene.Factory.newInstance();
         g.setName( "test gene one" );
@@ -61,84 +198,18 @@ public class CandidateGeneListServiceImplTest extends BaseDAOTestCase {
         p.setFirstName( "David" );
         p.setLastName( "Quigley" );
         p.setEmail( "daq2101@columbia.edu" );
-        daoPerson.create( p );
+        personDaoMock.create( p );
 
-        daoGene.create( g );
-        daoGene.create( g2 );
-        daoGene.create( g3 );
-        daoGene.create( g4 );
+        svc = new CandidateGeneListServiceImpl();
+        svc.setCandidateGeneDao( this.candidateGeneDaoMock );
+        svc.setCandidateGeneListDao( this.candidateGeneListDaoMock );
+        svc.setGeneDao( this.geneDaoMock );
+
+        svc.setActor( p );
+
     }
 
     protected void tearDown() throws Exception {
-
-        daoGene.remove( g );
-        daoGene.remove( g2 );
-        daoGene.remove( g3 );
-        daoGene.remove( g4 );
-        daoTaxon.remove( t );
-        daoPerson.remove( p );
-    }
-
-    public void testCandidateGeneListServiceImpl() {
-
-        // test create CandidateGeneList
-        CandidateGeneListService svc = ( CandidateGeneListService ) ctx.getBean( "candidateGeneListService" );
-        svc.setActor( p );
-
-        CandidateGeneList cgl = svc.createByName( "New Candidate List from service test" );
-        Long cgl_id = cgl.getId();
-        assertTrue( cgl != null );
-        CandidateGene cg = cgl.addCandidate( g );
-        cg.setAuditTrail( AuditTrail.Factory.newInstance() );
-        cg.getAuditTrail().start( "Created CandidateGene", p );
-
-        CandidateGene cg2 = cgl.addCandidate( g2 );
-        cg2.setAuditTrail( AuditTrail.Factory.newInstance() );
-        cg2.getAuditTrail().start( "Created CandidateGene", p );
-
-        CandidateGene cg3 = cgl.addCandidate( g3 );
-        cg3.setAuditTrail( AuditTrail.Factory.newInstance() );
-        cg3.getAuditTrail().start( "Created CandidateGene", p );
-
-        CandidateGene cg4 = cgl.addCandidate( g4 );
-        cg4.setAuditTrail( AuditTrail.Factory.newInstance() );
-        cg4.getAuditTrail().start( "Created CandidateGene", p );
-
-        cgl.setName( "New CL Test" );
-        // set owner of cg2 so I can test findByContributer
-        cg2.setOwner( p );
-
-        svc.saveCandidateGeneList( cgl );
-        cgl = svc.findByID( cgl_id.longValue() );
-        assertTrue( cgl.getCandidates().size() == 4 );
-
-        // test finders
-        java.util.Collection cByName = null;
-        java.util.Collection cByContributer = null;
-        java.util.Collection cAll = null;
-
-        try {
-            cByName = svc.findByGeneOfficialName( "test gene two" );
-            cByContributer = svc.findByContributer( p );
-            System.out.println( "By Name: " + cByName.size() );
-            System.out.println( "By Contributor: " + cByContributer.size() );
-            cAll = svc.getAll();
-            System.out.println( "All: " + cAll.size() + " candidate lists." );
-            cgl = svc.findByID( cgl_id.longValue() );
-
-        } catch ( Exception e ) {
-            System.out.println( e.getMessage() );
-        }
-
-        assertTrue( cByName != null && cByName.size() == 1 );
-        assertTrue( cByContributer != null && cByContributer.size() >= 1 );
-        assertTrue( cAll != null && cAll.size() >= 1 );
-        ;
-
-        // test remove CandidateGeneList
-        svc.removeCandidateGeneList( cgl );
-        cgl = svc.findByID( cgl_id.longValue() );
-        assertNull( cgl );
 
     }
 }
