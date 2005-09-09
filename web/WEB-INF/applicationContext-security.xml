@@ -71,7 +71,7 @@ $Id$
     <bean id="jdbcAuthenticationDao" class="net.sf.acegisecurity.providers.dao.jdbc.JdbcDaoImpl">
         <property name="dataSource"><ref bean="dataSource"/></property>
         <property name="usersByUsernameQuery">
-            <value>SELECT USER_NAME,PASSWORD, enabled as "true" FROM contact WHERE USER_NAME = ?</value>
+            <value>SELECT USER_NAME,PASSWORD, enabled as "true" FROM CONTACT WHERE USER_NAME = ?</value>
         </property>
         <property name="authoritiesByUsernameQuery">
             <value>SELECT USER_NAME,NAME FROM USER_ROLE WHERE USER_NAME = ?</value>
