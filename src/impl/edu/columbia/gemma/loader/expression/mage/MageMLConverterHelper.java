@@ -537,10 +537,10 @@ public class MageMLConverterHelper {
      */
     private URI findLocalMageExternalDataFile( String seekURI ) {
         String fileName = seekURI.substring( seekURI.lastIndexOf( "/" ) + 1 );
-        log.info( "Seeking external data file " + fileName );
+        log.debug( "Seeking external data file " + fileName );
         for ( String path : this.localExternalDataPaths ) {
             File f = new File( path + "/" + fileName );
-            log.info( "Looking in " + f.getAbsolutePath() );
+            log.debug( "Looking in " + f.getAbsolutePath() );
             if ( f.exists() ) {
                 try {
                     return new URI( "file", "", path, "" );
@@ -597,15 +597,15 @@ public class MageMLConverterHelper {
             }
 
             if ( ded instanceof FeatureDimension ) {
-                log.info( "Got a feature dimension: " + ded.getIdentifier() );
+                log.debug( "Got a feature dimension: " + ded.getIdentifier() );
                 designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
                 // bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
             } else if ( ded instanceof CompositeSequenceDimension ) {
-                log.info( "Got a compositesequence dimension: " + ded.getIdentifier() );
+                log.debug( "Got a compositesequence dimension: " + ded.getIdentifier() );
                 designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
                 // bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
             } else if ( ded instanceof ReporterDimension ) {
-                log.info( "Got a reporter dimension: " + ded.getIdentifier() );
+                log.debug( "Got a reporter dimension: " + ded.getIdentifier() );
                 designElements = ( ( ReporterDimension ) ded ).getReporters();
                 // bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
             }
@@ -891,7 +891,7 @@ public class MageMLConverterHelper {
             characteristic.setValueTerm( valueOntologyEntry );
         }
 
-        log.info( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
+        log.debug( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
                 + "'   CatDb: '" + categoryDb + "'  ValDb: '" + valueDb + "'   CatAcc: '" + categoryAcc
                 + "'   ValAcc: " + valueAcc );
     }
