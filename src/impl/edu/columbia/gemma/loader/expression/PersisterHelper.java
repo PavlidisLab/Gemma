@@ -530,12 +530,18 @@ public class PersisterHelper implements Persister {
      */
     @SuppressWarnings("unchecked")
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
+
+        if ( entity == null ) return null;
+
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
         }
 
-        if ( entity.getAccession() != null || entity.getAccession().getExternalDatabase() != null ) {
-            this.persistExternalDatabase( entity.getAccession().getExternalDatabase() );
+        if ( entity.getAccession() != null && entity.getAccession().getExternalDatabase() != null ) {
+            entity.getAccession().setExternalDatabase(
+                    this.persistExternalDatabase( entity.getAccession().getExternalDatabase() ) );
+        } else {
+            log.warn( "Null accession for expressionExperiment" );
         }
 
         // this is very annoying code.
