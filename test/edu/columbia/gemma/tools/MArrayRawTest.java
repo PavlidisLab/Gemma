@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
 
@@ -36,14 +39,22 @@ import junit.framework.TestCase;
  * @version $Id$
  */
 public class MArrayRawTest extends TestCase {
+    private static Log log = LogFactory.getLog( MArrayRawTest.class.getName() );
     MArrayRaw r;
+    private boolean connected = false;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        r = new MArrayRaw();
+        try {
+            r = new MArrayRaw();
+            connected = true;
+        } catch ( RuntimeException e ) {
+            connected = false;
+        }
+
     }
 
     /*
@@ -55,6 +66,10 @@ public class MArrayRawTest extends TestCase {
     }
 
     public void testMakeMArrayRaw() throws Exception {
+        if ( !connected ) {
+            log.warn( "Could not connect to RServe, skipping test." );
+            return;
+        }
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrixNamed maGb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
                 .getResourceAsStream( "/data/swirldata/maGb.sample.txt.gz" ) ) );
@@ -70,10 +85,18 @@ public class MArrayRawTest extends TestCase {
     }
 
     public void testMakeMArrayLayout() throws Exception {
+        if ( !connected ) {
+            log.warn( "Could not connect to RServe, skipping test." );
+            return;
+        }
         r.makeMArrayLayout( 4, 4, 22, 24 );
     }
 
     public void testMakeMarrayInfo() throws Exception {
+        if ( !connected ) {
+            log.warn( "Could not connect to RServe, skipping test." );
+            return;
+        }
         List<String> l = new ArrayList<String>();
         l.add( "foo" );
         l.add( "bar" );
