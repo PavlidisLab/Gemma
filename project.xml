@@ -637,6 +637,14 @@
                 </includes>
                 <filtering>false</filtering>
             </resource>
+             <resource>
+                <directory>${basedir}/src/impl</directory>
+                <includes>
+                    <include>**/*.xsl</include>
+                    <include>**/*.daml</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
             <resource>
                 <directory>${basedir}/web/</directory>
                 <includes>
