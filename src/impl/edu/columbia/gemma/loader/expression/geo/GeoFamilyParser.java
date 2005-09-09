@@ -64,7 +64,7 @@ public class GeoFamilyParser implements Parser {
     /**
      * 
      */
-    private static final String FIELD_DELIM = "\t";
+    private static final char FIELD_DELIM = '\t';
 
     private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
 
@@ -447,19 +447,17 @@ public class GeoFamilyParser implements Parser {
             return;
         }
 
-        String[] tokens = line.split( FIELD_DELIM );
-
-        Map<String, List<String>> platformDataMap = platformMap.get( currentPlatformAccession ).getData();
+        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
 
         int numColumns = platformMap.get( currentPlatformAccession ).getColumnNames().size();
 
-        if ( numColumns < tokens.length ) {
-            log.error( "Too many fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
-            return;
-        } else if ( numColumns > tokens.length ) {
-            log.warn( "Not enough tokens in line '" + line + "'\n(" + tokens.length + ", expected " + numColumns + ")" );
+        if ( numColumns != tokens.length ) {
+            log.warn( "Wrong number of tokens in line (" + tokens.length + ", expected " + numColumns + "), line was '"
+                    + line + "'" );
             return;
         }
+
+        Map<String, List<String>> platformDataMap = platformMap.get( currentPlatformAccession ).getData();
 
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
@@ -806,7 +804,7 @@ public class GeoFamilyParser implements Parser {
             return;
         }
 
-        String[] tokens = line.split( FIELD_DELIM );
+        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
 
         Map<String, List<String>> sampleDataMap = sampleMap.get( currentSampleAccession ).getData();
 
@@ -830,7 +828,7 @@ public class GeoFamilyParser implements Parser {
             return;
         }
 
-        String[] tokens = line.split( FIELD_DELIM );
+        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
 
         Map<String, List<String>> seriesDataMap = seriesMap.get( currentSeriesAccession ).getData();
 
