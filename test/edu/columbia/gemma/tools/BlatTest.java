@@ -72,7 +72,7 @@ public class BlatTest extends TestCase {
         try {
             b.startServer( b.getHumanServerPort() );
             serverStarted = true;
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             serverStarted = false;
         }
     }
