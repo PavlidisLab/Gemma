@@ -87,7 +87,7 @@ public class DatasetFetcher extends FtpFetcher {
                 return result;
             }
         } catch ( IOException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         }
         log.error( "Couldn't find file." );
         return null;

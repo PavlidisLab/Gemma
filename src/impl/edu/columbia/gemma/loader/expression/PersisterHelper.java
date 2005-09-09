@@ -534,6 +534,10 @@ public class PersisterHelper implements Persister {
             entity.setOwner( defaultOwner );
         }
 
+        if ( entity.getAccession() != null || entity.getAccession().getExternalDatabase() != null ) {
+            this.persistExternalDatabase( entity.getAccession().getExternalDatabase() );
+        }
+
         // this is very annoying code.
         // the following ontology entries must be persisted manually.
         // manually persist: experimentaldesign->experimentalFactor->annotation, category
@@ -608,9 +612,9 @@ public class PersisterHelper implements Persister {
     /**
      * @param database
      */
-    @SuppressWarnings("unused")
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
-        throw new UnsupportedOperationException( "Can't deal with " + database.getClass().getName() + " yet" );
+        if ( database == null ) return null;
+        return externalDatabaseDao.findOrCreate( database );
     }
 
     /**

@@ -18,6 +18,11 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
+import java.io.File;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.PropertiesConfiguration;
+
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
@@ -40,6 +45,14 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
 
     /** This is an integration test */
     public void testFetchAndLoad() throws Exception {
+
+        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
+        String path = ( String ) config.getProperty( "geo.local.datafile.basepath" );
+        if ( !( new File( path ).canRead() ) ) {
+            log.warn( "Skipping test, required path " + path + "not writable" );
+            return;
+        }
+
         GeoDatasetService gds = new GeoDatasetService();
         PersisterHelper ml = new PersisterHelper();
         GeoConverter geoConv = new GeoConverter();
@@ -54,5 +67,4 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         gds.setConverter( geoConv );
         gds.fetchAndLoad( "GDS100" );
     }
-
 }

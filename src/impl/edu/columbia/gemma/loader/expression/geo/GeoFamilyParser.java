@@ -104,6 +104,12 @@ public class GeoFamilyParser implements Parser {
 
     private Map<String, GeoSubset> subsetMap;
 
+    private boolean haveReadPlatformHeader = false;
+
+    private boolean haveReadSampleDataHeader = false;
+
+    private boolean haveReadSeriesDataHeader = false;
+
     public GeoFamilyParser() {
         sampleMap = new HashMap<String, GeoSample>();
         platformMap = new HashMap<String, GeoPlatform>();
@@ -170,6 +176,9 @@ public class GeoFamilyParser implements Parser {
         BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );
 
         log.info( "Parsing...." );
+        haveReadPlatformHeader = false;
+        haveReadSampleDataHeader = false;
+        haveReadSeriesDataHeader = false;
         String line = "";
         int count = 0;
         while ( ( line = dis.readLine() ) != null ) {
@@ -301,7 +310,6 @@ public class GeoFamilyParser implements Parser {
         String value = tokens[1];
         key = StringUtils.strip( key );
         value = StringUtils.strip( value );
-        log.debug( "Extracted key: " + key + ", value: " + value );
         map.put( key, value );
         return key;
     }
@@ -428,9 +436,17 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * If a line does not have the same number of fields as the column headings, it is skipped.
+     * 
      * @param line
      */
     private void parsePlatformLine( String line ) {
+
+        if ( !haveReadPlatformHeader ) {
+            haveReadPlatformHeader = true;
+            return;
+        }
+
         String[] tokens = line.split( FIELD_DELIM );
 
         Map<String, List<String>> platformDataMap = platformMap.get( currentPlatformAccession ).getData();
@@ -441,10 +457,8 @@ public class GeoFamilyParser implements Parser {
             log.error( "Too many fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
             return;
         } else if ( numColumns > tokens.length ) {
-            // sometimes there is a trailing tab in the line. Unfortunately this is not a great way to get around that
-            // problem.
-            // log.error( "Too few fields from '" + line + "' (" + tokens.length + ", expected " + numColumns + ")" );
-            // return;
+            log.warn( "Not enough tokens in line '" + line + "'\n(" + tokens.length + ", expected " + numColumns + ")" );
+            return;
         }
 
         for ( int i = 0; i < tokens.length; i++ ) {
@@ -786,6 +800,12 @@ public class GeoFamilyParser implements Parser {
      * @param line
      */
     private void parseSampleDataLine( String line ) {
+
+        if ( !haveReadSampleDataHeader ) {
+            haveReadSampleDataHeader = true;
+            return;
+        }
+
         String[] tokens = line.split( FIELD_DELIM );
 
         Map<String, List<String>> sampleDataMap = sampleMap.get( currentSampleAccession ).getData();
@@ -804,6 +824,12 @@ public class GeoFamilyParser implements Parser {
      * @param line
      */
     private void parseSeriesDataLine( String line ) {
+
+        if ( !haveReadSeriesDataHeader ) {
+            haveReadSeriesDataHeader = true;
+            return;
+        }
+
         String[] tokens = line.split( FIELD_DELIM );
 
         Map<String, List<String>> seriesDataMap = seriesMap.get( currentSeriesAccession ).getData();
