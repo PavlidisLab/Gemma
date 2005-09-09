@@ -40,11 +40,20 @@ public class QuantileNormalizerTest extends TestCase {
     DoubleMatrixNamed tester;
     QuantileNormalizer qn;
 
+    private boolean connected = false;
+
     public void setUp() throws Exception {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         tester = ( DoubleMatrixNamed ) reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
         assert tester != null;
-        qn = new QuantileNormalizer();
+
+        try {
+            qn = new QuantileNormalizer();
+            connected = true;
+        } catch ( RuntimeException e ) {
+            connected = false;
+        }
+
         log.debug( "Setup done" );
     }
 
@@ -58,7 +67,10 @@ public class QuantileNormalizerTest extends TestCase {
      * Test method for 'edu.columbia.gemma.analysis.preprocess.QuantileNormalizer.normalize(DenseDoubleMatrix2DNamed)'
      */
     public void testNormalize() {
-
+        if ( !connected ) {
+            log.warn( "Could not connect to RServe, skipping test." );
+            return;
+        }
         DoubleMatrixNamed result = qn.normalize( tester );
 
         // d<-read.table("testdata.txt", header=T, row.names=1)
