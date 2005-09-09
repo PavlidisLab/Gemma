@@ -586,6 +586,8 @@
                     <includes>
                         <include>**/*.xml</include>
                         <include>**/*.txt</include>
+                         <include>**/*.gz</include>
+                         <include>**/*.zip</include>
                         <include>**/*.probes</include>
                     </includes>
                     <filtering>false</filtering>
