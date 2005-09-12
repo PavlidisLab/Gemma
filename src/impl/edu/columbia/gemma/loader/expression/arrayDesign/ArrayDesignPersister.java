@@ -36,7 +36,7 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="arrayDesignLoader"
+ * @spring.bean id="arrayDesignPersister"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public class ArrayDesignPersister implements Persister {
