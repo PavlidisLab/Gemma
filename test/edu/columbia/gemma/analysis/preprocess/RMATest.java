@@ -67,7 +67,7 @@ public class RMATest extends TestCase {
         try {
             aa = new RMA();
             connected = true;
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             connected = false;
         }
     }

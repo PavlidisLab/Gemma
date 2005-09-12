@@ -66,7 +66,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
         try {
             aa = new RMABackgroundAdjuster();
             connected = true;
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             connected = false;
         }
     }

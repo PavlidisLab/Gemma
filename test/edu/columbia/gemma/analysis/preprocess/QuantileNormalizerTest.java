@@ -50,7 +50,7 @@ public class QuantileNormalizerTest extends TestCase {
         try {
             qn = new QuantileNormalizer();
             connected = true;
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             connected = false;
         }
 

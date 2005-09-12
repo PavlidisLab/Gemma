@@ -48,7 +48,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
         try {
             normalizer = new TwoColorArrayLoessNormalizer();
             connected = true;
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             connected = false;
         }
 
