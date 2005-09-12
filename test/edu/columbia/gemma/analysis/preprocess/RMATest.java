@@ -28,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
-import baseCode.dataStructure.matrix.NamedMatrix;
 import baseCode.io.reader.DoubleMatrixReader;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 
