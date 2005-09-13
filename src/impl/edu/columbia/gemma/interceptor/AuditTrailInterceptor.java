@@ -74,6 +74,7 @@ public class AuditTrailInterceptor implements MethodInterceptor {
      * @return Object
      * @throws Throwable
      */
+    @SuppressWarnings("unchecked")
     public Object invoke( MethodInvocation invocation ) throws Throwable {
 
         Method method = invocation.getMethod();
@@ -104,7 +105,7 @@ public class AuditTrailInterceptor implements MethodInterceptor {
 
             } else {
 
-                // TODO get hook to the performer.
+                // TODO get hook to the performer. I need to find a way to get the note from the user.
                 Collection<AuditEvent> auditEvents = auditTrail.getEvents();
                 AuditEvent auditEvent = AuditEvent.Factory.newInstance();
                 auditEvent.setDate( new Date() );
