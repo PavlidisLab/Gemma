@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import baseCode.util.RCommand;
 
 /**
+ * Encapsulates a connection to the RServer.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -55,10 +56,11 @@ public abstract class RCommander {
     }
 
     /**
-     * Users should call this method when they are ready to release this object.F
-     *
+     * Users should call this method when they are ready to release this object. Otherwise memory leaks and other
+     * badness can occur.
      */
     public void cleanup() {
+        rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.
         rc.disconnect();
     }
 
