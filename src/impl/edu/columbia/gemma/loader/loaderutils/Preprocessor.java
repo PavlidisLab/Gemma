@@ -1,5 +1,24 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.loaderutils;
 
+import java.io.InputStream;
 import java.util.List;
 
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
@@ -16,14 +35,16 @@ import edu.columbia.gemma.expression.designElement.DesignElement;
  * @version $Id$
  */
 public interface Preprocessor {
-    
+
     /**
+     * Creates a matrix of designElements (X) vs. bioAssays (Y) for each quantitation type from the input stream.
      * 
      * @param bioAssay
      * @param quantitationTypes
      * @param designElements
+     * @param inputStream
      */
     public void preprocess( BioAssay bioAssay, List<QuantitationType> quantitationTypes,
-            List<DesignElement> designElements );
+            List<DesignElement> designElements, InputStream inputStream );
 
 }
