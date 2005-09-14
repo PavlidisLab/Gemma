@@ -89,19 +89,18 @@ public class RawDataParser implements Parser {
         }
 
         X = conf.getInt( "x" );
-        ;
+
         Y = conf.getInt( "y" );
-        ;
+
         INTENSITY = conf.getInt( "intensity" );
-        ;
+
         STDEV = conf.getInt( "stdev" );
-        ;
+
         PIXELS = conf.getInt( "pixels" );
-        ;
+
         OUTLIER = conf.getInt( "outlier" );
-        ;
+
         MASKED = conf.getInt( "masked" );
-        ;
 
         intensityList = new ArrayList();
         stdevList = new ArrayList();
