@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Thu Sep 08 15:43:01 EDT 2005'>
+  timestamp = 'Wed Sep 14 12:53:32 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -12,9 +12,9 @@
       isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
       <UML:ModelElement.taggedValue>
         <UML:TaggedValue xmi.id = 'Id2a49dm1025ed2a6cbmm7252' isSpecification = 'false'>
-          <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
-          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>@remove.field</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>@spring.validator</UML:TaggedValue.dataValue>
+          <UML:TaggedValue.dataValue>spring.validator</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue>remove.by</UML:TaggedValue.dataValue>
           <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
           <UML:TaggedValue.type>
@@ -18932,6 +18932,14 @@ one class.
                               <UML:ModelElement.stereotype>
                                 <UML:Stereotype xmi.idref = 'I837986m101da242ae9mmf12'/>
                               </UML:ModelElement.stereotype>
+                              <UML:ModelElement.taggedValue>
+                                <UML:TaggedValue xmi.id = 'Im370dcfb4m1065081a11dm2aa3' isSpecification = 'false'>
+                                  <UML:TaggedValue.dataValue>&lt;p&gt;Represents ...&lt;/p&gt;</UML:TaggedValue.dataValue>
+                                  <UML:TaggedValue.type>
+                                    <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                  </UML:TaggedValue.type>
+                                </UML:TaggedValue>
+                              </UML:ModelElement.taggedValue>
                               <UML:Classifier.feature>
                                 <UML:Attribute xmi.id = 'Ieeda37m101f2ab640dmm2a44' name = 'PRESENTABSENT'
                                   visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
@@ -19001,6 +19009,50 @@ one class.
                                 <UML:Attribute xmi.id = 'Ieeda37m101f2ab640dmm2967' name = 'MEASUREDSIGNAL'
                                   visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'Im370dcfb4m1065081a11dm2a92' name = 'COORDINATE'
+                                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Im370dcfb4m1065081a11dm2aa4' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>Used to represent a value for a spatial coordinate</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'Im370dcfb4m1065081a11dm2aa5' name = 'TIME' visibility = 'private'
+                                  isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Im370dcfb4m1065081a11dm2ab6' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>Represents a particular point in time</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
+                                  <UML:StructuralFeature.type>
+                                    <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
+                                  </UML:StructuralFeature.type>
+                                </UML:Attribute>
+                                <UML:Attribute xmi.id = 'Im370dcfb4m1065081a11dm2ab7' name = 'DURATION'
+                                  visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
+                                  changeability = 'changeable'>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'Im370dcfb4m1065081a11dm2ac8' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>Represents a time duration</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e44'/>
                                   </UML:StructuralFeature.type>
@@ -29106,9 +29158,9 @@ of nucleotides associated with a gene product.  This class only represents the s
                               visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                               aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                               <UML:AssociationEnd.multiplicity>
-                                <UML:Multiplicity xmi.id = 'I1af67f0m102d10e4abem1f24'>
+                                <UML:Multiplicity xmi.id = 'Im370dcfb4m1065081a11dm2a8d'>
                                   <UML:Multiplicity.range>
-                                    <UML:MultiplicityRange xmi.id = 'I1af67f0m102d10e4abem1f25' lower = '0'
+                                    <UML:MultiplicityRange xmi.id = 'Im370dcfb4m1065081a11dm2a8e' lower = '1'
                                       upper = '1'/>
                                   </UML:Multiplicity.range>
                                 </UML:Multiplicity>
