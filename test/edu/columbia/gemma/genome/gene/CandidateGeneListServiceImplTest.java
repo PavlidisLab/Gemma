@@ -29,9 +29,6 @@ import java.util.HashSet;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -50,8 +47,6 @@ import edu.columbia.gemma.genome.TaxonDao;
  * @version $Id$
  */
 public class CandidateGeneListServiceImplTest extends TestCase {
-
-    private static Log log = LogFactory.getLog( CandidateGeneListServiceImplTest.class.getName() );
 
     private CandidateGeneDao candidateGeneDaoMock;;
     private CandidateGeneListDao candidateGeneListDaoMock;

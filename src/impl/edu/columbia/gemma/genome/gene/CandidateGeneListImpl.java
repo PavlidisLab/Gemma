@@ -22,11 +22,7 @@
 package edu.columbia.gemma.genome.gene;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
 
@@ -39,8 +35,6 @@ import edu.columbia.gemma.genome.Gene;
  * @version $Id$
  */
 public class CandidateGeneListImpl extends edu.columbia.gemma.genome.gene.CandidateGeneList {
-
-    private static Log log = LogFactory.getLog( CandidateGeneListImpl.class.getName() );
 
     /**
      * Adds a candidate to the list, intitializing the list as a List if none exists. Lists are ranked in ascending

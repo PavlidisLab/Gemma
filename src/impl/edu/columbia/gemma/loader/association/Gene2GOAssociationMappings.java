@@ -31,10 +31,6 @@ public class Gene2GOAssociationMappings {
 
     private final int TAX_ID = conf.getInt( "gene2go.tax_id" );
 
-    private final int GENE_ID = conf.getInt( "gene2go.gene_id" );
-
-    private final int GO_ID = conf.getInt( "gene2go.go_id" );
-
     private final int EVIDENCE_CODE = conf.getInt( "gene2go.evidence_code" );
 
     private TaxonDao taxonDao = null;
@@ -101,6 +97,7 @@ public class Gene2GOAssociationMappings {
     /**
      * Initialize the evidenceCodes from the enumeration values
      */
+    @SuppressWarnings("unchecked")
     private void initializeEvidenceCodes() {
         evidenceCodes = GOEvidenceCode.names();
     }

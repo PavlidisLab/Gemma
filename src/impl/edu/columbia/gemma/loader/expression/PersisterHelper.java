@@ -549,8 +549,7 @@ public class PersisterHelper implements Persister {
         // manually persist: experimentaldesign->experimentalFactor->annotation, category
         // manually persist: experimentaldesign->experimentalFactor->FactorValue->value
         // experimentaldesign->type
-        for ( ExperimentalDesign experimentalDesign : ( Collection<ExperimentalDesign> ) entity
-                .getExperimentalDesigns() ) {
+        for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
 
             // type
             for ( OntologyEntry type : ( Collection<OntologyEntry> ) experimentalDesign.getTypes() ) {

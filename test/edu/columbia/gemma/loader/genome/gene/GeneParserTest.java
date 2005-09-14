@@ -25,13 +25,12 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
@@ -49,7 +48,7 @@ public class GeneParserTest extends BaseServiceTestCase {
 
     private GeneLoaderImpl geneLoader = null;
     private GeneParserImpl geneParser = null;
-    private Map map = null;
+    private Map<String, Gene> map = null;
 
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
@@ -57,6 +56,7 @@ public class GeneParserTest extends BaseServiceTestCase {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/geneinfo.txt" );
         Method m = ParserAndLoaderTools.findParseLineMethod( geneParser.getGeneMappings(), "geneinfo" );
@@ -74,14 +74,12 @@ public class GeneParserTest extends BaseServiceTestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-
-        BeanFactory ctx = SpringContextUtil.getApplicationContext();
         geneParser = new GeneParserImpl();
         geneLoader = new GeneLoaderImpl();
         GeneMappings geneMappings = new GeneMappings( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
         geneParser.setGeneMappings( geneMappings );
         geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
-        map = new HashMap();
+        map = new HashMap<String, Gene>();
 
     }
 

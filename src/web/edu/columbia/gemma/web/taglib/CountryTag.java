@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.taglib;
 
 import java.io.IOException;
@@ -30,13 +48,11 @@ import edu.columbia.gemma.util.LabelValue;
  * @jsp.tag name="country" body-content="empty"
  */
 public class CountryTag extends TagSupport {
-    private static final String COUNTRIES = CountryTag.class.getName() + ".COUNTRIES";
+    // private static final String COUNTRIES = CountryTag.class.getName() + ".COUNTRIES";
     private String name;
     private String prompt;
     private String scope;
     private String selected;
-    private String style;
-    private String styleClass;
 
     /**
      * @param name The name to set.
@@ -70,26 +86,6 @@ public class CountryTag extends TagSupport {
      */
     public void setToScope( String scope ) {
         this.scope = scope;
-    }
-
-    /**
-     * Setter included for XDoclet TLD generation.
-     * 
-     * @param style
-     * @jsp.attribute required="false" rtexprvalue="true"
-     */
-    public void setStyle( String style ) {
-        this.style = style;
-    }
-
-    /**
-     * Setter included for XDoclet TLD generation.
-     * 
-     * @param styleClass
-     * @jsp.attribute required="false" rtexprvalue="true"
-     */
-    public void setStyleClass( String styleClass ) {
-        this.styleClass = styleClass;
     }
 
     /**

@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.taglib;
 
 import java.util.HashMap;
@@ -20,23 +38,23 @@ import edu.columbia.gemma.web.Constants;
  * <br />
  * 
  * <pre>
- * 
- *  
- *   &lt;tag:secure /&gt;
- *   or
- *   &lt;tag:secure mode=&quot;secured&quot; /&gt;
- *   
- *  
+ *      
+ *       
+ *        &lt;tag:secure /&gt;
+ *        or
+ *        &lt;tag:secure mode=&quot;secured&quot; /&gt;
+ *        
+ *       
  * </pre>
  * 
  * If you want the force the page to be viewed in over standard http, then you would do something like:<br />
  * 
  * <pre>
- * 
- *  
- *   &lt;tag:secure mode=&quot;unsecured&quot; /&gt;
- *   
- *  
+ *      
+ *       
+ *        &lt;tag:secure mode=&quot;unsecured&quot; /&gt;
+ *        
+ *       
  * </pre>
  * 
  * @jsp.tag name="secure" body-content="empty"
@@ -70,7 +88,8 @@ public class SecureTag extends BodyTagSupport {
         mode = aMode;
     }
 
-    public int doStartTag() throws JspException {
+    @Override
+    public int doStartTag() {
         // get the port numbers from the application context
         Map config = ( HashMap ) pageContext.getServletContext().getAttribute( Constants.CONFIG );
 
@@ -89,10 +108,12 @@ public class SecureTag extends BodyTagSupport {
         return SKIP_BODY;
     }
 
-    public int doAfterBody() throws JspException {
+    @Override
+    public int doAfterBody() {
         return SKIP_BODY;
     }
 
+    @Override
     public int doEndTag() throws JspException {
         if ( mode.equalsIgnoreCase( MODE_SECURED ) ) {
             if ( pageContext.getRequest().isSecure() == false ) {

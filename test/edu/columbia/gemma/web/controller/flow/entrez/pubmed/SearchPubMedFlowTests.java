@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.webflow.Event;
-import org.springframework.webflow.ViewDescriptor;
 
 import edu.columbia.gemma.BaseFlowTestCase;
 
@@ -41,10 +40,10 @@ public class SearchPubMedFlowTests extends BaseFlowTestCase {
      */
     public void testCriteriaView_Submit_Success() {
         startFlow();
-        Map properties = new HashMap();
+        Map<String, String> properties = new HashMap<String, String>();
         properties.put( "pubMedId", "15173114" );
         properties.put( "_eventId", "pubMedSearch" );
-        ViewDescriptor view = signalEvent( new Event( this, "submitPubMed", properties ) );
+        signalEvent( new Event( this, "submitPubMed", properties ) );
         assertCurrentStateEquals( "results.view" );
         // asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 1 );
     }

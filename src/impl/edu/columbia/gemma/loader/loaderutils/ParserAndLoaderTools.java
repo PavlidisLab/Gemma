@@ -47,12 +47,12 @@ public class ParserAndLoaderTools {
     private static final int RATTUS = 10114;
 
     /**
-     * Reflectively determines which loader to use. Display time to be used with org.apache.commons.lang.time.StopWatch
+     * User the loader to persist the collection.
      * 
      * @param loader
      * @param col
      */
-    public static final void loadDatabase( Persister loader, Collection<Object> col ) {
+    public static final void loadDatabase( Persister loader, Collection<?> col ) {
         assert ( loader != null );
         assert ( col != null );
         if ( col.size() == 0 ) return;

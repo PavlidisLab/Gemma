@@ -77,7 +77,7 @@ public class PublicationFetcher extends FtpFetcher {
 
                         SMDPublication newPub = new SMDPublication();
                         newPub.read( is );
-                        boolean success = f.completePendingCommand();
+                        success = f.completePendingCommand();
                         is.close();
 
                         if ( !success ) {

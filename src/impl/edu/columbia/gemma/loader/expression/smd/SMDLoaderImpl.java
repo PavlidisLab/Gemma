@@ -22,6 +22,14 @@ import java.util.Collection;
 
 import edu.columbia.gemma.loader.loaderutils.Persister;
 
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
 public class SMDLoaderImpl implements Persister {
 
     public Collection<Object> persist( Collection col ) {

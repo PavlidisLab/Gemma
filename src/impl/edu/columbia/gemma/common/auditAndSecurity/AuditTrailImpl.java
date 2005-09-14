@@ -35,11 +35,12 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#addEvent(edu.columbia.gemma.common.auditAndSecurity.AuditEvent)
      */
+    @SuppressWarnings("unchecked")
     public void addEvent( AuditEvent event ) {
         if ( event == null ) throw new IllegalArgumentException( "AuditEvent cannot be null" );
         assert this.getEvents() != null;
         this.getEvents().add( event );
-    }
+    } 
 
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getCreationEvent()

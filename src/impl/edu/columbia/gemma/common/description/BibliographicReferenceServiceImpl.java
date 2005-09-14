@@ -139,7 +139,7 @@ public class BibliographicReferenceServiceImpl extends
     @Override
     protected Collection handleGetAllBibliographicReferences( BibliographicReference bibliographicReference )
             throws Exception {
-        // TODO Auto-generated method stub
+        // TODO Auto-generated method stub. What is this method supposed to do?
         return null;
     }
 

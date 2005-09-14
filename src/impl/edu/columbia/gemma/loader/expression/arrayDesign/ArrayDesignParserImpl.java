@@ -57,7 +57,7 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserByMap {
     protected static final Log log = LogFactory.getLog( ArrayDesignParserImpl.class );
 
-    private Map arrayDesignMap = null;
+    private Map<String, ArrayDesign> arrayDesignMap = null;
 
     private ArrayDesignMappings arrayDesignMappings = null;
 
@@ -74,7 +74,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
      */
     public ArrayDesignParserImpl() {
         super();
-        arrayDesignMap = new HashMap();
+        arrayDesignMap = new HashMap<String, ArrayDesign>();
     }
 
     public Collection<Object> createOrGetDependencies( Object[] dependencies, Map adMap ) {
@@ -191,7 +191,7 @@ public class ArrayDesignParserImpl extends BasicLineMapParser implements ParserB
         return arrayDesignMap;
     }
 
-    public Map parseToMap( String filename ) throws IOException {
+    public Map parseToMap( String fileName ) throws IOException {
         // TODO implement
         throw new UnsupportedOperationException();
     }

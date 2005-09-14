@@ -31,8 +31,6 @@ import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileDao;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 

@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.genome;
 
 import java.io.BufferedReader;
@@ -8,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
@@ -21,7 +38,6 @@ import edu.columbia.gemma.genome.Chromosome;
 import edu.columbia.gemma.genome.ChromosomeDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.genome.TaxonImpl;
 import edu.columbia.gemma.loader.loaderutils.BulkCreator;
 
 /**
@@ -36,7 +52,6 @@ import edu.columbia.gemma.loader.loaderutils.BulkCreator;
  * @spring.property name="taxonDao" ref="taxonDao"
  */
 public class ChromosomeLoaderService implements BulkCreator {
-    private static boolean alreadyLoaded;
 
     private static boolean alreadyRetreivedTaxa;
     protected static final Log log = LogFactory.getLog( ChromosomeLoaderService.class );
@@ -47,7 +62,7 @@ public class ChromosomeLoaderService implements BulkCreator {
     private TaxonDao taxonDao;
     private String view;
     Configuration conf;
-    Map taxaMap;
+    Map<Integer, Taxon> taxaMap;
 
     /**
      * @throws ConfigurationException
@@ -57,7 +72,6 @@ public class ChromosomeLoaderService implements BulkCreator {
         nameCol = conf.getInt( "chromosome.nameCol" );
         taxonCol = conf.getInt( "chromosome.taxonCol" );
         alreadyRetreivedTaxa = false;
-        alreadyLoaded = false;
         view = "chromosome";
     }
 
@@ -144,6 +158,7 @@ public class ChromosomeLoaderService implements BulkCreator {
      * @param line
      * @throws NumberFormatException
      */
+    @SuppressWarnings("unchecked")
     private boolean createFromRow( String line ) throws NumberFormatException {
         String[] sArray = line.split( "\t" );
         Chromosome ch = Chromosome.Factory.newInstance();
@@ -151,7 +166,7 @@ public class ChromosomeLoaderService implements BulkCreator {
 
         if ( !alreadyRetreivedTaxa ) taxaMap = findAllTaxa();
 
-        ch.setTaxon( loadOrCreateTaxon( taxaMap, Integer.parseInt( sArray[taxonCol] ), null ) );
+        ch.setTaxon( loadOrCreateTaxon( Integer.parseInt( sArray[taxonCol] ), null ) );
 
         Collection chromosomeCol = this.chromosomeDao.findByName( ch.getName() );
 
@@ -167,14 +182,15 @@ public class ChromosomeLoaderService implements BulkCreator {
     /**
      * @return Map TODO put in taxonutils after making taxaMap in createFromRow static
      */
+    @SuppressWarnings("unchecked")
     private Map findAllTaxa() {
-        Collection taxa = this.taxonDao.loadAll();
-        Map taxaMap = new HashMap();
-        Iterator iter = taxa.iterator();
+        Collection<Taxon> taxa = this.taxonDao.loadAll();
+        taxaMap = new HashMap<Integer, Taxon>();
+
         int id = 1;
-        while ( iter.hasNext() ) {
+        for ( Taxon taxon : taxa ) {
             Integer Id = new Integer( id );
-            taxaMap.put( Id, iter.next() );
+            taxaMap.put( Id, taxon );
             id++;
         }
         alreadyRetreivedTaxa = true;
@@ -182,17 +198,16 @@ public class ChromosomeLoaderService implements BulkCreator {
     }
 
     /**
-     * @param taxaMap
      * @param id
      * @param s
-     * @return Taxon TODO put in taxonutils after making taxaMap in createFromRow static
+     * @return Taxon TODO put in taxonutils after making taxaMap in createFromRow static FIXME - what does this method
+     *         do?
      */
-    private Taxon loadOrCreateTaxon( Map taxaMap, int id, Taxon taxon ) {
+    private Taxon loadOrCreateTaxon( int id, Taxon taxon ) {
         Taxon t;
         Integer Id = new Integer( id );
         if ( taxaMap.containsKey( Id ) ) {
-            t = ( TaxonImpl ) taxaMap.get( Id );
-            System.err.println( t.toString() );
+            t = taxaMap.get( Id );
         } else {
             t = taxon;
         }

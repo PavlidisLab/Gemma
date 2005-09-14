@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.Date;
@@ -6,15 +24,12 @@ import java.util.Set;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.web.MockServletContext;
 import org.springframework.validation.BindException;
-import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserRole;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
-import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupController;
 
 /**
  * Tests the SignupController. Is also used to add an admin.
@@ -27,7 +42,6 @@ import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControlle
  */
 public class SignupControllerTest extends BaseControllerTestCase {
 
-    private MockServletContext mockCtx;
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
 
@@ -41,8 +55,6 @@ public class SignupControllerTest extends BaseControllerTestCase {
      * @throws Exception
      */
     public void setUp() throws Exception {
-
-        mockCtx = new MockServletContext();
 
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
@@ -67,6 +79,7 @@ public class SignupControllerTest extends BaseControllerTestCase {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testOnSubmit() throws Exception {
 
         request.setContextPath( "/Gemma" );
@@ -99,11 +112,10 @@ public class SignupControllerTest extends BaseControllerTestCase {
 
         testUser.getRoles().add( ur );
 
-        ModelAndView mav = signupController.onSubmit( request, response, testUser, ( BindException ) null );
+        signupController.onSubmit( request, response, testUser, ( BindException ) null );
 
         // assertEquals( "pubMedList", mav.getViewName() );
-        assertEquals( null, null );
-
+        // FIXME this test has no fail condition.
     }
 
 }

@@ -31,4 +31,32 @@ public class SMDFileFormat {
     private String name;
     private String description;
 
+    /**
+     * @return Returns the description.
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName( String name ) {
+        this.name = name;
+    }
+
 }
