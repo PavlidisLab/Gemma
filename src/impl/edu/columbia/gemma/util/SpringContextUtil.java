@@ -24,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.mock.web.MockServletContext;
+import org.springframework.web.context.support.XmlWebApplicationContext;
 
 /**
  * <hr>
@@ -38,12 +40,32 @@ public class SpringContextUtil {
     private static BeanFactory ctx = null;
 
     /**
-     * @return
+     * @return BeanFactory
      */
     public static BeanFactory getApplicationContext() {
         if ( ctx == null ) {
             String[] paths = getConfigLocations();
             ctx = new ClassPathXmlApplicationContext( paths );
+            if ( ctx != null )
+                log.info( "Got context" );
+            else
+                log.error( "Failed to load context" );
+        }
+        return ctx;
+    }
+
+    /**
+     * Xml
+     * 
+     * @return XmlWebApplicationContext
+     */
+    public static BeanFactory getXmlWebApplicationContext() {
+        if ( ctx == null ) {
+            String[] paths = getConfigLocations();
+            ctx = new XmlWebApplicationContext();
+            ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( paths );
+            ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );
+            ( ( XmlWebApplicationContext ) ctx ).refresh();
             if ( ctx != null )
                 log.info( "Got context" );
             else
