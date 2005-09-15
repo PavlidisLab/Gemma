@@ -39,7 +39,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class BaseControllerTestCase extends TestCase {
-    protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext();
+    protected final static BeanFactory ctx = SpringContextUtil.getApplicationContext();
 
     /* authentication */
     ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
