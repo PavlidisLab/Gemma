@@ -25,8 +25,8 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.Persister;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * <hr>

@@ -24,8 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.OntologyEntry;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.Persister;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * A service to load OntologyEntries (from any user interface).

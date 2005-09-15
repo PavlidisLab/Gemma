@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.loader.expression;
+package edu.columbia.gemma.loader.loaderutils;
 
 import java.util.Collection;
 
@@ -66,7 +66,6 @@ import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
-import edu.columbia.gemma.loader.loaderutils.Persister;
 
 /**
  * A generic class to persist Gemma-domain objects. (work in progress)

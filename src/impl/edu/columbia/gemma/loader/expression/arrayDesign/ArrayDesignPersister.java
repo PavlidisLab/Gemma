@@ -24,9 +24,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.Persister;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * A service to load ArrayDesigns (from any user interface).

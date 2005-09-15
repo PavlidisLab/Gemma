@@ -31,11 +31,11 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 import edu.columbia.gemma.loader.loaderutils.Persister;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * <hr>
