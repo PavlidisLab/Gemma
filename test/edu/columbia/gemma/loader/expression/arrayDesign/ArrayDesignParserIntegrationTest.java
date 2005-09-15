@@ -35,8 +35,9 @@ import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
- * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
- * loading.
+ * Loads the database with ArrayDesigns.
+ * This test is more representative of integration testing than unit testing as it tests both parsing and
+ * loading.  
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
