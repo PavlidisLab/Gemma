@@ -47,7 +47,7 @@ import edu.columbia.gemma.loader.description.OntologyEntryLoaderTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
-import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserTest;
+import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserIntegrationTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
 import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceTest;
@@ -141,7 +141,7 @@ public class AllTests {
 
         // loader.expression.arrayDesign
         suite.addTestSuite( AffyProbeReaderTest.class );
-        suite.addTestSuite( ArrayDesignParserTest.class );
+        suite.addTestSuite( ArrayDesignParserIntegrationTest.class );
         suite.addTestSuite( IlluminaProbeReaderTest.class );
 
         // loader.expression.arrayExpress
