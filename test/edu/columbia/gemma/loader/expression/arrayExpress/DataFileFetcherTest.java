@@ -22,10 +22,10 @@ import java.io.File;
 
 import org.apache.commons.net.ftp.FTP;
 
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import edu.columbia.gemma.loader.expression.mage.MageBaseTest;
 import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * <hr>

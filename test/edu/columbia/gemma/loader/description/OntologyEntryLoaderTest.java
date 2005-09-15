@@ -31,8 +31,8 @@ import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and

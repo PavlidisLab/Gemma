@@ -38,8 +38,8 @@ import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and

@@ -31,7 +31,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
-import edu.columbia.gemma.loader.expression.PersisterHelper;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * <hr>
