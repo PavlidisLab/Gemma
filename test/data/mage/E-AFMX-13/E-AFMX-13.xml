@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 <?xml-stylesheet type="text/xsl" href="MAGE-XSL-EXPERIMENT-AFFY.xsl"?>
-<!DOCTYPE MAGE-ML SYSTEM "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd">
+<!--  <!DOCTYPE MAGE-ML SYSTEM "http://schema.omg.org/lsr/gene_expression/1.1/MAGE-ML.dtd"> -->
 <MAGE-ML identifier="MAGE:ebi.ac.uk:E-AFMX-13">
 	<AuditAndSecurity_package>
 		<Contact_assnlist>
