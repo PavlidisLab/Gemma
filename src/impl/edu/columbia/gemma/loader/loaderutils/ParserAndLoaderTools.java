@@ -52,6 +52,7 @@ public class ParserAndLoaderTools {
      * @param loader
      * @param col
      */
+    @SuppressWarnings("unchecked")
     public static final void loadDatabase( Persister loader, Collection<?> col ) {
         assert ( loader != null );
         assert ( col != null );
@@ -60,7 +61,7 @@ public class ParserAndLoaderTools {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        loader.persist( col );
+        loader.persist( ( Collection<Object> ) col );
 
         stopWatch.stop();
 

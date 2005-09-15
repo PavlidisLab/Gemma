@@ -290,7 +290,7 @@ public class MageMLConverterHelper {
     /**
      * 
      */
-    private void initMGEDOntologyAliases() {
+    private void initMGEDOntologyAliases() { 
         mgedOntologyAliases = new HashSet<String>();
         mgedOntologyAliases.add( "MGED Ontology" );
         mgedOntologyAliases.add( "MO" );
