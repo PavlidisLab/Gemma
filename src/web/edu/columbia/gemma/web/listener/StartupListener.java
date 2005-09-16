@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.listener;
 
 import java.util.HashMap;
@@ -28,6 +46,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
+    @SuppressWarnings("unchecked")
     public void contextInitialized( ServletContextEvent event ) {
         if ( log.isDebugEnabled() ) {
             log.debug( "initializing context..." );
@@ -67,17 +86,4 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         // setupContext(context);
     }
 
-    // public static void setupContext(ServletContext context) {
-    // ApplicationContext ctx =
-    // WebApplicationContextUtils.getRequiredWebApplicationContext(context);
-    //
-    // LookupManager mgr = (LookupManager) ctx.getBean("lookupManager");
-    //
-    // // get list of possible roles
-    // context.setAttribute(Constants.AVAILABLE_ROLES, mgr.getAllRoles());
-    //
-    // if (log.isDebugEnabled()) {
-    // log.debug("drop-down initialization complete [OK]");
-    // }
-    // }
 }

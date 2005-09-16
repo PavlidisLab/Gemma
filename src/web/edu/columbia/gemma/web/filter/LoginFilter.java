@@ -102,8 +102,8 @@ public class LoginFilter implements Filter {
     /**
      * Initialize controller values of filter.
      */
-    public void init( FilterConfig config ) {
-        this.config = config;
+    public void init( FilterConfig c ) {
+        this.config = c;
 
         String param = config.getInitParameter( "enabled" );
         enabled = Boolean.valueOf( param ).booleanValue();

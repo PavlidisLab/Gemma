@@ -58,9 +58,6 @@ public class GZIPFilter implements Filter {
         }
     }
 
-    public void init( FilterConfig filterConfig ) {
-    }
-
     /**
      * Convenience method to test for GZIP cababilities
      * 
@@ -90,8 +87,17 @@ public class GZIPFilter implements Filter {
             }
 
             return false;
-        } else {
-            return supported;
         }
+        return supported;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
+     */
+    @SuppressWarnings("unused")
+    public void init( FilterConfig arg0 ) throws ServletException {
+        ;
     }
 }

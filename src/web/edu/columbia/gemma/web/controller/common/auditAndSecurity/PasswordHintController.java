@@ -30,7 +30,7 @@ import edu.columbia.gemma.common.auditAndSecurity.UserService;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @spring.bean id="passwordHintController" name="/passwordHint.html" 
+ * @spring.bean id="passwordHintController" name="/passwordHint.html"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="message" ref="mailMessage"
@@ -43,6 +43,7 @@ public class PasswordHintController implements Controller {
     protected MailEngine mailEngine = null;
     protected SimpleMailMessage message = null;
 
+    @SuppressWarnings("unused")
     public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'handleRequest' method..." );
@@ -87,20 +88,22 @@ public class PasswordHintController implements Controller {
         return new ModelAndView( new RedirectView( request.getContextPath() ) );
     }
 
+    @SuppressWarnings("unchecked")
     public void saveError( HttpServletRequest request, String error ) {
-        List errors = ( List ) request.getSession().getAttribute( "errors" );
+        List<Object> errors = ( List<Object> ) request.getSession().getAttribute( "errors" );
         if ( errors == null ) {
-            errors = new ArrayList();
+            errors = new ArrayList<Object>();
         }
         errors.add( error );
         request.getSession().setAttribute( "errors", errors );
     }
 
     // this method is also in BaseForm Controller
+    @SuppressWarnings("unchecked")
     public void saveMessage( HttpServletRequest request, String msg ) {
-        List messages = ( List ) request.getSession().getAttribute( "messages" );
+        List<Object> messages = ( List<Object> ) request.getSession().getAttribute( "messages" );
         if ( messages == null ) {
-            messages = new ArrayList();
+            messages = new ArrayList<Object>();
         }
         messages.add( msg );
         request.getSession().setAttribute( "messages", messages );

@@ -40,6 +40,13 @@ public class ArrayDesignController implements Controller {
         this.arrayDesignService = arrayDesignService;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.Controller#handleRequest(javax.servlet.http.HttpServletRequest,
+     *      javax.servlet.http.HttpServletResponse)
+     */
+    @SuppressWarnings("unused")
     public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
         log.info( request.getRequestURI() );
 

@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.Locale;
@@ -44,6 +62,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
 public class SignupController extends BaseFormController {
     private UserRoleService userRoleService;
 
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
@@ -88,8 +107,8 @@ public class SignupController extends BaseFormController {
         }
 
         // Set cookies for auto-magical login ;-)
-         String loginCookie = this.getUserService().createLoginCookie( user.getUserName() );
-         RequestUtil.setCookie( response, Constants.LOGIN_COOKIE, loginCookie, request.getContextPath() );
+        String loginCookie = this.getUserService().createLoginCookie( user.getUserName() );
+        RequestUtil.setCookie( response, Constants.LOGIN_COOKIE, loginCookie, request.getContextPath() );
 
         saveMessage( request, getText( "user.registered", user.getUserName(), locale ) );
 
@@ -112,6 +131,8 @@ public class SignupController extends BaseFormController {
         this.userRoleService = userRoleService;
     }
 
+    @Override
+    @SuppressWarnings("unused")
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return User.Factory.newInstance();
     }

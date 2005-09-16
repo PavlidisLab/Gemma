@@ -1,9 +1,8 @@
 package edu.columbia.gemma.web.controller.genome.gene;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collection;
-import java.util.Iterator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,10 +11,10 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.BaseCommandController;
 import org.springframework.web.servlet.view.RedirectView;
 
-import edu.columbia.gemma.genome.gene.GeneService;
 import edu.columbia.gemma.common.description.BibliographicReference;
-import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
+import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.gene.GeneService;
 
 /**
  * <hr>
