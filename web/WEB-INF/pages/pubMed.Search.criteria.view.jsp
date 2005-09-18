@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<jsp:useBean id="query" scope="request"
+<jsp:useBean id="bibliographicReference" scope="request"
 	class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -18,11 +18,13 @@
  				document.searchForm.submit();
 			}
 		}
+		<%-- Uncomment to use webflow implementation
 		if(target == 1){
 			document.searchForm._eventId.value="getBibRef"
 			document.searchForm._flowId.value="bibRef.GetAll" 
  			document.searchForm.submit();
 		}
+		--%>
 	}
 	</SCRIPT>
 
@@ -47,7 +49,7 @@
 		<HR>
 		</TD>
 	</TR>
-	<spring:hasBindErrors name="query">
+	<spring:hasBindErrors name="bibliographicReference">
 		<TR>
 			<TD COLSPAN="2"><div class="error">There were the following error(s) with your submission:<ul>
             <c:forEach var="errMsgObj" items="${errors.allErrors}">
@@ -88,7 +90,9 @@
 	<TR>
 		<TD COLSPAN="2">
 		<DIV align="left"><INPUT type="button"
-			onclick="javascript:selectButton(1)" value="Select"></DIV>
+			onclick="location.href='bibRefs.htm'" value="Select"></DIV>
+			<%--use this if using the webflow version of this
+			onclick="javascript:selectButton(1)"--%>
 		</TD>
 	</TR>
 	<TR>

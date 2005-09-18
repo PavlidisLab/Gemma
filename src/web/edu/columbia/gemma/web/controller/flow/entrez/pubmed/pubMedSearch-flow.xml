@@ -1,12 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+The Gemma project
+ 
+Copyright (c) 2005 Columbia University
+  
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+ 
+	http://www.apache.org/licenses/LICENSE-2.0
+ 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ 
 	A Spring WebFlow.  Flows can be in 1 of 4 states:	
 	view-state: displays associated view
 	action-state:  can be used to execute bean defined in bean-factory.xml
 	subflow-state: execute another flow
 	end-state: end flow sequence
 	
-	This flow is used to search for pubMed Id's.  The flow has a subflow "pubMed.Detail" 
+	This flow is used to search for pubMed Id's.
+	Uncommented portions of this flow are implemented in mvc.  
 	
 	author: keshav
 	version: $Id$	
@@ -22,14 +39,14 @@
 			<action bean="pubMed.Search.criteria.formAction"
 				method="bindAndValidate" />
 		</transition>
-		<transition on="getBibRef" to="getAllBibRef" />
+		<!-- <transition on="getBibRef" to="getAllBibRef" />-->
 	</view-state>
-
+	<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
 	<action-state id="getAllBibRef">
 		<action bean="pubMed.Search.getAllBibRef" />
 		<transition on="success" to="bibRef.results.view" />
 	</action-state>
-
+	-->
 	<action-state id="executeQuery">
 		<action bean="pubMed.Search.executeQuery" />
 		<transition on="success" to="results.view" />
@@ -39,15 +56,17 @@
 	<view-state id="results.view" view="pubMed.Search.results.view">
 		<transition on="newSearch" to="criteria.view" />
 		<transition on="saveBibRef" to="saveBibRef" />
-		<transition on="select" to="pubMed.Detail" />
+		<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
+		<transition on="select" to="pubMed.Detail" />-->
 	</view-state>
-
+	
 	<action-state id="saveBibRef">
 		<action bean="pubMed.Search.executeQuery" />
 		<transition on="success" to="criteria.view" />
 		<transition on="error" to="criteria.view" />
 	</action-state>
-
+	
+	<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
 	<view-state id="bibRef.results.view"
 		view="bibRef.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view" />
@@ -61,7 +80,7 @@
 		<transition on="finish" to="criteria.view" />
 		<transition on="error" to="error" />
 	</subflow-state>
-
+	-->
 
 	<end-state id="error" view="error.view" />
 

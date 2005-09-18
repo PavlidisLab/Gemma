@@ -217,13 +217,16 @@
 <!-- ==================================================== -->
 <!-- SPRING WEBFLOWS -->
 <!-- These entries are used with the xxx-flow.xml file.  The location of this file is defined
-	in the FlowFactoryBean (ie. see pubMed.Search below).
+	in the XmlFlowFactoryBean (ie. see pubMed.Search below).
+	NOTE: the pubMed and arrayDesign flows below are up-to-date and ready for use.  Uncomment the labelled regions to use
+	the webflow implementation, else spring mvc will be used.  The expressionExperiment is not up-to-date and may need some 
+	refactoring.
 -->
 <!-- ==================================================== -->
 
-<!-- Controller for the entire application.  This can be parameterized by adding the  
+<!-- Controller used by all webflows in this application.  This can be parameterized by adding the  
 	_flowId to the client view (ie. jsp).  If this is not specified, you must specify
-	an HttpServletFlowExecutionManager (ie. see pubMedSearchFrontController).
+	a ServletFlowExecutionManager.  I have added the _flowId to the jsp's, but have also specified the ServletFlowExecutionManager.
 -->
 <bean id="frontController" name="/search.htm"
 	class="org.springframework.webflow.mvc.FlowController">
@@ -232,10 +235,7 @@
 </bean>
 
 <!--
-	CONTINUATIONS
 	Custom configuration of the HTTP request flow execution manager.
-	Note how you can just change the flow execution storage strategy without any impact
-	on the views!
 -->
 <bean id="flowExecutionManager" 
 	class="org.springframework.webflow.execution.servlet.ServletFlowExecutionManager">
@@ -244,26 +244,27 @@
 	</property>
 </bean>
 
-<!-- Parent Flow (search flow) -->
+<!-- WebFlow (pubMed Search flow) -->
 
-<!-- Xml FlowBuilder definition for the search flow -->
 <bean id="pubMed.Search"
 	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" />
 </bean>
 
+<!-- The next 2 beans are called from edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml -->
+
+<!-- This is an older way of handling webflow form information.  See pubMedEdit-flow.xml
+or arrayDesignEdit-flow.xml to see how this is handled in the latest webflow versions.  There
+is not reason to change this except for clarity when reading the online spring webflow 
+documentation.
+-->
 <bean id="pubMed.Search.criteria.formAction"
 	class="org.springframework.webflow.action.FormAction">
-	<property name="formObjectName" value="query" />
+	<property name="formObjectName" value="bibliographicReference" />
 	<property name="formObjectClass"
 		value="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
 	<property name="formObjectScopeAsString" value="flow" />
-	<!--		
-		<property name="validator">
-		<bean id="pubMedQueryValidator" class="edu.columbia.gemma.web.controller.domain.PubMedValidator"/>
-		</property>
-	-->
 </bean>
 
 <bean id="pubMed.Search.executeQuery"
@@ -279,33 +280,49 @@
 	</property>
 </bean>
 
+<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation, and look in the jsp's to 
+see if anything else needs to be uncommented. 
 <bean id="pubMed.Search.getAllBibRef"
 	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.BibRefExecuteQueryAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
 </bean>
+-->
 
-<!-- Subflow (detail flow) -->
+<!-- WebFlow (pubMed Edit flow) -->
+<bean id="pubMed.Edit"
+	class="org.springframework.webflow.config.XmlFlowFactoryBean">
+	<property name="location"
+		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedEdit-flow.xml" />
+</bean>
 
-<!-- xml FlowBuilder definition for the detail flow -->
+<!-- The next bean is called from edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml -->
+<bean id="pubMed.Edit.formAction"
+	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.BibRefEditAction">
+	<property name="bibliographicReferenceService">
+		<ref bean="bibliographicReferenceService" />
+	</property>
+</bean>
+
+<!-- WebFlow (pubMed Detail flow) -->
+<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.   
 <bean id="pubMed.Detail"
 	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
 		value="classpath:edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml" />
 </bean>
 
-<!-- equivalent to the pubMed.Search.executeQuery defined above -->
 <bean id="pubMed.Detail.criteria.formAction.getFormAction"
 	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
 </bean>
+-->
 
-<!--  ArrayDesign WebFlow -->
-<!-- This is currently implemented in mvc.  Uncomment this to use as a flow. -->
-<!-- 
+<!-- WebFlow (arrayDesign Search flow) -->
+<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.   
 <bean id="arrayDesign.Search"
 	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
@@ -319,9 +336,9 @@
 	</property>
 </bean>
 -->
-<!-- ArrayDesign Detail Subflow -->
-<!-- This is currently implemented in mvc.  Uncomment this to use as a flow. -->
-<!-- 
+
+<!-- WebFlow (arrayDesign Detail flow) -->
+<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.   
 <bean id="arrayDesign.Detail"
 	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
@@ -335,8 +352,8 @@
 	</property>
 </bean>
 -->
-<!--  ArrayDesign Edit subflow -->
 
+<!-- WebFlow (arrayDesign Edit flow) -->
 <bean id="arrayDesign.Edit"
 	class="org.springframework.webflow.config.XmlFlowFactoryBean">
 	<property name="location"
@@ -350,7 +367,8 @@
 	</property>
 </bean>
 
-<!--  ExpressionExperiment flow -->
+<!--  <!-- WebFlow (expressionExperiment Search flow).  NOTE:  Paul, this was implemented by daq2101 and may be out of date.  This 
+comment was written on Sept 18/2005. -->
 <bean id="expressionExperimentSearchController" name="/expressionExperimentSearch.htm"
 	class="org.springframework.webflow.mvc.FlowController">
 	<property name="cacheSeconds" value="5" />

@@ -9,7 +9,9 @@
 
 <ul class="glassList">
 	<li>
-<!--        <a href="<c:url value="/search.htm?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>-->
+<!--    Paul, uncomment to use webflow implementation    
+		<a href="<c:url value="/search.htm?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
+-->
 		<a href="<c:url value="/arrayDesigns.htm"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
     </li>
 	<li>
@@ -20,7 +22,6 @@
 	</li>
 	<li>
 		<a href="<c:url value="/search.htm?_flowId=pubMed.Search"/>"><fmt:message key="menu.flow.PubMedSearch"/></a>
-<!--        <a href="<c:url value="/pubMedSearch.htm"/>"><fmt:message key="menu.flow.PubMedSearch"/></a>-->
     </li>
     <li>
         <a href="<c:url value="/editProfile.html"/>"><fmt:message key="menu.user"/></a>

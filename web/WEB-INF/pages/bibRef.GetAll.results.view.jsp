@@ -11,9 +11,12 @@
 <HEAD>
 </HEAD>
 <BODY>
-<FORM name="newSearchForm" action="search.htm">
+<%--uncomment when using webflow <FORM name="newSearchForm" action="search.htm">--%>
+<FORM name="newSearchForm" action="bibRefs.htm">
+<%-- uncomment when using webflows 
     <input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>"> 
 	<input type="hidden" name="_eventId" value="newSearch">
+--%>	
 </FORM>
 <DIV align="left">
 <P>
@@ -55,8 +58,11 @@
           	c.setTime( bibliographicReference.getPublicationDate());
             %>
 			<TR>
-				<TD><A
+				<%-- uncomment this if you are using the webflow version<TD><A
 					href="search.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_flowId=pubMed.Detail&_eventId=select&pubMedId=<%=pubmedId %>">
+				<%=pubmedId %> </A></TD>--%>
+				<TD><A
+					href="bibRefDetails.htm?pubMedId=<%=pubmedId %>">
 				<%=pubmedId %> </A></TD>
 			 	<td><%=bibliographicReference.getTitle() %></td>
 				<TD><%=bibliographicReference.getPublication() %></TD>

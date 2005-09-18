@@ -19,6 +19,10 @@
 package edu.columbia.gemma.web.controller.entrez.pubmed;
 
 import java.net.UnknownHostException;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,6 +37,7 @@ import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import edu.columbia.gemma.web.controller.common.description.BibliographicReferenceController;
 
 /**
  * <p>
@@ -134,4 +139,24 @@ public class PubMedFormControllerTest extends BaseControllerTestCase {
         }
     }
 
+    /* Enter BibliographicReferenceController tests. */
+
+    /**
+     * Tests getting all the bibrefs, which is implemented in
+     * {@link edu.columbia.gemma.web.controller.entrez.pubmed.BibliographicReferenceController} in method
+     * {@link #handleRequest(HttpServletRequest request, HttpServletResponse response)}.
+     * 
+     * @throws Exception
+     */
+    public void testGetAllBibliographicReferences() throws Exception {
+        BibliographicReferenceController brc = ( BibliographicReferenceController ) ctx
+                .getBean( "bibliographicReferenceController" );
+
+        ModelAndView mav = brc.handleRequest( ( HttpServletRequest ) null, ( HttpServletResponse ) null );
+
+        Map m = mav.getModel();
+
+        assertNotNull( m.get( "bibliographicReferences" ) );
+        assertEquals( mav.getViewName(), "bibRef.GetAll.results.view" );
+    }
 }

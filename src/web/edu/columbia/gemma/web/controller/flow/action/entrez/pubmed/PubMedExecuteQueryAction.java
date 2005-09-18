@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.controller.flow.action.entrez.pubmed;
 
 import java.io.IOException;
@@ -21,6 +39,7 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import edu.columbia.gemma.util.StringUtil;
 
 /**
+ * A webflow action bean, which is the actual implementation of the webflow functionality. 
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -57,6 +76,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
     }
 
     /**
+     * Determines the uri of the source event, and takes the appropriate action.
      * This is the equivalent of writing the onSubmit method in a Spring Controller, or a doGet (doPost) method in a
      * Java Servlet.
      * 
@@ -111,7 +131,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
             }
             return success();
         }
-        // TODO When you start using value objects, do the pubMed validation in the validator.
+        /* Webflow error handling. */
         catch ( IOException e ) {
             Errors errors = new FormObjectAccessor( context ).getFormErrors();
             errors.reject( "IOError", e.getMessage() );
