@@ -299,7 +299,7 @@ see if anything else needs to be uncommented.
 
 <!-- The next bean is called from edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml -->
 <bean id="pubMed.Edit.formAction"
-	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.BibRefEditAction">
+	class="edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.BibRefFormEditAction">
 	<property name="bibliographicReferenceService">
 		<ref bean="bibliographicReferenceService" />
 	</property>
@@ -361,7 +361,7 @@ see if anything else needs to be uncommented.
 </bean>
 
 <bean id="arrayDesign.Edit.formAction"
-	class="edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign.ArrayDesignEditAction">
+	class="edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign.ArrayDesignFormEditAction">
 	<property name="arrayDesignService">
 		<ref bean="arrayDesignService" />
 	</property>
