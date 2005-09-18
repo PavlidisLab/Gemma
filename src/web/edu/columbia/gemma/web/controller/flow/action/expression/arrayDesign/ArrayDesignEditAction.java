@@ -1,6 +1,3 @@
-package edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign;
-
-import org.apache.commons.logging.Log;
 /*
  * The Gemma project
  * 
@@ -19,6 +16,9 @@ import org.apache.commons.logging.Log;
  * limitations under the License.
  *
  */
+package edu.columbia.gemma.web.controller.flow.action.expression.arrayDesign;
+
+import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
