@@ -367,7 +367,7 @@ see if anything else needs to be uncommented.
 	</property>
 </bean>
 
-<!--  <!-- WebFlow (expressionExperiment Search flow).  NOTE:  Paul, this was implemented by daq2101 and may be out of date.  This 
+<!-- WebFlow (expressionExperiment Search flow).  NOTE:  Paul, this was implemented by daq2101 and may be out of date.  This 
 comment was written on Sept 18/2005. -->
 <bean id="expressionExperimentSearchController" name="/expressionExperimentSearch.htm"
 	class="org.springframework.webflow.mvc.FlowController">
