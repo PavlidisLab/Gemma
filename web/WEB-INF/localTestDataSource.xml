@@ -2,6 +2,8 @@
 
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 
+<!--  This is an appplication context configuration used for testing only -->
+
 <beans>
 
     <!-- ========================= DATASOURCE DEFINITION ========================= -->
