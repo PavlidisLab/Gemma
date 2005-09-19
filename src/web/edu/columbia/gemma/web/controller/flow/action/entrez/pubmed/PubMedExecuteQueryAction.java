@@ -39,7 +39,7 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import edu.columbia.gemma.util.StringUtil;
 
 /**
- * A webflow action bean, which is the actual implementation of the webflow functionality. 
+ * A webflow action bean, which is the actual implementation of the webflow functionality.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -76,9 +76,8 @@ public class PubMedExecuteQueryAction extends AbstractAction {
     }
 
     /**
-     * Determines the uri of the source event, and takes the appropriate action.
-     * This is the equivalent of writing the onSubmit method in a Spring Controller, or a doGet (doPost) method in a
-     * Java Servlet.
+     * Determines the uri of the source event, and takes the appropriate action. This is the equivalent of writing the
+     * onSubmit method in a Spring Controller, or a doGet (doPost) method in a Java Servlet.
      * 
      * @param context
      * @return Event
@@ -89,6 +88,8 @@ public class PubMedExecuteQueryAction extends AbstractAction {
         String event = ( String ) context.getSourceEvent().getParameter( "_eventId" );
         int pubMedId;
         BibliographicReference br;
+        Errors errors = null;
+
         try {
             pubMedId = StringUtil.relaxedParseInt( ( String ) context.getSourceEvent().getParameter( "pubMedId" ) );
             br = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
@@ -97,10 +98,17 @@ public class PubMedExecuteQueryAction extends AbstractAction {
                 list.add( br );
                 context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
                 context.getRequestScope().setAttribute( "bibliographicReferences", list );
+                // if BibliographicReference already exists, inform user.
+                if ( bibliographicReferenceService.alreadyExists( br ) ) {
+                    errors = new FormObjectAccessor( context ).getFormErrors();
+                    errors.reject( "BibliographicReference", "Already exists in Gemma.  "
+                            + "  View all Gemma bibliographic references. " );
+                    return error();
+                }
             } else if ( event.equals( "saveBibRef" ) ) {
 
                 if ( br == null ) {
-                    Errors errors = new FormObjectAccessor( context ).getFormErrors();
+                    errors = new FormObjectAccessor( context ).getFormErrors();
                     errors.reject( "PubMedXmlFetcher", "No results." );
                     return error();
                 }
@@ -118,7 +126,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
 
                     if ( pubMedDb == null ) {
                         log.error( "There was no external database 'PubMed'" );
-                        Errors errors = new FormObjectAccessor( context ).getFormErrors();
+                        errors = new FormObjectAccessor( context ).getFormErrors();
                         errors.reject( "ExternalDatabaseError", "There was no external database 'PubMed'" );
 
                         return error();
@@ -128,19 +136,20 @@ public class PubMedExecuteQueryAction extends AbstractAction {
 
                     this.bibliographicReferenceService.saveBibliographicReference( br );
                 }
+
             }
             return success();
         }
         /* Webflow error handling. */
         catch ( IOException e ) {
-            Errors errors = new FormObjectAccessor( context ).getFormErrors();
-            errors.reject( "IOError", e.getMessage() );
+            Errors errs = new FormObjectAccessor( context ).getFormErrors();
+            errs.reject( "IOError", e.getMessage() );
         } catch ( NumberFormatException e ) {
-            Errors errors = new FormObjectAccessor( context ).getFormErrors();
-            errors.reject( "NumberFormat", "Not a number" );
+            Errors errs = new FormObjectAccessor( context ).getFormErrors();
+            errs.reject( "NumberFormat", "Not a number" );
         } catch ( Exception e ) {
-            Errors errors = new FormObjectAccessor( context ).getFormErrors();
-            errors.reject( "GenericError", "Some other kind of error" );
+            Errors errs = new FormObjectAccessor( context ).getFormErrors();
+            errs.reject( "GenericError", "Some other kind of error" );
         }
         return error();
     }
