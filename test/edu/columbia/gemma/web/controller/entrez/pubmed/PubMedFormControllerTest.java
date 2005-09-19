@@ -138,25 +138,4 @@ public class PubMedFormControllerTest extends BaseControllerTestCase {
             log.info( "skipped test " + this.getName() );
         }
     }
-
-    /* Enter BibliographicReferenceController tests. */
-
-    /**
-     * Tests getting all the bibrefs, which is implemented in
-     * {@link edu.columbia.gemma.web.controller.entrez.pubmed.BibliographicReferenceController} in method
-     * {@link #handleRequest(HttpServletRequest request, HttpServletResponse response)}.
-     * 
-     * @throws Exception
-     */
-    public void testGetAllBibliographicReferences() throws Exception {
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) ctx
-                .getBean( "bibliographicReferenceController" );
-
-        ModelAndView mav = brc.handleRequest( ( HttpServletRequest ) null, ( HttpServletResponse ) null );
-
-        Map m = mav.getModel();
-
-        assertNotNull( m.get( "bibliographicReferences" ) );
-        assertEquals( mav.getViewName(), "bibRef.GetAll.results.view" );
-    }
 }
