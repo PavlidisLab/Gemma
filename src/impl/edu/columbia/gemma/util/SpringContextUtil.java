@@ -97,9 +97,10 @@ public class SpringContextUtil {
         // FIXME: these files need to be found automatically, not hard-coded.
 
         if ( testing ) {
-            return new String[] { "applicationContext-localTestDataSource.xml",
-                    "applicationContext-" + daoType + ".xml", "applicationContext-security.xml",
-                    servletContext + "-servlet.xml", "applicationContext-validation.xml" };
+            log.info( "************** Using test configuration ***************" );
+            return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
+                    "applicationContext-security.xml", servletContext + "-servlet.xml",
+                    "applicationContext-validation.xml" };
         }
         return new String[] { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
                 "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
