@@ -9,13 +9,29 @@
 <SCRIPT LANGUAGE = "JavaScript">
 	function selectButton(target){
 		if(target == 0){
-			document.backForm._eventId.value="back"
+			document.backForm._eventId.value="back" 
+			<%-- uncomment when using webflows
+			document.backForm.action="search.htm" --%>
 			document.backForm.action="bibRefs.htm"
 		}
 		if(target == 1){
+		<%-- confirm deletion of item --%>
+			if (confirm("Are you sure you want to delete this?")){
+				document.backForm._eventId.value="delete"
+				document.backForm.action="bibRefDetails.htm"
+				<%--
+				Not yet implemented for webflows
+				document.backForm._flowId.value="pubMed.Delete" 
+				document.backForm.action="search.htm"
+				--%>
+				}
+		}
+		if(target == 2){
 			document.backForm._eventId.value="edit"
 			document.backForm._flowId.value="pubMed.Edit"
+			<%-- uncomment when using webflow implementation
 			document.backForm.action="search.htm"
+			--%>
 		}
 		document.backForm.submit();
 	}
@@ -23,9 +39,10 @@
 	<HEAD></HEAD>
 	<BODY>
 		<FORM name="backForm" action="">
-				<!-- <INPUT type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">-->
-				<INPUT type="hidden" name="_eventId" value="back">
+				<%-- uncomment when using webflow implementation
 				<input type="hidden" name="_flowId" value="">
+				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">--%>
+				<input type="hidden" name="_eventId" value="">
 				<input type="hidden" name="pubMedId" value="<%=request.getAttribute("pubMedId") %>">
 		</FORM>
 		<TABLE width="100%">
@@ -73,17 +90,22 @@
 						<INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
 					</DIV>
 				</TD>
-				<%--<r:isUserInRole role="admin">--%>
-				<%--<authz:authorize ifAnyGranted="admin">--%>
-				<%--<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">--%>
+				
+				<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
 				<TD COLSPAN="2">
 					<DIV align="right">
-						<INPUT type="button" onclick="javascript:selectButton(1)" value="Edit">
+						<INPUT type="button" onclick="javascript:selectButton(1)" value="Delete">
 					</DIV>
 				</TD>
-				<%--</authz:acl>--%>
-				<%--</authz:authorize>--%>
-				<%--</r:isUserInRole> --%>
+				</authz:acl>
+				
+				<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
+				<TD COLSPAN="2">
+					<DIV align="right">
+						<INPUT type="button" onclick="javascript:selectButton(2)" value="Edit">
+					</DIV>
+				</TD>
+				</authz:acl>
 			</TR>
 		</TABLE>
 	</BODY>
