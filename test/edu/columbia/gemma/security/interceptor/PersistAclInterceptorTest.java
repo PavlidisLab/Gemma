@@ -45,7 +45,7 @@ public class PersistAclInterceptorTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        ctx = SpringContextUtil.getApplicationContext();
+        ctx = SpringContextUtil.getApplicationContext( true );
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( ( new Date() ).toString() );
     }
