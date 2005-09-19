@@ -116,11 +116,11 @@ public class BibliographicReferenceServiceImpl extends
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
      */
     protected void handleSaveBibliographicReference(
-            edu.columbia.gemma.common.description.BibliographicReference BibliographicReference )
+            edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
-        getBibliographicReferenceDao().create( BibliographicReference );
+        getBibliographicReferenceDao().create( bibliographicReference );
     }
-    
+
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
      */
@@ -150,6 +150,11 @@ public class BibliographicReferenceServiceImpl extends
             throws Exception {
         // TODO Auto-generated method stub. What is this method supposed to do?
         return null;
+    }
+
+    @Override
+    protected void handleRemoveBibliographicReference( BibliographicReference bibliographicReference ) throws Exception {
+        this.getBibliographicReferenceDao().remove( bibliographicReference );
     }
 
 }

@@ -64,11 +64,14 @@ public class BibliographicReferenceController implements Controller {
 
         String uri = request.getRequestURI();
 
+        log.debug( "uri: " + uri );
+
         String[] elements = StringUtils.split( uri, uri_separator );
+
         String path = elements[1];
 
         if ( path.equals( "bibRefs.htm" ) )
-            return new ModelAndView( "bibRef.GetAll.results.view", "bibliographicReferences",
+            return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences",
                     bibliographicReferenceService.getAllBibliographicReferences() );
 
         /*
@@ -93,6 +96,16 @@ public class BibliographicReferenceController implements Controller {
 
         log.debug( "request parameter pubMedId: " + request.getParameter( "pubMedId" )
                 + " has bibliographicReference: " + bibRef );
+
+        String event = request.getParameter( "_eventId" );
+        if ( event != null && event.equals( "delete" ) ) {
+            bibliographicReferenceService.removeBibliographicReference( bibRef );
+
+            log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
+
+            return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences",
+                    bibliographicReferenceService.getAllBibliographicReferences() );
+        }
 
         return new ModelAndView( "pubMed.Detail.view", "bibliographicReference", bibRef );
     }
