@@ -32,50 +32,16 @@
 		</TD>
 	</TR>
 	<TR>
-		<TD>
-		<TABLE BORDER="1">
-			<TR>
-				<TD><B>PubMed ID</B></TD>
-				<td><b>Title</b></td>
-				<TD><B>Publication</B></TD>
-				<TD><B>Authors</B></TD>
-				<TD><B>Year</B></TD>
-				<td><b>Volume</b></td>
-				<td><b>Pages</b></td>
-				
-			</TR>
-			<%
-        Collection results = ( Collection ) request.getAttribute( "bibliographicReferences" );
-        Iterator iter = results.iterator();
-        while ( iter.hasNext() ) {
-            BibliographicReference bibliographicReference = ( BibliographicReference ) iter.next();
-            DatabaseEntry databaseEntry = bibliographicReference.getPubAccession();
-            String pubmedId= "?";
-            if (databaseEntry != null) { 
-            pubmedId = databaseEntry.getAccession();
-            }  
-            Calendar c = Calendar.getInstance();
-          	c.setTime( bibliographicReference.getPublicationDate());
-            %>
-			<TR>
-				<%-- uncomment this if you are using the webflow version<TD><A
-					href="search.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_flowId=pubMed.Detail&_eventId=select&pubMedId=<%=pubmedId %>">
-				<%=pubmedId %> </A></TD>--%>
-				<TD><A
-					href="bibRefDetails.htm?pubMedId=<%=pubmedId %>">
-				<%=pubmedId %> </A></TD>
-			 	<td><%=bibliographicReference.getTitle() %></td>
-				<TD><%=bibliographicReference.getPublication() %></TD>
-				<TD><%=bibliographicReference.getAuthorList() %></TD>
-				<TD><%=c.get(Calendar.YEAR) %></TD>
-				<td><%=bibliographicReference.getVolume() %></td>
-				<td><%=bibliographicReference.getPages() %></td>
-			</TR>
-			<%
-        }
-    %>
-		</TABLE>
-		</TD>	
+	<display:table name="bibliographicReferences" class="list" requestURI="" id="bibliographicReferenceList" export="true">		
+		<display:column property="pubAccession.accession" sort="true" href="bibRefDetails.htm" paramId="pubMedId" paramProperty="pubAccession.accession" titleKey="pubMed.id"/>
+		<display:column property="title" sort="true" titleKey="pubMed.title"/>
+		<display:column property="publication" sort="true" titleKey="pubMed.publication"/>
+		<display:column property="authorList" sort="true" titleKey="pubMed.authors"/>
+		<display:column property="publicationDate" sort="true" titleKey="pubMed.year"/>
+		<display:column property="volume" sort="true" titleKey="pubMed.volume"/>		
+		<display:column property="pages" sort="true" titleKey="pubMed.pages"/>
+		<display:setProperty name="basic.empty.showtable" value="true"/>
+	</display:table>	
 	</TR>
 	<TR>
 		<TD>
