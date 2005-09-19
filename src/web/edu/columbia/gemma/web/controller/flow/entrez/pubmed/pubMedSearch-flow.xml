@@ -40,7 +40,8 @@ limitations under the License.
 			<action bean="pubMed.Search.criteria.formAction"
 				method="bindAndValidate" />
 		</transition>
-		<!-- <transition on="getBibRef" to="getAllBibRef" />-->
+		<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
+		<transition on="getBibRef" to="getAllBibRef" />-->
 	</view-state>
 	<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
 	<action-state id="getAllBibRef">
