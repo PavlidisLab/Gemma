@@ -42,7 +42,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  */
 public class BaseDAOTestCase extends TestCase {
     protected final Log log = LogFactory.getLog( getClass() );
-    protected final static BeanFactory ctx = SpringContextUtil.getApplicationContext();
+    protected final static BeanFactory ctx = SpringContextUtil.getApplicationContext( true );
     protected ResourceBundle rb;
 
     public BaseDAOTestCase() {

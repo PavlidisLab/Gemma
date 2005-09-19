@@ -35,7 +35,6 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * Integration test of MageML: Parser, Converter and Preprocessor
@@ -81,9 +80,6 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
 
         /* PARSING */
         log.info( "***** PARSING ***** \n" );
-
-        /* initialization of beans */
-        ctx = SpringContextUtil.getApplicationContext(); // simplifiedXml will be null in mageMLConverter
 
         this.setMageMLParser( ( MageMLParser ) ctx.getBean( "mageMLParser" ) );
 

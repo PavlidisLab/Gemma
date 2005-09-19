@@ -69,7 +69,7 @@ public class GeneLoaderCLI {
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
 
-            BeanFactory ctx = SpringContextUtil.getApplicationContext();
+            BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
 
             GeneLoaderImpl geneLoader;
 

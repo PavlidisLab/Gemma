@@ -50,61 +50,61 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class BaseServiceTestCase extends TestCase {
-   //~ Static fields/initializers =============================================
+    // ~ Static fields/initializers =============================================
 
-   protected final Log log = LogFactory.getLog( getClass() );
-   protected ResourceBundle rb;
-   
-   protected BeanFactory ctx = SpringContextUtil.getApplicationContext();
+    protected final Log log = LogFactory.getLog( getClass() );
+    protected ResourceBundle rb;
 
-   /* authentication */
-   ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-           .getBean( "manualAuthenticationProcessing" );
+    protected BeanFactory ctx = SpringContextUtil.getApplicationContext( true );
 
-   //~ Constructors ===========================================================
-   
-   public BaseServiceTestCase() {
-       
-       /* set user */
-       String username = null;
-       String password = null;
-           try {
+    /* authentication */
+    ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+            .getBean( "manualAuthenticationProcessing" );
+
+    // ~ Constructors ===========================================================
+
+    public BaseServiceTestCase() {
+
+        /* set user */
+        String username = null;
+        String password = null;
+        try {
             Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
-            username = conf.getString("acegi.authorization.username");
-            password = conf.getString("acegi.authorization.password");
+            username = conf.getString( "acegi.authorization.username" );
+            password = conf.getString( "acegi.authorization.password" );
         } catch ( ConfigurationException e ) {
             e.printStackTrace();
         }
-       
-       manAuthentication.validateRequest(username, password);
-       
-      // Since a ResourceBundle is not required for each class, just
-      // do a simple check to see if one exists
-      String className = this.getClass().getName();
 
-      try {
-         rb = ResourceBundle.getBundle( className );
-      } catch ( MissingResourceException mre ) {
-         //log.warn("No resource bundle found for: " + className);
-      }
-   }
+        manAuthentication.validateRequest( username, password );
 
-   //~ Methods ================================================================
+        // Since a ResourceBundle is not required for each class, just
+        // do a simple check to see if one exists
+        String className = this.getClass().getName();
 
-   /**
-    * Utility method to populate a javabean-style object with values from a Properties file
-    * 
-    * @param obj
-    * @return
-    * @throws Exception
-    */
-   protected Object populate( Object obj ) throws Exception {
-      // loop through all the beans methods and set its properties from
-      // its .properties file
-      Map map = ConvertUtil.convertBundleToMap( rb );
+        try {
+            rb = ResourceBundle.getBundle( className );
+        } catch ( MissingResourceException mre ) {
+            // log.warn("No resource bundle found for: " + className);
+        }
+    }
 
-      BeanUtils.copyProperties( obj, map );
+    // ~ Methods ================================================================
 
-      return obj;
-   }
+    /**
+     * Utility method to populate a javabean-style object with values from a Properties file
+     * 
+     * @param obj
+     * @return
+     * @throws Exception
+     */
+    protected Object populate( Object obj ) throws Exception {
+        // loop through all the beans methods and set its properties from
+        // its .properties file
+        Map map = ConvertUtil.convertBundleToMap( rb );
+
+        BeanUtils.copyProperties( obj, map );
+
+        return obj;
+    }
 }

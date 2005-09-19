@@ -40,11 +40,12 @@ public class SpringContextUtil {
     private static BeanFactory ctx = null;
 
     /**
+     * @param testing If true, it will get a test configured-BeanFactory
      * @return BeanFactory
      */
-    public static BeanFactory getApplicationContext() {
+    public static BeanFactory getApplicationContext( boolean testing ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations();
+            String[] paths = getConfigLocations( testing );
             ctx = new ClassPathXmlApplicationContext( paths );
             if ( ctx != null )
                 log.info( "Got context" );
@@ -80,14 +81,29 @@ public class SpringContextUtil {
      * @return
      */
     public static String[] getConfigLocations() {
+        return getConfigLocations( false );
+    }
+
+    /**
+     * Find the configuration file locations. The files must be in your class path for this to work.
+     * 
+     * @param testing - if true, it will use the test configuration.
+     * @return
+     */
+    public static String[] getConfigLocations( boolean testing ) {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
         // FIXME: these files need to be found automatically, not hard-coded.
-        String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
+
+        if ( testing ) {
+            return new String[] { "applicationContext-localTestDataSource.xml",
+                    "applicationContext-" + daoType + ".xml", "applicationContext-security.xml",
+                    servletContext + "-servlet.xml", "applicationContext-validation.xml" };
+        }
+        return new String[] { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
                 "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
 
-        return paths;
     }
 
 }

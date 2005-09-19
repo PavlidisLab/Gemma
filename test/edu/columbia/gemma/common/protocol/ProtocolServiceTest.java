@@ -18,10 +18,7 @@
  */
 package edu.columbia.gemma.common.protocol;
 
-import org.springframework.beans.factory.BeanFactory;
-
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * <hr>
@@ -32,7 +29,6 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class ProtocolServiceTest extends BaseServiceTestCase {
-    BeanFactory ctx = SpringContextUtil.getApplicationContext();
     ProtocolDao protocolDao = null;
 
     protected void setUp() throws Exception {

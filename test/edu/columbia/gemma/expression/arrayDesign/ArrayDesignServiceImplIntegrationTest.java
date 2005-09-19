@@ -22,12 +22,9 @@ import static org.easymock.EasyMock.createMock;
 
 import java.util.Collection;
 
-import org.springframework.beans.factory.BeanFactory;
-
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * Use this to test the acegi functionality. Namely, this is a good test to illustrate how getting This test class
@@ -246,7 +243,6 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
      */
     @SuppressWarnings("unchecked")
     public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
-        BeanFactory ctx = SpringContextUtil.getApplicationContext();
 
         // ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
         // .getBean( "manualAuthenticationProcessing" );
