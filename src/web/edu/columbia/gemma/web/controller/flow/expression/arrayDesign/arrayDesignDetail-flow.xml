@@ -17,13 +17,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <!--
-A Spring WebFlow.  Flows can be in 1 of 4 states:	
-view-state: displays associated view
-action-state:  can be used to execute bean defined in bean-factory.xml
-subflow-state: execute another flow
-end-state: end flow sequence
+	A Spring WebFlow.  Flows can be in 1 of 4 states:	
+	view-state: displays associated view
+	action-state:  can be used to execute bean defined in bean-factory.xml
+	subflow-state: execute another flow
+	end-state: end flow sequence
 
-Allows you to select arrayDesign details.  This is a subflow of arrayDesign.Search.   
+	Allows you to select arrayDesign details.  This is a subflow of arrayDesign.Search.   
 
 author: keshav
 version: $Id$	
