@@ -577,7 +577,7 @@
             </includes>
             <excludes>
                   <exclude>**/MageBaseTest.java</exclude>
-                 <include>**/*IntegrationTest.java</include>
+                 <exclude>**/*IntegrationTest.java</exclude>
             </excludes>
             <resources>
                 <resource>
