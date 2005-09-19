@@ -70,7 +70,7 @@ limitations under the License.
 	
 	<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
 	<view-state id="bibRef.results.view"
-		view="bibRef.GetAll.results.view">
+		view="pubMed.GetAll.results.view">
 		<transition on="newSearch" to="criteria.view" />
 		<transition on="select" to="pubMed.Detail" />
 	</view-state>
