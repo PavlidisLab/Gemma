@@ -60,7 +60,13 @@
 		Build and export and initialize the database schema
 		================================================================== -->
 	<goal name="ddl" description="Create database">
-		<attainGoal name="hibernate:schema-export" />
+		<attainGoal name="hibernate:schema-export" /><!-- this only creates the text sql file -->
+		<sql driver="${maven.sql.driver}" 
+		 url="${maven.sql.url}"  onerror="continue"
+		 userid="${maven.sql.userid}" 
+		 password="${maven.sql.password}" src="${basedir}/target/schema/Gemma-0.1-schema.sql" >
+		 	 <setProperty name="classpathref" value="${maven.sql.classpathref}"/>
+		 </sql>
 	</goal>
 
 	<preGoal name="ddl">
@@ -83,10 +89,13 @@
 	 
 	 <!-- create the tables in the test database -->
 	<goal name="ddl-test" >
+		<attainGoal name="hibernate:schema-export" /> <!-- this only creates the text sql file -->
+		 <!-- note use of test database here -->
 		 <sql driver="${maven.sql.driver}" 
-		 url="${maven.sql.testdb.url}"  onerror="continue"
+		 url="${maven.sql.testdb.url}"  
+		 onerror="continue"
 		 userid="${maven.sql.userid}" 
-		 password="${maven.sql.password}" src="${basedir}/target/schema/Gemma-0.1-schema.sql" >
+		 password="${maven.sql.password}" src="${basedir}/target/schema/${maven.final.name}-schema.sql" >
 		 	 <setProperty name="classpathref" value="${maven.sql.classpathref}"/>
 		 </sql>
 	</goal>
