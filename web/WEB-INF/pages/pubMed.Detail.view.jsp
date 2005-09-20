@@ -27,11 +27,10 @@
 				}
 		}
 		if(target == 2){
+		<%-- enter the flow --%>
 			document.backForm._eventId.value="edit"
 			document.backForm._flowId.value="pubMed.Edit"
-			<%-- uncomment when using webflow implementation
-			document.backForm.action="search.htm"
-			--%>
+			document.backForm.action="search.htm"			
 		}
 		document.backForm.submit();
 	}
@@ -40,9 +39,9 @@
 	<BODY>
 		<FORM name="backForm" action="">
 				<%-- uncomment when using webflow implementation
-				<input type="hidden" name="_flowId" value="">
 				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">--%>
 				<input type="hidden" name="_eventId" value="">
+				<input type="hidden" name="_flowId" value="">
 				<input type="hidden" name="pubMedId" value="<%=request.getAttribute("pubMedId") %>">
 		</FORM>
 		<TABLE width="100%">
@@ -91,7 +90,7 @@
 					</DIV>
 				</TD>
 				
-				<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
+				<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">
 				<TD COLSPAN="2">
 					<DIV align="right">
 						<INPUT type="button" onclick="javascript:selectButton(1)" value="Delete">
@@ -99,7 +98,7 @@
 				</TD>
 				</authz:acl>
 				
-				<authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
+				<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">
 				<TD COLSPAN="2">
 					<DIV align="right">
 						<INPUT type="button" onclick="javascript:selectButton(2)" value="Edit">
