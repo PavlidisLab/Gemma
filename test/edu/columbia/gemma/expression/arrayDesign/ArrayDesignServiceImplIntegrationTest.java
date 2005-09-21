@@ -18,8 +18,6 @@
  */
 package edu.columbia.gemma.expression.arrayDesign;
 
-import static org.easymock.EasyMock.createMock;
-
 import java.util.Collection;
 
 import edu.columbia.gemma.BaseServiceTestCase;
@@ -38,16 +36,11 @@ import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
  */
 public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
 
-    private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
-    private ArrayDesignDao arrayDesignDaoMock = null;
-
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        arrayDesignDaoMock = createMock( ArrayDesignDao.class );
-        arrayDesignService.setArrayDesignDao( arrayDesignDaoMock );
     }
 
     /*
@@ -57,46 +50,6 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         super.tearDown();
     }
 
-    /**
-     * Uses mock objects to unit test service layer method getAllArrayDesigns().
-     * 
-     * @throws Exception TODO add security to the method, then add it back to list of tests.
-     */
-    // public void testGetAllArrayDesigns() throws Exception {
-    // // to implement this test, the mock dao has to save several objects.
-    // Collection m = new HashSet();
-    //
-    // for ( int i = 0; i < 5; i++ ) {
-    // ArrayDesign tad = ArrayDesign.Factory.newInstance();
-    //
-    // tad.setName( "Foo" + i );
-    // if ( !m.add( tad ) ) throw new IllegalStateException( "Couldn't add to the collection - check equals" );
-    // }
-    //
-    // // set the behavior for the DAO: get all array designs will retrive the collection.
-    // arrayDesignDaoMock.getAllArrayDesigns();
-    // control.setReturnValue( m );
-    //
-    // control.replay(); // switch from record mode to replay
-    // arrayDesignService.getAllArrayDesigns();
-    // control.verify(); // verify that expectations were met
-    // }
-    // /**
-    // * @throws Exception TODO add security to this test, then add it back to list of tests.
-    // */
-    // public void testSaveArrayDesign() throws Exception {
-    // ArrayDesign tad = ArrayDesign.Factory.newInstance();
-    //
-    // tad.setName( "Foo" );
-    //
-    // // The expected behavior
-    // arrayDesignDaoMock.create( tad );
-    // control.setReturnValue( tad );
-    //
-    // control.replay(); // switch from record mode to replay
-    // arrayDesignService.saveArrayDesign( tad );
-    // control.verify(); // verify that expectations were met.
-    // }
     /**
      * Test removing an arrayDesign without having the correct authorization privileges. You should get an
      * unsuccessfulAuthentication. Does not use mock objects because I need the data from the database.
@@ -124,7 +77,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
     // ads.removeArrayDesign( ad );
     // }
     //
-    // // TODO add a more appropriate assertion (ie. specific to acegi security) and then uncomment this test.
+    // 
     // assertNull( null, null );
     // }
     /**
@@ -156,73 +109,24 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
     // }
     // }
     /**
-     * Testing the collections framework. Mock objects not used.
-     * 
-     * @throws
-     */
-    // public void testCollectionsWithArrayDesignsWithoutMock() throws Exception {
-    // BeanFactory ctx = SpringContextUtil.getApplicationContext();
-    //
-    // ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-    // .getBean( "manualAuthenticationProcessing" );
-    //
-    // manAuthentication.validateRequest( "pavlab", "pavlab" );
-    //
-    // ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-    //
-    // /* Collection comparison */
-    //
-    // Collection<ArrayDesign> col = ( Collection ) ads.getAllArrayDesigns();
-    // log.info( "Interface Collection" );
-    // for ( ArrayDesign ad : col ) {
-    // log.info( ad );
-    // }
-    //
-    // // not ordered, no duplicates
-    // HashSet<ArrayDesign> hs = new HashSet( ads.getAllArrayDesigns() );
-    // log.info( "Interface: Set, Implementation: HashSet" );
-    // for ( ArrayDesign ad : hs ) {
-    // log.info( ad );
-    // }
-    // // sorted, contains duplicates
-    // // TreeSet<ArrayDesign> ts = new TreeSet(ads.getAllArrayDesigns());
-    // // log.info("Interface: SortedSet, Implementation: TreeSet");
-    // // for ( ArrayDesign ad : ts ) {
-    // // log.info(ad);
-    // // }
-    //
-    // // ordered (based on insertion).
-    // LinkedList<ArrayDesign> ll = new LinkedList( ads.getAllArrayDesigns() );
-    // log.info( "Interface: List, Implementation: LinkedList" );
-    // for ( ArrayDesign ad : ll ) {
-    // log.info( ad );
-    // }
-    // }
-    /**
-     * Save an array design with username KiranKeshav
+     * Save an array design
      * 
      * @throws Exception
      */
-    // public void testSaveArrayDesignWithoutMock() throws Exception {
-    // BeanFactory ctx = SpringContextUtil.getApplicationContext();
-    //    
-    // ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-    // .getBean( "manualAuthenticationProcessing" );
-    //    
-    // manAuthentication.validateRequest( "pavlab", "pavlab" );
-    //    
+    // public void testSaveArrayDesignWithoutMock() {
+    //
     // ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-    //    
+    //
     // ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
     // arrayDesign.setName( "AD Foo" );
     // arrayDesign.setDescription( "a test ArrayDesign" );
-    //    
+    //
     // CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
     // cs1.setName( "DE Bar1" );
-    //    
+    //
     // CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
     // cs2.setName( "DE Bar2" );
-    //    
+    //
     // Collection<DesignElement> col = new HashSet();
     // col.add( cs1 );
     // col.add( cs2 );
@@ -231,24 +135,24 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
     // cs1.setArrayDesign( arrayDesign );
     // cs2.setArrayDesign( arrayDesign );
     // arrayDesign.setDesignElements( col );
-    //    
-    // ads.saveArrayDesign( arrayDesign );
+    //
+    // try {
+    // ArrayDesign ad = ads.saveArrayDesign( arrayDesign );
+    // //assertEquals( ad != null, true );
+    // } catch ( ArrayDesignExistsException e ) {
+    // //e.printStackTrace();
+    // }
+    //
     // }
     /**
-     * Tests getting all design elements given authorization on an array design (ie. tests getting the 'owned objects'
+     * Will test getting all design elements given authorization on an array design (ie. tests getting the 'owned objects'
      * given the authorization on an owner). This test was used to test the Acegi Security functionality. Mock objects
      * not used because I need the objects from the database.
      * 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
-
-        // ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-        // .getBean( "manualAuthenticationProcessing" );
-
-        // manAuthentication.validateRequest( "administrator", "admintoast" );
-
+    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() {
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
         CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
 
@@ -258,5 +162,6 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
             log.debug( cs );
         }
 
+        if ( col.size() == 0 ) fail( "User not authorized for to access at least one of the objects in the graph" );
     }
 }
