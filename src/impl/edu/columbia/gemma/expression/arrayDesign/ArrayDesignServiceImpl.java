@@ -41,9 +41,9 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
     /**
      * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#saveArrayDesign(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
      */
-    protected ArrayDesign handleSaveArrayDesign( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected edu.columbia.gemma.expression.arrayDesign.ArrayDesign handleSaveArrayDesign( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception {
-        return (ArrayDesign) this.getArrayDesignDao().create( arrayDesign );
+        return this.getArrayDesignDao().findOrCreate( arrayDesign );
     }
 
     /**
