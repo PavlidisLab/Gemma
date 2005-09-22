@@ -28,6 +28,8 @@ import org.hibernate.Transaction;
 import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
+ * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
+ * features.
  * <hr>
  * <p>
  * Copyright (c) 2004 Columbia University
@@ -38,92 +40,129 @@ import edu.columbia.gemma.BaseDAOTestCase;
 public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
     private BibliographicReferenceDao dao = null;
-    private DatabaseEntryDao dedao = null;
     private ExternalDatabaseDao exdbdao = null;
     private SessionFactory sf = null;
     private BibliographicReference testBibRef = null;
     private DatabaseEntry de = null;
-    private DatabaseEntry deb = null;
     ExternalDatabase ed = null;
-
+    
+    /*
+     * Call to create should persist the BibliographicReference and DatabaseEntry (cascade=all).  
+     */
     protected void setUp() throws Exception {
         super.setUp();
         testBibRef = BibliographicReference.Factory.newInstance();
         dao = ( BibliographicReferenceDao ) ctx.getBean( "bibliographicReferenceDao" );
-        dedao = ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" );
         exdbdao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
         sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
 
+        /*
+         * BibliographicReference has composition relationship with DatabaseEntry.
+         */
         de = DatabaseEntry.Factory.newInstance();
-        deb = DatabaseEntry.Factory.newInstance();
-
         de.setAccession( "foo" );
-        deb.setAccession( "bar" );
 
+        /*
+         * DatabaseEntry has a non-composition association with ExternalDatabase. Due to this, create ExternalDatabase
+         * and persist manually. If the relationship between DatabaseEntry and ExternalDatabase were composition, we
+         * would create the externalDatabase, stuff it in a databaseEntry, and persist the databaseEntry (which would in
+         * turn persist the externalDatabase).
+         */
         ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDbName( "database" );
+        ed.setName( "database" );
 
-        exdbdao.create( ed );
+        ExternalDatabase edtmp = null;
+        edtmp = exdbdao.findByName( "database" );
+        log.debug( "edtmp: " + edtmp );
+        if ( edtmp == null ) {
+            log.debug( "creating external database : " + ed );
+            exdbdao.create( ed );
+        }
 
-        de.setExternalDatabase( ed );
-        deb.setExternalDatabase( ed );
-        dedao.create( de );
-        dedao.create( deb );
+        /* Link the DatabaseEntry with an external database in the persistent state. */
+        de.setExternalDatabase( exdbdao.findByName( "database" ) );
 
+        /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );
 
         dao.create( testBibRef );
     }
-
+    
+    /*
+     * Call to remove should delete both BibliographicReference and DatabaseEntry (composition and cascade=all). 
+     */
     protected void tearDown() throws Exception {
-        // dedao.remove( de );
-        // dedao.remove( deb );
+        
         dao.remove( testBibRef );
-        exdbdao.remove( ed );
-
+        
         dao = null;
-        dedao = null;
         exdbdao = null;
     }
 
-    public final void testFindByExternalIdentStringHQL() throws Exception {
-        String query = "from BibliographicReferenceImpl b where b.pubAccession=:externalId";
-
-        Session sess = sf.openSession();
-        Transaction trans = sess.beginTransaction();
-
-        Query q = sess.createQuery( query );
-
-        q.setParameter( "externalId", de );
-
-        for ( Iterator it = q.iterate(); it.hasNext(); ) {
-            BibliographicReference b = ( BibliographicReference ) it.next();
-            assertEquals( testBibRef.getPubAccession(), b.getPubAccession() );
-        }
-        sess.flush();
-        trans.commit();
-        sess.close();
-
-    }
-
     /*
+     * Should persist the BibliographicReference and DatabaseEntry (cascade=all).
+     */
+    // public final void testCreate() {
+    //
+    // log.info( "Creating bibliographic reference (cascade=all, lazy=false)" );
+    //
+    // Exception exception = null;
+    // /* see setUp() for the initialization of this bibliographic reference. */
+    // try {
+    // dao.create( testBibRef );
+    // } catch ( Exception e ) {
+    // exception = e;
+    // }
+    //
+    // assertNull( exception );
+    // }
+    /*
+     * 
+     */
+     public final void testFindByExternalIdentStringHQL() throws Exception {
+     String query = "from BibliographicReferenceImpl b where b.pubAccession=:externalId";
+    
+     Session sess = sf.openSession();
+     Transaction trans = sess.beginTransaction();
+    
+     Query q = sess.createQuery( query );
+    
+     q.setParameter( "externalId", de );
+    
+     for ( Iterator it = q.iterate(); it.hasNext(); ) {
+     BibliographicReference b = ( BibliographicReference ) it.next();
+     assertEquals( testBibRef.getPubAccession(), b.getPubAccession() );
+     }
+     sess.flush();
+     trans.commit();
+     sess.close();
+    
+     }
+     /*
      * Class under test for Object findByExternalId(int, java.lang.String)
      */
     public final void testFindByExternalIdentString() {
-
         testBibRef = dao.findByExternalId( de );
         assertTrue( testBibRef != null );
-        assertTrue( dao.findByExternalId( deb ) == null );
-
-        // create assigns a new id, so this just creates yet another bibliographic reference.
-        // try {
-        // dao.create( testBibRef );
-        // fail( "Create didn't throw DataIntegrityViolationException" );
-        // } catch ( DataIntegrityViolationException e ) {
-        // assertNotNull( e );
-        // log.info( "Good, expected exception" );
-        // }
-
     }
 
+    /*
+     * Should remove a BibliographicReference and a DatabaseEntry (cascasde=all).
+     */
+//    public final void testRemove() {
+//        Exception exception = null;
+//        /* Should remove the BibliographicReference and DatabaseEntry (cascade=all) */
+//        try {
+//            log.info( "Removing bibliographic reference (cascade=all, lazy=false)" );
+//            dao.remove( testBibRef );
+//        }
+//
+//        catch ( Exception e ) {
+//            log.info( "Either the bibliographic reference with id " + de.getAccession() + " does not exist, or "
+//                    + "testBibRef has not been set." );
+//            exception = e;
+//        }
+//        assertNull( exception );
+//    }
 }
