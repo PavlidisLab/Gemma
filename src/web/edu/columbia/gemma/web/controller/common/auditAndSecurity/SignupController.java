@@ -40,6 +40,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * <p>
  * Copyright (c) 2004-2005 Columbia University
  * 
+ * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -54,10 +55,6 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="message" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
- * @author pavlidis
- * @author keshav
- * @version $Id$
  */
 public class SignupController extends BaseFormController {
     private UserRoleService userRoleService;
@@ -98,7 +95,7 @@ public class SignupController extends BaseFormController {
         } catch ( UserExistsException e ) {
             log.warn( e.getMessage() );
 
-            errors.rejectValue( "username", "errors.existing.user",
+            errors.rejectValue( "userName", "errors.existing.user",
                     new Object[] { user.getUserName(), user.getEmail() }, "duplicate user" );
 
             // redisplay the unencrypted passwords
