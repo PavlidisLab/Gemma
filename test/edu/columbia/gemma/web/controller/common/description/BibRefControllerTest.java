@@ -99,24 +99,53 @@ public class BibRefControllerTest extends BaseControllerTestCase {
     }
 
     /**
-     * Tests deleting;
+     * Tests deleting.  Asserts that a message is returned from BibRefController confirming successful deletion.
      * 
      * @throws Exception
      */
     public void testDelete() throws Exception {
         if ( !skip ) {
             log.debug( "testing delete" );
-
+            
             req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
             req.addParameter( "_eventId", "delete" );
             req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
             mav = c.handleRequest( req, new MockHttpServletResponse() );
             assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
+            assertNotNull(req.getSession().getAttribute("messages"));
         } else {
             log.info( "skipped test " + this.getName() );
         }
 
     }
+    
+    /**
+     * Tests the exception handling of the controller's delete method.
+     * @throws Exception
+     */
+//    public void testDeleteOfNonExistingEntry(){
+//        if ( !skip ) {
+//            log.debug( "testing delete" );
+//            
+//            /* set pubMedId to a non-existent id in gemdtest. */
+//            br.getPubAccession().setAccession("00000000");
+//            
+//            req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
+//            req.addParameter( "_eventId", "delete" );
+//            req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
+//            try{
+//                mav = c.handleRequest( req, new MockHttpServletResponse() );
+//            }
+//            catch(Exception e){
+//                e.printStackTrace();
+//            }
+//            
+//            assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
+//            assertNotNull(req.getSession().getAttribute("message"));
+//        } else {
+//            log.info( "skipped test " + this.getName() );
+//        }
+//    }
 
     /**
      * Tests getting all the bibrefs, which is implemented in
