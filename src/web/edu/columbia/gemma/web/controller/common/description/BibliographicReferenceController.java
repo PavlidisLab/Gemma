@@ -19,6 +19,7 @@
 package edu.columbia.gemma.web.controller.common.description;
 
 import java.util.Collection;
+import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
@@ -41,11 +43,14 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
  * @version $Id$
  * @spring.bean id="bibliographicReferenceController" name="/bibRefs.htm /bibRefDetails.htm"
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
+ * @spring.property name = "messageSource" ref="messageSource"
  */
 public class BibliographicReferenceController implements Controller {
     private static Log log = LogFactory.getLog( BibliographicReferenceController.class.getName() );
 
     private BibliographicReferenceService bibliographicReferenceService = null;
+    
+    private ResourceBundleMessageSource messageSource = null;
 
     private String uri_separator = "/";
 
@@ -61,7 +66,9 @@ public class BibliographicReferenceController implements Controller {
         if ( log.isDebugEnabled() )
             log.debug( "entered 'handleRequest'" + " HttpServletRequest: " + request + " HttpServletResponse: "
                     + response );
-
+        
+        Locale locale = request.getLocale();
+        
         String uri = request.getRequestURI();
 
         log.debug( "uri: " + uri );
@@ -100,8 +107,8 @@ public class BibliographicReferenceController implements Controller {
         String event = request.getParameter( "_eventId" );
         if ( event != null && event.equals( "delete" ) ) {
             bibliographicReferenceService.removeBibliographicReference( bibRef );
-
             log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
+            request.getSession().setAttribute("messages", messageSource.getMessage( "bibliographicReference.deleted",new Object[]{bibRef.getPubAccession().getAccession()}, locale ));
 
             return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences",
                     bibliographicReferenceService.getAllBibliographicReferences() );
@@ -115,6 +122,13 @@ public class BibliographicReferenceController implements Controller {
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param message The message to set.
+     */
+    public void setMessageSource( ResourceBundleMessageSource messageSource ) {
+        this.messageSource = messageSource;
     }
 
 }
