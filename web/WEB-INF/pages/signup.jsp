@@ -30,8 +30,6 @@
 		<td><spring:bind path="user.userName">
 			<input type="text" name="<c:out value="${status.expression}"/>"
 				value="<c:out value="${status.value}"/>" id="userName" />
-
-
 		</spring:bind></td>
 	</tr>
 	<tr>
