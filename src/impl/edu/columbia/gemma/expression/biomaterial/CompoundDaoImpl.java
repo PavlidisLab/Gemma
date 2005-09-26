@@ -18,6 +18,11 @@
  */
 package edu.columbia.gemma.expression.biomaterial;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
 /**
  * <hr>
  * <p>
@@ -29,6 +34,8 @@ package edu.columbia.gemma.expression.biomaterial;
  */
 public class CompoundDaoImpl extends edu.columbia.gemma.expression.biomaterial.CompoundDaoBase {
 
+    private static Log log = LogFactory.getLog( CompoundDaoImpl.class.getName() );
+
     /*
      * (non-Javadoc)
      * 
@@ -36,8 +43,26 @@ public class CompoundDaoImpl extends edu.columbia.gemma.expression.biomaterial.C
      */
     @Override
     public Compound find( Compound compound ) {
-        // TODO Auto-generated method stub
-        return super.find( compound );
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( Compound.class );
+            queryObject.add( Restrictions.eq( "name", compound.getName() ) );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + Compound.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = ( Compound ) results.iterator().next();
+                }
+            }
+            return ( Compound ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     /*
@@ -47,7 +72,15 @@ public class CompoundDaoImpl extends edu.columbia.gemma.expression.biomaterial.C
      */
     @Override
     public Compound findOrCreate( Compound compound ) {
-        // TODO Auto-generated method stub
-        return super.findOrCreate( compound );
+        if ( compound.getName() == null ) {
+            log.debug( "Compound must have a name to use as comparison key" );
+            return null;
+        }
+        Compound newCompound = this.find( compound );
+        if ( newCompound != null ) {
+            return newCompound;
+        }
+        log.debug( "Creating new compound: " + compound.getName() );
+        return ( Compound ) create( compound );
     }
 }
