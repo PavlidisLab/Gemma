@@ -35,6 +35,7 @@ import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.genome.TaxonDao;
@@ -77,6 +78,7 @@ public class MageLoadTest extends MageBaseTest {
         ml.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
         ml.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
         ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
+        ml.setCompoundDao((CompoundDao)ctx.getBean("compoundDao"));
     }
 
     @Override
