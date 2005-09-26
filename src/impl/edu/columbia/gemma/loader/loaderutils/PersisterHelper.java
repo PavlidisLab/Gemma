@@ -203,6 +203,8 @@ public class PersisterHelper implements Persister {
      */
     private Compound persistCompound( Compound compound ) {
         persistOntologyEntry( compound.getCompoundIndices() );
+        if ( compound.getIsSolvent() == null )
+            throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
         return compoundDao.findOrCreate( compound );
     }
 

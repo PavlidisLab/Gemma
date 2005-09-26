@@ -290,7 +290,7 @@ public class MageMLConverterHelper {
     /**
      * 
      */
-    private void initMGEDOntologyAliases() { 
+    private void initMGEDOntologyAliases() {
         mgedOntologyAliases = new HashSet<String>();
         mgedOntologyAliases.add( "MGED Ontology" );
         mgedOntologyAliases.add( "MO" );
@@ -1108,6 +1108,7 @@ public class MageMLConverterHelper {
     public Compound convertCompound( org.biomage.BioMaterial.Compound mageObj ) {
         if ( mageObj == null ) return null;
         Compound result = Compound.Factory.newInstance();
+        result.setIsSolvent( mageObj.getIsSolvent() == null ? Boolean.FALSE : mageObj.getIsSolvent() );
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;
