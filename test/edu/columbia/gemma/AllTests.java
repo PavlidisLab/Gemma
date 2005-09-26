@@ -33,7 +33,6 @@ import edu.columbia.gemma.common.description.BibliographicReferenceServiceImplTe
 import edu.columbia.gemma.common.description.DatabaseEntryDaoImplTest;
 import edu.columbia.gemma.common.description.ExternalDatabaseServiceImplTest;
 import edu.columbia.gemma.common.protocol.ProtocolServiceTest;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplIntegrationTest;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.genome.gene.CandidateGeneImplTest;
@@ -109,9 +108,6 @@ public class AllTests {
 
         // common.protocol
         suite.addTestSuite( ProtocolServiceTest.class );
-
-        // expression.arraydesign
-        suite.addTestSuite( ArrayDesignServiceImplIntegrationTest.class );
 
         // expression.experiment
         suite.addTestSuite( ExpressionExperimentServiceImplTest.class );

@@ -70,8 +70,10 @@ public class BaseServiceTestCase extends TestCase {
         String password = null;
         try {
             Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
-            username = conf.getString( "acegi.authorization.username" );
-            password = conf.getString( "acegi.authorization.password" );
+//            username = conf.getString( "acegi.authorization.username" );
+//            password = conf.getString( "acegi.authorization.password" );
+            username = "pavlab";
+            password = "pavlab";
         } catch ( ConfigurationException e ) {
             e.printStackTrace();
         }
