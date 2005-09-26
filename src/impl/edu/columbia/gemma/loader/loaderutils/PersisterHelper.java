@@ -51,6 +51,8 @@ import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.Compound;
+import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.DesignElement;
@@ -91,6 +93,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  * @spring.property name="bioAssayDao" ref="bioAssayDao"
  * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  * @spring.property name="quantitationTypeDao" ref="quantitationTypeDao"
+ * @spring.property name="compoundDao" ref="compoundDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -126,6 +129,8 @@ public class PersisterHelper implements Persister {
     private SoftwareDao softwareDao;
 
     private TaxonDao taxonDao;
+
+    private CompoundDao compoundDao;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -182,12 +187,23 @@ public class PersisterHelper implements Persister {
             return persistOntologyEntry( ( OntologyEntry ) entity );
         } else if ( entity instanceof Gene ) {
             return persistGene( ( Gene ) entity );
+        } else if ( entity instanceof Compound ) {
+            return persistCompound( ( Compound ) entity );
         } else {
             log.error( "Can't deal with " + entity.getClass().getName() );
             return null;
             // throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() );
         }
 
+    }
+
+    /**
+     * @param compound
+     * @return
+     */
+    private Compound persistCompound( Compound compound ) {
+        persistOntologyEntry( compound.getCompoundIndices() );
+        return compoundDao.findOrCreate( compound );
     }
 
     /**
@@ -664,6 +680,13 @@ public class PersisterHelper implements Persister {
      */
     public void setGeneDao( GeneDao geneDao ) {
         this.geneDao = geneDao;
+    }
+
+    /**
+     * @param compoundDao The compoundDao to set.
+     */
+    public void setCompoundDao( CompoundDao compoundDao ) {
+        this.compoundDao = compoundDao;
     }
 
 }
