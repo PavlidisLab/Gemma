@@ -2,7 +2,7 @@ insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME,
 insert into CONTACT (CLASS, NAME, EMAIL) values ("edu.columbia.gemma.common.auditAndSecurity.ContactImpl", "contact", "admin@gemma.org");
 insert into USER_ROLE (NAME, USER_NAME) values ("admin", "administrator");
 
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("homo sapien","human","9606");
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("homo sapiens","human","9606");
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("mus musculus","mouse","10090"); 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("rattus","rat","10114");
 
