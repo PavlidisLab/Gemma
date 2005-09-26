@@ -144,6 +144,7 @@ public class PersisterHelper implements Persister {
             }
         } catch ( Exception e ) {
             log.error( e, e );
+            throw new RuntimeException(e);
         }
         return col;
     }
