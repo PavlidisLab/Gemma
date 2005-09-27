@@ -18,9 +18,19 @@
  */
 package edu.columbia.gemma.security.interceptor;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import junit.framework.TestCase;
+
+import net.sf.acegisecurity.GrantedAuthority;
+import net.sf.acegisecurity.GrantedAuthorityImpl;
+import net.sf.acegisecurity.context.SecurityContextHolder;
+import net.sf.acegisecurity.context.SecurityContextImpl;
+import net.sf.acegisecurity.providers.ProviderManager;
+import net.sf.acegisecurity.providers.TestingAuthenticationProvider;
+import net.sf.acegisecurity.providers.TestingAuthenticationToken;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,6 +56,23 @@ public class PersistAclInterceptorTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         ctx = SpringContextUtil.getApplicationContext( true );
+
+        // see http://fishdujour.typepad.com/blog/2005/02/junit_testing_w.html
+        // Grant all roles to test user.
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "test", new GrantedAuthority[] {
+                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "administrator" ) } );
+
+        // Override the regular spring configuration
+        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+        List<TestingAuthenticationProvider> list = new ArrayList<TestingAuthenticationProvider>();
+        list.add( new TestingAuthenticationProvider() );
+        providerManager.setProviders( list );
+
+        // Create and store the Acegi SecureContext into the ContextHolder.
+        SecurityContextImpl secureContext = new SecurityContextImpl();
+        secureContext.setAuthentication( token );
+        SecurityContextHolder.setContext( secureContext );
+
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( ( new Date() ).toString() );
     }
@@ -60,6 +87,8 @@ public class PersistAclInterceptorTest extends TestCase {
     /**
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
      * actual method invocation.
+     * 
+     * FIXME how do we know if it worked?
      * 
      * @throws Exception
      */
