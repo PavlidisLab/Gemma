@@ -65,8 +65,8 @@ public class PersistAclInterceptorTest extends TestCase {
      */
     public void testSaveArrayDesign() throws Exception {
         log.info( "Testing saveArrayDesign(ArrayDesign ad)" );
-
-        ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).saveArrayDesign( ad );
+        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+        ads.saveArrayDesign( ad );
     }
 
     /**
