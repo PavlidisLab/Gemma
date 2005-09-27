@@ -37,8 +37,7 @@
             <c:if test="${sessionScope.currentUserForm != null}">
                 <div id="userStatus">
                     <fmt:message key="user.status"/>
-                    <strong><c:out value="${currentUserForm.firstName}"/> 
-                        <c:out value="${currentUserForm.lastName}"/></strong><br />
+                        <strong><c:out value="${currentUserForm.userName}"/></strong> 
                     <a href="<c:url value="/logout.jsp"/>"><fmt:message key="user.logout"/></a>
                 </div>
             </c:if>
