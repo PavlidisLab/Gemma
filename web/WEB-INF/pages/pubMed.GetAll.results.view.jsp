@@ -11,12 +11,10 @@
 <HEAD>
 </HEAD>
 <BODY>
-<%--uncomment when using webflow <FORM name="newSearchForm" action="search.htm">--%>
-<FORM name="newSearchForm" action="bibRefs.htm">
-<%-- uncomment when using webflows 
-    <input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>"> 
-	<input type="hidden" name="_eventId" value="newSearch">
---%>	
+<%--uncomment when using webflow --%>
+<FORM name="newSearchForm" action="search.htm">
+    <input type="hidden" name="_flowId" value="pubMed.Search">	 
+	<input type="hidden" name="_eventId" value="newSearch">	
 </FORM>
 <DIV align="left">
 <P>
