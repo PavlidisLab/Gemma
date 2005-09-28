@@ -215,7 +215,7 @@ public class PersisterHelper implements Persister {
     @SuppressWarnings("unchecked")
     public BioAssay persistBioAssay( BioAssay assay ) {
 
-        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getBioAssayFactorValues() ) {
+        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
             for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
                 persistOntologyEntry( value );
             }
