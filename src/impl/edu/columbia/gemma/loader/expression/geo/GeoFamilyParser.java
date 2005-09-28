@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -110,6 +111,16 @@ public class GeoFamilyParser implements Parser {
 
     private boolean haveReadSeriesDataHeader = false;
 
+    private boolean haveReadDatasetDataHeader = false;
+
+    private int dataSetDataLines = 0;
+
+    private int seriesDataLines = 0;
+
+    private int platformLines = 0;
+
+    private int sampleDataLines = 0;
+
     public GeoFamilyParser() {
         sampleMap = new HashMap<String, GeoSample>();
         platformMap = new HashMap<String, GeoPlatform>();
@@ -182,10 +193,18 @@ public class GeoFamilyParser implements Parser {
         String line = "";
         int count = 0;
         while ( ( line = dis.readLine() ) != null ) {
+            if ( line == null || line.length() == 0 ) {
+                log.error( "Empty or null line" );
+                return;
+            }
             parseLine( line );
             count++;
         }
-        log.debug( "Parsed " + count + " lines." );
+        log.info( "Parsed " + count + " lines." );
+        log.info( this.platformLines + " platform  lines" );
+        log.info( this.seriesDataLines + " series data lines" );
+        log.info( this.dataSetDataLines + " data set data lines" );
+        log.info( this.sampleDataLines + " sample data lines" );
 
     }
 
@@ -467,6 +486,7 @@ public class GeoFamilyParser implements Parser {
             }
             platformDataMap.get( columnName ).add( token );
         }
+        platformLines++;
     }
 
     /**
@@ -620,21 +640,27 @@ public class GeoFamilyParser implements Parser {
                     inSeriesTable = true;
                 } else if ( startsWithIgnoreCase( line, "!series_table_end" ) ) {
                     inSeriesTable = false;
-                } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
-                    int variable = extractVariableNumber( line );
-                    seriesMap.get( currentSeriesAccession ).addToVariables( new GeoVariable() );
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_description_" ) ) {
-                    int variable = extractVariableNumber( line );
-                    // FIXME
+                    Integer variableId = new Integer( extractVariableNumber( line ) );
+                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setDescription( value );
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_sample_list_" ) ) {
-                    int variable = extractVariableNumber( line );
-                    // FIXME
+                    Integer variableId = new Integer( extractVariableNumber( line ) );
+                    Collection<String> samples = Arrays.asList( StringUtils.split( value, "," ) );
+                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setVariableSampleList(
+                            samples );
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_" ) ) {
-                    int variable = extractVariableNumber( line );
-                    // FIXME
+                    Integer variableId = new Integer( extractVariableNumber( line ) );
+                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setRepeats( value );
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
-                    int variable = extractVariableNumber( line );
-                    // FIXME
+                    Integer variableId = new Integer( extractVariableNumber( line ) );
+                    Collection<String> samples = Arrays.asList( StringUtils.split( value, ", " ) );
+                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setRepeatsSampleList(
+                            samples );
+                } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
+                    Integer variableId = new Integer( extractVariableNumber( line ) );
+                    GeoVariable v = new GeoVariable();
+                    v.setName( value );
+                    seriesMap.get( currentSeriesAccession ).addToVariables( variableId, v );
                 } else {
                     throw new IllegalStateException( "Unknown flag: " + line );
                 }
@@ -787,6 +813,7 @@ public class GeoFamilyParser implements Parser {
             } else if ( inSeriesTable ) {
                 parseSeriesDataLine( line );
             } else if ( inDatasetTable ) {
+                parseDataSetDataLine( line );
             } else {
                 throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
             }
@@ -795,6 +822,8 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * The data for one sample is all the values for each quantitation type.
+     * 
      * @param line
      */
     private void parseSampleDataLine( String line ) {
@@ -816,13 +845,15 @@ public class GeoFamilyParser implements Parser {
             }
             sampleDataMap.get( columnName ).add( token );
         }
+
+        sampleDataLines++;
     }
 
     /**
      * @param line
      */
     private void parseSeriesDataLine( String line ) {
-
+        // FIXME: is this ever called?
         if ( !haveReadSeriesDataHeader ) {
             haveReadSeriesDataHeader = true;
             return;
@@ -840,6 +871,34 @@ public class GeoFamilyParser implements Parser {
             }
             seriesDataMap.get( columnName ).add( token );
         }
+
+        seriesDataLines++;
+    }
+
+    /**
+     * @param line
+     */
+    private void parseDataSetDataLine( String line ) {
+
+        if ( !haveReadDatasetDataHeader ) {
+            haveReadDatasetDataHeader = true;
+            return;
+        }
+
+        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
+
+        Map<String, List<String>> dataSetDataMap = datasetMap.get( currentDatasetAccession ).getData();
+
+        for ( int i = 0; i < tokens.length; i++ ) {
+            String token = tokens[i];
+            String columnName = datasetMap.get( currentDatasetAccession ).getColumnNames().get( i );
+            if ( !dataSetDataMap.containsKey( columnName ) ) {
+                dataSetDataMap.put( columnName, new ArrayList<String>() );
+            }
+            dataSetDataMap.get( columnName ).add( token );
+        }
+
+        dataSetDataLines++;
     }
 
     /**

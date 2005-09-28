@@ -104,10 +104,16 @@ public class GeoConverter implements Converter {
             return convert( ( GeoSubset ) geoObject );
         } else if ( geoObject instanceof GeoSample ) {
             return convert( ( GeoSample ) geoObject );
+        } else if ( geoObject instanceof GeoVariable ) {
+            return convert( ( GeoVariable ) geoObject );
         } else {
             throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() );
         }
 
+    }
+
+    public GeoVariable convert( GeoVariable variable ) {
+        return null; /// FIXME
     }
 
     /**
@@ -149,11 +155,15 @@ public class GeoConverter implements Converter {
     /**
      * @param series
      */
+    @SuppressWarnings("unchecked")
     private ExpressionExperiment convert( GeoSeries series ) {
         if ( series == null ) return null;
         log.info( "Converting series: " + series.getGeoAccesssion() );
 
-        Collection<GeoVariable> variables = series.getVariables();
+        Collection<GeoVariable> variables = series.getVariables().values();
+        for ( GeoVariable variable : variables ) {
+            convert( variable );
+        }
 
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
 
@@ -215,6 +225,12 @@ public class GeoConverter implements Converter {
             log.warn( "Null sample" );
             return null;
         }
+
+        if ( sample.getGeoAccesssion() == null || sample.getGeoAccesssion().length() == 0 ) {
+            log.error( "No GEO accession for sample" );
+            return null;
+        }
+
         log.info( "Converting sample: " + sample.getGeoAccesssion() );
         BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
 

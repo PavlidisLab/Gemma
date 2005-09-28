@@ -78,6 +78,9 @@
                 <property name="mergeMappingsUri">
                     file:${maven.andromda.merge.mappings}
                 </property>
+                <property name="open-session-in-view">
+                    ${maven.andromda.hibernate.generated.dir}
+                </property>
                 <property name="driver">com.mysql.jdbc.Driver</property>
                 <property name="username">pavlidis</property>
                 <property name="password">toast</property>

@@ -19,7 +19,9 @@
 package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * <hr>
@@ -38,7 +40,7 @@ public class GeoSeries extends GeoData {
     Collection<String> pubmedIds;
     Collection<String> webLinks;
     Collection<String> contributers;
-    Collection<GeoVariable> variables;
+    Map<Integer, GeoVariable> variables;
     Collection<String> sampleIds;
 
     Collection<GeoSample> samples;
@@ -47,7 +49,7 @@ public class GeoSeries extends GeoData {
         keywords = new HashSet<String>();
         pubmedIds = new HashSet<String>();
         sampleIds = new HashSet<String>();
-        variables = new HashSet<GeoVariable>();
+        variables = new HashMap<Integer, GeoVariable>();
         webLinks = new HashSet<String>();
         contributers = new HashSet<String>();
         samples = new HashSet<GeoSample>();
@@ -169,7 +171,7 @@ public class GeoSeries extends GeoData {
     /**
      * @return Returns the variables.
      */
-    public Collection<GeoVariable> getVariables() {
+    public Map<Integer, GeoVariable> getVariables() {
         return this.variables;
     }
 
@@ -184,8 +186,8 @@ public class GeoSeries extends GeoData {
         this.pubmedIds.add( id );
     }
 
-    public void addToVariables( GeoVariable variable ) {
-        this.variables.add( variable );
+    public void addToVariables( Integer number, GeoVariable variable ) {
+        this.variables.put( number, variable );
     }
 
     /**

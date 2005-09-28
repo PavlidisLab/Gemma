@@ -35,6 +35,8 @@ import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 
 /**
+ * This controller is responsible for showing a list of all bibliographic references, as well sending the user to the
+ * pubMed.Detail.view when they click on a specific link in that list.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -49,7 +51,7 @@ public class BibliographicReferenceController implements Controller {
     private static Log log = LogFactory.getLog( BibliographicReferenceController.class.getName() );
 
     private BibliographicReferenceService bibliographicReferenceService = null;
-    
+
     private ResourceBundleMessageSource messageSource = null;
 
     private String uri_separator = "/";
@@ -66,9 +68,9 @@ public class BibliographicReferenceController implements Controller {
         if ( log.isDebugEnabled() )
             log.debug( "entered 'handleRequest'" + " HttpServletRequest: " + request + " HttpServletResponse: "
                     + response );
-        
+
         Locale locale = request.getLocale();
-        
+
         String uri = request.getRequestURI();
 
         log.debug( "uri: " + uri );
@@ -108,7 +110,10 @@ public class BibliographicReferenceController implements Controller {
         if ( event != null && event.equals( "delete" ) ) {
             bibliographicReferenceService.removeBibliographicReference( bibRef );
             log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-            request.getSession().setAttribute("messages", messageSource.getMessage( "bibliographicReference.deleted",new Object[]{bibRef.getPubAccession().getAccession()}, locale ));
+            request.getSession().setAttribute(
+                    "messages",
+                    messageSource.getMessage( "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
+                            .getAccession() }, locale ) );
 
             return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences",
                     bibliographicReferenceService.getAllBibliographicReferences() );

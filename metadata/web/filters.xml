@@ -48,7 +48,8 @@
 <filter>
 	<filter-name>hibernateFilter</filter-name>
 	<filter-class>
-		org.springframework.orm.hibernate3.support.OpenSessionInViewFilter
+<!-- 		org.springframework.orm.hibernate3.support.OpenSessionInViewFilter -->
+            org.andromda.spring.presentation.AndroMDAOpenSessionInViewFilter
 	</filter-class>
 </filter>
 <filter>

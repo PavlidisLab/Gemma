@@ -1,13 +1,47 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.Collection;
 
+/**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
 public class GeoVariable {
 
-    String description;
+    String name;
+    String description = "";
     Collection<String> variableSampleList;
-    Collection<String> repeats;
+    String repeats;
     Collection<String> repeatsSampleList;
+
+    /**
+     * @param d
+     */
+    public void addToDescription( String d ) {
+        this.description += d;
+    }
 
     /**
      * @return Returns the description.
@@ -26,14 +60,14 @@ public class GeoVariable {
     /**
      * @return Returns the repeats.
      */
-    public Collection<String> getRepeats() {
+    public String getRepeats() {
         return this.repeats;
     }
 
     /**
      * @param repeats The repeats to set.
      */
-    public void setRepeats( Collection<String> repeats ) {
+    public void setRepeats( String repeats ) {
         this.repeats = repeats;
     }
 
@@ -42,6 +76,14 @@ public class GeoVariable {
      */
     public Collection<String> getRepeatsSampleList() {
         return this.repeatsSampleList;
+    }
+
+    public void addToVariableSampleList( String sample ) {
+        this.variableSampleList.add( sample );
+    }
+
+    public void addToRepeatsSampleList( String sample ) {
+        this.repeatsSampleList.add( sample );
     }
 
     /**
@@ -63,6 +105,20 @@ public class GeoVariable {
      */
     public void setVariableSampleList( Collection<String> variableSampleList ) {
         this.variableSampleList = variableSampleList;
+    }
+
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName( String name ) {
+        this.name = name;
     }
 
 }

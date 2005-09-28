@@ -25,7 +25,6 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import junit.framework.TestCase;
-
 import net.sf.acegisecurity.GrantedAuthority;
 import net.sf.acegisecurity.GrantedAuthorityImpl;
 import net.sf.acegisecurity.context.SecurityContextHolder;
@@ -35,9 +34,6 @@ import net.sf.acegisecurity.providers.TestingAuthenticationProvider;
 import net.sf.acegisecurity.providers.TestingAuthenticationToken;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;

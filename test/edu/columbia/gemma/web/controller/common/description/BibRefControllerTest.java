@@ -21,15 +21,12 @@ package edu.columbia.gemma.web.controller.common.description;
 import java.net.UnknownHostException;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.validation.BindException;
-import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
@@ -37,15 +34,13 @@ import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
-import edu.columbia.gemma.web.controller.common.description.BibliographicReferenceController;
-import edu.columbia.gemma.web.controller.entrez.pubmed.PubMedFormController;
 
 /**
  * Tests the BibliographicReferenceController
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2005 Columbia University
+ * <p>
+ * Copyright (c) 2004 - 2005 Columbia University
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -57,7 +52,7 @@ public class BibRefControllerTest extends BaseControllerTestCase {
     private MockHttpServletRequest req = null;
     private ModelAndView mav = null;
     private boolean skip = false;
-    
+
     /**
      * Add a bibliographic reference to the database for testing purposes.
      */
@@ -99,54 +94,54 @@ public class BibRefControllerTest extends BaseControllerTestCase {
     }
 
     /**
-     * Tests deleting.  Asserts that a message is returned from BibRefController confirming successful deletion.
+     * Tests deleting. Asserts that a message is returned from BibRefController confirming successful deletion.
      * 
      * @throws Exception
      */
     public void testDelete() throws Exception {
         if ( !skip ) {
             log.debug( "testing delete" );
-            
+
             req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
             req.addParameter( "_eventId", "delete" );
             req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
             mav = c.handleRequest( req, new MockHttpServletResponse() );
             assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
-            assertNotNull(req.getSession().getAttribute("messages"));
+            assertNotNull( req.getSession().getAttribute( "messages" ) );
         } else {
             log.info( "skipped test " + this.getName() );
         }
 
     }
-    
+
     /**
      * Tests the exception handling of the controller's delete method.
+     * 
      * @throws Exception
      */
-//    public void testDeleteOfNonExistingEntry(){
-//        if ( !skip ) {
-//            log.debug( "testing delete" );
-//            
-//            /* set pubMedId to a non-existent id in gemdtest. */
-//            br.getPubAccession().setAccession("00000000");
-//            
-//            req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
-//            req.addParameter( "_eventId", "delete" );
-//            req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
-//            try{
-//                mav = c.handleRequest( req, new MockHttpServletResponse() );
-//            }
-//            catch(Exception e){
-//                e.printStackTrace();
-//            }
-//            
-//            assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
-//            assertNotNull(req.getSession().getAttribute("message"));
-//        } else {
-//            log.info( "skipped test " + this.getName() );
-//        }
-//    }
-
+    // public void testDeleteOfNonExistingEntry(){
+    // if ( !skip ) {
+    // log.debug( "testing delete" );
+    //            
+    // /* set pubMedId to a non-existent id in gemdtest. */
+    // br.getPubAccession().setAccession("00000000");
+    //            
+    // req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
+    // req.addParameter( "_eventId", "delete" );
+    // req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
+    // try{
+    // mav = c.handleRequest( req, new MockHttpServletResponse() );
+    // }
+    // catch(Exception e){
+    // e.printStackTrace();
+    // }
+    //            
+    // assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
+    // assertNotNull(req.getSession().getAttribute("message"));
+    // } else {
+    // log.info( "skipped test " + this.getName() );
+    // }
+    // }
     /**
      * Tests getting all the bibrefs, which is implemented in
      * {@link edu.columbia.gemma.web.controller.entrez.pubmed.BibliographicReferenceController} in method
@@ -157,10 +152,10 @@ public class BibRefControllerTest extends BaseControllerTestCase {
     public void testGetAllBibliographicReferences() throws Exception {
         BibliographicReferenceController brc = ( BibliographicReferenceController ) ctx
                 .getBean( "bibliographicReferenceController" );
-        
+
         req = new MockHttpServletRequest( "GET", "Gemma/bibRefs.htm" );
 
-        ModelAndView mav = brc.handleRequest( req, ( HttpServletResponse ) null );
+        mav = brc.handleRequest( req, ( HttpServletResponse ) null );
 
         Map m = mav.getModel();
 

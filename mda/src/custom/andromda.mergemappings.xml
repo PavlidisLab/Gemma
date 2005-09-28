@@ -29,4 +29,19 @@
 </to>
 
 </mapping>
+
+<mapping>
+<from>
+<![CDATA[<!-- beanRefFactory merge-point -->]]>
+</from>
+<to>
+<![CDATA[
+<value>applicationContext-security.xml</value>
+<value>applicationContext-resources.xml</value>
+<value>applicationContext-validation.xml</value>
+<value>action-servlet.xml</value>
+]]>
+</to>
+</mapping>
+
 </mappings>

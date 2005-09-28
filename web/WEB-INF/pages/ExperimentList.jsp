@@ -22,7 +22,7 @@ if( m!=null) {
 	<display:setProperty name="basic.empty.showtable" value="true"/>
 
 	<display:column sortable="true" property="name" href="ExperimentDetail.html" paramId="experimentID" paramProperty="id"/>
-	<display:column title="Principle Investigator" property="owner.fullName" />
+	<display:column title="Principal Investigator" property="owner.fullName" />
 	<display:column property="description" />
 	<display:column><a href="javascript:deleteExperiment(
 	<c:out value="${experiment.id}"/>

@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
@@ -7,17 +25,21 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.BaseCommandController;
+import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
-import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.BibliographicReference;
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
+import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
 /**
  * <hr>
@@ -31,7 +53,10 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
  * @spring.property name="userService" ref="userService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  */
-public class ExperimentController extends BaseCommandController {
+public class ExperimentController extends SimpleFormController {
+
+    private static Log log = LogFactory.getLog( ExperimentController.class.getName() );
+
     private ExpressionExperimentService expressionExperimentService = null;
     private UserService userService = null;
     private BibliographicReferenceService bibliographicReferenceService = null;
@@ -79,14 +104,14 @@ public class ExperimentController extends BaseCommandController {
     }
 
     @Override
-    @SuppressWarnings({"unused", "unchecked"})
-    public ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    @SuppressWarnings( { "unused", "unchecked" })
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
         Map<String, Object> experimentModel = new HashMap<String, Object>();
         long experimentID = 0;
         String action = request.getParameter( "action" );
-        if ( request.getParameter( "experimentID" ) != null && request.getParameter( "experimentID" ) != "" ) {
+        if ( request.getParameter( "experimentID" ) != null && request.getParameter( "experimentID" ).length() > 0 ) {
             experimentID = new Long( request.getParameter( "experimentID" ) ).longValue();
         }
         String view = "ExperimentList";
@@ -100,22 +125,19 @@ public class ExperimentController extends BaseCommandController {
                 experimentModel
                         .put( "experiments", this.getExpressionExperimentService().getAllExpressionExperiments() );
             }
-        }
-
-        if ( action.equals( "setPI" ) ) {
+        } else if ( action.equals( "setPI" ) ) {
             ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             String UserName = request.getParameter( "username" );
             User u = this.getUserService().getUser( UserName );
             if ( u == null ) {
-                experimentModel.put( "error", "User Not Found" );
+                errors.reject( "ExperimentController", "User Not Found." ); // Spring MVC error handling
             } else {
                 ee.setOwner( u );
                 this.expressionExperimentService.saveExpressionExperiment( ee );
             }
             experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
             view = "ExperimentDetail";
-        }
-        if ( action.equals( "add" ) ) {
+        } else if ( action.equals( "add" ) ) {
             String eName = request.getParameter( "newName" );
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
             ee.setName( eName );
@@ -123,15 +145,11 @@ public class ExperimentController extends BaseCommandController {
             ee.setOwner( usr );
             this.getExpressionExperimentService().createExpressionExperiment( ee );
             experimentModel.put( "experiments", this.getExpressionExperimentService().getAllExpressionExperiments() );
-        }
-
-        if ( action.equals( "delete" ) ) {
+        } else if ( action.equals( "delete" ) ) {
             ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             this.getExpressionExperimentService().removeExpressionExperiment( ee );
             experimentModel.put( "experiments", this.getExpressionExperimentService().getAllExpressionExperiments() );
-        }
-
-        if ( action.equals( "removeParticipant" ) ) {
+        } else if ( action.equals( "removeParticipant" ) ) {
             ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             long userID = new Long( request.getParameter( "userID" ) ).longValue();
             Person p = null;
@@ -147,18 +165,16 @@ public class ExperimentController extends BaseCommandController {
             }
             experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
             view = "ExperimentDetail";
-        }
-
-        if ( action.equals( "addParticipant" ) ) {
+        } else if ( action.equals( "addParticipant" ) ) {
             ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             String UserName = request.getParameter( "username" );
             User u = this.getUserService().getUser( UserName );
             if ( u == null ) {
                 experimentModel.put( "error", "User Not Found" );
             } else {
-                Collection<Contact> par =   ee.getInvestigators();
+                Collection<Contact> par = ee.getInvestigators();
                 if ( par.contains( u ) ) {
-                    experimentModel.put( "error", "The user " + UserName + " is already an investigator." );
+                    errors.reject( "ExperimentController", "The user " + UserName + " is already an investigator." );
                 } else {
                     par.add( u );
                     this.expressionExperimentService.saveExpressionExperiment( ee );
@@ -167,8 +183,7 @@ public class ExperimentController extends BaseCommandController {
             experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
             view = "ExperimentDetail";
 
-        }
-        if ( action.equals( "update" ) ) {
+        } else if ( action.equals( "update" ) ) {
             ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             ee.setName( request.getParameter( "eName" ).toString() );
             ee.setDescription( request.getParameter( "eDesc" ).toString() );
@@ -196,4 +211,22 @@ public class ExperimentController extends BaseCommandController {
 
         return new ModelAndView( view, "model", experimentModel );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        log.debug( "Entering formBackingObject" );
+        if ( request.getParameter( "experimentID" ) != null && request.getParameter( "experimentID" ).length() > 0 ) {
+            long experimentID = new Long( request.getParameter( "experimentID" ) ).longValue();
+            return expressionExperimentService.findById( experimentID );
+        }
+        // FIXME we need to separate out the list all functionality to a new controller.
+        return ExpressionExperiment.Factory.newInstance();
+
+    }
+
 }

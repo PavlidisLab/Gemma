@@ -1,28 +1,33 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<%@ page import="java.util.Collection" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="java.util.Iterator" %>
-<%@ page import="edu.columbia.gemma.expression.experiment.ExpressionExperiment" %>
-<%@ page import="edu.columbia.gemma.common.auditAndSecurity.Person" %>
-<%@ page import="edu.columbia.gemma.common.description.OntologyEntry" %>
-<%@ page import="edu.columbia.gemma.expression.experiment.ExperimentalDesign" %>
-<%@ page import="edu.columbia.gemma.expression.experiment.ExperimentalFactor" %>
-<%@ page import="edu.columbia.gemma.expression.experiment.FactorValue" %>
-<%@ page import="edu.columbia.gemma.expression.bioAssay.BioAssay" %>
-<%@ page import="edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector" %>
-<%@ page import="edu.columbia.gemma.expression.arrayDesign.ArrayDesign" %>
+<%@ page import="java.util.Map"%>
+<%@ page import="java.util.Iterator"%>
+<%@ page
+    import="edu.columbia.gemma.expression.experiment.ExpressionExperiment"%>
+<%@ page import="edu.columbia.gemma.common.auditAndSecurity.Person"%>
+<%@ page import="edu.columbia.gemma.common.description.OntologyEntry"%>
+<%@ page
+    import="edu.columbia.gemma.expression.experiment.ExperimentalDesign"%>
+<%@ page
+    import="edu.columbia.gemma.expression.experiment.ExperimentalFactor"%>
+<%@ page import="edu.columbia.gemma.expression.experiment.FactorValue"%>
+<%@ page import="edu.columbia.gemma.expression.bioAssay.BioAssay"%>
+<%@ page
+    import="edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector"%>
+<%@ page import="edu.columbia.gemma.expression.arrayDesign.ArrayDesign"%>
 <html>
 <head>
-	<title>Experiment Detail</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Experiment Detail</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 <body bgcolor="#ffffff">
 
-<content tag="heading">Experiment Detail</content>
+<content tag="heading">
+Experiment Detail
+</content>
 
-<a href="ExperimentList.html">Back to Experiment List</a><P>
-<script language="javascript">
+<a href="ExperimentList.html">Back to Experiment List</a>
+<P><script language="javascript">
 	function doRemove(id){
 		document.fRemove.userID.value = id;
 		document.fRemove.submit();
@@ -35,8 +40,7 @@
 			document.dForm.submit();
 		}
 	}
-</script>
-<%
+</script> <%
 
 ExpressionExperiment ee = null;
 Map m = (Map)request.getAttribute("model");
@@ -49,20 +53,24 @@ if( m!=null) {
 	}
 	else{
 		%>
-		<form name="fRemove" id="fRemove" method="POST" action="ExperimentDetail.html">
-			<input type="hidden" name="action" id="action" value="removeParticipant">
-			<input type="hidden" name="experimentID" id="experimentID" value="<%=ee.getId()%>">
-			<input type="hidden" name="userID" id="userID">
-		</form>	
-		<%
+<form name="fRemove" id="fRemove" method="POST"
+    action="ExperimentDetail.html"><input type="hidden" name="action"
+    id="action" value="removeParticipant"> <input type="hidden"
+    name="experimentID" id="experimentID" value="<%=ee.getId()%>"> <input
+    type="hidden" name="userID" id="userID"></form>
+<%
 		String desc = ee.getDescription();
 		if( desc==null ){
 			desc="";
 		}
-		String err = (String)m.get("error");
-		if( err != null ){
-			out.print("<B>ERROR: " + err + "</B><P>&nbsp</P>");
-		}
+		%><spring:hasBindErrors name="expressionExperiment"><div class="error">There were the following error(s) with your submission:<ul>
+            <c:forEach var="errMsgObj" items="${errors.allErrors}">
+               <li>
+                  <spring:message code="${errMsgObj.code}" text="${errMsgObj.defaultMessage}"/>
+               </li>
+            </c:forEach>
+         </ul></div></spring:hasBindErrors>
+         <%
 		String pu = "(No provider URL)";
 		if( ee.getProvider()!=null){
 			pu = ee.getProvider().getURI();
@@ -71,91 +79,105 @@ if( m!=null) {
 		if( ee.getPrimaryPublication() != null)
 			pubmedAcc = ee.getPrimaryPublication().getPubAccession().getAccession();
 		%>
-		<form name="dForm" id="dForm" method="POST" action="ExperimentDetail.html">
-		<input type="hidden" name="action" id="action" value="update">
-		<input type="hidden" name="experimentID" id="experimentID" value="<%=request.getParameter("experimentID")%>">
-		<table width="100%" cellpadding="1" cellspacing="2">
-		
-		<tr><td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Experiment Details</B></td></tr>
-		<tr>
-			<td bgcolor="white">Name:</td> 
-			<td width="80%" bgcolor="white">
-				<input size="68" type="text" name="eName" id="eName" value="<%=ee.getName()%>">
-			</td>
-		</tr>
-		<tr><td bgcolor="white">Release Date:</td><td bgcolor="white">TODO: Attribute?</td></tr>
-		<tr><td bgcolor="white">Submission Date:</td><td bgcolor="white">TODO: Attribute?</td></tr>
-		<tr>
-			<td bgcolor="white">Provider URL:</td> 
-			<td bgcolor="white"><%=pu%></td>
-		</tr>	
-		<tr>
-			<td bgcolor="white">PUBMED ID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td> 
-			<td bgcolor="white"><input type="text" name="primaryPubmed" id="primaryPubmed" value="<%=pubmedAcc%>">
-			<%
+<%-- <table width="100%" cellpadding="1" cellspacing="2"> --%>
+<form name="dForm" id="dForm" method="POST"
+    action="ExperimentDetail.html"><input type="hidden" name="action"
+    id="action" value="update"> <input type="hidden" name="experimentID"
+    id="experimentID" value="<%=request.getParameter("experimentID")%>">
+
+
+<tr>
+    <td colspan="2" nowrap="true" bgcolor="#eeeeee"><B>Experiment
+    Details</B></td>
+</tr>
+<tr>
+    <td bgcolor="white">Name:</td>
+    <td width="80%" bgcolor="white"><input size="68" type="text"
+        name="eName" id="eName" value="<%=ee.getName()%>"></td>
+</tr>
+<tr>
+    <td bgcolor="white">Release Date:</td>
+    <td bgcolor="white">TODO: Attribute?</td>
+</tr>
+<tr>
+    <td bgcolor="white">Submission Date:</td>
+    <td bgcolor="white">TODO: Attribute?</td>
+</tr>
+<tr>
+    <td bgcolor="white">Provider URL:</td>
+    <td bgcolor="white"><%=pu%></td>
+</tr>
+<tr>
+    <td bgcolor="white">PUBMED
+    ID:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td bgcolor="white"><input type="text" name="primaryPubmed"
+        id="primaryPubmed" value="<%=pubmedAcc%>"> <%
 			if( pubmedAcc != "" ){%>
-				&nbsp;<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=<%=pubmedAcc%>">View Article</a>
-			<%
+    &nbsp;<a
+        href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=<%=pubmedAcc%>">View
+    Article</a> <%
 			}
-			%>			
-			</td>
-		</tr>		
-		<tr>
-			<td valign="top" bgcolor="white">Description:</td> 
-			<td bgcolor="white"> <textarea rows="5" cols="50" name="eDesc" id="eDesc"><%=desc%></textarea></td>
-		</tr>	
-		<tr>
-			<td></td>
-			<td bgcolor="white"><input type="button" value="Update Details" onclick="validateUpdate()"></td>
-		</tr>
-		</form>
-		
-		<tr>
-			<td colspan="2" bgcolor="#eeeeee">
-				<B>Investigators</B>
-			</td>
-		</tr>
-		<tr>
-			<form name="dFormU" id="dFormU" method="POST" action="ExperimentDetail.html">
-			<input type="hidden" name="action" id="action" value="setPI">
-			<input type="hidden" name="experimentID" id="experimentID" value="<%=ee.getId()%>">
-			<td valign="top">Principle Investigator:<BR>
-			<%=ee.getOwner().getFullName()%>
-			</td>
-			<td valign="top">
-				<input type="text" name="username" id="username"> <input type="submit" value="update">
-			</td>
-		</tr>
-		</form>
-		
-		<tr><td>Additional Investigators:</td><td>&nbsp;</td></tr>
-		<%
+			%></td>
+</tr>
+<tr>
+    <td valign="top" bgcolor="white">Description:</td>
+    <td bgcolor="white"><textarea rows="5" cols="50" name="eDesc"
+        id="eDesc"><%=desc%></textarea></td>
+</tr>
+<tr>
+    <td></td>
+    <td bgcolor="white"><input type="button" value="Update Details"
+        onclick="validateUpdate()"></td>
+</tr>
+</form>
+
+<tr>
+    <td colspan="2" bgcolor="#eeeeee"><B>Investigators</B></td>
+</tr>
+<tr>
+    <form name="dFormU" id="dFormU" method="POST"
+        action="ExperimentDetail.html"><input type="hidden"
+        name="action" id="action" value="setPI"> <input type="hidden"
+        name="experimentID" id="experimentID" value="<%=ee.getId()%>">
+    <td valign="top">Principal Investigator:<BR>
+    <% if (ee.getOwner() == null)  { %> "None specified"   <% }   else %><%=  ee.getOwner().getFullName()    %>
+    </td>
+    <td valign="top"><input type="text" name="username" id="username"> <input
+        type="submit" value="update"></td>
+</tr>
+</form>
+
+<tr>
+    <td>Additional Investigators:</td>
+    <td>&nbsp;</td>
+</tr>
+<%
 		for(Iterator iter=ee.getInvestigators().iterator(); iter.hasNext(); ){
 			Person p = (Person) iter.next();
 			%>
-			<tr>
-				<td><%=p.getFullName()%>&nbsp;&nbsp;&nbsp;(<a href="javascript:doRemove(<%=p.getId()%>)">remove</a>)</td>
-				<td></td>
-			</tr>
-		<%
+<tr>
+    <td><%=p.getFullName()%>&nbsp;&nbsp;&nbsp;(<a
+        href="javascript:doRemove(<%=p.getId()%>)">remove</a>)</td>
+    <td></td>
+</tr>
+<%
 		}
 		%>
-		<tr>
-			<form name="dFormA" id="dFormA" method="POST" action="ExperimentDetail.html">
-			<input type="hidden" name="action" id="action" value="addParticipant">
-			<input type="hidden" name="experimentID" id="experimentID" value="<%=ee.getId()%>">
-			<td align="right"></td>
-			<td valign="top">
-				<input type="text" name="username" id="username"> <input type="submit" value="add">
-			</td>
-		</tr>
-		</form>
-		
-		<tr>
-			<td colspan="2" bgcolor="#eeeeee">
-				<B>Experimental Designs</B>
-			</td>
-			<%
+<tr>
+    <form name="dFormA" id="dFormA" method="POST"
+        action="ExperimentDetail.html"><input type="hidden"
+        name="action" id="action" value="addParticipant"> <input
+        type="hidden" name="experimentID" id="experimentID"
+        value="<%=ee.getId()%>">
+    <td align="right"></td>
+    <td valign="top"><input type="text" name="username" id="username"> <input
+        type="submit" value="add"></td>
+</tr>
+</form>
+
+<tr>
+    <td colspan="2" bgcolor="#eeeeee"><B>Experimental Designs</B></td>
+    <%
 			if(ee.getExperimentalDesigns().size()==0)
 				out.print("<tr><td colspan='2'>No Experimental Designs for this experiment.</td></tr>");
 			else{
@@ -172,25 +194,31 @@ if( m!=null) {
 						replicates = "Unknown";
 						
 					%>
-				<tr><td>Normalization</td><td><%=normalization%></td></tr>	
-				<tr><td>Quality Control</td><td><%=qualitycontrol%></td></tr>	
-				<tr><td>Replicates</td><td><%=replicates%></td></tr>	
-		
-				<tr>
-					<td valign='top'>Design Types:</td>
-				 	<td>
-						<%
+<tr>
+    <td>Normalization</td>
+    <td><%=normalization%></td>
+</tr>
+<tr>
+    <td>Quality Control</td>
+    <td><%=qualitycontrol%></td>
+</tr>
+<tr>
+    <td>Replicates</td>
+    <td><%=replicates%></td>
+</tr>
+
+<tr>
+    <td valign='top'>Design Types:</td>
+    <td><%
 						for(Iterator iterTypes=ed.getTypes().iterator(); iterTypes.hasNext(); ){
 							OntologyEntry oe = (OntologyEntry) iterTypes.next();
 							out.print(oe.getValue() + "<br>");	
 						}
-						%>
-					</td>
-				</tr>	
-				<tr>
-					<td valign='top'>Factors</td>
-					<td>	
-						<%
+						%></td>
+</tr>
+<tr>
+    <td valign='top'>Factors</td>
+    <td><%
 						String categoryName="";
 						String factorList="";
 						if( ed.getExperimentalFactors().size()==0 )
@@ -224,21 +252,26 @@ if( m!=null) {
 						}
 						
 						%>
-						<table>
-							<tr><td valign='top'><b><%=categoryName%></b>:</td>
-							<tr><td valign='top'><%=factorList%></td></tr>
-						</table>
-					</td>
-				</tr>	
-						
-				<%
+    <table>
+        <tr>
+            <td valign='top'><b><%=categoryName%></b>:</td>
+        <tr>
+            <td valign='top'><%=factorList%></td>
+        </tr>
+    </table>
+    </td>
+</tr>
+
+<%
 				}
 			}
 			%>
-			
-		</tr>	
-		<tr><td colspan="2" bgcolor="#eeeeee"><B>Quantitation</B></td></tr>
-		<%
+
+</tr>
+<tr>
+    <td colspan="2" bgcolor="#eeeeee"><B>Quantitation</B></td>
+</tr>
+<%
 		if( ee.getAnalyses().size()==0) {
 			out.print("<tr><td colspan='2'>No analysis for this experiment</td></tr>");
 		}
@@ -246,8 +279,10 @@ if( m!=null) {
 			out.print("<tr><td colspan='2'>"+ ee.getAnalyses().size()+ "</td></tr>");
 		}
 		%>
-		<tr><td colspan="2" bgcolor="#eeeeee"><B>DesignElement Data Vectors</B></td></tr>
-		<%
+<tr>
+    <td colspan="2" bgcolor="#eeeeee"><B>DesignElement Data Vectors</B></td>
+</tr>
+<%
 		
 		if( ee.getDesignElementDataVectors().size()==0){
 			out.print("<tr><td colspan='2'>No DesignElementDataVectors for this experiment</td></tr>");
@@ -260,8 +295,10 @@ if( m!=null) {
 			}	
 		}
 		%>
-		<tr><td colspan="2" bgcolor="#eeeeee"><b>Bio Assays</b></td></tr>
-		<%
+<tr>
+    <td colspan="2" bgcolor="#eeeeee"><b>Bio Assays</b></td>
+</tr>
+<%
 		if( ee.getBioAssays().size()==0){
 			out.print("<tr><td colspan='2'>No BioAssays for this experiment</td></tr>");
 		}
@@ -324,8 +361,8 @@ if( m!=null) {
 				
 		}
 		%>
-		</table>
-	<%	
+<%-- </table> --%>
+<%	
 	}
 }
 else
