@@ -28,16 +28,21 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
+import edu.columbia.gemma.common.description.Characteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
+import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
+import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
+import edu.columbia.gemma.loader.expression.geo.model.GeoChannel;
 import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
 import edu.columbia.gemma.loader.expression.geo.model.GeoData;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
@@ -47,6 +52,7 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
 import edu.columbia.gemma.loader.expression.geo.util.GeoConstants;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 
 /**
@@ -112,15 +118,24 @@ public class GeoConverter implements Converter {
 
     }
 
-    public GeoVariable convert( GeoVariable variable ) {
-        return null; /// FIXME
+    /**
+     * @param variable
+     * @return
+     */
+    public ExperimentalFactor convert( GeoVariable variable ) {
+        log.debug( "Converting variable " + variable.getName() );
+        ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
+        result.setName( variable.getName() );
+        result.setDescription( variable.getDescription() );
+        // FIXME - fill in BioAssay FactorValues.
+        return result;
     }
 
     /**
      * @param geoDataset
      */
     private ExpressionExperiment convert( GeoDataset geoDataset ) {
-        log.info( "Converting dataset:" + geoDataset.getGeoAccesssion() );
+        log.debug( "Converting dataset:" + geoDataset.getGeoAccesssion() );
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
         result.setAccession( convertDatabaseEntry( geoDataset ) );
         convertSubsetAssociations( result, geoDataset );
@@ -133,9 +148,8 @@ public class GeoConverter implements Converter {
      * @param geoDataset
      */
     private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
-        log.info( "Converting subsets associations of a dataset" );
+        log.debug( "Converting subsets associations of a dataset" );
         for ( GeoSubset subset : geoDataset.getSubsets() ) {
-            // fixme
             convert( subset );
         }
     }
@@ -145,10 +159,10 @@ public class GeoConverter implements Converter {
      * @param geoDataset
      */
     private void convertSeriesAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
-        log.info( "Converting series associations of a dataset" );
+        log.debug( "Converting series associations of a dataset" );
         for ( GeoSeries series : geoDataset.getSeries() ) {
-            // fixme;
-            convert( series );
+            ExpressionExperiment newInfo = convert( series );
+            BeanPropertyCompleter.complete( result, newInfo );
         }
     }
 
@@ -158,7 +172,7 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private ExpressionExperiment convert( GeoSeries series ) {
         if ( series == null ) return null;
-        log.info( "Converting series: " + series.getGeoAccesssion() );
+        log.debug( "Converting series: " + series.getGeoAccesssion() );
 
         Collection<GeoVariable> variables = series.getVariables().values();
         for ( GeoVariable variable : variables ) {
@@ -200,7 +214,7 @@ public class GeoConverter implements Converter {
         // treat this like an expression experiment, but it has to be attached to the parent experiment.
         ExpressionExperimentSubSet expExp = ExpressionExperimentSubSet.Factory.newInstance();
         expExp.setAccession( convertDatabaseEntry( subset ) );
-        // FIXME expExp.setSourceExperiment();
+        expExp.setSourceExperiment( convert( subset.getOwningDataset() ) );
         return expExp;
     }
 
@@ -218,9 +232,12 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * A Sample corresponds to a BioAssay; the channels correspond to BioMaterials.
+     * 
      * @param sample
      */
-    private BioMaterial convert( GeoSample sample ) {
+    @SuppressWarnings("unchecked")
+    private BioAssay convert( GeoSample sample ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
             return null;
@@ -231,29 +248,53 @@ public class GeoConverter implements Converter {
             return null;
         }
 
-        log.info( "Converting sample: " + sample.getGeoAccesssion() );
-        BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-
-        // bioMaterial.setAccession(convertDatabaseEntry(sample));
-        bioMaterial.setName( sample.getTitle() );
-        bioMaterial.setDescription( sample.getDescription() );
+        log.debug( "Converting sample: " + sample.getGeoAccesssion() );
 
         Collection<GeoPlatform> platforms = sample.getPlatforms();
         for ( GeoPlatform platform : platforms ) {
             convert( platform );
         }
 
-        return bioMaterial;
+        BioAssay bioAssay = BioAssay.Factory.newInstance();
+        bioAssay.setName( sample.getTitle() );
+        bioAssay.setDescription( sample.getDescription() );
+        bioAssay.setSamplesUsed( new HashSet() );
+
+        // Need to fill in FactorValues.
+        bioAssay.setFactorValues( new HashSet() );
+
+        Collection<Characteristic> characteristics = new HashSet<Characteristic>();
+        for ( GeoChannel channel : sample.getChannelData() ) {
+
+            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+
+            bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) );
+            bioMaterial.setName( channel.getSourceName() );
+            // FIXME: fill in other fields from channel.
+
+            for ( String characteristic : channel.getCharacteristics() ) {
+                Characteristic gemmaChar = Characteristic.Factory.newInstance();
+                gemmaChar.setCategory( characteristic );
+                gemmaChar.setValue( characteristic ); // FIXME, need value.
+                characteristics.add( gemmaChar );
+            }
+            bioMaterial.setCharacteristics( characteristics );
+
+            bioAssay.getSamplesUsed().add( bioMaterial );
+
+        }
+
+        return bioAssay;
     }
 
     /**
      * @param platform
      */
-    private void convert( GeoPlatform platform ) {
-        log.info( "Converting platform: " + platform.getGeoAccesssion() );
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( platform.getTitle() );
-        ad.setDescription( platform.getDescriptions() );
+    private ArrayDesign convert( GeoPlatform platform ) {
+        log.debug( "Converting platform: " + platform.getGeoAccesssion() );
+        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+        arrayDesign.setName( platform.getTitle() );
+        arrayDesign.setDescription( platform.getDescriptions() );
 
         // convert the design element information.
         String identifier = determinePlatformIdentifier( platform );
@@ -285,13 +326,15 @@ public class GeoConverter implements Converter {
             cs.setBiologicalCharacteristic( bs );
 
         }
-        ad.setDesignElements( compositeSequences );
+        arrayDesign.setDesignElements( compositeSequences );
 
         // convert the manufacturer information.
         if ( platform.getManufacturer() != null ) {
             Contact manufacturer = ( Contact ) convert( platform.getManufacturer() );
-            ad.setDesignProvider( manufacturer );
+            arrayDesign.setDesignProvider( manufacturer );
         }
+
+        return arrayDesign;
     }
 
     /**
@@ -321,7 +364,7 @@ public class GeoConverter implements Converter {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyExternalReference( string ) ) {
-                log.info( string + " appears to indicate the external reference identifier in column " + index
+                log.debug( string + " appears to indicate the external reference identifier in column " + index
                         + " for platform " + platform );
                 return string;
             }

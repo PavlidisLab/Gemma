@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
+ * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
+ * BioAssay in Gemma.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -39,7 +41,6 @@ public class GeoSample extends GeoData {
     String dataProcessing;
     String scanProtocol;
     String description;
-    String platformId; // refers to a platform object.
 
     Collection<GeoPlatform> platforms;
 
@@ -165,20 +166,6 @@ public class GeoSample extends GeoData {
 
     public void addToDescription( String s ) {
         this.description = this.description + " " + s;
-    }
-
-    /**
-     * @return Returns the platformId.
-     */
-    public String getPlatformId() {
-        return this.platformId;
-    }
-
-    /**
-     * @param platformId The platformId to set.
-     */
-    public void setPlatformId( String platformId ) {
-        this.platformId = platformId;
     }
 
     /**

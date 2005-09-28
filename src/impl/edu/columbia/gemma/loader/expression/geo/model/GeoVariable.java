@@ -21,6 +21,15 @@ package edu.columbia.gemma.loader.expression.geo.model;
 import java.util.Collection;
 
 /**
+ * A GeoVariable represents variables which were investigated.
+ * <p>
+ * According to the GEO web site, the valid values for the "name" are: dose, time, tissue, strain, gender, cell line,
+ * development stage, age, agent, cell type, infection, isolate, metabolism, shock, stress, temperature, specimen,
+ * disease state, protocol, growth protocol, genotype/genetic variation, species, individual, or other.
+ * </p>
+ * <p>
+ * These map to ExperimentalFactors in Gemma.
+ * </p>
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Abstract class from which many Geo objects are descended.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University

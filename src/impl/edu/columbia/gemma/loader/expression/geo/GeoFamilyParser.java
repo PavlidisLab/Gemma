@@ -32,6 +32,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,6 +56,7 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
+ * Class for parsing GSE and GDS files from NCBI GEO.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -121,6 +125,8 @@ public class GeoFamilyParser implements Parser {
 
     private int sampleDataLines = 0;
 
+    private int parsedLines;
+
     public GeoFamilyParser() {
         sampleMap = new HashMap<String, GeoSample>();
         platformMap = new HashMap<String, GeoPlatform>();
@@ -184,28 +190,57 @@ public class GeoFamilyParser implements Parser {
             throw new IOException( "No bytes to read from the input stream." );
         }
 
-        BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );
+        final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );
 
         log.info( "Parsing...." );
+
+        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+            @SuppressWarnings("synthetic-access")
+            public Boolean call() throws IOException {
+                return doParse( dis );
+            }
+        } );
+
+        Executors.newSingleThreadExecutor().execute( future );
+
+        while ( !future.isDone() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException ie ) {
+                ;
+            }
+            log.info( parsedLines + " lines parsed." );
+        }
+        log.info( "Done parsing." );
+
+        doParse( dis );
+
+    }
+
+    /**
+     * @param dis
+     * @throws IOException
+     */
+    private Boolean doParse( BufferedReader dis ) throws IOException {
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
         haveReadSeriesDataHeader = false;
         String line = "";
-        int count = 0;
+        parsedLines = 0;
         while ( ( line = dis.readLine() ) != null ) {
             if ( line == null || line.length() == 0 ) {
                 log.error( "Empty or null line" );
-                return;
+                continue;
             }
             parseLine( line );
-            count++;
+            parsedLines++;
         }
-        log.info( "Parsed " + count + " lines." );
+        log.info( "Parsed " + parsedLines + " lines." );
         log.info( this.platformLines + " platform  lines" );
         log.info( this.seriesDataLines + " series data lines" );
         log.info( this.dataSetDataLines + " data set data lines" );
         log.info( this.sampleDataLines + " sample data lines" );
-
+        return Boolean.TRUE;
     }
 
     /*
@@ -229,19 +264,14 @@ public class GeoFamilyParser implements Parser {
                     new Class[] { value.getClass() } );
             adder.invoke( target, new Object[] { value } );
         } catch ( SecurityException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         } catch ( IllegalArgumentException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         } catch ( NoSuchMethodException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         } catch ( IllegalAccessException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         }
     }
@@ -256,10 +286,8 @@ public class GeoFamilyParser implements Parser {
         try {
             BeanUtils.setProperty( contact, property, value );
         } catch ( IllegalAccessException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            log.error( e, e );
             throw new RuntimeException( e );
         }
     }
@@ -386,7 +414,7 @@ public class GeoFamilyParser implements Parser {
                 GeoSample sample = new GeoSample();
                 sample.setGeoAccesssion( value );
                 sampleMap.put( value, sample );
-                log.debug( "In sample " + sample );
+                log.debug( "Starting new sample " + value );
             } else if ( startsWithIgnoreCase( line, "^PLATFORM" ) ) {
                 inPlatform = true;
                 inSubset = false;
@@ -443,7 +471,7 @@ public class GeoFamilyParser implements Parser {
                 if ( subsetMap.containsKey( value ) ) return;
                 GeoSubset ss = new GeoSubset();
                 ss.setGeoAccesssion( value );
-
+                ss.setOwningDataset( this.datasetMap.get( this.currentDatasetAccession ) );
                 subsetMap.put( value, ss );
                 log.debug( "In subset " + ss );
             } else {
@@ -776,7 +804,7 @@ public class GeoFamilyParser implements Parser {
                             sampleMap.get( v ).setGeoAccesssion( v );
                         }
                         log.debug( "Adding sample: " + v + " to subset " + currentSubsetAccession );
-                        subsetMap.get( currentSubsetAccession ).setSample( sampleMap.get( v ) );
+                        subsetMap.get( currentSubsetAccession ).addSample( sampleMap.get( v ) );
                     }
 
                 } else if ( startsWithIgnoreCase( line, "!subset_type" ) ) {
