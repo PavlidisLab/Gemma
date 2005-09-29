@@ -185,7 +185,7 @@ public class GeoConverter implements Converter {
         for ( GeoSeries series : geoDataset.getSeries() ) {
             log.debug( "Converting series associated with dataset: " + series.getGeoAccesssion() );
             ExpressionExperiment newInfo = convert( series );
-            BeanPropertyCompleter.complete( result, newInfo );
+            BeanPropertyCompleter.complete( result, newInfo ); // not good enough.
         }
     }
 

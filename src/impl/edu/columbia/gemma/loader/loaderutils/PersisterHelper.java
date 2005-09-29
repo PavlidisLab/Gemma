@@ -23,10 +23,13 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import sun.security.krb5.internal.crypto.e;
+
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.Characteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.common.description.DatabaseEntryDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -62,6 +65,7 @@ import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
 import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
@@ -94,6 +98,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  * @spring.property name="quantitationTypeDao" ref="quantitationTypeDao"
  * @spring.property name="compoundDao" ref="compoundDao"
+ * @spring.property name="databaseEntryDao' ref="databaseEntryDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -131,6 +136,8 @@ public class PersisterHelper implements Persister {
     private TaxonDao taxonDao;
 
     private CompoundDao compoundDao;
+
+    private DatabaseEntryDao databaseEntryDao;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -558,6 +565,9 @@ public class PersisterHelper implements Persister {
         if ( entity.getAccession() != null && entity.getAccession().getExternalDatabase() != null ) {
             entity.getAccession().setExternalDatabase(
                     this.persistExternalDatabase( entity.getAccession().getExternalDatabase() ) );
+
+            // we have to do this because the entry is used as part of a criteria query.
+            entity.setAccession( databaseEntryDao.findOrCreate( entity.getAccession() ) );
         } else {
             log.warn( "Null accession for expressionExperiment" );
         }
@@ -613,6 +623,12 @@ public class PersisterHelper implements Persister {
         // manually persist: experimentaldesign->bioassay->factorvalue->value and bioassay->arraydesign
         for ( BioAssay bA : ( Collection<BioAssay> ) entity.getBioAssays() ) {
             bA.setId( persistBioAssay( bA ).getId() );
+        }
+
+        for ( ExpressionExperimentSubSet subset : ( Collection<ExpressionExperimentSubSet> ) entity.getSubsets() ) {
+            for ( BioAssay bA : ( Collection<BioAssay> ) subset.getBioAssays() ) {
+                bA.setId( persistBioAssay( bA ).getId() );
+            }
         }
 
         // manually persist expressionExperiment-->designElementDataVector-->DesignElement
@@ -690,6 +706,13 @@ public class PersisterHelper implements Persister {
      */
     public void setCompoundDao( CompoundDao compoundDao ) {
         this.compoundDao = compoundDao;
+    }
+
+    /**
+     * @param databaseEntryDao The databaseEntryDao to set.
+     */
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
     }
 
 }
