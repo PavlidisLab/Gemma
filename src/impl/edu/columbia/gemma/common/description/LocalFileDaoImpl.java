@@ -82,7 +82,7 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
             edu.columbia.gemma.common.description.LocalFile localFile ) {
         if ( localFile == null || localFile.getLocalURI() == null
                 || ( localFile.getRemoteURI() == null && localFile.getSize() == 0 ) ) {
-            log.error( "localFile was null or had no valid business keys : " + localFile.getLocalURI() );
+            log.error( "localFile was null or had no valid business keys" );
             return null;
         }
         LocalFile newlocalFile = find( localFile );
