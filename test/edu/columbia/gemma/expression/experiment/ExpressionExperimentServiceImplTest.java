@@ -84,10 +84,10 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
     public void testExpressionExperimentFindByInvestigator() {
 
         reset( eeDao );
-        eeDao.findByInvestigator( 12 );
+        eeDao.findByInvestigator( nobody );
         expectLastCall().andReturn( cJustTwelve );
         replay( eeDao );
-        svc.findByInvestigator( 12 );
+        svc.findByInvestigator( nobody );
         verify( eeDao );
     }
 
@@ -100,14 +100,14 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         verify( eeDao );
     }
 
-    public void testExpressionExperimentFindById() {
-        reset( eeDao );
-        eeDao.findById( 13 );
-        expectLastCall().andReturn( null );
-        replay( eeDao );
-        svc.findById( 13 );
-        verify( eeDao );
-    }
+    // public void testExpressionExperimentFindById() {
+    // reset( eeDao );
+    // eeDao.findById( 13 );
+    // expectLastCall().andReturn( null );
+    // replay( eeDao );
+    // svc.findById( 13 );
+    // verify( eeDao );
+    //    }
 
     protected void tearDown() throws Exception {
         super.tearDown();

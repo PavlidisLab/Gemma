@@ -18,11 +18,6 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
-import java.io.File;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
@@ -42,18 +37,17 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * @version $Id$
  */
 public class GeoDatasetServiceTest extends BaseDAOTestCase {
+    GeoDatasetService gds;
 
-    /** This is an integration test */
-    public void testFetchAndLoad() throws Exception {
-
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-        String path = ( String ) config.getProperty( "geo.local.datafile.basepath" );
-        if ( !( new File( path ).canRead() ) ) {
-            log.warn( "Skipping test, required path " + path + "not writable" );
-            return;
-        }
-
-        GeoDatasetService gds = new GeoDatasetService();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see junit.framework.TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        gds = new GeoDatasetService();
         PersisterHelper ml = new PersisterHelper();
         GeoConverter geoConv = new GeoConverter();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
@@ -65,6 +59,45 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         ml.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
         gds.setPersister( ml );
         gds.setConverter( geoConv );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see junit.framework.TestCase#tearDown()
+     */
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    /** This is an integration test */
+
+    public void testFetchAndLoadA() throws Exception {
+        gds.fetchAndLoad( "GDS941" );
+    }
+
+    public void testFetchAndLoadB() throws Exception {
+        gds.fetchAndLoad( "GDS942" );
+    }
+
+    public void testFetchAndLoadC() throws Exception {
         gds.fetchAndLoad( "GDS100" );
+    }
+
+    public void testFetchAndLoadD() throws Exception {
+        gds.fetchAndLoad( "GDS1033" );
+    }
+
+    public void testFetchAndLoadE() throws Exception {
+        gds.fetchAndLoad( "GDS835" );
+    }
+
+    public void testFetchAndLoadF() throws Exception {
+        gds.fetchAndLoad( "GDS58" );
+    }
+
+    public void testFetchAndLoadG() throws Exception {
+        gds.fetchAndLoad( "GDS940" );
     }
 }
