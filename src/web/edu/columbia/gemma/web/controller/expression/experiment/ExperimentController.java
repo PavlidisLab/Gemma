@@ -111,22 +111,24 @@ public class ExperimentController extends SimpleFormController {
         Map<String, Object> experimentModel = new HashMap<String, Object>();
         long experimentID = 0;
         String action = request.getParameter( "action" );
+        ExpressionExperiment ee = null;
         if ( request.getParameter( "experimentID" ) != null && request.getParameter( "experimentID" ).length() > 0 ) {
             experimentID = new Long( request.getParameter( "experimentID" ) ).longValue();
+            ee = this.getExpressionExperimentService().find( experimentID );
         }
+
         String view = "ExperimentList";
         if ( action == null ) action = "view";
 
         if ( action.equals( "view" ) ) {
             if ( experimentID > 0 ) {
-                experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
+                experimentModel.put( "experiments", ee );
                 view = "ExperimentDetail";
             } else {
                 experimentModel
                         .put( "experiments", this.getExpressionExperimentService().getAllExpressionExperiments() );
             }
         } else if ( action.equals( "setPI" ) ) {
-            ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             String UserName = request.getParameter( "username" );
             User u = this.getUserService().getUser( UserName );
             if ( u == null ) {
@@ -135,22 +137,21 @@ public class ExperimentController extends SimpleFormController {
                 ee.setOwner( u );
                 this.expressionExperimentService.saveExpressionExperiment( ee );
             }
-            experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
+            experimentModel.put( "experiments", ee );
             view = "ExperimentDetail";
         } else if ( action.equals( "add" ) ) {
             String eName = request.getParameter( "newName" );
-            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+            ee = ExpressionExperiment.Factory.newInstance();
             ee.setName( eName );
             User usr = userService.getUser( request.getRemoteUser() );
             ee.setOwner( usr );
             this.getExpressionExperimentService().createExpressionExperiment( ee );
             experimentModel.put( "experiments", this.getExpressionExperimentService().getAllExpressionExperiments() );
         } else if ( action.equals( "delete" ) ) {
-            ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
+
             this.getExpressionExperimentService().removeExpressionExperiment( ee );
             experimentModel.put( "experiments", this.getExpressionExperimentService().getAllExpressionExperiments() );
         } else if ( action.equals( "removeParticipant" ) ) {
-            ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             long userID = new Long( request.getParameter( "userID" ) ).longValue();
             Person p = null;
             Person pNuke = null;
@@ -163,10 +164,9 @@ public class ExperimentController extends SimpleFormController {
                 par.remove( pNuke );
                 this.expressionExperimentService.saveExpressionExperiment( ee );
             }
-            experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
+            experimentModel.put( "experiments", ee );
             view = "ExperimentDetail";
         } else if ( action.equals( "addParticipant" ) ) {
-            ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             String UserName = request.getParameter( "username" );
             User u = this.getUserService().getUser( UserName );
             if ( u == null ) {
@@ -180,11 +180,10 @@ public class ExperimentController extends SimpleFormController {
                     this.expressionExperimentService.saveExpressionExperiment( ee );
                 }
             }
-            experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
+            experimentModel.put( "experiments", ee );
             view = "ExperimentDetail";
 
         } else if ( action.equals( "update" ) ) {
-            ExpressionExperiment ee = this.getExpressionExperimentService().findById( experimentID );
             ee.setName( request.getParameter( "eName" ).toString() );
             ee.setDescription( request.getParameter( "eDesc" ).toString() );
             String pp = request.getParameter( "primaryPubmed" ).toString();
@@ -203,7 +202,7 @@ public class ExperimentController extends SimpleFormController {
             }
 
             this.getExpressionExperimentService().saveExpressionExperiment( ee );
-            experimentModel.put( "experiments", this.getExpressionExperimentService().findById( experimentID ) );
+            experimentModel.put( "experiments", ee );
             view = "ExperimentDetail";
         }
 
@@ -222,7 +221,7 @@ public class ExperimentController extends SimpleFormController {
         log.debug( "Entering formBackingObject" );
         if ( request.getParameter( "experimentID" ) != null && request.getParameter( "experimentID" ).length() > 0 ) {
             long experimentID = new Long( request.getParameter( "experimentID" ) ).longValue();
-            return expressionExperimentService.findById( experimentID );
+            return expressionExperimentService.find( experimentID );
         }
         // FIXME we need to separate out the list all functionality to a new controller.
         return ExpressionExperiment.Factory.newInstance();
