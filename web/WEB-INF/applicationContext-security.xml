@@ -136,7 +136,7 @@ $Id$
             <value>
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user, admin  
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.getAllExpressionExperiments=user, admin  
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findById=user, admin  
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user, admin  
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.createExpressionExperiment=user, admin  
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.updateExpressionExperiment=user, admin  
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.removeExpressionExperiment=user, admin  
