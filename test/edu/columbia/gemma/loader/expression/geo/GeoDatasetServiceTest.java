@@ -20,12 +20,21 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.DatabaseEntryDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.protocol.HardwareDao;
+import edu.columbia.gemma.common.protocol.ProtocolDao;
+import edu.columbia.gemma.common.protocol.SoftwareDao;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
@@ -50,6 +59,7 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         gds = new GeoDatasetService();
         PersisterHelper ml = new PersisterHelper();
         GeoConverter geoConv = new GeoConverter();
+        ml = new PersisterHelper();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
         ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
         ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
@@ -57,6 +67,15 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         ml.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
         ml.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
         ml.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
+        ml.setProtocolDao( ( ProtocolDao ) ctx.getBean( "protocolDao" ) );
+        ml.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
+        ml.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
+        ml.setTaxonDao( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
+        ml.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
+        ml.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
+        ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
+        ml.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
+        ml.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
         gds.setPersister( ml );
         gds.setConverter( geoConv );
     }

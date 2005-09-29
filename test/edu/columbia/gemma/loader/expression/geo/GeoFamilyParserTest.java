@@ -47,25 +47,25 @@ public class GeoFamilyParserTest extends TestCase {
     public void testParseShortFamily() throws Exception {
         is = this.getClass().getResourceAsStream( "/data/geo/soft_ex_affy.txt" );
         parser.parse( is );
-        assertEquals( 3, parser.getSamples().size() );
+        assertEquals( 3, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
     public void testParseBigA() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/geo/GSE1623_family.soft.txt.gz" ) );
         parser.parse( is );
-        assertEquals( 8, parser.getSamples().size() );
+        assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
     public void testParseBigB() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/geo/GSE993_family.soft.txt.gz" ) );
         parser.parse( is );
-        assertEquals( 1, parser.getSamples().size() );
+        assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
     public void testParseDataset() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/geo/GDS100.soft.txt.gz" ) );
         parser.parse( is );
-        assertEquals( 8, parser.getSamples().size() );
+        assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }
 
 }

@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.DatabaseEntryDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
@@ -79,6 +80,7 @@ public class MageLoadTest extends MageBaseTest {
         ml.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
         ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
         ml.setCompoundDao((CompoundDao)ctx.getBean("compoundDao"));
+        ml.setDatabaseEntryDao((DatabaseEntryDao)ctx.getBean("databaseEntryDao"));
     }
 
     @Override
