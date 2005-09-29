@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -87,6 +89,7 @@ public class BioMaterialDaoImpl extends edu.columbia.gemma.expression.biomateria
         }
         BioMaterial newBioMaterial = this.find( bioMaterial );
         if ( newBioMaterial != null ) {
+            BeanPropertyCompleter.complete( newBioMaterial, bioMaterial );
             return newBioMaterial;
         }
         log.debug( "Creating new compound: " + bioMaterial.getName() );
