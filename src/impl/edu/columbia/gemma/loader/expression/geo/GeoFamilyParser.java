@@ -45,10 +45,12 @@ import org.apache.commons.logging.LogFactory;
 
 import baseCode.util.FileTools;
 import baseCode.util.StringUtil;
+import edu.columbia.gemma.loader.expression.geo.model.GeoChannel;
 import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
 import edu.columbia.gemma.loader.expression.geo.model.GeoData;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoPlatform;
+import edu.columbia.gemma.loader.expression.geo.model.GeoReplication;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
@@ -314,6 +316,11 @@ public class GeoFamilyParser implements Parser {
     private void datasetSet( String accession, String property, Object value ) {
         GeoDataset dataset = datasetMap.get( accession );
         if ( dataset == null ) throw new IllegalArgumentException( "Unknown dataset " + accession );
+
+        if ( property.equals( "experimentType" ) ) {
+            value = GeoDataset.convertStringToType( ( String ) value );
+        }
+
         try {
             BeanUtils.setProperty( dataset, property, value );
         } catch ( IllegalAccessException e ) {
@@ -611,10 +618,11 @@ public class GeoFamilyParser implements Parser {
                         this.seriesMap.get( value ).addSample( this.sampleMap.get( currentSampleAccession ) );
                     }
                     seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
+                } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
+                    // nooop.
                 } else {
                     throw new IllegalStateException( "Unknown flag: " + line );
                 }
-
             } else if ( inSeries ) {
                 if ( startsWithIgnoreCase( line, "!Series_title" ) ) {
                     seriesSet( currentSeriesAccession, "title", value );
@@ -633,7 +641,6 @@ public class GeoFamilyParser implements Parser {
                 } else if ( startsWithIgnoreCase( line, "!Series_contributor" ) ) {
                     seriesMap.get( currentSeriesAccession ).getContributers().add( value );
                 } else if ( startsWithIgnoreCase( line, "!Series_sample_id" ) ) {
-                    seriesMap.get( currentSeriesAccession ).getSampleIds().add( value );
                     if ( !this.sampleMap.containsKey( value ) ) {
                         log.debug( "New sample: " + value );
                         GeoSample sample = new GeoSample();
@@ -674,20 +681,27 @@ public class GeoFamilyParser implements Parser {
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_sample_list_" ) ) {
                     Integer variableId = new Integer( extractVariableNumber( line ) );
                     Collection<String> samples = Arrays.asList( StringUtils.split( value, "," ) );
-                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setVariableSampleList(
-                            samples );
+                    for ( String string : samples ) {
+                        GeoSample sam = this.sampleMap.get( string );
+                        seriesMap.get( currentSeriesAccession ).getVariables().get( variableId )
+                                .addToVariableSampleList( sam );
+                    }
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_" ) ) {
                     Integer variableId = new Integer( extractVariableNumber( line ) );
-                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setRepeats( value );
+                    seriesMap.get( currentSeriesAccession ).getReplicates().get( variableId ).setRepeats(
+                            GeoReplication.convertStringToRepeatType( value ) );
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
                     Integer variableId = new Integer( extractVariableNumber( line ) );
                     Collection<String> samples = Arrays.asList( StringUtils.split( value, ", " ) );
-                    seriesMap.get( currentSeriesAccession ).getVariables().get( variableId ).setRepeatsSampleList(
-                            samples );
+                    for ( String string : samples ) {
+                        GeoSample sam = this.sampleMap.get( string );
+                        seriesMap.get( currentSeriesAccession ).getReplicates().get( variableId )
+                                .addToRepeatsSampleList( sam );
+                    }
                 } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
                     Integer variableId = new Integer( extractVariableNumber( line ) );
                     GeoVariable v = new GeoVariable();
-                    v.setName( value );
+                    v.setType( GeoVariable.convertStringToType( value ) );
                     seriesMap.get( currentSeriesAccession ).addToVariables( variableId, v );
                 } else {
                     throw new IllegalStateException( "Unknown flag: " + line );
@@ -739,12 +753,15 @@ public class GeoFamilyParser implements Parser {
                     platformSet( currentPlatformAccession, "webLink", value );
                 } else if ( startsWithIgnoreCase( line, "!Platform_sample_id" ) ) {
                     platformSet( currentPlatformAccession, "id", value );
-                } else if ( startsWithIgnoreCase( line, "!platform_table_begin" ) ) {
+                } else if ( startsWithIgnoreCase( line, "!Platform_table_begin" ) ) {
                     inPlatformTable = true;
-                } else if ( startsWithIgnoreCase( line, "!platform_table_end" ) ) {
+                } else if ( startsWithIgnoreCase( line, "!Platform_table_end" ) ) {
                     inPlatformTable = false;
+                } else if ( startsWithIgnoreCase( line, "!Platform_contributor" ) ) {
+                    ;// noop. This is the name of the person who submitted the platform.
                 } else if ( startsWithIgnoreCase( line, "!Platform_series_id" ) ) {
-                    // no-op?
+                    // no-op. This identifies which series were run on this platform. We don't care to get this
+                    // information this way.
                 } else {
                     throw new IllegalStateException( "Unknown flag: " + line );
                 }
@@ -997,8 +1014,13 @@ public class GeoFamilyParser implements Parser {
      * @param channel
      * @param value
      */
-    private void sampleChannelSet( String sampleAccession, String property, int channel, String value ) {
+    private void sampleChannelSet( String sampleAccession, String property, int channel, Object value ) {
         GeoSample sample = sampleMap.get( sampleAccession );
+
+        if ( property.equals( "molecule" ) ) {
+            value = GeoChannel.convertStringToMolecule( ( String ) value );
+        }
+
         try {
             BeanUtils.setProperty( sample.getChannel( channel ), property, value );
         } catch ( IllegalAccessException e ) {
@@ -1107,6 +1129,11 @@ public class GeoFamilyParser implements Parser {
     private void subsetSet( String accession, String property, Object value ) {
         GeoSubset subset = subsetMap.get( accession );
         if ( subset == null ) throw new IllegalArgumentException( "Unknown subset " + accession );
+
+        if ( property.equals( "type" ) ) {
+            value = GeoVariable.convertStringToType( ( String ) value );
+        }
+
         try {
             BeanUtils.setProperty( subset, property, value );
         } catch ( IllegalAccessException e ) {
@@ -1124,7 +1151,7 @@ public class GeoFamilyParser implements Parser {
      * @see edu.columbia.gemma.loader.loaderutils.Parser#getResults()
      */
     public Collection<Object> getResults() {
-        // TODO Auto-generated method stub // FIXME
+        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 

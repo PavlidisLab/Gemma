@@ -35,7 +35,33 @@ public class GeoChannel {
     int channelNumber;
 
     String organism;
-    String molecule;
+
+    channelMolecule molecule;
+
+    public enum channelMolecule {
+        totalRNA, polyARNA, cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other
+    };
+
+    public static channelMolecule convertStringToMolecule( String string ) {
+        if ( string.equals( "total RNA" ) ) {
+            return channelMolecule.totalRNA;
+        } else if ( string.equals( "polyA RNA" ) ) {
+            return channelMolecule.polyARNA;
+        } else if ( string.equals( "cytoplasmic RNA" ) ) {
+            return channelMolecule.cytoplasmicRNA;
+        } else if ( string.equals( "nuclear RNA" ) ) {
+            return channelMolecule.nuclearRNA;
+        } else if ( string.equals( "genomic DNA" ) ) {
+            return channelMolecule.genomicDNA;
+        } else if ( string.equals( "protein" ) ) {
+            return channelMolecule.protein;
+        } else if ( string.equals( "other" ) ) {
+            return channelMolecule.other;
+        } else {
+            throw new IllegalArgumentException( "Unknown channel molecule " + string );
+        }
+    }
+
     String sourceName;
     Collection<String> characteristics;
     String bioMaterialProvider;
@@ -129,14 +155,14 @@ public class GeoChannel {
     /**
      * @return Returns the molecule.
      */
-    public String getMolecule() {
+    public channelMolecule getMolecule() {
         return this.molecule;
     }
 
     /**
      * @param molecule The molecule to set.
      */
-    public void setMolecule( String molecule ) {
+    public void setMolecule( channelMolecule molecule ) {
         this.molecule = molecule;
     }
 

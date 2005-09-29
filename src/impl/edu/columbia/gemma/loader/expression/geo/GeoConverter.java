@@ -47,6 +47,7 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
 import edu.columbia.gemma.loader.expression.geo.model.GeoData;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoPlatform;
+import edu.columbia.gemma.loader.expression.geo.model.GeoReplication;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
@@ -112,6 +113,8 @@ public class GeoConverter implements Converter {
             return convert( ( GeoSample ) geoObject );
         } else if ( geoObject instanceof GeoVariable ) {
             return convert( ( GeoVariable ) geoObject );
+        } else if ( geoObject instanceof GeoReplication ) {
+            return convert( ( GeoReplication ) geoObject );
         } else {
             throw new IllegalArgumentException( "Can't deal with " + geoObject.getClass().getName() );
         }
@@ -119,13 +122,28 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * @param replicates
+     * @return
+     */
+    public ExperimentalFactor convert( GeoReplication replicates ) {
+        log.debug( "Converting replicates " + replicates.getType() );
+        ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
+        result.setName( replicates.getType().toString() ); // FIXME this is an enum that can be made into an
+        // OntologyEntry.
+        result.setDescription( replicates.getDescription() );
+        // FIXME - fill in BioAssay FactorValues.
+        return result;
+    }
+
+    /**
      * @param variable
      * @return
      */
     public ExperimentalFactor convert( GeoVariable variable ) {
-        log.debug( "Converting variable " + variable.getName() );
+        log.debug( "Converting variable " + variable.getType() );
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
-        result.setName( variable.getName() );
+        result.setName( variable.getType().toString() ); // FIXME this is an enum that can be made into an
+        // OntologyEntry.
         result.setDescription( variable.getDescription() );
         // FIXME - fill in BioAssay FactorValues.
         return result;
@@ -137,7 +155,10 @@ public class GeoConverter implements Converter {
     private ExpressionExperiment convert( GeoDataset geoDataset ) {
         log.debug( "Converting dataset:" + geoDataset.getGeoAccesssion() );
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
+        result.setDescription( geoDataset.getDescription() );
+        result.setName( geoDataset.getTitle() );
         result.setAccession( convertDatabaseEntry( geoDataset ) );
+
         convertSubsetAssociations( result, geoDataset );
         convertSeriesAssociations( result, geoDataset );
         return result;
@@ -147,10 +168,12 @@ public class GeoConverter implements Converter {
      * @param result
      * @param geoDataset
      */
+    @SuppressWarnings("unchecked")
     private void convertSubsetAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
-        log.debug( "Converting subsets associations of a dataset" );
         for ( GeoSubset subset : geoDataset.getSubsets() ) {
-            convert( subset );
+            log.debug( "Converting subset: " + subset.getType() );
+            ExpressionExperimentSubSet ees = convert( subset );
+            result.getSubsets().add( ees );
         }
     }
 
@@ -159,8 +182,8 @@ public class GeoConverter implements Converter {
      * @param geoDataset
      */
     private void convertSeriesAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
-        log.debug( "Converting series associations of a dataset" );
         for ( GeoSeries series : geoDataset.getSeries() ) {
+            log.debug( "Converting series associated with dataset: " + series.getGeoAccesssion() );
             ExpressionExperiment newInfo = convert( series );
             BeanPropertyCompleter.complete( result, newInfo );
         }
@@ -174,22 +197,25 @@ public class GeoConverter implements Converter {
         if ( series == null ) return null;
         log.debug( "Converting series: " + series.getGeoAccesssion() );
 
-        Collection<GeoVariable> variables = series.getVariables().values();
-        for ( GeoVariable variable : variables ) {
-            convert( variable );
-        }
-
-        ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
-
         ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
         expExp.setAccession( convertDatabaseEntry( series ) );
+
+        ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
+        design.setExperimentalFactors( new HashSet() );
+        Collection<GeoVariable> variables = series.getVariables().values();
+        for ( GeoVariable variable : variables ) {
+            ExperimentalFactor ef = convert( variable );
+            design.getExperimentalFactors().add( ef );
+        }
 
         expExp.setExperimentalDesigns( new HashSet<ExperimentalDesign>() );
         expExp.getExperimentalDesigns().add( design );
 
         Collection<GeoSample> samples = series.getSamples();
+        expExp.setBioAssays( new HashSet() );
         for ( GeoSample sample : samples ) {
-            convert( sample );
+            BioAssay ba = convert( sample );
+            expExp.getBioAssays().add( ba );
         }
         return expExp;
     }
@@ -210,11 +236,14 @@ public class GeoConverter implements Converter {
     /**
      * @param subset
      */
+    @SuppressWarnings("unchecked")
     private ExpressionExperimentSubSet convert( GeoSubset subset ) {
-        // treat this like an expression experiment, but it has to be attached to the parent experiment.
         ExpressionExperimentSubSet expExp = ExpressionExperimentSubSet.Factory.newInstance();
-        expExp.setAccession( convertDatabaseEntry( subset ) );
         expExp.setSourceExperiment( convert( subset.getOwningDataset() ) );
+        expExp.setBioAssays( new HashSet() );
+        for ( GeoSample sample : subset.getSamples() ) {
+            expExp.getBioAssays().add( convert( sample ) );
+        }
         return expExp;
     }
 

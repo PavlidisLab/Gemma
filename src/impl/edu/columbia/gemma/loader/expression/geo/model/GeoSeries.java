@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
+ * Represents a set of GEO samples that were submitted together. In many cases this corresponds to a full study, but for
+ * studies that used more than one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -41,15 +43,15 @@ public class GeoSeries extends GeoData {
     Collection<String> webLinks;
     Collection<String> contributers;
     Map<Integer, GeoVariable> variables;
-    Collection<String> sampleIds;
+    Map<Integer, GeoReplication> replicates;
 
     Collection<GeoSample> samples;
 
     public GeoSeries() {
         keywords = new HashSet<String>();
         pubmedIds = new HashSet<String>();
-        sampleIds = new HashSet<String>();
         variables = new HashMap<Integer, GeoVariable>();
+        replicates = new HashMap<Integer, GeoReplication>();
         webLinks = new HashSet<String>();
         contributers = new HashSet<String>();
         samples = new HashSet<GeoSample>();
@@ -103,20 +105,6 @@ public class GeoSeries extends GeoData {
      */
     public void setPubmedIds( Collection<String> pubmedIds ) {
         this.pubmedIds = pubmedIds;
-    }
-
-    /**
-     * @return Returns the sampleIds.
-     */
-    public Collection<String> getSampleIds() {
-        return this.sampleIds;
-    }
-
-    /**
-     * @param sampleIds The sampleIds to set.
-     */
-    public void setSampleIds( Collection<String> sampleIds ) {
-        this.sampleIds = sampleIds;
     }
 
     /**
@@ -209,6 +197,20 @@ public class GeoSeries extends GeoData {
      */
     public void setContact( GeoContact contact ) {
         this.contact = contact;
+    }
+
+    /**
+     * @return Returns the replicates.
+     */
+    public Map<Integer, GeoReplication> getReplicates() {
+        return this.replicates;
+    }
+
+    /**
+     * @param replicates The replicates to set.
+     */
+    public void setReplicates( Map<Integer, GeoReplication> replicates ) {
+        this.replicates = replicates;
     }
 
 }

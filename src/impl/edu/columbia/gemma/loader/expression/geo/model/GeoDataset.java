@@ -22,7 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * Undocumented type of GEO data.
+ * Undocumented type of GEO data. In many cases this is associated with just one GeoSeries, but for studies that used
+ * more than one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -34,7 +35,31 @@ public class GeoDataset extends GeoData {
 
     private String completeness;
     private String description;
-    private String experimentType;
+
+    public ExperimentType experimentType;
+
+    public enum ExperimentType {
+        singleChannel, dualChannel, singleChannelGenomic, dualChannelGenomic, SAGE, MPSS
+    };
+
+    public static ExperimentType convertStringToType( String string ) {
+        if ( string.equals( "single channel" ) ) {
+            return ExperimentType.singleChannel;
+        } else if ( string.equals( "dual channel" ) ) {
+            return ExperimentType.dualChannel;
+        } else if ( string.equals( "single channel genomic" ) ) {
+            return ExperimentType.singleChannelGenomic;
+        } else if ( string.equals( "dual channel genomic" ) ) {
+            return ExperimentType.dualChannelGenomic;
+        } else if ( string.equals( "SAGE" ) ) {
+            return ExperimentType.SAGE;
+        } else if ( string.equals( "MPSS" ) ) {
+            return ExperimentType.MPSS;
+        } else {
+            throw new IllegalArgumentException( "Unknown experiment type " + string );
+        }
+    }
+
     private String order;
     private String organism;
     private GeoPlatform platform;
@@ -87,14 +112,14 @@ public class GeoDataset extends GeoData {
     /**
      * @return Returns the experimentType.
      */
-    public String getExperimentType() {
+    public GeoDataset.ExperimentType getExperimentType() {
         return this.experimentType;
     }
 
     /**
      * @param experimentType The experimentType to set.
      */
-    public void setExperimentType( String experimentType ) {
+    public void setExperimentType( GeoDataset.ExperimentType experimentType ) {
         this.experimentType = experimentType;
     }
 

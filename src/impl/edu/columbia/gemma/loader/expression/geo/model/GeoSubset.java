@@ -21,7 +21,10 @@ package edu.columbia.gemma.loader.expression.geo.model;
 import java.util.Collection;
 import java.util.HashSet;
 
+import edu.columbia.gemma.loader.expression.geo.model.GeoVariable.VariableType;
+
 /**
+ * Represents a subset of samples.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -34,7 +37,8 @@ public class GeoSubset extends GeoData {
     private GeoDataset owningDataset;
     private String description;
     private Collection<GeoSample> samples;
-    private String type;
+
+    private VariableType type;
 
     public GeoSubset() {
         this.samples = new HashSet<GeoSample>();
@@ -61,7 +65,7 @@ public class GeoSubset extends GeoData {
     /**
      * @return Returns the sample.
      */
-    public Collection getSamples() {
+    public Collection<GeoSample> getSamples() {
         return this.samples;
     }
 
@@ -79,14 +83,14 @@ public class GeoSubset extends GeoData {
     /**
      * @return Returns the type.
      */
-    public String getType() {
+    public VariableType getType() {
         return this.type;
     }
 
     /**
      * @param type The type to set.
      */
-    public void setType( String type ) {
+    public void setType( VariableType type ) {
         this.type = type;
     }
 

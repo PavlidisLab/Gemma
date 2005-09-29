@@ -144,7 +144,7 @@ public class PersisterHelper implements Persister {
             }
         } catch ( Exception e ) {
             log.error( e, e );
-            throw new RuntimeException(e);
+            throw new RuntimeException( e );
         }
         return col;
     }
@@ -630,7 +630,7 @@ public class PersisterHelper implements Persister {
             vect.setDesignElement( persistentDesignElement );
         }
 
-        return ( ExpressionExperiment ) expressionExperimentDao.create( entity );
+        return expressionExperimentDao.findOrCreate( entity );
     }
 
     /**

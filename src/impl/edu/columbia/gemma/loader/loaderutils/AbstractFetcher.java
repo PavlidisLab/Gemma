@@ -50,23 +50,30 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * Create a directory according to the current accession number and set path information.
+     * Create a directory according to the current accession number and set path information. If the path cannot be
+     * used, we use a temporary directory.
      * 
      * @param accession
-     * @return
+     * @return new directory
      * @throws IOException
      */
     protected File mkdir( String accession ) throws IOException {
         assert localBasePath != null;
-        File newDir = new File( localBasePath + "/" + accession );
-        if ( !newDir.exists() ) {
-            success = newDir.mkdir();
-            if ( !success ) {
-                throw new IOException( "Could not create output directory " + newDir );
-            }
-            log.info( "Created directory " + newDir.getAbsolutePath() );
-        }
 
+        File targetPath = new File( localBasePath );
+        File newDir = new File( targetPath + System.getProperty( "file.separator" ) + accession );
+
+        if ( !targetPath.canRead() ) {
+            File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + System.getProperty( "file.separator" )
+                    + accession );
+            log.warn( "Could not create output directory " + newDir );
+            log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
+
+            newDir = tmpDir;
+        }
+        if ( !newDir.exists() && !newDir.mkdir() ) {
+            throw new IOException( "Could not create target directory " + newDir.getAbsolutePath() );
+        }
         if ( !newDir.canWrite() ) {
             throw new IOException( "Cannot write to target directory " + newDir.getAbsolutePath() );
         }

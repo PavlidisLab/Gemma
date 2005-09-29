@@ -36,6 +36,7 @@ import edu.columbia.gemma.loader.expression.geo.util.GeoUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
+ * Retrieve GEO files from the NCBI FTP server.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -77,7 +78,7 @@ public class DatasetFetcher extends FtpFetcher {
                 file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
                 // file.setSize( outputFile.length() );
 
-                log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + " .Output file is "
+                log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + ". Output file is "
                         + outputFileName );
 
                 // no need to unpack the file, we process as is.

@@ -39,11 +39,20 @@ import java.util.Collection;
  */
 public class GeoVariable {
 
-    String name;
+    VariableType type;
     String description = "";
-    Collection<String> variableSampleList;
-    String repeats;
-    Collection<String> repeatsSampleList;
+
+    /**
+     * The samples to which this variable applies.
+     */
+    Collection<GeoSample> samples;
+
+    /**
+     * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma.
+     */
+    public enum VariableType {
+        age, agent, cellLine, cellType, developmentalStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue
+    };
 
     /**
      * @param d
@@ -66,68 +75,97 @@ public class GeoVariable {
         this.description = description;
     }
 
-    /**
-     * @return Returns the repeats.
-     */
-    public String getRepeats() {
-        return this.repeats;
-    }
-
-    /**
-     * @param repeats The repeats to set.
-     */
-    public void setRepeats( String repeats ) {
-        this.repeats = repeats;
-    }
-
-    /**
-     * @return Returns the repeatsSampleList.
-     */
-    public Collection<String> getRepeatsSampleList() {
-        return this.repeatsSampleList;
-    }
-
-    public void addToVariableSampleList( String sample ) {
-        this.variableSampleList.add( sample );
-    }
-
-    public void addToRepeatsSampleList( String sample ) {
-        this.repeatsSampleList.add( sample );
-    }
-
-    /**
-     * @param repeatsSampleList The repeatsSampleList to set.
-     */
-    public void setRepeatsSampleList( Collection<String> repeatsSampleList ) {
-        this.repeatsSampleList = repeatsSampleList;
+    public void addToVariableSampleList( GeoSample sample ) {
+        this.samples.add( sample );
     }
 
     /**
      * @return Returns the variableSampleList.
      */
-    public Collection<String> getVariableSampleList() {
-        return this.variableSampleList;
+    public Collection<GeoSample> getSamples() {
+        return this.samples;
     }
 
     /**
      * @param variableSampleList The variableSampleList to set.
      */
-    public void setVariableSampleList( Collection<String> variableSampleList ) {
-        this.variableSampleList = variableSampleList;
+    public void setSamples( Collection<GeoSample> variableSampleList ) {
+        this.samples = variableSampleList;
     }
 
     /**
      * @return Returns the name.
      */
-    public String getName() {
-        return this.name;
+    public VariableType getType() {
+        return this.type;
     }
 
     /**
      * @param name The name to set.
      */
-    public void setName( String name ) {
-        this.name = name;
+    public void setType( VariableType name ) {
+        this.type = name;
+    }
+
+    /**
+     * Convert a string e.g., "age" to the corresponding enumerated type.
+     * 
+     * @param string
+     * @return
+     */
+    public static VariableType convertStringToType( String string ) {
+        if ( string.equals( "age" ) ) {
+            return VariableType.age;
+        } else if ( string.equals( "agent" ) ) {
+            return VariableType.agent;
+        } else if ( string.equals( "cell line" ) ) {
+            return VariableType.cellLine;
+        } else if ( string.equals( "cell type" ) ) {
+            return VariableType.cellType;
+        } else if ( string.equals( "developmental stage" ) ) {
+            return VariableType.developmentalStage;
+        } else if ( string.equals( "disease state" ) ) {
+            return VariableType.diseaseState;
+        } else if ( string.equals( "dose" ) ) {
+            return VariableType.dose;
+        } else if ( string.equals( "gender" ) ) {
+            return VariableType.gender;
+        } else if ( string.equals( "genotype/variation" ) ) {
+            return VariableType.genotypeOrVariation;
+        } else if ( string.equals( "growth protocol" ) ) {
+            return VariableType.growthProtocol;
+        } else if ( string.equals( "individual" ) ) {
+            return VariableType.individual;
+        } else if ( string.equals( "infection" ) ) {
+            return VariableType.infection;
+        } else if ( string.equals( "isolate" ) ) {
+            return VariableType.isolate;
+        } else if ( string.equals( "metabolism" ) ) {
+            return VariableType.metabolism;
+        } else if ( string.equals( "other" ) ) {
+            return VariableType.other;
+        } else if ( string.equals( "protocol" ) ) {
+            return VariableType.protocol;
+        } else if ( string.equals( "shock" ) ) {
+            return VariableType.shock;
+        } else if ( string.equals( "species" ) ) {
+            return VariableType.species;
+        } else if ( string.equals( "specimen" ) ) {
+            return VariableType.specimen;
+        } else if ( string.equals( "stress" ) ) {
+            return VariableType.stress;
+        } else if ( string.equals( "strain" ) ) {
+            return VariableType.strain;
+        } else if ( string.equals( "temperature" ) ) {
+            return VariableType.temperature;
+        } else if ( string.equals( "time" ) ) {
+            return VariableType.time;
+        } else if ( string.equals( "tissue" ) ) {
+            return VariableType.tissue;
+        } else {
+            throw new IllegalArgumentException( "Unknown subset type " + string );
+        }
+
     }
 
 }
