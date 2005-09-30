@@ -2,8 +2,8 @@ insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME,
 insert into CONTACT (CLASS, NAME, EMAIL) values ("edu.columbia.gemma.common.auditAndSecurity.ContactImpl", "contact", "admin@gemma.org");
 insert into USER_ROLE (NAME, USER_NAME) values ("admin", "administrator");
 
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("homo sapiens","human","9606");
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("mus musculus","mouse","10090"); 
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Homo sapiens","human","9606");
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Mus musculus","mouse","10090"); 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("rattus","rat","10114");
 
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/");
