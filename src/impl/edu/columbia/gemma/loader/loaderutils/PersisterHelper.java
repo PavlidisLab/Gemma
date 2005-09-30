@@ -220,7 +220,7 @@ public class PersisterHelper implements Persister {
         }
 
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
-            persistArrayDesign( arrayDesign );
+            arrayDesign = persistArrayDesign( arrayDesign );
         }
 
         for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
