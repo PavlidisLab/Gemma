@@ -67,8 +67,6 @@ public class ArrayDesignMappings {
 
         arrayDesign.setDescription( values[ARRAY_DESCRIPTION] );
 
-        arrayDesign.setNumberOfFeatures( Integer.parseInt( values[ARRAY_NUM_OF_REPORTERS] ) );
-
         return arrayDesign;
     }
 

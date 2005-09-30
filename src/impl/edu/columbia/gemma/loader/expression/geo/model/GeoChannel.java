@@ -32,11 +32,11 @@ import java.util.HashSet;
  */
 public class GeoChannel {
 
-    int channelNumber;
+    private int channelNumber = -1;
 
-    String organism;
+    private String organism = null;
 
-    channelMolecule molecule;
+    private channelMolecule molecule;
 
     public enum channelMolecule {
         totalRNA, polyARNA, cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other
@@ -62,20 +62,16 @@ public class GeoChannel {
         }
     }
 
-    String sourceName;
-    Collection<String> characteristics;
-    String bioMaterialProvider;
-    String treatmentProtocol;
-    String extractProtocol;
-    String label;
-    String labelProtocol;
+    String sourceName = null;
+    Collection<String> characteristics = new HashSet<String>();;
+    String bioMaterialProvider = null;
+    String treatmentProtocol = null;
+    String extractProtocol = null;
+    String label = null;
+    String labelProtocol = null;
 
     public void addToExtractProtocol( String s ) {
         this.extractProtocol = this.extractProtocol + " " + s;
-    }
-
-    public GeoChannel() {
-        characteristics = new HashSet<String>();
     }
 
     public void addCharacteristic( String characteristic ) {

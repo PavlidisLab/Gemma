@@ -21,7 +21,7 @@ package edu.columbia.gemma.loader.expression.geo.model;
 import java.util.Collection;
 
 /**
- * Represents a group of samples which were replicated.
+ * Represents a group of samples that were replicated.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -30,13 +30,13 @@ import java.util.Collection;
  * @version $Id$
  */
 public class GeoReplication {
-    ReplicationType type;
-    String description = "";
+    private ReplicationType type;
+    private String description = "";
 
     /**
      * The samples which are replicates.
      */
-    Collection<GeoSample> samples;
+    private Collection<GeoSample> samples;
 
     /**
      * @param d

@@ -31,11 +31,10 @@ import org.apache.commons.net.ftp.FTPClient;
 import baseCode.util.NetUtils;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004-2005 Columbia University
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -68,4 +67,5 @@ public class GeoUtil {
     public static FTPClient connect( int mode ) throws SocketException, IOException {
         return NetUtils.connect( mode, host, login, password );
     }
+
 }

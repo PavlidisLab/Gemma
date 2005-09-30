@@ -34,13 +34,13 @@ import java.util.Map;
  */
 public abstract class GeoData {
 
-    Map<String, List<String>> data = new HashMap<String, List<String>>();;
+    private Map<String, List<String>> data = new HashMap<String, List<String>>();;
 
-    GeoContact contact = new GeoContact();
+    protected GeoContact contact = new GeoContact();
 
-    String geoAccesssion;
+    protected String geoAccesssion;
 
-    List<String> columnNames = new ArrayList<String>();
+    private List<String> columnNames = new ArrayList<String>();
 
     /**
      * @return Returns the columnNames.

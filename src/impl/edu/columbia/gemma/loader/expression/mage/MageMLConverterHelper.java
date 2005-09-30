@@ -325,7 +325,7 @@ public class MageMLConverterHelper {
         edu.columbia.gemma.expression.arrayDesign.ArrayDesign result = edu.columbia.gemma.expression.arrayDesign.ArrayDesign.Factory
                 .newInstance();
         Integer numFeatures = mageObj.getNumberOfFeatures();
-        if ( numFeatures != null ) result.setNumberOfFeatures( numFeatures.intValue() );
+        if ( numFeatures != null ) result.setAdvertisedNumberOfDesignElements( numFeatures.intValue() );
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;
@@ -3281,7 +3281,7 @@ public class MageMLConverterHelper {
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }
         }
-        gemmaObj.setNumberOfCompositeSequences( designObjs.size() );
+        gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );
     }
 
     /**
@@ -3341,7 +3341,7 @@ public class MageMLConverterHelper {
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }
         }
-        gemmaObj.setNumberOfFeatures( designObjs.size() );
+        gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );
     }
 
     /**

@@ -806,7 +806,7 @@ public class GeoFamilyParser implements Parser {
                 } else if ( startsWithIgnoreCase( line, "!Platform_distribution" ) ) {
                     platformSet( currentPlatformAccession, "distribution", value );
                 } else if ( startsWithIgnoreCase( line, "!Platform_organism" ) ) {
-                    platformSet( currentPlatformAccession, "organism", value );
+                    platformAddTo( currentPlatformAccession, "organisms", value );
                 } else if ( startsWithIgnoreCase( line, "!Platform_description" ) ) {
                     platformAddTo( currentPlatformAccession, "description", value );
                 } else if ( startsWithIgnoreCase( line, "!Platform_contact_name" ) ) {

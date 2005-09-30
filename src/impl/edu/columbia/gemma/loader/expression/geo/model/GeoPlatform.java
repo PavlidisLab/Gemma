@@ -18,7 +18,9 @@
  */
 package edu.columbia.gemma.loader.expression.geo.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -32,33 +34,41 @@ import java.util.List;
  */
 public class GeoPlatform extends GeoData {
 
-    String title;
+    private Collection<String> catalogNumbers = new HashSet<String>();
 
-    String distribution;
+    private String coating = "";
 
-    String technology;
+    private Collection<String> contributer = new HashSet<String>();
 
-    Collection<String> organism;
+    private String description = "";
 
-    String manufacturer;
+    private String distribution = "";
 
-    String manufactureProtocol;
+    private String manufactureProtocol = "";
 
-    Collection<String> catalogNumbers;
+    private String manufacturer = "";
 
-    Collection<String> webLinks;
+    private Collection<String> organisms = new HashSet<String>();
 
-    String support;
+    private List<List> platformData = new ArrayList<List>();
 
-    String coating;
+    private Collection<Integer> pubMedIds = new HashSet<Integer>();
 
-    String description;
+    private String support = "";
 
-    Collection<String> contributer;
+    private String technology = "";
 
-    Collection<Integer> pubMedIds;
+    private String title = "";
 
-    List<List> platformData;
+    private Collection<String> webLinks = new HashSet<String>();
+
+    public void addToDescription( String s ) {
+        this.description = this.description + " " + s;
+    }
+
+    public void addToOrganisms( String org ) {
+        this.organisms.add( org );
+    }
 
     /**
      * @return Returns the catalogNumbers.
@@ -68,28 +78,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param catalogNumbers The catalogNumbers to set.
-     */
-    public void setCatalogNumbers( Collection<String> catalogNumbers ) {
-        this.catalogNumbers = catalogNumbers;
-    }
-
-    /**
      * @return Returns the coating.
      */
     public String getCoating() {
         return this.coating;
-    }
-
-    public void addToDescription( String s ) {
-        this.description = this.description + " " + s;
-    }
-
-    /**
-     * @param coating The coating to set.
-     */
-    public void setCoating( String coating ) {
-        this.coating = coating;
     }
 
     /**
@@ -100,10 +92,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param contributer The contributer to set.
+     * @return Returns the description.
      */
-    public void setContributer( Collection<String> contributer ) {
-        this.contributer = contributer;
+    public String getDescription() {
+        return this.description;
     }
 
     /**
@@ -121,24 +113,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param distribution The distribution to set.
-     */
-    public void setDistribution( String distribution ) {
-        this.distribution = distribution;
-    }
-
-    /**
      * @return Returns the manufactureProtocol.
      */
     public String getManufactureProtocol() {
         return this.manufactureProtocol;
-    }
-
-    /**
-     * @param manufactureProtocol The manufactureProtocol to set.
-     */
-    public void setManufactureProtocol( String manufactureProtocol ) {
-        this.manufactureProtocol = manufactureProtocol;
     }
 
     /**
@@ -149,10 +127,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param manufacturer The manufacturer to set.
+     * @return Returns the organisms.
      */
-    public void setManufacturer( String manufacturer ) {
-        this.manufacturer = manufacturer;
+    public Collection<String> getOrganisms() {
+        return this.organisms;
     }
 
     /**
@@ -163,24 +141,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param platformData The platformData to set.
-     */
-    public void setPlatformData( List<List> platformData ) {
-        this.platformData = platformData;
-    }
-
-    /**
      * @return Returns the pubMedIds.
      */
     public Collection<Integer> getPubMedIds() {
         return this.pubMedIds;
-    }
-
-    /**
-     * @param pubMedIds The pubMedIds to set.
-     */
-    public void setPubMedIds( Collection<Integer> pubMedIds ) {
-        this.pubMedIds = pubMedIds;
     }
 
     /**
@@ -191,24 +155,10 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param support The support to set.
-     */
-    public void setSupport( String support ) {
-        this.support = support;
-    }
-
-    /**
      * @return Returns the technology.
      */
     public String getTechnology() {
         return this.technology;
-    }
-
-    /**
-     * @param technology The technology to set.
-     */
-    public void setTechnology( String technology ) {
-        this.technology = technology;
     }
 
     /**
@@ -219,17 +169,101 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param title The title to set.
-     */
-    public void setTitle( String title ) {
-        this.title = title;
-    }
-
-    /**
      * @return Returns the webLinks.
      */
     public Collection<String> getWebLinks() {
         return this.webLinks;
+    }
+
+    /**
+     * @param catalogNumbers The catalogNumbers to set.
+     */
+    public void setCatalogNumbers( Collection<String> catalogNumbers ) {
+        this.catalogNumbers = catalogNumbers;
+    }
+
+    /**
+     * @param coating The coating to set.
+     */
+    public void setCoating( String coating ) {
+        this.coating = coating;
+    }
+
+    /**
+     * @param contributer The contributer to set.
+     */
+    public void setContributer( Collection<String> contributer ) {
+        this.contributer = contributer;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    /**
+     * @param distribution The distribution to set.
+     */
+    public void setDistribution( String distribution ) {
+        this.distribution = distribution;
+    }
+
+    /**
+     * @param manufactureProtocol The manufactureProtocol to set.
+     */
+    public void setManufactureProtocol( String manufactureProtocol ) {
+        this.manufactureProtocol = manufactureProtocol;
+    }
+
+    /**
+     * @param manufacturer The manufacturer to set.
+     */
+    public void setManufacturer( String manufacturer ) {
+        this.manufacturer = manufacturer;
+    }
+
+    /**
+     * @param organisms The organisms to set.
+     */
+    public void setOrganisms( Collection<String> organism ) {
+        this.organisms = organism;
+    }
+
+    /**
+     * @param platformData The platformData to set.
+     */
+    public void setPlatformData( List<List> platformData ) {
+        this.platformData = platformData;
+    }
+
+    /**
+     * @param pubMedIds The pubMedIds to set.
+     */
+    public void setPubMedIds( Collection<Integer> pubMedIds ) {
+        this.pubMedIds = pubMedIds;
+    }
+
+    /**
+     * @param support The support to set.
+     */
+    public void setSupport( String support ) {
+        this.support = support;
+    }
+
+    /**
+     * @param technology The technology to set.
+     */
+    public void setTechnology( String technology ) {
+        this.technology = technology;
+    }
+
+    /**
+     * @param title The title to set.
+     */
+    public void setTitle( String title ) {
+        this.title = title;
     }
 
     /**

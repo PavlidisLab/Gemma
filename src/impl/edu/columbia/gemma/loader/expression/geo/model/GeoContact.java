@@ -28,14 +28,14 @@ package edu.columbia.gemma.loader.expression.geo.model;
  */
 public class GeoContact {
 
-    String name;
-    String email;
-    String institute;
-    String department;
-    String city;
-    String phone;
-    String fax;
-    String webLink;
+    private String name;
+    private String email;
+    private String institute;
+    private String department;
+    private String city;
+    private String phone;
+    private String fax;
+    private String webLink;
 
     /**
      * @return Returns the city.

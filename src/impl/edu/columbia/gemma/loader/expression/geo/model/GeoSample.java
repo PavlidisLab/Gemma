@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
- * BioAssay in Gemma.
+ * BioAssay in Gemma. Some fields are only relevant for SAGE.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -34,13 +34,13 @@ import java.util.List;
  * @version $Id$
  */
 public class GeoSample extends GeoData {
-    String title;
 
-    List<GeoChannel> channelData;
-    String hybProtocol;
-    String dataProcessing;
-    String scanProtocol;
-    String description;
+    private String title = "";
+    private List<GeoChannel> channels;
+    private String hybProtocol = "";
+    private String dataProcessing = "";
+    private String scanProtocol = "";
+    private String description = "";
 
     Collection<GeoPlatform> platforms;
 
@@ -50,7 +50,7 @@ public class GeoSample extends GeoData {
     int tagLength;
 
     public GeoSample() {
-        channelData = new ArrayList<GeoChannel>();
+        channels = new ArrayList<GeoChannel>();
         this.addChannel();
         contact = new GeoContact();
         platforms = new HashSet<GeoPlatform>();
@@ -65,14 +65,14 @@ public class GeoSample extends GeoData {
     }
 
     /**
-     * @return Returns the anchor.
+     * @return Returns the anchor. (SAGE)
      */
     public String getAnchor() {
         return this.anchor;
     }
 
     /**
-     * @param anchor The anchor to set.
+     * @param anchor The anchor to set. (SAGE)
      */
     public void setAnchor( String anchor ) {
         this.anchor = anchor;
@@ -82,32 +82,40 @@ public class GeoSample extends GeoData {
      * @return Returns the channelCount.
      */
     public int getChannelCount() {
-        return this.channelData.size();
+        return this.channels.size();
     }
 
     /**
-     * @return Returns the channelData.
+     * @return Returns the channels.
      */
-    public List<GeoChannel> getChannelData() {
-        return this.channelData;
+    public List<GeoChannel> getChannels() {
+        return this.channels;
     }
 
     /**
-     * @param channelData The channelData to set.
+     * @param channels The channels to set.
      */
-    public void setChannelData( List<GeoChannel> channelData ) {
-        this.channelData = channelData;
+    public void setChannels( List<GeoChannel> channelData ) {
+        this.channels = channelData;
     }
 
     public GeoChannel getChannel( int i ) {
-        if ( i <= 0 || i > channelData.size() )
-            throw new IllegalArgumentException( "Invalid channel index " + i + ", only " + channelData.size()
+        if ( i <= 0 || i > channels.size() )
+            throw new IllegalArgumentException( "Invalid channel index " + i + ", only " + channels.size()
                     + " channels available." );
-        return channelData.get( i - 1 );
+        GeoChannel result = channels.get( i - 1 );
+
+        if ( result.getChannelNumber() != i ) {
+            throw new IllegalStateException( "Channel number recorded in object was incorrect."
+                    + result.getChannelNumber() + " != " + i );
+        }
+        return result;
     }
 
     public void addChannel() {
-        this.channelData.add( new GeoChannel() );
+        GeoChannel newCh = new GeoChannel();
+        newCh.setChannelNumber( channels.size() + 1 );
+        this.channels.add( newCh );
     }
 
     /**
@@ -183,28 +191,28 @@ public class GeoSample extends GeoData {
     }
 
     /**
-     * @return Returns the tagCount.
+     * @return Returns the tagCount. (SAGE)
      */
     public int getTagCount() {
         return this.tagCount;
     }
 
     /**
-     * @param tagCount The tagCount to set.
+     * @param tagCount The tagCount to set. (SAGE)
      */
     public void setTagCount( int tagCount ) {
         this.tagCount = tagCount;
     }
 
     /**
-     * @return Returns the tagLength.
+     * @return Returns the tagLength. (SAGE)
      */
     public int getTagLength() {
         return this.tagLength;
     }
 
     /**
-     * @param tagLength The tagLength to set.
+     * @param tagLength The tagLength to set. (SAGE)
      */
     public void setTagLength( int tagLength ) {
         this.tagLength = tagLength;

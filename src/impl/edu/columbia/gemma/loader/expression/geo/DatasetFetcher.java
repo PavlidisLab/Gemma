@@ -57,8 +57,6 @@ public class DatasetFetcher extends FtpFetcher {
 
     /**
      * @param accession
-     * @throws SocketException
-     * @throws IOException
      */
     public Collection<LocalFile> fetch( String accession ) {
         log.info( "Seeking GDS file for " + accession );
@@ -69,6 +67,7 @@ public class DatasetFetcher extends FtpFetcher {
             File newDir = mkdir( accession );
             String outputFileName = newDir + "/" + accession + ".soft.gz";
             success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
+            f.disconnect();
 
             if ( success ) {
                 // get meta-data about the file.

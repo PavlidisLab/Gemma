@@ -18,13 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
-import java.io.IOException;
-import java.net.SocketException;
+import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
@@ -41,7 +36,6 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
  */
 public class GeoDatasetService {
 
-    private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
     private SourceDomainObjectGenerator generator;
     private Persister expLoader;
     private Converter converter;
@@ -56,20 +50,17 @@ public class GeoDatasetService {
      * 
      * @param geoDataSetAccession
      */
+    @SuppressWarnings("unchecked")
     public void fetchAndLoad( String geoDataSetAccession ) {
 
         generator = new GeoDomainObjectGenerator();
 
         GeoParseResult results = ( GeoParseResult ) generator.generate( geoDataSetAccession ).iterator().next();
 
-        ExpressionExperiment expexp = ( ExpressionExperiment ) converter.convert( results.getDatasets().values()
-                .iterator().next() );
+        Collection<Object> convertedResults = ( Collection<Object> ) converter.convert( results.getDatasets().values() );
 
-        if ( expexp == null ) throw new NullPointerException( "Got a null expressionExpression " );
-
-        log.info( "Loading expressionExperiment: " + expexp.getAccession().getAccession() );
         assert expLoader != null;
-        expLoader.persist( expexp );
+        expLoader.persist( convertedResults );
     }
 
     /**

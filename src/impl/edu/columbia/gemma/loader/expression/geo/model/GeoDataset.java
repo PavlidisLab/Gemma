@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * Undocumented type of GEO data. In many cases this is associated with just one GeoSeries, but for studies that used
- * more than one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
+ * A GEO-curated dataset. In many cases this is associated with just one GeoSeries, but for studies that used more than
+ * one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
