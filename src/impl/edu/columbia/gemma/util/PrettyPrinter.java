@@ -41,6 +41,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public class PrettyPrinter {
 
+    /**
+     * The maximum number of items to display from a collection.
+     */
+    private static final int MAX_TO_SHOW = 10;
+
     private PrettyPrinter() {
     }
 
@@ -116,8 +121,15 @@ public class PrettyPrinter {
      */
     private static void print( StringBuffer buf, Collection gemmaCollection, int level )
             throws IllegalArgumentException, IntrospectionException, IllegalAccessException, InvocationTargetException {
+        int i = 0;
         for ( Object gemmaObj : gemmaCollection ) {
             print( buf, gemmaObj, level );
+            i++;
+            if ( i >= MAX_TO_SHOW ) {
+                buf.append( "..." + ( gemmaCollection.size() - MAX_TO_SHOW ) + " more "
+                        + gemmaObj.getClass().getSimpleName() + "'s\n" );
+                break;
+            }
         }
     }
 

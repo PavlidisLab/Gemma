@@ -39,6 +39,8 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Contact.class );
 
+            if ( contact.getName() != null ) queryObject.add( Restrictions.eq( "name", contact.getAddress() ) );
+
             if ( contact.getAddress() != null ) queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
 
             if ( contact.getEmail() != null ) queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
@@ -67,8 +69,8 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
     @Override
     public Contact findOrCreate( Contact contact ) {
         if ( contact == null
-                || ( contact.getAddress() == null && contact.getEmail() == null && contact.getPhone() == null ) )
-            return null;
+                || ( contact.getName() == null && contact.getAddress() == null && contact.getEmail() == null && contact
+                        .getPhone() == null ) ) return null;
         Contact newContact = find( contact );
         if ( newContact != null ) {
             BeanPropertyCompleter.complete( newContact, contact );

@@ -19,10 +19,11 @@
 package edu.columbia.gemma.loader.loaderutils;
 
 import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.auditAndSecurity.Contact;
+import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.Characteristic;
@@ -97,6 +98,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  * @spring.property name="quantitationTypeDao" ref="quantitationTypeDao"
  * @spring.property name="compoundDao" ref="compoundDao"
  * @spring.property name="databaseEntryDao" ref="databaseEntryDao"
+ * @spring.property name="contactDao" ref="contactDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -108,6 +110,8 @@ public class PersisterHelper implements Persister {
     private BioMaterialDao bioMaterialDao;
 
     private CompoundDao compoundDao;
+
+    private ContactDao contactDao;
 
     private DatabaseEntryDao databaseEntryDao;
 
@@ -225,7 +229,6 @@ public class PersisterHelper implements Persister {
 
         for ( BioMaterial bioMaterial : ( Collection<BioMaterial> ) assay.getSamplesUsed() ) {
             bioMaterial = persistBioMaterial( bioMaterial );
-            log.debug( bioMaterial.getId() );
         }
 
         LocalFile f = assay.getRawDataFile();
@@ -268,6 +271,13 @@ public class PersisterHelper implements Persister {
      */
     public void setCompoundDao( CompoundDao compoundDao ) {
         this.compoundDao = compoundDao;
+    }
+
+    /**
+     * @param contactDao The contactDao to set.
+     */
+    public void setContactDao( ContactDao contactDao ) {
+        this.contactDao = contactDao;
     }
 
     /**
@@ -367,9 +377,9 @@ public class PersisterHelper implements Persister {
     private void fillInBioSequence( BioSequence bioSequence ) {
         if ( bioSequence == null ) return;
         Taxon t = bioSequence.getTaxon();
-        if ( t != null ) {
-            t = taxonDao.findOrCreate( t );
-        }
+        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
+        t = taxonDao.findOrCreate( t );
+
     }
 
     /**
@@ -502,22 +512,23 @@ public class PersisterHelper implements Persister {
     @SuppressWarnings("unchecked")
     private ArrayDesign persistArrayDesign( ArrayDesign entity ) {
 
-        ArrayDesign existing = arrayDesignDao.find( entity );
-        if ( existing != null ) {
-            log.warn( "Array design " + entity + " already exists." );
-            Collection<DesignElement> existingDesignElements = existing.getDesignElements();
-            if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
-                log.warn( "Number of design elements in existing version "
-                        + "is the same. No further processing will be done." );
-                return existing;
-            } else if ( entity.getDesignElements().size() == 0 ) {
-                log.warn( "No design elements in new version, no further processing will be done." );
-                return existing;
-            }
+        entity.setDesignProvider( persistContact( entity.getDesignProvider() ) );
+        ArrayDesign existing = arrayDesignDao.findOrCreate( entity );
+
+        Collection<DesignElement> existingDesignElements = existing.getDesignElements();
+        if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
+            log.warn( "Number of design elements in existing version "
+                    + "is the same. No further processing will be done." );
+            return existing;
+        } else if ( entity.getDesignElements().size() == 0 ) {
+            log.warn( existing + ": No design elements in newly supplied version, no further processing will be done." );
+            return existing;
         }
 
         log.debug( "Filling in design elements for " + entity );
+        int i = 0;
         for ( DesignElement designElement : ( Collection<DesignElement> ) entity.getDesignElements() ) {
+            designElement.setArrayDesign( existing );
             if ( designElement instanceof CompositeSequence ) {
                 CompositeSequence cs = ( CompositeSequence ) designElement;
                 fillInBioSequence( cs.getBiologicalCharacteristic() );
@@ -525,8 +536,10 @@ public class PersisterHelper implements Persister {
                 Reporter reporter = ( Reporter ) designElement;
                 fillInBioSequence( reporter.getImmobilizedCharacteristic() );
             }
+            i++;
+            if ( i % 1000 == 0 ) log.info( i + " design elements examined" );
         }
-        log.info( "Creating arrayDesign " + entity );
+
         return arrayDesignDao.findOrCreate( entity );
     }
 
@@ -568,6 +581,13 @@ public class PersisterHelper implements Persister {
         if ( compound.getIsSolvent() == null )
             throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
         return compoundDao.findOrCreate( compound );
+    }
+
+    /**
+     * @param designProvider
+     */
+    private Contact persistContact( Contact designProvider ) {
+        return this.contactDao.findOrCreate( designProvider );
     }
 
     /**

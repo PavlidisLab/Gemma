@@ -19,6 +19,7 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.DatabaseEntryDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
@@ -76,6 +77,7 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
         ml.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
         ml.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
+        ml.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
         gds.setPersister( ml );
         gds.setConverter( geoConv );
     }
