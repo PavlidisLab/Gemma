@@ -92,10 +92,6 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
 
     /** This is an integration test */
 
-    public void testFetchAndLoadA() throws Exception {
-        gds.fetchAndLoad( "GDS941" );
-    }
-
     public void testFetchAndLoadB() throws Exception {
         gds.fetchAndLoad( "GDS942" );
     }

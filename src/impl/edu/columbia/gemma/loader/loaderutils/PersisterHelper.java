@@ -23,8 +23,6 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import sun.security.krb5.internal.crypto.e;
-
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.Characteristic;
@@ -109,6 +107,10 @@ public class PersisterHelper implements Persister {
 
     private BioMaterialDao bioMaterialDao;
 
+    private CompoundDao compoundDao;
+
+    private DatabaseEntryDao databaseEntryDao;
+
     private Person defaultOwner = null;
 
     private DesignElementDao designElementDao;
@@ -134,10 +136,6 @@ public class PersisterHelper implements Persister {
     private SoftwareDao softwareDao;
 
     private TaxonDao taxonDao;
-
-    private CompoundDao compoundDao;
-
-    private DatabaseEntryDao databaseEntryDao;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -200,20 +198,7 @@ public class PersisterHelper implements Persister {
         } else {
             log.error( "Can't deal with " + entity.getClass().getName() );
             return null;
-            // throw new UnsupportedOperationException( "Can't deal with " + entity.getClass().getName() );
         }
-
-    }
-
-    /**
-     * @param compound
-     * @return
-     */
-    private Compound persistCompound( Compound compound ) {
-        persistOntologyEntry( compound.getCompoundIndices() );
-        if ( compound.getIsSolvent() == null )
-            throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
-        return compoundDao.findOrCreate( compound );
     }
 
     /**
@@ -222,27 +207,36 @@ public class PersisterHelper implements Persister {
     @SuppressWarnings("unchecked")
     public BioAssay persistBioAssay( BioAssay assay ) {
 
+        if ( assay == null ) return null;
+
         for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
             for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
-                persistOntologyEntry( value );
+                value = persistOntologyEntry( value );
             }
         }
 
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
-            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
+            persistArrayDesign( arrayDesign );
         }
 
         for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
-            file.setId( this.persistLocalFile( file ).getId() );
+            file = persistLocalFile( file );
+        }
+
+        for ( BioMaterial bioMaterial : ( Collection<BioMaterial> ) assay.getSamplesUsed() ) {
+            bioMaterial = persistBioMaterial( bioMaterial );
+            log.debug( bioMaterial.getId() );
         }
 
         LocalFile f = assay.getRawDataFile();
-        LocalFile persistentLocalFile = persistLocalFile( f );
-        if ( persistentLocalFile != null ) {
-            f.setId( persistentLocalFile.getId() );
-        } else {
-            log.error( "Null local file for " + f.getLocalURI() );
-            throw new RuntimeException( "Null local file for" + f.getLocalURI() );
+        if ( f != null ) {
+            LocalFile persistentLocalFile = persistLocalFile( f );
+            if ( persistentLocalFile != null ) {
+                f = persistentLocalFile;
+            } else {
+                log.error( "Null local file for " + f.getLocalURI() );
+                throw new RuntimeException( "Null local file for" + f.getLocalURI() );
+            }
         }
 
         return bioAssayDao.findOrCreate( assay );
@@ -262,15 +256,25 @@ public class PersisterHelper implements Persister {
         this.bioAssayDao = bioAssayDao;
     }
 
-    // private void loadBioAssayData(BioAssayData data) {
-    // throw new UnsupportedOperationException( "Can't deal with " + data.getClass().getName() + " yet" );
-    // }
-
     /**
      * @param bioMaterialDao The bioMaterialDao to set.
      */
     public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
         this.bioMaterialDao = bioMaterialDao;
+    }
+
+    /**
+     * @param compoundDao The compoundDao to set.
+     */
+    public void setCompoundDao( CompoundDao compoundDao ) {
+        this.compoundDao = compoundDao;
+    }
+
+    /**
+     * @param databaseEntryDao The databaseEntryDao to set.
+     */
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
     }
 
     /**
@@ -292,6 +296,13 @@ public class PersisterHelper implements Persister {
      */
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    /**
+     * @param geneDao The geneDao to set.
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
     }
 
     /**
@@ -412,11 +423,11 @@ public class PersisterHelper implements Persister {
         protocol.setType( type );
 
         for ( Software software : ( Collection<Software> ) protocol.getSoftwareUsed() ) {
-            software.setId( softwareDao.findOrCreate( software ).getId() );
+            software = softwareDao.findOrCreate( software );
         }
 
         for ( Hardware hardware : ( Collection<Hardware> ) protocol.getHardwares() ) {
-            hardware.setId( hardwareDao.findOrCreate( hardware ).getId() );
+            hardware = hardwareDao.findOrCreate( hardware );
         }
     }
 
@@ -525,7 +536,7 @@ public class PersisterHelper implements Persister {
     @SuppressWarnings("unchecked")
     private BioMaterial persistBioMaterial( BioMaterial entity ) {
 
-        // log.debug( PrettyPrinter.print( entity ) );
+        entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
 
         OntologyEntry materialType = entity.getMaterialType();
         if ( materialType != null ) {
@@ -544,7 +555,28 @@ public class PersisterHelper implements Persister {
 
         fillInOntologyEntries( entity.getCharacteristics() );
 
-        return ( BioMaterial ) bioMaterialDao.create( entity );
+        return bioMaterialDao.findOrCreate( entity );
+    }
+
+    /**
+     * @param compound
+     * @return
+     */
+    private Compound persistCompound( Compound compound ) {
+        if ( compound == null ) return null;
+        persistOntologyEntry( compound.getCompoundIndices() );
+        if ( compound.getIsSolvent() == null )
+            throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
+        return compoundDao.findOrCreate( compound );
+    }
+
+    /**
+     * @param databaseEntry
+     * @return
+     */
+    private DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
+        databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
+        return databaseEntryDao.findOrCreate( databaseEntry );
     }
 
     /**
@@ -563,11 +595,7 @@ public class PersisterHelper implements Persister {
         }
 
         if ( entity.getAccession() != null && entity.getAccession().getExternalDatabase() != null ) {
-            entity.getAccession().setExternalDatabase(
-                    this.persistExternalDatabase( entity.getAccession().getExternalDatabase() ) );
-
-            // we have to do this because the entry is used as part of a criteria query.
-            entity.setAccession( databaseEntryDao.findOrCreate( entity.getAccession() ) );
+            entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
         } else {
             log.warn( "Null accession for expressionExperiment" );
         }
@@ -622,11 +650,13 @@ public class PersisterHelper implements Persister {
 
         // manually persist: experimentaldesign->bioassay->factorvalue->value and bioassay->arraydesign
         for ( BioAssay bA : ( Collection<BioAssay> ) entity.getBioAssays() ) {
+            if ( bA == null ) continue;
             bA.setId( persistBioAssay( bA ).getId() );
         }
 
         for ( ExpressionExperimentSubSet subset : ( Collection<ExpressionExperimentSubSet> ) entity.getSubsets() ) {
             for ( BioAssay bA : ( Collection<BioAssay> ) subset.getBioAssays() ) {
+                if ( bA == null ) continue;
                 bA.setId( persistBioAssay( bA ).getId() );
             }
         }
@@ -692,27 +722,6 @@ public class PersisterHelper implements Persister {
      */
     private QuantitationType persistQuantitationType( QuantitationType entity ) {
         return quantitationTypeDao.findOrCreate( entity );
-    }
-
-    /**
-     * @param geneDao The geneDao to set.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
-
-    /**
-     * @param compoundDao The compoundDao to set.
-     */
-    public void setCompoundDao( CompoundDao compoundDao ) {
-        this.compoundDao = compoundDao;
-    }
-
-    /**
-     * @param databaseEntryDao The databaseEntryDao to set.
-     */
-    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
     }
 
 }

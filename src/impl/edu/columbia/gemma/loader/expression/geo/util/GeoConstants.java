@@ -52,6 +52,7 @@ public class GeoConstants {
         descriptionNames.add( "Gene Title" );
         descriptionNames.add( "description" );
         descriptionNames.add( "DESCRIPTION" );
+        descriptionNames.add( "Symbol" );
     }
 
     /**

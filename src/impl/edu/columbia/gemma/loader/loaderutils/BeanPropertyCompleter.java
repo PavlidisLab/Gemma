@@ -51,6 +51,10 @@ public class BeanPropertyCompleter {
      * Given a source Object and a source one of the same type, fill in any missing attributes of the target object with
      * ones from the source object. If update is true, then any non-null values in the target object will be clobbered
      * with the non-null values from the source object.
+     * <p>
+     * Associated objects which are in collections or maps are not updated individually. All associations are either
+     * assigned to or left alone. Thus collections will be replaced if "update" is selected, but if not, the collection
+     * will not be changed, even if the sourceObject contains new members in the collection.
      * 
      * @param targetObject
      * @param sourceObject

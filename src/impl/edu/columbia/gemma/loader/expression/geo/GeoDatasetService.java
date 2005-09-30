@@ -20,20 +20,12 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
-import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
-import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.loaderutils.Converter;
-import edu.columbia.gemma.loader.loaderutils.Fetcher;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
@@ -64,7 +56,7 @@ public class GeoDatasetService {
      * 
      * @param geoDataSetAccession
      */
-    public void fetchAndLoad( String geoDataSetAccession ) throws SocketException, IOException {
+    public void fetchAndLoad( String geoDataSetAccession ) {
 
         generator = new GeoDomainObjectGenerator();
 

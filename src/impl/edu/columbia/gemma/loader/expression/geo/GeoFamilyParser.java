@@ -596,6 +596,9 @@ public class GeoFamilyParser implements Parser {
     private void parseRegularLine( String line ) {
         if ( line.startsWith( "!" ) ) {
             String value = extractValue( line );
+            /***********************************************************************************************************
+             * SAMPLE
+             **********************************************************************************************************/
             if ( inSample ) {
                 if ( startsWithIgnoreCase( line, "!sample_table_begin" ) ) {
                     inSampleTable = true;
@@ -605,7 +608,8 @@ public class GeoFamilyParser implements Parser {
                     sampleSet( currentSampleAccession, "title", value );
                 } else if ( startsWithIgnoreCase( line, "!Sample_geo_accession" ) ) {
                     currentSampleAccession = value;
-                    results.getSampleMap().put( currentSampleAccession, new GeoSample() );
+                    if ( !results.getSampleMap().containsKey( currentSampleAccession ) )
+                        results.getSampleMap().put( currentSampleAccession, new GeoSample() );
                 } else if ( startsWithIgnoreCase( line, "!Sample_status" ) ) {
                     sampleSet( currentSampleAccession, "status", value );
                 } else if ( startsWithIgnoreCase( line, "!Sample_submission_date" ) ) {
@@ -692,6 +696,9 @@ public class GeoFamilyParser implements Parser {
                     throw new IllegalStateException( "Unknown flag: " + line );
                 }
             } else if ( inSeries ) {
+                /*******************************************************************************************************
+                 * SERIES
+                 ******************************************************************************************************/
                 if ( startsWithIgnoreCase( line, "!Series_title" ) ) {
                     seriesSet( currentSeriesAccession, "title", value );
                 } else if ( startsWithIgnoreCase( line, "!Series_geo_accession" ) ) {
@@ -779,6 +786,9 @@ public class GeoFamilyParser implements Parser {
             } else if ( inDatabase ) {
                 // we are going to ignore these lines.
             } else if ( inPlatform ) {
+                /*******************************************************************************************************
+                 * PLATFORM
+                 ******************************************************************************************************/
                 if ( startsWithIgnoreCase( line, "!Platform_title" ) ) {
                     platformSet( currentPlatformAccession, "title", value );
                 } else if ( startsWithIgnoreCase( line, "!Platform_geo_accession" ) ) {
@@ -836,6 +846,9 @@ public class GeoFamilyParser implements Parser {
                     throw new IllegalStateException( "Unknown flag: " + line );
                 }
             } else if ( inDataset ) {
+                /*******************************************************************************************************
+                 * DATASET
+                 ******************************************************************************************************/
                 if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
                     datasetSet( currentDatasetAccession, "title", value );
                 } else if ( startsWithIgnoreCase( line, "!dataset_description" ) ) {
@@ -877,6 +890,9 @@ public class GeoFamilyParser implements Parser {
                     throw new IllegalStateException( "Unknown flag: " + line );
                 }
             } else if ( inSubset ) {
+                /*******************************************************************************************************
+                 * SUBSET
+                 ******************************************************************************************************/
                 if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
                     subsetSet( currentSubsetAccession, "title", value );
                 } else if ( startsWithIgnoreCase( line, "!subset_dataset_id" ) ) {
