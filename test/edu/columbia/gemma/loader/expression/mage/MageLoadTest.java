@@ -41,6 +41,7 @@ import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
@@ -83,6 +84,7 @@ public class MageLoadTest extends MageBaseTest {
         ml.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
         ml.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
         ml.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
+        ml.setBioSequenceDao((BioSequenceDao)ctx.getBean("bioSequenceDao"));
     }
 
     @Override

@@ -71,6 +71,7 @@ import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
+import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 
 /**
  * A generic class to persist Gemma-domain objects. (work in progress)
@@ -99,6 +100,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  * @spring.property name="compoundDao" ref="compoundDao"
  * @spring.property name="databaseEntryDao" ref="databaseEntryDao"
  * @spring.property name="contactDao" ref="contactDao"
+ * @spring.property name="bioSequenceDao" ref="bioSequenceDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -140,6 +142,8 @@ public class PersisterHelper implements Persister {
     private SoftwareDao softwareDao;
 
     private TaxonDao taxonDao;
+
+    private BioSequenceDao bioSequenceDao;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -221,6 +225,7 @@ public class PersisterHelper implements Persister {
 
         for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
             arrayDesign = persistArrayDesign( arrayDesign );
+            log.debug( arrayDesign );
         }
 
         for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
@@ -374,11 +379,12 @@ public class PersisterHelper implements Persister {
     /**
      * @param bioSequence
      */
-    private void fillInBioSequence( BioSequence bioSequence ) {
-        if ( bioSequence == null ) return;
+    private BioSequence persistBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null ) return null;
         Taxon t = bioSequence.getTaxon();
         if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
         bioSequence.setTaxon( taxonDao.findOrCreate( t ) );
+        return bioSequenceDao.findOrCreate( bioSequence );
     }
 
     /**
@@ -515,17 +521,18 @@ public class PersisterHelper implements Persister {
         ArrayDesign existing = arrayDesignDao.find( entity );
 
         if ( existing != null ) {
-            entity = existing;
-        }
-
-        Collection<DesignElement> existingDesignElements = entity.getDesignElements();
-        if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
-            log.warn( "Number of design elements in existing version "
-                    + "is the same. No further processing will be done." );
-            return entity;
-        } else if ( entity.getDesignElements().size() == 0 ) {
-            log.warn( entity + ": No design elements in newly supplied version, no further processing will be done." );
-            return entity;
+            assert existing.getId() != null;
+            log.info( "Array design " + existing.getName() + " already exists." );
+            Collection<DesignElement> existingDesignElements = entity.getDesignElements();
+            if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
+                log.warn( "Number of design elements in existing version " + "is the same ("
+                        + existingDesignElements.size() + "). No further processing will be done." );
+                return existing;
+            } else if ( entity.getDesignElements().size() == 0 ) {
+                log.warn( entity
+                        + ": No design elements in newly supplied version, no further processing will be done." );
+                return existing;
+            }
         }
 
         log.debug( "Filling in design elements for " + entity );
@@ -534,10 +541,10 @@ public class PersisterHelper implements Persister {
             designElement.setArrayDesign( entity );
             if ( designElement instanceof CompositeSequence ) {
                 CompositeSequence cs = ( CompositeSequence ) designElement;
-                fillInBioSequence( cs.getBiologicalCharacteristic() );
+                cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
             } else if ( designElement instanceof Reporter ) {
                 Reporter reporter = ( Reporter ) designElement;
-                fillInBioSequence( reporter.getImmobilizedCharacteristic() );
+                reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
             }
             i++;
             if ( i % 1000 == 0 ) log.info( i + " design elements examined" );
@@ -745,6 +752,13 @@ public class PersisterHelper implements Persister {
      */
     private QuantitationType persistQuantitationType( QuantitationType entity ) {
         return quantitationTypeDao.findOrCreate( entity );
+    }
+
+    /**
+     * @param bioSequenceDao The bioSequenceDao to set.
+     */
+    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
+        this.bioSequenceDao = bioSequenceDao;
     }
 
 }

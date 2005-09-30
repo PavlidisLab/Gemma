@@ -18,7 +18,17 @@
  */
 package edu.columbia.gemma.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import net.sf.acegisecurity.GrantedAuthority;
+import net.sf.acegisecurity.GrantedAuthorityImpl;
+import net.sf.acegisecurity.context.SecurityContextHolder;
+import net.sf.acegisecurity.context.SecurityContextImpl;
+import net.sf.acegisecurity.providers.ProviderManager;
+import net.sf.acegisecurity.providers.TestingAuthenticationProvider;
+import net.sf.acegisecurity.providers.TestingAuthenticationToken;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +63,32 @@ public class SpringContextUtil {
                 log.error( "Failed to load context" );
         }
         return ctx;
+    }
+
+    /**
+     * For use in tests only.
+     * <p>
+     * see http://fishdujour.typepad.com/blog/2005/02/junit_testing_w.html
+     */
+    public static void grantAuthorityForTests() {
+
+        assert ctx != null;
+
+        // 
+        // Grant all roles to test user.
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "test", new GrantedAuthority[] {
+                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "administrator" ) } );
+
+        // Override the regular spring configuration
+        ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+        List<TestingAuthenticationProvider> list = new ArrayList<TestingAuthenticationProvider>();
+        list.add( new TestingAuthenticationProvider() );
+        providerManager.setProviders( list );
+
+        // Create and store the Acegi SecureContext into the ContextHolder.
+        SecurityContextImpl secureContext = new SecurityContextImpl();
+        secureContext.setAuthentication( token );
+        SecurityContextHolder.setContext( secureContext );
     }
 
     /**
