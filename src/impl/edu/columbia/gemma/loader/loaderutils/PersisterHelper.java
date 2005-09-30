@@ -96,7 +96,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  * @spring.property name="quantitationTypeDao" ref="quantitationTypeDao"
  * @spring.property name="compoundDao" ref="compoundDao"
- * @spring.property name="databaseEntryDao' ref="databaseEntryDao"
+ * @spring.property name="databaseEntryDao" ref="databaseEntryDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
