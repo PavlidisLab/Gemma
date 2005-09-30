@@ -378,8 +378,7 @@ public class PersisterHelper implements Persister {
         if ( bioSequence == null ) return;
         Taxon t = bioSequence.getTaxon();
         if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
-        t = taxonDao.findOrCreate( t );
-
+        bioSequence.setTaxon( taxonDao.findOrCreate( t ) );
     }
 
     /**
@@ -513,22 +512,26 @@ public class PersisterHelper implements Persister {
     private ArrayDesign persistArrayDesign( ArrayDesign entity ) {
 
         entity.setDesignProvider( persistContact( entity.getDesignProvider() ) );
-        ArrayDesign existing = arrayDesignDao.findOrCreate( entity );
+        ArrayDesign existing = arrayDesignDao.find( entity );
 
-        Collection<DesignElement> existingDesignElements = existing.getDesignElements();
+        if ( existing != null ) {
+            entity = existing;
+        }
+
+        Collection<DesignElement> existingDesignElements = entity.getDesignElements();
         if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
             log.warn( "Number of design elements in existing version "
                     + "is the same. No further processing will be done." );
-            return existing;
+            return entity;
         } else if ( entity.getDesignElements().size() == 0 ) {
-            log.warn( existing + ": No design elements in newly supplied version, no further processing will be done." );
-            return existing;
+            log.warn( entity + ": No design elements in newly supplied version, no further processing will be done." );
+            return entity;
         }
 
         log.debug( "Filling in design elements for " + entity );
         int i = 0;
         for ( DesignElement designElement : ( Collection<DesignElement> ) entity.getDesignElements() ) {
-            designElement.setArrayDesign( existing );
+            designElement.setArrayDesign( entity );
             if ( designElement instanceof CompositeSequence ) {
                 CompositeSequence cs = ( CompositeSequence ) designElement;
                 fillInBioSequence( cs.getBiologicalCharacteristic() );

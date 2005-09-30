@@ -319,6 +319,11 @@ public class GeoConverter implements Converter {
 
         String organism = organisms.iterator().next();
         log.debug( "Organism: " + organism );
+
+        if ( organism.startsWith( "Rattus" ) || organism.startsWith( "rattus" ) ) {
+            organism = "rattus"; // we don't distinguish between species.
+        }
+
         taxon.setScientificName( organism );
         return taxon;
     }
