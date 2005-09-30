@@ -20,12 +20,8 @@ package edu.columbia.gemma;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.springframework.beans.factory.BeanFactory;
 
-import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -41,25 +37,9 @@ import edu.columbia.gemma.util.SpringContextUtil;
 public class BaseControllerTestCase extends TestCase {
     protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext();
 
-    /* authentication */
-    ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-            .getBean( "manualAuthenticationProcessing" );
-
     // ~ Constructors ===========================================================
 
     public BaseControllerTestCase() {
-
-        /* set user */
-        String username = null;
-        String password = null;
-        try {
-            Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
-            username = conf.getString( "acegi.authorization.username" );
-            password = conf.getString( "acegi.authorization.password" );
-        } catch ( ConfigurationException e ) {
-            e.printStackTrace();
-        }
-
-        manAuthentication.validateRequest( username, password );
+        SpringContextUtil.grantAuthorityForTests();
     }
 }

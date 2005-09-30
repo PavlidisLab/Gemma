@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.description.DatabaseEntryDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
@@ -79,8 +80,9 @@ public class MageLoadTest extends MageBaseTest {
         ml.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
         ml.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
         ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
-        ml.setCompoundDao((CompoundDao)ctx.getBean("compoundDao"));
-        ml.setDatabaseEntryDao((DatabaseEntryDao)ctx.getBean("databaseEntryDao"));
+        ml.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
+        ml.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
+        ml.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
     }
 
     @Override
