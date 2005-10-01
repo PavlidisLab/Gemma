@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Fri Sep 30 14:52:37 EDT 2005'>
+  timestamp = 'Sat Oct 01 01:14:17 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -24006,6 +24006,14 @@ of nucleotides associated with a gene product.  This class only represents the s
                               <UML:Classifier.feature>
                                 <UML:Attribute xmi.id = 'Im8f64ed4m101a5582751mm781c' name = 'length' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I429111ebm106a7192636m2b32'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I429111ebm106a7192636m2b33' lower = '0'
+                                          upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
                                   </UML:StructuralFeature.type>
@@ -24027,6 +24035,14 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Attribute xmi.id = 'Im8f64ed4m101a5582751mm77ab' name = 'isApproximateLength'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I429111ebm106a7192636m2b4c'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I429111ebm106a7192636m2b4d' lower = '0'
+                                          upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e28'/>
                                   </UML:StructuralFeature.type>
@@ -24034,6 +24050,14 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Attribute xmi.id = 'Im8f64ed4m101a5582751mm779a' name = 'isCircular'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I429111ebm106a7192636m2b66'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I429111ebm106a7192636m2b67' lower = '0'
+                                          upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e28'/>
                                   </UML:StructuralFeature.type>
@@ -24041,12 +24065,28 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2cde' name = 'polymerType'
                                   visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                                   changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I429111ebm106a7192636m2b80'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I429111ebm106a7192636m2b81' lower = '0'
+                                          upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:Class xmi.idref = 'Idc8f6dm101f83f6735mm2d2f'/>
                                   </UML:StructuralFeature.type>
                                 </UML:Attribute>
                                 <UML:Attribute xmi.id = 'Idc8f6dm101f83f6735mm2c9d' name = 'type' visibility = 'public'
                                   isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                                  <UML:StructuralFeature.multiplicity>
+                                    <UML:Multiplicity xmi.id = 'I429111ebm106a7192636m2b9a'>
+                                      <UML:Multiplicity.range>
+                                        <UML:MultiplicityRange xmi.id = 'I429111ebm106a7192636m2b9b' lower = '0'
+                                          upper = '1'/>
+                                      </UML:Multiplicity.range>
+                                    </UML:Multiplicity>
+                                  </UML:StructuralFeature.multiplicity>
                                   <UML:StructuralFeature.type>
                                     <UML:Class xmi.idref = 'Idc8f6dm101f83f6735mm2c5c'/>
                                   </UML:StructuralFeature.type>
