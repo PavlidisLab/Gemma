@@ -50,7 +50,7 @@ public class TaxonDaoImpl extends edu.columbia.gemma.genome.TaxonDaoBase {
     public Taxon find( Taxon taxon ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Taxon.class );
-            if ( taxon.getNcbiId() == 0 ) {
+            if ( taxon.getNcbiId() != null ) {
                 queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
             } else if ( taxon.getScientificName() != null ) {
                 queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );

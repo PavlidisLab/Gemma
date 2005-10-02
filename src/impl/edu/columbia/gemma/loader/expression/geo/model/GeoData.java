@@ -42,6 +42,8 @@ public abstract class GeoData {
 
     private List<String> columnNames = new ArrayList<String>();
 
+    private List<String> columnDescriptions = new ArrayList<String>();
+
     /**
      * @return Returns the columnNames.
      */
@@ -80,6 +82,13 @@ public abstract class GeoData {
     @Override
     public String toString() {
         return this.geoAccesssion;
+    }
+
+    /**
+     * @return Returns the columnDescriptions.
+     */
+    public List<String> getColumnDescriptions() {
+        return this.columnDescriptions;
     }
 
 }

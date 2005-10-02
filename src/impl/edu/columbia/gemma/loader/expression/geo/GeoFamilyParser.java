@@ -58,92 +58,6 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
-class GeoParseResult {
-    private Map<String, GeoDataset> datasetMap;
-
-    private Map<String, GeoPlatform> platformMap;
-
-    private Map<String, GeoSample> sampleMap;
-
-    private Map<String, GeoSeries> seriesMap;
-
-    private Map<String, GeoSubset> subsetMap;
-
-    public GeoParseResult() {
-        sampleMap = new HashMap<String, GeoSample>();
-        platformMap = new HashMap<String, GeoPlatform>();
-        seriesMap = new HashMap<String, GeoSeries>();
-
-        subsetMap = new HashMap<String, GeoSubset>();
-
-        datasetMap = new HashMap<String, GeoDataset>();
-    }
-
-    /**
-     * @return
-     */
-    public Map<String, GeoDataset> getDatasets() {
-        return this.datasetMap;
-    }
-
-    /**
-     * @return
-     */
-    public Map<String, GeoPlatform> getPlatforms() {
-        return this.platformMap;
-    }
-
-    /**
-     * @return
-     */
-    public Map<String, GeoSample> getSamples() {
-        return this.sampleMap;
-    }
-
-    /**
-     * @return
-     */
-    public Map<String, GeoSeries> getSeries() {
-        return this.seriesMap;
-    }
-
-    /**
-     * @return Returns the datasetMap.
-     */
-    public Map<String, GeoDataset> getDatasetMap() {
-        return this.datasetMap;
-    }
-
-    /**
-     * @return Returns the platformMap.
-     */
-    public Map<String, GeoPlatform> getPlatformMap() {
-        return this.platformMap;
-    }
-
-    /**
-     * @return Returns the sampleMap.
-     */
-    public Map<String, GeoSample> getSampleMap() {
-        return this.sampleMap;
-    }
-
-    /**
-     * @return Returns the seriesMap.
-     */
-    public Map<String, GeoSeries> getSeriesMap() {
-        return this.seriesMap;
-    }
-
-    /**
-     * @return Returns the subsetMap.
-     */
-    public Map<String, GeoSubset> getSubsetMap() {
-        return this.subsetMap;
-    }
-
-}
-
 /**
  * Class for parsing GSE and GDS files from NCBI GEO.
  * <hr>
@@ -155,84 +69,63 @@ class GeoParseResult {
  */
 public class GeoFamilyParser implements Parser {
 
-    private Map<String, String> platformColumns;
-    private Map<String, String> sampleColumns;
-    private Map<String, String> seriesColumns;
     /**
      * 
      */
     private static final char FIELD_DELIM = '\t';
-
     private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
-
     private String currentDatasetAccession;
     private String currentPlatformAccession;
+
     private String currentSampleAccession;
+
     private String currentSeriesAccession;
     private String currentSubsetAccession;
-    private Map<String, String> datasetColumns;
+    private int dataSetDataLines = 0;
+    private boolean haveReadDatasetDataHeader = false;
+    private boolean haveReadPlatformHeader = false;
 
+    private boolean haveReadSampleDataHeader = false;
+    private boolean haveReadSeriesDataHeader = false;
     private boolean inDatabase = false;
     private boolean inDataset = false;
     private boolean inDatasetTable = false;
+
     private boolean inPlatform = false;
+
     private boolean inPlatformTable = false;
-
     private boolean inSample = false;
-
     private boolean inSampleTable = false;
+
     private boolean inSeries = false;
+
     private boolean inSeriesTable = false;
 
     private boolean inSubset = false;
 
-    private boolean haveReadPlatformHeader = false;
-
-    private boolean haveReadSampleDataHeader = false;
-
-    private boolean haveReadSeriesDataHeader = false;
-
-    private boolean haveReadDatasetDataHeader = false;
-
-    private int dataSetDataLines = 0;
-
-    private int seriesDataLines = 0;
+    private int parsedLines;
 
     private int platformLines = 0;
 
-    private int sampleDataLines = 0;
-
-    private int parsedLines;
-
     private GeoParseResult results;
 
-    /**
-     * @return Returns the platformColumns.
-     */
-    public Map<String, String> getPlatformColumns() {
-        return this.platformColumns;
-    }
+    private int sampleDataLines = 0;
 
-    /**
-     * @return Returns the sampleColumns.
-     */
-    public Map<String, String> getSampleColumns() {
-        return this.sampleColumns;
-    }
-
-    /**
-     * @return Returns the seriesColumns.
-     */
-    public Map<String, String> getSeriesColumns() {
-        return this.seriesColumns;
-    }
+    private int seriesDataLines = 0;
 
     public GeoFamilyParser() {
         results = new GeoParseResult();
-        platformColumns = new HashMap<String, String>();
-        sampleColumns = new HashMap<String, String>();
-        seriesColumns = new HashMap<String, String>();
-        datasetColumns = new HashMap<String, String>();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#getResults()
+     */
+    public Collection<Object> getResults() {
+        Collection<Object> r = new HashSet<Object>();
+        r.add( this.results );
+        return r;
     }
 
     /*
@@ -283,32 +176,6 @@ public class GeoFamilyParser implements Parser {
 
         doParse( dis );
 
-    }
-
-    /**
-     * @param dis
-     * @throws IOException
-     */
-    private Boolean doParse( BufferedReader dis ) throws IOException {
-        haveReadPlatformHeader = false;
-        haveReadSampleDataHeader = false;
-        haveReadSeriesDataHeader = false;
-        String line = "";
-        parsedLines = 0;
-        while ( ( line = dis.readLine() ) != null ) {
-            if ( line == null || line.length() == 0 ) {
-                log.error( "Empty or null line" );
-                continue;
-            }
-            parseLine( line );
-            parsedLines++;
-        }
-        log.info( "Parsed " + parsedLines + " lines." );
-        log.info( this.platformLines + " platform  lines" );
-        log.info( this.seriesDataLines + " series data lines" );
-        log.info( this.dataSetDataLines + " data set data lines" );
-        log.info( this.sampleDataLines + " sample data lines" );
-        return Boolean.TRUE;
     }
 
     /*
@@ -374,6 +241,22 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
+    private GeoDataset currentDataset() {
+        return this.results.getDatasetMap().get( currentDatasetAccession );
+    }
+
+    private GeoPlatform currentPlatform() {
+        return this.results.getPlatformMap().get( currentPlatformAccession );
+    }
+
+    private GeoSample currentSample() {
+        return this.results.getSampleMap().get( currentSampleAccession );
+    }
+
+    private GeoSeries currentSeries() {
+        return this.results.getSeriesMap().get( currentSeriesAccession );
+    }
+
     /**
      * @param accession
      * @param property
@@ -399,6 +282,32 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * @param dis
+     * @throws IOException
+     */
+    private Boolean doParse( BufferedReader dis ) throws IOException {
+        haveReadPlatformHeader = false;
+        haveReadSampleDataHeader = false;
+        haveReadSeriesDataHeader = false;
+        String line = "";
+        parsedLines = 0;
+        while ( ( line = dis.readLine() ) != null ) {
+            if ( line == null || line.length() == 0 ) {
+                log.error( "Empty or null line" );
+                continue;
+            }
+            parseLine( line );
+            parsedLines++;
+        }
+        log.info( "Parsed " + parsedLines + " lines." );
+        log.info( this.platformLines + " platform  lines" );
+        log.info( this.seriesDataLines + " series data lines" );
+        log.info( this.dataSetDataLines + " data set data lines" );
+        log.info( this.sampleDataLines + " sample data lines" );
+        return Boolean.TRUE;
+    }
+
+    /**
      * @param line
      * @return
      */
@@ -414,12 +323,24 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * @param line
+     * @param dataToAddTo
+     */
+    private void extractColumnIdentifier( String line, GeoData dataToAddTo ) {
+        Map<String, String> res = extractKeyValue( line );
+        String key = res.keySet().iterator().next();
+        dataToAddTo.getColumnNames().add( key );
+        dataToAddTo.getColumnDescriptions().add( res.get( key ) );
+    }
+
+    /**
      * @param map
      * @param line
      */
-    private String extractKeyValue( Map<String, String> map, String line ) {
-        if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
+    private Map<String, String> extractKeyValue( String line ) {
 
+        if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
+        Map<String, String> result = new HashMap<String, String>();
         String fixed = line.substring( line.indexOf( '#' ) + 1 );
 
         String[] tokens = fixed.split( "=", 2 );
@@ -430,8 +351,8 @@ public class GeoFamilyParser implements Parser {
         String value = tokens[1];
         key = StringUtils.strip( key );
         value = StringUtils.strip( value );
-        map.put( key, value );
-        return key;
+        result.put( key, value );
+        return result;
     }
 
     /**
@@ -459,6 +380,99 @@ public class GeoFamilyParser implements Parser {
             }
         }
         throw new IllegalArgumentException( "Wrong kind of string: " + line );
+    }
+
+    /**
+     * @param line
+     */
+    private void parseColumnIdentifier( String line ) {
+        if ( inPlatform ) {
+            extractColumnIdentifier( line, currentPlatform() );
+        } else if ( inSample ) {
+            extractColumnIdentifier( line, currentSample() );
+        } else if ( inSeries ) {
+            extractColumnIdentifier( line, currentSeries() );
+        } else if ( inSubset ) {
+            // nothing.
+        } else if ( inDataset ) {
+            extractColumnIdentifier( line, currentDataset() );
+        } else {
+            throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
+        }
+    }
+
+    /**
+     * @param line
+     */
+    private void parseDataSetDataLine( String line ) {
+
+        if ( !haveReadDatasetDataHeader ) {
+            haveReadDatasetDataHeader = true;
+            return;
+        }
+
+        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
+
+        Map<String, List<String>> dataSetDataMap = results.getDatasetMap().get( currentDatasetAccession ).getData();
+
+        for ( int i = 0; i < tokens.length; i++ ) {
+            String token = tokens[i];
+            String columnName = results.getDatasetMap().get( currentDatasetAccession ).getColumnNames().get( i );
+            if ( !dataSetDataMap.containsKey( columnName ) ) {
+                dataSetDataMap.put( columnName, new ArrayList<String>() );
+            }
+            dataSetDataMap.get( columnName ).add( token );
+        }
+
+        dataSetDataLines++;
+    }
+
+    /**
+     * @param line
+     * @param value
+     */
+    private void parseDatasetLine( String line, String value ) {
+        /***************************************************************************************************************
+         * DATASET
+         **************************************************************************************************************/
+        if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
+            datasetSet( currentDatasetAccession, "title", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_description" ) ) {
+            datasetSet( currentDatasetAccession, "title", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_maximum_probes" ) ) {
+            datasetSet( currentDatasetAccession, "numProbes", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_order" ) ) {
+            datasetSet( currentDatasetAccession, "order", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_organism" ) ) {
+            datasetSet( currentDatasetAccession, "organism", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_platform" ) ) {
+            if ( !results.getPlatformMap().containsKey( value ) ) {
+                results.getPlatformMap().put( value, new GeoPlatform() );
+                results.getPlatformMap().get( value ).setGeoAccesssion( value );
+            }
+            results.getDatasetMap().get( currentDatasetAccession ).setPlatform( results.getPlatformMap().get( value ) );
+        } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) {
+            datasetSet( currentDatasetAccession, "probeType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_reference_series" ) ) {
+            if ( !results.getSeriesMap().containsKey( value ) ) {
+                log.debug( "Adding series " + value );
+                results.getSeriesMap().put( value, new GeoSeries() );
+                results.getSeriesMap().get( value ).setGeoAccesssion( value );
+            }
+            results.getDatasetMap().get( currentDatasetAccession ).addSeries( results.getSeriesMap().get( value ) );
+        } else if ( startsWithIgnoreCase( line, "!dataset_total_samples" ) ) {
+            datasetSet( currentDatasetAccession, "numSamples", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_update_date" ) ) {
+            datasetSet( currentDatasetAccession, "updateDate", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_value_type" ) ) {
+            datasetSet( currentDatasetAccession, "valueType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_completeness" ) ) {
+            datasetSet( currentDatasetAccession, "completeness", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_experiment_type" ) ) {
+            datasetSet( currentDatasetAccession, "experimentType", value );
+        } else {
+            throw new IllegalStateException( "Unknown flag: " + line );
+        }
     }
 
     /**
@@ -592,355 +606,95 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * @param line
+     * @param value
+     */
+    private void parsePlatformLine( String line, String value ) {
+        /***************************************************************************************************************
+         * PLATFORM
+         **************************************************************************************************************/
+        if ( startsWithIgnoreCase( line, "!Platform_title" ) ) {
+            platformSet( currentPlatformAccession, "title", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_geo_accession" ) ) {
+            currentPlatformAccession = value;
+        } else if ( startsWithIgnoreCase( line, "!Platform_status" ) ) {
+            platformSet( currentPlatformAccession, "status", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_manufacturer" ) ) {
+            platformSet( currentPlatformAccession, "manufacturer", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_manufacture_protocol" ) ) {
+            platformSet( currentPlatformAccession, "manufactureProtocol", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_submission_date" ) ) {
+            platformSet( currentPlatformAccession, "submissionDate", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_technology" ) ) {
+            platformSet( currentPlatformAccession, "technology", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_distribution" ) ) {
+            platformSet( currentPlatformAccession, "distribution", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_organism" ) ) {
+            platformAddTo( currentPlatformAccession, "organisms", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_description" ) ) {
+            platformAddTo( currentPlatformAccession, "description", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_name" ) ) {
+            platformContactSet( currentPlatformAccession, "name", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_email" ) ) {
+            platformContactSet( currentPlatformAccession, "email", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_institute" ) ) {
+            platformContactSet( currentPlatformAccession, "institute", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_laboratory" ) ) {
+            platformContactSet( currentPlatformAccession, "laboratory", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_department" ) ) {
+            platformContactSet( currentPlatformAccession, "department", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) {
+            platformContactSet( currentPlatformAccession, "address", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_city" ) ) {
+            platformContactSet( currentPlatformAccession, "city", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_phone" ) ) {
+            platformContactSet( currentPlatformAccession, "phone", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_web_link" ) ) {
+            platformContactSet( currentPlatformAccession, "webLink", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_fax" ) ) {
+            platformContactSet( currentSeriesAccession, "fax", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_web_link" ) ) {
+            platformSet( currentPlatformAccession, "webLink", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_sample_id" ) ) {
+            platformSet( currentPlatformAccession, "id", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_table_begin" ) ) {
+            inPlatformTable = true;
+        } else if ( startsWithIgnoreCase( line, "!Platform_table_end" ) ) {
+            inPlatformTable = false;
+        } else if ( startsWithIgnoreCase( line, "!Platform_contributor" ) ) {
+            ;// noop. This is the name of the person who submitted the platform.
+        } else if ( startsWithIgnoreCase( line, "!Platform_series_id" ) ) {
+            // no-op. This identifies which series were run on this platform. We don't care to get this
+            // information this way.
+        } else {
+            throw new IllegalStateException( "Unknown flag: " + line );
+        }
+    }
+
+    /**
+     * @param line
      */
     private void parseRegularLine( String line ) {
         if ( line.startsWith( "!" ) ) {
             String value = extractValue( line );
-            /***********************************************************************************************************
-             * SAMPLE
-             **********************************************************************************************************/
-            if ( inSample ) {
-                if ( startsWithIgnoreCase( line, "!sample_table_begin" ) ) {
-                    inSampleTable = true;
-                } else if ( startsWithIgnoreCase( line, "!sample_table_end" ) ) {
-                    inSampleTable = false;
-                } else if ( startsWithIgnoreCase( line, "!Sample_title" ) ) {
-                    sampleSet( currentSampleAccession, "title", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_geo_accession" ) ) {
-                    currentSampleAccession = value;
-                    if ( !results.getSampleMap().containsKey( currentSampleAccession ) )
-                        results.getSampleMap().put( currentSampleAccession, new GeoSample() );
-                } else if ( startsWithIgnoreCase( line, "!Sample_status" ) ) {
-                    sampleSet( currentSampleAccession, "status", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_submission_date" ) ) {
-                    sampleSet( currentSampleAccession, "submissionDate", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
-                    sampleSet( currentSampleAccession, "type", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_channel_count" ) ) {
-                    int numExtraChannelsNeeded = Integer.parseInt( value ) - 1;
-                    for ( int i = 0; i < numExtraChannelsNeeded; i++ ) {
-                        results.getSampleMap().get( currentSampleAccession ).addChannel();
-                    }
-                    sampleSet( currentSampleAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
-                } else if ( startsWithIgnoreCase( line, "!Sample_source_name" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelSet( currentSampleAccession, "sourceName", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_organism" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelSet( currentSampleAccession, "organism", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_biomaterial_provider" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelSet( currentSampleAccession, "bioMaterialProvider", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_treatment_protocol" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelAddTo( currentSampleAccession, "treatmentProtocol", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_molecule" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelSet( currentSampleAccession, "molecule", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_growth_protocol" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelAddTo( currentSampleAccession, "growthProtocol", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!sample_extract_protocol" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelAddTo( currentSampleAccession, "extractProtocol", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_hyb_protocol" ) ) {
-                    sampleAddTo( currentSampleAccession, "hybProtocol", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_scan_protocol" ) ) {
-                    sampleAddTo( currentSampleAccession, "scanProtocol", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_data_processing" ) ) {
-                    sampleAddTo( currentSampleAccession, "dataProcessing", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_description" ) ) {
-                    sampleAddTo( currentSampleAccession, "description", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_label" ) ) {
-                    int channel = extractChannelNumber( line );
-                    sampleChannelSet( currentSampleAccession, "label", channel, value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_characteristics" ) ) {
-                    int channel = extractChannelNumber( line );
-                    GeoSample sample = results.getSampleMap().get( currentSampleAccession );
-                    sample.getChannel( channel ).addCharacteristic( value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_platform_id" ) ) {
-                    sampleSet( currentSampleAccession, "id", value );
-                    if ( results.getPlatformMap().containsKey( value ) ) {
-                        results.getSampleMap().get( currentSampleAccession ).addPlatform(
-                                results.getPlatformMap().get( value ) );
-                    }
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_name" ) ) {
-                    sampleContactSet( currentSampleAccession, "name", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_email" ) ) {
-                    sampleContactSet( currentSampleAccession, "email", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_institute" ) ) {
-                    sampleContactSet( currentSampleAccession, "institute", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_laboratory" ) ) {
-                    sampleContactSet( currentSampleAccession, "laboratory", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_department" ) ) {
-                    sampleContactSet( currentSampleAccession, "department", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_address" ) ) {
-                    sampleContactSet( currentSampleAccession, "address", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_city" ) ) {
-                    sampleContactSet( currentSampleAccession, "city", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_phone" ) ) {
-                    sampleContactSet( currentSampleAccession, "phone", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_web_link" ) ) {
-                    sampleContactSet( currentSampleAccession, "webLink", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_contact_fax" ) ) {
-                    sampleContactSet( currentSeriesAccession, "fax", value );
-                } else if ( startsWithIgnoreCase( line, "!Sample_series_id" ) ) {
-                    if ( results.getSeriesMap().containsKey( value ) ) {
-                        results.getSeriesMap().get( value ).addSample(
-                                results.getSampleMap().get( currentSampleAccession ) );
-                    }
-                    seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
-                } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
-                    // nooop.
-                } else {
-                    throw new IllegalStateException( "Unknown flag: " + line );
-                }
-            } else if ( inSeries ) {
-                /*******************************************************************************************************
-                 * SERIES
-                 ******************************************************************************************************/
-                if ( startsWithIgnoreCase( line, "!Series_title" ) ) {
-                    seriesSet( currentSeriesAccession, "title", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_geo_accession" ) ) {
-                    currentSeriesAccession = value;
-                } else if ( startsWithIgnoreCase( line, "!Series_status" ) ) {
-                    seriesSet( currentSeriesAccession, "status", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_submission_date" ) ) {
-                    seriesSet( currentSeriesAccession, "submissionDate", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_pubmed_id" ) ) {
-                    seriesAddTo( currentSeriesAccession, "pubmedIds", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_summary" ) ) {
-                    seriesAddTo( currentSeriesAccession, "summary", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_type" ) ) {
-                    seriesSet( currentSeriesAccession, "type", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contributor" ) ) {
-                    results.getSeriesMap().get( currentSeriesAccession ).getContributers().add( value );
-                } else if ( startsWithIgnoreCase( line, "!Series_sample_id" ) ) {
-                    if ( !results.getSampleMap().containsKey( value ) ) {
-                        log.debug( "New sample: " + value );
-                        GeoSample sample = new GeoSample();
-                        sample.setGeoAccesssion( value );
-                    }
-                    log.debug( "Adding sample: " + value + " to series " + currentSeriesAccession );
-                    results.getSeriesMap().get( currentSeriesAccession )
-                            .addSample( results.getSampleMap().get( value ) );
 
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_name" ) ) {
-                    seriesContactSet( currentSeriesAccession, "name", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_email" ) ) {
-                    seriesContactSet( currentSeriesAccession, "email", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_institute" ) ) {
-                    seriesContactSet( currentSeriesAccession, "institute", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_laboratory" ) ) {
-                    seriesContactSet( currentSeriesAccession, "laboratory", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_department" ) ) {
-                    seriesContactSet( currentSeriesAccession, "department", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) {
-                    seriesContactSet( currentSeriesAccession, "address", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_city" ) ) {
-                    seriesContactSet( currentSeriesAccession, "city", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_phone" ) ) {
-                    seriesContactSet( currentSeriesAccession, "phone", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_fax" ) ) {
-                    seriesContactSet( currentSeriesAccession, "fax", value );
-                } else if ( startsWithIgnoreCase( line, "!Series_contact_web_link" ) ) {
-                    seriesContactSet( currentSeriesAccession, "webLink", value );
-                } else if ( startsWithIgnoreCase( line, "!series_platform_id" ) ) {
-                    seriesSet( currentSeriesAccession, "platformId", value );
-                } else if ( startsWithIgnoreCase( line, "!series_table_begin" ) ) {
-                    inSeriesTable = true;
-                } else if ( startsWithIgnoreCase( line, "!series_table_end" ) ) {
-                    inSeriesTable = false;
-                } else if ( startsWithIgnoreCase( line, "!Series_variable_description_" ) ) {
-                    Integer variableId = new Integer( extractVariableNumber( line ) );
-                    results.getSeriesMap().get( currentSeriesAccession ).getVariables().get( variableId )
-                            .setDescription( value );
-                } else if ( startsWithIgnoreCase( line, "!Series_variable_sample_list_" ) ) {
-                    Integer variableId = new Integer( extractVariableNumber( line ) );
-                    Collection<String> samples = Arrays.asList( StringUtils.split( value, "," ) );
-                    for ( String string : samples ) {
-                        GeoSample sam = results.getSampleMap().get( string );
-                        results.getSeriesMap().get( currentSeriesAccession ).getVariables().get( variableId )
-                                .addToVariableSampleList( sam );
-                    }
-                } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_" ) ) {
-                    Integer variableId = new Integer( extractVariableNumber( line ) );
-                    results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId ).setRepeats(
-                            GeoReplication.convertStringToRepeatType( value ) );
-                } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
-                    Integer variableId = new Integer( extractVariableNumber( line ) );
-                    Collection<String> samples = Arrays.asList( StringUtils.split( value, ", " ) );
-                    for ( String string : samples ) {
-                        GeoSample sam = results.getSampleMap().get( string );
-                        results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId )
-                                .addToRepeatsSampleList( sam );
-                    }
-                } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
-                    Integer variableId = new Integer( extractVariableNumber( line ) );
-                    GeoVariable v = new GeoVariable();
-                    v.setType( GeoVariable.convertStringToType( value ) );
-                    results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
-                } else {
-                    throw new IllegalStateException( "Unknown flag: " + line );
-                }
+            if ( inSample ) {
+                parseSampleLine( line, value );
+            } else if ( inSeries ) {
+                parseSeriesLine( line, value );
             } else if ( inDatabase ) {
                 // we are going to ignore these lines.
             } else if ( inPlatform ) {
-                /*******************************************************************************************************
-                 * PLATFORM
-                 ******************************************************************************************************/
-                if ( startsWithIgnoreCase( line, "!Platform_title" ) ) {
-                    platformSet( currentPlatformAccession, "title", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_geo_accession" ) ) {
-                    currentPlatformAccession = value;
-                } else if ( startsWithIgnoreCase( line, "!Platform_status" ) ) {
-                    platformSet( currentPlatformAccession, "status", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_manufacturer" ) ) {
-                    platformSet( currentPlatformAccession, "manufacturer", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_manufacture_protocol" ) ) {
-                    platformSet( currentPlatformAccession, "manufactureProtocol", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_submission_date" ) ) {
-                    platformSet( currentPlatformAccession, "submissionDate", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_technology" ) ) {
-                    platformSet( currentPlatformAccession, "technology", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_distribution" ) ) {
-                    platformSet( currentPlatformAccession, "distribution", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_organism" ) ) {
-                    platformAddTo( currentPlatformAccession, "organisms", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_description" ) ) {
-                    platformAddTo( currentPlatformAccession, "description", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_name" ) ) {
-                    platformContactSet( currentPlatformAccession, "name", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_email" ) ) {
-                    platformContactSet( currentPlatformAccession, "email", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_institute" ) ) {
-                    platformContactSet( currentPlatformAccession, "institute", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_laboratory" ) ) {
-                    platformContactSet( currentPlatformAccession, "laboratory", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_department" ) ) {
-                    platformContactSet( currentPlatformAccession, "department", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) {
-                    platformContactSet( currentPlatformAccession, "address", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_city" ) ) {
-                    platformContactSet( currentPlatformAccession, "city", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_phone" ) ) {
-                    platformContactSet( currentPlatformAccession, "phone", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_web_link" ) ) {
-                    platformContactSet( currentPlatformAccession, "webLink", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_contact_fax" ) ) {
-                    platformContactSet( currentSeriesAccession, "fax", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_web_link" ) ) {
-                    platformSet( currentPlatformAccession, "webLink", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_sample_id" ) ) {
-                    platformSet( currentPlatformAccession, "id", value );
-                } else if ( startsWithIgnoreCase( line, "!Platform_table_begin" ) ) {
-                    inPlatformTable = true;
-                } else if ( startsWithIgnoreCase( line, "!Platform_table_end" ) ) {
-                    inPlatformTable = false;
-                } else if ( startsWithIgnoreCase( line, "!Platform_contributor" ) ) {
-                    ;// noop. This is the name of the person who submitted the platform.
-                } else if ( startsWithIgnoreCase( line, "!Platform_series_id" ) ) {
-                    // no-op. This identifies which series were run on this platform. We don't care to get this
-                    // information this way.
-                } else {
-                    throw new IllegalStateException( "Unknown flag: " + line );
-                }
+                parsePlatformLine( line, value );
             } else if ( inDataset ) {
-                /*******************************************************************************************************
-                 * DATASET
-                 ******************************************************************************************************/
-                if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
-                    datasetSet( currentDatasetAccession, "title", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_description" ) ) {
-                    datasetSet( currentDatasetAccession, "title", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_maximum_probes" ) ) {
-                    datasetSet( currentDatasetAccession, "numProbes", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_order" ) ) {
-                    datasetSet( currentDatasetAccession, "order", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_organism" ) ) {
-                    datasetSet( currentDatasetAccession, "organism", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_platform" ) ) {
-                    if ( !results.getPlatformMap().containsKey( value ) ) {
-                        results.getPlatformMap().put( value, new GeoPlatform() );
-                        results.getPlatformMap().get( value ).setGeoAccesssion( value );
-                    }
-                    results.getDatasetMap().get( currentDatasetAccession ).setPlatform(
-                            results.getPlatformMap().get( value ) );
-                } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) {
-                    datasetSet( currentDatasetAccession, "probeType", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_reference_series" ) ) {
-                    if ( !results.getSeriesMap().containsKey( value ) ) {
-                        log.debug( "Adding series " + value );
-                        results.getSeriesMap().put( value, new GeoSeries() );
-                        results.getSeriesMap().get( value ).setGeoAccesssion( value );
-                    }
-                    results.getDatasetMap().get( currentDatasetAccession ).addSeries(
-                            results.getSeriesMap().get( value ) );
-                } else if ( startsWithIgnoreCase( line, "!dataset_total_samples" ) ) {
-                    datasetSet( currentDatasetAccession, "numSamples", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_update_date" ) ) {
-                    datasetSet( currentDatasetAccession, "updateDate", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_value_type" ) ) {
-                    datasetSet( currentDatasetAccession, "valueType", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_completeness" ) ) {
-                    datasetSet( currentDatasetAccession, "completeness", value );
-                } else if ( startsWithIgnoreCase( line, "!dataset_experiment_type" ) ) {
-                    datasetSet( currentDatasetAccession, "experimentType", value );
-                } else {
-                    throw new IllegalStateException( "Unknown flag: " + line );
-                }
+                inDatasetTable = true;
+                parseDatasetLine( line, value );
             } else if ( inSubset ) {
-                /*******************************************************************************************************
-                 * SUBSET
-                 ******************************************************************************************************/
-                if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
-                    subsetSet( currentSubsetAccession, "title", value );
-                } else if ( startsWithIgnoreCase( line, "!subset_dataset_id" ) ) {
-                    subsetSet( currentSubsetAccession, "dataSet", value );
-                } else if ( startsWithIgnoreCase( line, "!subset_description" ) ) {
-                    subsetAddTo( currentSubsetAccession, "description", value );
-                } else if ( startsWithIgnoreCase( line, "!subset_sample_id" ) ) {
-                    String[] values = value.split( "," );
-                    for ( int i = 0; i < values.length; i++ ) {
-                        String v = values[i];
-                        if ( !results.getSubsetMap().containsKey( v ) ) {
-                            log.debug( "New sample: " + v );
-                            results.getSampleMap().put( v, new GeoSample() );
-                            results.getSampleMap().get( v ).setGeoAccesssion( v );
-                        }
-                        log.debug( "Adding sample: " + v + " to subset " + currentSubsetAccession );
-                        results.getSubsetMap().get( currentSubsetAccession )
-                                .addSample( results.getSampleMap().get( v ) );
-                    }
-
-                } else if ( startsWithIgnoreCase( line, "!subset_type" ) ) {
-                    subsetSet( currentSubsetAccession, "type", value );
-                } else {
-                    throw new IllegalStateException( "Unknown flag: " + line );
-                }
+                parseSubsetLine( line, value );
             } else {
                 throw new IllegalStateException( "Unknown flag: " + line );
             }
         } else if ( line.startsWith( "#" ) ) {
-            inDatasetTable = false;
-            if ( inPlatform ) {
-                results.getPlatformMap().get( currentPlatformAccession ).getColumnNames().add(
-                        extractKeyValue( platformColumns, line ) );
-            } else if ( inSample ) {
-                results.getSampleMap().get( currentSampleAccession ).getColumnNames().add(
-                        extractKeyValue( sampleColumns, line ) );
-            } else if ( inSeries ) {
-                results.getSeriesMap().get( currentSeriesAccession ).getColumnNames().add(
-                        extractKeyValue( seriesColumns, line ) );
-            } else if ( inSubset ) {
-                // nothing.
-            } else if ( inDataset ) {
-                inDatasetTable = true;
-                results.getDatasetMap().get( currentDatasetAccession ).getColumnNames().add(
-                        extractKeyValue( datasetColumns, line ) );
-            } else {
-                throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
-            }
+            parseColumnIdentifier( line );
         } else {
             if ( inPlatformTable ) {
                 parsePlatformLine( line );
@@ -950,6 +704,8 @@ public class GeoFamilyParser implements Parser {
                 parseSeriesDataLine( line );
             } else if ( inDatasetTable ) {
                 parseDataSetDataLine( line );
+            } else if ( inSubset ) {
+                // do nothing.
             } else {
                 throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
             }
@@ -987,6 +743,110 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * @param line
+     * @param value
+     */
+    private void parseSampleLine( String line, String value ) {
+        /***************************************************************************************************************
+         * SAMPLE
+         **************************************************************************************************************/
+        if ( startsWithIgnoreCase( line, "!sample_table_begin" ) ) {
+            inSampleTable = true;
+        } else if ( startsWithIgnoreCase( line, "!sample_table_end" ) ) {
+            inSampleTable = false;
+        } else if ( startsWithIgnoreCase( line, "!Sample_title" ) ) {
+            sampleSet( currentSampleAccession, "title", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_geo_accession" ) ) {
+            currentSampleAccession = value;
+            if ( !results.getSampleMap().containsKey( currentSampleAccession ) )
+                results.getSampleMap().put( currentSampleAccession, new GeoSample() );
+        } else if ( startsWithIgnoreCase( line, "!Sample_status" ) ) {
+            sampleSet( currentSampleAccession, "status", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_submission_date" ) ) {
+            sampleSet( currentSampleAccession, "submissionDate", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
+            sampleSet( currentSampleAccession, "type", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_channel_count" ) ) {
+            int numExtraChannelsNeeded = Integer.parseInt( value ) - 1;
+            for ( int i = 0; i < numExtraChannelsNeeded; i++ ) {
+                results.getSampleMap().get( currentSampleAccession ).addChannel();
+            }
+            sampleSet( currentSampleAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
+        } else if ( startsWithIgnoreCase( line, "!Sample_source_name" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelSet( currentSampleAccession, "sourceName", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_organism" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelSet( currentSampleAccession, "organism", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_biomaterial_provider" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelSet( currentSampleAccession, "bioMaterialProvider", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_treatment_protocol" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelAddTo( currentSampleAccession, "treatmentProtocol", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_molecule" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelSet( currentSampleAccession, "molecule", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_growth_protocol" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelAddTo( currentSampleAccession, "growthProtocol", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!sample_extract_protocol" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelAddTo( currentSampleAccession, "extractProtocol", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_hyb_protocol" ) ) {
+            sampleAddTo( currentSampleAccession, "hybProtocol", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_scan_protocol" ) ) {
+            sampleAddTo( currentSampleAccession, "scanProtocol", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_data_processing" ) ) {
+            sampleAddTo( currentSampleAccession, "dataProcessing", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_description" ) ) {
+            sampleAddTo( currentSampleAccession, "description", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_label" ) ) {
+            int channel = extractChannelNumber( line );
+            sampleChannelSet( currentSampleAccession, "label", channel, value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_characteristics" ) ) {
+            int channel = extractChannelNumber( line );
+            GeoSample sample = results.getSampleMap().get( currentSampleAccession );
+            sample.getChannel( channel ).addCharacteristic( value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_platform_id" ) ) {
+            sampleSet( currentSampleAccession, "id", value );
+            if ( results.getPlatformMap().containsKey( value ) ) {
+                results.getSampleMap().get( currentSampleAccession )
+                        .addPlatform( results.getPlatformMap().get( value ) );
+            }
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_name" ) ) {
+            sampleContactSet( currentSampleAccession, "name", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_email" ) ) {
+            sampleContactSet( currentSampleAccession, "email", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_institute" ) ) {
+            sampleContactSet( currentSampleAccession, "institute", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_laboratory" ) ) {
+            sampleContactSet( currentSampleAccession, "laboratory", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_department" ) ) {
+            sampleContactSet( currentSampleAccession, "department", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_address" ) ) {
+            sampleContactSet( currentSampleAccession, "address", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_city" ) ) {
+            sampleContactSet( currentSampleAccession, "city", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_phone" ) ) {
+            sampleContactSet( currentSampleAccession, "phone", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_web_link" ) ) {
+            sampleContactSet( currentSampleAccession, "webLink", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_fax" ) ) {
+            sampleContactSet( currentSeriesAccession, "fax", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_series_id" ) ) {
+            if ( results.getSeriesMap().containsKey( value ) ) {
+                results.getSeriesMap().get( value ).addSample( results.getSampleMap().get( currentSampleAccession ) );
+            }
+            seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
+        } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
+            // nooop.
+        } else {
+            throw new IllegalStateException( "Unknown flag: " + line );
+        }
+    }
+
+    /**
+     * @param line
      */
     private void parseSeriesDataLine( String line ) {
         // FIXME: is this ever called?
@@ -1013,28 +873,129 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * @param line
+     * @param value
      */
-    private void parseDataSetDataLine( String line ) {
-
-        if ( !haveReadDatasetDataHeader ) {
-            haveReadDatasetDataHeader = true;
-            return;
-        }
-
-        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
-
-        Map<String, List<String>> dataSetDataMap = results.getDatasetMap().get( currentDatasetAccession ).getData();
-
-        for ( int i = 0; i < tokens.length; i++ ) {
-            String token = tokens[i];
-            String columnName = results.getDatasetMap().get( currentDatasetAccession ).getColumnNames().get( i );
-            if ( !dataSetDataMap.containsKey( columnName ) ) {
-                dataSetDataMap.put( columnName, new ArrayList<String>() );
+    private void parseSeriesLine( String line, String value ) {
+        /***************************************************************************************************************
+         * SERIES
+         **************************************************************************************************************/
+        if ( startsWithIgnoreCase( line, "!Series_title" ) ) {
+            seriesSet( currentSeriesAccession, "title", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_geo_accession" ) ) {
+            currentSeriesAccession = value;
+        } else if ( startsWithIgnoreCase( line, "!Series_status" ) ) {
+            seriesSet( currentSeriesAccession, "status", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_submission_date" ) ) {
+            seriesSet( currentSeriesAccession, "submissionDate", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_pubmed_id" ) ) {
+            seriesAddTo( currentSeriesAccession, "pubmedIds", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_summary" ) ) {
+            seriesAddTo( currentSeriesAccession, "summary", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_type" ) ) {
+            seriesSet( currentSeriesAccession, "type", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contributor" ) ) {
+            results.getSeriesMap().get( currentSeriesAccession ).getContributers().add( value );
+        } else if ( startsWithIgnoreCase( line, "!Series_sample_id" ) ) {
+            if ( !results.getSampleMap().containsKey( value ) ) {
+                log.debug( "New sample: " + value );
+                GeoSample sample = new GeoSample();
+                sample.setGeoAccesssion( value );
             }
-            dataSetDataMap.get( columnName ).add( token );
-        }
+            log.debug( "Adding sample: " + value + " to series " + currentSeriesAccession );
+            results.getSeriesMap().get( currentSeriesAccession ).addSample( results.getSampleMap().get( value ) );
 
-        dataSetDataLines++;
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_name" ) ) {
+            seriesContactSet( currentSeriesAccession, "name", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_email" ) ) {
+            seriesContactSet( currentSeriesAccession, "email", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_institute" ) ) {
+            seriesContactSet( currentSeriesAccession, "institute", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_laboratory" ) ) {
+            seriesContactSet( currentSeriesAccession, "laboratory", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_department" ) ) {
+            seriesContactSet( currentSeriesAccession, "department", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) {
+            seriesContactSet( currentSeriesAccession, "address", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_city" ) ) {
+            seriesContactSet( currentSeriesAccession, "city", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_phone" ) ) {
+            seriesContactSet( currentSeriesAccession, "phone", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_fax" ) ) {
+            seriesContactSet( currentSeriesAccession, "fax", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_web_link" ) ) {
+            seriesContactSet( currentSeriesAccession, "webLink", value );
+        } else if ( startsWithIgnoreCase( line, "!series_platform_id" ) ) {
+            seriesSet( currentSeriesAccession, "platformId", value );
+        } else if ( startsWithIgnoreCase( line, "!series_table_begin" ) ) {
+            inSeriesTable = true;
+        } else if ( startsWithIgnoreCase( line, "!series_table_end" ) ) {
+            inSeriesTable = false;
+        } else if ( startsWithIgnoreCase( line, "!Series_variable_description_" ) ) {
+            Integer variableId = new Integer( extractVariableNumber( line ) );
+            results.getSeriesMap().get( currentSeriesAccession ).getVariables().get( variableId )
+                    .setDescription( value );
+        } else if ( startsWithIgnoreCase( line, "!Series_variable_sample_list_" ) ) {
+            Integer variableId = new Integer( extractVariableNumber( line ) );
+            Collection<String> samples = Arrays.asList( StringUtils.split( value, "," ) );
+            for ( String string : samples ) {
+                GeoSample sam = results.getSampleMap().get( string );
+                results.getSeriesMap().get( currentSeriesAccession ).getVariables().get( variableId )
+                        .addToVariableSampleList( sam );
+            }
+        } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_" ) ) {
+            Integer variableId = new Integer( extractVariableNumber( line ) );
+            results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId ).setRepeats(
+                    GeoReplication.convertStringToRepeatType( value ) );
+        } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
+            Integer variableId = new Integer( extractVariableNumber( line ) );
+            Collection<String> samples = Arrays.asList( StringUtils.split( value, ", " ) );
+            for ( String string : samples ) {
+                GeoSample sam = results.getSampleMap().get( string );
+                results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId )
+                        .addToRepeatsSampleList( sam );
+            }
+        } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
+            Integer variableId = new Integer( extractVariableNumber( line ) );
+            GeoVariable v = new GeoVariable();
+            v.setType( GeoVariable.convertStringToType( value ) );
+            results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
+        } else {
+            throw new IllegalStateException( "Unknown flag: " + line );
+        }
+    }
+
+    /**
+     * @param line
+     * @param value
+     */
+    private void parseSubsetLine( String line, String value ) {
+        /***************************************************************************************************************
+         * SUBSET
+         **************************************************************************************************************/
+        if ( startsWithIgnoreCase( line, "!Dataset_title" ) ) {
+            subsetSet( currentSubsetAccession, "title", value );
+        } else if ( startsWithIgnoreCase( line, "!subset_dataset_id" ) ) {
+            subsetSet( currentSubsetAccession, "dataSet", value );
+        } else if ( startsWithIgnoreCase( line, "!subset_description" ) ) {
+            subsetAddTo( currentSubsetAccession, "description", value );
+        } else if ( startsWithIgnoreCase( line, "!subset_sample_id" ) ) {
+            String[] values = value.split( "," );
+            for ( int i = 0; i < values.length; i++ ) {
+                String v = values[i];
+                if ( !results.getSubsetMap().containsKey( v ) ) {
+                    log.debug( "New sample: " + v );
+                    results.getSampleMap().put( v, new GeoSample() );
+                    results.getSampleMap().get( v ).setGeoAccesssion( v );
+                }
+                log.debug( "Adding sample: " + v + " to subset " + currentSubsetAccession );
+                results.getSubsetMap().get( currentSubsetAccession ).addSample( results.getSampleMap().get( v ) );
+            }
+
+        } else if ( startsWithIgnoreCase( line, "!subset_type" ) ) {
+            subsetSet( currentSubsetAccession, "type", value );
+        } else {
+            throw new IllegalStateException( "Unknown flag: " + line );
+        }
     }
 
     /**
@@ -1235,15 +1196,90 @@ public class GeoFamilyParser implements Parser {
             throw new RuntimeException( e );
         }
     }
+}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Parser#getResults()
-     */
-    public Collection<Object> getResults() {
-        Collection<Object> r = new HashSet<Object>();
-        r.add( this.results );
-        return r;
+class GeoParseResult {
+    private Map<String, GeoDataset> datasetMap;
+
+    private Map<String, GeoPlatform> platformMap;
+
+    private Map<String, GeoSample> sampleMap;
+
+    private Map<String, GeoSeries> seriesMap;
+
+    private Map<String, GeoSubset> subsetMap;
+
+    public GeoParseResult() {
+        sampleMap = new HashMap<String, GeoSample>();
+        platformMap = new HashMap<String, GeoPlatform>();
+        seriesMap = new HashMap<String, GeoSeries>();
+
+        subsetMap = new HashMap<String, GeoSubset>();
+
+        datasetMap = new HashMap<String, GeoDataset>();
     }
+
+    /**
+     * @return Returns the datasetMap.
+     */
+    public Map<String, GeoDataset> getDatasetMap() {
+        return this.datasetMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoDataset> getDatasets() {
+        return this.datasetMap;
+    }
+
+    /**
+     * @return Returns the platformMap.
+     */
+    public Map<String, GeoPlatform> getPlatformMap() {
+        return this.platformMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoPlatform> getPlatforms() {
+        return this.platformMap;
+    }
+
+    /**
+     * @return Returns the sampleMap.
+     */
+    public Map<String, GeoSample> getSampleMap() {
+        return this.sampleMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoSample> getSamples() {
+        return this.sampleMap;
+    }
+
+    /**
+     * @return
+     */
+    public Map<String, GeoSeries> getSeries() {
+        return this.seriesMap;
+    }
+
+    /**
+     * @return Returns the seriesMap.
+     */
+    public Map<String, GeoSeries> getSeriesMap() {
+        return this.seriesMap;
+    }
+
+    /**
+     * @return Returns the subsetMap.
+     */
+    public Map<String, GeoSubset> getSubsetMap() {
+        return this.subsetMap;
+    }
+
 }

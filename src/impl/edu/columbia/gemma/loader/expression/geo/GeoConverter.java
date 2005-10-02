@@ -45,6 +45,8 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
+import edu.columbia.gemma.genome.biosequence.PolymerType;
+import edu.columbia.gemma.genome.biosequence.SequenceType;
 import edu.columbia.gemma.loader.expression.geo.model.GeoChannel;
 import edu.columbia.gemma.loader.expression.geo.model.GeoContact;
 import edu.columbia.gemma.loader.expression.geo.model.GeoData;
@@ -259,6 +261,7 @@ public class GeoConverter implements Converter {
         String identifier = determinePlatformIdentifier( platform );
         String externalReference = determinePlatformExternalReferenceIdentifier( platform );
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
+        ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
         List<String> identifiers = platform.getData().get( identifier );
         List<String> externalRefs = platform.getData().get( externalReference );
@@ -286,6 +289,13 @@ public class GeoConverter implements Converter {
             BioSequence bs = BioSequence.Factory.newInstance();
             bs.setName( externalRef );
             bs.setTaxon( taxon );
+            bs.setPolymerType( PolymerType.DNA ); // FIXME: need to determine PolymerType.
+            bs.setType( SequenceType.DNA ); // FIXME need to determine SequenceType
+
+            DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+            dbe.setAccession( externalRef );
+            dbe.setExternalDatabase( externalDb ); // FIXME is it always genbank? No.
+
             cs.setBiologicalCharacteristic( bs );
 
             compositeSequences.add( cs );
@@ -302,6 +312,35 @@ public class GeoConverter implements Converter {
         arrayDesign.setDesignProvider( manufacturer );
 
         return arrayDesign;
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
+    private ExternalDatabase determinePlatformExternalDatabase( GeoPlatform platform ) {
+        ExternalDatabase result = ExternalDatabase.Factory.newInstance();
+        result.setType( DatabaseType.SEQUENCE );
+
+        String likelyExternalDatabaseIdentifier = determinePlatformExternalReferenceIdentifier( platform );
+        String dbIdentifierDescription = getDbIdentifierDescription( platform );
+
+        String url = null;
+        if ( dbIdentifierDescription.indexOf( "LINK_PRE:" ) >= 0 ) {
+            // example: #ORF = ORF reference LINK_PRE:"http://genome-www4.stanford.edu/cgi-bin/SGD/locus.pl?locus="
+            url = dbIdentifierDescription.substring( dbIdentifierDescription.indexOf( "LINK_PRE:" ) );
+            result.setWebUri( url );
+        }
+
+        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) ) {
+            result.setName( "Genbank" );
+            result.setType( DatabaseType.SEQUENCE );
+        } else if ( likelyExternalDatabaseIdentifier.equals( "ORF" ) ) {
+            String organism = platform.getOrganisms().iterator().next();
+            result.setName( organism );// what else can we do?
+        }
+
+        return result;
     }
 
     /**
@@ -515,6 +554,22 @@ public class GeoConverter implements Converter {
                 log.debug( string + " appears to indicate the external reference identifier in column " + index
                         + " for platform " + platform );
                 return string;
+            }
+            index++;
+        }
+        return null;
+    }
+
+    /**
+     * @param platform
+     * @return
+     */
+    private String getDbIdentifierDescription( GeoPlatform platform ) {
+        Collection<String> columnNames = platform.getColumnNames();
+        int index = 0;
+        for ( String string : columnNames ) {
+            if ( GeoConstants.likelyExternalReference( string ) ) {
+                return platform.getColumnDescriptions().get( index );
             }
             index++;
         }

@@ -3252,7 +3252,7 @@ public class MageMLConverterHelper {
                     }
                 }
             } else if ( bioAssayDatum instanceof MeasuredBioAssayData ) {
-                log.info( "Got raw data file" );
+                log.debug( "Got raw data file" );
                 gemmaObj.setRawDataFile( lf );
             } else {
                 throw new IllegalArgumentException( "Unknown BioAssayData class: " + bioAssayDatum.getClass().getName() );
@@ -3408,7 +3408,7 @@ public class MageMLConverterHelper {
 
         if ( alreadyLinkedArrayDesigns.contains( conv.getName() ) ) return;
 
-        log.info( "Adding array design used " + ad.getName() + " to " + result.getName() );
+        log.debug( "Adding array design used " + ad.getName() + " to " + result.getName() );
         result.getArrayDesignsUsed().add( conv );
 
     }

@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Sat Oct 01 01:14:17 EDT 2005'>
+  timestamp = 'Sun Oct 02 08:21:12 EDT 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -7811,13 +7811,21 @@ one class.
                                   visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
                                   aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                                   <UML:AssociationEnd.multiplicity>
-                                    <UML:Multiplicity xmi.id = 'I7962e0e4m1069e71f9d7m2b21'>
+                                    <UML:Multiplicity xmi.id = 'I429111ebm106a7192636m2bb4'>
                                       <UML:Multiplicity.range>
-                                        <UML:MultiplicityRange xmi.id = 'I7962e0e4m1069e71f9d7m2b20' lower = '1'
+                                        <UML:MultiplicityRange xmi.id = 'I429111ebm106a7192636m2bb5' lower = '0'
                                           upper = '1'/>
                                       </UML:Multiplicity.range>
                                     </UML:Multiplicity>
                                   </UML:AssociationEnd.multiplicity>
+                                  <UML:ModelElement.taggedValue>
+                                    <UML:TaggedValue xmi.id = 'I429111ebm106a7192636m2bb6' isSpecification = 'false'>
+                                      <UML:TaggedValue.dataValue>An optional external refernce for this BioMaterial. In many cases this is the same as the accession for the related BioAssay. We store the  information here to help make the data easier to trace. Note that more than one BioMaterial may reference a given external accession.</UML:TaggedValue.dataValue>
+                                      <UML:TaggedValue.type>
+                                        <UML:TagDefinition xmi.idref = 'Im8f64ed4m101a5582751mm745f'/>
+                                      </UML:TaggedValue.type>
+                                    </UML:TaggedValue>
+                                  </UML:ModelElement.taggedValue>
                                   <UML:AssociationEnd.participant>
                                     <UML:Class xmi.idref = 'I2863e477m101683735a4mm7704'/>
                                   </UML:AssociationEnd.participant>
@@ -29387,7 +29395,7 @@ of nucleotides associated with a gene product.  This class only represents the s
                                 </UML:TaggedValue>
                               </UML:ModelElement.taggedValue>
                               <UML:StructuralFeature.type>
-                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e2a'/>
+                                <UML:DataType xmi.idref = 'Ie046em101e424eaa0mm3e3e'/>
                               </UML:StructuralFeature.type>
                             </UML:Attribute>
                             <UML:Operation xmi.id = 'I183d08cm102a19e2aa6m7100' name = 'findByScientificName'
