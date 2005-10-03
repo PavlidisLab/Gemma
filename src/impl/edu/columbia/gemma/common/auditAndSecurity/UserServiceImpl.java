@@ -63,7 +63,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#FindById(long)
      */
     protected User handleFindById( long id ) throws java.lang.Exception {
-        return ( User ) this.getUserDao().load( id );
+        return ( User ) this.getUserDao().load( new Long( id ) );
     }
 
     /**
@@ -154,7 +154,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
         newRole.setName( role.getName() );
         newRole.setUserName( user.getUserName() );
         newRole = this.getUserRoleService().saveRole( newRole );
-        if ( user.getRoles() == null ) user.setRoles( new HashSet() ); 
+        if ( user.getRoles() == null ) user.setRoles( new HashSet() );
         Collection<UserRole> roles = user.getRoles();
         roles.add( newRole );
     }

@@ -99,9 +99,20 @@ public abstract class BasicLineParser implements LineParser {
     public void parse( String filename ) throws IOException {
         File infile = new File( filename );
         parse( infile );
-
     }
 
+    /**
+     * Add an object to the results collection.
+     * 
+     * @param obj
+     */
+    protected void addResult( Object obj ) {
+        this.results.add( obj );
+    }
+
+    /**
+     * 
+     */
     public Collection<Object> getResults() {
         return results;
     }

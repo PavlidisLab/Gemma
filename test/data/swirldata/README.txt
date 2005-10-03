@@ -23,3 +23,15 @@ g<-maNorm(k, norm="loess")
 maM(g)[100,3]
 
 
+# normalizing "by hand". This is a location-only normalization, so the
+  normalization factor only involves maMloc and is the same for all
+  rows.
+
+rawlr <- -log2((maGf-maGb)/(maRf-maRb))
+rawlr[1,] + maMloc(maNorm(swirl, norm="median"))[1,]
+# compare to
+maM(maNorm(swirl, norm="median"))[1,]
+
+# here's a direct call to maNormMain
+maNormMain(mbatch = k, f.loc = list(maNormLoess(x = "maA", y = "maM", z = NULL, w = NULL)), Mloc = TRUE, Mscale = TRUE, echo = TRUE)
+

@@ -153,11 +153,9 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
      */
     @SuppressWarnings("unchecked")
     public void testGetAllDesignElementsFromArrayDesignsWithoutMock() {
-        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
         CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
 
         Collection<CompositeSequence> col = css.getAllCompositeSequences();
-        log.info( col.size() );
         for ( CompositeSequence cs : col ) {
             log.debug( cs );
         }

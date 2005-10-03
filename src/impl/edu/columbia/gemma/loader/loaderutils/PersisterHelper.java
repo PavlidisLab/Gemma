@@ -18,14 +18,11 @@
  */
 package edu.columbia.gemma.loader.loaderutils;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
@@ -71,7 +68,6 @@ import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
-import edu.columbia.gemma.expression.experiment.ExperimentalFactorDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
@@ -125,6 +121,8 @@ public class PersisterHelper implements Persister {
 
     private BioMaterialDao bioMaterialDao;
 
+    private BioSequenceDao bioSequenceDao;
+
     private CompoundDao compoundDao;
 
     private ContactDao contactDao;
@@ -138,6 +136,8 @@ public class PersisterHelper implements Persister {
     private ExpressionExperimentDao expressionExperimentDao;
 
     private ExternalDatabaseDao externalDatabaseDao;
+
+    private FactorValueDao factorValueDao;
 
     private GeneDao geneDao;
 
@@ -157,9 +157,7 @@ public class PersisterHelper implements Persister {
 
     private TaxonDao taxonDao;
 
-    private BioSequenceDao bioSequenceDao;
-
-    private FactorValueDao factorValueDao;
+    private Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -226,74 +224,6 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param assay
-     */
-    @SuppressWarnings("unchecked")
-    private BioAssay persistBioAssay( BioAssay assay ) {
-
-        if ( assay == null ) return null;
-
-        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
-            // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
-            factorValue.setId( persistFactorValue( factorValue ).getId() );
-        }
-
-        for ( Iterator iter = assay.getArrayDesignsUsed().iterator(); iter.hasNext(); ) {
-            ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
-            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
-        }
-
-        for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
-            file.setId( persistLocalFile( file ).getId() );
-        }
-
-        for ( BioMaterial bioMaterial : ( Collection<BioMaterial> ) assay.getSamplesUsed() ) {
-            bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
-        }
-
-        LocalFile f = assay.getRawDataFile();
-        if ( f != null ) {
-            LocalFile persistentLocalFile = persistLocalFile( f );
-            if ( persistentLocalFile != null ) {
-                f.setId( persistentLocalFile.getId() );
-            } else {
-                log.error( "Null local file for " + f.getLocalURI() );
-                throw new RuntimeException( "Null local file for" + f.getLocalURI() );
-            }
-        }
-
-        return bioAssayDao.findOrCreate( assay );
-    }
-
-    /**
-     * @param factorValue
-     * @return
-     */
-    private FactorValue persistFactorValue( FactorValue factorValue ) {
-
-        if ( factorValue.getOntologyEntry() != null ) {
-            if ( factorValue.getMeasurement() != null || factorValue.getMeasurement() != null ) {
-                throw new IllegalStateException(
-                        "FactorValue can only have one of a value, ontology entry, or measurement." );
-            }
-            OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
-            ontologyEntry.setId( persistOntologyEntry( ontologyEntry ).getId() );
-        } else if ( factorValue.getValue() != null ) {
-            if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
-                throw new IllegalStateException(
-                        "FactorValue can only have one of a value, ontology entry, or measurement." );
-            }
-        } else {
-            // no need to do anything, the measurement will be cascaded in.
-        }
-
-        if ( isTransient( factorValue ) ) {
-            return factorValueDao.create( factorValue );
-        }
-        return factorValue;
-    }
-
-    /**
      * @param arrayDesignDao The arrayDesignDao to set.
      */
     public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
@@ -312,6 +242,13 @@ public class PersisterHelper implements Persister {
      */
     public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
         this.bioMaterialDao = bioMaterialDao;
+    }
+
+    /**
+     * @param bioSequenceDao The bioSequenceDao to set.
+     */
+    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
+        this.bioSequenceDao = bioSequenceDao;
     }
 
     /**
@@ -354,6 +291,13 @@ public class PersisterHelper implements Persister {
      */
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    /**
+     * @param factorValueDao The factorValueDao to set.
+     */
+    public void setFactorValueDao( FactorValueDao factorValueDao ) {
+        this.factorValueDao = factorValueDao;
     }
 
     /**
@@ -417,20 +361,6 @@ public class PersisterHelper implements Persister {
      */
     public void setTaxonDao( TaxonDao taxonDao ) {
         this.taxonDao = taxonDao;
-    }
-
-    /**
-     * The taxon is only updated if it has a null identifier.
-     * 
-     * @param bioSequence
-     */
-    private BioSequence persistBioSequence( BioSequence bioSequence ) {
-        if ( bioSequence == null ) return null;
-        Taxon t = bioSequence.getTaxon();
-        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
-        if ( isTransient( t ) ) bioSequence.setTaxon( taxonDao.findOrCreate( t ) );
-        if ( isTransient( bioSequence ) ) return bioSequenceDao.findOrCreate( bioSequence );
-        return bioSequence;
     }
 
     /**
@@ -558,6 +488,24 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * Determine if a entity transient (not persistent).
+     * 
+     * @param ontologyEntry
+     * @return
+     */
+    private boolean isTransient( Object entity ) {
+        try {
+            return BeanUtils.getSimpleProperty( entity, "id" ) == null;
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        } catch ( NoSuchMethodException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * @param entity
      */
     @SuppressWarnings("unchecked")
@@ -612,6 +560,46 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param assay
+     */
+    @SuppressWarnings("unchecked")
+    private BioAssay persistBioAssay( BioAssay assay ) {
+
+        if ( assay == null ) return null;
+
+        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
+            // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
+            factorValue.setId( persistFactorValue( factorValue ).getId() );
+        }
+
+        for ( Iterator iter = assay.getArrayDesignsUsed().iterator(); iter.hasNext(); ) {
+            ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
+            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
+        }
+
+        for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
+            file.setId( persistLocalFile( file ).getId() );
+        }
+
+        for ( BioMaterial bioMaterial : ( Collection<BioMaterial> ) assay.getSamplesUsed() ) {
+            bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
+        }
+
+        LocalFile f = assay.getRawDataFile();
+        if ( f != null ) {
+            LocalFile persistentLocalFile = persistLocalFile( f );
+            if ( persistentLocalFile != null ) {
+                f.setId( persistentLocalFile.getId() );
+            } else {
+                log.error( "Null local file for " + f.getLocalURI() );
+                throw new RuntimeException( "Null local file for" + f.getLocalURI() );
+            }
+        }
+
+        return bioAssayDao.findOrCreate( assay );
+    }
+
+    /**
      * @param entity
      */
     @SuppressWarnings("unchecked")
@@ -637,6 +625,45 @@ public class PersisterHelper implements Persister {
         fillInOntologyEntries( entity.getCharacteristics() );
 
         return bioMaterialDao.findOrCreate( entity );
+    }
+
+    /**
+     * @param bioSequence
+     */
+    private BioSequence persistBioSequence( BioSequence bioSequence ) {
+        if ( bioSequence == null ) return null;
+        fillInBioSequenceTaxon( bioSequence );
+        if ( isTransient( bioSequence ) ) return bioSequenceDao.findOrCreate( bioSequence );
+        return bioSequence;
+    }
+
+    /**
+     * @param bioSequence
+     */
+    private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
+        Taxon t = bioSequence.getTaxon();
+        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
+
+        // Avoid trips to the database to get the taxon.
+        String scientificName = t.getScientificName();
+        String commonName = t.getCommonName();
+        Integer ncbiId = t.getNcbiId();
+        if ( scientificName != null && seenTaxa.get( scientificName ) != null ) {
+            bioSequence.setTaxon( seenTaxa.get( scientificName ) );
+        } else if ( commonName != null && seenTaxa.get( commonName ) != null ) {
+            bioSequence.setTaxon( seenTaxa.get( commonName ) );
+        } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
+            bioSequence.setTaxon( seenTaxa.get( ncbiId ) );
+        } else if ( isTransient( t ) ) {
+            Taxon foundOrCreatedTaxon = taxonDao.findOrCreate( t );
+            bioSequence.setTaxon( foundOrCreatedTaxon );
+            if ( foundOrCreatedTaxon.getScientificName() != null )
+                seenTaxa.put( foundOrCreatedTaxon.getScientificName(), bioSequence.getTaxon() );
+            if ( foundOrCreatedTaxon.getCommonName() != null )
+                seenTaxa.put( foundOrCreatedTaxon.getCommonName(), bioSequence.getTaxon() );
+            if ( foundOrCreatedTaxon.getNcbiId() != null )
+                seenTaxa.put( foundOrCreatedTaxon.getNcbiId(), bioSequence.getTaxon() );
+        }
     }
 
     /**
@@ -850,6 +877,34 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param factorValue
+     * @return
+     */
+    private FactorValue persistFactorValue( FactorValue factorValue ) {
+
+        if ( factorValue.getOntologyEntry() != null ) {
+            if ( factorValue.getMeasurement() != null || factorValue.getMeasurement() != null ) {
+                throw new IllegalStateException(
+                        "FactorValue can only have one of a value, ontology entry, or measurement." );
+            }
+            OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
+            ontologyEntry.setId( persistOntologyEntry( ontologyEntry ).getId() );
+        } else if ( factorValue.getValue() != null ) {
+            if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
+                throw new IllegalStateException(
+                        "FactorValue can only have one of a value, ontology entry, or measurement." );
+            }
+        } else {
+            // no need to do anything, the measurement will be cascaded in.
+        }
+
+        if ( isTransient( factorValue ) ) {
+            return factorValueDao.create( factorValue );
+        }
+        return factorValue;
+    }
+
+    /**
      * @param gene
      */
     private Object persistGene( Gene gene ) {
@@ -881,42 +936,10 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * Determine if a entity transient (not persistent).
-     * 
-     * @param ontologyEntry
-     * @return
-     */
-    private boolean isTransient( Object entity ) {
-        try {
-            return BeanUtils.getSimpleProperty( entity, "id" ) == null;
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
      * @param entity
      */
     private QuantitationType persistQuantitationType( QuantitationType entity ) {
         return quantitationTypeDao.findOrCreate( entity );
-    }
-
-    /**
-     * @param bioSequenceDao The bioSequenceDao to set.
-     */
-    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
-        this.bioSequenceDao = bioSequenceDao;
-    }
-
-    /**
-     * @param factorValueDao The factorValueDao to set.
-     */
-    public void setFactorValueDao( FactorValueDao factorValueDao ) {
-        this.factorValueDao = factorValueDao;
     }
 
 }

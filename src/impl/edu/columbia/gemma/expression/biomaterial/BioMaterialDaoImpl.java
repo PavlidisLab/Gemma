@@ -48,16 +48,21 @@ public class BioMaterialDaoImpl extends edu.columbia.gemma.expression.biomateria
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( BioMaterial.class );
 
-            queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
+            if ( bioMaterial.getName() != null ) {
+                queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
+            }
 
             /*
              * This syntax allows you to look at an association.
              */
+            // if ( bioMaterial.getExternalAccession() != null ) {
+            // queryObject.createCriteria( "externalAccession" ).add(
+            // Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
+            // }
+            // but this is easier:
             if ( bioMaterial.getExternalAccession() != null ) {
-                queryObject.createCriteria( "accession" ).add(
-                        Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
+                queryObject.add( Restrictions.eq( "externalAccession", bioMaterial.getExternalAccession() ) );
             }
-
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -84,15 +89,16 @@ public class BioMaterialDaoImpl extends edu.columbia.gemma.expression.biomateria
     @Override
     public BioMaterial findOrCreate( BioMaterial bioMaterial ) {
         if ( bioMaterial.getName() == null && bioMaterial.getExternalAccession() == null ) {
-            log.debug( "Compound must have a name to use as comparison key" );
+            log.debug( "BioMaterial must have a name or accession to use as comparison key" );
             return null;
         }
         BioMaterial newBioMaterial = this.find( bioMaterial );
         if ( newBioMaterial != null ) {
+            log.debug( "Found existing bioMaterial: " + newBioMaterial );
             BeanPropertyCompleter.complete( newBioMaterial, bioMaterial );
             return newBioMaterial;
         }
-        log.debug( "Creating new compound: " + bioMaterial.getName() );
+        log.debug( "Creating new bioMaterial: " + bioMaterial.getName() );
         return ( BioMaterial ) create( bioMaterial );
     }
 

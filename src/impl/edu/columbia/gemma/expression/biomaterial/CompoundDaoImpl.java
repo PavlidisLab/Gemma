@@ -23,6 +23,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * <hr>
  * <p>
@@ -78,6 +80,7 @@ public class CompoundDaoImpl extends edu.columbia.gemma.expression.biomaterial.C
         }
         Compound newCompound = this.find( compound );
         if ( newCompound != null ) {
+            BeanPropertyCompleter.complete( newCompound, compound );
             return newCompound;
         }
         log.debug( "Creating new compound: " + compound.getName() );
