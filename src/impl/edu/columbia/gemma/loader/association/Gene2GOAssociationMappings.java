@@ -58,12 +58,13 @@ public class Gene2GOAssociationMappings {
     /**
      * initializes the taxa.
      */
+    @SuppressWarnings("unchecked")
     private void initializeTaxa() {
         Collection<Taxon> taxa = taxonDao.loadAll();
         taxaMap = new HashMap<Integer, Taxon>();
 
         for ( Taxon t : taxa ) {
-            taxaMap.put( new Integer( t.getNcbiId() ), t );
+            taxaMap.put( t.getNcbiId(), t );
         }
     }
 

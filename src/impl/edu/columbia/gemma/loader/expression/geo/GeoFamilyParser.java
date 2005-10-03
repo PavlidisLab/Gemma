@@ -494,7 +494,6 @@ public class GeoFamilyParser implements Parser {
     private void parseLine( String line ) {
         if ( StringUtils.isBlank( line ) ) return;
         if ( line.startsWith( "^" ) ) {
-            log.debug( "Line: " + line );
             if ( startsWithIgnoreCase( line, "^DATABASE" ) ) {
                 inDatabase = true;
                 inSubset = false;
@@ -1130,7 +1129,6 @@ public class GeoFamilyParser implements Parser {
     private void sampleSet( String accession, String property, Object value ) {
         GeoSample sample = results.getSampleMap().get( accession );
         if ( sample == null ) throw new IllegalArgumentException( "Unknown sample " + accession );
-        log.debug( "Setting " + property + " for sample " + accession + " to " + value );
         try {
             BeanUtils.setProperty( sample, property, value );
         } catch ( IllegalAccessException e ) {

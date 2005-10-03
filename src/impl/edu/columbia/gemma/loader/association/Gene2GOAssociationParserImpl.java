@@ -154,10 +154,8 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
         if ( obj == null ) return null;
         assert obj instanceof Gene2GOAssociation;
         Gene2GOAssociation g2go = ( Gene2GOAssociation ) obj;
-        g2go.setAssociatedGene( ( Gene ) persisterHelper.persist( g2go.getAssociatedGene() ) );
-        g2go
-                .setAssociatedOntologyEntry( ( OntologyEntry ) persisterHelper.persist( g2go
-                        .getAssociatedOntologyEntry() ) );
+        g2go.setGene( ( Gene ) persisterHelper.persist( g2go.getGene() ) );
+        g2go.setOntologyEntry( ( OntologyEntry ) persisterHelper.persist( g2go.getOntologyEntry() ) );
 
         return g2go;
 
@@ -197,7 +195,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     protected Object getKey( Object newItem ) {
         if ( !( newItem instanceof Gene2GOAssociation ) ) throw new IllegalArgumentException();
         Gene2GOAssociation g2GO = ( Gene2GOAssociation ) newItem;
-        return g2GO.getAssociatedGene() + " " + g2GO.getAssociatedOntologyEntry() + " " + g2GO.getEvidenceCode();
+        return g2GO.getGene() + " " + g2GO.getOntologyEntry() + " " + g2GO.getEvidenceCode();
     }
 
     /**

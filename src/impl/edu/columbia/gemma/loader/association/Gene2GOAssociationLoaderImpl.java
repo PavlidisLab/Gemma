@@ -80,8 +80,8 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
 
     private Object persistGene2GOAssociation( Gene2GOAssociation entity ) {
         assert persisterHelper != null;
-        persisterHelper.persist( entity.getAssociatedGene() );
-        persisterHelper.persist( entity.getAssociatedOntologyEntry() );
+        persisterHelper.persist( entity.getGene() );
+        persisterHelper.persist( entity.getOntologyEntry() );
         persisterHelper.persist( entity.getSource() );
         return getGene2GOAssociationDao().create( entity );
     }

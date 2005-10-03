@@ -44,9 +44,6 @@ public class ArrayDesignMappings {
     Map<String, Contact> designProvidersMap = null;
     Collection<DesignElement> designElements = new HashSet<DesignElement>();
 
-    private ContactDao contactDao = null;
-    private ArrayDesignDao arrayDesignDao = null;
-
     /**
      * 
      */
@@ -89,10 +86,10 @@ public class ArrayDesignMappings {
         cs.setName( values[MGU74A_COMPOSITESEQUENCE_NAME] );
         cs.setDescription( values[MGU74A_COMPOSITESEQUENCE_DESCRIPTION] );
 
-        // NOTE: if you use cs.setArrayDesign(arrayDesign), 
-        // make sure you set inverse="true" in ArrayDesign.hbm.xml under the <set> designElements.  This tells 
-        // hibernate to only propagate changes to the database that are made from the arrayDesign end.  That is,
-        // arrayDesign.setDesignElements(designElements).  If you do not set inverse="true", then you must leave
+        // NOTE: if you use cs.setArrayDesign(arrayDesign),
+        // make sure you set inverse="true" in ArrayDesign.hbm.xml under the <set> designElements. This tells
+        // hibernate to only propagate changes to the database that are made from the arrayDesign end. That is,
+        // arrayDesign.setDesignElements(designElements). If you do not set inverse="true", then you must leave
         // this first line out (that is: cs.setArrayDesign(arrayDesign)).
         cs.setArrayDesign( arrayDesign );
         designElements.add( cs );
@@ -108,41 +105,13 @@ public class ArrayDesignMappings {
      * @return ArrayDesign
      */
     private ArrayDesign checkAndGetExistingArrayDesign( String name ) {
-     
+
         if ( arrayDesignMap.containsKey( name ) ) return arrayDesignMap.get( name );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( name );
         arrayDesignMap.put( name, ad );
         return ad;
-    }
-
-    /**
-     * @return Returns the contactDao.
-     */
-    public ContactDao getContactDao() {
-        return contactDao;
-    }
-
-    /**
-     * @param contactDao The contactDao to set.
-     */
-    public void setContactDao( ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * @return Returns the arrayDesignDao.
-     */
-    public ArrayDesignDao getArrayDesignDao() {
-        return arrayDesignDao;
-    }
-
-    /**
-     * @param arrayDesignDao The arrayDesignDao to set.
-     */
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
     }
 
 }

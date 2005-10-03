@@ -470,10 +470,10 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "BioAssayFactorValues" ) ) {
+            // FIXME: these should be the same factorvalues as referred to by the experimentalfactors.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Channels" ) ) {
             ; // we don't support this.
-
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -1497,6 +1497,7 @@ public class MageMLConverterHelper {
         else if ( associationName.equals( "Annotations" ) )
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         else if ( associationName.equals( "FactorValues" ) )
+            // FIXME: these should be the same factorvalues as referred to by the bioassays.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         else
             log.warn( "Unsupported or unknown association: " + associationName );
@@ -1634,11 +1635,11 @@ public class MageMLConverterHelper {
         Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associationName.equals( "ExperimentalFactor" ) ) {
-            // we don't support this reverse association.
+            // we let the ExperimentalFactor manage this association. FIXME - this might not work.
         } else if ( associationName.equals( "Measurement" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
         } else if ( associationName.equals( "Value" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "Value" );
+            simpleFillIn( associatedObject, gemmaObj, getter, "OntologyEntry" );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
