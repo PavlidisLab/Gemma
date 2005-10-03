@@ -550,7 +550,7 @@ public class PersisterHelper implements Persister {
     private void initializeDefaultOwner() {
         Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
 
-        assert matchingPersons.size() == 1;
+        assert matchingPersons.size() == 1 : "Found " + matchingPersons.size() + " contacts matching 'nobody'";
 
         defaultOwner = matchingPersons.iterator().next();
 

@@ -49,7 +49,7 @@ public class ArrayDesignParserIntegrationTest extends BaseServiceTestCase {
     //TODO - refactor methods to separate junit tests from the integration test.  This is currently an integration test.
     protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 
-    private ArrayDesignParserImpl arrayDesignParser = null;
+    private ArrayDesignParser arrayDesignParser = null;
 
     private ArrayDesignPersister arrayDesignLoader = null;
 
@@ -63,7 +63,7 @@ public class ArrayDesignParserIntegrationTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        arrayDesignParser = new ArrayDesignParserImpl();
+        arrayDesignParser = new ArrayDesignParser();
 
         arrayDesignParser.setArrayDesignMappings( ( ArrayDesignMappings ) ctx.getBean( "arrayDesignMappings" ) );
 
