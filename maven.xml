@@ -101,7 +101,7 @@
 	</goal>
 	
 	<!-- Load initial data into the test database -->
-	<goal name="init-testdb" prereqs="ddl-test" >
+	<goal name="init-testdb"  >
 		 <sql driver="${maven.sql.driver}" 
 		 url="${maven.sql.testdb.url}"  onerror="continue"
 		 userid="${maven.sql.userid}" 
@@ -113,8 +113,10 @@
 		 </sql>
 	</goal>
 	
+	<goal name="ddl-test-setup" prereqs="ddl-test,init-testdb" />
+	
 	<!-- Do a full-blown test, including all preliminary tests -->
-	<goal name="fulltest" prereqs="mda,init-testdb,xdoclet" >
+	<goal name="fulltest" prereqs="mda,init-testdb,ddl-test,xdoclet" >
 		<echo>"Running test"</echo>
 		<attainGoal name="test" />	
 	</goal>
