@@ -18,7 +18,16 @@
  */
 package edu.columbia.gemma.loader.loaderutils;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -62,10 +71,12 @@ import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
+import edu.columbia.gemma.expression.experiment.ExperimentalFactorDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
 import edu.columbia.gemma.expression.experiment.FactorValue;
+import edu.columbia.gemma.expression.experiment.FactorValueDao;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
@@ -74,7 +85,9 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 
 /**
- * A generic class to persist Gemma-domain objects. (work in progress)
+ * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
+ * Where appropriate, objects are only created anew if they don't already exist in the database, according to rules
+ * documented elsewhere.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -100,7 +113,8 @@ import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
  * @spring.property name="compoundDao" ref="compoundDao"
  * @spring.property name="databaseEntryDao" ref="databaseEntryDao"
  * @spring.property name="contactDao" ref="contactDao"
- * @spring.property name="bioSequenceDao" ref="bioSequenceDao"
+ * @spring.property name="bioSequenceDao" ref="bioSequenceDao"*
+ * @spring.property name="factorValueDao" ref="factorValueDao" *
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -144,6 +158,8 @@ public class PersisterHelper implements Persister {
     private TaxonDao taxonDao;
 
     private BioSequenceDao bioSequenceDao;
+
+    private FactorValueDao factorValueDao;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -213,34 +229,33 @@ public class PersisterHelper implements Persister {
      * @param assay
      */
     @SuppressWarnings("unchecked")
-    public BioAssay persistBioAssay( BioAssay assay ) {
+    private BioAssay persistBioAssay( BioAssay assay ) {
 
         if ( assay == null ) return null;
 
         for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
-            for ( OntologyEntry value : ( Collection<OntologyEntry> ) factorValue.getValue() ) {
-                value = persistOntologyEntry( value );
-            }
+            // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
+            factorValue.setId( persistFactorValue( factorValue ).getId() );
         }
 
-        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) assay.getArrayDesignsUsed() ) {
-            arrayDesign = persistArrayDesign( arrayDesign );
-            log.debug( arrayDesign );
+        for ( Iterator iter = assay.getArrayDesignsUsed().iterator(); iter.hasNext(); ) {
+            ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
+            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
         }
 
         for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
-            file = persistLocalFile( file );
+            file.setId( persistLocalFile( file ).getId() );
         }
 
         for ( BioMaterial bioMaterial : ( Collection<BioMaterial> ) assay.getSamplesUsed() ) {
-            bioMaterial = persistBioMaterial( bioMaterial );
+            bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
         }
 
         LocalFile f = assay.getRawDataFile();
         if ( f != null ) {
             LocalFile persistentLocalFile = persistLocalFile( f );
             if ( persistentLocalFile != null ) {
-                f = persistentLocalFile;
+                f.setId( persistentLocalFile.getId() );
             } else {
                 log.error( "Null local file for " + f.getLocalURI() );
                 throw new RuntimeException( "Null local file for" + f.getLocalURI() );
@@ -248,6 +263,34 @@ public class PersisterHelper implements Persister {
         }
 
         return bioAssayDao.findOrCreate( assay );
+    }
+
+    /**
+     * @param factorValue
+     * @return
+     */
+    private FactorValue persistFactorValue( FactorValue factorValue ) {
+
+        if ( factorValue.getOntologyEntry() != null ) {
+            if ( factorValue.getMeasurement() != null || factorValue.getMeasurement() != null ) {
+                throw new IllegalStateException(
+                        "FactorValue can only have one of a value, ontology entry, or measurement." );
+            }
+            OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
+            ontologyEntry.setId( persistOntologyEntry( ontologyEntry ).getId() );
+        } else if ( factorValue.getValue() != null ) {
+            if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
+                throw new IllegalStateException(
+                        "FactorValue can only have one of a value, ontology entry, or measurement." );
+            }
+        } else {
+            // no need to do anything, the measurement will be cascaded in.
+        }
+
+        if ( isTransient( factorValue ) ) {
+            return factorValueDao.create( factorValue );
+        }
+        return factorValue;
     }
 
     /**
@@ -377,14 +420,17 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * The taxon is only updated if it has a null identifier.
+     * 
      * @param bioSequence
      */
     private BioSequence persistBioSequence( BioSequence bioSequence ) {
         if ( bioSequence == null ) return null;
         Taxon t = bioSequence.getTaxon();
         if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
-        bioSequence.setTaxon( taxonDao.findOrCreate( t ) );
-        return bioSequenceDao.findOrCreate( bioSequence );
+        if ( isTransient( t ) ) bioSequence.setTaxon( taxonDao.findOrCreate( t ) );
+        if ( isTransient( bioSequence ) ) return bioSequenceDao.findOrCreate( bioSequence );
+        return bioSequence;
     }
 
     /**
@@ -532,11 +578,14 @@ public class PersisterHelper implements Persister {
                 log.warn( entity
                         + ": No design elements in newly supplied version, no further processing will be done." );
                 return existing;
+            } else {
+                log.warn( "Design exists but design elements are to be updated." );
+                entity = existing;
             }
         }
 
-        log.debug( "Filling in design elements for " + entity );
         int i = 0;
+        log.debug( "Filling in design elements for " + entity );
         for ( DesignElement designElement : ( Collection<DesignElement> ) entity.getDesignElements() ) {
             designElement.setArrayDesign( entity );
             if ( designElement instanceof CompositeSequence ) {
@@ -547,7 +596,16 @@ public class PersisterHelper implements Persister {
                 reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
             }
             i++;
-            if ( i % 1000 == 0 ) log.info( i + " design elements examined" );
+            if ( i % 100 == 0 ) {
+                try {
+                    Thread.sleep( 10 );
+                } catch ( InterruptedException e ) {
+                    ;
+                }
+            }
+            if ( i % 1000 == 0 ) {
+                log.info( i + " design elements examined." );
+            }
         }
 
         return arrayDesignDao.findOrCreate( entity );
@@ -568,7 +626,7 @@ public class PersisterHelper implements Persister {
 
         for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
             OntologyEntry action = treatment.getAction();
-            persistOntologyEntry( action );
+            action.setId( persistOntologyEntry( action ).getId() );
 
             for ( ProtocolApplication protocolApplication : ( Collection<ProtocolApplication> ) treatment
                     .getProtocolApplications() ) {
@@ -605,6 +663,7 @@ public class PersisterHelper implements Persister {
      * @return
      */
     private DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
+        if ( databaseEntry == null ) return null;
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
         return databaseEntryDao.findOrCreate( databaseEntry );
     }
@@ -630,23 +689,18 @@ public class PersisterHelper implements Persister {
             log.warn( "Null accession for expressionExperiment" );
         }
 
-        // this is very annoying code.
-        // the following ontology entries must be persisted manually.
-        // manually persist: experimentaldesign->experimentalFactor->annotation, category
-        // manually persist: experimentaldesign->experimentalFactor->FactorValue->value
-        // experimentaldesign->type
         for ( ExperimentalDesign experimentalDesign : ( Collection<ExperimentalDesign> ) entity
                 .getExperimentalDesigns() ) {
 
             // type
             for ( OntologyEntry type : ( Collection<OntologyEntry> ) experimentalDesign.getTypes() ) {
-                persistOntologyEntry( type );
+                type.setId( persistOntologyEntry( type ).getId() );
             }
 
             for ( ExperimentalFactor experimentalFactor : ( Collection<ExperimentalFactor> ) experimentalDesign
                     .getExperimentalFactors() ) {
                 for ( OntologyEntry annotation : ( Collection<OntologyEntry> ) experimentalFactor.getAnnotations() ) {
-                    persistOntologyEntry( annotation );
+                    annotation.setId( persistOntologyEntry( annotation ).getId() );
                 }
 
                 OntologyEntry category = experimentalFactor.getCategory();
@@ -658,40 +712,21 @@ public class PersisterHelper implements Persister {
                 }
 
                 for ( FactorValue factorValue : ( Collection<FactorValue> ) experimentalFactor.getFactorValues() ) {
-
-                    OntologyEntry value = factorValue.getValue();
-
-                    if ( value == null ) {
-                        log.debug( "No 'value' for FactorValue" ); // that's okay, it can be a measurement.
-                        if ( factorValue.getMeasurement() == null ) {
-                            throw new IllegalStateException( "FactorValue must have either a measurement or a value" );
-                        }
-                    } else {
-                        if ( factorValue.getMeasurement() != null ) {
-                            throw new IllegalStateException( "FactorValue cannot have both a measurement and a value" );
-                        }
-                        persistOntologyEntry( value );
-                        // factorValue.setValue( value );
-                        log.debug( "factorValue.value=" + value.getId() );
-                    }
+                    factorValue.setId( persistFactorValue( factorValue ).getId() );
                 }
             }
         }
 
-        // manually persist: experimentaldesign->bioassay->factorvalue->value and bioassay->arraydesign
         for ( BioAssay bA : ( Collection<BioAssay> ) entity.getBioAssays() ) {
-            if ( bA == null ) continue;
             bA.setId( persistBioAssay( bA ).getId() );
         }
 
         for ( ExpressionExperimentSubSet subset : ( Collection<ExpressionExperimentSubSet> ) entity.getSubsets() ) {
             for ( BioAssay bA : ( Collection<BioAssay> ) subset.getBioAssays() ) {
-                if ( bA == null ) continue;
                 bA.setId( persistBioAssay( bA ).getId() );
             }
         }
 
-        // manually persist expressionExperiment-->designElementDataVector-->DesignElement
         for ( DesignElementDataVector vect : ( Collection<DesignElementDataVector> ) entity
                 .getDesignElementDataVectors() ) {
             DesignElement persistentDesignElement = designElementDao.find( vect.getDesignElement() );
@@ -705,6 +740,103 @@ public class PersisterHelper implements Persister {
 
             vect.setDesignElement( persistentDesignElement );
         }
+
+        // FIXME:java.lang.RuntimeException: org.springframework.orm.hibernate3.HibernateSystemException: a different
+        // object with the same identifier value was already associated with the session:
+        // [edu.columbia.gemma.expression.bioAssay.BioAssayImpl#26]; nested exception is
+        // org.hibernate.NonUniqueObjectException: a different object with the same identifier value was already
+        // associated with the session: [edu.columbia.gemma.expression.bioAssay.BioAssayImpl#26]
+        // at edu.columbia.gemma.loader.loaderutils.PersisterHelper.persist(PersisterHelper.java:175)
+        // at edu.columbia.gemma.loader.expression.geo.GeoDatasetService.fetchAndLoad(GeoDatasetService.java:63)
+        // at
+        // edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceTest.testFetchAndLoadD(GeoDatasetServiceTest.java:108)
+        // at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        // at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+        // at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+        // at java.lang.reflect.Method.invoke(Method.java:585)
+        // at junit.framework.TestCase.runTest(TestCase.java:154)
+        // at junit.framework.TestCase.runBare(TestCase.java:127)
+        // at junit.framework.TestResult$1.protect(TestResult.java:106)
+        // at junit.framework.TestResult.runProtected(TestResult.java:124)
+        // at junit.framework.TestResult.run(TestResult.java:109)
+        // at junit.framework.TestCase.run(TestCase.java:118)
+        // at junit.framework.TestSuite.runTest(TestSuite.java:208)
+        // at junit.framework.TestSuite.run(TestSuite.java:203)
+        // at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.runTests(RemoteTestRunner.java:478)
+        // at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.run(RemoteTestRunner.java:344)
+        // at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:196)
+        // Caused by: org.springframework.orm.hibernate3.HibernateSystemException: a different object with the same
+        // identifier value was already associated with the session:
+        // [edu.columbia.gemma.expression.bioAssay.BioAssayImpl#26]; nested exception is
+        // org.hibernate.NonUniqueObjectException: a different object with the same identifier value was already
+        // associated with the session: [edu.columbia.gemma.expression.bioAssay.BioAssayImpl#26]
+        // at
+        // org.springframework.orm.hibernate3.SessionFactoryUtils.convertHibernateAccessException(SessionFactoryUtils.java:656)
+        // at
+        // org.springframework.orm.hibernate3.HibernateAccessor.convertHibernateAccessException(HibernateAccessor.java:413)
+        // at org.springframework.orm.hibernate3.HibernateTemplate.execute(HibernateTemplate.java:320)
+        // at org.springframework.orm.hibernate3.HibernateTemplate.save(HibernateTemplate.java:552)
+        // at
+        // edu.columbia.gemma.expression.experiment.ExpressionExperimentDaoBase.create(ExpressionExperimentDaoBase.java:99)
+        // at
+        // edu.columbia.gemma.expression.experiment.ExpressionExperimentDaoBase.create(ExpressionExperimentDaoBase.java:86)
+        // at
+        // edu.columbia.gemma.expression.experiment.ExpressionExperimentDaoImpl.findOrCreate(ExpressionExperimentDaoImpl.java:89)
+        // at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        // at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+        // at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+        // at java.lang.reflect.Method.invoke(Method.java:585)
+        // at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:292)
+        // at
+        // org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:155)
+        // at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:122)
+        // at org.springframework.orm.hibernate3.HibernateInterceptor.invoke(HibernateInterceptor.java:97)
+        // at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:144)
+        // at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:174)
+        // at $Proxy1.findOrCreate(Unknown Source)
+        // at
+        // edu.columbia.gemma.loader.loaderutils.PersisterHelper.persistExpressionExperiment(PersisterHelper.java:754)
+        // at edu.columbia.gemma.loader.loaderutils.PersisterHelper.persist(PersisterHelper.java:189)
+        // at edu.columbia.gemma.loader.loaderutils.PersisterHelper.persist(PersisterHelper.java:171)
+        // ... 17 more
+        // Caused by: org.hibernate.NonUniqueObjectException: a different object with the same identifier value was
+        // already associated with the session: [edu.columbia.gemma.expression.bioAssay.BioAssayImpl#26]
+        // at org.hibernate.engine.PersistenceContext.checkUniqueness(PersistenceContext.java:586)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.performUpdate(DefaultSaveOrUpdateEventListener.java:254)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.entityIsDetached(DefaultSaveOrUpdateEventListener.java:214)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:91)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:69)
+        // at org.hibernate.impl.SessionImpl.saveOrUpdate(SessionImpl.java:468)
+        // at org.hibernate.engine.Cascades$5.cascade(Cascades.java:154)
+        // at org.hibernate.engine.Cascades.cascadeAssociation(Cascades.java:771)
+        // at org.hibernate.engine.Cascades.cascade(Cascades.java:720)
+        // at org.hibernate.engine.Cascades.cascadeCollection(Cascades.java:895)
+        // at org.hibernate.engine.Cascades.cascadeAssociation(Cascades.java:792)
+        // at org.hibernate.engine.Cascades.cascade(Cascades.java:720)
+        // at org.hibernate.engine.Cascades.cascade(Cascades.java:847)
+        // at org.hibernate.event.def.AbstractSaveEventListener.cascadeAfterSave(AbstractSaveEventListener.java:363)
+        // at
+        // org.hibernate.event.def.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:265)
+        // at org.hibernate.event.def.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:160)
+        // at org.hibernate.event.def.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:95)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:184)
+        // at
+        // org.hibernate.event.def.DefaultSaveEventListener.saveWithGeneratedOrRequestedId(DefaultSaveEventListener.java:33)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:173)
+        // at org.hibernate.event.def.DefaultSaveEventListener.performSaveOrUpdate(DefaultSaveEventListener.java:27)
+        // at
+        // org.hibernate.event.def.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:69)
+        // at org.hibernate.impl.SessionImpl.save(SessionImpl.java:481)
+        // at org.hibernate.impl.SessionImpl.save(SessionImpl.java:476)
+        // at org.springframework.orm.hibernate3.HibernateTemplate$12.doInHibernate(HibernateTemplate.java:555)
+        // at org.springframework.orm.hibernate3.HibernateTemplate.execute(HibernateTemplate.java:315)
+        // ... 35 more
 
         return expressionExperimentDao.findOrCreate( entity );
     }
@@ -740,11 +872,30 @@ public class PersisterHelper implements Persister {
     private OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
         fillInPersistentExternalDatabase( ontologyEntry );
-        ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
+        if ( isTransient( ontologyEntry ) )
+            ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
         for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
             persistOntologyEntry( associatedOntologyEntry );
         }
         return ontologyEntry;
+    }
+
+    /**
+     * Determine if a entity transient (not persistent).
+     * 
+     * @param ontologyEntry
+     * @return
+     */
+    private boolean isTransient( Object entity ) {
+        try {
+            return BeanUtils.getSimpleProperty( entity, "id" ) == null;
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        } catch ( NoSuchMethodException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -759,6 +910,13 @@ public class PersisterHelper implements Persister {
      */
     public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
         this.bioSequenceDao = bioSequenceDao;
+    }
+
+    /**
+     * @param factorValueDao The factorValueDao to set.
+     */
+    public void setFactorValueDao( FactorValueDao factorValueDao ) {
+        this.factorValueDao = factorValueDao;
     }
 
 }

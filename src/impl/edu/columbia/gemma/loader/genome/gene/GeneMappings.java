@@ -74,12 +74,14 @@ public class GeneMappings {
     /**
      * Initialize a taxa map.
      */
+    @SuppressWarnings("unchecked")
     private void initializeTaxa() {
         Collection<Taxon> taxa = taxonDao.loadAll();
         taxaMap = new HashMap<Integer, Taxon>();
 
         for ( Taxon t : taxa ) {
-            taxaMap.put( new Integer( t.getNcbiId() ), t );
+            if ( t == null ) continue;
+            taxaMap.put( t.getNcbiId(), t );
         }
     }
 

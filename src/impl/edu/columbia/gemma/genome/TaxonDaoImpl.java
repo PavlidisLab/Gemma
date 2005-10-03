@@ -86,7 +86,7 @@ public class TaxonDaoImpl extends edu.columbia.gemma.genome.TaxonDaoBase {
      */
     @Override
     public Taxon findOrCreate( Taxon taxon ) {
-        if ( taxon.getScientificName() == null && taxon.getCommonName() == null && taxon.getNcbiId() == 0 ) {
+        if ( taxon.getScientificName() == null && taxon.getCommonName() == null && taxon.getNcbiId() == null ) {
             log.warn( "taxon had no testable fields filled in : " + taxon );
             return null;
         }

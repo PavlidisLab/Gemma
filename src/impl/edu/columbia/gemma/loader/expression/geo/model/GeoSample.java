@@ -44,6 +44,9 @@ public class GeoSample extends GeoData {
 
     Collection<GeoPlatform> platforms;
 
+    Collection<GeoReplication> replicates;
+    Collection<GeoVariable> variables;
+
     // SAGE items.
     String anchor;
     int tagCount;
@@ -54,6 +57,8 @@ public class GeoSample extends GeoData {
         this.addChannel();
         contact = new GeoContact();
         platforms = new HashSet<GeoPlatform>();
+        replicates = new HashSet<GeoReplication>();
+        variables = new HashSet<GeoVariable>();
     }
 
     public void addPlatform( GeoPlatform platform ) {
@@ -230,6 +235,34 @@ public class GeoSample extends GeoData {
      */
     public void setTitle( String title ) {
         this.title = title;
+    }
+
+    /**
+     * @return Returns the replicates.
+     */
+    public Collection<GeoReplication> getReplicates() {
+        return this.replicates;
+    }
+
+    /**
+     * @return Returns the variables.
+     */
+    public Collection<GeoVariable> getVariables() {
+        return this.variables;
+    }
+
+    /**
+     * @param variable
+     */
+    public void addVariable( GeoVariable variable ) {
+        this.variables.add( variable );
+    }
+
+    /**
+     * @param replication
+     */
+    public void addReplication( GeoReplication replication ) {
+        this.replicates.add( replication );
     }
 
 }

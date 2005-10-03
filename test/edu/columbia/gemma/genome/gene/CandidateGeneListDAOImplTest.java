@@ -58,35 +58,24 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
 
         cgl = CandidateGeneList.Factory.newInstance();
 
-        t = daoTaxon.findByCommonName( "mouse" );
-        if ( t == null ) {
-            t = Taxon.Factory.newInstance();
-            t.setCommonName( "mouse" );
-            t.setScientificName( "mouse" );
-            daoTaxon.create( t );
-        }
-        Collection col = daoGene.findByOfficalSymbol( "foo" );
-        if ( col.size() > 0 )
-            g = ( Gene ) col.iterator().next();
-        else {
-            g = Gene.Factory.newInstance();
-            g.setName( "testmygene" );
-            g.setOfficialSymbol( "foo" );
-            g.setOfficialName( "testmygene" );
-            g.setTaxon( t );
-            daoGene.create( g );
-        }
-        col = daoGene.findByOfficalSymbol( "foo2" );
-        if ( col.size() > 0 )
-            g2 = ( Gene ) col.iterator().next();
-        else {
-            g2 = Gene.Factory.newInstance();
-            g2.setName( "testmygene2" );
-            g2.setOfficialSymbol( "foo2" );
-            g2.setOfficialName( "testmygene2" );
-            g2.setTaxon( t );
-            daoGene.create( g2 );
-        }
+        t = Taxon.Factory.newInstance();
+        t.setCommonName( "mouse" );
+        t.setScientificName( "Mus musculus" );
+        t = daoTaxon.findOrCreate( t );
+
+        g = Gene.Factory.newInstance();
+        g.setName( "testmygene" );
+        g.setOfficialSymbol( "foo" );
+        g.setOfficialName( "testmygene" );
+        g.setTaxon( t );
+        daoGene.findOrCreate( g );
+
+        g2 = Gene.Factory.newInstance();
+        g2.setName( "testmygene2" );
+        g2.setOfficialSymbol( "foo2" );
+        g2.setOfficialName( "testmygene2" );
+        g2.setTaxon( t );
+        daoGene.findOrCreate( g2 );
 
         daoCGL.create( cgl );
     }
