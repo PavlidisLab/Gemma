@@ -18,27 +18,34 @@
  */
 package edu.columbia.gemma.loader.expression.mage;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import baseCode.dataStructure.matrix.NamedMatrix;
+import baseCode.io.ByteArrayConverter;
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.loader.loaderutils.Preprocessor;
+import edu.columbia.gemma.util.ConfigUtils;
 
 /**
- * <hr>
- * <p>
- * An {@link edu.columbia.gemma.loader.expression.mage.RawDataParser} is required by this implementation, so the raw
- * data files can be parsed correctly.
- * </p>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
+ * @author pavlidis
  * @author keshav
  * @version $Id$
  * @spring.bean id="mageMLPreprocessor" singleton="false"
@@ -47,108 +54,134 @@ public class MageMLPreprocessor implements Preprocessor {
 
     RawDataParser rdp = null;
 
-    /**
-     * instantiate a RawDataProcessor.
-     */
-    public MageMLPreprocessor() {
-        rdp = new RawDataParser();
+    private String localMatrixFilepath;
+
+    private final String experimentName;
+
+    public MageMLPreprocessor( String experimentName ) {
+        this.experimentName = experimentName.replaceAll( "\\W+", "_" );
+        this.localMatrixFilepath = ConfigUtils.getProperty( "local.rawData.matrix.basepath" );
     }
 
     /**
-     * Creates a list of 2D arrays from raw data and the 3 dimensions - BioAssay, QuantitationType, DesignElement.
-     * Calling any of the methods {@link #convertListOfDoubleArraysToMatrix( List list, int cols, int rows )},
-     * {@link #convertListOfIntArraysToMatrix( List list, int cols, int rows )}, or
-     * {@link #convertListOfBooleanArraysToMatrix( List list, int cols, int rows )} after this will convert this list to
-     * a matrix.
+     * This method is provided primarily for testing.
      * 
-     * @param bioAssay
-     * @param quantitationTypes
-     * @param designElements
+     * @param streams
+     * @param bioAssays
+     * @param dimensions
+     * @throws IOException
      */
-    @SuppressWarnings("unchecked")
-    public void preprocess( BioAssay bioAssay, List<QuantitationType> quantitationTypes,
-            List<DesignElement> designElements, InputStream is ) {
+    public void preprocessStreams( List<InputStream> streams, List<BioAssay> bioAssays, BioAssayDimensions dimensions )
+            throws IOException {
+        rdp = new RawDataParser( bioAssays, dimensions );
+        rdp.setSeparator( ' ' );
         Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
 
-        log.info( " preprocessing the data ..." );
+        log.info( "Preprocessing the data ..." );
 
-        log.debug( "There are " + quantitationTypes.size() + " quantitation types for bioassay " + bioAssay );
+        rdp.parseStreams( streams );
+    }
 
-        try {
-            rdp.setNumOfDesignElements( designElements.size() );
-            rdp.parse( is );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Preprocessor#preprocess(java.util.List,
+     *      edu.columbia.gemma.loader.expression.mage.BioAssayDimensions)
+     */
+    @SuppressWarnings("unchecked")
+    public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
+
+        rdp = new RawDataParser( bioAssays, dimensions );
+        rdp.setSeparator( ' ' );
+
+        Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
+
+        log.info( "Preprocessing the data ..." );
+
+        rdp.parse();
+
+        Collection<LocalFile> sourceFiles = new HashSet<LocalFile>();
+        for ( BioAssay assay : bioAssays ) {
+            sourceFiles.add( assay.getRawDataFile() );
+        }
+
+        // Now we do several things: Create text files, persist their information, and persist the data vectors.
+
+        Collection<Object> matrices = rdp.getResults();
+        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
+        Collection<LocalFile> localFiles = new HashSet<LocalFile>();
+        ByteArrayConverter converter = new ByteArrayConverter();
+        int i = 0;
+        for ( Object object : matrices ) {
+            assert object instanceof NamedMatrix;
+
+            QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
+
+            File outputDir = new File( localMatrixFilepath + File.separator + this.experimentName + File.separator
+                    + experimentName );
+
+            if ( !outputDir.exists() ) {
+                boolean success = outputDir.mkdirs();
+                if ( !success ) throw new IOException( "Could not create to " + outputDir );
+            }
+
+            File outputFile = new File( localMatrixFilepath + File.separator + this.experimentName + File.separator
+                    + experimentName + File.separator + experimentName + "_" + qt.getName() );
+
+            log.info( "Storing in file: " + outputFile );
+
+            FileWriter fo = new FileWriter( outputFile );
+            String matrix = ( ( NamedMatrix ) object ).toString();
+            fo.write( matrix );
+            fo.close();
+
+            LocalFile lf = makeLocalFile( sourceFiles, outputFile, matrix );
+            localFiles.add( lf );
+
+            makeDataVectors( vectors, converter, object, qt );
+            i++;
         }
 
     }
 
     /**
-     * Argument list is a list of double[][]. Returns a 2D double[][] - a matrix.
-     * 
-     * @param list
-     * @param cols
-     * @param rows
-     * @return double[][]
+     * @param vectors
+     * @param converter
+     * @param object
+     * @param qt
      */
-    @SuppressWarnings("unused")
-    public double[][] convertListOfDoubleArraysToMatrix( List list, int cols, int rows ) {
-        return rdp.convertListOfDoubleArraysToMatrix( list, cols, rows );
+    private void makeDataVectors( Collection<DesignElementDataVector> vectors, ByteArrayConverter converter,
+            Object object, QuantitationType qt ) {
+        // make data vectors.
+        for ( int j = 0; j < ( ( NamedMatrix ) object ).rows(); j++ ) {
+
+            DesignElement de = rdp.getQtData().getDesignElementsForQuantitationType( qt ).get( j );
+
+            Object[] row = ( ( NamedMatrix ) object ).getRowObj( j );
+
+            byte[] bytes = converter.toBytes( row );
+
+            DesignElementDataVector v = DesignElementDataVector.Factory.newInstance();
+            v.setData( bytes );
+            v.setDesignElement( de );
+            v.setQuantitationType( qt );
+            vectors.add( v );
+        }
     }
 
     /**
-     * Argument list is a list of int[][]. Returns a 2D int[][] - a matrix.
-     * 
-     * @param list
-     * @param cols
-     * @param rows
-     * @return int[][]
-     */
-    @SuppressWarnings("unused")
-    public int[][] convertListOfIntArraysToMatrix( List list, int cols, int rows ) {
-        return rdp.convertListOfIntArraysToMatrix( list, cols, rows );
-    }
-
-    /**
-     * Argument list is a list of boolean[][]. Returns a 2D boolean[][] - a matrix.
-     * 
-     * @param list
-     * @param cols
-     * @param rows
-     * @return boolean[][]
-     */
-    @SuppressWarnings("unused")
-    public boolean[][] convertListOfBooleanArraysToMatrix( List list, int cols, int rows ) {
-        return rdp.convertListOfBooleanArraysToMatrix( list, cols, rows );
-    }
-
-    /**
-     * Writes the double[][] matrix out to a file.
-     * 
+     * @param sourceFiles
+     * @param outputFile
      * @param matrix
-     * @param filename
+     * @return
      */
-    public void log2DDoubleMatrixToFile( double[][] matrix, String filename ) {
-        rdp.log2DDoubleMatrixToFile( matrix, filename );
-    }
-
-    /**
-     * Writes the int[][] matrix out to a file.
-     * 
-     * @param matrix
-     * @param filename
-     */
-    public void log2DIntMatrixToFile( int[][] matrix, String filename ) {
-        rdp.log2DIntMatrixToFile( matrix, filename );
-    }
-
-    /**
-     * Writes the boolean[][] matrix out to a file.
-     * 
-     * @param matrix
-     * @param filename
-     */
-    public void log2DBooleanMatrixToFile( boolean[][] matrix, String filename ) {
-        rdp.log2DBooleanMatrixToFile( matrix, filename );
+    private LocalFile makeLocalFile( Collection<LocalFile> sourceFiles, File outputFile, String matrix ) {
+        // create the local file information.
+        LocalFile lf = LocalFile.Factory.newInstance();
+        lf.setVersion( new SimpleDateFormat().format( new Date() ) );
+        lf.setSourceFiles( sourceFiles );
+        lf.setSize( matrix.getBytes().length );
+        lf.setLocalURI( "file://" + outputFile.getAbsolutePath().replaceAll( "\\\\", "/" ) );
+        return lf;
     }
 }

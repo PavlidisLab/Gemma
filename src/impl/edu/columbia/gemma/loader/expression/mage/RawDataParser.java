@@ -21,94 +21,91 @@ package edu.columbia.gemma.loader.expression.mage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.loader.loaderutils.Parser;
+import baseCode.dataStructure.matrix.NamedMatrix;
+import baseCode.dataStructure.matrix.StringMatrix2DNamed;
+import baseCode.util.StringUtil;
+import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.designElement.DesignElement;
+import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
 
 /**
- * Parse the raw files from array express.
+ * Parse the raw files from MAGE-ML. The results are returned as a Collection of NamedMatrix's
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
+ * @author pavlidis
  * @author keshav
  * @version $Id$
+ * @see baseCode.dataStructure.matrix.NamedMatrix;
  */
-public class RawDataParser implements Parser {
+public class RawDataParser implements FileCombiningParser {
     private static Log log = LogFactory.getLog( RawDataParser.class.getName() );
 
-    protected static final int ALERT_FREQUENCY = 1000; // TODO put in interface since this is a constant
+    private final List<BioAssay> bioAssays;
+    private BioAssay currentBioAssay;
 
-    int numOfBioAssays = 0;
-    int numOfDesignElements = 0;
+    private final BioAssayDimensions dimensions;
 
-    protected static int X = 0;
-    protected static int Y = 0;
-    protected static int INTENSITY = 0;
-    protected static int STDEV = 0;
-    protected static int PIXELS = 0;
-    protected static int OUTLIER = 0;
-    protected static int MASKED = 0;
+    private int linesParsed = 0;
 
-    private List intensityList = null;
-    private List stdevList = null;
-    private List pixelList = null;
-    private List outlierList = null;
-    private List maskedList = null;
+    private QuantitationTypeData qtData = new QuantitationTypeData();
 
-    // private List arrayListX = null;
-    // private List arrayListY = null;
+    private Collection<Object> results = new LinkedHashSet<Object>();
+
+    private char separator = '\t';
+
+    /**
+     * @param dimension
+     * @param dimension2
+     * @param dimensiom
+     */
+    public RawDataParser( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) {
+        super();
+        this.bioAssays = bioAssays;
+        this.dimensions = dimensions;
+    }
 
     /*
-     * Quantitation types as data structures. Using arrayList because it is ordered and more efficient than LinkedList
-     * implementation.
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#getResults()
      */
-    public RawDataParser() {
+    public Collection<Object> getResults() {
+        return results;
+    }
 
-        /* read indicies to parse from configuration file. */
-        Configuration conf = null;
-        try {
-            conf = new PropertiesConfiguration( "Gemma.properties" );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
+    /**
+     * @throws IOException
+     */
+    public void parse() throws IOException {
+        assert bioAssays != null;
+        for ( BioAssay bioAssay : bioAssays ) {
+            currentBioAssay = bioAssay;
+            parse( bioAssay );
         }
 
-        X = conf.getInt( "x" );
-
-        Y = conf.getInt( "y" );
-
-        INTENSITY = conf.getInt( "intensity" );
-
-        STDEV = conf.getInt( "stdev" );
-
-        PIXELS = conf.getInt( "pixels" );
-
-        OUTLIER = conf.getInt( "outlier" );
-
-        MASKED = conf.getInt( "masked" );
-
-        intensityList = new ArrayList();
-        stdevList = new ArrayList();
-        pixelList = new ArrayList();
-        outlierList = new ArrayList();
-        maskedList = new ArrayList();
-        // xList = new ArrayList();
-        // yList = new ArrayList();
+        Collection<QuantitationType> qts = qtData.getQuantitationTypes();
+        for ( QuantitationType quantitationType : qts ) {
+            NamedMatrix matrix = qtData.getDataMatrix( quantitationType );
+            results.add( matrix );
+        }
 
     }
 
@@ -121,292 +118,211 @@ public class RawDataParser implements Parser {
         parse( is );
     }
 
-    @SuppressWarnings("unused")
-    public void parse( String filename ) {
-        // TODO implement and remove the SuppressedWarnings("unused") from this method. I have added it for now
-        // so you will not see any warnings.
-
-    }
-
-    /**
-     * @param is
-     * @throws IOException FIXME purposely reading only 1000 lines from the raw data files for test purposes ... remove
-     *         this
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
-    @SuppressWarnings("unchecked")
     public void parse( InputStream is ) throws IOException {
-
-        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
+        linesParsed = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
         String line = null;
-        int count = 0;
-        /*
-         * getNumOfDesignElements() will return a value that will represent the number of columns in the resulting
-         * matrix.
+
+        while ( ( line = br.readLine() ) != null ) {
+            String[] fields = ( String[] ) parseOneLine( line );
+
+            DesignElement de = dimensions.getDesignElementDimension( currentBioAssay ).get( linesParsed );
+
+            for ( int i = 0; i < fields.length; i++ ) {
+                String field = fields[i];
+                QuantitationType qt = dimensions.getQuantitationTypeDimension( currentBioAssay ).get( i );
+                qtData.addData( qt, de, field );
+            }
+
+            linesParsed++;
+            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Read in " + linesParsed + " items..." );
+
+        }
+        log.info( "Read in " + linesParsed + " items..." );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
+     */
+    public void parse( List<File> files ) throws IOException {
+        for ( File file : files ) {
+            log.info( "Parsing " + file.getAbsolutePath() );
+            parse( file );
+        }
+    }
+
+    /**
+     * 
+     */
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.lang.String)
+     */
+    public void parse( String filename ) throws IOException {
+        try {
+            parse( new FileInputStream( new File( filename ) ) );
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
+     */
+    public Object parseOneLine( String line ) {
+        String[] fields = StringUtil.splitPreserveAllTokens( line, this.separator );
+        return fields;
+    }
+
+    /**
+     * @param streams
+     * @throws IOException
+     */
+    public void parseStreams( List<InputStream> streams ) throws IOException {
+        for ( InputStream stream : streams ) {
+            this.parse( stream );
+        }
+    }
+
+    /**
+     * @param separator The separator to set.
+     */
+    public void setSeparator( char separator ) {
+        this.separator = separator;
+    }
+
+    /**
+     * @param bioAssay
+     */
+    private void parse( BioAssay bioAssay ) throws IOException {
+        if ( bioAssay.getRawDataFile() == null )
+            throw new IllegalArgumentException( "RawDataFile must not be null for BioAssay " + bioAssay );
+        File f = bioAssay.getRawDataFile().asFile();
+        if ( !f.canRead() ) throw new IOException( "Cannot read from " + f );
+        parse( f );
+    }
+
+    class QuantitationTypeData {
+
+        // Note we specifiy the use of LinkedHashMap to ensure order is predictable.
+        LinkedHashMap<QuantitationType, LinkedHashMap<DesignElement, List<Object>>> dataMap = new LinkedHashMap<QuantitationType, LinkedHashMap<DesignElement, List<Object>>>();
+
+        /**
+         * Supports Boolean, String, Double and Integer data.
+         * 
+         * @param qt
+         * @param de
+         * @param data
          */
-        double[] intensities = new double[getNumOfDesignElements()];
-        double[] stdevs = new double[getNumOfDesignElements()];
-        int[] pixels = new int[getNumOfDesignElements()];
-        boolean[] outliers = new boolean[getNumOfDesignElements()];
-        boolean[] masked = new boolean[getNumOfDesignElements()];
+        public void addData( QuantitationType qt, DesignElement de, String data ) {
+            PrimitiveType pt = qt.getRepresentation();
 
-        while ( ( ( line = br.readLine() ) != null ) && count < 1000 ) {
-            String[] values = StringUtils.split( line, " " );
-
-            /*
-             * quantitationType[count] (ie. intensities[count] forms one column in resulting matrix. We will end up with
-             * 12 columns and 1000 rows.
-             */
-
-            intensities[count] = Double.parseDouble( values[INTENSITY] );
-            stdevs[count] = Double.parseDouble( values[STDEV] );
-            pixels[count] = Integer.parseInt( values[PIXELS] );
-            outliers[count] = Boolean.parseBoolean( values[MASKED] );
-            masked[count] = Boolean.parseBoolean( values[MASKED] );
-
-            // arrayListX.add( Integer.parseInt( values[X] ) );
-            // arrayListY.add( Integer.parseInt( values[Y] ) );
-
-            count++;
-
-            logDetails( count );
-        }
-
-        /* Adding arrays to respective lists. Each array represents a row in the corresponding matrix */
-        intensityList.add( intensities );
-        stdevList.add( stdevs );
-        pixelList.add( pixels );
-        outlierList.add( outliers );
-        maskedList.add( masked );
-
-        br.close();
-
-    }
-
-    @SuppressWarnings("unchecked")
-    public Collection<Object> getResults() {
-        Collection<Object> col = new HashSet();
-        col.add( intensityList );
-        col.add( stdevList );
-        col.add( pixelList );
-        col.add( outlierList );
-        col.add( maskedList );
-        return col;
-    }
-
-    /**
-     * Each element in list is an array, which represents the columns of the matrix.
-     * 
-     * @param list
-     * @param cols
-     * @param rows
-     * @return double[][]
-     */
-    double[][] convertListOfDoubleArraysToMatrix( List list, int cols, int rows ) {
-        // TODO the cols will soon be defined by the designElement dimension
-        cols = ( ( double[] ) list.get( 0 ) ).length;
-
-        double[][] matrix = new double[rows][cols];
-        for ( int i = 0; i < list.size(); i++ ) {
-            log.debug( "list " + i + " (an array) size: " + ( ( double[] ) list.get( i ) ).length );
-            matrix[i] = ( ( double[] ) list.get( i ) );
-            log.debug( "matrix[" + i + "] size: " + matrix[i].length );
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Each element in list is an array, which represents the columns of the matrix.
-     * 
-     * @param list
-     * @param cols
-     * @param rows
-     * @return int[][]
-     */
-    int[][] convertListOfIntArraysToMatrix( List list, int cols, int rows ) {
-        // TODO the cols will soon be defined by the designElement dimension
-        cols = ( ( int[] ) list.get( 0 ) ).length;
-
-        int[][] matrix = new int[rows][cols];
-        for ( int i = 0; i < list.size(); i++ ) {
-            log.debug( "list " + i + " (an array) size: " + ( ( int[] ) list.get( i ) ).length );
-            matrix[i] = ( ( int[] ) list.get( i ) );
-            log.debug( "matrix[" + i + "] size: " + matrix[i].length );
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Each element in list is an array, which represents the columns of the matrix.
-     * 
-     * @param list
-     * @param cols
-     * @param rows
-     * @return boolean[][]
-     */
-    boolean[][] convertListOfBooleanArraysToMatrix( List list, int cols, int rows ) {
-        // TODO the cols will soon be defined by the designElement dimension
-        cols = ( ( boolean[] ) list.get( 0 ) ).length;
-
-        boolean[][] matrix = new boolean[rows][cols];
-        for ( int i = 0; i < list.size(); i++ ) {
-            matrix[i] = ( ( boolean[] ) list.get( i ) );
-            log.debug( "matrix[" + i + "] size: " + matrix[i].length );
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Write the details of the double[][] array to a file.
-     */
-    public void log2DDoubleMatrixToFile( double[][] matrix, String filename ) {
-        try {
-
-            /*
-             * use PrintWriter as opposed to a BufferedWriter so we can print all primitive data types.
-             */
-            PrintWriter out = new PrintWriter( new FileWriter( filename ) );
-            log.debug( "matrix length (length of a 2D array) " + matrix.length );
-
-            for ( int i = 0; i < matrix.length; i++ ) {
-                for ( int j = 0; j < matrix[i].length; j++ ) {
-                    out.print( matrix[i][j] );
-
-                    // if not at the end of a line
-                    if ( j != matrix[i].length - 1 ) out.write( " " );
-                }
-                out.println();
+            if ( !dataMap.containsKey( qt ) ) {
+                dataMap.put( qt, new LinkedHashMap<DesignElement, List<Object>>() );
             }
 
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Write the details of the int[][] array to a file.
-     */
-    public void log2DIntMatrixToFile( int[][] matrix, String filename ) {
-        try {
-            /*
-             * use PrintWriter as opposed to a BufferedWriter so we can print all primitive data types.
-             */
-            PrintWriter out = new PrintWriter( new FileWriter( filename ) );
-            log.debug( "matrix length (length of a 2D array) " + matrix.length );
-
-            for ( int i = 0; i < matrix.length; i++ ) {
-                for ( int j = 0; j < matrix[i].length; j++ ) {
-                    out.print( matrix[i][j] );
-
-                    // if not at the end of a line
-                    if ( j != matrix[i].length - 1 ) out.write( " " );
-                }
-                out.println();
+            if ( !dataMap.get( qt ).containsKey( de ) ) {
+                dataMap.get( qt ).put( de, new ArrayList<Object>() );
             }
 
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Write the details of the boolean[][] array to a file.
-     */
-    public void log2DBooleanMatrixToFile( boolean[][] matrix, String filename ) {
-        try {
-            /*
-             * use PrintWriter as opposed to a BufferedWriter so we can print all primitive data types.
-             */
-            PrintWriter out = new PrintWriter( new FileWriter( filename ) );
-            log.debug( "matrix length (length of a 2D array) " + matrix.length );
-
-            for ( int i = 0; i < matrix.length; i++ ) {
-                for ( int j = 0; j < matrix[i].length; j++ ) {
-
-                    out.print( matrix[i][j] );
-
-                    // if not at the end of a line
-                    if ( j != matrix[i].length - 1 ) out.write( " " );
+            try {
+                if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+                    dataMap.get( qt ).get( de ).add( new Boolean( data ) );
+                } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+                    dataMap.get( qt ).get( de ).add( new Double( data ) );
+                } else if ( pt.equals( PrimitiveType.INT ) ) {
+                    dataMap.get( qt ).get( de ).add( new Integer( data ) );
+                } else {
+                    dataMap.get( qt ).get( de ).add( data );
                 }
-                out.println();
+            } catch ( NumberFormatException e ) {
+                throw new RuntimeException( e );
             }
 
-            out.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+        }
+
+        /**
+         * 
+         * @param qt
+         * @return
+         */
+        public LinkedHashMap<DesignElement, List<Object>> getDataForQuantitationType( QuantitationType qt ) {
+            return dataMap.get( qt );
+        }
+
+        /**
+         * @param qts
+         * @return
+         */
+        @SuppressWarnings("synthetic-access")
+        public NamedMatrix getDataMatrix( QuantitationType qt ) {
+            int numDesignElements = dataMap.get( qt ).keySet().size();
+            assert bioAssays.size() == dataMap.get( qt ).keySet().size();
+            int numBioAssays = bioAssays.size();
+
+            NamedMatrix result = new StringMatrix2DNamed( numDesignElements, numBioAssays );
+
+            int i = 0;
+            for ( DesignElement de : dataMap.get( qt ).keySet() ) {
+                result.addRowName( de.getName(), i );
+                i++;
+
+                int j = 0;
+                for ( Object obj : dataMap.get( qt ).get( de ) ) {
+                    result.set( i, j, obj );
+                    j++;
+                }
+
+            }
+
+            int j = 0;
+            for ( BioAssay ba : bioAssays ) {
+                result.addColumnName( ba.getName(), j );
+                j++;
+            }
+            return result;
+
+        }
+
+        /**
+         * @return
+         */
+        public List<QuantitationType> getQuantitationTypes() {
+            return new ArrayList<QuantitationType>( dataMap.keySet() );
+        }
+
+        /**
+         * @param n
+         * @return
+         */
+        public QuantitationType getNthQuantitationType( int n ) {
+            return ( new ArrayList<QuantitationType>( dataMap.keySet() ) ).get( n );
+        }
+
+        /**
+         * @param qt
+         * @return
+         */
+        public List<DesignElement> getDesignElementsForQuantitationType( QuantitationType qt ) {
+            return new ArrayList<DesignElement>( dataMap.get( qt ).keySet() );
         }
     }
 
     /**
-     * Logs details for each of the array lists. The parameter count is used to determine the frequency of logging. X Y
-     * Intensity Stdev Pixels Outlier Masked
-     * 
-     * @param count
+     * @return Returns the qtData.
      */
-    private void logDetails( int count ) {
-        if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..." );
-    }
-
-    /**
-     * @return Returns the numOfBioAssays.
-     */
-    public int getNumOfBioAssays() {
-        return numOfBioAssays;
-    }
-
-    /**
-     * @return Returns the numOfDesignElements.
-     */
-    public int getNumOfDesignElements() {
-        return numOfDesignElements;
-    }
-
-    /**
-     * @param numOfDesignElements The numOfDesignElements to set.
-     */
-    void setNumOfDesignElements( int numOfDesignElements ) {
-        this.numOfDesignElements = numOfDesignElements;
-    }
-
-    /**
-     * @return Returns the arrayListIntensity.
-     */
-    public List getIntensityList() {
-        return intensityList;
-    }
-
-    /**
-     * @return Returns the stdevList.
-     */
-    public List getStdevList() {
-        return stdevList;
-    }
-
-    /**
-     * @return Returns the pixelList.
-     */
-    public List getPixelList() {
-        return pixelList;
-    }
-
-    /**
-     * @return Returns the outlierList.
-     */
-    public List getOutlierList() {
-        return outlierList;
-    }
-
-    /**
-     * @return Returns the maskedList.
-     */
-    public List getMaskedList() {
-        return maskedList;
+    public QuantitationTypeData getQtData() {
+        return this.qtData;
     }
 
 }

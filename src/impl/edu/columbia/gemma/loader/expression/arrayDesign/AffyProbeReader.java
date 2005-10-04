@@ -31,9 +31,13 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 /**
  * Reads Affymetrix Probe files.
  * <p>
- * Expected format is tabbed, NOT FASTA: <code>1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense</code>. A
- * one-line header starting with the word "Probe" is permitted. In later versions of the format the second field is
- * omitted.
+ * Expected format is tabbed, NOT FASTA, for example:
+ * <p>
+ * <code>1494_f_at 1 325 359 1118 TCCCCATGAGTTTGGCCCGCAGAGT Antisense</code>.
+ * </p>
+ * <p>
+ * A one-line header starting with the word "Probe" is permitted. In later versions of the format the second field
+ * (column) is omitted.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -45,7 +49,7 @@ public class AffyProbeReader extends BasicLineMapParser {
 
     protected static final Log log = LogFactory.getLog( AffyProbeReader.class );
 
-    private int sequenceField = 3;
+    private int sequenceField = 4;
 
     /*
      * (non-Javadoc)
@@ -64,30 +68,30 @@ public class AffyProbeReader extends BasicLineMapParser {
         String xcoord = sArray[sequenceField - 3];
         String ycoord = sArray[sequenceField - 2];
 
-        Reporter ap = Reporter.Factory.newInstance();
+        Reporter reporter = Reporter.Factory.newInstance();
 
         try {
-            ap.setRow( Integer.parseInt( xcoord ) );
-            ap.setCol( Integer.parseInt( ycoord ) );
-            ap.setStartInBioChar( Integer.parseInt( sArray[sequenceField - 1] ) );
+            reporter.setRow( Integer.parseInt( xcoord ) );
+            reporter.setCol( Integer.parseInt( ycoord ) );
+            reporter.setStartInBioChar( Integer.parseInt( sArray[sequenceField - 1] ) );
         } catch ( NumberFormatException e ) {
             log.warn( "Invalid row: could not parse coordinates." );
             return null;
         }
 
-        ap.setName( probeSetId + ":" + xcoord + ":" + ycoord );
+        reporter.setName( probeSetId + ":" + xcoord + ":" + ycoord );
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
-        ap.setImmobilizedCharacteristic( immobChar );
+        reporter.setImmobilizedCharacteristic( immobChar );
 
-        CompositeSequence newps = ( CompositeSequence ) get( probeSetId );
+        CompositeSequence probeSet = ( CompositeSequence ) get( probeSetId );
 
-        if ( newps == null ) newps = CompositeSequence.Factory.newInstance();
-        newps.setName( probeSetId );
-        if ( newps.getReporters() == null ) newps.setReporters( new HashSet() );
+        if ( probeSet == null ) probeSet = CompositeSequence.Factory.newInstance();
+        probeSet.setName( probeSetId );
+        if ( probeSet.getReporters() == null ) probeSet.setReporters( new HashSet() );
 
-        newps.getReporters().add( ap );
-        return newps;
+        probeSet.getReporters().add( reporter );
+        return probeSet;
 
     }
 

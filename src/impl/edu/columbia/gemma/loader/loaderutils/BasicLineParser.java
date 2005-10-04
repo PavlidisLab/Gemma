@@ -45,10 +45,7 @@ public abstract class BasicLineParser implements LineParser {
 
     private Collection<Object> results;
 
-    /**
-     * How often we tell the user what is happening.
-     */
-    protected static final int ALERT_FREQUENCY = 10000;
+    protected int linesParsed = 0;
 
     public BasicLineParser() {
         results = new HashSet<Object>();
@@ -60,21 +57,22 @@ public abstract class BasicLineParser implements LineParser {
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
+        linesParsed = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
         String line = null;
-        int count = 0;
+
         while ( ( line = br.readLine() ) != null ) {
             Object newItem = parseOneLine( line );
 
             if ( newItem != null ) {
                 results.add( newItem );
-                count++;
+                linesParsed++;
             }
-            if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..." );
+            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + linesParsed + " lines..." );
 
         }
-        log.info( "Read in " + count + " items..." );
+        log.info( "Parsed " + linesParsed + " lines." );
     }
 
     /*

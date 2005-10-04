@@ -101,10 +101,11 @@ public abstract class BasicLineMapParser extends BasicLineParser {
             }
             results.put( key, newItem );
             count++;
-            if ( count % ALERT_FREQUENCY == 0 ) log.debug( "Read in " + count + " items..., last had key " + key );
+            if ( count % PARSE_ALERT_FREQUENCY == 0 )
+                log.debug( "Parsed " + count + " lines..., last had key " + key );
 
         }
-        log.info( "Read in " + count + " items." );
+        log.info( "Parsed " + count + " lines." );
         br.close();
     }
 

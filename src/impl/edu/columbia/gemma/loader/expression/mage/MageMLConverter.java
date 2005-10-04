@@ -27,7 +27,6 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.biomage.QuantitationType.QuantitationType;
 import org.dom4j.Document;
 
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
@@ -78,7 +77,7 @@ public class MageMLConverter implements Converter {
     public MageMLConverter() {
         super();
         ResourceBundle rb = ResourceBundle.getBundle( "mage" );
-        String mageClassesString = rb.getString( "mage.classes" ); // FIXME : use config array
+        String mageClassesString = rb.getString( "mage.classes" );
         this.mageConverterHelper = new MageMLConverterHelper();
         mageClasses = mageClassesString.split( ", " );
     }
@@ -137,7 +136,8 @@ public class MageMLConverter implements Converter {
      * 
      * @see edu.columbia.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay)
      */
-    public List<QuantitationType> getBioAssayQuantitationTypeDimension( BioAssay bioAssay ) {
+    public List<edu.columbia.gemma.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
+            BioAssay bioAssay ) {
         assert isConverted;
         return this.mageConverterHelper.getBioAssayQuantitationTypeDimension( bioAssay );
     }
@@ -205,6 +205,13 @@ public class MageMLConverter implements Converter {
     public Object convert( Object mageObject ) {
         if ( mageObject == null ) return null;
         return mageConverterHelper.convert( mageObject );
+    }
+
+    /* (non-Javadoc)
+     * @see edu.columbia.gemma.loader.expression.mage.MageMLConverterHelper#getBioAssayDimensions()
+     */
+    public BioAssayDimensions getBioAssayDimensions() {
+        return this.mageConverterHelper.getBioAssayDimensions();
     }
 
 }

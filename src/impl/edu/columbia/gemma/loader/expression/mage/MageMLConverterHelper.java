@@ -30,11 +30,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
@@ -217,7 +215,7 @@ public class MageMLConverterHelper {
     /**
      * Stores the dimension information for the bioassays
      */
-    private Map<String, Map<String, List>> bioAssayDimensions;
+    private BioAssayDimensions bioAssayDimensions;
 
     /**
      * Holds the simplified MAGE-ML
@@ -245,7 +243,7 @@ public class MageMLConverterHelper {
      * Constructor
      */
     public MageMLConverterHelper() {
-        bioAssayDimensions = new HashMap<String, Map<String, List>>();
+        bioAssayDimensions = new BioAssayDimensions();
 
         initMGEDOntologyAliases();
 
@@ -274,7 +272,7 @@ public class MageMLConverterHelper {
     private void initLocalExternalDataPaths() {
         localExternalDataPaths = new HashSet<String>();
         try {
-            // FIXME eventually there may be more configuration locations.
+            // Eventually there may be more configuration locations.
             Configuration config = new PropertiesConfiguration( "Gemma.properties" );
             String path = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
             File p = new File( path );
@@ -470,7 +468,7 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "BioAssayFactorValues" ) ) {
-            // FIXME: these should be the same factorvalues as referred to by the experimentalfactors.
+            // Note that these are be the same factorvalues as referred to by the experimentalfactors.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Channels" ) ) {
             ; // we don't support this.
@@ -531,9 +529,11 @@ public class MageMLConverterHelper {
     /**
      * Given a URI, try to find the corresponding local file. The only part of the URI that is looked at is the file
      * name. We then look in known local directory paths that are used to store MAGE-ML derived files.
+     * <p>
+     * FIXME this is broken, need to do much smarter path search....just the idea for now.
      * 
      * @param seekURI
-     * @return FIXME this is broken, need to do much smarter path search....just the idea for now.
+     * @return
      */
     private URI findLocalMageExternalDataFile( String seekURI ) {
         String fileName = seekURI.substring( seekURI.lastIndexOf( "/" ) + 1 );
@@ -564,7 +564,7 @@ public class MageMLConverterHelper {
      * these cases we have to get the feature dimension from somewhere else.
      * <p>
      * In MAGE, there can be more than one QuantitationType dimension associated with a single BioAssay, because there
-     * can be more than on BioAssayData (Measured, Derived, Physical).
+     * can be more than one BioAssayData (Measured, Derived, Physical).
      * <p>
      * There also seems to be no particular standard as to whether the external data files contain compositesequence or
      * reporter or feature data. Feature data makes the most sense. For Affy files that seems to be what you get (so
@@ -584,36 +584,47 @@ public class MageMLConverterHelper {
         }
 
         DesignElementDimension ded = mageObj.getDesignElementDimension();
-        List<DesignElement> designElements = null;
+        List<org.biomage.DesignElement.DesignElement> designElements = null;
 
         BioAssayDimension bioAssayDim = mageObj.getBioAssayDimension();
         if ( bioAssayDim == null ) return;
 
         List<BioAssay> bioAssays = ( List<BioAssay> ) bioAssayDim.getBioAssays();
         for ( BioAssay bioAssay : bioAssays ) {
-            String bioAssayName = bioAssay.getName();
-            if ( bioAssayDimensions.get( bioAssayName ) == null ) {
-                bioAssayDimensions.put( bioAssayName, new HashMap<String, List>() );
-            }
-
             if ( ded instanceof FeatureDimension ) {
                 log.debug( "Got a feature dimension: " + ded.getIdentifier() );
-                designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
-                // bioAssayDimensions.get( name ).put( "FeatureDimension", designElements );
+                designElements = ( List<org.biomage.DesignElement.DesignElement> ) ( ( FeatureDimension ) ded )
+                        .getContainedFeatures();
             } else if ( ded instanceof CompositeSequenceDimension ) {
                 log.debug( "Got a compositesequence dimension: " + ded.getIdentifier() );
-                designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
-                // bioAssayDimensions.get( name ).put( "CompositeSequenceDimension", designElements );
+                designElements = ( List<org.biomage.DesignElement.DesignElement> ) ( ( CompositeSequenceDimension ) ded )
+                        .getCompositeSequences();
             } else if ( ded instanceof ReporterDimension ) {
                 log.debug( "Got a reporter dimension: " + ded.getIdentifier() );
-                designElements = ( ( ReporterDimension ) ded ).getReporters();
-                // bioAssayDimensions.get( name ).put( "ReporterDimension", designElements );
+                designElements = ( List<org.biomage.DesignElement.DesignElement> ) ( ( ReporterDimension ) ded )
+                        .getReporters();
             }
-            bioAssayDimensions.get( bioAssayName ).put( "DesignElementDimension", designElements );
-            bioAssayDimensions.get( bioAssayName ).put( "QuantitationTypeDimension", convertedQuantitationTypes );
+
+            List<DesignElement> convertedDesignElements = new ArrayList<DesignElement>();
+            for ( org.biomage.DesignElement.DesignElement designElement : designElements ) {
+                convertedDesignElements.add( convertDesignElement( designElement ) );
+            }
+
+            edu.columbia.gemma.expression.bioAssay.BioAssay convertedBioAssay = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory
+                    .newInstance();
+
+            convertIdentifiable( bioAssay, convertedBioAssay );
+
+            bioAssayDimensions.addDesignElementDimension( convertedBioAssay, convertedDesignElements );
+            bioAssayDimensions.addQuantitationTypeDimension( convertedBioAssay, convertedQuantitationTypes );
 
         }
 
+    }
+
+    @SuppressWarnings("unused")
+    public void convertBioAssayDimension( BioAssay ba ) {
+        // noop
     }
 
     /**
@@ -626,56 +637,18 @@ public class MageMLConverterHelper {
     public List<DesignElement> getBioAssayDesignElementDimension(
             edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay ) {
         if ( bioAssay == null ) throw new IllegalArgumentException();
-        if ( !bioAssayDimensions.containsKey( bioAssay.getName() ) ) return null;
-        return bioAssayDimensions.get( bioAssay.getName() ).get( "DesignElementDimension" );
+        return bioAssayDimensions.getDesignElementDimension( bioAssay );
     }
-
-    // /**
-    // * @param bioAssay
-    // * @return
-    // */
-    // public List<DesignElement> getBioAssayCompositeSequenceDimension( edu.columbia.gemma.expression.bioAssay.BioAssay
-    // bioAssay ) {
-    // return bioAssayDimensions.get( bioAssay.getName() ).get( "CompositeSequenceDimension" );
-    // }
-    //
-    // /**
-    // * @param bioAssay
-    // * @return
-    // */
-    // public List<DesignElement> getBioAssayReporterDimension( edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay
-    // ) {
-    // return bioAssayDimensions.get( bioAssay.getName() ).get( "ReporterDimension" );
-    // }
-    //
-    // /**
-    // * @param bioAssay
-    // * @return
-    // */
-    // public List<DesignElement> getBioAssayFeatureDimension( edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay
-    // ) {
-    // return bioAssayDimensions.get( bioAssay.getName() ).get( "FeatureDimension" );
-    // }
 
     /**
      * @param bioAssay
-     * @return
+     * @return A List of QuantitationTypes representing the QuantitationTypeDimension for the BioAssay. If there is no
+     *         such bioAssay in the current data, returns null.
      */
-    public List<QuantitationType> getBioAssayQuantitationTypeDimension(
+    public List<edu.columbia.gemma.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
             edu.columbia.gemma.expression.bioAssay.BioAssay bioAssay ) {
-        return bioAssayDimensions.get( bioAssay.getName() ).get( "QuantitationTypeDimension" );
-    }
-
-    /**
-     * Not supported, a no-op.
-     * 
-     * @param mageObj
-     * @return
-     */
-    @SuppressWarnings("unused")
-    public Object convertBioAssayDimension( BioAssayDimension mageObj ) {
-        log.warn( "Calling convertBioAssayDimension -- noop" );
-        return null;
+        if ( bioAssay == null ) throw new IllegalArgumentException();
+        return bioAssayDimensions.getQuantitationTypeDimension( bioAssay );
     }
 
     /**
@@ -1497,7 +1470,7 @@ public class MageMLConverterHelper {
         else if ( associationName.equals( "Annotations" ) )
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         else if ( associationName.equals( "FactorValues" ) )
-            // FIXME: these should be the same factorvalues as referred to by the bioassays.
+            // Note that these should be the same factorvalues as referred to by the bioassays.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         else
             log.warn( "Unsupported or unknown association: " + associationName );
@@ -1635,7 +1608,7 @@ public class MageMLConverterHelper {
         Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
         if ( associationName.equals( "ExperimentalFactor" ) ) {
-            // we let the ExperimentalFactor manage this association. FIXME - this might not work.
+            // we let the ExperimentalFactor manage this association.
         } else if ( associationName.equals( "Measurement" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
         } else if ( associationName.equals( "Value" ) ) {
@@ -1894,10 +1867,12 @@ public class MageMLConverterHelper {
         result.setOtherKind( mageObj.getOtherKind() );
         result.setKindCV( convertKindCV( mageObj.getKindCV() ) );
 
-        if ( mageObj.getValue() != null ) result.setValue( mageObj.getValue().toString() ); // FIME - is this okay
+        if ( mageObj.getValue() != null ) result.setValue( mageObj.getValue().toString() );
 
         result.setType( convertMeasurementType( mageObj.getType() ) );
-        result.setRepresentation( PrimitiveType.STRING ); // FIXME - this is not going to work.
+
+        result.setRepresentation( PrimitiveType.STRING ); // FIXME This is somewhat silly as the QuantitationType has
+        // the primitive type.
         return result;
     }
 
@@ -2358,6 +2333,20 @@ public class MageMLConverterHelper {
     public void convertRatioAssociations( Ratio mageObj,
             edu.columbia.gemma.common.quantitationtype.QuantitationType gemmaObj, Method getter ) {
         convertQuantitationTypeAssociations( mageObj, gemmaObj, getter );
+    }
+
+    /**
+     * @param designElement
+     * @return
+     */
+    public DesignElement convertDesignElement( org.biomage.DesignElement.DesignElement designElement ) {
+        if ( designElement instanceof org.biomage.DesignElement.Reporter ) {
+            return convertReporter( ( org.biomage.DesignElement.Reporter ) designElement );
+        } else if ( designElement instanceof org.biomage.DesignElement.CompositeSequence ) {
+            return convertCompositeSequence( ( org.biomage.DesignElement.CompositeSequence ) designElement );
+        } else {
+            throw new IllegalArgumentException( "Can't convert a " + designElement.getClass().getName() );
+        }
     }
 
     /**
@@ -3441,6 +3430,13 @@ public class MageMLConverterHelper {
             break;
         }
 
+    }
+
+    /**
+     * @return Returns the bioAssayDimensions.
+     */
+    public BioAssayDimensions getBioAssayDimensions() {
+        return this.bioAssayDimensions;
     }
 
 }

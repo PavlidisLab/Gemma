@@ -18,12 +18,11 @@
  */
 package edu.columbia.gemma.loader.loaderutils;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.List;
 
-import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
-import edu.columbia.gemma.expression.designElement.DesignElement;
+import edu.columbia.gemma.loader.expression.mage.BioAssayDimensions;
 
 /**
  * Put data in a form that can be used in analysis.
@@ -37,14 +36,10 @@ import edu.columbia.gemma.expression.designElement.DesignElement;
 public interface Preprocessor {
 
     /**
-     * Creates a matrix of designElements (X) vs. bioAssays (Y) for each quantitation type from the input stream.
+     * Creates a matrix of designElements (Y) vs. bioAssays (X) for each quantitation type, for the given bioAssays
      * 
-     * @param bioAssay
-     * @param quantitationTypes
-     * @param designElements
-     * @param inputStream
+     * @param bioAssays
      */
-    public void preprocess( BioAssay bioAssay, List<QuantitationType> quantitationTypes,
-            List<DesignElement> designElements, InputStream inputStream );
+    public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException;
 
 }

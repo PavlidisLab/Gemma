@@ -54,7 +54,7 @@ public class GoldenPathTest extends TestCase {
 
     }
 
-    // TODO: put hard-coded values in an external file. These are based on the may 2004 hg17.
+    // We should put these hard-coded values in an external file. These are based on the may 2004 hg17.
     // These locations on chromosome 11 were just chosen at random.
     // http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=41239384&hgt.out1=1.5x&position=chr11%3A206144-206244
     // http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=41239384&hgt.out3=10x&position=chr11%3A1439902-1439903
@@ -62,8 +62,8 @@ public class GoldenPathTest extends TestCase {
 
         // gene >>>>, location contained within the gene.
         int location = 1439902 - 100;
-        int actualResult = gp.getThreePrimeDistances( "11", location, location + 2, null, null,
-                null, GoldenPath.RIGHTEND ).get( 0 ).getDistance();
+        int actualResult = gp.getThreePrimeDistances( "11", location, location + 2, null, null, null,
+                GoldenPath.RIGHTEND ).get( 0 ).getDistance();
         int expectedResult = 100 - 2;
         assertEquals( expectedResult, actualResult );
 
@@ -100,8 +100,8 @@ public class GoldenPathTest extends TestCase {
     public final void testGetThreePrimeDistanceE() {
         // Gene in <<<<<< direction.
         int location = 206144 + 100;
-        int actualResult = gp.getThreePrimeDistances( "11", location + 100, location + 200, null,
-                null, "-", GoldenPath.RIGHTEND ).get( 0 ).getDistance();
+        int actualResult = gp.getThreePrimeDistances( "11", location + 100, location + 200, null, null, "-",
+                GoldenPath.RIGHTEND ).get( 0 ).getDistance();
         int expectedResult = 206; // this is a funny case, as it turns out.
         assertEquals( expectedResult, actualResult );
     }
@@ -109,8 +109,8 @@ public class GoldenPathTest extends TestCase {
     public final void testGetThreePrimeDistanceF() {
         // gene <<<<<, location overhangs on left.
         int location = 206144 + 100;
-        int actualResult = gp.getThreePrimeDistances( "11", location - 200, location + 200, null,
-                null, "-", GoldenPath.RIGHTEND ).get( 0 ).getDistance();
+        int actualResult = gp.getThreePrimeDistances( "11", location - 200, location + 200, null, null, "-",
+                GoldenPath.RIGHTEND ).get( 0 ).getDistance();
         int expectedResult = 0;
         assertEquals( expectedResult, actualResult );
     }
@@ -127,8 +127,8 @@ public class GoldenPathTest extends TestCase {
     public final void testGetThreePrimeDistanceH() {
         // gene <<<<<, region contains gene entirely
         int location = 206144; // start of the gene.
-        int actualResult = gp.getThreePrimeDistances( "11", location - 200, location + 10000,
-                null, null, "-", GoldenPath.RIGHTEND ).get( 0 ).getDistance();
+        int actualResult = gp.getThreePrimeDistances( "11", location - 200, location + 10000, null, null, "-",
+                GoldenPath.RIGHTEND ).get( 0 ).getDistance();
         int expectedResult = 0;
         assertEquals( expectedResult, actualResult );
     }

@@ -124,57 +124,47 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
         /* get all the gemma bioassays from the converter */
         List<BioAssay> bioAssays = mageMLConverter.getConvertedBioAssays();
 
-        // you will have to parse a new file for each bioassay.
-        InputStream[] is = new InputStream[bioAssays.size()];
+//        // you will have to parse a new file for each bioassay.
+//        InputStream[] is = new InputStream[bioAssays.size()];
+//
+//        is[0] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031128_jm 29 c1 72hrao_031128_JM 29 C1 72hrAO_CEL_externaldata.txt" );
+//
+//        is[1] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031128_jm 30 g1 72hrgen_031128_JM 30 G1 72hrGEN_CEL_externaldata.txt" );
+//
+//        is[2] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031128_jm 31 e1 72hre2_031128_JM 31 E1 72hrE2_CEL_externaldata.txt" );
+//
+//        is[3] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031128_jm 32 d1 72hrdes_031128_JM 32 D1 72hrDES_CEL_externaldata.txt" );
+//
+//        is[4] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031201_jm 37 c2 72hrao_031201_JM 37 C2 72hrAO_CEL_externaldata.txt" );
+//
+//        is[5] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031201_jm 38 g2 72hrgen_031201_JM 38 G2 72hrGEN_CEL_externaldata.txt" );
+//
+//        is[6] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031201_jm 39 e2 72hre2_031201_JM 39 E2 72hrE2_CEL_externaldata.txt" );
+//
+//        is[7] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031201_jm 40 d2 72hrdes_031201_JM 40 D2 72hrDES_CEL_externaldata.txt" );
+//
+//        is[8] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031205_jm 45 c3 72hrao_031205_JM 45 C3 72hrAO_CEL_externaldata.txt" );
+//
+//        is[9] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031205_jm 46 g3 72hrgen_031205_JM 46 G3 72hrGEN_CEL_externaldata.txt" );
+//
+//        is[10] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031205_jm 47 e3 72hre2_031205_JM 47 E3 72hrE2_CEL_externaldata.txt" );
+//
+//        is[11] = this.getClass().getResourceAsStream(
+//                "/data/mage/E-AFMX-13/031205_jm 48 d3 72hrdes_031205_JM 48 D3 72hrDES_CEL_externaldata.txt" );
 
-        is[0] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031128_jm 29 c1 72hrao_031128_JM 29 C1 72hrAO_CEL_externaldata.txt" );
+        mageMLPreprocessor.preprocess( bioAssays, mageMLConverter.getBioAssayDimensions() );
 
-        is[1] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031128_jm 30 g1 72hrgen_031128_JM 30 G1 72hrGEN_CEL_externaldata.txt" );
-
-        is[2] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031128_jm 31 e1 72hre2_031128_JM 31 E1 72hrE2_CEL_externaldata.txt" );
-
-        is[3] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031128_jm 32 d1 72hrdes_031128_JM 32 D1 72hrDES_CEL_externaldata.txt" );
-
-        is[4] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031201_jm 37 c2 72hrao_031201_JM 37 C2 72hrAO_CEL_externaldata.txt" );
-
-        is[5] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031201_jm 38 g2 72hrgen_031201_JM 38 G2 72hrGEN_CEL_externaldata.txt" );
-
-        is[6] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031201_jm 39 e2 72hre2_031201_JM 39 E2 72hrE2_CEL_externaldata.txt" );
-
-        is[7] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031201_jm 40 d2 72hrdes_031201_JM 40 D2 72hrDES_CEL_externaldata.txt" );
-
-        is[8] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031205_jm 45 c3 72hrao_031205_JM 45 C3 72hrAO_CEL_externaldata.txt" );
-
-        is[9] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031205_jm 46 g3 72hrgen_031205_JM 46 G3 72hrGEN_CEL_externaldata.txt" );
-
-        is[10] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031205_jm 47 e3 72hre2_031205_JM 47 E3 72hrE2_CEL_externaldata.txt" );
-
-        is[11] = this.getClass().getResourceAsStream(
-                "/data/mage/E-AFMX-13/031205_jm 48 d3 72hrdes_031205_JM 48 D3 72hrDES_CEL_externaldata.txt" );
-
-        for ( int i = 0; i < bioAssays.size(); i++ ) {
-            BioAssay ba = bioAssays.get( i );
-            List qtypes = mageMLConverter.getBioAssayQuantitationTypeDimension( ba );
-            List designElements = mageMLConverter.getBioAssayDesignElementDimension( ba );
-
-            mageMLPreprocessor.preprocess( ba, qtypes, designElements, is[i] );
-
-        }
-
-        /* create matricies of doubles */
-        // FIXME - make this test do something.
-        // getMageMLPreprocessor().log2DDoubleMatrixToFile( matrixOfIntensities, intensity_qtype_filename );
     }
 
 }

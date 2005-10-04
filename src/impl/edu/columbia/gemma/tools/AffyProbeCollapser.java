@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.Iterator;
 
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
@@ -43,12 +44,13 @@ import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReader;
 public class AffyProbeCollapser {
 
     public void collapse( String arrayName, InputStream is, Writer writer ) throws IOException {
-
         AffyProbeReader apr = new AffyProbeReader();
-
+        apr.setSequenceField( 4 );
         apr.parse( is );
 
-        for ( Iterator<Object> iter = apr.getResults().iterator(); iter.hasNext(); ) {
+        Collection<Object> results = apr.getResults();
+
+        for ( Iterator<Object> iter = results.iterator(); iter.hasNext(); ) {
             String probeSetname = ( String ) iter.next();
             CompositeSequence apset = ( CompositeSequence ) apr.get( probeSetname );
 
@@ -58,16 +60,17 @@ public class AffyProbeCollapser {
     }
 
     public static void main( String[] args ) throws IOException {
-        String arrayName = args[0];
-        String filename = args[1];
+        String arrayName = args[0]; // Array Name, just used to label the sequences
+        String filename = args[1]; // Input File Name.
         File f = new File( filename );
         if ( !f.canRead() ) throw new IOException();
 
-        String outputFileName = args[2];
+        String outputFileName = args[2]; // Output file name
         File o = new File( outputFileName );
-        // if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
 
         AffyProbeCollapser apc = new AffyProbeCollapser();
+        // int sequenceColumn = Integer.parseInt(args[3]);
+
         apc.collapse( arrayName, new FileInputStream( f ), new BufferedWriter( new FileWriter( o ) ) );
 
     }

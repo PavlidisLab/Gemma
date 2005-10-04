@@ -55,7 +55,9 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
 
     /**
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
-     * actual method invocation. FIXME how do we know if it worked? Should check that the invoke method was called.
+     * actual method invocation.
+     * <p>
+     * FIXME how do we know if it worked? Should check that the invoke method was called.
      * 
      * @throws Exception
      */

@@ -34,6 +34,8 @@ import java.util.Collection;
  */
 public interface Parser {
 
+    public static final int PARSE_ALERT_FREQUENCY = 10000;
+
     /**
      * Parse a {@link InputStream}.
      * 
