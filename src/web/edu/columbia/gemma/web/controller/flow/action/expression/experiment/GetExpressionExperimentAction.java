@@ -38,7 +38,7 @@ public class GetExpressionExperimentAction extends AbstractAction {
      * @return Event
      */
     protected Event doExecute( RequestContext context ) throws Exception {
-        long id = new Long( ( String ) context.getFlowScope().getRequiredAttribute( "experimentID" ) ).longValue();
+        Long id = new Long( ( String ) context.getFlowScope().getRequiredAttribute( "experimentID" ) );
         ExpressionExperiment ex = getExpressionExperimentService().find( id );
         if ( ex != null ) {
             context.getRequestScope().setAttribute( "expressionExperiment", ex );

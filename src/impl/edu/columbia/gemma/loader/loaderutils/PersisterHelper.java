@@ -28,6 +28,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import baseCode.util.StringUtil;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
@@ -109,8 +110,8 @@ import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
  * @spring.property name="compoundDao" ref="compoundDao"
  * @spring.property name="databaseEntryDao" ref="databaseEntryDao"
  * @spring.property name="contactDao" ref="contactDao"
- * @spring.property name="bioSequenceDao" ref="bioSequenceDao"*
- * @spring.property name="factorValueDao" ref="factorValueDao" *
+ * @spring.property name="bioSequenceDao" ref="bioSequenceDao"
+ * @spring.property name="factorValueDao" ref="factorValueDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -177,7 +178,7 @@ public class PersisterHelper implements Persister {
     }
 
     /*
-     * (non-Javadoc) TODO: finish implementing this.
+     * (non-Javadoc)
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
      */
@@ -942,4 +943,24 @@ public class PersisterHelper implements Persister {
         return quantitationTypeDao.findOrCreate( entity );
     }
 
+    /**
+     * @param entity
+     */
+    public void remove( Object entity ) {
+        if ( entity instanceof Collection ) {
+            this.remove( ( Collection ) entity );
+        }
+        // String entityName = ReflectionUtil.getBaseForImpl( entity ).getSimpleName();
+        // String daoName = StringUtil.lowerCaseFirstLetter( entityName ) + "Dao";
+        // FIXME, make this work.
+    }
+
+    /**
+     * @param entity
+     */
+    public void remove( Collection entities ) {
+        for ( Object object : entities ) {
+            remove( object );
+        }
+    }
 }

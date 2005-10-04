@@ -25,13 +25,9 @@ import java.util.List;
 
 import javax.xml.transform.TransformerException;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
-import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
@@ -48,16 +44,9 @@ import edu.columbia.gemma.expression.bioAssay.BioAssay;
 public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
     protected static final Log log = LogFactory.getLog( MageMLPreprocessorIntegrationTest.class );
 
-    BeanFactory ctx = null;
     private MageMLParser mageMLParser = null;
     private MageMLConverter mageMLConverter = null;
     private MageMLPreprocessor mageMLPreprocessor = null;
-
-    private String intensity_qtype_filename = null;
-    private String stdev_qtype_filename = null;
-    private String pixel_qtype_filename = null;
-    private String outlier_qtype_filename = null;
-    private String masked_qtype_filename = null;
 
     public void setup() throws Exception {
         super.setUp();
@@ -76,35 +65,35 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
      * @throws ConfigurationException
      */
     @SuppressWarnings("unchecked")
-    public void testPreprocess() throws IOException, TransformerException, ConfigurationException {
+    public void testPreprocess() throws IOException, TransformerException {
 
         /* PARSING */
         log.info( "***** PARSING ***** \n" );
 
-        this.setMageMLParser( ( MageMLParser ) ctx.getBean( "mageMLParser" ) );
+        this.mageMLParser = ( MageMLParser ) ctx.getBean( "mageMLParser" );
 
-        this.setMageMLConverter( ( MageMLConverter ) ctx.getBean( "mageMLConverter" ) );
+        this.mageMLConverter = ( MageMLConverter ) ctx.getBean( "mageMLConverter" );
 
-        this.setMageMLPreprocessor( ( MageMLPreprocessor ) ctx.getBean( "mageMLPreprocessor" ) );
+        this.mageMLPreprocessor = ( MageMLPreprocessor ) ctx.getBean( "mageMLPreprocessor" );
 
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLPreprocessorIntegrationTest.class
                 .getResourceAsStream( "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
 
-        getMageMLParser().parse( istMageExamples );
+        mageMLParser.parse( istMageExamples );
 
         /* create the simplified xml file using the mageMLParser */
         InputStream ist2MageExamples = MageMLPreprocessorIntegrationTest.class
                 .getResourceAsStream( "/data/mage/E-AFMX-13/E-AFMX-13.xml" );
-        getMageMLParser().createSimplifiedXml( ist2MageExamples );
+        mageMLParser.createSimplifiedXml( ist2MageExamples );
 
         /* get results from parsing step */
-        log.info( "Tally:\n" + getMageMLParser() );
-        Collection<Object> mageObjects = getMageMLParser().getResults();
+        log.info( "Tally:\n" + mageMLParser );
+        Collection<Object> mageObjects = mageMLParser.getResults();
         log.debug( "number of SDOs: " + mageObjects.size() );
 
         /* get xsl transformed xml file */
-        Document simplifiedXml = getMageMLParser().getSimplifiedXml();
+        Document simplifiedXml = mageMLParser.getSimplifiedXml();
         log.debug( "simplified xml document: " + simplifiedXml );
 
         /* close input streams */
@@ -124,29 +113,16 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
          * on Spring initialization, simplifiedXml is still null because it has not been passed a document. Therefore,
          * set it.
          */
-        getMageMLConverter().setSimplifiedXml( simplifiedXml );
+        mageMLConverter.setSimplifiedXml( simplifiedXml );
 
-        Collection<Object> gemmaObjects = getMageMLConverter().convert( mageObjects );
+        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
         log.debug( "number of GDOs: " + gemmaObjects.size() );
         for ( Object obj : gemmaObjects ) {
             log.debug( obj.getClass() + ": " + obj );
         }
 
-        /* PREPROCESSING */
-        log.info( "***** PREPROCESSING ***** \n" );
-
-        /*
-         * FIXME reading form Gemma.properties put here because if put in setUp(), the resulting values are null.
-         */
-        Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
-        intensity_qtype_filename = conf.getString( "intensity.matrix.outfile" );
-        stdev_qtype_filename = conf.getString( "stdev.matrix.outfile" );
-        pixel_qtype_filename = conf.getString( "pixel.matrix.outfile" );
-        outlier_qtype_filename = conf.getString( "outlier.matrix.outfile" );
-        masked_qtype_filename = conf.getString( "masked.matrix.outfile" );
-
         /* get all the gemma bioassays from the converter */
-        List<BioAssay> bioAssays = getMageMLConverter().getConvertedBioAssays();
+        List<BioAssay> bioAssays = mageMLConverter.getConvertedBioAssays();
 
         // you will have to parse a new file for each bioassay.
         InputStream[] is = new InputStream[bioAssays.size()];
@@ -189,94 +165,16 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
 
         for ( int i = 0; i < bioAssays.size(); i++ ) {
             BioAssay ba = bioAssays.get( i );
-            List qtypes = getMageMLConverter().getBioAssayQuantitationTypeDimension( ba );
-            List designElements = getMageMLConverter().getBioAssayDesignElementDimension( ba );
+            List qtypes = mageMLConverter.getBioAssayQuantitationTypeDimension( ba );
+            List designElements = mageMLConverter.getBioAssayDesignElementDimension( ba );
 
-            getMageMLPreprocessor().preprocess( ba, qtypes, designElements, is[i] );
+            mageMLPreprocessor.preprocess( ba, qtypes, designElements, is[i] );
 
         }
 
         /* create matricies of doubles */
-
-        // intensity matrix
-        double[][] matrixOfIntensities = null;
-        matrixOfIntensities = getMageMLPreprocessor().convertListOfDoubleArraysToMatrix(
-                getMageMLPreprocessor().getIntensityList(), 0, bioAssays.size() );
-
-        getMageMLPreprocessor().log2DDoubleMatrixToFile( matrixOfIntensities, intensity_qtype_filename );
-
-        // standard deviation matrix
-        double[][] matrixOfStdevs = null;
-        matrixOfStdevs = getMageMLPreprocessor().convertListOfDoubleArraysToMatrix(
-                getMageMLPreprocessor().getStdevList(), 0, bioAssays.size() );
-
-        getMageMLPreprocessor().log2DDoubleMatrixToFile( matrixOfStdevs, stdev_qtype_filename );
-
-        /* create matricies of ints */
-
-        // pixel matrix
-        int[][] matrixOfPixels = null;
-        matrixOfPixels = getMageMLPreprocessor().convertListOfIntArraysToMatrix(
-                getMageMLPreprocessor().getPixelList(), 0, bioAssays.size() );
-
-        getMageMLPreprocessor().log2DIntMatrixToFile( matrixOfPixels, pixel_qtype_filename );
-
-        /* create matricies of booleans */
-
-        // outlier matrix
-        boolean[][] matrixOfOutliers = null;
-        matrixOfOutliers = getMageMLPreprocessor().convertListOfBooleanArraysToMatrix(
-                getMageMLPreprocessor().getOutlierList(), 0, bioAssays.size() );
-
-        getMageMLPreprocessor().log2DBooleanMatrixToFile( matrixOfOutliers, outlier_qtype_filename );
-
-        // masked matrix
-        boolean[][] matrixOfMasked = null;
-        matrixOfMasked = getMageMLPreprocessor().convertListOfBooleanArraysToMatrix(
-                getMageMLPreprocessor().getMaskedList(), 0, bioAssays.size() );
-
-        getMageMLPreprocessor().log2DBooleanMatrixToFile( matrixOfMasked, masked_qtype_filename );
+        // FIXME - make this test do something.
+        // getMageMLPreprocessor().log2DDoubleMatrixToFile( matrixOfIntensities, intensity_qtype_filename );
     }
 
-    /**
-     * @return Returns the mageMLParser.
-     */
-    public MageMLParser getMageMLParser() {
-        return mageMLParser;
-    }
-
-    /**
-     * @param mageMLParser The mageMLParser to set.
-     */
-    public void setMageMLParser( MageMLParser mageMLParser ) {
-        this.mageMLParser = mageMLParser;
-    }
-
-    /**
-     * @param mageMLConverter The mageMLConverter to set.
-     */
-    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
-        this.mageMLConverter = mageMLConverter;
-    }
-
-    /**
-     * @return Returns the mageMLConverter.
-     */
-    public MageMLConverter getMageMLConverter() {
-        return mageMLConverter;
-    }
-
-    /**
-     * @return Returns the mageMLPreprocessor.
-     */
-    public MageMLPreprocessor getMageMLPreprocessor() {
-        return mageMLPreprocessor;
-    }
-
-    /**
-     * @param mageMLPreprocessor The mageMLPreprocessor to set.
-     */
-    public void setMageMLPreprocessor( MageMLPreprocessor mageMLPreprocessor ) {
-        this.mageMLPreprocessor = mageMLPreprocessor;
-    }
 }

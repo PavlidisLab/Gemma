@@ -65,20 +65,24 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
             for ( int i = 0; i < synonyms.length; i++ ) {
                 geneInfo.addToSynonyms( synonyms[i] );
             }
-            String[] dbXRefs = StringUtil.splitPreserveAllTokens( fields[5], '|' );
-            for ( int i = 0; i < dbXRefs.length; i++ ) {
-                String dbXr = dbXRefs[i];
-                String[] dbF = StringUtils.split( dbXr, ':' );
-                assert dbF.length == 2;
-                geneInfo.addToDbXRefs( dbF[0], dbF[1] );
+
+            if ( !fields[5].equals( "-" ) ) {
+                String[] dbXRefs = StringUtil.splitPreserveAllTokens( fields[5], '|' );
+                for ( int i = 0; i < dbXRefs.length; i++ ) {
+                    String dbXr = dbXRefs[i];
+                    String[] dbF = StringUtils.split( dbXr, ':' );
+                    assert dbF.length == 2 : "Expected 2 fields, got " + dbF.length + " from " + dbXr;
+                    geneInfo.addToDbXRefs( dbF[0], dbF[1] );
+                }
             }
-            geneInfo.setChromosome( fields[5] );
-            geneInfo.setMapLocation( fields[6] );
-            geneInfo.setDescription( fields[7] );
-            geneInfo.setGeneType( NCBIGeneInfo.typeStringToGeneType( fields[8] ) );
-            geneInfo.setSymbolIsFromAuthority( fields[9].equals( "-" ) ? false : true );
-            geneInfo.setNameIsFromAuthority( fields[10].equals( "-" ) ? false : true );
-            geneInfo.setNomenclatureStatus( fields[11].equals( "-" ) ? NomenclatureStatus.UNKNOWN : fields[11]
+
+            geneInfo.setChromosome( fields[6] );
+            geneInfo.setMapLocation( fields[7] );
+            geneInfo.setDescription( fields[8] );
+            geneInfo.setGeneType( NCBIGeneInfo.typeStringToGeneType( fields[9] ) );
+            geneInfo.setSymbolIsFromAuthority( fields[10].equals( "-" ) ? false : true );
+            geneInfo.setNameIsFromAuthority( fields[11].equals( "-" ) ? false : true );
+            geneInfo.setNomenclatureStatus( fields[12].equals( "-" ) ? NomenclatureStatus.UNKNOWN : fields[11]
                     .equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
 
         } catch ( NumberFormatException e ) {

@@ -253,7 +253,6 @@ public class RawDataParser implements Parser {
 
         boolean[][] matrix = new boolean[rows][cols];
         for ( int i = 0; i < list.size(); i++ ) {
-            log.debug( "list " + i + " (an array) size: " + ( ( boolean[] ) list.get( i ) ).length );
             matrix[i] = ( ( boolean[] ) list.get( i ) );
             log.debug( "matrix[" + i + "] size: " + matrix[i].length );
         }
@@ -275,7 +274,6 @@ public class RawDataParser implements Parser {
 
             for ( int i = 0; i < matrix.length; i++ ) {
                 for ( int j = 0; j < matrix[i].length; j++ ) {
-                    log.debug( "matrix[" + i + "]" + "[" + j + "]" + matrix[i][j] );
                     out.print( matrix[i][j] );
 
                     // if not at the end of a line
@@ -303,7 +301,6 @@ public class RawDataParser implements Parser {
 
             for ( int i = 0; i < matrix.length; i++ ) {
                 for ( int j = 0; j < matrix[i].length; j++ ) {
-                    log.debug( "matrix[" + i + "]" + "[" + j + "]" + matrix[i][j] );
                     out.print( matrix[i][j] );
 
                     // if not at the end of a line
@@ -331,7 +328,6 @@ public class RawDataParser implements Parser {
 
             for ( int i = 0; i < matrix.length; i++ ) {
                 for ( int j = 0; j < matrix[i].length; j++ ) {
-                    log.debug( "matrix[" + i + "]" + "[" + j + "]" + matrix[i][j] );
 
                     out.print( matrix[i][j] );
 

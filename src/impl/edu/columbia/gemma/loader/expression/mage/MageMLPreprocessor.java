@@ -48,41 +48,6 @@ public class MageMLPreprocessor implements Preprocessor {
     RawDataParser rdp = null;
 
     /**
-     * @return Returns the intensityList (from RawDataParser).
-     */
-    public List getIntensityList() {
-        return rdp.getIntensityList();
-    }
-
-    /**
-     * @return Returns the stdevList (from RawDataParser).
-     */
-    public List getStdevList() {
-        return rdp.getStdevList();
-    }
-
-    /**
-     * @return Returns the pixelList (from RawDataParser).
-     */
-    public List getPixelList() {
-        return rdp.getPixelList();
-    }
-
-    /**
-     * @return Returns the outlierList (from RawDataParser).
-     */
-    public List getOutlierList() {
-        return rdp.getOutlierList();
-    }
-
-    /**
-     * @return Returns the maskedList (from RawDataParser).
-     */
-    public List getMaskedList() {
-        return rdp.getMaskedList();
-    }
-
-    /**
      * instantiate a RawDataProcessor.
      */
     public MageMLPreprocessor() {
@@ -94,10 +59,9 @@ public class MageMLPreprocessor implements Preprocessor {
      * Calling any of the methods {@link #convertListOfDoubleArraysToMatrix( List list, int cols, int rows )},
      * {@link #convertListOfIntArraysToMatrix( List list, int cols, int rows )}, or
      * {@link #convertListOfBooleanArraysToMatrix( List list, int cols, int rows )} after this will convert this list to
-     * a matrix. Raw files: Column 1 - int - X Column 2 - int - Y Column 3 - double - Intensity Column 4 - double -
-     * Standard Deviation Column 5 - int - Pixels Column 6 - boolean - Outlier Column 7 - boolean - Masked
+     * a matrix.
      * 
-     * @param bioAssays
+     * @param bioAssay
      * @param quantitationTypes
      * @param designElements
      */
@@ -111,12 +75,10 @@ public class MageMLPreprocessor implements Preprocessor {
         log.debug( "There are " + quantitationTypes.size() + " quantitation types for bioassay " + bioAssay );
 
         try {
-            // TODO set this to designElements.size()
-            rdp.setNumOfDesignElements( 1000 );
+            rdp.setNumOfDesignElements( designElements.size() );
             rdp.parse( is );
         } catch ( IOException e ) {
-            System.err.print( "error with parse method when parsing raw data file" );
-            e.printStackTrace();
+            throw new RuntimeException( e );
         }
 
     }

@@ -182,7 +182,7 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * @see edu.columbia.gemma.loader.mage.MageMLParser
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLConverterHelper" singleton="false" TODO remove springdoclet tags
+ * @spring.bean id="mageMLConverterHelper" singleton="false"
  */
 @SuppressWarnings("unchecked")
 public class MageMLConverterHelper {

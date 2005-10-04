@@ -56,7 +56,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         if ( tx == null ) {
             tx = Taxon.Factory.newInstance();
             tx.setCommonName( "mouse" );
-            tx.setNcbiId( 9609 );
+            tx.setNcbiId( new Integer( 9609 ) );
             tx = taxonDao.create( tx );
         }
 

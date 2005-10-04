@@ -31,7 +31,7 @@ import edu.columbia.gemma.common.auditAndSecurity.AuditAction;
 import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailDao;
-import edu.columbia.gemma.security.interceptor.PersistAclInterceptorBackend;
+import edu.columbia.gemma.security.interceptor.AddOrRemoveFromACLInterceptor;
 
 /**
  * Add to the audit trail on create, delete, or update of domain objects.
@@ -48,7 +48,7 @@ public class AuditTrailInterceptor implements MethodInterceptor {
     public static final String saveMethodPrefix = "save";
     public static final String updateMethodPrefix = "update";
 
-    private static Log log = LogFactory.getLog( PersistAclInterceptorBackend.class.getName() );
+    private static Log log = LogFactory.getLog( AddOrRemoveFromACLInterceptor.class.getName() );
 
     private AuditTrailDao auditTrailDao = null;
 

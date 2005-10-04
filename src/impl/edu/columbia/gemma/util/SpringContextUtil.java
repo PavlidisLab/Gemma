@@ -130,7 +130,7 @@ public class SpringContextUtil {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        // FIXME: these files need to be found automatically, not hard-coded.
+        // TODO: these files need to be found automatically, not hard-coded.
 
         if ( testing ) {
             log.info( "************** Using test configuration ***************" );

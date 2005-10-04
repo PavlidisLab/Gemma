@@ -101,6 +101,7 @@ public class CollectionFilterer implements Filterer {
     /**
      * @see net.sf.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
      */
+    @SuppressWarnings("unused")
     public void remove( Object object ) {
         collectionIter.remove();
     }

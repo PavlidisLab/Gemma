@@ -18,54 +18,18 @@
  */
 package edu.columbia.gemma.web.controller.flow.action.entrez.pubmed;
 
-import org.easymock.MockControl;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import org.springframework.webflow.test.AbstractFlowExecutionTests;
 import org.springframework.webflow.test.MockRequestContext;
 import org.springframework.webflow.Event;
+import org.springframework.webflow.ViewDescriptor;
 
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedAction;
-
-// //// here is an example of what this looks like, from the sample code
-// public class SearchPersonFlowTests extends AbstractFlowExecutionTests {
-//
-// public SearchPersonFlowTests() {
-// setDependencyCheck(false);
-// }
-//
-// protected String flowId() {
-// return "searchFlow";
-// }
-//
-// protected String[] getConfigLocations() {
-// return new String[] { "classpath:org/springframework/webflow/samples/phonebook/deploy/service-layer.xml",
-// "classpath:org/springframework/webflow/samples/phonebook/deploy/web-layer.xml" };
-// }
-//
-// public void testStartFlow() {
-// startFlow();
-// assertCurrentStateEquals("displayCriteria");
-// }
-//    
-// public void testCriteriaView_Submit_Success() {
-// startFlow();
-// Map parameters = new HashMap();
-// parameters.put("firstName", "Keith");
-// parameters.put("lastName", "Donald");
-// ViewDescriptor view = signalEvent(event("search", parameters));
-// assertCurrentStateEquals("displayResults");
-// Assert.collectionAttributeSizeEquals(view, "persons", 1);
-// }
-//    
-// public void testCriteriaView_Submit_Error() {
-// startFlow();
-// // simulate user error by not passing in any params
-// signalEvent(event("search"));
-// assertCurrentStateEquals("displayCriteria");
-// }
-//
-// }
 
 /**
  * Test the PubMedAction used in the flow pubMed.Search
@@ -83,59 +47,52 @@ public class GetPubMedActionTests extends AbstractFlowExecutionTests {
     }
 
     public void testDoExecuteActionError() throws Exception {
-        // set up mock object
-        MockControl control = MockControl.createControl( BibliographicReferenceService.class );
-        BibliographicReferenceService bibliographicReferenceService = ( BibliographicReferenceService ) control
-                .getMock();
-        bibliographicReferenceService.findByExternalId( "19491" );
-        control.setReturnValue( null, 1 );
-        control.replay();
-
+        BibliographicReferenceService bibliographicReferenceService = createMock( BibliographicReferenceService.class );
         GetPubMedAction action = new GetPubMedAction();
         action.setBibliographicReferenceService( bibliographicReferenceService );
+        bibliographicReferenceService.findByExternalId( "100009491" );
+        expectLastCall().andReturn( null );
+        replay( bibliographicReferenceService );
+
+        this.startFlow();
+        assertCurrentStateEquals( "criteria.view" );
         MockRequestContext context = new MockRequestContext();
-        context.getFlowScope().setAttribute( "pubMedId", "19491" );
+        context.getFlowScope().setAttribute( "pubMedId", "100009491" );
+
         Event result = action.execute( context );
         assertEquals( "error", result.getId() );
 
-        // FIXME
-        // this.assertModelAttributeNull( "bibliographicReference" );
-        // was: this.assertAttributeNotPresent( context.getRequestScope(), "bibliographicReference" );
-        control.verify();
+        ViewDescriptor view = signalEvent( result );
+        this.assertModelAttributeNull( "bibliographicReference", view );
+
+        verify( bibliographicReferenceService );
     }
 
     public void testDoExecuteActionSuccess() throws Exception {
-
-        // set up mock object BibliographicReferenceService
-        MockControl control = MockControl.createControl( BibliographicReferenceService.class );
-        BibliographicReferenceService bibliographicReferenceService = ( BibliographicReferenceService ) control
-                .getMock();
-        bibliographicReferenceService.findByExternalId( "19491" );
-        // method getBibliographicReferenceByTitle(String s) called once.
-        control.setReturnValue( new BibliographicReferenceImpl(), 1 );
-        control.replay();
-
+        BibliographicReferenceService bibliographicReferenceService = createMock( BibliographicReferenceService.class );
         GetPubMedAction action = new GetPubMedAction();
         action.setBibliographicReferenceService( bibliographicReferenceService );
+        bibliographicReferenceService.findByExternalId( "19491" );
+        expectLastCall().andReturn( new BibliographicReferenceImpl() );
+        replay( bibliographicReferenceService );
+
+        this.startFlow();
+        assertCurrentStateEquals( "criteria.view" );
         MockRequestContext context = new MockRequestContext();
         context.getFlowScope().setAttribute( "pubMedId", "19491" );
+
         Event result = action.execute( context );
         assertEquals( "success", result.getId() );
 
-        // FIXME
-        // this.assertModelAttributeNotNull( "bibliographicReference" );
-        // was: assertAttributePresent( context.getRequestScope(), "bibliographicReference" );
-        control.verify();
+        ViewDescriptor view = signalEvent( result );
+        this.assertModelAttributeNotNull( "bibliographicReference", view );
+
+        verify( bibliographicReferenceService );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.webflow.test.AbstractFlowExecutionTests#flowId()
-     */
     @Override
     protected String flowId() {
-        return "foo";
+        return "pubMed.Search";
     }
 
     /*
@@ -145,7 +102,9 @@ public class GetPubMedActionTests extends AbstractFlowExecutionTests {
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "/edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedDetail-flow.xml",
-                "/edu/columbia/gemma/web/controller/flow/entrez/pubmed/pubMedSearch-flow.xml" };
+        return new String[] { "classpath:WEB-INF/action-servlet.xml",
+                "classpath:WEB-INF/applicationContext-hibernate.xml",
+                "classpath:WEB-INF/applicationContext-security.xml",
+                "classpath:WEB-INF/applicationContext-validation.xml", "classpath:WEB-INF/localTestdataSource.xml" };
     }
 }

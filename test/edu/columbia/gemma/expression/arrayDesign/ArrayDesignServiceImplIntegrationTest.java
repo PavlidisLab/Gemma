@@ -82,7 +82,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
     // }
     /**
      * Test removing an arrayDesign with correct authorization. The security interceptor should be called on this
-     * method, as should the PersistAclInterceptorBackend. Does not use mock objects because I need to remove an element
+     * method, as should the AddOrRemoveFromACLInterceptor. Does not use mock objects because I need to remove an element
      * from a live database.
      * 
      * @throws Exception

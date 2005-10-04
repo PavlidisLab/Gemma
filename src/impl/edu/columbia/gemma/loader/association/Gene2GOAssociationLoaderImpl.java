@@ -19,6 +19,7 @@
 package edu.columbia.gemma.loader.association;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,17 +51,15 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
      * @param oeCol
      */
     public Collection<Object> persist( Collection<Object> g2GoCol ) {
-
-        log.info( "persisting Gemma objects (if object exists it will not be persisted) ..." );
-
         assert gene2GOAssociationDao != null;
+        Collection<Object> results = new HashSet<Object>();
         for ( Object ob : g2GoCol ) {
             if ( ob == null ) continue;
             assert ob instanceof Gene2GOAssociation;
             Gene2GOAssociation g2Go = ( Gene2GOAssociation ) ob;
-            persist( g2Go );
+            results.add( persist( g2Go ) );
         }
-        return g2GoCol;
+        return results;
     }
 
     /**
@@ -78,26 +77,15 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
         this.persisterHelper = persisterHelper;
     }
 
+    /**
+     * @param entity
+     * @return
+     */
     private Object persistGene2GOAssociation( Gene2GOAssociation entity ) {
-        assert persisterHelper != null;
         persisterHelper.persist( entity.getGene() );
         persisterHelper.persist( entity.getOntologyEntry() );
         persisterHelper.persist( entity.getSource() );
-        return getGene2GOAssociationDao().create( entity );
-    }
-
-    /**
-     * @param gene2GOAssociation
-     */
-    public void create( Gene2GOAssociation gene2GOAssociation ) {
-        getGene2GOAssociationDao().create( gene2GOAssociation );
-    }
-
-    /**
-     * @return Returns the gene2GOAssociationDao.
-     */
-    public Gene2GOAssociationDao getGene2GOAssociationDao() {
-        return gene2GOAssociationDao;
+        return gene2GOAssociationDao.create( entity );
     }
 
     /**

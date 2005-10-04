@@ -42,7 +42,7 @@ import edu.columbia.gemma.genome.gene.CandidateGeneListServiceImplTest;
 import edu.columbia.gemma.genome.gene.GeneServiceImplTest;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImplTest;
 import edu.columbia.gemma.loader.association.Gene2GOAssociationParserTest;
-import edu.columbia.gemma.loader.description.OntologyEntryLoaderTest;
+import edu.columbia.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
@@ -54,7 +54,7 @@ import edu.columbia.gemma.loader.expression.geo.GeoFamilyParserTest;
 import edu.columbia.gemma.loader.expression.mage.MageLoadTest;
 import edu.columbia.gemma.loader.expression.mage.MageMLParserTest;
 import edu.columbia.gemma.loader.expression.smd.SMDManagerImplTest;
-import edu.columbia.gemma.loader.genome.gene.GeneParserTest;
+import edu.columbia.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleterTest;
 import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
@@ -128,7 +128,7 @@ public class AllTests {
         suite.addTestSuite( Gene2GOAssociationParserTest.class );
 
         // loader.description
-        suite.addTestSuite( OntologyEntryLoaderTest.class );
+        suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
 
         // loader.entrez.pubmed
         suite.addTestSuite( PubMedXMLFetcherTest.class );
@@ -158,7 +158,7 @@ public class AllTests {
         suite.addTestSuite( PublicationMetaTest.class );
 
         // loader.genome.gene
-        suite.addTestSuite( GeneParserTest.class );
+        suite.addTestSuite( NCBIGeneParserTest.class );
 
         // loader.loaderutils
         suite.addTestSuite( BeanPropertyCompleterTest.class );

@@ -107,16 +107,6 @@ public class Gene2GOAssociationParserImpl extends BasicLineMapParser implements 
     }
 
     /**
-     * @param filename
-     * @return Map
-     * @throws IOException
-     */
-    public Map parseToMap( String f ) throws IOException {
-        // TODO implement
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * @param url
      * @return Map
      * @throws IOException

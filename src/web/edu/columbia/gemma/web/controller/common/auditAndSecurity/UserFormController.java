@@ -139,7 +139,7 @@ public class UserFormController extends BaseFormController {
 
             // Send an account information e-mail
             message.setSubject( getText( "signup.email.subject", locale ) );
-            sendUserMessage( user, getText( "newuser.email.message", user.getFullName(), locale ), RequestUtil
+            sendEmail( user, getText( "newuser.email.message", user.getFullName(), locale ), RequestUtil
                     .getAppURL( request ) );
 
             return showNewForm( request, response );

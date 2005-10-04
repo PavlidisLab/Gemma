@@ -1,7 +1,6 @@
 package edu.columbia.gemma.loader.genome.gene;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -10,16 +9,32 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
+import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
+import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.DatabaseEntryDao;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.common.description.LocalFileDao;
+import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.protocol.HardwareDao;
+import edu.columbia.gemma.common.protocol.ProtocolDao;
+import edu.columbia.gemma.common.protocol.SoftwareDao;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
+import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.CompoundDao;
+import edu.columbia.gemma.expression.designElement.DesignElementDao;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.expression.experiment.FactorValueDao;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.ParserByMap;
+import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
+import edu.columbia.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -32,7 +47,9 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class GeneLoaderCLI {
-    protected static final Log log = LogFactory.getLog( ParserByMap.class );
+    protected static final Log log = LogFactory.getLog( GeneLoaderCLI.class );
+
+    // FIXME this should use the SDOG
 
     /**
      * Command line interface to run the gene parser/loader
@@ -41,8 +58,9 @@ public class GeneLoaderCLI {
      * @throws ConfigurationException
      * @throws IOException
      */
-    public static void main( String args[] ) throws ConfigurationException, IOException {
-        StopWatch stopwatch;
+    public static void main( String args[] ) throws IOException {
+        GeneLoaderCLI cli = new GeneLoaderCLI();
+
         try {
             // options stage
             OptionBuilder.withDescription( "Print help for this application" );
@@ -69,46 +87,29 @@ public class GeneLoaderCLI {
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
 
-            BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
-
-            GeneLoaderImpl geneLoader;
-
-            GeneParserImpl geneParser = new GeneParserImpl();
-            GeneMappings geneMappings = new GeneMappings( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
-            geneParser.setGeneMappings( geneMappings );
+            NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
+            // NcbiGene2AccessionParser gene2AccParser = new NcbiGene2AccessionParser();
 
             // interrogation stage
             if ( cl.hasOption( 'h' ) ) {
                 printHelp( opt );
 
             } else if ( cl.hasOption( 'p' ) ) {
-                geneParser.parseToMap( cl.getOptionValue( 'p' ) );
+                geneInfoParser.parse( cl.getOptionValue( 'p' ) );
             } else if ( cl.hasOption( 'l' ) ) {
-                geneLoader = new GeneLoaderImpl();
-                geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
 
-                Map map = null;
                 String[] filenames = cl.getOptionValues( 'l' );
 
-                // stopwatch = new StopWatch();
-                // stopwatch.start();
-                // log.info( "Timer started" );
-                //
                 for ( int i = 0; i < filenames.length - 1; i++ ) {
-                    geneParser.parseToMap( filenames[i] );
+                    geneInfoParser.parse( filenames[i] );
                     i++;
                 }
-                map = geneParser.parseToMap( filenames[filenames.length - 1] );
-                // geneLoader.create( map.values() );
-                //
-                // stopwatch.stop();
-                // LoaderTools.displayTime( stopwatch );
-                ParserAndLoaderTools.loadDatabase( geneLoader, map.values() );
+
+                geneInfoParser.parse( filenames[filenames.length - 1] );
+                cli.getGenePersister().persist( geneInfoParser.getResults() );
 
             } else if ( cl.hasOption( 'r' ) ) {
-                geneLoader = new GeneLoaderImpl();
-                geneLoader.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
-                geneLoader.removeAll();
+                cli.getGenePersister().removeAll();
             } else {
                 printHelp( opt );
             }
@@ -117,12 +118,57 @@ public class GeneLoaderCLI {
         }
     }
 
+    private PersisterHelper ml;
+    private GenePersister genePersister;
+
+    public GeneLoaderCLI() {
+        BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
+        ml = new PersisterHelper();
+        ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
+        ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
+        ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
+        ml.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
+        ml.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
+        ml.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
+        ml.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
+        ml.setProtocolDao( ( ProtocolDao ) ctx.getBean( "protocolDao" ) );
+        ml.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
+        ml.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
+        ml.setTaxonDao( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
+        ml.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
+        ml.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
+        ml.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
+        ml.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
+        ml.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
+        ml.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
+        ml.setBioSequenceDao( ( BioSequenceDao ) ctx.getBean( "bioSequenceDao" ) );
+        ml.setFactorValueDao( ( FactorValueDao ) ctx.getBean( "factorValueDao" ) );
+        genePersister = new GenePersister();
+        genePersister.setGeneDao( ( GeneDao ) ctx.getBean( "geneDao" ) );
+
+        genePersister.setPersisterHelper( ml );
+    }
+
     /**
      * @param opt
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
         h.printHelp( "Options Tip", opt );
+    }
+
+    /**
+     * @return Returns the genePersister.
+     */
+    public GenePersister getGenePersister() {
+        return this.genePersister;
+    }
+
+    /**
+     * @return Returns the ml.
+     */
+    public PersisterHelper getMl() {
+        return this.ml;
     }
 
 }

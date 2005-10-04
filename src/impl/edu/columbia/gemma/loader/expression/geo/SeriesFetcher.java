@@ -2,9 +2,7 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.configuration.Configuration;
@@ -46,12 +44,7 @@ public class SeriesFetcher extends FtpFetcher {
             success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
 
             if ( success ) {
-                // get meta-data about the file.
-                LocalFile file = LocalFile.Factory.newInstance();
-                file.setVersion( new SimpleDateFormat().format( new Date() ) );
-                file.setRemoteURI( seekFile );
-                file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
-                // file.setSize( outputFile.length() );
+                LocalFile file = fetchedFile( seekFile, outputFileName );
                 log.info( "Retrieved " + seekFile + " for experiment(set) " + accession + " .Output file is "
                         + outputFileName );
                 Collection<LocalFile> result = new HashSet<LocalFile>();

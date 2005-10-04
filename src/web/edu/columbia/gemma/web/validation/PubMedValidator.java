@@ -1,5 +1,7 @@
 package edu.columbia.gemma.web.validation;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
@@ -17,6 +19,8 @@ import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
  */
 public class PubMedValidator implements Validator {
 
+    private static Log log = LogFactory.getLog( PubMedValidator.class.getName() );
+
     public boolean supports( Class clazz ) {
         return clazz.equals( BibliographicReferenceImpl.class );
     }
@@ -24,7 +28,7 @@ public class PubMedValidator implements Validator {
     // TODO either replace this with a BibliographicReferenceServiceQueryValidator
     // (yes, it should be "...Service...") or add the pubMedId to the POJO BibliographicReference.
     public void validate( Object obj, Errors errors ) {
-        System.err.println( "Object obj is: " + obj.toString() );
+        log.debug( "Validating: " + obj.toString() );
         BibliographicReference query = ( BibliographicReference ) obj;
         if ( ( query.getAuthorList() == null || query.getAuthorList().length() == 0 )
                 && ( query.getTitle() == null || query.getTitle().length() == 0 ) ) {

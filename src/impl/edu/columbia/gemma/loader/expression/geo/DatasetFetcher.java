@@ -20,9 +20,7 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.configuration.Configuration;
@@ -71,12 +69,7 @@ public class DatasetFetcher extends FtpFetcher {
 
             if ( success ) {
                 // get meta-data about the file.
-                LocalFile file = LocalFile.Factory.newInstance();
-                file.setVersion( new SimpleDateFormat().format( new Date() ) );
-                file.setRemoteURI( seekFile );
-                file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
-                // file.setSize( outputFile.length() );
-
+                LocalFile file = fetchedFile( seekFile, outputFileName );
                 log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + ". Output file is "
                         + outputFileName );
 

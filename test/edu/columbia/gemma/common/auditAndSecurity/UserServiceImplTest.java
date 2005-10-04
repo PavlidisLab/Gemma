@@ -90,32 +90,4 @@ public class UserServiceImplTest extends TestCase {
         verify( userDaoMock );
     }
 
-    /*
-     * Class under test for String handleCheckLoginCookie(java.lang.String)
-     */
-    public void testHandleCheckLoginCookieString() {
-        // TODO
-    }
-
-    /*
-     * Class under test for String handleCreateLoginCookie(java.lang.String)
-     */
-    public void testHandleCreateLoginCookieString() {
-        // TODO
-    }
-
-    /*
-     * Class under test for void handleRemoveLoginCookies(String)
-     */
-    public void testHandleRemoveLoginCookiesString() {
-        // TODO
-    }
-
-    /*
-     * Class under test for void handleAddRole(User, UserRole)
-     */
-    public void testHandleAddRoleUserUserRole() {
-        // TODO
-    }
-
 }

@@ -50,12 +50,4 @@ public class ExternalDatabaseTest extends BaseDAOTestCase {
         assertEquals( connectionIsClosed, false );
     }
 
-    /**
-     * @throws HibernateException
-     * @throws SQLException TODO implement when you have mapped the tables from these other databases to objects.
-     */
-    public void testRetreiveFromDatabase() throws Exception {
-
-    }
-
 }

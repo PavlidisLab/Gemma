@@ -39,7 +39,6 @@ import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
-import edu.columbia.gemma.expression.experiment.ExperimentalFactorDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.FactorValueDao;
 import edu.columbia.gemma.genome.TaxonDao;

@@ -18,8 +18,6 @@
  */
 package edu.columbia.gemma.web.controller.flow.action.entrez.pubmed;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
@@ -44,7 +42,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
 public class BibRefFormEditAction extends FormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private BibliographicReferenceService bibliographicReferenceService;
-    private BibliographicReference br = null;
+    private BibliographicReference bibRef = null;
 
     /**
      * Programmatically set the domain object, the class is refers to, and the scope.
@@ -72,19 +70,11 @@ public class BibRefFormEditAction extends FormAction {
         String pubMedId = ( String ) context.getSourceEvent().getAttribute( "pubMedId" );
         context.getFlowScope().setAttribute( "pubMedId", pubMedId );
 
-        // FIXME again, getBibliographicReferenceService().findByExternalId(pubMedId) returns null.
-        // Fix this and put it here instead of getting all arrayDesigns.
-        Collection<BibliographicReference> col = getBibliographicReferenceService().getAllBibliographicReferences();
-        for ( BibliographicReference b : col ) {
-            if ( b.getPubAccession().getAccession().equals( pubMedId ) ) {
-                br = b;
-                break;
-            }
-        }
+        bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
 
-        if ( br != null ) context.getRequestScope().setAttribute( "bibliographicReference", br );
+        if ( bibRef != null ) context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
 
-        return br;
+        return bibRef;
     }
 
     /**
@@ -112,14 +102,14 @@ public class BibRefFormEditAction extends FormAction {
 
         if ( log.isInfoEnabled() ) logScopes( context );
 
-        br.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
-        br.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
-        br.setVolume( ( String ) context.getSourceEvent().getAttribute( "volume" ) );
-        // br.setName( ( String ) context.getFlowScope().getAttribute( "pubMedId", String.class ) );
+        bibRef.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
+        bibRef.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
+        bibRef.setVolume( ( String ) context.getSourceEvent().getAttribute( "volume" ) );
+        // bibRef.setName( ( String ) context.getFlowScope().getAttribute( "pubMedId", String.class ) );
 
-        log.info( "updating bibliographic reference " + br.getPubAccession().getAccession() );
+        log.info( "updating bibliographic reference " + bibRef.getPubAccession().getAccession() );
 
-        getBibliographicReferenceService().updateBibliographicReference( br );
+        getBibliographicReferenceService().updateBibliographicReference( bibRef );
 
         return success();
     }

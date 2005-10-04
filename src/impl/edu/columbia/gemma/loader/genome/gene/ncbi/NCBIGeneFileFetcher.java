@@ -18,10 +18,9 @@
  */
 package edu.columbia.gemma.loader.genome.gene.ncbi;
 
+import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.configuration.Configuration;
@@ -51,6 +50,9 @@ public class NCBIGeneFileFetcher extends FtpFetcher {
             config = new PropertiesConfiguration( "Gemma.properties" );
             this.localBasePath = ( String ) config.getProperty( "ncbi.local.datafile.basepath" );
             this.baseDir = ( String ) config.getProperty( "ncbi.remote.gene.basedir" );
+
+            if ( baseDir == null ) throw new ConfigurationException( "Failed to get basedir" );
+            if ( localBasePath == null ) throw new ConfigurationException( "Failed to get localBasePath" );
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }
@@ -68,25 +70,28 @@ public class NCBIGeneFileFetcher extends FtpFetcher {
             if ( this.f == null || !this.f.isConnected() ) f = NCBIUtil.connect( FTP.BINARY_FILE_TYPE );
 
             String seekFile = baseDir + "/" + identifier + ".gz";
-            String outputFileName = this.localBasePath + identifier + ".gz";
+            File outputDir = new File( this.localBasePath );
+            String outputFileName = null;
+            if ( !outputDir.canWrite() ) {
+                outputFileName = File.createTempFile( identifier, "gz" ).getAbsolutePath();
+            } else {
+                outputFileName = outputDir + File.separator + identifier + ".gz";
+            }
             success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
 
             if ( success ) {
                 // get meta-data about the file.
-                LocalFile file = LocalFile.Factory.newInstance();
-                file.setVersion( new SimpleDateFormat().format( new Date() ) );
-                file.setRemoteURI( seekFile );
-                file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
-                // file.setSize( outputFile.length() );
+                LocalFile file = fetchedFile( seekFile, outputFileName );
                 log.info( "Retrieved " + seekFile + ", output file is " + outputFileName );
                 Collection<LocalFile> result = new HashSet<LocalFile>();
                 result.add( file );
                 return result;
             }
+            throw new IOException( "Failed to get the file" );
         } catch ( IOException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         }
-        log.error( "Failed" );
-        return null;
     }
+
+ 
 }

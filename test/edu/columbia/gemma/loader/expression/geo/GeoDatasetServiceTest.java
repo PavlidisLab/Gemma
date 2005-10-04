@@ -62,7 +62,6 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         gds = new GeoDatasetService();
         PersisterHelper ml = new PersisterHelper();
         GeoConverter geoConv = new GeoConverter();
-        ml = new PersisterHelper();
         ml.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
         ml.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
         ml.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );

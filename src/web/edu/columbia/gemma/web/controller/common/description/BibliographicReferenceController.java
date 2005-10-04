@@ -18,7 +18,6 @@
  */
 package edu.columbia.gemma.web.controller.common.description;
 
-import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -91,17 +90,8 @@ public class BibliographicReferenceController implements Controller {
          */
         request.setAttribute( "pubMedId", request.getParameter( "pubMedId" ) );
 
-        // FIXME bibliographicReferenceService.findByExternalId( request.getParameter( "pubMedId" ) ) is returning
-        // null here.
-        // I have done this for now, but this must be fixed and not get all the bibliographicReferences.
-        Collection<BibliographicReference> col = bibliographicReferenceService.getAllBibliographicReferences();
-        BibliographicReference bibRef = null;
-        for ( BibliographicReference br : col ) {
-            if ( br.getPubAccession().getAccession().equals( request.getParameter( "pubMedId" ) ) ) {
-                bibRef = br;
-                break;
-            }
-        }
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( request
+                .getParameter( "pubMedId" ) );
 
         log.debug( "request parameter pubMedId: " + request.getParameter( "pubMedId" )
                 + " has bibliographicReference: " + bibRef );

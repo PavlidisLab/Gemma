@@ -36,8 +36,6 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  */
 public class IlluminaProbeReader extends BasicLineMapParser {
 
-    // FIXME make columns external parameters.
-
     protected static final Log log = LogFactory.getLog( IlluminaProbeReader.class );
 
     /*
