@@ -44,6 +44,30 @@ public class AffyProbeReaderTest extends TestCase {
         is.close();
     }
 
+    public final void testReadInputStreamNew() throws Exception {
+        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-newprobes-example.txt" );
+        apr.setSequenceField( 4 );
+        apr.parse( is );
+
+        String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
+        CompositeSequence cs = ( ( CompositeSequence ) apr.get( "1000_at" ) );
+
+        assertTrue( "CompositeSequence was null", cs != null );
+
+        boolean foundIt = false;
+        for ( Iterator iter = cs.getReporters().iterator(); iter.hasNext(); ) {
+            Reporter element = ( Reporter ) iter.next();
+            if ( element.getName().equals( "1000_at:617:349" ) ) {
+                String actualValue = element.getImmobilizedCharacteristic().getSequence();
+
+                assertEquals( expectedValue, actualValue );
+                foundIt = true;
+                break;
+            }
+        }
+        assertTrue( "Didn't find the probe ", foundIt );
+    }
+
     /*
      * Class under test for Map read(InputStream)
      */
