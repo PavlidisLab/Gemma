@@ -51,7 +51,7 @@ import edu.columbia.gemma.util.ConfigUtils;
  * @spring.bean id="mageMLPreprocessor" singleton="false"
  */
 public class MageMLPreprocessor implements Preprocessor {
-
+    Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
     RawDataParser rdp = null;
 
     private String localMatrixFilepath;
@@ -75,11 +75,13 @@ public class MageMLPreprocessor implements Preprocessor {
             throws IOException {
         rdp = new RawDataParser( bioAssays, dimensions );
         rdp.setSeparator( ' ' );
-        Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
-
         log.info( "Preprocessing the data ..." );
 
         rdp.parseStreams( streams );
+        for ( InputStream is : streams ) {
+            is.close();
+        }
+        processResults( null );
     }
 
     /*
@@ -94,8 +96,6 @@ public class MageMLPreprocessor implements Preprocessor {
         rdp = new RawDataParser( bioAssays, dimensions );
         rdp.setSeparator( ' ' );
 
-        Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
-
         log.info( "Preprocessing the data ..." );
 
         rdp.parse();
@@ -105,7 +105,17 @@ public class MageMLPreprocessor implements Preprocessor {
             sourceFiles.add( assay.getRawDataFile() );
         }
 
-        // Now we do several things: Create text files, persist their information, and persist the data vectors.
+        processResults( sourceFiles );
+
+    }
+
+    /**
+     * After parsing: Create text files, persist their information, and persist the data vectors.
+     * 
+     * @param sourceFiles
+     * @throws IOException
+     */
+    private void processResults( Collection<LocalFile> sourceFiles ) throws IOException {
 
         Collection<Object> matrices = rdp.getResults();
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
@@ -141,7 +151,6 @@ public class MageMLPreprocessor implements Preprocessor {
             makeDataVectors( vectors, converter, object, qt );
             i++;
         }
-
     }
 
     /**

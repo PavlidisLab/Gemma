@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,6 +43,7 @@ import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.designElement.DesignElement;
+import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
 
 /**
@@ -116,6 +118,7 @@ public class RawDataParser implements FileCombiningParser {
     public void parse( File f ) throws IOException {
         InputStream is = new FileInputStream( f );
         parse( is );
+        is.close();
     }
 
     /*
@@ -124,26 +127,68 @@ public class RawDataParser implements FileCombiningParser {
      * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
-        linesParsed = 0;
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        String line = null;
 
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+        assert currentBioAssay != null;
+        boolean hasDesignElements = dimensions.getDesignElementDimension( currentBioAssay ) != null
+                && dimensions.getDesignElementDimension( currentBioAssay ).size() > 0;
+
+        log.info( "Parsing 'raw' data for bioAssay: " + currentBioAssay );
+
+        List<DesignElement> designElements = dimensions.getDesignElementDimension( currentBioAssay );
+        List<QuantitationType> quantitationTypes = dimensions.getQuantitationTypeDimension( currentBioAssay );
+
+        if ( hasDesignElements ) {
+            qtData.setUp( quantitationTypes, designElements );
+        } else {
+            qtData.setUp( quantitationTypes );
+        }
+
+        if ( quantitationTypes == null )
+            throw new NullPointerException( "Null quantitationTypeDimension for " + currentBioAssay );
+
+        String line = null;
+        linesParsed = 0;
         while ( ( line = br.readLine() ) != null ) {
             String[] fields = ( String[] ) parseOneLine( line );
 
-            DesignElement de = dimensions.getDesignElementDimension( currentBioAssay ).get( linesParsed );
+            DesignElement de = getDesignElement( hasDesignElements, designElements );
 
             for ( int i = 0; i < fields.length; i++ ) {
                 String field = fields[i];
-                QuantitationType qt = dimensions.getQuantitationTypeDimension( currentBioAssay ).get( i );
+                QuantitationType qt = quantitationTypes.get( i );
                 qtData.addData( qt, de, field );
             }
 
             linesParsed++;
-            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Read in " + linesParsed + " items..." );
+            if ( linesParsed % ( PARSE_ALERT_FREQUENCY << 2 ) == 0 )
+                log.info( "Read in " + linesParsed + " lines  for " + currentBioAssay.getName() + "..." );
 
         }
         log.info( "Read in " + linesParsed + " items..." );
+    }
+
+    /**
+     * Get the designElement for the current row being parsed.
+     * 
+     * @param hasDesignElements
+     * @param designElements
+     */
+    private DesignElement getDesignElement( boolean hasDesignElements, List<DesignElement> designElements ) {
+        DesignElement de;
+        if ( hasDesignElements ) {
+            if ( designElements.size() < linesParsed )
+                // TODO CHECK
+                throw new IllegalArgumentException(
+                        "Number of lines in stream doesn't match number of DesignElements in the dimension. " );
+            de = designElements.get( linesParsed );
+            if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
+        } else {
+            de = Reporter.Factory.newInstance();
+            de.setName( "R_" + Integer.toString( linesParsed ) );
+        }
+        return de;
     }
 
     /*
@@ -180,8 +225,7 @@ public class RawDataParser implements FileCombiningParser {
      * @see edu.columbia.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {
-        String[] fields = StringUtil.splitPreserveAllTokens( line, this.separator );
-        return fields;
+        return StringUtil.splitPreserveAllTokens( line, this.separator );
     }
 
     /**
@@ -189,8 +233,12 @@ public class RawDataParser implements FileCombiningParser {
      * @throws IOException
      */
     public void parseStreams( List<InputStream> streams ) throws IOException {
+        int i = 0;
         for ( InputStream stream : streams ) {
+            currentBioAssay = bioAssays.get( i );
+            if ( currentBioAssay == null ) throw new IllegalStateException( "No " + i + "nth BioAssay" );
             this.parse( stream );
+            i++;
         }
     }
 
@@ -212,10 +260,54 @@ public class RawDataParser implements FileCombiningParser {
         parse( f );
     }
 
+    /**
+     * Encapsulates the relationship between QuantitationTypes, DesignElements and the Measurements (which will be
+     * turned into DataVectors).
+     */
     class QuantitationTypeData {
 
-        // Note we specifiy the use of LinkedHashMap to ensure order is predictable.
-        LinkedHashMap<QuantitationType, LinkedHashMap<DesignElement, List<Object>>> dataMap = new LinkedHashMap<QuantitationType, LinkedHashMap<DesignElement, List<Object>>>();
+        // Note we specifiy the use of LinkedHashMap to ensure order is predictable. We use string instead of the
+        // entities because their hashcodes are not zero.
+        LinkedHashMap<String, LinkedHashMap<String, List<Object>>> dataMap = new LinkedHashMap<String, LinkedHashMap<String, List<Object>>>();
+
+        Map<String, QuantitationType> quantitationTypesForNames = new HashMap<String, QuantitationType>();
+        Map<String, DesignElement> designElementsForNames = new HashMap<String, DesignElement>();
+
+        /**
+         * This must be called before any processing can be completed.
+         * 
+         * @param quantitationTypes
+         * @param designElements
+         */
+        public void setUp( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
+            for ( DesignElement element : designElements ) {
+                designElementsForNames.put( element.getName(), element );
+            }
+            for ( QuantitationType type : quantitationTypes ) {
+                quantitationTypesForNames.put( type.getName(), type );
+                dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
+
+                LinkedHashMap<String, List<Object>> map = dataMap.get( type.getName() );
+                for ( DesignElement element : designElements ) {
+                    if ( !map.containsKey( element.getName() ) ) {
+                        map.put( element.getName(), new ArrayList<Object>() );
+                    }
+                }
+            }
+        }
+
+        /**
+         * Use this method if you don't know the design elements ahead of time (slower).
+         * 
+         * @param quantitationTypes
+         */
+        public void setUp( List<QuantitationType> quantitationTypes ) {
+            for ( QuantitationType type : quantitationTypes ) {
+                quantitationTypesForNames.put( type.getName(), type );
+                dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
+
+            }
+        }
 
         /**
          * Supports Boolean, String, Double and Integer data.
@@ -226,24 +318,23 @@ public class RawDataParser implements FileCombiningParser {
          */
         public void addData( QuantitationType qt, DesignElement de, String data ) {
             PrimitiveType pt = qt.getRepresentation();
+            String qtName = qt.getName();
+            String deName = de.getName();
 
-            if ( !dataMap.containsKey( qt ) ) {
-                dataMap.put( qt, new LinkedHashMap<DesignElement, List<Object>>() );
+            if ( !dataMap.get( qtName ).containsKey( deName ) ) {
+                dataMap.get( qtName ).put( deName, new ArrayList<Object>() );
             }
-
-            if ( !dataMap.get( qt ).containsKey( de ) ) {
-                dataMap.get( qt ).put( de, new ArrayList<Object>() );
-            }
+            List<Object> list = dataMap.get( qtName ).get( deName );
 
             try {
                 if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                    dataMap.get( qt ).get( de ).add( new Boolean( data ) );
+                    list.add( new Boolean( data ) );
                 } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                    dataMap.get( qt ).get( de ).add( new Double( data ) );
+                    list.add( new Double( data ) );
                 } else if ( pt.equals( PrimitiveType.INT ) ) {
-                    dataMap.get( qt ).get( de ).add( new Integer( data ) );
+                    list.add( new Integer( data ) );
                 } else {
-                    dataMap.get( qt ).get( de ).add( data );
+                    list.add( data );
                 }
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( e );
@@ -252,11 +343,10 @@ public class RawDataParser implements FileCombiningParser {
         }
 
         /**
-         * 
          * @param qt
          * @return
          */
-        public LinkedHashMap<DesignElement, List<Object>> getDataForQuantitationType( QuantitationType qt ) {
+        public LinkedHashMap<String, List<Object>> getDataForQuantitationType( QuantitationType qt ) {
             return dataMap.get( qt );
         }
 
@@ -272,13 +362,14 @@ public class RawDataParser implements FileCombiningParser {
 
             NamedMatrix result = new StringMatrix2DNamed( numDesignElements, numBioAssays );
 
+            String qtName = qt.getName();
             int i = 0;
-            for ( DesignElement de : dataMap.get( qt ).keySet() ) {
-                result.addRowName( de.getName(), i );
+            for ( String deName : dataMap.get( qtName ).keySet() ) {
+                result.addRowName( deName, i );
                 i++;
 
                 int j = 0;
-                for ( Object obj : dataMap.get( qt ).get( de ) ) {
+                for ( Object obj : dataMap.get( qtName ).get( deName ) ) {
                     result.set( i, j, obj );
                     j++;
                 }
@@ -298,7 +389,11 @@ public class RawDataParser implements FileCombiningParser {
          * @return
          */
         public List<QuantitationType> getQuantitationTypes() {
-            return new ArrayList<QuantitationType>( dataMap.keySet() );
+            List<QuantitationType> result = new ArrayList<QuantitationType>();
+            for ( String qtName : dataMap.keySet() ) {
+                result.add( quantitationTypesForNames.get( qtName ) );
+            }
+            return result;
         }
 
         /**
@@ -306,7 +401,7 @@ public class RawDataParser implements FileCombiningParser {
          * @return
          */
         public QuantitationType getNthQuantitationType( int n ) {
-            return ( new ArrayList<QuantitationType>( dataMap.keySet() ) ).get( n );
+            return getQuantitationTypes().get( n );
         }
 
         /**
@@ -314,7 +409,13 @@ public class RawDataParser implements FileCombiningParser {
          * @return
          */
         public List<DesignElement> getDesignElementsForQuantitationType( QuantitationType qt ) {
-            return new ArrayList<DesignElement>( dataMap.get( qt ).keySet() );
+            List<DesignElement> result = new ArrayList<DesignElement>();
+
+            for ( String deName : dataMap.get( qt.getName() ).keySet() ) {
+                result.add( designElementsForNames.get( deName ) );
+            }
+            return result;
+
         }
     }
 

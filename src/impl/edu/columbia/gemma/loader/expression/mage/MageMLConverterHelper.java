@@ -27,11 +27,11 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -504,7 +504,7 @@ public class MageMLConverterHelper {
             }
             URI localURI = findLocalMageExternalDataFile( dataExternal.getFilenameURI() );
 
-            if ( localURI == null ) {
+            if ( localURI == null ) { // FIXME NEED TO GET ACTUAL FILE (or fill in later)
                 result.setLocalURI( dataExternal.getFilenameURI() );
             } else {
                 log.warn( "Local file not found, filling in " + dataExternal.getFilenameURI() );
@@ -569,17 +569,21 @@ public class MageMLConverterHelper {
      * There also seems to be no particular standard as to whether the external data files contain compositesequence or
      * reporter or feature data. Feature data makes the most sense. For Affy files that seems to be what you get (so
      * far).
+     * <p>
+     * Implementation note: Implementation note: We have to store things as Maps of Strings to the objects of interest,
+     * rather than using the object itself as a key, because hashCode() for our entities looks just at the primary key
+     * (the id), which is not filled in in many cases (when working with non-persistent objects).
      * 
      * @param mageObj
      */
     public void convertBioAssayDataAssociations( BioAssayData mageObj ) {
         QuantitationTypeDimension qtd = mageObj.getQuantitationTypeDimension();
-        List<edu.columbia.gemma.common.quantitationtype.QuantitationType> convertedQuantitationTypes = new ArrayList<edu.columbia.gemma.common.quantitationtype.QuantitationType>();
+        LinkedHashMap<String, edu.columbia.gemma.common.quantitationtype.QuantitationType> convertedQuantitationTypes = new LinkedHashMap<String, edu.columbia.gemma.common.quantitationtype.QuantitationType>();
         if ( qtd != null ) {
             List<QuantitationType> quantitationTypes = ( List<QuantitationType> ) qtd.getQuantitationTypes();
             for ( QuantitationType type : quantitationTypes ) {
                 edu.columbia.gemma.common.quantitationtype.QuantitationType convertedType = convertQuantitationType( type );
-                convertedQuantitationTypes.add( convertedType );
+                convertedQuantitationTypes.put( convertedType.getName(), convertedType );
             }
         }
 
@@ -605,9 +609,15 @@ public class MageMLConverterHelper {
                         .getReporters();
             }
 
-            List<DesignElement> convertedDesignElements = new ArrayList<DesignElement>();
+            LinkedHashMap<String, DesignElement> convertedDesignElements = new LinkedHashMap<String, DesignElement>();
             for ( org.biomage.DesignElement.DesignElement designElement : designElements ) {
-                convertedDesignElements.add( convertDesignElement( designElement ) );
+                DesignElement de = convertDesignElement( designElement );
+                convertedDesignElements.put( de.getName(), de );
+            }
+
+            if ( convertedDesignElements.size() == 0 ) {
+                // FIXME
+                // This happens with affymetrix raw data, which don't have explicit probe names.
             }
 
             edu.columbia.gemma.expression.bioAssay.BioAssay convertedBioAssay = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory

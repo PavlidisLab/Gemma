@@ -20,9 +20,13 @@ package edu.columbia.gemma.loader.loaderutils;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import edu.columbia.gemma.common.description.LocalFile;
 
 /**
  * <hr>
@@ -79,6 +83,20 @@ public abstract class AbstractFetcher implements Fetcher {
         }
 
         return newDir;
+    }
+
+    /**
+     * @param seekFile
+     * @param outputFileName
+     * @return
+     */
+    protected LocalFile fetchedFile( String seekFile, String outputFileName ) {
+        LocalFile file = LocalFile.Factory.newInstance();
+        file.setVersion( new SimpleDateFormat().format( new Date() ) );
+        file.setRemoteURI( seekFile );
+        file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
+        // file.setSize( outputFile.length() );
+        return file;
     }
 
     /**
