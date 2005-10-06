@@ -57,15 +57,18 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.Compound;
 import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceDao;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.expression.designElement.ReporterDao;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
@@ -111,6 +114,9 @@ import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
  * @spring.property name="contactDao" ref="contactDao"
  * @spring.property name="bioSequenceDao" ref="bioSequenceDao"
  * @spring.property name="factorValueDao" ref="factorValueDao"
+ * @spring.property name="designElementDataVectorDao" ref="designElementDataVectorDao"
+ * @spring.property name="compositeSequenceDao" ref="compositeSequenceDao"
+ * @spring.property name="reporterDao" ref="reporterDao"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -157,7 +163,15 @@ public class PersisterHelper implements Persister {
 
     private TaxonDao taxonDao;
 
+    private CompositeSequenceDao compositeSequenceDao;
+
+    private ReporterDao reporterDao;
+
+    private DesignElementDataVectorDao designElementDataVectorDao;
+
     private Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
+
+    private boolean firstBioSequence = true;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -181,24 +195,41 @@ public class PersisterHelper implements Persister {
      * 
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(edu.columbia.gemma.genome.Gene)
      */
+    @SuppressWarnings("unchecked")
     public Object persist( Object entity ) {
+
         if ( entity == null ) return null;
+
         log.debug( "Persisting " + entity.getClass().getName() + " " + entity );
         if ( entity instanceof ExpressionExperiment ) {
             return persistExpressionExperiment( ( ExpressionExperiment ) entity );
         } else if ( entity instanceof ArrayDesign ) {
             return persistArrayDesign( ( ArrayDesign ) entity );
         } else if ( entity instanceof BioSequence ) {
+            if ( firstBioSequence )
+                log.warn( "*** Attempt to directly persist a BioSequence "
+                        + "*** BioSequence are only persisted by association to other objects." );
+            firstBioSequence = false;
             return null;
             // deal with in cascade from array design? Do nothing, probably.
         } else if ( entity instanceof Protocol ) {
             return null;
         } else if ( entity instanceof CompositeSequence ) {
-            return null;
+            // if ( firstCompositeSequence )
+            // log.warn( "*** Attempt to directly persist a CompositeSequence "
+            // + "*** CompositeSequences are only persisted by association to other objects." );
+            // firstCompositeSequence = false;
+            // return null;
+            return persistDesignElement( ( DesignElement ) entity );
             // cascade from array design, do nothing
         } else if ( entity instanceof Reporter ) {
-            return null;
-            // cascade from array design, do nothing
+            // if ( firstReporter )
+            // log.warn( "*** Attempt to directly persist a reporter "
+            // + "*** Reporters are only persisted by association to other objects." );
+            // firstReporter = false;
+            // return null;
+            // // cascade from array design, do nothing
+            return persistDesignElement( ( DesignElement ) entity );
         } else if ( entity instanceof Hardware ) {
             return null;
         } else if ( entity instanceof QuantitationType ) {
@@ -217,10 +248,60 @@ public class PersisterHelper implements Persister {
             return persistGene( ( Gene ) entity );
         } else if ( entity instanceof Compound ) {
             return persistCompound( ( Compound ) entity );
+        } else if ( entity instanceof DesignElementDataVector ) {
+            return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
+        } else if ( entity.getClass() == ( new HashMap() ).values().getClass() ) {
+            // This is a kludge because Java thinks that HashMap() ).values() and Collections are not the same thing.
+            // -PP
+            return persist( ( Collection<Object> ) entity );
+        } else if ( entity instanceof Collection ) {
+            return persist( ( Collection<Object> ) entity );
         } else {
-            log.error( "Can't deal with " + entity.getClass().getName() );
-            return null;
+            throw new IllegalArgumentException( "Don't know how to persist a " + entity.getClass().getName() );
         }
+
+    }
+
+    /**
+     * @param designElement
+     * @return
+     */
+    private DesignElement persistDesignElement( DesignElement designElement ) {
+        if ( designElement == null ) return null;
+        if ( designElement instanceof CompositeSequence ) {
+            return reporterDao.findOrCreate( ( Reporter ) designElement );
+        } else if ( designElement instanceof Reporter ) {
+            return compositeSequenceDao.findOrCreate( ( CompositeSequence ) designElement );
+        } else {
+            throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
+        }
+
+    }
+
+    /**
+     * @param vector
+     * @return
+     */
+    private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
+        if ( vector == null ) return null;
+        DesignElement designElement = vector.getDesignElement();
+
+        if ( designElement instanceof CompositeSequence ) {
+            CompositeSequence cs = ( CompositeSequence ) compositeSequenceDao.find( designElement );
+            if ( cs == null )
+                throw new IllegalStateException(
+                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
+            vector.setDesignElement( cs );
+        } else if ( designElement instanceof Reporter ) {
+            Reporter reporter = ( Reporter ) designElementDao.find( designElement );
+            if ( reporter == null )
+                throw new IllegalStateException(
+                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
+            vector.setDesignElement( reporter );
+        }
+
+        vector.setQuantitationType( persistQuantitationType( vector.getQuantitationType() ) );
+        return ( DesignElementDataVector ) designElementDataVectorDao.create( vector );
     }
 
     /**
@@ -758,8 +839,7 @@ public class PersisterHelper implements Persister {
                 .getDesignElementDataVectors() ) {
             DesignElement persistentDesignElement = designElementDao.find( vect.getDesignElement() );
             if ( persistentDesignElement == null ) {
-                log.error( vect.getDesignElement() + " does not have a persistent version" );
-                continue;
+                throw new IllegalStateException( vect.getDesignElement() + " does not have a persistent version" );
             }
 
             ArrayDesign ad = persistentDesignElement.getArrayDesign();
@@ -961,5 +1041,26 @@ public class PersisterHelper implements Persister {
         for ( Object object : entities ) {
             remove( object );
         }
+    }
+
+    /**
+     * @param designElementDataVectorDao The designElementDataVectorDao to set.
+     */
+    public void setDesignElementDataVectorDao( DesignElementDataVectorDao designElementDataVectorDao ) {
+        this.designElementDataVectorDao = designElementDataVectorDao;
+    }
+
+    /**
+     * @param compositeSequenceDao The compositeSequenceDao to set.
+     */
+    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
+        this.compositeSequenceDao = compositeSequenceDao;
+    }
+
+    /**
+     * @param reporterDao The reporterDao to set.
+     */
+    public void setReporterDao( ReporterDao reporterDao ) {
+        this.reporterDao = reporterDao;
     }
 }
