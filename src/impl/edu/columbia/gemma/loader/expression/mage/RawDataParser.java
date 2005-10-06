@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,19 +37,20 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.dataStructure.matrix.NamedMatrix;
-import baseCode.dataStructure.matrix.ObjectMatrix2DNamed;
-import baseCode.dataStructure.matrix.StringMatrix2DNamed;
+import baseCode.io.ByteArrayConverter;
 import baseCode.util.StringUtil;
+import cern.colt.list.ByteArrayList;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
 
 /**
- * Parse the raw files from MAGE-ML. The results are returned as a Collection of NamedMatrix's
+ * Parse the raw files from ArrayExpress (MAGE-ML). The format for the raw files is to have no column or row labels.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -59,18 +61,18 @@ import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
  * @see baseCode.dataStructure.matrix.NamedMatrix;
  */
 public class RawDataParser implements FileCombiningParser {
+    private static Log log = LogFactory.getLog( RawDataParser.class.getName() );
+
     /**
      * 
      */
     static final String NAN_STRING = Double.toString( Double.NaN );
 
-    private static Log log = LogFactory.getLog( RawDataParser.class.getName() );
-
-    private final List<BioAssay> bioAssays;
+    List<BioAssay> bioAssays;
 
     private BioAssay currentBioAssay;
 
-    private final BioAssayDimensions dimensions;
+    private BioAssayDimensions dimensions = null;
 
     // careful, this is basically a global variable. Make sure it gets reset when necessary.
     private int linesParsed = 0;
@@ -79,17 +81,36 @@ public class RawDataParser implements FileCombiningParser {
 
     private Collection<Object> results = new LinkedHashSet<Object>();
 
+    private int selector = -1;
+
     private char separator = '\t';
+
+    /**
+     * 
+     */
+    public RawDataParser() {
+    }
 
     /**
      * @param dimension
      * @param dimension2
      * @param dimensiom
      */
+    @SuppressWarnings("unchecked")
     public RawDataParser( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) {
         super();
+        if ( bioAssays == null || bioAssays.size() == 0 || dimensions == null )
+            throw new IllegalArgumentException( "Null parameters." );
         this.bioAssays = bioAssays;
         this.dimensions = dimensions;
+        //        
+        // if ( bioAssays.iterator().next().getArrayDesignsUsed() == null )
+        // throw new IllegalArgumentException( "arrayDesignsUsed must be set" );
+        //        
+        // if ( bioAssays.iterator().next().getArrayDesignsUsed().size() > 1 )
+        // log.warn("Warning!! More than one array design for these bioAssays. ")
+        //        
+        // arrayDesignUsed = ( ArrayDesign ) bioAssays.iterator().next().getArrayDesignsUsed().iterator().next();
     }
 
     /**
@@ -109,15 +130,25 @@ public class RawDataParser implements FileCombiningParser {
     }
 
     /**
+     * @return Returns the selector.
+     */
+    public int getSelector() {
+        return this.selector;
+    }
+
+    /**
      * Parse, if already set the BioAssays.
      * 
      * @throws IOException
      */
     public void parse() throws IOException {
         assert bioAssays != null;
+        int i = 0;
         for ( BioAssay bioAssay : bioAssays ) {
             currentBioAssay = bioAssay;
+            log.info( "Parsing " + bioAssay.getName() + " (" + ( i + 1 ) + " of " + bioAssays.size() + ")" );
             parse( bioAssay );
+            i++;
         }
         convertResultsToMatrices();
     }
@@ -128,9 +159,11 @@ public class RawDataParser implements FileCombiningParser {
      * @see edu.columbia.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
      */
     public void parse( List<File> files ) throws IOException {
+        int i = 1;
         for ( File file : files ) {
-            log.info( "Parsing " + file.getAbsolutePath() );
+            log.info( "Parsing " + file.getAbsolutePath() + " (" + i + " of " + files.size() + ")" );
             parse( file );
+            i++;
         }
 
         convertResultsToMatrices();
@@ -154,11 +187,33 @@ public class RawDataParser implements FileCombiningParser {
         for ( InputStream stream : streams ) {
             currentBioAssay = bioAssays.get( i );
             if ( currentBioAssay == null ) throw new IllegalStateException( "No " + i + "nth BioAssay" );
+            log.info( "Parsing " + currentBioAssay.getName() + " (" + ( i + 1 ) + " of " + bioAssays.size() + ")" );
             this.parse( stream );
             i++;
         }
 
         convertResultsToMatrices();
+    }
+
+    /**
+     * @param bioAssays The bioAssays to set.
+     */
+    public void setBioAssays( List<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
+
+    /**
+     * @param dimensions The dimensions to set.
+     */
+    public void setDimensions( BioAssayDimensions dimensions ) {
+        this.dimensions = dimensions;
+    }
+
+    /**
+     * @param selector The selector to set.
+     */
+    public void setSelector( int selector ) {
+        this.selector = selector;
     }
 
     /**
@@ -173,8 +228,14 @@ public class RawDataParser implements FileCombiningParser {
      */
     private void convertResultsToMatrices() {
         Collection<QuantitationType> qts = qtData.getQuantitationTypes();
+        int i = 0;
         for ( QuantitationType quantitationType : qts ) {
+            if ( selector >= 0 && i != selector ) {
+                i++;
+                continue;
+            }
             convertResultToMatrix( quantitationType );
+            i++;
         }
     }
 
@@ -183,7 +244,7 @@ public class RawDataParser implements FileCombiningParser {
      */
     private void convertResultToMatrix( QuantitationType quantitationType ) {
         log.info( "Generating matrix for quantitation type: " + quantitationType.getName() );
-        NamedMatrix matrix = qtData.getDataMatrix( quantitationType );
+        RawDataMatrix matrix = qtData.getDataForQuantitationType( quantitationType );
         results.add( matrix );
     }
 
@@ -203,6 +264,7 @@ public class RawDataParser implements FileCombiningParser {
             if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
         } else {
             de = Reporter.Factory.newInstance();
+            de.setArrayDesign( ( ArrayDesign ) currentBioAssay.getArrayDesignsUsed().iterator().next() );
             de.setName( "R_" + Integer.toString( linesParsed ) );
         }
         return de;
@@ -248,14 +310,10 @@ public class RawDataParser implements FileCombiningParser {
         List<DesignElement> designElements = dimensions.getDesignElementDimension( currentBioAssay );
         List<QuantitationType> quantitationTypes = dimensions.getQuantitationTypeDimension( currentBioAssay );
 
-        if ( hasDesignElements ) {
-            qtData.setUp( quantitationTypes, designElements );
-        } else {
-            qtData.setUp( quantitationTypes );
-        }
-
         if ( quantitationTypes == null )
             throw new NullPointerException( "Null quantitationTypeDimension for " + currentBioAssay );
+
+        qtData.setUp( quantitationTypes, designElements );
 
         String line = null;
         linesParsed = 0;
@@ -264,15 +322,23 @@ public class RawDataParser implements FileCombiningParser {
 
             DesignElement de = getDesignElement( hasDesignElements, designElements );
 
-            for ( int i = 0; i < fields.length; i++ ) {
-                String field = fields[i];
+            if ( selector >= 0 ) {
+                if ( selector >= fields.length ) throw new NoMoreQuantitationTypesException();
+                String field = fields[selector];
                 if ( StringUtils.isBlank( field ) ) field = NAN_STRING;
-                QuantitationType qt = quantitationTypes.get( i );
+                QuantitationType qt = quantitationTypes.get( selector );
                 qtData.addData( qt, de, field );
+            } else {
+                for ( int i = 0; i < fields.length; i++ ) {
+                    String field = fields[i];
+                    if ( StringUtils.isBlank( field ) ) field = NAN_STRING;
+                    QuantitationType qt = quantitationTypes.get( i );
+                    qtData.addData( qt, de, field );
+                }
             }
 
             linesParsed++;
-            if ( linesParsed % ( PARSE_ALERT_FREQUENCY << 2 ) == 0 )
+            if ( linesParsed % ( PARSE_ALERT_FREQUENCY << 4 ) == 0 )
                 log.info( "Read in " + linesParsed + " lines  for " + currentBioAssay.getName() + "..." );
 
         }
@@ -285,12 +351,21 @@ public class RawDataParser implements FileCombiningParser {
      */
     class QuantitationTypeData {
 
-        // Note we specifiy the use of LinkedHashMap to ensure order is predictable. We use string instead of the
-        // entities because their hashcodes are not zero.
-        LinkedHashMap<String, LinkedHashMap<String, List<Object>>> dataMap = new LinkedHashMap<String, LinkedHashMap<String, List<Object>>>();
+        // we specify LinkedHashMaps so things come out in predictable orders.
+        LinkedHashMap<String, RawDataMatrix> dataMatrices = new LinkedHashMap<String, RawDataMatrix>();
+        LinkedHashMap<String, DesignElement> designElementsForNames = new LinkedHashMap<String, DesignElement>();
+        LinkedHashMap<String, QuantitationType> quantitationTypesForNames = new LinkedHashMap<String, QuantitationType>();
 
-        Map<String, DesignElement> designElementsForNames = new HashMap<String, DesignElement>();
-        Map<String, QuantitationType> quantitationTypesForNames = new HashMap<String, QuantitationType>();
+        /**
+         * 
+         */
+        public QuantitationTypeData() {
+            // must call set up.
+        }
+
+        public QuantitationTypeData( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
+            setUp( quantitationTypes, designElements );
+        }
 
         /**
          * Supports Boolean, String, Double and Integer data.
@@ -301,41 +376,32 @@ public class RawDataParser implements FileCombiningParser {
          */
         public void addData( QuantitationType qt, DesignElement de, String data ) {
 
-            if ( qt == null || de == null )
-                throw new IllegalArgumentException( "Quantitation type and design element cannot be null" );
-            if ( StringUtils.isBlank( data ) )
-                throw new IllegalArgumentException( "Data cannot be blank for " + qt.getName() + ", " + de.getName() );
-
-            PrimitiveType pt = qt.getRepresentation();
             String qtName = qt.getName();
-            String deName = de.getName();
 
-            if ( !dataMap.get( qtName ).containsKey( deName ) ) {
-                dataMap.get( qtName ).put( deName, new ArrayList<Object>() );
-            }
-            List<Object> list = dataMap.get( qtName ).get( deName );
-
+            RawDataMatrix matrixToAddTo = dataMatrices.get( qtName );
+            designElementsForNames.put( de.getName(), de );
+            PrimitiveType pt = qt.getRepresentation();
             try {
                 if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        list.add( Boolean.FALSE );
+                        matrixToAddTo.addDataToRow( de, qt, Boolean.FALSE );
                     else
-                        list.add( new Boolean( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, new Boolean( data ) );
                 } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        list.add( new Double( Double.NaN ) );
+                        matrixToAddTo.addDataToRow( de, qt, new Double( Double.NaN ) );
                     else
-                        list.add( new Double( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, new Double( data ) );
                 } else if ( pt.equals( PrimitiveType.INT ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        list.add( new Integer( 0 ) );
+                        matrixToAddTo.addDataToRow( de, qt, new Integer( 0 ) );
                     else
-                        list.add( new Integer( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, new Integer( data ) );
                 } else {
                     if ( data.equals( NAN_STRING ) )
-                        list.add( "" );
+                        matrixToAddTo.addDataToRow( de, qt, "" );
                     else
-                        list.add( data );
+                        matrixToAddTo.addDataToRow( de, qt, data );
                 }
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( e );
@@ -347,47 +413,8 @@ public class RawDataParser implements FileCombiningParser {
          * @param qt
          * @return
          */
-        public LinkedHashMap<String, List<Object>> getDataForQuantitationType( QuantitationType qt ) {
-            return dataMap.get( qt );
-        }
-
-        /**
-         * @param qts
-         * @return
-         */
-        @SuppressWarnings("synthetic-access")
-        public NamedMatrix getDataMatrix( QuantitationType qt ) {
-            Collection<String> designElementNames = dataMap.get( qt.getName() ).keySet();
-            int numDesignElements = designElementNames.size();
-            int numBioAssays = bioAssays.size();
-
-            log.info( "Creating " + numDesignElements + " x " + numBioAssays + " matrix for " + qt.getName() );
-
-            String qtName = qt.getName();
-            NamedMatrix result = new ObjectMatrix2DNamed( numDesignElements, numBioAssays );
-            LinkedHashMap<String, List<Object>> quantitationTypeDesignElements = dataMap.get( qtName );
-
-            int column = 0;
-            for ( BioAssay ba : bioAssays ) {
-                result.addColumnName( ba.getName(), column );
-                column++;
-            }
-
-            int row = 0;
-            for ( String deName : designElementNames ) {
-                result.addRowName( deName, row );
-                column = 0;
-                for ( Object obj : quantitationTypeDesignElements.get( deName ) ) {
-                    if ( obj == null ) {
-                        throw new RuntimeException( "Got null value for row " + row + ", column " + column
-                                + ", reporter: " + deName + " quantitation type: " + qtName );
-                    }
-                    result.set( row, column, obj );
-                    column++;
-                }
-                row++;
-            }
-            return result;
+        public RawDataMatrix getDataForQuantitationType( QuantitationType qt ) {
+            return this.dataMatrices.get( qt.getName() );
         }
 
         /**
@@ -397,11 +424,14 @@ public class RawDataParser implements FileCombiningParser {
         public List<DesignElement> getDesignElementsForQuantitationType( QuantitationType qt ) {
             List<DesignElement> result = new ArrayList<DesignElement>();
 
-            for ( String deName : dataMap.get( qt.getName() ).keySet() ) {
-                result.add( designElementsForNames.get( deName ) );
+            for ( String deName : dataMatrices.get( qt.getName() ).rows.keySet() ) {
+                DesignElement de = designElementsForNames.get( deName );
+                if ( de == null ) {
+                    throw new IllegalStateException( "Null design element for " + deName );
+                }
+                result.add( de );
             }
             return result;
-
         }
 
         /**
@@ -417,48 +447,216 @@ public class RawDataParser implements FileCombiningParser {
          */
         public List<QuantitationType> getQuantitationTypes() {
             List<QuantitationType> result = new ArrayList<QuantitationType>();
-            for ( String qtName : dataMap.keySet() ) {
+            for ( String qtName : dataMatrices.keySet() ) {
                 result.add( quantitationTypesForNames.get( qtName ) );
             }
             return result;
         }
 
         /**
-         * Use this method if you don't know the design elements ahead of time (slower).
-         * 
          * @param quantitationTypes
          */
-        public void setUp( List<QuantitationType> quantitationTypes ) {
+        void setUp( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
             for ( QuantitationType type : quantitationTypes ) {
-                quantitationTypesForNames.put( type.getName(), type );
-                if ( !dataMap.containsKey( type.getName() ) )
-                    dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
-            }
-        }
+                String qtName = type.getName();
+                if ( !dataMatrices.containsKey( qtName ) ) {
+                    dataMatrices.put( qtName, new RawDataMatrix( bioAssays, type ) );
+                }
 
-        /**
-         * This must be called before any processing can be completed.
-         * 
-         * @param quantitationTypes
-         * @param designElements
-         */
-        public void setUp( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
-            for ( DesignElement element : designElements ) {
-                designElementsForNames.put( element.getName(), element );
-            }
-            for ( QuantitationType type : quantitationTypes ) {
-                quantitationTypesForNames.put( type.getName(), type );
-                if ( !dataMap.containsKey( type.getName() ) )
-                    dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
-
-                LinkedHashMap<String, List<Object>> map = dataMap.get( type.getName() );
-                for ( DesignElement element : designElements ) {
-                    if ( !map.containsKey( element.getName() ) ) {
-                        map.put( element.getName(), new ArrayList<Object>() );
-                    }
+                if ( !quantitationTypesForNames.containsKey( qtName ) ) {
+                    quantitationTypesForNames.put( qtName, type );
                 }
             }
+
+            for ( DesignElement de : designElements ) {
+                designElementsForNames.put( de.getName(), de );
+            }
+
         }
+
+    }
+
+}
+
+class NoMoreQuantitationTypesException extends RuntimeException {
+}
+
+/**
+ * Class to store and print data matrices.
+ */
+class RawDataMatrix {
+
+    private long byteSize = 0;
+    List<BioAssay> assays;
+    ByteArrayConverter converter = new ByteArrayConverter();
+    QuantitationType quantitationType;
+    Map<String, DesignElementDataVector> rows = new HashMap<String, DesignElementDataVector>();
+    Map<String, ByteArrayList> rowTemp = new HashMap<String, ByteArrayList>();
+
+    /**
+     * @param type
+     */
+    public RawDataMatrix( List<BioAssay> bioAssays, QuantitationType type ) {
+        super();
+        this.assays = bioAssays;
+        this.quantitationType = type;
+    }
+
+    /**
+     * Add an object to a row corresponding to a given DesignElement.
+     * 
+     * @param de
+     * @param data
+     */
+    public void addDataToRow( DesignElement de, QuantitationType qt, Object data ) {
+        if ( de == null || data == null ) throw new IllegalArgumentException( "Null" );
+
+        addRow( de, qt );
+
+        if ( !rowTemp.containsKey( de.getName() ) ) {
+            rowTemp.put( de.getName(), new ByteArrayList() );
+        }
+
+        ByteArrayList existingBytes = rowTemp.get( de.getName() );
+
+        byte[] newBytes = converter.toBytes( data );
+        byteSize += newBytes.length;
+        for ( int i = 0; i < newBytes.length; i++ ) {
+            existingBytes.add( newBytes[i] );
+        }
+    }
+
+    /**
+     * @param de
+     * @param qt
+     */
+    public void addRow( DesignElement de, QuantitationType qt ) {
+        if ( rows.containsKey( de.getName() ) ) return;
+        DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
+        tobeAdded.setDesignElement( de );
+        tobeAdded.setQuantitationType( qt );
+        addRow( tobeAdded );
+    }
+
+    /**
+     * Add a row to the matrix.
+     * 
+     * @param de
+     * @param qt
+     * @param data
+     */
+    public void addRow( DesignElement de, QuantitationType qt, List<Object> data ) {
+        DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
+        tobeAdded.setDesignElement( de );
+        tobeAdded.setQuantitationType( qt );
+        byte[] bytes = converter.toBytes( data.toArray() );
+        byteSize += bytes.length;
+        tobeAdded.setData( bytes );
+        addRow( tobeAdded );
+    }
+
+    /**
+     * Add a row to the matrix.
+     * 
+     * @param vector
+     */
+    public void addRow( DesignElementDataVector vector ) {
+        rows.put( vector.getDesignElement().getName(), vector );
+    }
+
+    /**
+     * @return Size of the matrix in bytes.
+     */
+    public Long byteSize() {
+        return new Long( byteSize );
+    }
+
+    /**
+     * @return Returns the assays.
+     */
+    public List<BioAssay> getAssays() {
+        return this.assays;
+    }
+
+    /**
+     * @return Returns the quantitationType.
+     */
+    public QuantitationType getQuantitationType() {
+        return this.quantitationType;
+    }
+
+    /**
+     * @param de
+     * @return
+     */
+    public DesignElementDataVector getRow( DesignElement de ) {
+        String name = de.getName();
+        ByteArrayList bytes = this.rowTemp.get( name );
+        this.rows.get( name ).setData( bytes.elements() );
+        this.rowTemp.remove( name );
+        return this.rows.get( name );
+    }
+
+    /**
+     * @return Returns the rows.
+     */
+    public Collection<DesignElementDataVector> getRows() {
+
+        // If we need to clear out the temporary data.
+        if ( this.rowTemp.keySet().size() != 0 ) {
+            for ( String rowName : rows.keySet() ) {
+                ByteArrayList bytes = this.rowTemp.get( rowName );
+                this.rows.get( rowName ).setData( bytes.elements() );
+                this.rowTemp.remove( rowName );
+            }
+        }
+        return this.rows.values();
+    }
+
+    /**
+     * @param o
+     * @throws IOException
+     * @throws UnsupportedOperationException if Class is a type that can't be handled by this.
+     */
+    public void print( Writer o ) throws IOException {
+
+        o.write( "Probe" );
+        for ( BioAssay bioAssay : assays ) {
+            o.write( "\t" + bioAssay.getName() );
+        }
+        o.write( "\n" );
+
+        this.getRows(); // make sure the vectors are initialized.
+        for ( DesignElementDataVector vector : rows.values() ) {
+            PrimitiveType pt = vector.getQuantitationType().getRepresentation();
+            o.write( vector.getDesignElement().getName() + "\t" );
+            String line = null;
+            byte[] data = vector.getData();
+
+            if ( data == null ) {
+                throw new NullPointerException( "No bytes in vector!" );
+            }
+
+            if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+                line = converter.byteArrayToTabbedString( data, Boolean.class );
+            } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+                line = converter.byteArrayToTabbedString( data, Double.class );
+            } else if ( pt.equals( PrimitiveType.INT ) ) {
+                line = converter.byteArrayToTabbedString( data, Integer.class );
+            } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                line = converter.byteArrayToTabbedString( data, String.class );
+            } else {
+                throw new UnsupportedOperationException( "Can't deal with " + pt );
+            }
+            o.write( line + "\n" );
+        }
+    }
+
+    /**
+     * @param assays The assays to set.
+     */
+    public void setAssays( List<BioAssay> assays ) {
+        this.assays = assays;
     }
 
 }

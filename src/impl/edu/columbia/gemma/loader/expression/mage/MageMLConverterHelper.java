@@ -3336,9 +3336,9 @@ public class MageMLConverterHelper {
             List reps = rg.getReporters();
             for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
                 org.biomage.DesignElement.Reporter reporter = ( org.biomage.DesignElement.Reporter ) iterator.next();
-                Reporter csconv = convertReporter( reporter );
-                csconv.setArrayDesign( gemmaObj );
-                if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
+                Reporter convertedReporter = convertReporter( reporter );
+                convertedReporter.setArrayDesign( gemmaObj );
+                if ( !designObjs.contains( convertedReporter ) ) designObjs.add( convertedReporter );
             }
         }
         gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );

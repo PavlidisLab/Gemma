@@ -26,19 +26,18 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.dataStructure.matrix.NamedMatrix;
-import baseCode.io.ByteArrayConverter;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
-import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.loader.expression.Preprocessor;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.util.ConfigUtils;
 
 /**
@@ -49,18 +48,59 @@ import edu.columbia.gemma.util.ConfigUtils;
  * @author keshav
  * @version $Id$
  * @spring.bean id="mageMLPreprocessor" singleton="false"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public class MageMLPreprocessor implements Preprocessor {
-    Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
-    RawDataParser rdp = null;
-
+    private final String experimentName;
     private String localMatrixFilepath;
 
-    private final String experimentName;
+    private PersisterHelper persisterHelper;
+
+    Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
+    RawDataParser rdp = new RawDataParser();
+    private int whichQuantitationType = -1;
 
     public MageMLPreprocessor( String experimentName ) {
         this.experimentName = experimentName.replaceAll( "\\W+", "_" );
         this.localMatrixFilepath = ConfigUtils.getProperty( "local.rawData.matrix.basepath" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Preprocessor#preprocess(java.util.List,
+     *      edu.columbia.gemma.loader.expression.mage.BioAssayDimensions)
+     */
+    @SuppressWarnings("unchecked")
+    public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
+
+        rdp.setDimensions( dimensions );
+        rdp.setBioAssays( bioAssays );
+        rdp.setSeparator( ' ' );
+
+        log.info( "Preprocessing the data ..." );
+
+        int i = 0;
+        if ( whichQuantitationType >= 0 ) i = whichQuantitationType;
+        while ( true ) {
+            if ( whichQuantitationType < 0 || !( whichQuantitationType >= 0 && i != whichQuantitationType ) ) {
+                try {
+                    rdp.parse();
+                } catch ( NoMoreQuantitationTypesException e ) {
+                    log.info( "No more quantitation types!" );
+                    break;
+                }
+                Collection<LocalFile> sourceFiles = new HashSet<LocalFile>();
+                for ( BioAssay assay : bioAssays ) {
+                    sourceFiles.add( assay.getRawDataFile() );
+                }
+                processResults( sourceFiles );
+            }
+            i++;
+        }
+
+        setSelector( -1 );
+
     }
 
     /**
@@ -73,7 +113,8 @@ public class MageMLPreprocessor implements Preprocessor {
      */
     public void preprocessStreams( List<InputStream> streams, List<BioAssay> bioAssays, BioAssayDimensions dimensions )
             throws IOException {
-        rdp = new RawDataParser( bioAssays, dimensions );
+        rdp.setDimensions( dimensions );
+        rdp.setBioAssays( bioAssays );
         rdp.setSeparator( ' ' );
         log.info( "Preprocessing the data ..." );
 
@@ -84,48 +125,103 @@ public class MageMLPreprocessor implements Preprocessor {
         processResults( null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Preprocessor#preprocess(java.util.List,
-     *      edu.columbia.gemma.loader.expression.mage.BioAssayDimensions)
+    /**
+     * @param persisterHelper The persisterHelper to set.
      */
-    @SuppressWarnings("unchecked")
-    public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
-
-        rdp = new RawDataParser( bioAssays, dimensions );
-        rdp.setSeparator( ' ' );
-
-        log.info( "Preprocessing the data ..." );
-
-        rdp.parse();
-
-        Collection<LocalFile> sourceFiles = new HashSet<LocalFile>();
-        for ( BioAssay assay : bioAssays ) {
-            sourceFiles.add( assay.getRawDataFile() );
-        }
-
-        processResults( sourceFiles );
-
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     /**
-     * After parsing: Create text files, persist their information, and persist the data vectors.
-     * 
+     * @param sourceFiles
+     * @param outputFile
+     * @param matrix
+     * @return
+     */
+    private LocalFile makeLocalFile( Collection<LocalFile> sourceFiles, File outputFile, Long size ) {
+        // create the local file information.
+        LocalFile lf = LocalFile.Factory.newInstance();
+        lf.setVersion( new SimpleDateFormat().format( new Date() ) );
+        lf.setSourceFiles( sourceFiles );
+        lf.setSize( size.longValue() );
+        lf.setLocalURI( "file://" + outputFile.getAbsolutePath().replaceAll( "\\\\", "/" ) );
+        return lf;
+    }
+
+    /**
+     * `
+     */
+    private void makePersistent() {
+        assert persisterHelper != null;
+        Collection<Object> matrices = rdp.getResults();
+        int i = 0;
+        if ( whichQuantitationType >= 0 ) i = whichQuantitationType;
+        for ( Object object : matrices ) {
+
+            assert object instanceof RawDataMatrix;
+
+            QuantitationType qType = ( ( RawDataMatrix ) object ).getQuantitationType();
+            // Should we do this one?
+            if ( whichQuantitationType >= 0 ) {
+                QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
+                if ( !qt.getName().equals( qType.getName() ) ) {
+                    i++;
+                    continue;
+                }
+            }
+
+            persistDesignElements( qType );
+
+            log.info( "Persisting matrix " + i + ", quantitation type " + qType.getName() );
+            persisterHelper.persist( ( ( RawDataMatrix ) object ).getRows() );
+
+            if ( whichQuantitationType >= 0 ) continue;
+            i++;
+        }
+    }
+
+    /**
+     * @param i
+     * @param object
+     */
+    @SuppressWarnings("unchecked")
+    private void persistDesignElements( QuantitationType qType ) {
+        log.info( "Persisting design elements " );
+        Collection<DesignElement> designElements = this.rdp.getQtData().getDesignElementsForQuantitationType( qType );
+        Collection<DesignElement> persistentDesignElements = ( Collection<DesignElement> ) persisterHelper
+                .persist( designElements );
+        log.info( "Copying IDs..." );
+        Iterator<DesignElement> it = designElements.iterator();
+        for ( DesignElement persistentElement : persistentDesignElements ) {
+            DesignElement element = it.next();
+            assert persistentElement != null && element != null;
+            element.setId( persistentElement.getId() );
+        }
+    }
+
+    /**
      * @param sourceFiles
      * @throws IOException
      */
-    private void processResults( Collection<LocalFile> sourceFiles ) throws IOException {
-
+    private void makeTabbedFiles( Collection<LocalFile> sourceFiles ) throws IOException {
         Collection<Object> matrices = rdp.getResults();
-        Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
         Collection<LocalFile> localFiles = new HashSet<LocalFile>();
-        ByteArrayConverter converter = new ByteArrayConverter();
-        int i = 0;
-        for ( Object object : matrices ) {
-            assert object instanceof NamedMatrix;
 
+        int i = 0;
+        if ( whichQuantitationType >= 0 ) i = whichQuantitationType;
+
+        for ( Object object : matrices ) {
             QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
+
+            if ( whichQuantitationType >= 0 ) {
+                QuantitationType typeToDo = rdp.getQtData().getQuantitationTypes().get( whichQuantitationType );
+                if ( !qt.getName().equals( typeToDo.getName() ) ) {
+                    i++;
+                    continue;
+                }
+            }
+
+            assert object instanceof RawDataMatrix;
 
             File outputDir = new File( localMatrixFilepath + File.separator + this.experimentName );
 
@@ -135,65 +231,41 @@ public class MageMLPreprocessor implements Preprocessor {
             }
 
             File outputFile = new File( localMatrixFilepath + File.separator + this.experimentName + File.separator
-                    + experimentName + File.separator + experimentName + "_" + qt.getName() );
+                    + experimentName + "_" + qt.getName() );
 
             log.info( experimentName + ": Storing data for quantitation type " + qt.getName() + " in file: "
                     + outputFile );
 
             FileWriter fo = new FileWriter( outputFile );
-            String matrix = ( ( NamedMatrix ) object ).toString();
-            fo.write( matrix );
+            ( ( RawDataMatrix ) object ).print( fo );
             fo.close();
 
-            LocalFile lf = makeLocalFile( sourceFiles, outputFile, matrix );
+            LocalFile lf = makeLocalFile( sourceFiles, outputFile, ( ( RawDataMatrix ) object ).byteSize() );
             localFiles.add( lf );
 
-            makeDataVectors( vectors, converter, object, qt );
             i++;
         }
     }
 
     /**
-     * @param vectors
-     * @param converter
-     * @param object
-     * @param qt
+     * After parsing: Create text files, persist their information, and persist the data vectors.
+     * 
+     * @param sourceFiles
+     * @throws IOException
      */
-    private void makeDataVectors( Collection<DesignElementDataVector> vectors, ByteArrayConverter converter,
-            Object object, QuantitationType qt ) {
-        for ( int i = 0; i < ( ( NamedMatrix ) object ).rows(); i++ ) {
-
-            DesignElement de = rdp.getQtData().getDesignElementsForQuantitationType( qt ).get( i );
-
-            Object[] row = ( ( NamedMatrix ) object ).getRowObj( i );
-
-            if ( row == null ) {
-                throw new NullPointerException( "Got null row " + i + " for quantitation type " + qt.getName() );
-            }
-
-            byte[] bytes = converter.toBytes( row );
-
-            DesignElementDataVector v = DesignElementDataVector.Factory.newInstance();
-            v.setData( bytes );
-            v.setDesignElement( de );
-            v.setQuantitationType( qt );
-            vectors.add( v );
-        }
+    private void processResults( Collection<LocalFile> sourceFiles ) throws IOException {
+        makeTabbedFiles( sourceFiles );
+        makePersistent();
     }
 
-    /**
-     * @param sourceFiles
-     * @param outputFile
-     * @param matrix
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.expression.mage.RawDataParser#setSelector(int)
      */
-    private LocalFile makeLocalFile( Collection<LocalFile> sourceFiles, File outputFile, String matrix ) {
-        // create the local file information.
-        LocalFile lf = LocalFile.Factory.newInstance();
-        lf.setVersion( new SimpleDateFormat().format( new Date() ) );
-        lf.setSourceFiles( sourceFiles );
-        lf.setSize( matrix.getBytes().length );
-        lf.setLocalURI( "file://" + outputFile.getAbsolutePath().replaceAll( "\\\\", "/" ) );
-        return lf;
+    public void setSelector( int selector ) {
+        assert rdp != null;
+        this.whichQuantitationType = selector;
+        this.rdp.setSelector( selector );
     }
 }
