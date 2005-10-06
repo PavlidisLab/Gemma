@@ -268,10 +268,12 @@ public class PersisterHelper implements Persister {
      */
     private DesignElement persistDesignElement( DesignElement designElement ) {
         if ( designElement == null ) return null;
+        designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
+        if ( !isTransient( designElement ) ) return designElement;
         if ( designElement instanceof CompositeSequence ) {
-            return reporterDao.findOrCreate( ( Reporter ) designElement );
-        } else if ( designElement instanceof Reporter ) {
             return compositeSequenceDao.findOrCreate( ( CompositeSequence ) designElement );
+        } else if ( designElement instanceof Reporter ) {
+            return reporterDao.findOrCreate( ( Reporter ) designElement );
         } else {
             throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
         }
@@ -592,23 +594,25 @@ public class PersisterHelper implements Persister {
     @SuppressWarnings("unchecked")
     private ArrayDesign persistArrayDesign( ArrayDesign entity ) {
 
+        if ( !isTransient( entity ) ) return entity;
+
         entity.setDesignProvider( persistContact( entity.getDesignProvider() ) );
         ArrayDesign existing = arrayDesignDao.find( entity );
 
         if ( existing != null ) {
             assert existing.getId() != null;
-            log.info( "Array design " + existing.getName() + " already exists." );
+            log.debug( "Array design " + existing.getName() + " already exists." );
             Collection<DesignElement> existingDesignElements = entity.getDesignElements();
             if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
-                log.warn( "Number of design elements in existing version " + "is the same ("
+                log.debug( "Number of design elements in existing version " + "is the same ("
                         + existingDesignElements.size() + "). No further processing will be done." );
                 return existing;
             } else if ( entity.getDesignElements().size() == 0 ) {
-                log.warn( entity
+                log.debug( entity
                         + ": No design elements in newly supplied version, no further processing will be done." );
                 return existing;
             } else {
-                log.warn( "Design exists but design elements are to be updated." );
+                log.debug( "Design exists but design elements are to be updated." );
                 entity = existing;
             }
         }
@@ -648,6 +652,8 @@ public class PersisterHelper implements Persister {
 
         if ( assay == null ) return null;
 
+        if ( !isTransient( assay ) ) return assay;
+
         for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
             factorValue.setId( persistFactorValue( factorValue ).getId() );
@@ -685,7 +691,8 @@ public class PersisterHelper implements Persister {
      */
     @SuppressWarnings("unchecked")
     private BioMaterial persistBioMaterial( BioMaterial entity ) {
-
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
 
         OntologyEntry materialType = entity.getMaterialType();

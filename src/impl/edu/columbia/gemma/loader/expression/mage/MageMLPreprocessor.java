@@ -155,13 +155,11 @@ public class MageMLPreprocessor implements Preprocessor {
         assert persisterHelper != null;
         Collection<Object> matrices = rdp.getResults();
         int i = 0;
-        if ( whichQuantitationType >= 0 ) i = whichQuantitationType;
         for ( Object object : matrices ) {
 
             assert object instanceof RawDataMatrix;
 
             QuantitationType qType = ( ( RawDataMatrix ) object ).getQuantitationType();
-            // Should we do this one?
             if ( whichQuantitationType >= 0 ) {
                 QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
                 if ( !qt.getName().equals( qType.getName() ) ) {
@@ -208,8 +206,6 @@ public class MageMLPreprocessor implements Preprocessor {
         Collection<LocalFile> localFiles = new HashSet<LocalFile>();
 
         int i = 0;
-        if ( whichQuantitationType >= 0 ) i = whichQuantitationType;
-
         for ( Object object : matrices ) {
             QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
 

@@ -36,9 +36,12 @@ import edu.columbia.gemma.common.protocol.SoftwareDao;
 import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.CompoundDao;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceDao;
 import edu.columbia.gemma.expression.designElement.DesignElementDao;
+import edu.columbia.gemma.expression.designElement.ReporterDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.FactorValueDao;
 import edu.columbia.gemma.genome.TaxonDao;
@@ -85,8 +88,13 @@ public class MageLoadTest extends MageBaseTest {
         ml.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
         ml.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
         ml.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
+        ml.setFactorValueDao( ( FactorValueDao ) ctx.getBean( "factorValueDao" ) );
+        ml.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
         ml.setBioSequenceDao( ( BioSequenceDao ) ctx.getBean( "bioSequenceDao" ) );
         ml.setFactorValueDao( ( FactorValueDao ) ctx.getBean( "factorValueDao" ) );
+        ml.setCompositeSequenceDao( ( CompositeSequenceDao ) ctx.getBean( "compositeSequenceDao" ) );
+        ml.setReporterDao( ( ReporterDao ) ctx.getBean( "reporterDao" ) );
+        ml.setDesignElementDataVectorDao( ( DesignElementDataVectorDao ) ctx.getBean( "designElementDataVectorDao" ) );
     }
 
     @Override

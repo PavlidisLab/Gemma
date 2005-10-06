@@ -20,6 +20,8 @@ package edu.columbia.gemma.expression.designElement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * <hr>
@@ -33,6 +35,43 @@ import org.apache.commons.logging.LogFactory;
 public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement.ReporterDaoBase {
 
     private static Log log = LogFactory.getLog( ReporterDaoImpl.class.getName() );
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.designElement.ReporterDaoBase#find(edu.columbia.gemma.expression.designElement.Reporter)
+     */
+    @Override
+    public Reporter find( DesignElement reporter ) {
+
+        if ( reporter.getName() == null ) return null;
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( Reporter.class );
+
+            queryObject.add( Restrictions.eq( "name", reporter.getName() ) );
+
+            // join
+            queryObject.createCriteria( "arrayDesign" ).add(
+                    Restrictions.eq( "name", reporter.getArrayDesign().getName() ) );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + Reporter.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = ( Reporter ) results.iterator().next();
+                }
+            }
+            return ( Reporter ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+    }
 
     /*
      * (non-Javadoc)

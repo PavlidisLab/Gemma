@@ -21,8 +21,6 @@ package edu.columbia.gemma.expression.designElement;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import edu.columbia.gemma.genome.Gene;
-
 /**
  * <hr>
  * <p>
