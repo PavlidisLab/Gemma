@@ -38,7 +38,7 @@ import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
-import edu.columbia.gemma.loader.loaderutils.Preprocessor;
+import edu.columbia.gemma.loader.expression.Preprocessor;
 import edu.columbia.gemma.util.ConfigUtils;
 
 /**
@@ -127,18 +127,18 @@ public class MageMLPreprocessor implements Preprocessor {
 
             QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
 
-            File outputDir = new File( localMatrixFilepath + File.separator + this.experimentName + File.separator
-                    + experimentName );
+            File outputDir = new File( localMatrixFilepath + File.separator + this.experimentName );
 
             if ( !outputDir.exists() ) {
                 boolean success = outputDir.mkdirs();
-                if ( !success ) throw new IOException( "Could not create to " + outputDir );
+                if ( !success ) throw new IOException( "Could not create " + outputDir );
             }
 
             File outputFile = new File( localMatrixFilepath + File.separator + this.experimentName + File.separator
                     + experimentName + File.separator + experimentName + "_" + qt.getName() );
 
-            log.info( "Storing in file: " + outputFile );
+            log.info( experimentName + ": Storing data for quantitation type " + qt.getName() + " in file: "
+                    + outputFile );
 
             FileWriter fo = new FileWriter( outputFile );
             String matrix = ( ( NamedMatrix ) object ).toString();
@@ -161,12 +161,15 @@ public class MageMLPreprocessor implements Preprocessor {
      */
     private void makeDataVectors( Collection<DesignElementDataVector> vectors, ByteArrayConverter converter,
             Object object, QuantitationType qt ) {
-        // make data vectors.
-        for ( int j = 0; j < ( ( NamedMatrix ) object ).rows(); j++ ) {
+        for ( int i = 0; i < ( ( NamedMatrix ) object ).rows(); i++ ) {
 
-            DesignElement de = rdp.getQtData().getDesignElementsForQuantitationType( qt ).get( j );
+            DesignElement de = rdp.getQtData().getDesignElementsForQuantitationType( qt ).get( i );
 
-            Object[] row = ( ( NamedMatrix ) object ).getRowObj( j );
+            Object[] row = ( ( NamedMatrix ) object ).getRowObj( i );
+
+            if ( row == null ) {
+                throw new NullPointerException( "Got null row " + i + " for quantitation type " + qt.getName() );
+            }
 
             byte[] bytes = converter.toBytes( row );
 

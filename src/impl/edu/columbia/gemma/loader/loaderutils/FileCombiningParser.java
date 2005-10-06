@@ -21,10 +21,11 @@ package edu.columbia.gemma.loader.loaderutils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.List;
 
 /**
- * A parser that combines results across files.
+ * A parser that combines results across files. To be used if parsing a single file does not make any sense.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -32,7 +33,9 @@ import java.util.List;
  * @author pavlidis
  * @version $Id$
  */
-public interface FileCombiningParser extends Parser {
+public interface FileCombiningParser {
+
+    public static final int PARSE_ALERT_FREQUENCY = 10000;
 
     /**
      * Parse a List of files.
@@ -50,4 +53,8 @@ public interface FileCombiningParser extends Parser {
      */
     public void parseStreams( List<InputStream> streams ) throws IOException;
 
+    /**
+     * @return results
+     */
+    public Collection<Object> getResults();
 }

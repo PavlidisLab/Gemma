@@ -21,7 +21,6 @@ package edu.columbia.gemma.loader.expression.mage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,10 +32,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.dataStructure.matrix.NamedMatrix;
+import baseCode.dataStructure.matrix.ObjectMatrix2DNamed;
 import baseCode.dataStructure.matrix.StringMatrix2DNamed;
 import baseCode.util.StringUtil;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
@@ -58,13 +59,20 @@ import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
  * @see baseCode.dataStructure.matrix.NamedMatrix;
  */
 public class RawDataParser implements FileCombiningParser {
+    /**
+     * 
+     */
+    static final String NAN_STRING = Double.toString( Double.NaN );
+
     private static Log log = LogFactory.getLog( RawDataParser.class.getName() );
 
     private final List<BioAssay> bioAssays;
+
     private BioAssay currentBioAssay;
 
     private final BioAssayDimensions dimensions;
 
+    // careful, this is basically a global variable. Make sure it gets reset when necessary.
     private int linesParsed = 0;
 
     private QuantitationTypeData qtData = new QuantitationTypeData();
@@ -84,6 +92,13 @@ public class RawDataParser implements FileCombiningParser {
         this.dimensions = dimensions;
     }
 
+    /**
+     * @return Returns the qtData.
+     */
+    public QuantitationTypeData getQtData() {
+        return this.qtData;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -94,6 +109,8 @@ public class RawDataParser implements FileCombiningParser {
     }
 
     /**
+     * Parse, if already set the BioAssays.
+     * 
      * @throws IOException
      */
     public void parse() throws IOException {
@@ -102,31 +119,123 @@ public class RawDataParser implements FileCombiningParser {
             currentBioAssay = bioAssay;
             parse( bioAssay );
         }
+        convertResultsToMatrices();
+    }
 
-        Collection<QuantitationType> qts = qtData.getQuantitationTypes();
-        for ( QuantitationType quantitationType : qts ) {
-            NamedMatrix matrix = qtData.getDataMatrix( quantitationType );
-            results.add( matrix );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
+     */
+    public void parse( List<File> files ) throws IOException {
+        for ( File file : files ) {
+            log.info( "Parsing " + file.getAbsolutePath() );
+            parse( file );
         }
 
+        convertResultsToMatrices();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
+     */
+    public Object parseOneLine( String line ) {
+        return StringUtil.splitPreserveAllTokens( line, this.separator );
+    }
+
+    /**
+     * @param streams
+     * @throws IOException
+     */
+    public void parseStreams( List<InputStream> streams ) throws IOException {
+        int i = 0;
+        for ( InputStream stream : streams ) {
+            currentBioAssay = bioAssays.get( i );
+            if ( currentBioAssay == null ) throw new IllegalStateException( "No " + i + "nth BioAssay" );
+            this.parse( stream );
+            i++;
+        }
+
+        convertResultsToMatrices();
+    }
+
+    /**
+     * @param separator The separator to set.
+     */
+    public void setSeparator( char separator ) {
+        this.separator = separator;
+    }
+
+    /**
+     * Once done parsing a series of files, convert them into matrices.
+     */
+    private void convertResultsToMatrices() {
+        Collection<QuantitationType> qts = qtData.getQuantitationTypes();
+        for ( QuantitationType quantitationType : qts ) {
+            convertResultToMatrix( quantitationType );
+        }
+    }
+
+    /**
+     * @param quantitationType
+     */
+    private void convertResultToMatrix( QuantitationType quantitationType ) {
+        log.info( "Generating matrix for quantitation type: " + quantitationType.getName() );
+        NamedMatrix matrix = qtData.getDataMatrix( quantitationType );
+        results.add( matrix );
+    }
+
+    /**
+     * Get the designElement for the current row being parsed.
+     * 
+     * @param hasDesignElements
+     * @param designElements
+     */
+    private DesignElement getDesignElement( boolean hasDesignElements, List<DesignElement> designElements ) {
+        DesignElement de;
+        if ( hasDesignElements ) {
+            if ( designElements.size() < linesParsed )
+                throw new IllegalArgumentException(
+                        "Number of lines in stream doesn't match number of DesignElements in the dimension. " );
+            de = designElements.get( linesParsed );
+            if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
+        } else {
+            de = Reporter.Factory.newInstance();
+            de.setName( "R_" + Integer.toString( linesParsed ) );
+        }
+        return de;
+    }
+
+    /**
+     * @param bioAssay
+     */
+    private void parse( BioAssay bioAssay ) throws IOException {
+        if ( bioAssay.getRawDataFile() == null )
+            throw new IllegalArgumentException( "RawDataFile must not be null for BioAssay " + bioAssay );
+        File f = bioAssay.getRawDataFile().asFile();
+        if ( !f.canRead() ) throw new IOException( "Cannot read from " + f );
+        parse( f );
     }
 
     /**
      * @param file
      * @throws IOException
      */
-    public void parse( File f ) throws IOException {
+    private void parse( File f ) throws IOException {
         InputStream is = new FileInputStream( f );
         parse( is );
         is.close();
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * This is the main parse method.
      * 
-     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
+     * @param is
+     * @throws IOException
      */
-    public void parse( InputStream is ) throws IOException {
+    private void parse( InputStream is ) throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
@@ -157,6 +266,7 @@ public class RawDataParser implements FileCombiningParser {
 
             for ( int i = 0; i < fields.length; i++ ) {
                 String field = fields[i];
+                if ( StringUtils.isBlank( field ) ) field = NAN_STRING;
                 QuantitationType qt = quantitationTypes.get( i );
                 qtData.addData( qt, de, field );
             }
@@ -170,97 +280,6 @@ public class RawDataParser implements FileCombiningParser {
     }
 
     /**
-     * Get the designElement for the current row being parsed.
-     * 
-     * @param hasDesignElements
-     * @param designElements
-     */
-    private DesignElement getDesignElement( boolean hasDesignElements, List<DesignElement> designElements ) {
-        DesignElement de;
-        if ( hasDesignElements ) {
-            if ( designElements.size() < linesParsed )
-                // TODO CHECK
-                throw new IllegalArgumentException(
-                        "Number of lines in stream doesn't match number of DesignElements in the dimension. " );
-            de = designElements.get( linesParsed );
-            if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
-        } else {
-            de = Reporter.Factory.newInstance();
-            de.setName( "R_" + Integer.toString( linesParsed ) );
-        }
-        return de;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
-     */
-    public void parse( List<File> files ) throws IOException {
-        for ( File file : files ) {
-            log.info( "Parsing " + file.getAbsolutePath() );
-            parse( file );
-        }
-    }
-
-    /**
-     * 
-     */
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.Parser#parse(java.lang.String)
-     */
-    public void parse( String filename ) throws IOException {
-        try {
-            parse( new FileInputStream( new File( filename ) ) );
-        } catch ( FileNotFoundException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
-     */
-    public Object parseOneLine( String line ) {
-        return StringUtil.splitPreserveAllTokens( line, this.separator );
-    }
-
-    /**
-     * @param streams
-     * @throws IOException
-     */
-    public void parseStreams( List<InputStream> streams ) throws IOException {
-        int i = 0;
-        for ( InputStream stream : streams ) {
-            currentBioAssay = bioAssays.get( i );
-            if ( currentBioAssay == null ) throw new IllegalStateException( "No " + i + "nth BioAssay" );
-            this.parse( stream );
-            i++;
-        }
-    }
-
-    /**
-     * @param separator The separator to set.
-     */
-    public void setSeparator( char separator ) {
-        this.separator = separator;
-    }
-
-    /**
-     * @param bioAssay
-     */
-    private void parse( BioAssay bioAssay ) throws IOException {
-        if ( bioAssay.getRawDataFile() == null )
-            throw new IllegalArgumentException( "RawDataFile must not be null for BioAssay " + bioAssay );
-        File f = bioAssay.getRawDataFile().asFile();
-        if ( !f.canRead() ) throw new IOException( "Cannot read from " + f );
-        parse( f );
-    }
-
-    /**
      * Encapsulates the relationship between QuantitationTypes, DesignElements and the Measurements (which will be
      * turned into DataVectors).
      */
@@ -270,44 +289,8 @@ public class RawDataParser implements FileCombiningParser {
         // entities because their hashcodes are not zero.
         LinkedHashMap<String, LinkedHashMap<String, List<Object>>> dataMap = new LinkedHashMap<String, LinkedHashMap<String, List<Object>>>();
 
-        Map<String, QuantitationType> quantitationTypesForNames = new HashMap<String, QuantitationType>();
         Map<String, DesignElement> designElementsForNames = new HashMap<String, DesignElement>();
-
-        /**
-         * This must be called before any processing can be completed.
-         * 
-         * @param quantitationTypes
-         * @param designElements
-         */
-        public void setUp( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
-            for ( DesignElement element : designElements ) {
-                designElementsForNames.put( element.getName(), element );
-            }
-            for ( QuantitationType type : quantitationTypes ) {
-                quantitationTypesForNames.put( type.getName(), type );
-                dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
-
-                LinkedHashMap<String, List<Object>> map = dataMap.get( type.getName() );
-                for ( DesignElement element : designElements ) {
-                    if ( !map.containsKey( element.getName() ) ) {
-                        map.put( element.getName(), new ArrayList<Object>() );
-                    }
-                }
-            }
-        }
-
-        /**
-         * Use this method if you don't know the design elements ahead of time (slower).
-         * 
-         * @param quantitationTypes
-         */
-        public void setUp( List<QuantitationType> quantitationTypes ) {
-            for ( QuantitationType type : quantitationTypes ) {
-                quantitationTypesForNames.put( type.getName(), type );
-                dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
-
-            }
-        }
+        Map<String, QuantitationType> quantitationTypesForNames = new HashMap<String, QuantitationType>();
 
         /**
          * Supports Boolean, String, Double and Integer data.
@@ -317,6 +300,12 @@ public class RawDataParser implements FileCombiningParser {
          * @param data
          */
         public void addData( QuantitationType qt, DesignElement de, String data ) {
+
+            if ( qt == null || de == null )
+                throw new IllegalArgumentException( "Quantitation type and design element cannot be null" );
+            if ( StringUtils.isBlank( data ) )
+                throw new IllegalArgumentException( "Data cannot be blank for " + qt.getName() + ", " + de.getName() );
+
             PrimitiveType pt = qt.getRepresentation();
             String qtName = qt.getName();
             String deName = de.getName();
@@ -328,13 +317,25 @@ public class RawDataParser implements FileCombiningParser {
 
             try {
                 if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                    list.add( new Boolean( data ) );
+                    if ( data.equals( NAN_STRING ) )
+                        list.add( Boolean.FALSE );
+                    else
+                        list.add( new Boolean( data ) );
                 } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                    list.add( new Double( data ) );
+                    if ( data.equals( NAN_STRING ) )
+                        list.add( new Double( Double.NaN ) );
+                    else
+                        list.add( new Double( data ) );
                 } else if ( pt.equals( PrimitiveType.INT ) ) {
-                    list.add( new Integer( data ) );
+                    if ( data.equals( NAN_STRING ) )
+                        list.add( new Integer( 0 ) );
+                    else
+                        list.add( new Integer( data ) );
                 } else {
-                    list.add( data );
+                    if ( data.equals( NAN_STRING ) )
+                        list.add( "" );
+                    else
+                        list.add( data );
                 }
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( e );
@@ -356,52 +357,37 @@ public class RawDataParser implements FileCombiningParser {
          */
         @SuppressWarnings("synthetic-access")
         public NamedMatrix getDataMatrix( QuantitationType qt ) {
-            int numDesignElements = dataMap.get( qt ).keySet().size();
-            assert bioAssays.size() == dataMap.get( qt ).keySet().size();
+            Collection<String> designElementNames = dataMap.get( qt.getName() ).keySet();
+            int numDesignElements = designElementNames.size();
             int numBioAssays = bioAssays.size();
 
-            NamedMatrix result = new StringMatrix2DNamed( numDesignElements, numBioAssays );
+            log.info( "Creating " + numDesignElements + " x " + numBioAssays + " matrix for " + qt.getName() );
 
             String qtName = qt.getName();
-            int i = 0;
-            for ( String deName : dataMap.get( qtName ).keySet() ) {
-                result.addRowName( deName, i );
-                i++;
+            NamedMatrix result = new ObjectMatrix2DNamed( numDesignElements, numBioAssays );
+            LinkedHashMap<String, List<Object>> quantitationTypeDesignElements = dataMap.get( qtName );
 
-                int j = 0;
-                for ( Object obj : dataMap.get( qtName ).get( deName ) ) {
-                    result.set( i, j, obj );
-                    j++;
-                }
-
-            }
-
-            int j = 0;
+            int column = 0;
             for ( BioAssay ba : bioAssays ) {
-                result.addColumnName( ba.getName(), j );
-                j++;
+                result.addColumnName( ba.getName(), column );
+                column++;
+            }
+
+            int row = 0;
+            for ( String deName : designElementNames ) {
+                result.addRowName( deName, row );
+                column = 0;
+                for ( Object obj : quantitationTypeDesignElements.get( deName ) ) {
+                    if ( obj == null ) {
+                        throw new RuntimeException( "Got null value for row " + row + ", column " + column
+                                + ", reporter: " + deName + " quantitation type: " + qtName );
+                    }
+                    result.set( row, column, obj );
+                    column++;
+                }
+                row++;
             }
             return result;
-
-        }
-
-        /**
-         * @return
-         */
-        public List<QuantitationType> getQuantitationTypes() {
-            List<QuantitationType> result = new ArrayList<QuantitationType>();
-            for ( String qtName : dataMap.keySet() ) {
-                result.add( quantitationTypesForNames.get( qtName ) );
-            }
-            return result;
-        }
-
-        /**
-         * @param n
-         * @return
-         */
-        public QuantitationType getNthQuantitationType( int n ) {
-            return getQuantitationTypes().get( n );
         }
 
         /**
@@ -417,13 +403,62 @@ public class RawDataParser implements FileCombiningParser {
             return result;
 
         }
-    }
 
-    /**
-     * @return Returns the qtData.
-     */
-    public QuantitationTypeData getQtData() {
-        return this.qtData;
+        /**
+         * @param n
+         * @return
+         */
+        public QuantitationType getNthQuantitationType( int n ) {
+            return getQuantitationTypes().get( n );
+        }
+
+        /**
+         * @return
+         */
+        public List<QuantitationType> getQuantitationTypes() {
+            List<QuantitationType> result = new ArrayList<QuantitationType>();
+            for ( String qtName : dataMap.keySet() ) {
+                result.add( quantitationTypesForNames.get( qtName ) );
+            }
+            return result;
+        }
+
+        /**
+         * Use this method if you don't know the design elements ahead of time (slower).
+         * 
+         * @param quantitationTypes
+         */
+        public void setUp( List<QuantitationType> quantitationTypes ) {
+            for ( QuantitationType type : quantitationTypes ) {
+                quantitationTypesForNames.put( type.getName(), type );
+                if ( !dataMap.containsKey( type.getName() ) )
+                    dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
+            }
+        }
+
+        /**
+         * This must be called before any processing can be completed.
+         * 
+         * @param quantitationTypes
+         * @param designElements
+         */
+        public void setUp( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
+            for ( DesignElement element : designElements ) {
+                designElementsForNames.put( element.getName(), element );
+            }
+            for ( QuantitationType type : quantitationTypes ) {
+                quantitationTypesForNames.put( type.getName(), type );
+                if ( !dataMap.containsKey( type.getName() ) )
+                    dataMap.put( type.getName(), new LinkedHashMap<String, List<Object>>() );
+
+                LinkedHashMap<String, List<Object>> map = dataMap.get( type.getName() );
+                for ( DesignElement element : designElements ) {
+                    if ( !map.containsKey( element.getName() ) ) {
+                        map.put( element.getName(), new ArrayList<Object>() );
+                    }
+                }
+            }
+        }
     }
 
 }
