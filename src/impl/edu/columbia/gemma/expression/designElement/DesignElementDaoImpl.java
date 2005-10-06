@@ -16,16 +16,20 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.expression.designElement;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.genome.Gene;
+
 /**
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.DesignElement
  */
 public class DesignElementDaoImpl extends edu.columbia.gemma.expression.designElement.DesignElementDaoBase {
@@ -42,8 +46,9 @@ public class DesignElementDaoImpl extends edu.columbia.gemma.expression.designEl
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( DesignElement.class );
 
-            queryObject.add( Restrictions.ilike( "category", designElement.getName() ) );
+            queryObject.add( Restrictions.eq( "name", designElement.getName() ) );
 
+            // join
             queryObject.createCriteria( "arrayDesign" ).add(
                     Restrictions.eq( "name", designElement.getArrayDesign().getName() ) );
 
@@ -65,4 +70,5 @@ public class DesignElementDaoImpl extends edu.columbia.gemma.expression.designEl
         }
 
     }
+
 }
