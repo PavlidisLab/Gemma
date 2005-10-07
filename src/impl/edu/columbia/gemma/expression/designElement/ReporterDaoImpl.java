@@ -84,7 +84,7 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
             log.debug( "reporter must name and arrayDesign." );
             return null;
         }
-        Reporter newreporter = ( Reporter ) this.find( reporter );
+        Reporter newreporter = this.find( reporter );
         if ( newreporter != null ) {
             return newreporter;
         }
