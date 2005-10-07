@@ -161,7 +161,7 @@ public class MageMLPreprocessor implements Preprocessor {
 
             QuantitationType qType = ( ( RawDataMatrix ) object ).getQuantitationType();
             if ( whichQuantitationType >= 0 ) {
-                QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( i );
+                QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( whichQuantitationType );
                 if ( !qt.getName().equals( qType.getName() ) ) {
                     i++;
                     continue;
@@ -173,7 +173,6 @@ public class MageMLPreprocessor implements Preprocessor {
             log.info( "Persisting matrix " + i + ", quantitation type " + qType.getName() );
             persisterHelper.persist( ( ( RawDataMatrix ) object ).getRows() );
 
-            if ( whichQuantitationType >= 0 ) continue;
             i++;
         }
     }
@@ -221,13 +220,18 @@ public class MageMLPreprocessor implements Preprocessor {
 
             File outputDir = new File( localMatrixFilepath + File.separator + this.experimentName );
 
-            if ( !outputDir.exists() ) {
-                boolean success = outputDir.mkdirs();
-                if ( !success ) throw new IOException( "Could not create " + outputDir );
+            log.info("Seeking or creating output directory...");
+            if ( !outputDir.exists() && !outputDir.mkdirs() ) {
+                log.warn( "Could not create output directory " + outputDir );
+                outputDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + experimentName );
+
+                log.warn( "Will use local temporary directory: " + outputDir.getAbsolutePath() );
+                if ( !outputDir.exists() && !outputDir.mkdirs() ) {
+                    throw new IOException( "Could not create temporary directory" );
+                }
             }
 
-            File outputFile = new File( localMatrixFilepath + File.separator + this.experimentName + File.separator
-                    + experimentName + "_" + qt.getName() );
+            File outputFile = new File( outputDir + File.separator + experimentName + "_" + qt.getName() + ".txt" );
 
             log.info( experimentName + ": Storing data for quantitation type " + qt.getName() + " in file: "
                     + outputFile );

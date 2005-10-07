@@ -245,6 +245,7 @@ public class RawDataParser implements FileCombiningParser {
     private void convertResultToMatrix( QuantitationType quantitationType ) {
         log.info( "Generating matrix for quantitation type: " + quantitationType.getName() );
         RawDataMatrix matrix = qtData.getDataForQuantitationType( quantitationType );
+        log.info( "...done" );
         results.add( matrix );
     }
 
