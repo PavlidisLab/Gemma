@@ -35,7 +35,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @version $Id$
  */
 public class BaseControllerTestCase extends TestCase {
-    protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext(false);
+    protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext(true);
 
     // ~ Constructors ===========================================================
 

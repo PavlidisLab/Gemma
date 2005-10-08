@@ -96,9 +96,9 @@ public class SpringContextUtil {
      * 
      * @return XmlWebApplicationContext
      */
-    public static BeanFactory getXmlWebApplicationContext() {
+    public static BeanFactory getXmlWebApplicationContext(boolean testing) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations();
+            String[] paths = getConfigLocations(testing);
             ctx = new XmlWebApplicationContext();
             ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( paths );
             ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );
