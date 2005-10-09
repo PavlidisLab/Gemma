@@ -15,7 +15,8 @@
 		<a href="<c:url value="/arrayDesigns.htm"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
     </li>
 	<li>
-        <a href="<c:url value="/ExperimentList.html"/>">Show Expression Experiments</a>
+        <!-- <a href="<c:url value="/ExperimentList.html"/>">Show Expression Experiments</a>-->
+        <a href="<c:url value="/expressionExperiments.htm"/>">Show Expression Experiments</a>
     </li>    
 	<li>
 		<a href="<c:url value="/candidateGeneList.htm"/>"><fmt:message key="menu.CandidateGeneList" />

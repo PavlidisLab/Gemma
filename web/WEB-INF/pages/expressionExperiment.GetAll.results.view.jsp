@@ -7,7 +7,8 @@
 <HEAD>
 </HEAD>
 <BODY>
-<FORM name="newSearchForm" action="expressionExperimentSearch.htm"><INPUT
+
+<FORM name="newSearchForm" action=""><INPUT
 	type="hidden" name="_flowExecutionId"
 	value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
 	type="hidden" name="_eventId" value="newSearch"></FORM>
@@ -25,30 +26,15 @@
 		</TD>
 	</TR>
 	<TR>
-		<TD>
-		<TABLE BORDER="1">
-			<TR>
-				<TD><B>Name</B></TD>
-				<TD><B>Description</B></TD>
-
-			</TR>
-			<%
-        Collection results = ( Collection ) request.getAttribute( "expressionExperiments" );
-        Iterator iter = results.iterator();
-        while ( iter.hasNext() ) {
-            ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) iter.next();
-            %>
-			<TR>
-				<TD><A
-					href="expressionExperimentSearch.htm?_flowExecutionId=<%=request.getAttribute("flowExecutionId") %>&_eventId=select&experimentID=<%=expressionExperiment.getId() %>">
-				<%=expressionExperiment.getName() %> </A></TD>
-				<TD><%=expressionExperiment.getDescription() %></TD>
-			</TR>
-			<%
-        }
-    %>
-		</TABLE>
-		</TD>
+	<%--  display tag used here --%>
+	<display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList" export="true">		
+		<display:column property="accession.accession" sort="true" titleKey="expressionExperiment.id"/>
+		<display:column property="name" sort="true" titleKey="expressionExperiment.name"/>
+		<display:column property="source" sort="true" href="expressionExperimentDetails.htm" paramId="source" paramProperty="source" titleKey="expressionExperiment.source"/>
+		<display:column property="experimentalDesigns" sort="true" href="experimentalDesigns.htm" titleKey="experimentalDesigns"/>
+		<display:column property="bioAssays" sort="true" href="bioAssays.htm" titleKey="bioAssays"/>
+		<display:setProperty name="basic.empty.showtable" value="true"/>
+	</display:table>	
 	</TR>
 	<TR>
 		<TD>
