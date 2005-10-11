@@ -104,8 +104,7 @@ public class AuditTrailInterceptor implements MethodInterceptor {
                 auditTrail.start();
 
             } else {
-
-                // TODO get hook to the performer. I need to find a way to get the note from the user.
+                // FIXME add performer to the audit event.
                 Collection<AuditEvent> auditEvents = auditTrail.getEvents();
                 AuditEvent auditEvent = AuditEvent.Factory.newInstance();
                 auditEvent.setDate( new Date() );
