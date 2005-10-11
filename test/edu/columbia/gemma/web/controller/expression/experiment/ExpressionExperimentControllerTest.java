@@ -88,6 +88,7 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
                 .getBean( "expressionExperimentController" );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/expressionExperiments.htm" );
+        req.setRequestURI("/Gemma/expressionExperiments.htm");
 
         ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
 
