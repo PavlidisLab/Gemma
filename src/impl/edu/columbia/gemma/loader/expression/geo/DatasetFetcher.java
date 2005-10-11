@@ -63,15 +63,15 @@ public class DatasetFetcher extends FtpFetcher {
             if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
             String seekFile = baseDir + "/" + accession + ".soft.gz";
             File newDir = mkdir( accession );
-            String outputFileName = newDir + "/" + accession + ".soft.gz";
-            success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
+            File outputFile = new File( newDir, accession + ".soft.gz" );
+            success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
             f.disconnect();
 
             if ( success ) {
                 // get meta-data about the file.
-                LocalFile file = fetchedFile( seekFile, outputFileName );
+                LocalFile file = fetchedFile( seekFile, outputFile.getAbsolutePath() );
                 log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + ". Output file is "
-                        + outputFileName );
+                        + outputFile.getAbsolutePath() );
 
                 // no need to unpack the file, we process as is.
 
@@ -82,9 +82,7 @@ public class DatasetFetcher extends FtpFetcher {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-        log.error( "Couldn't find file." );
-        return null;
-
+        throw new RuntimeException( "Couldn't find file for " + accession );
     }
 
 }

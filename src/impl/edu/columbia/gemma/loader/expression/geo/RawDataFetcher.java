@@ -16,10 +16,11 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.loader.expression.arrayExpress;
+package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.Collection;
 import java.util.concurrent.FutureTask;
 
@@ -29,14 +30,12 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
+import edu.columbia.gemma.loader.expression.geo.util.GeoUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
 
 /**
- * ArrayExpress stores files in an FTP site as tarred-gzipped archives. Each tar file contains the MAGE file and the
- * datacube external files. This class can download an experiment, unpack the tar file, and put the resulting files onto
- * a local filesystem.
- * <p>
+ * Retrieve and unpack the raw data files for GEO series. These are the CEL and other files (RPT, EXP and maybe DAT) for
+ * Affymetrix data sets. For other types of arrays there may also be raw data?
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -44,49 +43,33 @@ import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcher extends FtpArchiveFetcher {
+public class RawDataFetcher extends FtpArchiveFetcher {
 
-    public DataFileFetcher() {
+    public RawDataFetcher() {
         initConfig();
-        initArchiveHandler( "gzip" );
+        initArchiveHandler( null );
     }
 
-    /**
-     * @param identifier The accession value for the experiment, such as "SMDB-14"
-     * @param discardArchive Whether to delete the downloaded archive after unpacking its contents
-     * @return
-     * @throws SocketException
-     * @throws IOException
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
     public Collection<LocalFile> fetch( String identifier ) {
-
         try {
-            if ( f == null || !f.isConnected() ) f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
 
             File newDir = mkdir( identifier );
             final String outputFileName = formLocalFilePath( identifier, newDir );
             final String seekFile = formRemoteFilePath( identifier );
-
-            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, outputFileName, identifier, newDir, ".mageml.tgz" );
-
+            FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
+            return doTask( future, outputFileName, identifier, newDir, ".tar" );
+        } catch ( SocketException e ) {
+            throw new RuntimeException( e );
         } catch ( IOException e ) {
-            throw new RuntimeException( "Couldn't fetch file for " + identifier, e );
+            throw new RuntimeException( e );
         }
 
-    }
-
-    /**
-     * @param files
-     * @return
-     */
-    public LocalFile getMageMlFile( Collection<LocalFile> files ) {
-        for ( LocalFile file : files ) {
-            if ( file.getLocalURI().endsWith( ".xml" ) ) {
-                return file;
-            }
-        }
-        return null;
     }
 
     /**
@@ -95,7 +78,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @return
      */
     private String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + System.getProperty( "file.separator" ) + "E-" + identifier + ".mageml.tgz";
+        String outputFileName = newDir + File.separator + identifier + "_RAW.tar";
         return outputFileName;
     }
 
@@ -104,8 +87,8 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @return
      */
     protected String formRemoteFilePath( String identifier ) {
-        String dirName = identifier.replaceFirst( "-\\d+", "" );
-        String seekFile = baseDir + "/" + dirName + "/" + "E-" + identifier + "/" + "E-" + identifier + ".mageml.tgz";
+
+        String seekFile = baseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
         return seekFile;
     }
 
@@ -117,13 +100,13 @@ public class DataFileFetcher extends FtpArchiveFetcher {
         try {
             config = new PropertiesConfiguration( "Gemma.properties" );
 
-            localBasePath = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
-            baseDir = ( String ) config.getProperty( "arrayExpress.experiments.baseDir" );
+            localBasePath = ( String ) config.getProperty( "geo.local.datafile.basepath" );
+            baseDir = ( String ) config.getProperty( "geo.remote.rawDataDir" );
 
             if ( localBasePath == null || localBasePath.length() == 0 )
-                throw new ConfigurationException( "localBasePath was null or empty" );
+                throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
             if ( baseDir == null || baseDir.length() == 0 )
-                throw new ConfigurationException( "baseDir was null or empty" );
+                throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }

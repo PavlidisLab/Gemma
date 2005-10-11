@@ -38,10 +38,11 @@ public class SeriesFetcher extends FtpFetcher {
             if ( this.f == null || !this.f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
             File newDir = mkdir( accession );
 
-            String outputFileName = newDir + "/" + accession + "_family.soft.gz";
+            File outputFile = new File( newDir, accession + "_family.soft.gz" );
+            String outputFileName = outputFile.getAbsolutePath();
 
             String seekFile = baseDir + "/" + accession + "_family.soft.gz";
-            success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
+            success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
 
             if ( success ) {
                 LocalFile file = fetchedFile( seekFile, outputFileName );
