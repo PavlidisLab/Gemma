@@ -103,4 +103,9 @@ public class ExpressionExperimentServiceImpl extends
     protected ExpressionExperiment handleFind( Long id ) throws Exception {
         return ( ExpressionExperiment ) this.getExpressionExperimentDao().load( id );
     }
+
+    @Override
+    protected ExpressionExperiment handleFindByName( String name ) throws Exception {
+        return this.getExpressionExperimentDao().findByName(name);
+    }
 }
