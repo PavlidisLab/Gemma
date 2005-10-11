@@ -19,6 +19,7 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.Collection;
@@ -28,6 +29,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
+
+import baseCode.util.NetUtils;
 
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.geo.util.GeoUtil;
@@ -60,10 +63,24 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
 
             File newDir = mkdir( identifier );
+            newDir = new File( newDir, "rawDataFiles" );
+            if ( !newDir.canRead() && !newDir.mkdir() )
+                throw new IOException( "Could not create the raw data subdirectory" );
             final String outputFileName = formLocalFilePath( identifier, newDir );
             final String seekFile = formRemoteFilePath( identifier );
+            try {
+                NetUtils.checkForFile( f, seekFile );
+            } catch ( FileNotFoundException e ) {
+                // that's okay, just return.
+                log.info( "There is apparently no raw data archive for " + identifier );
+                newDir.delete(); // nothing there.
+                f.disconnect(); // important to do this!
+                return null;
+            }
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
-            return doTask( future, outputFileName, identifier, newDir, ".tar" );
+            Collection<LocalFile> result = doTask( future, outputFileName, identifier, newDir, ".tar" );
+            f.disconnect();
+            return result;
         } catch ( SocketException e ) {
             throw new RuntimeException( e );
         } catch ( IOException e ) {
@@ -87,7 +104,6 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * @return
      */
     protected String formRemoteFilePath( String identifier ) {
-
         String seekFile = baseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
         return seekFile;
     }

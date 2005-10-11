@@ -108,6 +108,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      */
     protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String outputFileName, String identifier,
             File newDir, String excludePattern ) {
+        assert f != null;
         Executors.newSingleThreadExecutor().execute( future );
         try {
             while ( !future.isDone() ) {

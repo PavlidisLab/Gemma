@@ -65,11 +65,10 @@ public abstract class AbstractFetcher implements Fetcher {
         assert localBasePath != null;
 
         File targetPath = new File( localBasePath );
-        File newDir = new File( targetPath + System.getProperty( "file.separator" ) + accession );
+        File newDir = new File( targetPath + File.separator + accession );
 
         if ( !targetPath.canRead() ) {
-            File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + System.getProperty( "file.separator" )
-                    + accession );
+            File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + accession );
             log.warn( "Could not create output directory " + newDir );
             log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
 

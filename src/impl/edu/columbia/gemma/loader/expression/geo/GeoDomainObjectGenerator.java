@@ -102,9 +102,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             Collection<GeoSeries> seriesSet = gds.getSeries();
             for ( GeoSeries series : seriesSet ) {
                 log.info( "Processing series " + series );
-                Collection<LocalFile> fullSeries = seriesFetcher.fetch( series.getGeoAccesssion() ); // fetch series
-                // referred to by
-                // the dataset.
+
+                // fetch series referred to by the dataset.
+                Collection<LocalFile> fullSeries = seriesFetcher.fetch( series.getGeoAccesssion() );
                 LocalFile seriesFile = ( fullSeries.iterator() ).next();
                 String seriesPath;
                 try {
@@ -113,6 +113,15 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                     throw new IllegalStateException( e );
                 }
                 gfp.parse( seriesPath );
+
+                // Fetch any raw data files
+                RawDataFetcher rawFetcher = new RawDataFetcher();
+                Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getGeoAccesssion() );
+                if ( rawFiles != null ) {
+                    // FIXME do something useful. These are usually (always?) CEL files so they can be parsed and
+                    // assembled or left alone.
+                    log.info( "Downloaded raw data files" );
+                }
             }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
