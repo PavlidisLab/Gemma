@@ -57,4 +57,13 @@ public class RawDataFetcherTest extends TestCase {
         assert ( result.size() == 8 );
     }
 
+    /*
+     * Test method for 'edu.columbia.gemma.loader.expression.geo.RawDataFetcher.fetch(String)'
+     */
+    public void testFetchNothingThere() {
+        RawDataFetcher rdf = new RawDataFetcher();
+        Collection<LocalFile> result = rdf.fetch( "GSE1001" );
+        assert ( result == null );
+    }
+
 }

@@ -41,6 +41,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
+ * This is an integration test
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -95,7 +96,14 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         super.tearDown();
     }
 
-    /** This is an integration test */
+    public void testFetchAndLoadWithRawData() throws Exception {
+        gds.fetchAndLoad( "GDS562" );
+    }
+
+    public void testFetchAndLoadMultiChipPerSeries() throws Exception {
+        gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
+                                        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+    }
 
     public void testFetchAndLoadB() throws Exception {
         gds.fetchAndLoad( "GDS942" );
@@ -117,7 +125,4 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         gds.fetchAndLoad( "GDS58" );
     }
 
-    public void testFetchAndLoadG() throws Exception {
-        gds.fetchAndLoad( "GDS940" );
-    }
 }

@@ -38,7 +38,8 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
  * Given a GEO data set id:
  * <ol>
  * <li>Download and parse GDS file</li>
- * <li>Download and parse the corresponding GSE family file(s)</li
+ * <li>Download and parse the corresponding GSE family file(s)</li>
+ * <li>Download and unpack the corresponding raw data files (if present)</li>
  * </ol>
  * <hr>
  * <p>
@@ -100,6 +101,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             GeoDataset gds = datasetMap.get( geoDataSetAccession );
 
             Collection<GeoSeries> seriesSet = gds.getSeries();
+
+            /*
+             * FIXME note that when we do this, if the series has more than one data set, we get all the samples here.
+             * That means that some samples will not be associated with the correct dataset information? For a dataset,
+             * the samples are listed under the 'subset' information.
+             */
             for ( GeoSeries series : seriesSet ) {
                 log.info( "Processing series " + series );
 

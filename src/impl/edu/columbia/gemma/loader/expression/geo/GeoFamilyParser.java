@@ -172,7 +172,7 @@ public class GeoFamilyParser implements Parser {
             }
             log.info( parsedLines + " lines parsed." );
         }
-        log.info( "Done parsing." );
+        log.debug( "Done parsing." );
     }
 
     /*
@@ -309,11 +309,11 @@ public class GeoFamilyParser implements Parser {
             parseLine( line );
             parsedLines++;
         }
-        log.info( "Parsed " + parsedLines + " lines." );
-        log.info( this.platformLines + " platform  lines" );
-        log.info( this.seriesDataLines + " series data lines" );
-        log.info( this.dataSetDataLines + " data set data lines" );
-        log.info( this.sampleDataLines + " sample data lines" );
+        log.debug( "Parsed " + parsedLines + " lines." );
+        log.debug( this.platformLines + " platform  lines" );
+        log.debug( this.seriesDataLines + " series data lines" );
+        log.debug( this.dataSetDataLines + " data set data lines" );
+        log.debug( this.sampleDataLines + " sample data lines" );
         return Boolean.TRUE;
     }
 
@@ -409,6 +409,15 @@ public class GeoFamilyParser implements Parser {
             // nothing.
         } else if ( inDataset ) {
             extractColumnIdentifier( line, currentDataset() );
+            Map<String, String> res = extractKeyValue( line );
+            String key = res.keySet().iterator().next();
+            String value = res.get( key );
+            // only set the title if it isn't already.
+            if ( key.startsWith( "GSM" ) && StringUtils.isBlank( results.getSampleMap().get( key ).getTitle() ) ) {
+                value = value.substring( value.indexOf( ':' ) ); // throw out the "Value for GSM1949024:" part.
+                value = StringUtils.trim( value );
+                sampleSet( key, "title", value );
+            }
         } else {
             throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
         }
@@ -572,6 +581,7 @@ public class GeoFamilyParser implements Parser {
                 GeoSubset ss = new GeoSubset();
                 ss.setGeoAccesssion( value );
                 ss.setOwningDataset( results.getDatasetMap().get( this.currentDatasetAccession ) );
+                results.getDatasetMap().get( this.currentDatasetAccession ).addSubset( ss );
                 results.getSubsetMap().put( value, ss );
                 log.debug( "In subset " + ss );
             } else {
