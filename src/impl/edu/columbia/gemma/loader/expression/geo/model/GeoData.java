@@ -68,7 +68,7 @@ public abstract class GeoData {
     /**
      * @return Returns the geoAccesssion.
      */
-    public String getGeoAccesssion() {
+    public String getGeoAccession() {
         return this.geoAccesssion;
     }
 
