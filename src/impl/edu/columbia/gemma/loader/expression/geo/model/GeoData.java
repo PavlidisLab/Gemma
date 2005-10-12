@@ -38,7 +38,7 @@ public abstract class GeoData {
 
     protected GeoContact contact = new GeoContact();
 
-    protected String geoAccesssion;
+    protected String geoAccession;
 
     private List<String> columnNames = new ArrayList<String>();
 
@@ -69,19 +69,19 @@ public abstract class GeoData {
      * @return Returns the geoAccesssion.
      */
     public String getGeoAccession() {
-        return this.geoAccesssion;
+        return this.geoAccession;
     }
 
     /**
      * @param geoAccesssion The geoAccesssion to set.
      */
-    public void setGeoAccesssion( String geoAccesssion ) {
-        this.geoAccesssion = geoAccesssion;
+    public void setGeoAccession( String geoAccesssion ) {
+        this.geoAccession = geoAccesssion;
     }
 
     @Override
     public String toString() {
-        return this.geoAccesssion;
+        return this.geoAccession;
     }
 
     /**
