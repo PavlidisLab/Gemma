@@ -75,21 +75,21 @@
 					</DIV>
 				</TD>
 				
-				<authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+				<%--<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">--%>
 				<TD COLSPAN="2">
 					<DIV align="right">
 						<INPUT type="button" onclick="javascript:selectButton(1)" value="Delete">
 					</DIV>
 				</TD>
-				</authz:acl>
+				<%--</authz:acl>--%>
 				
-				<authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+				<%--<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">--%>
 				<TD COLSPAN="2">
 					<DIV align="right">
 						<INPUT type="button" onclick="javascript:selectButton(2)" value="Edit">
 					</DIV>
 				</TD>
-				</authz:acl>
+				<%--</authz:acl>--%>
 			</TR>
 		</TABLE>
 	</BODY>
