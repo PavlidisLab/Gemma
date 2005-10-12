@@ -29,20 +29,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.math.StringDistance;
-
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
@@ -77,6 +75,10 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
  */
 public class DatasetCombiner {
 
+    private DatasetCombiner() {
+        // nobody can instantiate this class.
+    }
+
     private static Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
 
     /**
@@ -85,10 +87,9 @@ public class DatasetCombiner {
      * @param seriesAccession
      * @return a collection of associated GDS accessions.
      */
-    public static Collection<String> findGDSGrouping( String seriesAccession ) {
+    public static Collection<String> findGDSforGSE( String seriesAccession ) {
         /*
-         * go from GDS-->GSE then use the Entrez e-utils to get the GDS's for the GSE. If there are multiple GDS's, we
-         * do something
+         * go from GSE to GDS.
          */
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
         // grep on "GDS[[digits]] record"
@@ -138,42 +139,60 @@ public class DatasetCombiner {
 
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
         LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
+        LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
 
         // get all the 'title's of the GSMs.
         for ( GeoDataset dataset : dataSets ) {
-            Collection<GeoSubset> subsets = dataset.getSubsets();
-            for ( GeoSubset subset : subsets ) {
-                Collection<GeoSample> samples = subset.getSamples();
-                for ( GeoSample sample : samples ) {
-                    String description = sample.getTitle();
-                    accToTitle.put( sample.getGeoAccesssion(), description );
+            for ( GeoSubset subset : dataset.getSubsets() ) {
+                for ( GeoSample sample : subset.getSamples() ) {
+                    String title = sample.getTitle();
+                    if ( StringUtils.isBlank( title ) ) {
+                        continue; // the same sample may show up more than once with a blank title.
+                    }
+                    accToTitle.put( sample.getGeoAccession(), title );
+                    accToDataset.put( sample.getGeoAccession(), dataset.getGeoAccession() );
                 }
             }
         }
 
-        // assuming there aren't thousands of samples....
+        // allocate matrix.
         int[][] matrix = new int[accToTitle.keySet().size()][accToTitle.keySet().size()];
         for ( int i = 0; i < matrix.length; i++ ) {
             Arrays.fill( matrix[i], -1 );
         }
 
+        // this is purely for making tests.
+        // StringBuilder buf = new StringBuilder();
+        // for ( String acc : accToTitle.keySet() ) {
+        // buf.append( "\"" + acc + "\"," );
+        // }
+        // System.err.println( buf );
+
         List<String> sampleAccs = new ArrayList<String>( accToTitle.keySet() );
+
+        // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
 
-        Set<String> used = new HashSet<String>();
-
+        // do pairwise comparisons of all samples.
         for ( int j = 0; j < sampleAccs.size(); j++ ) {
-            String testAcc = sampleAccs.get( j );
-            if ( used.contains( testAcc ) ) continue;
-
+            String targetAcc = sampleAccs.get( j );
             int mindistance = Integer.MAX_VALUE;
             String bestMatch = null;
             String bestMatchAcc = null;
-            String iTitle = accToTitle.get( testAcc );
+            String iTitle = accToTitle.get( targetAcc );
+
+            if ( StringUtils.isBlank( iTitle ) )
+                throw new IllegalArgumentException( "Can't have blank titles for samples" );
 
             for ( int i = 0; i < sampleAccs.size(); i++ ) {
                 if ( i == j ) continue;
-                String jTitle = accToTitle.get( sampleAccs.get( i ) );
+
+                String testAcc = sampleAccs.get( i );
+
+                String jTitle = accToTitle.get( testAcc );
+                if ( StringUtils.isBlank( jTitle ) )
+                    throw new IllegalArgumentException( "Can't have blank titles for samples" );
+
                 int distance = -1;
                 if ( matrix[i][j] < 0 ) {
                     distance = StringDistance.editDistance( iTitle, jTitle );
@@ -183,22 +202,17 @@ public class DatasetCombiner {
                     distance = matrix[i][j];
                 }
 
-                if ( distance <= mindistance && !used.contains( bestMatchAcc ) ) {
+                // make sure match is to sample in another data set, as well as being a good match.
+                if ( distance <= mindistance && accToDataset.get( targetAcc ) != accToDataset.get( testAcc ) ) {
                     mindistance = distance;
                     bestMatch = jTitle;
-                    bestMatchAcc = sampleAccs.get( i );
+                    bestMatchAcc = testAcc;
                 }
             }
 
-            if ( used.contains( bestMatchAcc ) ) {
-                throw new IllegalStateException( bestMatchAcc + " is already the best match for a sample!" );
-            }
+            result.addCorrespondence( targetAcc, bestMatchAcc );
 
-            used.add( bestMatchAcc );
-            result.addCorrespondence( testAcc, bestMatchAcc );
-
-            log.debug( "Seeking match for " + iTitle + ": found " + bestMatch );
-            log.debug( testAcc + " <====> " + bestMatchAcc );
+            log.debug( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch + "\n" );
         }
 
         return result;
@@ -207,21 +221,76 @@ public class DatasetCombiner {
 
 class GeoSampleCorrespondence {
 
-    Map<String, Collection<String>> map = new HashMap<String, Collection<String>>();
+    Collection<Set<String>> sets = new HashSet<Set<String>>();
 
     /**
      * @param gsmNumber
      * @return Collection of sample accession values that correspond to the argument.
      */
     public Collection<String> getCorrespondingSamples( String gsmNumber ) {
-        return this.map.get( gsmNumber );
+        // return this.map.get( gsmNumber );
+        for ( Set<String> set : sets ) {
+            if ( set.contains( gsmNumber ) ) {
+                return set;
+            }
+        }
+        return null; // not found!
     }
 
+    /**
+     * @param gsmNumberA
+     * @param gsmNumberB
+     */
     public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
-        if ( !map.containsKey( gsmNumberA ) ) map.put( gsmNumberA, new HashSet<String>() );
-        if ( !map.containsKey( gsmNumberB ) ) map.put( gsmNumberB, new HashSet<String>() );
-        map.get( gsmNumberA ).add( gsmNumberB );
-        map.get( gsmNumberB ).add( gsmNumberA );
+        // if ( !map.containsKey( gsmNumberA ) ) map.put( gsmNumberA, new HashSet<String>() );
+        // if ( !map.containsKey( gsmNumberB ) ) map.put( gsmNumberB, new HashSet<String>() );
+        // map.get( gsmNumberA ).add( gsmNumberB );
+        // map.get( gsmNumberB ).add( gsmNumberA );
+
+        // the following is to make sets that each contain just the samples that group together.
+        boolean found = false;
+        for ( Set<String> set : sets ) {
+            if ( set.contains( gsmNumberA ) ) {
+                set.add( gsmNumberB );
+                found = true;
+                break;
+            } else if ( set.contains( gsmNumberB ) ) {
+                set.add( gsmNumberA );
+                found = true;
+                break;
+            }
+        }
+
+        if ( !found ) {
+            Set<String> newSet = new HashSet<String>();
+            newSet.add( gsmNumberA );
+            newSet.add( gsmNumberB );
+            sets.add( newSet );
+        }
+
     }
 
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+
+        List<String> groupStrings = new ArrayList<String>();
+        for ( Set<String> set : sets ) {
+            String group = "";
+            List<String> sortedSet = new ArrayList<String>( set );
+            Collections.sort( sortedSet );
+            for ( String string : sortedSet ) {
+                group = group + string + " <==> ";
+            }
+            group = group + "\n";
+            groupStrings.add( group );
+        }
+
+        Collections.sort( groupStrings );
+        for ( String string : groupStrings ) {
+            buf.append( string );
+        }
+
+        return buf.toString().replaceAll( " <==> \\n", "\n" );
+    }
 }

@@ -96,13 +96,13 @@ public class GeoDatasetServiceTest extends BaseDAOTestCase {
         super.tearDown();
     }
 
-    public void testFetchAndLoadWithRawData() throws Exception {
-        gds.fetchAndLoad( "GDS562" );
-    }
-
     public void testFetchAndLoadMultiChipPerSeries() throws Exception {
         gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
-                                        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+    }
+
+    public void testFetchAndLoadWithRawData() throws Exception {
+        gds.fetchAndLoad( "GDS562" );
     }
 
     public void testFetchAndLoadB() throws Exception {

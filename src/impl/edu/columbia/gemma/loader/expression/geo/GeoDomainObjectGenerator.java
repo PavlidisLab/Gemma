@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -54,27 +56,45 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     private Fetcher datasetFetcher;
     private Fetcher seriesFetcher;
+    private GeoFamilyParser gfp = new GeoFamilyParser();
+
+    private boolean generateHasBeenCalled = false;
+    private Collection<String> doneDatasets;
+
+    private Collection<String> doneSeries;
 
     /**
      * 
      *
      */
     public GeoDomainObjectGenerator() {
+        reset();
+    }
+
+    /**
+     * 
+     */
+    public void reset() {
         try {
             datasetFetcher = new DatasetFetcher();
             seriesFetcher = new SeriesFetcher();
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }
+        doneDatasets = new HashSet<String>();
+        doneSeries = new HashSet<String>();
+        this.gfp = new GeoFamilyParser();
+        this.generateHasBeenCalled = false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
+    /**
+     * @param geoDataSetAccession
+     * @param addOn - Don't start a new generation, add it to the existing results.
+     * @return
      */
+    @SuppressWarnings("unused")
+    private Collection<Object> generate( String geoDataSetAccession, boolean addOn ) {
 
-    public Collection<Object> generate( String geoDataSetAccession ) {
         Collection<LocalFile> result = datasetFetcher.fetch( geoDataSetAccession );
 
         if ( result == null ) return null;
@@ -87,8 +107,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             throw new IllegalStateException( e );
         }
 
-        GeoFamilyParser gfp = new GeoFamilyParser();
-
+        // FIXME we don't get a single ExpressionExperiment out of this - we get one for each dataset.
         try {
             gfp.parse( dataSetPath );
 
@@ -102,38 +121,101 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
             Collection<GeoSeries> seriesSet = gds.getSeries();
 
-            /*
-             * FIXME note that when we do this, if the series has more than one data set, we get all the samples here.
-             * That means that some samples will not be associated with the correct dataset information? For a dataset,
-             * the samples are listed under the 'subset' information.
-             */
             for ( GeoSeries series : seriesSet ) {
-                log.info( "Processing series " + series );
+                if ( doneSeries.contains( series.getGeoAccession() ) ) continue;
 
-                // fetch series referred to by the dataset.
-                Collection<LocalFile> fullSeries = seriesFetcher.fetch( series.getGeoAccesssion() );
-                LocalFile seriesFile = ( fullSeries.iterator() ).next();
-                String seriesPath;
-                try {
-                    seriesPath = ( new URI( seriesFile.getLocalURI() ) ).getPath();
-                } catch ( URISyntaxException e ) {
-                    throw new IllegalStateException( e );
-                }
-                gfp.parse( seriesPath );
+                processSeries( series );
 
-                // Fetch any raw data files
-                RawDataFetcher rawFetcher = new RawDataFetcher();
-                Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getGeoAccesssion() );
-                if ( rawFiles != null ) {
-                    // FIXME do something useful. These are usually (always?) CEL files so they can be parsed and
-                    // assembled or left alone.
-                    log.info( "Downloaded raw data files" );
-                }
+                processRawData( series );
+
+                processSeriesDatasets( geoDataSetAccession, series );
+
             }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+
+        // fixme - we have to use this information.
+        GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( ( ( GeoParseResult ) gfp
+                .getResults().iterator().next() ).getDatasetMap().values() );
+
+        doneDatasets.add( geoDataSetAccession );
         return gfp.getResults();
+    }
+
+    /**
+     * @param series
+     * @throws IOException
+     */
+    private void processSeries( GeoSeries series ) throws IOException {
+        log.info( "Processing series " + series );
+
+        // fetch series referred to by the dataset.
+        Collection<LocalFile> fullSeries = seriesFetcher.fetch( series.getGeoAccession() );
+        LocalFile seriesFile = ( fullSeries.iterator() ).next();
+        String seriesPath;
+        try {
+            seriesPath = ( new URI( seriesFile.getLocalURI() ) ).getPath();
+        } catch ( URISyntaxException e ) {
+            throw new IllegalStateException( e );
+        }
+        gfp.parse( seriesPath );
+        doneSeries.add( series.getGeoAccession() );
+    }
+
+    /**
+     * Fetch any raw data files
+     * 
+     * @param series
+     */
+    private void processRawData( GeoSeries series ) {
+
+        RawDataFetcher rawFetcher = new RawDataFetcher();
+        Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getGeoAccession() );
+        if ( rawFiles != null ) {
+            // FIXME maybe do something more. These are usually (always?) CEL files so they can be parsed and
+            // assembled or left alone.
+            log.info( "Downloaded raw data files" );
+        }
+    }
+
+    /**
+     * @param geoDataSetAccession
+     * @param series
+     */
+    private void processSeriesDatasets( String geoDataSetAccession, GeoSeries series ) {
+        Collection<String> datasets = DatasetCombiner.findGDSforGSE( series.getGeoAccession() );
+
+        // sanity check.
+        if ( !datasets.contains( geoDataSetAccession ) ) {
+            throw new IllegalStateException( "Somehow " + geoDataSetAccession + " isn't in "
+                    + series.getGeoAccession() );
+        }
+
+        if ( datasets.size() > 1 ) {
+            log.info( "Multiple datasets for " + series.getGeoAccession() );
+            for ( Iterator iter = datasets.iterator(); iter.hasNext(); ) {
+                String dataset = ( String ) iter.next();
+                if ( doneDatasets.contains( dataset ) ) continue;
+                this.generate( dataset, true );
+            }
+        }
+    }
+
+    /**
+     * Unlike some other generators, this method can only be called once without calling 'reset'.
+     * 
+     * @see edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
+     */
+    public Collection<Object> generate( String geoDataSetAccession ) {
+        if ( generateHasBeenCalled )
+            throw new IllegalArgumentException(
+                    "You can only call 'generate' once on this without calling 'reset()' first." );
+
+        generateHasBeenCalled = true;
+
+        return this.generate( geoDataSetAccession, false );
+
     }
 
     /**

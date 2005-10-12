@@ -51,7 +51,7 @@ public class GeoVariable {
      * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma.
      */
     public enum VariableType {
-        age, agent, cellLine, cellType, developmentalStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue
+        age, agent, cellLine, cellType, developmentStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue
     };
 
     /**
@@ -122,8 +122,8 @@ public class GeoVariable {
             return VariableType.cellLine;
         } else if ( string.equals( "cell type" ) ) {
             return VariableType.cellType;
-        } else if ( string.equals( "developmental stage" ) ) {
-            return VariableType.developmentalStage;
+        } else if ( string.equals( "development stage" ) ) {
+            return VariableType.developmentStage;
         } else if ( string.equals( "disease state" ) ) {
             return VariableType.diseaseState;
         } else if ( string.equals( "dose" ) ) {
