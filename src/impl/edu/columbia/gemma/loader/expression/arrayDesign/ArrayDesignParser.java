@@ -52,13 +52,13 @@ public class ArrayDesignParser extends BasicLineParser {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
         ad.setName( fields[0] );
-        ad.setDescription( fields[4] );
+        ad.setDescription( fields[5] );
 
         Contact manufacturer = Contact.Factory.newInstance();
         manufacturer.setName( fields[1] );
         ad.setDesignProvider( manufacturer );
 
-        ad.setAdvertisedNumberOfDesignElements( Integer.parseInt( fields[3] ) );
+        ad.setAdvertisedNumberOfDesignElements( Integer.parseInt( fields[4] ) );
         return ad;
     }
 
