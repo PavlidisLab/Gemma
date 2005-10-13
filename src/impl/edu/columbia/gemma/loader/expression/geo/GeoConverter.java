@@ -424,6 +424,7 @@ public class GeoConverter implements Converter {
         String title = sample.getTitle();
         if ( StringUtils.isBlank( title ) ) {
             throw new IllegalArgumentException( "Title cannot be blank for sample " + sample );
+            // log.warn( "Blank title for sample " + sample );
         }
         bioAssay.setName( sample.getTitle() );
         bioAssay.setDescription( sample.getDescription() );
@@ -552,8 +553,8 @@ public class GeoConverter implements Converter {
     // log.debug( "Converting subset: " + subset.getType() );
     // ExpressionExperimentSubSet ees = convertSubset( subset );
     // result.getSubsets().add( ees );
-    //        }
-    //    }
+    // }
+    // }
 
     /**
      * Convert a variable into a ExperimentalFactor
