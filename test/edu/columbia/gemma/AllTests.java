@@ -49,8 +49,9 @@ import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserIntegrationTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
-import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceTest;
+import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceIntegrationTest;
 import edu.columbia.gemma.loader.expression.geo.GeoFamilyParserTest;
+import edu.columbia.gemma.loader.expression.geo.RawDataFetcherTest;
 import edu.columbia.gemma.loader.expression.mage.MageLoadTest;
 import edu.columbia.gemma.loader.expression.mage.MageMLParserTest;
 import edu.columbia.gemma.loader.expression.smd.SMDManagerImplTest;
@@ -143,8 +144,9 @@ public class AllTests {
         suite.addTestSuite( DataFileFetcherTest.class );
 
         // loader.expression.geo
-        suite.addTestSuite( GeoDatasetServiceTest.class );
+        suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         suite.addTestSuite( GeoFamilyParserTest.class );
+        suite.addTestSuite( RawDataFetcherTest.class );
 
         // loader.expression.mage
         suite.addTestSuite( MageMLParserTest.class );
