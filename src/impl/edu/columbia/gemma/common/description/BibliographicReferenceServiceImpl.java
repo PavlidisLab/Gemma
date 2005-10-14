@@ -141,4 +141,17 @@ public class BibliographicReferenceServiceImpl extends
         this.getBibliographicReferenceDao().remove( bibliographicReference );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleAddDocument(byte[],
+     *      edu.columbia.gemma.common.description.BibliographicReference)
+     */
+    @Override
+    protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) throws Exception {
+        bibliographicReference.setFullTextPDF( pdfFile );
+        this.getBibliographicReferenceDao().update( bibliographicReference );
+
+    }
+
 }

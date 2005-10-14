@@ -134,8 +134,7 @@ public class DatasetCombiner {
      */
     public static GeoSampleCorrespondence findGSECorrespondence( Collection<GeoDataset> dataSets ) {
 
-        if ( dataSets == null || dataSets.size() < 2 )
-            throw new IllegalArgumentException( "Must be multiple data sets" );
+        if ( dataSets == null || dataSets.size() < 2 ) return null;
 
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
         LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();

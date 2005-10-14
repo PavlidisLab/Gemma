@@ -18,7 +18,7 @@
  				document.searchForm.submit();
 			}
 		}
-		<%-- Uncomment to use webflow implementation
+		<%-- Uncomment to use webflow implementation of "getting all"
 		if(target == 1){
 			document.searchForm._eventId.value="getBibRef"
 			document.searchForm._flowId.value="bibRef.GetAll" 
@@ -38,10 +38,10 @@
 	type="hidden" name="_currentStateId" value="criteria.view"> <INPUT
 	type="hidden" name="_eventId" value=""> <INPUT type="hidden"
 	name="_flowId" value="">
-<TABLE width="100%">
+<TABLE width="40%">
 	<TR>
 		<TD>
-		<DIV align="left"><b>Search External Databases For PubMed ID</b></DIV>
+		<DIV align="left"><b>Search PubMed for references</b></DIV>
 		</TD>
 	</TR>
 	<TR>
@@ -70,7 +70,7 @@
 		</TD>
 	</TR>
 	<TR>
-		<TD COLSPAN="2">
+		<TD COLSPAN="2" align="left">
 		<DIV align="right"><INPUT type="button"
 			onclick="javascript:selectButton(0)" value="Search"></DIV>
 		</TD>

@@ -38,9 +38,18 @@ public class HardwareDaoImpl extends edu.columbia.gemma.common.protocol.Hardware
     public Hardware find( Hardware hardware ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Hardware.class );
-            queryObject.add( Restrictions.eq( "name", hardware.getName() ) ).add(
-                    Restrictions.eq( "make", hardware.getMake() ) )
-                    .add( Restrictions.eq( "model", hardware.getModel() ) );
+
+            if ( hardware.getName() != null ) {
+                queryObject.add( Restrictions.eq( "name", hardware.getName() ) );
+            }
+
+            if ( hardware.getMake() != null ) {
+                queryObject.add( Restrictions.eq( "make", hardware.getMake() ) );
+            }
+            if ( hardware.getModel() != null ) {
+                queryObject.add( Restrictions.eq( "model", hardware.getModel() ) );
+            }
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -60,7 +69,10 @@ public class HardwareDaoImpl extends edu.columbia.gemma.common.protocol.Hardware
 
     @Override
     public Hardware findOrCreate( Hardware hardware ) {
-        if ( hardware == null || hardware.getMake() == null || hardware.getModel() == null ) return null;
+        if ( hardware == null
+                || ( hardware.getName() == null && hardware.getMake() == null && hardware.getModel() == null ) ) {
+            throw new IllegalArgumentException( "Hardware is null; or has no fields to search on." );
+        }
         Hardware newHardware = find( hardware );
         if ( newHardware != null ) {
             BeanPropertyCompleter.complete( newHardware, hardware );

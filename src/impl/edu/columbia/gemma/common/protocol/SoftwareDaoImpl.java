@@ -38,8 +38,12 @@ public class SoftwareDaoImpl extends edu.columbia.gemma.common.protocol.Software
     public Software find( Software software ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Software.class );
-            queryObject.add( Restrictions.eq( "name", software.getName() ) ).add(
-                    Restrictions.eq( "description", software.getDescription() ) );
+
+            queryObject.add( Restrictions.eq( "name", software.getName() ) );
+
+            if ( software.getDescription() != null )
+                queryObject.add( Restrictions.eq( "description", software.getDescription() ) );
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {

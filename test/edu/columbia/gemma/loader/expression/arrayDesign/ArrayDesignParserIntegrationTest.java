@@ -24,6 +24,28 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
+import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.description.DatabaseEntryDao;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.common.description.LocalFileDao;
+import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.protocol.HardwareDao;
+import edu.columbia.gemma.common.protocol.ProtocolDao;
+import edu.columbia.gemma.common.protocol.SoftwareDao;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDao;
+import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.CompoundDao;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceDao;
+import edu.columbia.gemma.expression.designElement.DesignElementDao;
+import edu.columbia.gemma.expression.designElement.ReporterDao;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.expression.experiment.FactorValueDao;
+import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
@@ -41,17 +63,39 @@ public class ArrayDesignParserIntegrationTest extends BaseServiceTestCase {
 
     private ArrayDesignParser arrayDesignParser = null;
     private ArrayDesignPersister arrayDesignLoader = null;
-    private PersisterHelper persisterHelper;
+    private PersisterHelper ph;
 
     /**
      * set up
      */
     protected void setUp() throws Exception {
         super.setUp();
-        persisterHelper = new PersisterHelper();
+        ph = new PersisterHelper();
+        ph.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
+        ph.setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
+        ph.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
+        ph.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
+        ph.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
+        ph.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
+        ph.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
+        ph.setProtocolDao( ( ProtocolDao ) ctx.getBean( "protocolDao" ) );
+        ph.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
+        ph.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
+        ph.setTaxonDao( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
+        ph.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
+        ph.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
+        ph.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
+        ph.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
+        ph.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
+        ph.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
+        ph.setBioSequenceDao( ( BioSequenceDao ) ctx.getBean( "bioSequenceDao" ) );
+        ph.setFactorValueDao( ( FactorValueDao ) ctx.getBean( "factorValueDao" ) );
+        ph.setCompositeSequenceDao( ( CompositeSequenceDao ) ctx.getBean( "compositeSequenceDao" ) );
+        ph.setReporterDao( ( ReporterDao ) ctx.getBean( "reporterDao" ) );
+        ph.setDesignElementDataVectorDao( ( DesignElementDataVectorDao ) ctx.getBean( "designElementDataVectorDao" ) );
         arrayDesignParser = new ArrayDesignParser();
         arrayDesignLoader = new ArrayDesignPersister();
-        arrayDesignLoader.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
+        arrayDesignLoader.setPersisterHelper( ph );
     }
 
     /**
@@ -70,7 +114,7 @@ public class ArrayDesignParserIntegrationTest extends BaseServiceTestCase {
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/array.txt" );
         arrayDesignParser.parse( is );
-        persisterHelper.persist( arrayDesignParser.getResults() );
+        ph.persist( arrayDesignParser.getResults() );
     }
 
 }

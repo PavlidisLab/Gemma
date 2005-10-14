@@ -25,14 +25,16 @@
         </style>
     </head>
 <body<decorator:getProperty property="body.id" writeEntireProperty="true"/>>
-
+  
     <div class="standardsNote">
         <fmt:message key="errors.browser.warning"/>
     </div>
-
+<%-- Gemma logo --%>
+         
     <div id="screen">
 
         <div id="header">
+       
             <% if (request.getRequestURL().indexOf("login.jsp") == -1) { %>
             <c:if test="${sessionScope.currentUserForm != null}">
                 <div id="userStatus">
@@ -45,8 +47,7 @@
             <c:import url="/common/header.jsp"/>
         </div>
         
-        <%-- Gemma --%>
-        <img src="<%=request.getContextPath()%>/images/logo/gemOnlySmall.gif" />
+       <a href="<%=request.getContextPath()%>"><img src="<%=request.getContextPath()%>/images/logo/gemOnlySmall.gif" /></a> 
 		
         <c:if test="${sessionScope.currentUserForm != null}">
             <c:import url="/WEB-INF/pages/menu.jsp"/>

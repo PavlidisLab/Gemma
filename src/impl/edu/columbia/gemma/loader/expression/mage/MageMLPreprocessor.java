@@ -41,6 +41,9 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.util.ConfigUtils;
 
 /**
+ * Parse and persist the raw data files from MAGE-ML files. Files are also created that contain the data organized by
+ * quantitation type. The input files are normally organized by bioassay. Note that this does not perform any
+ * normalization or other types of preprocessing.
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
@@ -220,7 +223,7 @@ public class MageMLPreprocessor implements Preprocessor {
 
             File outputDir = new File( localMatrixFilepath + File.separator + this.experimentName );
 
-            log.info("Seeking or creating output directory...");
+            log.info( "Seeking or creating output directory..." );
             if ( !outputDir.exists() && !outputDir.mkdirs() ) {
                 log.warn( "Could not create output directory " + outputDir );
                 outputDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + experimentName );

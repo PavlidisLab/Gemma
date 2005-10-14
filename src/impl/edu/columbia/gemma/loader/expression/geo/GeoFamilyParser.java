@@ -157,7 +157,7 @@ public class GeoFamilyParser implements Parser {
 
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             @SuppressWarnings("synthetic-access")
-            public Boolean call() throws IOException {
+            public Boolean call() {
                 return doParse( dis );
             }
         } );
@@ -295,7 +295,7 @@ public class GeoFamilyParser implements Parser {
      * @param dis
      * @throws IOException
      */
-    private Boolean doParse( BufferedReader dis ) throws IOException {
+    private Boolean doParse( BufferedReader dis ) {
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
         haveReadSeriesDataHeader = false;
@@ -785,7 +785,7 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!sample_table_end" ) ) {
             inSampleTable = false;
         } else if ( startsWithIgnoreCase( line, "!Sample_title" ) ) {
-            if ( !StringUtils.isBlank( currentSample().getTitle() ) ) {
+            if ( StringUtils.isBlank( currentSample().getTitle() ) ) {
                 sampleSet( currentSampleAccession, "title", value );
             } else {
                 log.debug( "Sample " + currentSample() + " already has title " + currentSample().getTitle() );

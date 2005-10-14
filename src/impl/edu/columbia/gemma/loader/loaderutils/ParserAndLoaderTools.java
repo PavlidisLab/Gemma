@@ -93,14 +93,7 @@ public class ParserAndLoaderTools {
         if ( path == null ) throw new IllegalArgumentException();
 
         URL urlPattern = new URL( path );
-
-        try {
-            return urlPattern.openStream();
-        } catch ( IOException e ) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return null;
+        return urlPattern.openStream();
     }
 
     /**

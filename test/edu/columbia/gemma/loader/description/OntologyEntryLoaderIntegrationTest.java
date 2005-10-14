@@ -35,8 +35,6 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
- * loading.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
@@ -46,7 +44,7 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  */
 public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderIntegrationTest.class );
-    String url = "http://archive.godatabase.org/latest/go_200505-termdb.rdf-xml.gz";
+    String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
     OntologyEntryPersister ontologyEntryPersister = null;
 
     OntologyEntryParser ontologyEntryParser = null;
@@ -54,8 +52,7 @@ public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
     PersisterHelper ph;
 
     /**
-     * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
-     * localized to the Gemma project it has been added to the test suite.
+     * Tests both the parser and the loader.
      * 
      * @throws SAXException
      * @throws IOException

@@ -44,6 +44,11 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
  */
 public class DatasetFetcher extends FtpFetcher {
     /**
+     * 
+     */
+    private static final String SOFT_GZ = ".soft.gz";
+
+    /**
      * @throws ConfigurationException
      */
     public DatasetFetcher() throws ConfigurationException {
@@ -61,16 +66,16 @@ public class DatasetFetcher extends FtpFetcher {
 
         try {
             if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
-            String seekFile = baseDir + "/" + accession + ".soft.gz";
+            String seekFile = baseDir + "/" + accession + SOFT_GZ;
             File newDir = mkdir( accession );
-            File outputFile = new File( newDir, accession + ".soft.gz" );
+            File outputFile = new File( newDir, accession + SOFT_GZ );
             success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
             f.disconnect();
 
             if ( success ) {
                 // get meta-data about the file.
                 LocalFile file = fetchedFile( seekFile, outputFile.getAbsolutePath() );
-                log.info( "Got " + accession + ".xls.gz" + " for experiment(set) " + accession + ". Output file is "
+                log.info( "Got " + accession + SOFT_GZ + " for experiment(set) " + accession + ". Output file is "
                         + outputFile.getAbsolutePath() );
 
                 // no need to unpack the file, we process as is.

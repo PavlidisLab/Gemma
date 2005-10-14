@@ -202,16 +202,16 @@
         </property>
         <property name="objectDefinitionSource">
             <value>
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.getAllExpressionExperiments=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.createExpressionExperiment=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.updateExpressionExperiment=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.removeExpressionExperiment=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByInvestigator=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.getExperimentalDesigns=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.saveExperimentalDesign=user,adminadmin
-                edu.columbia.gemma.expression.experiment.ExperimentalFactorService.getAllExperimentalFactors=user,adminadmin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user,admina
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.getAllExpressionExperiments=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.createExpressionExperiment=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.updateExpressionExperiment=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.removeExpressionExperiment=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin
+                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.getExperimentalDesigns=user,admin
+                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.saveExperimentalDesign=user,admin
+                edu.columbia.gemma.expression.experiment.ExperimentalFactorService.getAllExperimentalFactors=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalFactorService.saveExperimentalFactor=user,admin
                 edu.columbia.gemma.expression.experiment.FactorValueService.getAllFactorValues=user,admin
                 edu.columbia.gemma.expression.experiment.FactorValueService.saveFactorValue=user,admin
@@ -220,7 +220,7 @@
                 edu.columbia.gemma.expression.designElement.CompositeSequenceService.saveCompositeSequence=user,admin
                 edu.columbia.gemma.expression.designElement.CompositeSequenceService.getAllCompositeSequences=user,admin, AFTER_ACL_ARRAYDESIGN_COLLECTION_READ
                 edu.columbia.gemma.expression.designElement.ReporterService.saveReporter=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,adminadmin
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_ARRAYDESIGN_EDIT
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
@@ -323,6 +323,27 @@
         <property name="processDomainObjectClass">
             <value>
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesign
+            </value>
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION" />
+                <ref local="SimpleAclEntry.READ_WRITE" />
+            </list>
+        </property>
+    </bean>
+    <!--  voter that can be applied to any operation on a describable -->
+    <bean id="describableVoter"
+        class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager">
+            <ref bean="aclManager" />
+        </property>
+        <property name="processConfigAttribute">
+            <value>ACL_DESCRIBABLE_EDIT</value>
+        </property>
+        <property name="processDomainObjectClass">
+            <value>
+                edu.columbia.gemma.common.Describable
             </value>
         </property>
         <property name="requirePermission">

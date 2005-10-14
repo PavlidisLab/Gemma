@@ -81,6 +81,7 @@ import org.biomage.Common.Extendable;
 import org.biomage.Description.Database;
 import org.biomage.Description.Description;
 import org.biomage.Description.OntologyEntry;
+import org.biomage.DesignElement.Feature;
 import org.biomage.DesignElement.FeatureInformation;
 import org.biomage.DesignElement.FeatureReporterMap;
 import org.biomage.DesignElement.ReporterCompositeMap;
@@ -612,12 +613,13 @@ public class MageMLConverterHelper {
             LinkedHashMap<String, DesignElement> convertedDesignElements = new LinkedHashMap<String, DesignElement>();
             for ( org.biomage.DesignElement.DesignElement designElement : designElements ) {
                 DesignElement de = convertDesignElement( designElement );
+                if ( de == null ) continue;
                 convertedDesignElements.put( de.getName(), de );
             }
 
             if ( convertedDesignElements.size() == 0 ) {
-                // FIXME
-                // This happens with affymetrix raw data, which don't have explicit probe names.
+                // This happens with affymetrix raw data, which don't have explicit probe names. Not much to do about
+                // it.
             }
 
             edu.columbia.gemma.expression.bioAssay.BioAssay convertedBioAssay = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory
@@ -2354,9 +2356,21 @@ public class MageMLConverterHelper {
             return convertReporter( ( org.biomage.DesignElement.Reporter ) designElement );
         } else if ( designElement instanceof org.biomage.DesignElement.CompositeSequence ) {
             return convertCompositeSequence( ( org.biomage.DesignElement.CompositeSequence ) designElement );
+        } else if ( designElement instanceof Feature ) {
+            return convertFeature( ( Feature ) designElement );
         } else {
             throw new IllegalArgumentException( "Can't convert a " + designElement.getClass().getName() );
         }
+    }
+
+    /**
+     * @param feature
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public DesignElement convertFeature( Feature feature ) {
+        // I think we just have to ignore this.
+        return null;
     }
 
     /**

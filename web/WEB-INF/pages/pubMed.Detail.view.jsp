@@ -16,7 +16,7 @@
 		}
 		if(target == 1){
 		<%-- confirm deletion of item --%>
-			if (confirm("Are you sure you want to delete this?")){
+			if (confirm("Are you sure you want to delete this reference from the system?")){
 				document.backForm._eventId.value="delete"
 				document.backForm.action="bibRefDetails.htm"
 				<%--
@@ -67,18 +67,19 @@
 				<TD><B>Issue</B></TD>
 				<TD><jsp:getProperty name="bibliographicReference" property="issue"/></TD>
 			</TR>
+            <TR>
+                <TD><B>Publication Date</B></TD>
+                <TD><jsp:getProperty name="bibliographicReference" property="publicationDate"/></TD>
+            </TR>
 			<TR>
 				<TD><B>Publication</B></TD>
 				<TD><jsp:getProperty name="bibliographicReference" property="publication"/></TD>
 			</TR>
 			<TR>
-				<TD><B>Abstract Text</B></TD>
+				<TD><B>Abstract</B></TD>
 				<TD><jsp:getProperty name="bibliographicReference" property="abstractText"/></TD>
 			</TR>
-			<TR>
-				<TD><B>Publication Date</B></TD>
-				<TD><jsp:getProperty name="bibliographicReference" property="publicationDate"/></TD>
-			</TR>
+			
 
 			<TR>
 				<TD COLSPAN="2"><HR></TD>

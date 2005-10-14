@@ -29,7 +29,7 @@ import org.springframework.webflow.ViewDescriptor;
 
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
-import edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedAction;
+import edu.columbia.gemma.web.controller.flow.bibref.GetPubMedAction;
 
 /**
  * Test the PubMedAction used in the flow pubMed.Search

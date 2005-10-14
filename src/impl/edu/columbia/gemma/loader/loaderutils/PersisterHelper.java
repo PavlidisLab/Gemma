@@ -244,6 +244,8 @@ public class PersisterHelper implements Persister {
             return persistBioAssay( ( BioAssay ) entity );
         } else if ( entity instanceof OntologyEntry ) {
             return persistOntologyEntry( ( OntologyEntry ) entity );
+        } else if ( entity instanceof Software ) {
+            return persistSoftware( ( Software ) entity );
         } else if ( entity instanceof Gene ) {
             return persistGene( ( Gene ) entity );
         } else if ( entity instanceof Compound ) {
@@ -259,6 +261,35 @@ public class PersisterHelper implements Persister {
         } else {
             throw new IllegalArgumentException( "Don't know how to persist a " + entity.getClass().getName() );
         }
+
+    }
+
+    /**
+     * @param software
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Software persistSoftware( Software software ) {
+
+        if ( !isTransient( software ) ) return software;
+
+        Collection<Software> components = software.getSoftwareComponents();
+
+        if ( components != null && components.size() > 0 ) {
+            for ( Software component : components ) {
+                component.setId( persistSoftware( component ).getId() );
+            }
+        }
+
+        if ( software.getSoftwareManufacturers() != null && software.getSoftwareManufacturers().size() > 0 ) {
+            for ( Contact manufacturer : ( Collection<Contact> ) software.getSoftwareManufacturers() ) {
+                manufacturer.setId( persistContact( manufacturer ).getId() );
+            }
+        }
+
+        software.setHardware( persistHardware( software.getHardware() ) );
+
+        return softwareDao.findOrCreate( software );
 
     }
 
@@ -497,12 +528,39 @@ public class PersisterHelper implements Persister {
         protocol.setType( type );
 
         for ( Software software : ( Collection<Software> ) protocol.getSoftwareUsed() ) {
-            software = softwareDao.findOrCreate( software );
+            software.setId( persistSoftware( software ).getId() );
         }
 
         for ( Hardware hardware : ( Collection<Hardware> ) protocol.getHardwares() ) {
-            hardware = hardwareDao.findOrCreate( hardware );
+            hardware.setId( persistHardware( hardware ).getId() );
         }
+    }
+
+    /**
+     * @param hardware
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Hardware persistHardware( Hardware hardware ) {
+
+        if ( hardware == null ) return null;
+        if ( !isTransient( hardware ) ) return hardware;
+
+        if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
+            for ( Software software : ( Collection<Software> ) hardware.getSoftwares() ) {
+                software.setId( persistSoftware( software ).getId() );
+            }
+        }
+
+        hardware.setType( persistOntologyEntry( hardware.getType() ) );
+
+        if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
+            for ( Contact manufacturer : ( Collection<Contact> ) hardware.getHardwareManufacturers() ) {
+                manufacturer.setId( persistContact( manufacturer ).getId() );
+            }
+        }
+
+        return hardwareDao.findOrCreate( hardware );
     }
 
     /**
@@ -948,6 +1006,7 @@ public class PersisterHelper implements Persister {
      * @param entity
      */
     public void remove( Collection entities ) {
+        if ( entities == null ) return;
         for ( Object object : entities ) {
             remove( object );
         }

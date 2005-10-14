@@ -11,7 +11,7 @@ public class BaseFlowTestCase extends AbstractFlowExecutionTests {
     }
 
     protected String[] getConfigLocations() {
-        return SpringContextUtil.getConfigLocations();
+        return SpringContextUtil.getConfigLocations( true );
     }
 
 }
