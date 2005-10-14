@@ -16,7 +16,7 @@
 		if(target == 1){
 			document.backForm._eventId.value="edit"
 			document.backForm._flowId.value="arrayDesign.Edit"
-			document.backForm.action="search.htm"
+			document.backForm.action="flowController.htm"
 		}
 		document.backForm.submit();
 	}

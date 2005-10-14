@@ -13,7 +13,7 @@
 </script>
 <HEAD></HEAD>
 <BODY>
-<FORM name="newSearchForm" action="search.htm"><INPUT type="hidden"
+<FORM name="newSearchForm" action="flowController.htm"><INPUT type="hidden"
     name="_flowExecutionId"
     value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
     type="hidden" name="_eventId" value=""> <INPUT type="hidden"

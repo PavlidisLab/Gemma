@@ -32,7 +32,7 @@
 </HEAD>
 <BODY>
 <DIV align="left">
-<FORM name="searchForm" action="search.htm"><INPUT type="hidden"
+<FORM name="searchForm" action="flowController.htm"><INPUT type="hidden"
 	name="_flowExecutionId"
 	value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
 	type="hidden" name="_currentStateId" value="criteria.view"> <INPUT

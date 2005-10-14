@@ -20,14 +20,14 @@
 				<%--
 				Not yet implemented for webflows
 				document.backForm._flowId.value="pubMed.Delete" 
-				document.backForm.action="search.htm"
+				document.backForm.action="flowController.htm"
 				--%>
 				}
 		}
 		if(target == 2){
 			document.detailsForm._eventId.value="edit"
 			document.detailsForm._flowId.value="expressionExperiment.Edit"
-			document.detailsForm.action="search.htm"
+			document.detailsForm.action="flowController.htm"
 		}
 		document.detailsForm.submit();
 	}

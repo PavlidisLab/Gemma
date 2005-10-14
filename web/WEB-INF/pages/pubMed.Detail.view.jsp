@@ -11,7 +11,7 @@
 		if(target == 0){
 			document.backForm._eventId.value="back" 
 			<%-- uncomment when using webflows
-			document.backForm.action="search.htm" --%>
+			document.backForm.action="flowController.htm" --%>
 			document.backForm.action="bibRefs.htm"
 		}
 		if(target == 1){
@@ -22,7 +22,7 @@
 				<%--
 				Not yet implemented for webflows
 				document.backForm._flowId.value="pubMed.Delete" 
-				document.backForm.action="search.htm"
+				document.backForm.action="flowController.htm"
 				--%>
 				}
 		}
@@ -30,7 +30,7 @@
 		<%-- enter the flow --%>
 			document.backForm._eventId.value="edit"
 			document.backForm._flowId.value="pubMed.Edit"
-			document.backForm.action="search.htm"			
+			document.backForm.action="flowController.htm"			
 		}
 		document.backForm.submit();
 	}

@@ -231,7 +231,7 @@
     _flowId to the client view (ie. jsp).  If this is not specified, you must specify
     a ServletFlowExecutionManager.  I have added the _flowId to the jsp's, but have also specified the ServletFlowExecutionManager.
 -->
-<bean id="frontController" name="/search.htm"
+<bean id="frontController" name="/flowController.htm"
     class="org.springframework.webflow.mvc.FlowController">
     <property name="cacheSeconds" value="5" />
     <property name="flowExecutionManager" ref="flowExecutionManager" />
