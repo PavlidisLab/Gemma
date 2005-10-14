@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.web.controller.common.auditAndSecurity;
 
 import java.io.File;
@@ -18,7 +36,7 @@ import edu.columbia.gemma.web.Constants;
 import edu.columbia.gemma.web.controller.BaseFormController;
 
 /**
- * Controller class to upload Files
+ * Controller class to upload Files. This demonstrates the technique, but isn't generally useful.
  * <p>
  * <a href="FileUploadFormController.java.html"><i>View Source</i></a>
  * </p>
@@ -29,7 +47,6 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
  * @version $Id$
- * 
  * @spring.bean id="fileUploadController" name="/selectFile.html /uploadFile.html"
  * @spring.property name="commandName" value="fileUpload"
  * @spring.property name="commandClass" value="edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload"
@@ -38,6 +55,10 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.property name="successView" value="uploadDisplay"
  */
 public class FileUploadController extends BaseFormController {
+
+    /**
+     * 
+     */
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         FileUpload fileUpload = ( FileUpload ) command;
@@ -63,10 +84,10 @@ public class FileUploadController extends BaseFormController {
             dirPath.mkdirs();
         }
 
-        //retrieve the file data
+        // retrieve the file data
         InputStream stream = file.getInputStream();
 
-        //write the file to the file specified
+        // write the file to the file specified
         OutputStream bos = new FileOutputStream( uploadDir + file.getOriginalFilename() );
         int bytesRead = 0;
         byte[] buffer = new byte[8192];
@@ -77,7 +98,7 @@ public class FileUploadController extends BaseFormController {
 
         bos.close();
 
-        //close the stream
+        // close the stream
         stream.close();
 
         // place the data into the request for retrieval on next page
@@ -94,6 +115,9 @@ public class FileUploadController extends BaseFormController {
         return new ModelAndView( getSuccessView() );
     }
 
+    /**
+     * 
+     */
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
