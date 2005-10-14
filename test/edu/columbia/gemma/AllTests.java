@@ -32,6 +32,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceDaoImplTest;
 import edu.columbia.gemma.common.description.BibliographicReferenceServiceImplTest;
 import edu.columbia.gemma.common.description.DatabaseEntryDaoImplTest;
 import edu.columbia.gemma.common.description.ExternalDatabaseServiceImplTest;
+import edu.columbia.gemma.common.description.LocalFileServiceImplTest;
 import edu.columbia.gemma.common.protocol.ProtocolServiceTest;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
@@ -49,7 +50,7 @@ import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserIntegrationTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
-import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceIntegrationTest;
+// import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceIntegrationTest;
 import edu.columbia.gemma.loader.expression.geo.GeoFamilyParserTest;
 import edu.columbia.gemma.loader.expression.geo.RawDataFetcherTest;
 import edu.columbia.gemma.loader.expression.mage.MageLoadTest;
@@ -105,6 +106,7 @@ public class AllTests {
         suite.addTestSuite( BibliographicReferenceServiceImplTest.class );
         suite.addTestSuite( DatabaseEntryDaoImplTest.class );
         suite.addTestSuite( ExternalDatabaseServiceImplTest.class );
+        suite.addTestSuite( LocalFileServiceImplTest.class );
 
         // common.protocol
         suite.addTestSuite( ProtocolServiceTest.class );
@@ -144,7 +146,7 @@ public class AllTests {
         suite.addTestSuite( DataFileFetcherTest.class );
 
         // loader.expression.geo
-        suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
+        // suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         suite.addTestSuite( GeoFamilyParserTest.class );
         suite.addTestSuite( RawDataFetcherTest.class );
 
