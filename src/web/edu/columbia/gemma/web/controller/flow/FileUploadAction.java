@@ -69,10 +69,14 @@ public class FileUploadAction extends FormAction {
      * @return
      * @throws Exception
      */
+    @Override
     public Event doExecute( RequestContext context ) throws Exception {
         assert context != null;
-        bindAndValidate( context );
-        FileUpload fub = ( FileUpload ) context.getRequestScope().getAttribute( "file" );
+        // bindAndValidate( context ); // causes NPE.
+        FileUpload fub = ( FileUpload ) context.getFlowScope().getAttribute( "file" );
+        if ( fub == null ) {
+            throw new RuntimeException( "FileUpload was null" );
+        }
         byte[] fileData = fub.getFile();
 
         // the directory to upload to.. .I don't know what this does.

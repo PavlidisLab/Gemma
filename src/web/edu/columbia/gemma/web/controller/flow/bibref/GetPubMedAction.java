@@ -53,6 +53,7 @@ public class GetPubMedAction extends AbstractAction {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
+    @Override
     protected Event doExecute( RequestContext context ) throws Exception {
         String pubMedId = ( String ) context.getFlowScope().getRequiredAttribute( "pubMedId", String.class );
         BibliographicReference br = getBibliographicReferenceService().findByExternalId( pubMedId );
