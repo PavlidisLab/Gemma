@@ -390,12 +390,8 @@
 
 <!--  ============================================================= -->
 <!-- File upload, as in the example -->
-<bean name="/fileupload.htm"
-    class="org.springframework.webflow.mvc.FlowController">
-    <property name="flow" ref="fileupload" />
-</bean>
 
-<bean id="fileupload"
+<bean id="fileUploader"
     class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location"
         value="classpath:edu/columbia/gemma/web/controller/flow/fileUpload-flow.xml" />
@@ -403,12 +399,6 @@
 
 <bean id="uploadFileAction"
     class="edu.columbia.gemma.web.controller.flow.FileUploadAction" />
-
-<!-- 
-    support for multipart requests using jakarta commons file upload
-    make sure you have the fileupload jar in your classpath
-    The multipartResolver is defined elsewhere.
--->
 
  
 <!--  ============================================================= -->
