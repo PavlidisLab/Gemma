@@ -26,6 +26,8 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
@@ -55,6 +57,8 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.property name="successView" value="uploadDisplay"
  */
 public class FileUploadController extends BaseFormController {
+
+    private static Log log = LogFactory.getLog( FileUploadController.class.getName() );
 
     /**
      * 
@@ -111,6 +115,8 @@ public class FileUploadController extends BaseFormController {
         String link = request.getContextPath() + "/resources" + "/" + request.getRemoteUser() + "/";
 
         request.setAttribute( "link", link + file.getOriginalFilename() );
+
+        log.warn( "Uploaded file!" );
 
         return new ModelAndView( getSuccessView() );
     }

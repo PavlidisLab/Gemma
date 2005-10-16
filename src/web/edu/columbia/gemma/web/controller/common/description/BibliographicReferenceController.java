@@ -95,6 +95,8 @@ public class BibliographicReferenceController implements Controller {
 
         log.debug( "request parameter pubMedId: " + request.getParameter( "pubMedId" )
                 + " has bibliographicReference: " + bibRef );
+        
+      
 
         String event = request.getParameter( "_eventId" );
         if ( event != null && event.equals( "delete" ) ) {
