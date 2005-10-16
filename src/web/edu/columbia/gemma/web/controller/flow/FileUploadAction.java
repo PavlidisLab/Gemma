@@ -20,6 +20,7 @@ package edu.columbia.gemma.web.controller.flow;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.commons.logging.Log;
@@ -72,32 +73,41 @@ public class FileUploadAction extends FormAction {
     @Override
     public Event doExecute( RequestContext context ) throws Exception {
         assert context != null;
-        // bindAndValidate( context ); // causes NPE.
-        FileUpload fub = ( FileUpload ) context.getFlowScope().getAttribute( "file" );
+
+        FileUpload fub = ( FileUpload ) context.getSourceEvent().getAttribute( "file" ); //  org.springframework.web.multipart.commons.CommonsMultipartFile
         if ( fub == null ) {
-            throw new RuntimeException( "FileUpload was null" );
+            return error( new IOException( "FileUpload parameter was null" ) );
         }
         byte[] fileData = fub.getFile();
+
+        if ( fileData == null || fileData.length == 0 ) {
+            return error( new IOException( "File data was null or empty" ) );
+        }
 
         // the directory to upload to.. .I don't know what this does.
         String uploadDir = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getContextPath();
         String user = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getRemoteUser();
 
         String uploadedFile = uploadDir + "/resources/" + user + "/";
-        log.info( "Upload  path is " + uploadedFile );
+        log.warn( "Upload  path is " + uploadedFile );
 
         // Create the directory if it doesn't exist
         File dirPath = new File( uploadDir );
 
         if ( !dirPath.exists() ) {
-            dirPath.mkdirs();
+            boolean success = dirPath.mkdirs();
+            if ( !success ) {
+                return error( new IOException( "Could not make output directory " + dirPath ) );
+            }
         }
 
-        // write the data to the file specified
-        OutputStream bos = new FileOutputStream( uploadedFile );
-        bos.write( fileData, 0, fileData.length );
-        bos.close();
-
+        try {
+            OutputStream bos = new FileOutputStream( uploadedFile );
+            bos.write( fileData, 0, fileData.length );
+            bos.close();
+        } catch ( IOException e ) {
+            return error( e );
+        }
         context.getFlowScope().setAttribute( "readFile", uploadedFile );
         return success();
     }

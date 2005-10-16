@@ -3,9 +3,9 @@
 <!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
     "http://www.springframework.org/dtd/spring-webflow.dtd">
 
-<webflow id="fileupload" start-state="selectFile">
+<webflow id="fileUploader" start-state="selectFile">
 
-    <view-state id="selectFile" view="fileForm">
+    <view-state id="selectFile" view="uploadForm">
         <transition on="submit" to="uploadFile"/>
     </view-state>
 
@@ -15,7 +15,7 @@
         <transition on="error" to="selectFile"/>
     </action-state>
     
-    <view-state id="displayConfirmation" view="confirmation">
+    <view-state id="displayConfirmation" view="uploadDisplay">
         <transition on="back" to="selectFile"/>
     </view-state>
     
