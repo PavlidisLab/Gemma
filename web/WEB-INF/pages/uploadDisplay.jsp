@@ -1,5 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload %>
+<%@ page import="edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload" %>
 <%@ page session="false" %>
 
 <title><fmt:message key="display.title"/></title>
@@ -51,8 +51,8 @@ Below is a list of attributes that were gathered in FileUploadController.java.
 </table>
 
 <%
-                FileUpload file=(FileUpload)request.getAttribute("file"); 
-                if (file.getFile()!=null && file.getFile().length>0) {
+                FileUpload file=(FileUpload)request.getAttribute("readFile"); 
+                if (file != null && file.getFile()!=null && file.getFile().length>0) {
             %>
             <TABLE border="1">
                 <TR>

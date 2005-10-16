@@ -5,7 +5,9 @@
 <fmt:message key="upload.heading" />
 </content>
 
-
+<jsp:useBean id="fileUpload" scope="request"
+    class="edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload" />
+    
 <spring:bind path="fileUpload.*">
     <c:if test="${not empty status.errorMessages}">
         <div class="error"><c:forEach var="error"
@@ -17,6 +19,7 @@
         </c:forEach></div>
     </c:if>
 </spring:bind>
+ 
 
 <fmt:message key="upload.message" />
 <div class="separator"></div>
@@ -25,16 +28,23 @@
 <%--
     The most important part is to declare your form's enctype to be "multipart/form-data"
 --%>
+<%-- uncomment for spring mvc version
 <form method="post" id="uploadForm"
     action="<c:url value="/uploadFile.html"/>"
     enctype="multipart/form-data"
     onsubmit="return validateFileUpload(this)">
-    
-    <%-- The following two fields are to support use of this form in flows --%>
-<input type="hidden" name="_flowExecutionId"
-    value="<%=request.getAttribute("flowExecutionId") %>"> <input
-    type="hidden" name="_eventId" value="submit">
+--%>
 
+<%-- use this for flow version --%>
+<form method="post" action="<c:url value="/flowController.htm"/>"  enctype="multipart/form-data"
+    id="uploadFile" onsubmit="return onFormSubmit(this)">
+    
+    <%-- The following fields are to support use of this form in flows --%>
+<input type="hidden" name="_flowExecutionId"  value="<%=request.getAttribute("flowExecutionId") %>"> 
+    <input  type="hidden" name="_eventId" value="submit">
+<input type="hidden"  name="_flowId" value=""> 
+    <input type="hidden" name="name"  value="<%=request.getAttribute("name") %>">
+    
 <table class="detail">
     <tr>
         <th><Gemma:label key="uploadForm.name" /></th>
