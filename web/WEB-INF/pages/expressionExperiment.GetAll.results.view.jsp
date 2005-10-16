@@ -32,7 +32,7 @@
 		<display:column property="accession.accession" sort="true" titleKey="expressionExperiment.id"/>
 		<display:column property="name" sort="true" href="expressionExperimentDetails.htm" paramId="name" paramProperty="name" titleKey="expressionExperiment.name"/>
 		<display:column property="source" sort="true" titleKey="expressionExperiment.source"/>
-		<display:column title="Experimental Designs" sort="true" href="experimentalDesigns.htm" >
+		<display:column title="Experimental Designs" sort="true" href="experimentalDesigns.htm" paramId="name" paramProperty="name" >
       		<c:out value="${fn:length(experimentalDesigns)}"/>
     	</display:column>
 		<display:column title="Bioassays" sort="true" href="bioAssays.htm">
