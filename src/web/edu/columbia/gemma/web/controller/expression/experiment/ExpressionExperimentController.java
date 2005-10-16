@@ -70,15 +70,15 @@ public class ExpressionExperimentController implements Controller {
         String uri = request.getRequestURI();
 
         log.info( uri );
-        
+
         /* handle "get all" case. */
         if ( uri.equals( "/Gemma/expressionExperiments.htm" ) )
             return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
                     expressionExperimentService.getAllExpressionExperiments() );
-        
+
         /* handle details or delete, depending on whether _eventId=delete. */
         else if ( uri.equals( "/Gemma/expressionExperimentDetails.htm" ) ) {
-            
+
             /* passed from jsp, and must be packed again to view in the next jsp. */
             request.setAttribute( "name", request.getParameter( "name" ) );
             log.debug( "request parameter: " + request.getAttribute( "name" ) );
@@ -97,15 +97,27 @@ public class ExpressionExperimentController implements Controller {
                 return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
                         expressionExperimentService.getAllExpressionExperiments() );
             }
-            
+
             /* details */
             return new ModelAndView( "expressionExperiment.Detail.view", "expressionExperiment",
                     expressionExperimentService.findByName( request.getParameter( "name" ) ) );
         }
-        // else if ( uri.equals( "/Gemma/experimentalDesigns.htm" ) )
-        // return new ModelAndView( "experimentalDesign.GetAll.results.view", "experimentalDesigns",
-        // expressionExperimentService.getAllExpressionExperiments() );
-        else
+
+        /*
+         * handle the event of clicking on the experimental designs (expressed as the number of experimental designs in
+         * the collection) link for this expression experiment.
+         */
+        else if ( uri.equals( "/Gemma/experimentalDesigns.htm" ) ) {
+            /*
+             * What is the difference between getParameter vs. getAttribute? I have used getAttribute because the
+             * MockHttpServletRequest does not have a setParameter method. getAttribute does not work when you fire up
+             * the webapp, but getParameter does. This could be remedied if the MockHttpServletRequest provided a method
+             * getParameter.
+             */
+            return new ModelAndView( "experimentalDesign.GetAll.results.view", "experimentalDesigns",
+                    ( expressionExperimentService.findByName( ( String ) request.getParameter( "name" ) )
+                            .getExperimentalDesigns() ) );
+        } else
             throw new RuntimeException( "There is no view to match the url" );
     }
 
