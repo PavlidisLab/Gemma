@@ -202,7 +202,7 @@
         </property>
         <property name="objectDefinitionSource">
             <value>
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user,admina
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.getAllExpressionExperiments=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.createExpressionExperiment=user,admin
