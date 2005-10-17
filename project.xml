@@ -580,6 +580,7 @@
                   <exclude>**/MageBaseTest.java</exclude>
                  <exclude>**/*IntegrationTest.java</exclude>
                 <exclude>**/org/springframework/test/**</exclude>
+                <exclude>**/AllTests.java</exclude>
             </excludes>
             <resources>
                 <resource>
