@@ -381,7 +381,7 @@
 
 <!-- The next bean is called from edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentEdit-flow.xml -->
 <bean id="expressionExperiment.Edit.formAction"
-    class="edu.columbia.gemma.web.controller.flow.action.expression.experiment.ExpressionExperimentFormEditAction">
+    class="edu.columbia.gemma.web.controller.flow.expression.experiment.ExpressionExperimentFormEditAction">
     <property name="expressionExperimentService">
         <ref bean="expressionExperimentService" />
     </property>
