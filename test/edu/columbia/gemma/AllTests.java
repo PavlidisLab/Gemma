@@ -69,7 +69,6 @@ import edu.columbia.gemma.tools.MArrayRawTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import edu.columbia.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
-import edu.columbia.gemma.web.controller.flow.action.entrez.pubmed.GetPubMedActionTests;
 import edu.columbia.gemma.web.controller.flow.entrez.pubmed.DetailBibRefFlowTests;
 import edu.columbia.gemma.web.controller.flow.entrez.pubmed.SearchPubMedFlowTests;
 
@@ -185,9 +184,6 @@ public class AllTests {
 
         // web.controller.entrez.pubmed
         suite.addTestSuite( ArrayDesignControllerTest.class );
-
-        // web.controller.flow.action.entrez.pubmed
-        suite.addTestSuite( GetPubMedActionTests.class );
 
         // web.controller.flow.entrez.pubmed
         suite.addTestSuite( SearchPubMedFlowTests.class );
