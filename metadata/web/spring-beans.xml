@@ -283,6 +283,9 @@
     <property name="pubMedXmlFetcher">
         <ref bean="pubMedXmlFetcher" />
     </property>
+    <property name="messageSource">
+      	<ref bean="messageSource"/>
+    </property>
 </bean>
 
 <!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation, and look in the jsp's to 
