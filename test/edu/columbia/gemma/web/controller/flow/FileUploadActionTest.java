@@ -75,7 +75,7 @@ public class FileUploadActionTest extends AbstractFlowExecutionTests {
         return new String[] { "classpath:WEB-INF/action-servlet.xml",
                 "classpath:WEB-INF/applicationContext-hibernate.xml",
                 "classpath:WEB-INF/applicationContext-security.xml",
-                "classpath:WEB-INF/applicationContext-validation.xml", "classpath:WEB-INF/localTestdataSource.xml" };
+                "classpath:WEB-INF/applicationContext-validation.xml", "classpath:WEB-INF/localTestDataSource.xml" };
     }
 
 }
