@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	A Spring WebFlow.  Flows can be in 1 of 4 states:	
+	view-state: displays associated view
+	action-state:  can be used to execute bean defined in bean-factory.xml
+	subflow-state: execute another flow
+	end-state: end flow sequence
+	
+	This flow is used to get all expressionExperiments.  The flow has a subflow "expressionExperiment.Detail" 
+	
+	author: keshav
+	version: $Id$
+-->
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="expressionExperiment.Search" start-state="criteria.view">
+
+	<view-state id="criteria.view"
+		view="expressionExperiment.Search.criteria.view">
+		<transition on="getExpressionExperiments" to="getAllExpressionExperiments" />
+	</view-state>
+	
+	<action-state id="getAllExpressionExperiments">
+		<action bean="expressionExperiment.Search.getAllExpressionExperiments" />
+		<transition on="success" to="expressionExperiment.results.view" />
+	</action-state>
+
+	<view-state id="expressionExperiment.results.view"
+		view="expressionExperiment.GetAll.results.view">
+		<transition on="newSearch" to="criteria.view" />
+		<transition on="select" to="expressionExperiment.set" />
+	</view-state>
+
+	<action-state id="expressionExperiment.set">
+		<action bean="expressionExperiment.Search.id.set" />
+		<transition on="success" to="expressionExperiment.Detail" />
+		<transition on="error" to="error" />
+	</action-state>
+
+	<subflow-state id="expressionExperiment.Detail" flow="expressionExperiment.Detail">
+		<attribute-mapper>
+			<input value="${sourceEvent.parameters.experimentID}" as="experimentID" />
+		</attribute-mapper>
+
+		<transition on="finish" to="criteria.view" />
+		<transition on="error" to="error" />
+	</subflow-state>
+
+	<end-state id="error" view="error.view" />
+
+</webflow>

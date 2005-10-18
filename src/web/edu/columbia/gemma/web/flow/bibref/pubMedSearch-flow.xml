@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The Gemma project
+ 
+Copyright (c) 2005 Columbia University
+  
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+ 
+	http://www.apache.org/licenses/LICENSE-2.0
+ 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!--  
+	A Spring WebFlow.  Flows can be in 1 of 4 states:	
+	view-state: displays associated view
+	action-state:  can be used to execute bean defined in bean-factory.xml
+	subflow-state: execute another flow
+	end-state: end flow sequence
+	
+	This flow is used to search for pubMed Id's.
+	Uncommented portions of this flow are implemented in mvc.  
+	
+	author: keshav
+	version: $Id$	
+-->
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+	"http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="pubMed.Search" start-state="criteria.view">
+
+	<view-state id="criteria.view" view="pubMed.Search.criteria.view">
+		<transition on="submitPubMed" to="executeQuery">
+			<action bean="pubMed.Search.criteria.formAction"
+				method="bindAndValidate" />
+		</transition>
+	</view-state>
+	 
+	<action-state id="executeQuery">
+		<action bean="pubmedExecuteQueryAction" />
+		<transition on="success" to="results.view" />
+		<transition on="error" to="criteria.view" />
+	</action-state>
+
+	<view-state id="results.view" view="pubMed.Search.results.view">
+		<transition on="newSearch" to="criteria.view" />
+		<transition on="saveBibRef" to="saveBibRef" />
+		<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
+		<transition on="select" to="pubMed.Detail" />-->
+	</view-state>
+	
+	<action-state id="saveBibRef">
+		<action bean="pubmedExecuteQueryAction" />
+		<transition on="success" to="criteria.view" />
+		<transition on="error" to="criteria.view" />
+	</action-state>
+	
+ 
+
+	<end-state id="error" view="error.view" />
+
+</webflow>
