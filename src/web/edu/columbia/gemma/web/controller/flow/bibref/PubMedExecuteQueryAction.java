@@ -21,14 +21,19 @@ package edu.columbia.gemma.web.controller.flow.bibref;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.validation.Errors;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.action.AbstractAction;
 import org.springframework.webflow.action.FormObjectAccessor;
+import org.springframework.webflow.execution.servlet.ServletEvent;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
@@ -53,6 +58,7 @@ public class PubMedExecuteQueryAction extends AbstractAction {
     private BibliographicReferenceService bibliographicReferenceService;
     private ExternalDatabaseService externalDatabaseService;
     private PubMedXMLFetcher pubMedXmlFetcher;
+    private MessageSource messageSource = null;
 
     /**
      * @param bibliographicReferenceService The bibliographicReferenceService to set.
@@ -135,6 +141,16 @@ public class PubMedExecuteQueryAction extends AbstractAction {
                     br.getPubAccession().setExternalDatabase( pubMedDb );
 
                     this.bibliographicReferenceService.saveBibliographicReference( br );
+                    
+                    /* Get the request so we can gain access to the local */
+                    HttpServletRequest request =  ( ( ServletEvent ) context.getSourceEvent()
+                    ).getRequest();
+                    
+                    Locale locale = request.getLocale();
+                    
+                    /* put 'messages' in the session so it survives redirects. */
+                    request.getSession().setAttribute("messages",  messageSource.getMessage( "bibliographicReference.saved", new Object[] { br.getPubAccession()
+                            .getAccession() }, locale ));
                 }
 
             }
@@ -152,5 +168,12 @@ public class PubMedExecuteQueryAction extends AbstractAction {
             errs.reject( "GenericError", "Some other kind of error" );
         }
         return error();
+    }
+
+    /**
+     * @param messageSource The messageSource to set.
+     */
+    public void setMessageSource( MessageSource messageSource ) {
+        this.messageSource = messageSource;
     }
 }
