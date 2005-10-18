@@ -302,11 +302,13 @@
         value="classpath:edu/columbia/gemma/web/controller/flow/bibref/pubMedEdit-flow.xml" />
 </bean>
 
-<!-- The next bean is called from edu/columbia/gemma/web/controller/flow/bibref/pubMedSearch-flow.xml -->
 <bean id="pubMed.Edit.formAction"
     class="edu.columbia.gemma.web.controller.flow.bibref.BibRefFormEditAction">
     <property name="bibliographicReferenceService">
         <ref bean="bibliographicReferenceService" />
+    </property>
+    <property name="messageSource">
+      	<ref bean="messageSource"/>
     </property>
 </bean>
 <!--  ============================================================= -->
