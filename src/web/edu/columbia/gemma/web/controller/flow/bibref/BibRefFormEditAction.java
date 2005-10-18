@@ -18,13 +18,19 @@
  */
 package edu.columbia.gemma.web.controller.flow.bibref;
 
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
 import org.springframework.webflow.action.FormAction;
+import org.springframework.webflow.execution.servlet.ServletEvent;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
@@ -41,7 +47,9 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
  */
 public class BibRefFormEditAction extends FormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
+    
     private BibliographicReferenceService bibliographicReferenceService;
+    private ResourceBundleMessageSource messageSource = null;
     private BibliographicReference bibRef = null;
 
     /**
@@ -105,12 +113,21 @@ public class BibRefFormEditAction extends FormAction {
         bibRef.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
         bibRef.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
         bibRef.setVolume( ( String ) context.getSourceEvent().getAttribute( "volume" ) );
-        // bibRef.setName( ( String ) context.getFlowScope().getAttribute( "pubMedId", String.class ) );
 
         log.info( "updating bibliographic reference " + bibRef.getPubAccession().getAccession() );
 
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
-
+        
+        /* Get the request so we can gain access to the local */
+        HttpServletRequest request =  ( ( ServletEvent ) context.getSourceEvent()
+        ).getRequest();
+        
+        Locale locale = request.getLocale();
+        
+        /* put 'messages' in the session so it survives redirects. */
+        request.getSession().setAttribute("messages",  messageSource.getMessage( "bibliographicReference.updated", new Object[] { bibRef.getPubAccession()
+                .getAccession() }, locale ));
+        
         return success();
     }
 
@@ -125,6 +142,13 @@ public class BibRefFormEditAction extends FormAction {
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param messageSource The messageSource to set.
+     */
+    public void setMessageSource( ResourceBundleMessageSource messageSource ) {
+        this.messageSource = messageSource;
     }
  
 }
