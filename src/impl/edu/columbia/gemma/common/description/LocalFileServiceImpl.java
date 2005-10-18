@@ -40,14 +40,17 @@ public class LocalFileServiceImpl extends edu.columbia.gemma.common.description.
      */
     protected void handleDeleteFile( edu.columbia.gemma.common.description.LocalFile localFile )
             throws java.lang.Exception {
+
+        if ( localFile == null ) return;
         File file = localFile.asFile();
+        if ( file == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
 
         boolean success = false;
         if ( file.exists() ) {
             success = file.delete();
         }
-        
-        if ( file.exists() || !success) {
+
+        if ( file.exists() || !success ) {
             throw new IOException( "Cannot delete file" );
         }
         this.getLocalFileDao().remove( localFile );
@@ -61,7 +64,10 @@ public class LocalFileServiceImpl extends edu.columbia.gemma.common.description.
             edu.columbia.gemma.common.description.LocalFile sourceFile,
             edu.columbia.gemma.common.description.LocalFile targetFile ) throws java.lang.Exception {
         File src = sourceFile.asFile();
+        if ( src == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
+
         File dst = targetFile.asFile();
+        if ( dst == null ) throw new IOException( "Could not convert LocalFile into java.io.File" );
 
         InputStream in = new FileInputStream( src );
         OutputStream out = new FileOutputStream( dst );
