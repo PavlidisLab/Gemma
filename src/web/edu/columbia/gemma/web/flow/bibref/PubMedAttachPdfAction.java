@@ -24,7 +24,6 @@ import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
-import org.springframework.webflow.action.FormAction;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
@@ -32,6 +31,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.FileFormat;
 import edu.columbia.gemma.common.description.FileFormatService;
 import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 
 /**
  * Action to add a PDF file to the bibliographic reference.
@@ -42,7 +42,7 @@ import edu.columbia.gemma.common.description.LocalFile;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedAttachPdfAction extends FormAction {
+public class PubMedAttachPdfAction extends AbstractFlowFormAction {
 
     protected final transient Log log = LogFactory.getLog( getClass() );
     private BibliographicReferenceService bibliographicReferenceService;

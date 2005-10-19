@@ -78,9 +78,10 @@ public class BibliographicReferenceController implements Controller {
 
         String path = elements[1];
 
-        if ( path.equals( "bibRefs.htm" ) )
+        if ( path.equals( "bibRefs.htm" ) ) {
             return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences",
                     bibliographicReferenceService.getAllBibliographicReferences() );
+        }
 
         /*
          * If uri does not equal 'bibRefs.htm', it must equal 'bibRefDetails.htm'. Pack the attribute 'pubMedId' in the
@@ -95,8 +96,6 @@ public class BibliographicReferenceController implements Controller {
 
         log.debug( "request parameter pubMedId: " + request.getParameter( "pubMedId" )
                 + " has bibliographicReference: " + bibRef );
-        
-      
 
         String event = request.getParameter( "_eventId" );
         if ( event != null && event.equals( "delete" ) ) {

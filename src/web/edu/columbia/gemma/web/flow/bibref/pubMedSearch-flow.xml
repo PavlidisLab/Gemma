@@ -36,7 +36,7 @@ limitations under the License.
 <webflow id="pubMed.Search" start-state="criteria.view">
 
 	<view-state id="criteria.view" view="pubMed.Search.criteria.view">
-		<transition on="submitPubMed" to="executeQuery">
+		<transition on="searchPubMed" to="executeQuery">
 			<action bean="pubMed.Search.criteria.formAction"
 				method="bindAndValidate" />
 		</transition>
@@ -50,19 +50,17 @@ limitations under the License.
 
 	<view-state id="results.view" view="pubMed.Search.results.view">
 		<transition on="newSearch" to="criteria.view" />
+        <transition on="viewRecord" to="record" />
 		<transition on="saveBibRef" to="saveBibRef" />
-		<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.
-		<transition on="select" to="pubMed.Detail" />-->
 	</view-state>
 	
 	<action-state id="saveBibRef">
 		<action bean="pubmedExecuteQueryAction" />
-		<transition on="success" to="criteria.view" />
-		<transition on="error" to="criteria.view" />
+		<transition on="success" to="results.view" />
+		<transition on="error" to="results.view" />
 	</action-state>
 	
- 
-
+    <end-state id="record" view="redirect:/bibRefDetails.htm?pubMedId=${flowScope.pubMedId}" /> 
 	<end-state id="error" view="error.view" />
 
 </webflow>

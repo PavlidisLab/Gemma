@@ -24,11 +24,11 @@ import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
-import org.springframework.webflow.action.FormAction;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 
 /**
  * <hr>
@@ -40,7 +40,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignFormEditAction extends FormAction {
+public class ArrayDesignFormEditAction extends AbstractFlowFormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private ArrayDesignService arrayDesignService;
     private ArrayDesign ad = null;
@@ -64,9 +64,7 @@ public class ArrayDesignFormEditAction extends FormAction {
     @Override
     public Object createFormObject( RequestContext context ) {
 
-        if ( log.isInfoEnabled() ) logScopes( context );
-        // String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
-
+        // todo: can't we just pass the arraydesign into here.
         String name = ( String ) context.getSourceEvent().getAttribute( "name" );
         context.getFlowScope().setAttribute( "name", name );
 
@@ -100,27 +98,18 @@ public class ArrayDesignFormEditAction extends FormAction {
      */
     public Event save( RequestContext context ) throws Exception {
 
-        if ( log.isInfoEnabled() ) logScopes( context );
-
         ad.setName( ( String ) context.getFlowScope().getAttribute( "name", String.class ) );
         ad.setDescription( ( String ) context.getSourceEvent().getAttribute( "description" ) );
 
-        // ad.setNumberOfFeatures( Integer.parseInt( ( String ) context.getRequestScope().getAttribute(
-        // "numberOfFeatures",
-        // String.class ) ) );
+        // TODO: need to use contact service to find or create this before setting it.
+        // ad.setDesignProvider( ( Contact ) context.getSourceEvent().getAttribute( "provider" ) );
 
         log.info( "updating ArrayDesign " + ad.getName() );
 
         getArrayDesignService().updateArrayDesign( ad );
 
+        addMessage( context, "arrayDesign.update" );
         return success();
-    }
-
-    private void logScopes( RequestContext context ) {
-
-        log.info( "originating event: " + context.getSourceEvent() );
-        log.info( "flow scope: " + context.getFlowScope().getAttributeMap() );
-        log.info( "request scope: " + context.getRequestScope().getAttributeMap() );
     }
 
     /**

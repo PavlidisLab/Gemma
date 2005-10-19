@@ -18,38 +18,34 @@
  */
 package edu.columbia.gemma.web.flow.bibref;
 
-import java.util.Locale;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
-import org.springframework.webflow.action.FormAction;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
+import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 
 /**
- * Webflow. This webflow action bean is used to handle editing of BibliographicReference form data.
+ * This webflow action bean is used to handle editing of BibliographicReference form data.
  * <hr>
  * <p>
  * Copyright (c) 2004 - 2005 Columbia University
  * 
  * @spring.bean id="bibRefFormEditAction"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name="messageSource" ref="messageSource"
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  */
-public class BibRefFormEditAction extends FormAction {
+public class BibRefFormEditAction extends AbstractFlowFormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private BibliographicReferenceService bibliographicReferenceService;
     private BibliographicReference bibRef = null;
-    private ResourceBundleMessageSource messageSource;
 
     /**
      * Programmatically set the domain object, the class is refers to, and the scope.
@@ -70,13 +66,11 @@ public class BibRefFormEditAction extends FormAction {
     @Override
     @SuppressWarnings("unchecked")
     public Object createFormObject( RequestContext context ) {
-
-        if ( log.isInfoEnabled() ) logScopes( context );
         // String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
 
         // String pubMedId = ( String ) context.getSourceEvent().getAttribute( "pubMedId" );
         // context.getFlowScope().setAttribute( "pubMedId", pubMedId );
-        return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
+        return ( BibliographicReference ) context.getSourceEvent().getAttribute( "bibliographicReference" );
 
     }
 
@@ -101,8 +95,6 @@ public class BibRefFormEditAction extends FormAction {
      */
     public Event save( RequestContext context ) throws Exception {
 
-        if ( log.isInfoEnabled() ) logScopes( context );
-
         // copy all attributes that we get from the form. Can't we do this binding automatically?
         bibRef.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
         bibRef.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
@@ -112,18 +104,9 @@ public class BibRefFormEditAction extends FormAction {
 
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
 
-        context.getRequestScope().setAttribute(
-                "messages",
-                messageSource.getMessage( "bibliographicReference.updated", new Object[] { bibRef.getPubAccession()
-                        .getAccession() }, Locale.getDefault() ) );
+        addMessage( context, "bibliographicReference.updated" );
 
         return success();
-    }
-
-    private void logScopes( RequestContext context ) {
-        log.info( "originating event: " + context.getSourceEvent() );
-        log.info( "flow scope: " + context.getFlowScope().getAttributeMap() );
-        log.info( "request scope: " + context.getRequestScope().getAttributeMap() );
     }
 
     /**
@@ -131,10 +114,6 @@ public class BibRefFormEditAction extends FormAction {
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    public void setMessageSource( org.springframework.context.support.ResourceBundleMessageSource messageSource ) {
-        this.messageSource = messageSource;
     }
 
 }

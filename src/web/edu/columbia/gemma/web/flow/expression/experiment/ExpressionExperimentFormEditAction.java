@@ -29,6 +29,7 @@ import org.springframework.webflow.action.FormAction;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentImpl;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
+import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 
 /**
  * Webflow. This webflow action bean is used to handle editing of expressionExperiment form data.
@@ -41,7 +42,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentFormEditAction extends FormAction {
+public class ExpressionExperimentFormEditAction extends AbstractFlowFormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionExperiment exprExp = null;
@@ -114,6 +115,8 @@ public class ExpressionExperimentFormEditAction extends FormAction {
 
         expressionExperimentService.updateExpressionExperiment( exprExp );
 
+        addMessage(context, "expressionExperiment.update");
+        
         return success();
     }
 
