@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.web.controller.flow;
+package edu.columbia.gemma.web.flow;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +27,7 @@ import org.springframework.webflow.test.AbstractFlowExecutionTests;
 import org.springframework.webflow.test.MockRequestContext;
 
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload;
+import edu.columbia.gemma.web.flow.FileUploadAction;
 
 /**
  * <hr>

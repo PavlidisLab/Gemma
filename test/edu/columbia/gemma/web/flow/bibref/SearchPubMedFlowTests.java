@@ -1,4 +1,4 @@
-package edu.columbia.gemma.web.controller.flow.entrez.pubmed;
+package edu.columbia.gemma.web.flow.bibref;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class SearchPubMedFlowTests extends BaseFlowTestCase {
         Map<String, String> properties = new HashMap<String, String>();
         properties.put( "pubMedId", "15173114" );
         properties.put( "_eventId", "pubMedSearch" );
-        signalEvent( new Event( this, "submitPubMed", properties ) );
+        signalEvent( new Event( this, "searchPubMed", properties ) );
         assertCurrentStateEquals( "results.view" );
         // asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 1 );
     }
