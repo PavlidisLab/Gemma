@@ -8,6 +8,31 @@
 -->
 
 <!-- ==================================================== -->
+<!-- Exception handler. -->
+<!-- ==================================================== -->
+<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+    <property name="exceptionMappings">
+        <props>
+            <prop key="java.lang.Exception">error</prop>
+        </props>
+    </property>
+</bean>
+
+
+<!-- ==================================================== -->
+<!-- Action resolvers for MultiActionControllers -->
+<!-- ==================================================== -->
+<bean id="bibRefActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/Gemma/showAllBibRef.html">showAll</prop>
+            <prop key="/Gemma/deleteBibRef.html">delete</prop>
+            <prop key="/Gemma/showBibRef.html">show</prop>
+        </props>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
 <bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
@@ -100,8 +125,8 @@
 
 
 <!-- ==================================================== -->
-<!--  Mapping urls to services. -->
-    <!-- ==================================================== -->
+<!--  Mapping urls to services. --><!--  FIXME This is never used ? -->
+<!-- ==================================================== -->
 <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/mainMenu.html /activeUsers.html /flushCache.html" />
 
 <!-- ==================================================== -->
@@ -189,11 +214,15 @@
 <!-- 
     Add one bean here for each flow. The actions are defined using XDoclet tags in the Action classes.   
 -->
+
+
 <bean id="pubMed.Search.criteria.formAction" class="org.springframework.webflow.action.FormAction">
     <property name="formObjectName" value="bibliographicReference" />
     <property name="formObjectClass" value="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
     <property name="formObjectScopeAsString" value="flow" />
 </bean>
+
+
 
 <bean id="pubMed.Search" class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedSearch-flow.xml" />
@@ -217,7 +246,7 @@
 
 
 
-<!--  ============================================================= -->
+<!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
 <bean id="conversion.service" class="org.springframework.binding.convert.support.DefaultConversionService" autowire="byType" />
 <!-- A formatter registry, a thread-safe cache for Formatters: a thread-safe, lighter weight alt. to PropertyEditors! -->

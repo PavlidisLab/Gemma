@@ -116,9 +116,10 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
                 if (  bibliographicReferenceService.alreadyExists( bibRef ) ) {
                     context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
                     addMessage( context, "bibliographicReference.alreadyInSystem" );
+                } else {
+                    context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
                 }
             } else if ( event.equals( "saveBibRef" ) ) {
-                context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
                 if ( bibRef == null ) {
                     errors = new FormObjectAccessor( context ).getFormErrors();
                     errors.reject( "PubMedXmlFetcher", "No results." );

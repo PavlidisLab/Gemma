@@ -8,33 +8,30 @@
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
+
+<HEAD>
 <SCRIPT LANGUAGE="JavaScript">
-	function selectButton(target){
-		if(target == 0){
-			document.backForm._eventId.value="back" 
-			document.backForm.action="bibRefs.htm"
-		}
-		if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
+    function selectButton(target){
+        if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
                 document.backForm._flowId.value="pubMed.Edit" 
-				document.backForm._eventId.value="delete"
-				document.backForm.action="bibRefDetails.htm"
-		}
-		if(target == 2){
-			document.backForm._eventId.value="edit"
-			document.backForm._flowId.value="pubMed.Edit"
-			document.backForm.action="flowController.htm"			
-		}
+                document.backForm._eventId.value="delete"
+                document.backForm.action="bibRefDetails.htm"
+        }
+        if(target == 2){
+            document.backForm._eventId.value="edit"
+            document.backForm._flowId.value="pubMed.Edit"
+            document.backForm.action="flowController.htm"           
+        }
         
-		document.backForm.submit();
-	}
-	</SCRIPT>
-<HEAD></HEAD>
+        document.backForm.submit();
+    }
+    </SCRIPT>
+</HEAD>
 <BODY>
 
-<FORM name="backForm" action=""><%-- uncomment when using webflow implementation
-				<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">--%>
-<input type="hidden" name="_eventId" value=""> <input type="hidden"
-    name="_flowId" value=""> <input type="hidden" name="pubMedId"
+<FORM name="backForm" action=""><input type="hidden" name="_eventId"
+    value=""> <input type="hidden" name="_flowId" value=""> <input
+    type="hidden" name="pubMedId"
     value="<%=request.getAttribute("pubMedId") %>"></FORM>
 <TABLE width="100%">
     <TR>
@@ -46,7 +43,7 @@
         </TD>
     </TR>
     <TR>
-        <TD><B>Author List</B></TD>
+        <TD><B>Authors</B></TD>
         <TD><jsp:getProperty name="bibliographicReference"
             property="authorList" /></TD>
     </TR>
@@ -67,8 +64,10 @@
     </TR>
     <TR>
         <TD><B>Publication Date</B></TD>
+        <%-- FIXME: Format this into just a year --%>
         <TD><jsp:getProperty name="bibliographicReference"
             property="publicationDate" /></TD>
+
     </TR>
     <TR>
         <TD><B>Publication</B></TD>
@@ -89,31 +88,24 @@
     </TR>
     <TR>
         <TD COLSPAN="2">
-        <table>
+        <table cellpadding="4">
             <tr>
-                <td>
-                <DIV align="right"><INPUT type="button"
-                    onclick="javascript:selectButton(0)" value="Back"></DIV>
-                </TD>
-
-                <authz:acl domainObject="${bibliographicReference}"
+                <TD><authz:acl domainObject="${bibliographicReference}"
                     hasPermission="1,6">
-                    <TD COLSPAN="2">
+
                     <DIV align="right"><INPUT type="button"
                         onclick="javascript:selectButton(1)"
                         value="Delete from Gemma"></DIV>
-                    </TD>
-                </authz:acl>
 
-                <authz:acl domainObject="${bibliographicReference}"
+                </authz:acl></TD>
+                <TD><authz:acl domainObject="${bibliographicReference}"
                     hasPermission="1,6">
-                    <TD COLSPAN="2">
+
                     <DIV align="right"><INPUT type="button"
                         onclick="javascript:selectButton(2)"
                         value="Edit"></DIV>
-                    </TD>
-                </authz:acl>
-                </td>
+
+                </authz:acl></td>
             </tr>
         </table>
         </td>

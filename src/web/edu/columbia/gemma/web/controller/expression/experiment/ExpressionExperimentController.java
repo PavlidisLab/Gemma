@@ -114,9 +114,10 @@ public class ExpressionExperimentController implements Controller {
              * the webapp, but getParameter does. This could be remedied if the MockHttpServletRequest provided a method
              * getParameter.
              */
-            return new ModelAndView( "experimentalDesign.GetAll.results.view", "experimentalDesigns",
-                    ( expressionExperimentService.findByName( ( String ) request.getParameter( "name" ) )
-                            .getExperimentalDesigns() ) );
+            return new ModelAndView(
+                    "experimentalDesign.GetAll.results.view",
+                    "experimentalDesigns",
+                    ( expressionExperimentService.findByName( request.getParameter( "name" ) ).getExperimentalDesigns() ) );
         } else
             throw new RuntimeException( "There is no view to match the url" );
     }

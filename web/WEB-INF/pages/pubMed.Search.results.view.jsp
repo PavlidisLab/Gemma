@@ -1,7 +1,10 @@
+<%-- $Id$ --%>
+<%-- Shows the results of a NCBI search for pubmed references. --%>
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
 <%@ page
     import="edu.columbia.gemma.common.description.BibliographicReference"%>
+<%@ page import="java.text.SimpleDateFormat"%>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -21,7 +24,7 @@
     name="pubMedId" value="<%=request.getAttribute("pubMedId") %>"></FORM>
 <TABLE width="100%">
     <TR>
-        <TD colspan="2"><b>Bibliographic Reference</b></TD>
+        <TD colspan="2"><b>Bibliographic Reference </b></TD>
     </TR>
     <TR>
         <TD COLSPAN="2">
@@ -34,35 +37,43 @@ List results = ( List ) request.getAttribute( "bibliographicReferences" );
                 BibliographicReference bibliographicReference = ( BibliographicReference ) results.get( i );
 
                 %>
-
+    <TR>
+        <TD><B>Pubmed ID</B></TD>
+        <TD><%=bibliographicReference.getPubAccession().getAccession() %></TD>
+    </TR>
     <TR>
         <TD><B>Authors</B></TD>
         <TD><%=bibliographicReference.getAuthorList() %></TD>
     </TR>
     <TR>
+        <TD><B>Year</B></TD>
+        <TD><Gemma:date
+            date="<%=bibliographicReference.getPublicationDate()%>" /></TD>
+    </TR>
+
+    <TR>
         <TD><B>Title</B></TD>
         <TD><%=bibliographicReference.getTitle() %></TD>
+    </TR>
+
+
+    <TR>
+        <TD><B>Publication</B></TD>
+        <TD><%=bibliographicReference.getPublication() %></TD>
     </TR>
     <TR>
         <TD><B>Volume</B></TD>
         <TD><%=bibliographicReference.getVolume() %></TD>
     </TR>
     <TR>
-        <TD><B>Issue</B></TD>
-        <TD><%=bibliographicReference.getIssue() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Publication</B></TD>
-        <TD><%=bibliographicReference.getPublication() %></TD>
+        <TD><B>Pages</B></TD>
+        <TD><%=bibliographicReference.getPages() %></TD>
     </TR>
     <TR>
         <TD><B>Abstract Text</B></TD>
         <TD><%=bibliographicReference.getAbstractText() %></TD>
     </TR>
-    <TR>
-        <TD><B>Publication Date</B></TD>
-        <TD><%=bibliographicReference.getPublicationDate() %></TD>
-    </TR>
+
     <%
 }
 
@@ -79,7 +90,7 @@ List results = ( List ) request.getAttribute( "bibliographicReferences" );
         <table>
             <tr>
                 <TD align="left"><c:if
-                    test="not ${requestScope.existsInSystem}">
+                    test="${!requestScope.existsInSystem}">
                     <DIV align="left"><INPUT type="button"
                         onclick="javascript:selectAction('saveBibRef')"
                         value="Add to Gemma Database"></DIV>
