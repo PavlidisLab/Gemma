@@ -49,7 +49,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
 public class GeneLoaderCLI {
     protected static final Log log = LogFactory.getLog( GeneLoaderCLI.class );
 
-    // FIXME this should use the SDOG
+    // FIXME this should use the SDOG (source domain object generator)
 
     /**
      * Command line interface to run the gene parser/loader
