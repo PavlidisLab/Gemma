@@ -47,7 +47,7 @@ public class BibliographicReferenceServiceImpl extends
             throws java.lang.Exception {
 
         BibliographicReference br = getBibliographicReferenceDao().find( bibliographicReference );
-        return br == null;
+        return br != null;
     }
 
     /**
