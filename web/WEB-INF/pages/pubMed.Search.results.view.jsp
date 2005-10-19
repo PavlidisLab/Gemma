@@ -4,23 +4,24 @@
     import="edu.columbia.gemma.common.description.BibliographicReference"%>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
+<html>
+<head>
 <script language="JavaScript">
-	function selectAction(event){
-		document.newSearchForm._eventId.value=event;
- 		document.newSearchForm.submit();
-	}
+    function selectAction(event){
+        document.newSearchForm._eventId.value=event;
+        document.newSearchForm.submit();
+    }
 </script>
-<HEAD></HEAD>
-<BODY>
-<FORM name="newSearchForm" action="flowController.htm"><INPUT type="hidden"
-    name="_flowExecutionId"
+</head>
+<body>
+<form name="newSearchForm" action="flowController.htm"><INPUT
+    type="hidden" name="_flowExecutionId"
     value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
     type="hidden" name="_eventId" value=""> <INPUT type="hidden"
     name="pubMedId" value="<%=request.getAttribute("pubMedId") %>"></FORM>
 <TABLE width="100%">
     <TR>
-        <TD><b>Bibliographic Reference</b></TD>
+        <TD colspan="2"><b>Bibliographic Reference</b></TD>
     </TR>
     <TR>
         <TD COLSPAN="2">
@@ -28,14 +29,14 @@
         </TD>
     </TR>
     <%
+List results = ( List ) request.getAttribute( "bibliographicReferences" );
+            for ( int i = 0; i < results.size(); i++ ) {
+                BibliographicReference bibliographicReference = ( BibliographicReference ) results.get( i );
 
-        List results = ( List ) request.getAttribute( "bibliographicReferences" );
-        for ( int i = 0; i < results.size(); i++ ) {
-            BibliographicReference bibliographicReference = ( BibliographicReference ) results.get( i );
-            %>
+                %>
 
     <TR>
-        <TD><B>Author List</B></TD>
+        <TD><B>Authors</B></TD>
         <TD><%=bibliographicReference.getAuthorList() %></TD>
     </TR>
     <TR>
@@ -63,9 +64,9 @@
         <TD><%=bibliographicReference.getPublicationDate() %></TD>
     </TR>
     <%
+}
 
-        }
-    %>
+        %>
 
     <TR>
         <TD COLSPAN="2">
@@ -74,17 +75,34 @@
     </TR>
     <TR>
 
-        <TD>
-        <DIV align="right"><INPUT type="button"
-            onclick="javascript:selectAction('saveBibRef')"
-            value="Add to Gemma Database"></DIV>
-        </TD>
-        <TD>
-        <DIV align="right"><INPUT type="button"
-            onclick="javascript:selectAction('newSearch')"
-            value="New Search"></DIV>
-        </TD>
+        <td colspan="2">
+        <table>
+            <tr>
+                <TD align="left"><c:if
+                    test="not ${requestScope.existsInSystem}">
+                    <DIV align="left"><INPUT type="button"
+                        onclick="javascript:selectAction('saveBibRef')"
+                        value="Add to Gemma Database"></DIV>
+                </c:if></TD>
+
+
+                <TD align="right"><c:if
+                    test="${requestScope.existsInSystem}">
+                    <DIV align="right"><INPUT type="button"
+                        onclick="javascript:selectAction('viewRecord')"
+                        value="View Gemma Record"></DIV>
+                </c:if></TD>
+
+
+                <TD align="right">
+                <DIV align="right"><INPUT type="button"
+                    onclick="javascript:selectAction('newSearch')"
+                    value="New Search"></DIV>
+                </TD>
+            </tr>
+        </table>
+        </td>
     </TR>
-</TABLE>
-</BODY>
-</HTML>
+</table>
+</body>
+</html>

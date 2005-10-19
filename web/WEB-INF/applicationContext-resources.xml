@@ -14,6 +14,6 @@
     
     <!-- JNDI DataSource for J2EE environments -->
     <bean id="jndiDataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
-        <property name="jndiName"><value>java:comp/env/jdbc/gemd</value></property>
+        <property name="jndiName"><value>java:comp/env/jdbc/gemdtest</value></property>
     </bean>
 </beans>

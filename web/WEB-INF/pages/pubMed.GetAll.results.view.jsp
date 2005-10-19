@@ -1,9 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="java.util.*"%>
-<%@ page
-    import="edu.columbia.gemma.common.description.BibliographicReference"
-    import="edu.columbia.gemma.common.description.DatabaseEntry"
-    import="java.util.Calendar"%>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>

@@ -15,7 +15,7 @@
 	
 	These are the default error messages associated with
 	each validator defined in this file.  They should be
-	added to your projects ApplicationResources.properties
+	added to your projects messages.properties
 	file or you can associate new ones by modifying the
 	pluggable validators msg attributes in this file.
 	

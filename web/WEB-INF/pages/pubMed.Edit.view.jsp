@@ -11,39 +11,26 @@
         </c:forEach></div>
     </c:if>
 </spring:bind>
-
+<html>
+<head></head>
+<body>
 <form method="post" action="<c:url value="/flowController.htm"/>"
     id="bibliographicReferenceForm" onsubmit="return onFormSubmit(this)">
 <input type="hidden" name="_flowExecutionId"
     value="<c:out value="${flowExecutionId}"/>"> <input type="hidden"
-    name="_eventId" value="submit"> <%--	
-<input type="hidden" name="from" value="<c:out value="${param.from}"/>" />
+    name="_eventId" value="submit">
 
-<c:if test="${cookieLogin == 'true'}">
-    <spring:bind path="user.password">
-    <input type="hidden" name="password" value="<c:out value="${status.value}"/>"/>
-    </spring:bind>
-    <spring:bind path="user.confirmPassword">
-    <input type="hidden" name="confirmPassword" value="<c:out value="${status.value}"/>"/>
-    </spring:bind>
-</c:if>
---%> <c:if test="${empty pubMed.title}">
-    <%--    <input type="hidden" name="encryptPass" value="true" />  --%>
-</c:if>
-
-<table class="detail" >
+<table class="detail" width="75%">
     <c:set var="pageButtons">
         <tr>
             <td></td>
-            <td class="buttonBar"><%--
-            <input type="submit" class="button" name="save" 
-                onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
-        --%> <input type="submit" class="button" name="save"
+            <td class="buttonBar"><input type="submit" class="button"
+                name="save"
                 onclick="bCancel=false;this.form._eventId.value='submit'"
                 value="<fmt:message key="button.save"/>" /> <c:if
                 test="${param.from == 'list'}">
                 <input type="submit" class="button" name="delete"
-                    onclick="bCancel=true;return confirmDelete('arrayDesign')"
+                    onclick="bCancel=false;this.form._eventId.value='delete'"
                     value="<fmt:message key="button.delete"/>" />
             </c:if> <input type="submit" class="button" name="cancel"
                 onclick="bCancel=true;this.form._eventId.value='cancel'"
@@ -106,58 +93,7 @@
         </spring:bind></td>
     </tr>
 
-    <%--    
-<c:choose>
-    <c:when test="${param.from == 'list' or param.method == 'Add'}">
-    <tr>
-        <td></td>
-        <td>
-            <fieldset class="pickList">
-                <legend>
-                    <fmt:message key="userProfile.assignRoles"/>
-                </legend>
-	            <table class="pickList">
-	                <tr>
-	                    <th class="pickLabel">
-	                        <Gemma:label key="user.availableRoles" 
-	                            colon="false" styleClass="required"/>
-	                    </th>
-	                    <td>
-	                    </td>
-	                    <th class="pickLabel">
-	                        <Gemma:label key="user.roles"
-	                            colon="false" styleClass="required"/>
-	                    </th>
-	                </tr>
-	                <c:set var="leftList" value="${availableRoles}" scope="request"/>
-	                <c:set var="rightList" value="${user.roleList}" scope="request"/>
-	                <c:import url="/WEB-INF/pages/pickList.jsp">
-	                    <c:param name="listCount" value="1"/>
-	                    <c:param name="leftId" value="availableRoles"/>
-	                    <c:param name="rightId" value="userRoles"/>
-	                </c:import>
-	            </table>
-            </fieldset>
-        </td>
-    </tr>
-    </c:when>
-    <c:when test="${not empty user.userName}">
-    <tr>
-        <th>
-            <Gemma:label key="user.roles"/>
-        </th>
-        <td>
-        <c:forEach var="role" items="${user.userRoles}" varStatus="status">
-            
-            <c:out value="${role.userName}"/><c:if test="${!status.last}">,</c:if>
-            <input type="hidden" name="userRoles"     
-                value="<c:out value="${role.userName}"/>" />
-        </c:forEach>
-        </td>
-    </tr>
-    </c:when>
-</c:choose>
---%>
+
     <%-- Print out buttons - defined at top of form --%>
     <%-- This is so you can put them at the top and the bottom if you like --%>
     <c:out value="${pageButtons}" escapeXml="false" />
@@ -168,34 +104,16 @@
 <script type="text/javascript">
 <!--
 highlightFormElements();
-<%-- if we're doing an add, change the focus --%>
-<%--
-<c:choose><c:when test="${user.userName == null}"><c:set var="focus" value="userName"/></c:when>
-<c:when test="${cookieLogin == 'true'}"><c:set var="focus" value="firstName"/></c:when>
-<c:otherwise><c:set var="focus" value="password"/></c:otherwise></c:choose>
---%>
+
 var focusControl = document.forms["bibliographicReferenceForm"].elements["<c:out value="${focus}"/>"];
-<%--
-if (focusControl.type != "hidden" && !focusControl.disabled) {
-    focusControl.focus();
-}
---%>
 
 function onFormSubmit(theForm) {
-<%--
-<c:if test="${param.from == 'list'}">
-    selectAll('userRoles');
-</c:if>
-    return validateUser(theForm);
---%>    
 }
 // -->
 </script>
 
 <html:javascript formName="bibliographicReferenceForm"
     staticJavascript="false" />
-<%--
-<script type="text/javascript"
-      src="<c:url value="/scripts/validator.jsp"/>"></script>
---%>
+</body>
+</html>
 
