@@ -109,11 +109,10 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
             context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
             context.getFlowScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
             context.getRequestScope().setAttribute( "bibliographicReferences", list ); // page is designed to show
-                                                                                        // multiple?
+                                                                                        // multiple
             context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
 
             if ( event.equals( "searchPubMed" ) ) { // used when searching the web.
-                
                 if (  bibliographicReferenceService.alreadyExists( bibRef ) ) {
                     context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
                     addMessage( context, "bibliographicReference.alreadyInSystem" );
