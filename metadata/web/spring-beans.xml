@@ -1,4 +1,3 @@
-<!-- ==================================================== -->
 <!--
     This document is a "merge file" used by XDoclet to automagically generate a web-context
     for the application.  The generated web-context will have the name xxx-servlet.xml and is
@@ -7,13 +6,11 @@
     author: keshav
     version: $Id$
 -->
-<!-- ==================================================== -->
 
 <!-- ==================================================== -->
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
-<bean id="sessionFactoryGoldenPathHuman"
-    class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+<bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
     <property name="dataSource">
         <ref bean="dataSourceGoldenPathHuman" />
     </property>
@@ -22,24 +19,17 @@
     </property>
     <property name="hibernateProperties">
         <props>
-            <prop key="hibernate.dialect">
-                org.hibernate.dialect.MySQLDialect
-            </prop>
+            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
             <prop key="hibernate.cache.use_query_cache">false</prop>
-            <prop key="hibernate.cache.provider_class">
-                org.hibernate.cache.EhCacheProvider
-            </prop>
-            <prop key="hibernate.cache.query_cache_factory">
-                org.hibernate.cache.StandardQueryCacheFactory
-            </prop>
+            <prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+            <prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
             <prop key="hibernate.show_sql">true</prop>
         </props>
     </property>
 </bean>
 
 <!-- DATASOURCE USED BY SESSION FACTORY ABOVE -->
-<bean id="dataSourceGoldenPathHuman"
-    class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<bean id="dataSourceGoldenPathHuman" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
     <property name="driverClassName">
         <value>com.mysql.jdbc.Driver</value>
     </property>
@@ -53,7 +43,6 @@
         <value>jdbc:mysql://localhost:3306/hg17</value>
     </property>
 </bean>
-
 <!-- ==================================================== -->
 <!--    Email configuration   -->
 <!-- ==================================================== -->
@@ -65,8 +54,7 @@
         <ref bean="velocityEngine" />
     </property>
 </bean>
-<bean id="mailSender"
-    class="org.springframework.mail.javamail.JavaMailSenderImpl">
+<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
     <property name="host">
         <value>${mail.host}</value>
     </property>
@@ -79,21 +67,15 @@
 </bean>
 
 <!-- Configure Velocity for sending e-mail -->
-<bean id="velocityEngine"
-    class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
     <property name="velocityProperties">
         <props>
             <prop key="resource.loader">class</prop>
-            <prop key="class.resource.loader.class">
-                org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
-            </prop>
+            <prop key="class.resource.loader.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
         </props>
     </property>
 </bean>
-
-<bean id="mailMessage"
-    class="org.springframework.mail.SimpleMailMessage"
-    singleton="false">
+<bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage" singleton="false">
     <property name="from">
         <value>pavlidis@dbmi.columbia.edu</value>
     </property>
@@ -105,10 +87,8 @@
 <!--    stored in a .properties file from an xml file.    -->
 <!--    Looks like:  ${mail.host} 						  -->
 <!-- ==================================================== -->
-
 <!-- For mail settings and future properties files -->
-<bean id="propertyConfigurer"
-    class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     <property name="locations">
         <list>
             <value>classpath:mail.properties</value>
@@ -117,55 +97,26 @@
     <property name="ignoreUnresolvablePlaceholders" value="true" />
     <property name="ignoreResourceNotFound" value="true" />
 </bean>
-<!--  TODO: define a separate propertyConfigurer for the web flows, somehow -->
+
 
 <!-- ==================================================== -->
-
-<!--  Mapping urls to services. Note that not all of the controllers will be listed here: some of them will be created by XDoclet. -->
-<!--  NOTE: You cannot use this AND specify name="urlpattern.htm" in bean tags ... choose one.  -->
-
-<!-- ==================================================== -->
-<!-- 
-    <bean id="urlMapping"
-    class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
-    <property name="mappings">
-    <props>
-    <prop key="/editProfile.html">userFormController</prop>
-    <prop key="/mainMenu.html">filenameController</prop>
-    <prop key="/editUser.html">userFormController</prop>
-    <prop key="/passwordHint.html">passwordHintController</prop>
-    <prop key="/signup.html">signupController</prop>
-    <prop key="/pubMedSearch.htm">pubMedSearchController</prop>
-    </props>
-    </property>
-    </bean>
--->
-
-<bean id="filenameController"
-    class="org.springframework.web.servlet.mvc.UrlFilenameViewController"
-    name="/mainMenu.html /activeUsers.html /flushCache.html" />
+<!--  Mapping urls to services. -->
+    <!-- ==================================================== -->
+<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/mainMenu.html /activeUsers.html /flushCache.html" />
 
 <!-- ==================================================== -->
 <!-- 	Used by the fileUploadController 				  -->
 <!-- ==================================================== -->
-<bean id="multipartResolver"
-    class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
     <property name="maxUploadSize">
         <value>2097152</value>
     </property>
 </bean>
 
-<bean id="messageSource"
-    class="org.springframework.context.support.ResourceBundleMessageSource">
-    <!-- The default place for this is in WEB-INF/classes -->
-    <property name="basename">
-        <value>ApplicationResources</value>
-    </property>
-</bean>
-
+<!-- ==================================================== -->
 <!-- View Resolver for JSPs -->
-<bean id="viewResolver"
-    class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+<!-- ==================================================== -->
+<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
     <property name="requestContextAttribute">
         <value>rc</value>
     </property>
@@ -183,9 +134,7 @@
 <!-- ==================================================== -->
 <!--  Validation settings. -->
 <!-- ==================================================== -->
-<bean id="validatorFactory"
-    class="org.springframework.validation.commons.DefaultValidatorFactory"
-    init-method="init">
+<bean id="validatorFactory" class="org.springframework.validation.commons.DefaultValidatorFactory" init-method="init">
     <property name="resources">
         <list>
             <value>/WEB-INF/validator-rules.xml</value>
@@ -193,18 +142,14 @@
         </list>
     </property>
 </bean>
-
 <!--  Use this if the command class is not _actually_ an "Impl" -->
-<bean id="genericBeanValidator"
-    class="org.springframework.validation.commons.BeanValidator">
+<bean id="genericBeanValidator" class="org.springframework.validation.commons.BeanValidator">
     <property name="validatorFactory">
         <ref local="validatorFactory" />
     </property>
 </bean>
-
 <!-- Use this type of validator if you use a data model object as the command object -->
-<bean id="userValidator"
-    class="org.springframework.validation.commons.NamedBeanValidator">
+<bean id="userValidator" class="org.springframework.validation.commons.NamedBeanValidator">
     <property name="validatorFactory">
         <ref local="validatorFactory" />
     </property>
@@ -212,27 +157,19 @@
         <value>user</value>
     </property>
 </bean>
+
 <!--  add more NamedBeanValidators here -->
 
+
 <!--  ============================================================= -->
+<!--  ===========         SPRING WEBFLOWS       =================== -->
 <!--  ============================================================= -->
-<!--  ============================================================= -->
-<!-- ==================================================== -->
-<!-- SPRING WEBFLOWS -->
-<!-- These entries are used with the xxx-flow.xml file.  The location of this file is defined
-    in the XmlFlowFactoryBean (ie. see pubMed.Search below).
-    NOTE: the pubMed and arrayDesign flows below are up-to-date and ready for use.  Uncomment the labelled regions to use
-    the webflow implementation, else spring mvc will be used.  The expressionExperiment is not up-to-date and may need some 
-    refactoring.
--->
-<!-- ==================================================== -->
 
 <!-- Controller used by all webflows in this application.  This can be parameterized by adding the  
     _flowId to the client view (ie. jsp).  If this is not specified, you must specify
     a ServletFlowExecutionManager.  I have added the _flowId to the jsp's, but have also specified the ServletFlowExecutionManager.
 -->
-<bean id="frontController" name="/flowController.htm"
-    class="org.springframework.webflow.mvc.FlowController">
+<bean id="frontController" name="/flowController.htm" class="org.springframework.webflow.mvc.FlowController">
     <property name="cacheSeconds" value="5" />
     <property name="flowExecutionManager" ref="flowExecutionManager" />
 </bean>
@@ -240,186 +177,50 @@
 <!--
     Custom configuration of the HTTP request flow execution manager.
 -->
-<bean id="flowExecutionManager"
-    class="org.springframework.webflow.execution.servlet.ServletFlowExecutionManager">
+<bean id="flowExecutionManager" class="org.springframework.webflow.execution.servlet.ServletFlowExecutionManager">
     <property name="storage">
-        <bean
-            class="org.springframework.webflow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
+        <bean class="org.springframework.webflow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
+    </property>
+    <property name="listener">
+        <bean class="edu.columbia.gemma.web.flow.FlowExecutionListenerImpl" />
     </property>
 </bean>
 
-<!-- WebFlow (pubMed Search flow) -->
-
-<bean id="pubMed.Search"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-        value="classpath:edu/columbia/gemma/web/controller/flow/bibref/pubMedSearch-flow.xml" />
-</bean>
-
-<!-- The next 2 beans are called from edu/columbia/gemma/web/controller/flow/bibref/pubMedSearch-flow.xml -->
-
-<!--  ============================================================= -->
-<!-- This is an older way of handling webflow form information.  See pubMedEdit-flow.xml
-    or arrayDesignEdit-flow.xml to see how this is handled in the latest webflow versions.  There
-    is not reason to change this except for clarity when reading the online spring webflow 
-    documentation.
+<!-- 
+    Add one bean here for each flow. The actions are defined using XDoclet tags in the Action classes.   
 -->
-<bean id="pubMed.Search.criteria.formAction"
-    class="org.springframework.webflow.action.FormAction">
+<bean id="pubMed.Search.criteria.formAction" class="org.springframework.webflow.action.FormAction">
     <property name="formObjectName" value="bibliographicReference" />
-    <property name="formObjectClass"
-        value="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
+    <property name="formObjectClass" value="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
     <property name="formObjectScopeAsString" value="flow" />
 </bean>
 
-<bean id="pubMed.Search.executeQuery"
-    class="edu.columbia.gemma.web.controller.flow.bibref.PubMedExecuteQueryAction">
-    <property name="bibliographicReferenceService">
-        <ref bean="bibliographicReferenceService" />
-    </property>
-    <property name="externalDatabaseService">
-        <ref bean="externalDatabaseService" />
-    </property>
-    <property name="pubMedXmlFetcher">
-        <ref bean="pubMedXmlFetcher" />
-    </property>
-    <property name="messageSource">
-      	<ref bean="messageSource"/>
-    </property>
+<bean id="pubMed.Search" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedSearch-flow.xml" />
 </bean>
 
-<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation, and look in the jsp's to 
-    see if anything else needs to be uncommented. 
-    <bean id="pubMed.Search.getAllBibRef"
-    class="edu.columbia.gemma.web.controller.flow.bibref.BibRefExecuteQueryAction">
-    <property name="bibliographicReferenceService">
-    <ref bean="bibliographicReferenceService" />
-    </property>
-    </bean>
--->
-<!--  ============================================================= -->
-<!-- WebFlow (pubMed Edit flow) -->
-<bean id="pubMed.Edit"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-        value="classpath:edu/columbia/gemma/web/controller/flow/bibref/pubMedEdit-flow.xml" />
+<bean id="pubMed.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedEdit-flow.xml" />
 </bean>
 
-<bean id="pubMed.Edit.formAction"
-    class="edu.columbia.gemma.web.controller.flow.bibref.BibRefFormEditAction">
-    <property name="bibliographicReferenceService">
-        <ref bean="bibliographicReferenceService" />
-    </property>
-    <property name="messageSource">
-      	<ref bean="messageSource"/>
-    </property>
-</bean>
-<!--  ============================================================= -->
-<!-- WebFlow (pubMed Detail flow) -->
-<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.   
-    <bean id="pubMed.Detail"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-    value="classpath:edu/columbia/gemma/web/controller/flow/bibref/pubMedDetail-flow.xml" />
-    </bean>
-    
-    <bean id="pubMed.Detail.criteria.formAction.getFormAction"
-    class="edu.columbia.gemma.web.controller.flow.bibref.GetPubMedAction">
-    <property name="bibliographicReferenceService">
-    <ref bean="bibliographicReferenceService" />
-    </property>
-    </bean>
--->
-<!--  ============================================================= -->
-<!-- WebFlow (arrayDesign Search flow) -->
-<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.   
-    <bean id="arrayDesign.Search"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-    value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignSearch-flow.xml" />
-    </bean>
-    
-    <bean id="arrayDesign.Search.getAllArrayDesigns"
-    class="edu.columbia.gemma.web.controller.flow.expression.arrayDesign.ArrayDesignExecuteQueryAction">
-    <property name="arrayDesignService">
-    <ref bean="arrayDesignService" />
-    </property>
-    </bean>
--->
-<!--  ============================================================= -->
-<!-- WebFlow (arrayDesign Detail flow) -->
-<!-- This is currently implemented in mvc.  Uncomment this to use the webflow implementation.   
-    <bean id="arrayDesign.Detail"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-    value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignDetail-flow.xml" />
-    </bean>
-    
-    <bean id="arrayDesign.Detail.criteria.formAction.getFormAction"
-    class="edu.columbia.gemma.web.controller.flow.expression.arrayDesign.GetArrayDesignAction">
-    <property name="arrayDesignService">
-    <ref bean="arrayDesignService" />
-    </property>
-    </bean>
--->
-<!--  ============================================================= -->
-<!-- WebFlow (arrayDesign Edit flow) -->
-<bean id="arrayDesign.Edit"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-        value="classpath:edu/columbia/gemma/web/controller/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
+<bean id="arrayDesign.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:edu/columbia/gemma/web/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
 </bean>
 
-<bean id="arrayDesign.Edit.formAction"
-    class="edu.columbia.gemma.web.controller.flow.expression.arrayDesign.ArrayDesignFormEditAction">
-    <property name="arrayDesignService">
-        <ref bean="arrayDesignService" />
-    </property>
+<bean id="expressionExperiment.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:edu/columbia/gemma/web/flow/expression/experiment/expressionExperimentEdit-flow.xml" />
 </bean>
 
-<!--  WebFlow (expressionExperiment Edit flow) -->
-<bean id="expressionExperiment.Edit"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-        value="classpath:edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentEdit-flow.xml" />
+<bean id="fileUploader" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:edu/columbia/gemma/web/flow/fileUpload-flow.xml" />
 </bean>
 
-<!-- The next bean is called from edu/columbia/gemma/web/controller/flow/expression/experiment/expressionExperimentEdit-flow.xml -->
-<bean id="expressionExperiment.Edit.formAction"
-    class="edu.columbia.gemma.web.controller.flow.expression.experiment.ExpressionExperimentFormEditAction">
-    <property name="expressionExperimentService">
-        <ref bean="expressionExperimentService" />
-    </property>
-</bean>
 
 
 <!--  ============================================================= -->
-<!-- File upload, as in the example -->
-
-<bean id="fileUploader"
-    class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location"
-        value="classpath:edu/columbia/gemma/web/controller/flow/fileUpload-flow.xml" />
-</bean>
-
-<bean id="uploadFileAction"
-    class="edu.columbia.gemma.web.controller.flow.FileUploadAction" />
-
- 
-<!--  ============================================================= -->
-
-
-
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
-<bean id="conversion.service"
-    class="org.springframework.binding.convert.support.DefaultConversionService"
-    autowire="byType" />
-
+<bean id="conversion.service" class="org.springframework.binding.convert.support.DefaultConversionService" autowire="byType" />
 <!-- A formatter registry, a thread-safe cache for Formatters: a thread-safe, lighter weight alt. to PropertyEditors! -->
-<bean id="formatter.locator"
-    class="org.springframework.binding.format.support.ThreadLocalFormatterLocator"
-    autowire="byType" />
-
+<bean id="formatter.locator" class="org.springframework.binding.format.support.ThreadLocalFormatterLocator" autowire="byType" />
 <!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
-<bean id="thread.cleanupBroadcaster"
-    class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
+<bean id="thread.cleanupBroadcaster" class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
