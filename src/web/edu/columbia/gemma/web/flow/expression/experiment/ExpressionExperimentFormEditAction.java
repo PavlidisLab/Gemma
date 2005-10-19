@@ -24,7 +24,6 @@ import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
-import org.springframework.webflow.action.FormAction;
 
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentImpl;
@@ -115,8 +114,8 @@ public class ExpressionExperimentFormEditAction extends AbstractFlowFormAction {
 
         expressionExperimentService.updateExpressionExperiment( exprExp );
 
-        addMessage(context, "expressionExperiment.update");
-        
+        addMessage( context, "expressionExperiment.update" );
+
         return success();
     }
 

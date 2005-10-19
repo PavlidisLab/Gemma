@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
@@ -31,7 +30,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
-import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
@@ -104,6 +102,7 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
     /**
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testGetExperimentalDesigns() throws Exception {
 
         ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
@@ -120,10 +119,10 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
         /*
          * In this case, the map contains 1 element of type Collection. That is, a collection of experimental designs.
          */
-        Map m = mav.getModel();
+        Map<String, Object> m = mav.getModel();
 
-        Collection<ExperimentalDesign> col = ( Collection ) m.get( "experimentalDesigns" );
-        log.debug( col.size() );
+        Collection<ExperimentalDesign> col = ( Collection<ExperimentalDesign> ) m.get( "experimentalDesigns" );
+        log.debug( new Integer( col.size() ) );
 
         assertNotNull( m.get( "experimentalDesigns" ) );
         assertEquals( mav.getViewName(), "experimentalDesign.GetAll.results.view" );
