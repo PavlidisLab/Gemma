@@ -54,7 +54,7 @@ public class BibliographicReferenceDaoImpl extends edu.columbia.gemma.common.des
              * This syntax allows you to look at an association.
              */
             if ( bibliographicReference.getPubAccession() != null ) {
-                queryObject.createCriteria( "accession" ).add(
+                queryObject.createCriteria( "pubAccession" ).add(
                         Restrictions.eq( "accession", bibliographicReference.getPubAccession().getAccession() ) );
             }
 

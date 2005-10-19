@@ -46,13 +46,8 @@ public class BibliographicReferenceServiceImpl extends
             edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
 
-        boolean exists = false;
-        // Collection col = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
-        // if ( col.size() > 0 ) exists = true;
-        BibliographicReference br = getBibliographicReferenceDao().findByTitle( bibliographicReference.getTitle() );
-        if ( br != null ) exists = true;
-
-        return exists;
+        BibliographicReference br = getBibliographicReferenceDao().find( bibliographicReference );
+        return br == null;
     }
 
     /**
