@@ -57,29 +57,28 @@ public class BibliographicReferenceTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append( "<table><tr><td><b>Pubmed ID</B></td><td>&nbsp;</td><td>" );
-        buf.append( bibliographicReference.getPubAccession().getAccession() );
+        buf.append( "<table><tr><td valign=\"top\"><b>Pubmed</B></td><td>&nbsp;</td><td valign=\"top\">" );
+        buf.append( "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?"
+                + "cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids="
+                + bibliographicReference.getPubAccession().getAccession() + "&query_hl=3\">"
+                + bibliographicReference.getPubAccession().getAccession() + "</a>" );
 
-        buf.append( "</td> </tr> <tr> <td><b>Authors</B></td><td>&nbsp;</td><td>" );
+        buf.append( "</td> </tr> <tr><td valign=\"top\"><b>Authors</B></td><td>&nbsp;</td><td valign=\"top\">" );
         buf.append( bibliographicReference.getAuthorList() );
 
-        buf.append( "</td> </tr> <tr> <td><b>Year</B></td><td>&nbsp;</td><td>" );
+        buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Year</B></td><td>&nbsp;</td><td valign=\"top\">" );
         SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
         buf.append( sdf.format( bibliographicReference.getPublicationDate() ) );
 
-        buf.append( "</td> </tr> <tr> <td><b>Title</B></td><td>&nbsp;</td><td>" );
+        buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Title</B></td><td>&nbsp;</td><td valign=\"top\">" );
         buf.append( bibliographicReference.getTitle() );
 
-        buf.append( "</td></tr><tr><td><b>Publication</B></td><td>&nbsp;</td><td>" );
-        buf.append( bibliographicReference.getPublication() );
-
-        buf.append( "</td></tr><tr> <td><b>Volume</B></td><td>&nbsp;</td><td>" );
-        buf.append( bibliographicReference.getVolume() );
-
-        buf.append( "</td></tr><tr><td><b>Pages</B></td><td>&nbsp;</td><td>" );
+        buf.append( "</td></tr><tr><td valign=\"top\"><b>Citation</B></td><td>&nbsp;</td><td valign=\"top\">" );
+        buf.append( bibliographicReference.getPublication() + " " );
+        buf.append( "<em>" + bibliographicReference.getVolume() + "</em>: " );
         buf.append( bibliographicReference.getPages() );
 
-        buf.append( "</td></tr><tr><td><b>Abstract</B></td><td>&nbsp;</td><td>" );
+        buf.append( "</td></tr><tr><td valign=\"top\"><b>Abstract</B></td><td>&nbsp;</td><td valign=\"top\">" );
         if ( bibliographicReference.getAbstractText() != null ) {
             buf.append( bibliographicReference.getAbstractText() );
         } else {
