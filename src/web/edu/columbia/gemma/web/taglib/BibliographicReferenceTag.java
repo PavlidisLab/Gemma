@@ -57,30 +57,34 @@ public class BibliographicReferenceTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append( "<table><tr><td><b>Pubmed ID</B></td><td>" );
+        buf.append( "<table><tr><td><b>Pubmed ID</B></td><td>&nbsp;</td><td>" );
         buf.append( bibliographicReference.getPubAccession().getAccession() );
 
-        buf.append( "</td> </tr> <tr> <td><b>Authors</B></td> <td>" );
+        buf.append( "</td> </tr> <tr> <td><b>Authors</B></td><td>&nbsp;</td><td>" );
         buf.append( bibliographicReference.getAuthorList() );
 
-        buf.append( "</td> </tr> <tr> <td><b>Year</B></td>  <td>" );
+        buf.append( "</td> </tr> <tr> <td><b>Year</B></td><td>&nbsp;</td><td>" );
         SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
         buf.append( sdf.format( bibliographicReference.getPublicationDate() ) );
 
-        buf.append( "</td> </tr> <tr> <td><b>Title</B></td> <td>" );
+        buf.append( "</td> </tr> <tr> <td><b>Title</B></td><td>&nbsp;</td><td>" );
         buf.append( bibliographicReference.getTitle() );
 
-        buf.append( "</td></tr><tr><td><b>Publication</B></td><td>" );
+        buf.append( "</td></tr><tr><td><b>Publication</B></td><td>&nbsp;</td><td>" );
         buf.append( bibliographicReference.getPublication() );
 
-        buf.append( "</td></tr><tr> <td><b>Volume</B></td><td>" );
+        buf.append( "</td></tr><tr> <td><b>Volume</B></td><td>&nbsp;</td><td>" );
         buf.append( bibliographicReference.getVolume() );
 
-        buf.append( "</td></tr><tr><td><b>Pages</B></td> <td>" );
+        buf.append( "</td></tr><tr><td><b>Pages</B></td><td>&nbsp;</td><td>" );
         buf.append( bibliographicReference.getPages() );
 
-        buf.append( "</td></tr><tr><td><b>Abstract Text</B></td><td>" );
-        buf.append( bibliographicReference.getAbstractText() );
+        buf.append( "</td></tr><tr><td><b>Abstract</B></td><td>&nbsp;</td><td>" );
+        if ( bibliographicReference.getAbstractText() != null ) {
+            buf.append( bibliographicReference.getAbstractText() );
+        } else {
+            buf.append( "(No abstract available)" );
+        }
 
         buf.append( "</td></tr></table>" );
 
