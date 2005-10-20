@@ -43,45 +43,12 @@
         <HR>
         </TD>
     </TR>
-      <%BibliographicReference bibliographicReference = ( BibliographicReference ) request
-                    .getAttribute( "bibliographicReference" );
 
-            %>
-    <TR>
-        <TD><B>Pubmed ID</B></TD>
-        <TD><%=bibliographicReference.getPubAccession().getAccession() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Authors</B></TD>
-        <TD><%=bibliographicReference.getAuthorList() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Year</B></TD>
-        <TD><Gemma:date
-            date="<%=bibliographicReference.getPublicationDate()%>" /></TD>
-    </TR>
-
-    <TR>
-        <TD><B>Title</B></TD>
-        <TD><%=bibliographicReference.getTitle() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Publication</B></TD>
-        <TD><%=bibliographicReference.getPublication() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Volume</B></TD>
-        <TD><%=bibliographicReference.getVolume() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Pages</B></TD>
-        <TD><%=bibliographicReference.getPages() %></TD>
-    </TR>
-    <TR>
-        <TD><B>Abstract Text</B></TD>
-        <TD><%=bibliographicReference.getAbstractText() %></TD>
-    </TR>
-
+    <tr>
+        <td colspan="2"><Gemma:bibref
+            bibliographicReference="<%=bibliographicReference %>" />
+        <td>
+    </tr>
 
 
     <TR>
