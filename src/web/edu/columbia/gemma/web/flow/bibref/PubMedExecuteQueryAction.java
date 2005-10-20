@@ -19,8 +19,6 @@
 package edu.columbia.gemma.web.flow.bibref;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -91,29 +89,25 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
     protected Event doExecute( RequestContext context ) throws Exception {
 
         String event = ( String ) context.getSourceEvent().getParameter( "_eventId" );
-        int pubMedId;
+        Integer pubMedId;
         BibliographicReference bibRef;
         Errors errors = null;
 
         context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE ); // the default.
 
         try {
-            pubMedId = StringUtil.relaxedParseInt( ( String ) context.getSourceEvent().getParameter( "pubMedId" ) );
+            pubMedId = new Integer( StringUtil.relaxedParseInt( ( String ) context.getSourceEvent().getParameter(
+                    "pubMedId" ) ) );
 
             // does this mean we search twice when we do
             // search+save?
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
-            context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
-            context.getFlowScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
+            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId.intValue() );
+            context.getRequestScope().setAttribute( "pubMedId", pubMedId );
+            context.getFlowScope().setAttribute( "pubMedId", pubMedId );
             context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
 
             if ( event.equals( "searchPubMed" ) ) { // used when searching the web.
-                if ( bibliographicReferenceService.alreadyExists( bibRef ) ) {
-                    context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-                    addMessage( context, "bibliographicReference.alreadyInSystem" );
-                } else {
-                    context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
-                }
+                doSearch( context, bibRef );
             } else if ( event.equals( "saveBibRef" ) ) {
                 if ( bibRef == null ) {
                     errors = new FormObjectAccessor( context ).getFormErrors();
@@ -121,15 +115,18 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
                     return error();
                 }
 
-                if ( this.bibliographicReferenceService.alreadyExists( bibRef ) ) {
+                BibliographicReference bibRefFound = this.bibliographicReferenceService.find( bibRef );
+                if ( bibRefFound != null ) {
                     context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-                    addMessage( context, "bibliographicReference.alreadyInSystem" );
+                    addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { pubMedId } );
+                    context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
+                    context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
                 } else {
                     log.debug( "Saving bibliographic reference" );
                     // fill in the accession and the external database.
                     if ( bibRef.getPubAccession() == null ) {
                         DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-                        dbEntry.setAccession( ( new Integer( pubMedId ) ).toString() );
+                        dbEntry.setAccession( pubMedId.toString() );
                         bibRef.setPubAccession( dbEntry );
                     }
 
@@ -143,15 +140,18 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
                     }
 
                     bibRef.getPubAccession().setExternalDatabase( pubMedDb );
-                    this.bibliographicReferenceService.saveBibliographicReference( bibRef );
+                    bibRef = this.bibliographicReferenceService.saveBibliographicReference( bibRef );
+
+                    context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
+                    context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
                     context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-                    addMessage( context, "bibliographicReference.saved" );
+                    addMessage( context, "bibliographicReference.saved", new Object[] { pubMedId } );
 
                 }
 
             } else if ( event.equals( "delete" ) ) {
                 this.bibliographicReferenceService.removeBibliographicReference( bibRef );
-                addMessage( context, "bilbiographicReference.deleted" );
+                addMessage( context, "bilbiographicReference.deleted", new Object[] { pubMedId } );
             }
             return success();
         }
@@ -167,6 +167,23 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
             errs.reject( "OtherError", e.getLocalizedMessage() );
         }
         return error();
+    }
+
+    /**
+     * @param context
+     * @param bibRef
+     */
+    private void doSearch( RequestContext context, BibliographicReference bibRef ) {
+        BibliographicReference bibRefFound = bibliographicReferenceService.find( bibRef );
+        if ( bibRefFound != null ) {
+            context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
+            context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
+            context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
+            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { new Integer( Integer
+                    .parseInt( bibRef.getPubAccession().getAccession() ) ) } );
+        } else {
+            context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
+        }
     }
 
 }

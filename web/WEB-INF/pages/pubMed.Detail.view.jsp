@@ -1,10 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
 <%@ page
-    import="edu.columbia.gemma.common.description.BibliographicReference"%>
-
-<jsp:useBean id="bibliographicReference" scope="request"
-    class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
+    import="edu.columbia.gemma.common.description.BibliographibibliographicReferenceeBean id="bibliographicRefereedu.columbia.gemma.common.description.BibliographicReferenceImplption.BibliographicReferenceImpl" />
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
@@ -30,11 +27,9 @@
 <BODY>
 
 <FORM name="backForm" action=""><input type="hidden" name="_eventId"
-    value=""> <input type="hidden" name="_flowId" value="">
-    <input
+    value=""> <input type="hidden" name="_flowId" value=""> <input
     type="hidden" name="bibliographicReference"
-    value="<%=((BibliographicReference)request.getAttribute("bibliographicReference"))%>">
-    </FORM>
+    value="<%=request.getAttribute("pubMedId")%>"></FORM>
 
 <TABLE width="100%">
     <TR>
@@ -48,12 +43,9 @@
     <TR>
         <TD><B>Authors</B></TD>
         <TD><jsp:getProperty name="bibliographicReference"
-            property="authorList" /></TD>
-    </TR>
-    <TR>
+ bibliographicReference.getPubAccession().getAccession() TR>
         <TD><B>Title</B></TD>
-        <TD><jsp:getProperty name="bibliographicReference"
-            property="title" /></TD>
+        <TD><jsp:getProperty name="biblibibliographicReference.getAuthorList() ="title" /></TD>
     </TR>
     <TR>
         <TD><B>Volume</B></TD>
@@ -62,23 +54,18 @@
     </TR>
     <TR>
         <TD><B>Issue</B></TD>
-        <TD><jsp:getProperty name="bibliographicReference"
+       bibliographicReference.getTitle() graphicReference"
             property="issue" /></TD>
     </TR>
     <TR>
-        <TD><B>Publication Date</B></TD>
-        <%-- FIXME: Format this into just a year --%>
-        <TD><jsp:getProperty name="bibliographicReference"
+    bibliographicReference.getPublication()      <%-- FIXME: Format this into just a year --%>
+        <TD><jsp:getPrbibliographicReference.getVolume() "
             property="publicationDate" /></TD>
 
     </TR>
     <TR>
-        <TD><B>Publication</B></TD>
-        <TD><jsp:getProperty name="bibliographicReference"
-            property="publication" /></TD>
-    </TR>
-    <TR>
-        <TD><B>Abstract</B></TD>
+   bibliographicReference.getPages()        <TD><jsp:getProperty name="bibliographicReference"
+            property="bibliographicReference.getAbstractText()        <TD><B>Abstract</B></TD>
         <TD><jsp:getProperty name="bibliographicReference"
             property="abstractText" /></TD>
     </TR>

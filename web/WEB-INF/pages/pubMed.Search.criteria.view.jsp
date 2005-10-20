@@ -26,12 +26,6 @@
 </HEAD>
 <BODY>
 
-<FORM name="searchForm" action="flowController.htm"><INPUT type="hidden"
-    name="_flowExecutionId"
-    value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
-    type="hidden" name="_currentStateId" value="criteria.view"> <INPUT
-    type="hidden" name="_eventId" value=""> <INPUT type="hidden"
-    name="_flowId" value="">
 
 
 
@@ -51,7 +45,15 @@
 <table>
     <TR>
         <TD>PubMed ID</TD>
-        <TD><INPUT type="text" name="pubMedId"></TD>
+        <TD>
+        <FORM name="searchForm" action="flowController.htm"><INPUT
+            type="hidden" name="_flowExecutionId"
+            value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
+            type="hidden" name="_currentStateId" value="criteria.view">
+        <INPUT type="hidden" name="_eventId" value=""> <INPUT
+            type="hidden" name="_flowId" value=""> <INPUT type="text"
+            name="pubMedId"></form>
+        </TD>
 
         <TD align="left">
         <DIV align="right"><INPUT type="button"
@@ -70,7 +72,9 @@
 
         <TD>
         <DIV align="left"><INPUT type="button"
-            onclick="location.href='bibRef/showAllBibRef.html'" value="Select"></DIV>
+            onclick="location.href='bibRef/showAllBibRef.html'"
+            value="Select"></DIV>
+        </td>
     </TR>
 
 </table>

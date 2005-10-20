@@ -14,6 +14,11 @@
     type="text" name="pubMedId" value="Enter PubMed Id" /> <input
     type="submit" /></form>
 <hr />
-
+<DIV align="left"><INPUT type="button"
+    onclick="location.href='showAllBibRef.html'"
+    value="View all references"></DIV>
+<hr />
+<a href="<c:url value="/flowController.htm?_flowId=pubMed.Search"/>"><fmt:message
+    key="menu.flow.PubMedSearch" /></a>
 </body>
 </html>

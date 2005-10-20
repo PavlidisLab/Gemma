@@ -113,8 +113,6 @@ public class SignupController extends BaseFormController {
 
         // Send user an e-mail
         log.debug( "Sending user '" + user.getUserName() + "' an account information e-mail" );
-
-        // Send an account information e-mail
         message.setSubject( getText( "signup.email.subject", locale ) );
         sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
 

@@ -1,7 +1,6 @@
 <%-- $Id$ --%>
 <%-- Shows the results of a NCBI search for pubmed references. --%>
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="java.util.*"%>
 <%@ page
     import="edu.columbia.gemma.common.description.BibliographicReference"%>
 
@@ -10,20 +9,22 @@
 <head>
 <script language="JavaScript">
     function selectAction(event){
-        document.newSearchForm._eventId.value=event;
-        document.newSearchForm.submit();
+        document.actionForm._eventId.value=event;
+        document.actionForm.submit();
     }
 </script>
 </head>
 <body>
-<form name="newSearchForm" action="flowController.htm"><INPUT
+ 
+<form method="post" name="actionForm" action="flowController.htm"><INPUT
     type="hidden" name="_flowExecutionId"
     value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
     type="hidden" name="_eventId" value=""> <INPUT type="hidden"
     name="pubMedId" value="<%=request.getAttribute("pubMedId") %>"></FORM>
+
 <TABLE width="100%">
     <TR>
-        <TD colspan="2"><b>Bibliographic Reference </b></TD>
+        <TD colspan="2"><b>Bibliographic Reference</b></TD>
     </TR>
     <TR>
         <TD COLSPAN="2">

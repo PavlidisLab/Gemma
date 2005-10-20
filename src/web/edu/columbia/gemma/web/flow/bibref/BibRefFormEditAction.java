@@ -24,6 +24,7 @@ import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
+import org.springframework.webflow.execution.servlet.ServletEvent;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
@@ -65,7 +66,12 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      */
     @Override
     public Object createFormObject( RequestContext context ) {
-        return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
+        // return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
+        ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getAttributeNames();
+        BibliographicReference foo = ( BibliographicReference ) context.getRequestScope().getAttribute(
+                "bibliographicReference" );
+        return ( BibliographicReference ) context.getFlowScope().getAttribute( "bibliographicReference" );
+
     }
 
     /**
@@ -83,6 +89,8 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
     }
 
     /**
+     * After editing a bibliographic reference, persist the changes.
+     * 
      * @param context
      * @return
      * @throws Exception
@@ -98,7 +106,7 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
 
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
 
-        addMessage( context, "bibliographicReference.updated" );
+        addMessage( context, "bibliographicReference.updated", null );
 
         return success();
     }

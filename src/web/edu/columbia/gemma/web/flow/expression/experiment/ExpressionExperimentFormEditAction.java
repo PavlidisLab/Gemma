@@ -114,7 +114,7 @@ public class ExpressionExperimentFormEditAction extends AbstractFlowFormAction {
 
         expressionExperimentService.updateExpressionExperiment( exprExp );
 
-        addMessage( context, "expressionExperiment.update" );
+        addMessage( context, "expressionExperiment.update", null );
 
         return success();
     }
