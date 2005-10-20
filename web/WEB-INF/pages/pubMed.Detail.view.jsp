@@ -1,7 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
 <%@ page
-    import="edu.columbia.gemma.common.description.BibliographibibliographicReferenceeBean id="bibliographicRefereedu.columbia.gemma.common.description.BibliographicReferenceImplption.BibliographicReferenceImpl" />
+    import="edu.columbia.gemma.common.description.BibliographicReference"%>
+
+<jsp:useBean id="bibliographicReference" scope="request"
+    class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
@@ -40,35 +43,45 @@
         <HR>
         </TD>
     </TR>
+      <%BibliographicReference bibliographicReference = ( BibliographicReference ) request
+                    .getAttribute( "bibliographicReference" );
+
+            %>
+    <TR>
+        <TD><B>Pubmed ID</B></TD>
+        <TD><%=bibliographicReference.getPubAccession().getAccession() %></TD>
+    </TR>
     <TR>
         <TD><B>Authors</B></TD>
-        <TD><jsp:getProperty name="bibliographicReference"
- bibliographicReference.getPubAccession().getAccession() TR>
+        <TD><%=bibliographicReference.getAuthorList() %></TD>
+    </TR>
+    <TR>
+        <TD><B>Year</B></TD>
+        <TD><Gemma:date
+            date="<%=bibliographicReference.getPublicationDate()%>" /></TD>
+    </TR>
+
+    <TR>
         <TD><B>Title</B></TD>
-        <TD><jsp:getProperty name="biblibibliographicReference.getAuthorList() ="title" /></TD>
+        <TD><%=bibliographicReference.getTitle() %></TD>
+    </TR>
+    <TR>
+        <TD><B>Publication</B></TD>
+        <TD><%=bibliographicReference.getPublication() %></TD>
     </TR>
     <TR>
         <TD><B>Volume</B></TD>
-        <TD><jsp:getProperty name="bibliographicReference"
-            property="volume" /></TD>
+        <TD><%=bibliographicReference.getVolume() %></TD>
     </TR>
     <TR>
-        <TD><B>Issue</B></TD>
-       bibliographicReference.getTitle() graphicReference"
-            property="issue" /></TD>
+        <TD><B>Pages</B></TD>
+        <TD><%=bibliographicReference.getPages() %></TD>
     </TR>
     <TR>
-    bibliographicReference.getPublication()      <%-- FIXME: Format this into just a year --%>
-        <TD><jsp:getPrbibliographicReference.getVolume() "
-            property="publicationDate" /></TD>
+        <TD><B>Abstract Text</B></TD>
+        <TD><%=bibliographicReference.getAbstractText() %></TD>
+    </TR>
 
-    </TR>
-    <TR>
-   bibliographicReference.getPages()        <TD><jsp:getProperty name="bibliographicReference"
-            property="bibliographicReference.getAbstractText()        <TD><B>Abstract</B></TD>
-        <TD><jsp:getProperty name="bibliographicReference"
-            property="abstractText" /></TD>
-    </TR>
 
 
     <TR>
