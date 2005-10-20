@@ -99,9 +99,9 @@ public abstract class AbstractFlowAction extends AbstractAction implements Appli
         return applicationContext;
     }
 
-    protected Object addMessage( RequestContext context, String messageName ) {
+    protected Object addMessage( RequestContext context, String messageKey, Object[] parameters ) {
         return context.getRequestScope()
-                .setAttribute( "messages", getMessageSourceAccessor().getMessage( messageName ) );
+                .setAttribute( "messages", getMessageSourceAccessor().getMessage( messageKey, parameters ) );
     }
 
 }

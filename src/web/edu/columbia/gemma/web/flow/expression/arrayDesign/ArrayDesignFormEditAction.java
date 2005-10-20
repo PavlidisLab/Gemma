@@ -108,7 +108,7 @@ public class ArrayDesignFormEditAction extends AbstractFlowFormAction {
 
         getArrayDesignService().updateArrayDesign( ad );
 
-        addMessage( context, "arrayDesign.update" );
+        addMessage( context, "arrayDesign.update", null );
         return success();
     }
 
