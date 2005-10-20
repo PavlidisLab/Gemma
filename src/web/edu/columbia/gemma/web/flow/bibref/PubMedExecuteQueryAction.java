@@ -103,17 +103,12 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
             // does this mean we search twice when we do
             // search+save?
             bibRef = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
-
-            List<BibliographicReference> list = new ArrayList<BibliographicReference>();
-            list.add( bibRef );
             context.getRequestScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
             context.getFlowScope().setAttribute( "pubMedId", new Integer( pubMedId ) );
-            context.getRequestScope().setAttribute( "bibliographicReferences", list ); // page is designed to show
-                                                                                        // multiple
             context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
 
             if ( event.equals( "searchPubMed" ) ) { // used when searching the web.
-                if (  bibliographicReferenceService.alreadyExists( bibRef ) ) {
+                if ( bibliographicReferenceService.alreadyExists( bibRef ) ) {
                     context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
                     addMessage( context, "bibliographicReference.alreadyInSystem" );
                 } else {
@@ -148,9 +143,10 @@ public class PubMedExecuteQueryAction extends AbstractFlowAction {
                     }
 
                     bibRef.getPubAccession().setExternalDatabase( pubMedDb );
-
-                    addMessage( context, "bibliographicReference.saved" );
                     this.bibliographicReferenceService.saveBibliographicReference( bibRef );
+                    context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
+                    addMessage( context, "bibliographicReference.saved" );
+
                 }
 
             } else if ( event.equals( "delete" ) ) {

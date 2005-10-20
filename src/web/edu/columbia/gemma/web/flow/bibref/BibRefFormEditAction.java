@@ -64,14 +64,8 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      * @param context
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Object createFormObject( RequestContext context ) {
-        // String name = ( String ) context.getFlowScope().getRequiredAttribute( "name", String.class );
-
-        // String pubMedId = ( String ) context.getSourceEvent().getAttribute( "pubMedId" );
-        // context.getFlowScope().setAttribute( "pubMedId", pubMedId );
-        return ( BibliographicReference ) context.getSourceEvent().getAttribute( "bibliographicReference" );
-
+        return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
     }
 
     /**

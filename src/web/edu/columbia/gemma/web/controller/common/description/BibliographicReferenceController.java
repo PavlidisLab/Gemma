@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
@@ -64,25 +63,36 @@ public class BibliographicReferenceController extends MultiActionController {
         String pubMedId = request.getParameter( "pubMedId" );
 
         if ( pubMedId == null ) {
-            // should be a validation error.
+            // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( "Must provide a PubMed Id" );
         }
 
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( request
-                .getParameter( "pubMedId" ) );
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
             throw new EntityNotFoundException( pubMedId + " not found" );
-
         }
-        return new ModelAndView( "pubMed.Detail.view", "bibliographicReference", bibRef );
+
+        this.addMessage( request, "bibliographicReference.found", new Object[] { pubMedId } );
+        request.setAttribute( "pubMedId", pubMedId );
+        return new ModelAndView( "pubMed.Detail.view" ).addObject( "bibliographicReference", bibRef );
     }
 
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences", bibliographicReferenceService
-                .getAllBibliographicReferences() );
+        return new ModelAndView( "pubMed.GetAll.results.view" ).addObject( "bibliographicReferences",
+                bibliographicReferenceService.getAllBibliographicReferences() );
     }
 
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
     @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "pubMedId" );
@@ -97,6 +107,7 @@ public class BibliographicReferenceController extends MultiActionController {
         if ( bibRef == null ) {
             throw new EntityNotFoundException( pubMedId + " not found" );
         }
+
         return doDelete( request, bibRef );
     }
 
@@ -126,16 +137,21 @@ public class BibliographicReferenceController extends MultiActionController {
      * @param bibRef
      * @return
      */
-    // @SuppressWarnings("unused")
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.removeBibliographicReference( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-
-        // request.getSession().setAttribute(
-        // "messages",
-        // messageSource.getMessage( "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
-        // .getAccession() }, locale ) );
+        this.addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
+                .getAccession() } );
         return new ModelAndView( "bibRefSearch", "bibliographicReference", bibRef );
+    }
+
+    /**
+     * @param request
+     * @param messageName
+     */
+    private void addMessage( HttpServletRequest request, String messageCode, Object[] parameters ) {
+        request.getSession()
+                .setAttribute( "messages", getMessageSourceAccessor().getMessage( messageCode, parameters ) );
     }
 
     /**
@@ -144,12 +160,5 @@ public class BibliographicReferenceController extends MultiActionController {
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
-
-    // /**
-    // * @param message The message to set.
-    // */
-    // public void setMessageSource( ResourceBundleMessageSource messageSource ) {
-    // this.messageSource = messageSource;
-    // }
 
 }

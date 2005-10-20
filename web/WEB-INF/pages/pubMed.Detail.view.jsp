@@ -15,12 +15,12 @@
         if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
                 document.backForm._flowId.value="pubMed.Edit" 
                 document.backForm._eventId.value="delete"
-                document.backForm.action="bibRefDetails.htm"
+                document.backForm.action="<c:url value="/bibRef/deleteBibRef.html" />"
         }
         if(target == 2){
             document.backForm._eventId.value="edit"
             document.backForm._flowId.value="pubMed.Edit"
-            document.backForm.action="flowController.htm"           
+            document.backForm.action="<c:url value="/flowController.htm"/>"           
         }
         
         document.backForm.submit();
@@ -30,9 +30,10 @@
 <BODY>
 
 <FORM name="backForm" action=""><input type="hidden" name="_eventId"
-    value=""> <input type="hidden" name="_flowId" value=""> <input
+    value=""> <input type="hidden" name="_flowId" value=""><input
     type="hidden" name="pubMedId"
-    value="<%=request.getAttribute("pubMedId") %>"></FORM>
+    value="<%=((BibliographicReference)request.getAttribute("bibliographicReference")).getPubAccession().getAccession()%>"></FORM>
+
 <TABLE width="100%">
     <TR>
         <TD colspan="2"><b>Bibliographic Reference Details</b></TD>

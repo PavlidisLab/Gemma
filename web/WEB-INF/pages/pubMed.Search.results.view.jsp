@@ -30,12 +30,10 @@
         <HR>
         </TD>
     </TR>
-    <%
-List results = ( List ) request.getAttribute( "bibliographicReferences" );
-            for ( int i = 0; i < results.size(); i++ ) {
-                BibliographicReference bibliographicReference = ( BibliographicReference ) results.get( i );
+    <%BibliographicReference bibliographicReference = ( BibliographicReference ) request
+                    .getAttribute( "bibliographicReference" );
 
-                %>
+            %>
     <TR>
         <TD><B>Pubmed ID</B></TD>
         <TD><%=bibliographicReference.getPubAccession().getAccession() %></TD>
@@ -54,8 +52,6 @@ List results = ( List ) request.getAttribute( "bibliographicReferences" );
         <TD><B>Title</B></TD>
         <TD><%=bibliographicReference.getTitle() %></TD>
     </TR>
-
-
     <TR>
         <TD><B>Publication</B></TD>
         <TD><%=bibliographicReference.getPublication() %></TD>
@@ -73,10 +69,7 @@ List results = ( List ) request.getAttribute( "bibliographicReferences" );
         <TD><%=bibliographicReference.getAbstractText() %></TD>
     </TR>
 
-    <%
-}
 
-        %>
 
     <TR>
         <TD COLSPAN="2">
