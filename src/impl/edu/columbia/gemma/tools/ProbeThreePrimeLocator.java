@@ -70,7 +70,7 @@ public class ProbeThreePrimeLocator {
      */
     private static final int PORT = 3306;
 
-    private static final String DATABASE_NAME = "hg17";
+    private String databaseName = "hg17";
     private double identityThreshold = 0.90;
     private double scoreThreshold = 0.90;
     private String threeprimeMethod = GoldenPath.RIGHTEND;
@@ -79,7 +79,7 @@ public class ProbeThreePrimeLocator {
     public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-        GoldenPath bp = new GoldenPath( PORT, DATABASE_NAME, HOST, USERNAME, PASSWORD );
+        GoldenPath bp = new GoldenPath( PORT, databaseName, HOST, USERNAME, PASSWORD );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( input );
@@ -231,18 +231,20 @@ public class ProbeThreePrimeLocator {
     public static void main( String[] args ) {
 
         try {
-            if ( args.length < 2 ) throw new IllegalArgumentException( "usage: input file name, output filename" );
+            if ( args.length < 3 )
+                throw new IllegalArgumentException( "usage: input blat result file name, output filename, dbName (hg17)" );
             String filename = args[0];
             File f = new File( filename );
             if ( !f.canRead() ) throw new IOException( "Can't read file" );
-
+            ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
             String outputFileName = args[1];
+
             File o = new File( outputFileName );
             // if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
             String bestOutputFileName = outputFileName.replaceFirst( "\\.", ".best." );
             log.info( "Saving best to " + bestOutputFileName );
 
-            ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
+            ptpl.databaseName = args[2];
             Map<String, Collection<LocationData>> results = ptpl.run( new FileInputStream( f ), new BufferedWriter(
                     new FileWriter( o ) ) );
 
