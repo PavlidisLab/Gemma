@@ -60,7 +60,7 @@ limitations under the License.
 		<transition on="error" to="results.view" />
 	</action-state>
 	
-    <end-state id="record" view="redirect:/bibRefDetails.htm?pubMedId=${flowScope.pubMedId}" /> 
+    <end-state id="record" view="redirect:/bibRef/showBibRef.html?pubMedId=${flowScope.pubMedId}" /> 
 	<end-state id="error" view="error.view" />
 
 </webflow>

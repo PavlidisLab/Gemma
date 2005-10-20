@@ -27,7 +27,8 @@
         <props>
             <prop key="/bibRef/showAllBibRef.html">showAll</prop>
             <prop key="/bibRef/deleteBibRef.html">delete</prop>
-            <prop key="/bibRef/showBibRef.html">show</prop>
+            <prop key="/bibRef/showBibRef.html">show</prop> 
+            <prop key="/bibRef/searchBibRef.html">show</prop>
         </props>
     </property>
 </bean>

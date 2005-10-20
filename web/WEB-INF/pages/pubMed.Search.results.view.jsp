@@ -4,7 +4,6 @@
 <%@ page import="java.util.*"%>
 <%@ page
     import="edu.columbia.gemma.common.description.BibliographicReference"%>
-<%@ page import="java.text.SimpleDateFormat"%>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>

@@ -26,8 +26,8 @@
     <li><a
         href="<c:url value="/flowController.htm?_flowId=pubMed.Search"/>"><fmt:message
         key="menu.flow.PubMedSearch" /></a></li>
-    <li><a href="<c:url value="/bibRefSearch.htm"/>">Search Gemma for
-    PubMed Id</a></li>
+    <li><a href="<c:url value="/bibRef/searchBibRef.html"/>">Search
+    Gemma for PubMed Id</a></li>
     <li><a href="<c:url value="/editProfile.html"/>"><fmt:message
         key="menu.user" /></a></li>
     <li><a href="<c:url value="/selectFile.html"/>"><fmt:message
