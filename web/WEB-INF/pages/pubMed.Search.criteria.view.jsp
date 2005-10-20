@@ -70,7 +70,7 @@
 
         <TD>
         <DIV align="left"><INPUT type="button"
-            onclick="location.href='bibRefs.htm'" value="Select"></DIV>
+            onclick="location.href='bibRef/showAllBibRef.html'" value="Select"></DIV>
     </TR>
 
 </table>
