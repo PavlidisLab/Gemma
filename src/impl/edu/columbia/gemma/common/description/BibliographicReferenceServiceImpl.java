@@ -106,10 +106,10 @@ public class BibliographicReferenceServiceImpl extends
     /**
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#saveBibliographicReference(edu.columbia.gemma.common.description.BibliographicReference)
      */
-    protected void handleSaveBibliographicReference(
+    protected BibliographicReference handleSaveBibliographicReference(
             edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
-        getBibliographicReferenceDao().create( bibliographicReference );
+        return ( BibliographicReference ) getBibliographicReferenceDao().create( bibliographicReference );
     }
 
     /**
