@@ -38,9 +38,8 @@
             <![CDATA[
 <value>applicationContext-security.xml</value>
 ]]>
-            <!-- WE DONT WANT THIS
+            <!-- WE DONT WANT THESE
                 <![CDATA[
-                <value>applicationContext-security.xml</value>
                 <value>applicationContext-resources.xml</value>
                 <value>applicationContext-validation.xml</value>
                 <value>action-servlet.xml</value>

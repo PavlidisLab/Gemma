@@ -42,12 +42,11 @@ public class BibliographicReferenceServiceImpl extends
      * 
      * @see edu.columbia.gemma.common.description.BibliographicReferenceService#alreadyExists(edu.columbia.gemma.common.description.BibliographicReference)
      */
-    protected boolean handleAlreadyExists(
+    protected BibliographicReference handleFind(
             edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
 
-        BibliographicReference br = getBibliographicReferenceDao().find( bibliographicReference );
-        return br != null;
+       return getBibliographicReferenceDao().find( bibliographicReference );
     }
 
     /**
