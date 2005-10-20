@@ -18,6 +18,9 @@
  */
 package edu.columbia.gemma.web.controller.common.description;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,6 +32,7 @@ import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
+import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
  * This controller is responsible for showing a list of all bibliographic references, as well sending the user to the
@@ -40,7 +44,7 @@ import edu.columbia.gemma.common.description.BibliographicReferenceService;
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="bibliographicReferenceController"
+ * @spring.bean id="bibliographicReferenceController" name="/bibRef/*"
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="methodNameResolver" ref="bibRefActions"
  */
@@ -56,33 +60,64 @@ public class BibliographicReferenceController extends MultiActionController {
      * @return
      */
     @SuppressWarnings("unused")
-    protected ModelAndView show( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "pubMedId" );
+
+        if ( pubMedId == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+        }
+
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( request
                 .getParameter( "pubMedId" ) );
         if ( bibRef == null ) {
-            errors.reject( "bibliographicReference.notfound", new Object[] { pubMedId }, "Not found" );
-            return new ModelAndView( "bibRefSearch", "bibliographicReference", bibRef );
+            throw new EntityNotFoundException( pubMedId + " not found" );
+
         }
         return new ModelAndView( "pubMed.Detail.view", "bibliographicReference", bibRef );
     }
 
     @SuppressWarnings("unused")
-    protected ModelAndView showAll( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
+    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "pubMed.GetAll.results.view", "bibliographicReferences", bibliographicReferenceService
                 .getAllBibliographicReferences() );
     }
 
     @SuppressWarnings("unused")
-    protected ModelAndView delete( HttpServletRequest request, HttpServletResponse response, BindException errors ) {
+    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "pubMedId" );
+
+        if ( pubMedId == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+        }
+
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( request
                 .getParameter( "pubMedId" ) );
         if ( bibRef == null ) {
-            errors.reject( "bibliographicReference.notfound", new Object[] { pubMedId }, "Not found" );
-            return new ModelAndView( "bibRefSearch", "bibliographicReference", bibRef );
+            throw new EntityNotFoundException( pubMedId + " not found" );
         }
         return doDelete( request, bibRef );
+    }
+
+    /**
+     * Error handler for 'not found' condition.
+     * 
+     * @param request
+     * @param response
+     * @param error
+     * @return
+     */
+    @SuppressWarnings( { "unchecked", "unused" })
+    public ModelAndView notFoundError( HttpServletRequest request, HttpServletResponse response,
+            EntityNotFoundException error ) {
+        List<String> errors = ( List<String> ) request.getAttribute( "errors" );
+        if ( errors == null ) {
+            errors = new ArrayList<String>();
+        }
+        errors.add( error.getMessage() );
+        request.setAttribute( "errors", errors );
+        return new ModelAndView( "bibRefSearch", "bibliographicReference", null );
     }
 
     /**
