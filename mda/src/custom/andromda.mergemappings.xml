@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <mappings name="gemma">
 
-<mapping>
-<from>
-<![CDATA[// license-header java merge-point]]>
-</from>
-<to>
-<![CDATA[
+    <mapping>
+        <from>
+            <![CDATA[// license-header java merge-point]]>
+        </from>
+        <to>
+            <![CDATA[
 /*
  * The Gemma project.
  * 
@@ -26,24 +26,27 @@
  *
  */
 ]]>
-</to>
+        </to>
 
-</mapping>
+    </mapping>
 
-<mapping>
-<from>
-<![CDATA[<!-- beanRefFactory merge-point -->]]>
-</from>
-<to>
-<!-- WE DONT WANT THIS
-<![CDATA[
+    <mapping>
+        <from>
+            <![CDATA[<!-- beanRefFactory merge-point -->]]>
+        </from>
+        <to>
+            <![CDATA[
 <value>applicationContext-security.xml</value>
-<value>applicationContext-resources.xml</value>
-<value>applicationContext-validation.xml</value>
-<value>action-servlet.xml</value>
 ]]>
--->
-</to>
-</mapping>
+            <!-- WE DONT WANT THIS
+                <![CDATA[
+                <value>applicationContext-security.xml</value>
+                <value>applicationContext-resources.xml</value>
+                <value>applicationContext-validation.xml</value>
+                <value>action-servlet.xml</value>
+                ]]>
+            -->
+        </to>
+    </mapping>
 
 </mappings>
