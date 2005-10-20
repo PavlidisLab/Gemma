@@ -30,9 +30,11 @@
 <BODY>
 
 <FORM name="backForm" action=""><input type="hidden" name="_eventId"
-    value=""> <input type="hidden" name="_flowId" value=""><input
-    type="hidden" name="pubMedId"
-    value="<%=((BibliographicReference)request.getAttribute("bibliographicReference")).getPubAccession().getAccession()%>"></FORM>
+    value=""> <input type="hidden" name="_flowId" value="">
+    <input
+    type="hidden" name="bibliographicReference"
+    value="<%=((BibliographicReference)request.getAttribute("bibliographicReference"))%>">
+    </FORM>
 
 <TABLE width="100%">
     <TR>

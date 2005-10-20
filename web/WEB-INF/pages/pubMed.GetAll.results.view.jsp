@@ -20,7 +20,7 @@
 
 <display:table name="bibliographicReferences" class="list" requestURI=""
     id="bibliographicReferenceList" export="true">
-    <display:column sort="true" href="bibRefDetails.htm"
+    <display:column sort="true" href="showBibRef.html"
         paramId="pubMedId" paramProperty="pubAccession.accession"
         title="View details">
         <%="Details"%>
