@@ -239,7 +239,7 @@
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_BIBREF_EDIT
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.alreadyExists=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.find=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getBibliographicReferenceByTitle=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReferenceByLookup=user,admin
