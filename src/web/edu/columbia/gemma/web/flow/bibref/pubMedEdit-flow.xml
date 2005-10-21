@@ -32,14 +32,12 @@
 <!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
 	"http://www.springframework.org/dtd/spring-webflow.dtd">
 
-<webflow id="pubMed.Edit" start-state="setupForm">
-
-    <action-state id="setupForm">
-        <action bean="bibRefFormEditAction" />
-        <transition on="success" to="pubMed.Edit.view" />
-    </action-state>
+<webflow id="pubMed.Edit" start-state="pubMed.Edit.view">
 
     <view-state id="pubMed.Edit.view" view="pubMed.Edit.view">
+        <entry>
+            <action bean="bibRefFormEditAction" method="setupForm" />
+        </entry>
         <transition on="submit" to="save">
             <action bean="bibRefFormEditAction" method="bindAndValidate" />
         </transition>

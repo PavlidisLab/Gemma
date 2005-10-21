@@ -66,12 +66,13 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      */
     @Override
     public Object createFormObject( RequestContext context ) {
-        // return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
-        ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getAttributeNames();
-        BibliographicReference foo = ( BibliographicReference ) context.getRequestScope().getAttribute(
-                "bibliographicReference" );
-        return ( BibliographicReference ) context.getFlowScope().getAttribute( "bibliographicReference" );
-
+        // // return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
+        // ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getAttributeNames();
+        // BibliographicReference foo = ( BibliographicReference ) context.getRequestScope().getAttribute(
+        // "bibliographicReference" );
+        // return ( BibliographicReference ) context.getFlowScope().getAttribute( "bibliographicReference" );
+        return bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
+                "pubMedId" ) );
     }
 
     /**
