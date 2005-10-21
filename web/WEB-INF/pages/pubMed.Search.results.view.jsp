@@ -37,7 +37,7 @@
         </td>
     </tr>
     <tr>
-        <td colspan="2"><Gemma:bibref 
+        <td colspan="2"><Gemma:bibref
             bibliographicReference="<%=bibliographicReference %>" />
         <td>
     </tr>
@@ -58,15 +58,33 @@
                         value="Add to Gemma Database"></DIV>
                 </c:if></td>
 
-
+                <!--
                 <td align="right"><c:if
                     test="${requestScope.existsInSystem}">
                     <DIV align="right"><INPUT type="button"
                         onclick="javascript:selectAction('viewRecord')"
                         value="View Gemma Record"></DIV>
                 </c:if></td>
+-->
+                <TD><c:if test="${requestScope.existsInSystem}">
+                    <authz:acl domainObject="${bibliographicReference}"
+                        hasPermission="1,6">
+                        <DIV align="right"><INPUT type="button"
+                            onclick="javascript:selectAction('delete')"
+                            value="Delete from Gemma"></DIV>
+                    </authz:acl>
+                </c:if></td>
 
+                <TD><c:if test="${requestScope.existsInSystem}">
+                    <authz:acl domainObject="${bibliographicReference}"
+                        hasPermission="1,6">
 
+                        <DIV align="right"><INPUT type="button"
+                            onclick="javascript:selectAction('edit')"
+                            value="Edit"></DIV>
+
+                    </authz:acl>
+                </c:if></td>
                 <td align="right">
                 <DIV align="right"><INPUT type="button"
                     onclick="javascript:selectAction('newSearch')"

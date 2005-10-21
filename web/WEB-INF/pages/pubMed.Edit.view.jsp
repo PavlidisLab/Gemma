@@ -18,7 +18,8 @@
     id="bibliographicReferenceForm" onsubmit="return onFormSubmit(this)">
 <input type="hidden" name="_flowExecutionId"
     value="<c:out value="${flowExecutionId}"/>"> <input type="hidden"
-    name="_eventId" value="submit">
+    name="_eventId" value="submit"> <input type="hidden" name="pubMedId"
+    value="<%=request.getAttribute("pubMedId")%>">
 
 <table class="detail" width="75%">
     <c:set var="pageButtons">
@@ -46,14 +47,13 @@
 
     <tr>
         <th><Gemma:label key="pubMed.year" /></th>
-        <td><c:out value="${bibliographicReference.publicationDate}" />
-        </td>
+        <td><fmt:formatDate pattern="yyyy"
+            value="${bibliographicReference.publicationDate}" /></td>
     </tr>
 
     <tr>
         <th><Gemma:label key="pubMed.volume" /></th>
-        <td><input
-            type="text" name="volume"
+        <td><input type="text" name="volume"
             value="<c:out value="${bibliographicReference.volume}"/>"
             id="volume" /></td>
     </tr>
@@ -91,6 +91,18 @@
             <span class="fieldError"><c:out
                 value="${status.errorMessage}" /></span>
         </spring:bind></td>
+    </tr>
+
+    <tr>
+        <th><Gemma:label key="pubMed.pdf" /></th>
+        <td><spring:bind path="bibliographicReference.fullTextPDF">
+            <input type="file" name="pdf" id="fullTextPDF" size="40">
+            <c:out value="${status.value}" />
+            </textarea>
+            <span class="fieldError"><c:out
+                value="${status.errorMessage}" /></span>
+        </spring:bind></td>
+
     </tr>
 
 

@@ -54,7 +54,7 @@
         <transition on="success" to="finish" />
     </action-state>
 
-    <end-state id="finish" view="redirect:/bibRefDetails.htm?pubMedId=${flowScope.pubMedId}" />
+    <end-state id="finish" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
 
     <end-state id="error" view="error.view" />
 

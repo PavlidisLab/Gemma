@@ -1,7 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="java.util.*"%>
-<%@ page
-    import="edu.columbia.gemma.common.description.BibliographicReference"%>
 
 <jsp:useBean id="bibliographicReference" scope="request"
     class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
@@ -13,25 +10,25 @@
 <SCRIPT LANGUAGE="JavaScript">
     function selectButton(target){
         if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
-                document.backForm._flowId.value="pubMed.Edit" 
-                document.backForm._eventId.value="delete"
-                document.backForm.action="<c:url value="/bibRef/deleteBibRef.html" />"
+                document.actionForm._flowId.value="pubMed.Edit" 
+                document.actionForm._eventId.value="delete"
+                document.actionForm.action="<c:url value="/bibRef/deleteBibRef.html" />"
         }
         if(target == 2){
-            document.backForm._eventId.value="edit"
-            document.backForm._flowId.value="pubMed.Edit"
-            document.backForm.action="<c:url value="/flowController.htm"/>"           
+            document.actionForm._eventId.value="edit"
+            document.actionForm._flowId.value="pubMed.Edit"
+            document.actionForm.action="<c:url value="/flowController.htm"/>"           
         }
         
-        document.backForm.submit();
+        document.actionForm.submit();
     }
     </SCRIPT>
 </HEAD>
 <BODY>
 
-<FORM name="backForm" action=""><input type="hidden" name="_eventId"
+<FORM name="actionForm" action=""><input type="hidden" name="_eventId"
     value=""> <input type="hidden" name="_flowId" value=""> <input
-    type="hidden" name="bibliographicReference"
+    type="hidden" name="pubMedId"
     value="<%=request.getAttribute("pubMedId")%>"></FORM>
 
 <TABLE width="100%">
@@ -46,7 +43,7 @@
 
     <tr>
         <td colspan="2"><Gemma:bibref
-            bibliographicReference="<%=bibliographicReference %>" />
+            bibliographicReference="<%=bibliographicReference%>" />
         <td>
     </tr>
 

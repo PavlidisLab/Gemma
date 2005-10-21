@@ -45,7 +45,7 @@ import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 public class BibRefFormEditAction extends AbstractFlowFormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private BibliographicReferenceService bibliographicReferenceService;
-    private BibliographicReference bibRef = null;
+    private BibliographicReference bibRef;
 
     /**
      * Programmatically set the domain object, the class is refers to, and the scope.
@@ -57,16 +57,13 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
     }
 
     /**
-     * flowScope - attributes in the flowScope are available for the duration of the flow requestScope - attributes in
-     * the requestScope are available for the duration of the request sourceEvent - this is the event that originated
-     * the request. SourceEvent contains parameters provided as input by the client.
-     * 
      * @param context
      */
     @Override
     public Object createFormObject( RequestContext context ) {
-        return bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
+        bibRef = bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
                 "pubMedId" ) );
+        return bibRef;
     }
 
     /**
@@ -89,6 +86,8 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      * @throws Exception
      */
     public Event save( RequestContext context ) throws Exception {
+
+        if ( bibRef == null ) return error( new NullPointerException( "Bibliographic Reference was null." ) );
 
         // copy all attributes that we get from the form. Can't we do this binding automatically?
         bibRef.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
