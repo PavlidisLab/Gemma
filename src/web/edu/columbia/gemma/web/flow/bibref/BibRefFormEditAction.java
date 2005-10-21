@@ -24,7 +24,6 @@ import org.springframework.validation.DataBinder;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
-import org.springframework.webflow.execution.servlet.ServletEvent;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
@@ -66,11 +65,6 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      */
     @Override
     public Object createFormObject( RequestContext context ) {
-        // // return ( BibliographicReference ) context.getRequestScope().getAttribute( "bibliographicReference" );
-        // ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getAttributeNames();
-        // BibliographicReference foo = ( BibliographicReference ) context.getRequestScope().getAttribute(
-        // "bibliographicReference" );
-        // return ( BibliographicReference ) context.getFlowScope().getAttribute( "bibliographicReference" );
         return bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
                 "pubMedId" ) );
     }
@@ -85,8 +79,6 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
     @SuppressWarnings("unused")
     protected void initBinder( RequestContext context, DataBinder binder ) {
         this.setBindOnSetupForm( true );
-        log.info( new Boolean( this.isBindOnSetupForm() ) );
-
     }
 
     /**
@@ -103,7 +95,7 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
         bibRef.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
         bibRef.setVolume( ( String ) context.getSourceEvent().getAttribute( "volume" ) );
 
-        log.info( "updating bibliographic reference " + bibRef.getPubAccession().getAccession() );
+        log.info( "Updating bibliographic reference " + bibRef.getPubAccession().getAccession() );
 
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
 
