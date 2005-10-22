@@ -44,20 +44,26 @@
         <transition on="update" to="update">
             <action bean="bibRefFormEditAction" method="bindAndValidate" />
         </transition>
-        <transition on="cancel" to="finish" />
+        <transition on="cancel" to="cancel" />
     </view-state>
+
+    <action-state id="cancel">
+        <action bean="pubmedExecuteQueryAction" />
+        <transition on="success" to="record" />
+        <transition on="error" to="error" />
+    </action-state>
 
     <action-state id="update">
         <action bean="bibRefFormEditAction" />
-        <transition on="success" to="finish" />
+        <transition on="success" to="record" />
     </action-state>
 
     <action-state id="delete">
         <action bean="pubmedExecuteQueryAction" />
-        <transition on="success" to="finish" />
+        <transition on="success" to="record" />
     </action-state>
 
-    <end-state id="finish" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
+    <end-state id="record" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
 
     <end-state id="error" view="error" />
 

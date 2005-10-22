@@ -48,7 +48,7 @@
         <transition on="update" to="update">
             <action bean="bibRefFormEditAction" method="bindAndValidate" />
         </transition>
-        <transition on="cancel" to="record" />
+        <transition on="cancel" to="cancel" />
     </view-state>
 
     <view-state id="results.view" view="pubMed.Search.results.view">
@@ -59,6 +59,12 @@
         <transition on="saveBibRef" to="save" />
         <transition on="error" to="error" />
     </view-state>
+
+    <action-state id="cancel">
+        <action bean="pubmedExecuteQueryAction" />
+        <transition on="success" to="record" />
+        <transition on="error" to="error" />
+    </action-state>
 
     <action-state id="update">
         <action bean="bibRefFormEditAction" />
@@ -80,7 +86,7 @@
 
     <action-state id="edit">
         <action bean="bibRefFormEditAction" />
-        <transition on="success" to="pubMed.Edit.view" />
+        <transition on="success" to="record" />
         <transition on="error" to="error" />
     </action-state>
 

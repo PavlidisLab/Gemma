@@ -117,7 +117,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
             context.getFlowScope().setAttribute( "pubMedId", pubMedId );
             context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
             context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
-            
+
         }
         return success();
     }
@@ -143,6 +143,15 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         } else {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
         }
+        return success();
+    }
+
+    public Event cancel( RequestContext context ) throws Exception {
+        String pubMedId = ( String ) context.getSourceEvent().getParameter( "pubMedId" );
+        if ( pubMedId == null ) return error();
+        context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
+        addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { pubMedId } );
+        context.getFlowScope().setAttribute( "pubMedId", pubMedId );
         return success();
     }
 
