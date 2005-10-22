@@ -8,7 +8,7 @@
 <%-- I know this is webflow related, but it is needed here so when clicking "New Search" 
      we return to the pubMed.Search flow, which is a webflow.
 --%>
-<FORM name="newSearchForm" action="flowController.htm"><input type="hidden"
+<FORM name="newSearchForm" action=""><input type="hidden"
     name="_flowId" value="pubMed.Search"> <input type="hidden"
     name="_eventId" value="newSearch"></FORM>
 <DIV align="left">
