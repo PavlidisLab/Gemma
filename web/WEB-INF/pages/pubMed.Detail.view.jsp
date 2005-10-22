@@ -1,5 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
+<%-- This jsp demonstrates the use of the jsp taglib --%>
+
 <jsp:useBean id="bibliographicReference" scope="request"
     class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
 
