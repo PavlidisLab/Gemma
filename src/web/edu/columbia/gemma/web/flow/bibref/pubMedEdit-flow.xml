@@ -38,13 +38,16 @@
         <entry>
             <action bean="bibRefFormEditAction" method="setupForm" />
         </entry>
-        <transition on="submit" to="save">
+        <transition on="submit" to="update">
+            <action bean="bibRefFormEditAction" method="bindAndValidate" />
+        </transition>
+        <transition on="update" to="update">
             <action bean="bibRefFormEditAction" method="bindAndValidate" />
         </transition>
         <transition on="cancel" to="finish" />
     </view-state>
 
-    <action-state id="save">
+    <action-state id="update">
         <action bean="bibRefFormEditAction" />
         <transition on="success" to="finish" />
     </action-state>
@@ -56,6 +59,6 @@
 
     <end-state id="finish" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
 
-    <end-state id="error" view="error.view" />
+    <end-state id="error" view="error" />
 
 </webflow>

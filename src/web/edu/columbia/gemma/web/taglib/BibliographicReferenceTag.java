@@ -75,7 +75,10 @@ public class BibliographicReferenceTag extends TagSupport {
 
         buf.append( "</td></tr><tr><td valign=\"top\"><b>Citation</B></td><td>&nbsp;</td><td valign=\"top\">" );
         buf.append( bibliographicReference.getPublication() + " " );
-        buf.append( "<em>" + bibliographicReference.getVolume() + "</em>: " );
+
+        if ( bibliographicReference.getVolume() != null ) {
+            buf.append( "<em>" + bibliographicReference.getVolume() + "</em>: " );
+        }
         buf.append( bibliographicReference.getPages() );
 
         buf.append( "</td></tr><tr><td valign=\"top\"><b>Abstract</B></td><td>&nbsp;</td><td valign=\"top\">" );

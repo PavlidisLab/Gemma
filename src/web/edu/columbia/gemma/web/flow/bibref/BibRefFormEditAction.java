@@ -85,11 +85,12 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      * @return
      * @throws Exception
      */
-    public Event save( RequestContext context ) throws Exception {
+    public Event update( RequestContext context ) throws Exception {
 
-        if ( bibRef == null ) return error( new NullPointerException( "Bibliographic Reference was null." ) );
+        bibRef = bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
+                "pubMedId" ) );
 
-        // copy all attributes that we get from the form. Can't we do this binding automatically?
+        // // copy all attributes that we get from the form. Can't we do this binding automatically?
         bibRef.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
         bibRef.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
         bibRef.setVolume( ( String ) context.getSourceEvent().getAttribute( "volume" ) );
@@ -98,7 +99,8 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
 
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
 
-        addMessage( context, "bibliographicReference.updated", null );
+        context.getFlowScope().setAttribute( "pubMedId", bibRef.getPubAccession().getAccession() );
+        addMessage( context, "bibliographicReference.updated", new Object[] { bibRef.getPubAccession().getAccession() } );
 
         return success();
     }

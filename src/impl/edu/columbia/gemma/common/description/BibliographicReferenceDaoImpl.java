@@ -56,6 +56,8 @@ public class BibliographicReferenceDaoImpl extends edu.columbia.gemma.common.des
             if ( bibliographicReference.getPubAccession() != null ) {
                 queryObject.createCriteria( "pubAccession" ).add(
                         Restrictions.eq( "accession", bibliographicReference.getPubAccession().getAccession() ) );
+            } else {
+                throw new NullPointerException( "PubAccession cannot be null" );
             }
 
             java.util.List results = queryObject.list();
@@ -64,7 +66,8 @@ public class BibliographicReferenceDaoImpl extends edu.columbia.gemma.common.des
                 if ( results.size() > 1 ) {
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '" + BibliographicReference.class.getName()
-                                    + "' was found when executing query" );
+                                    + "' with accession " + bibliographicReference.getPubAccession().getAccession()
+                                    + " was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
                     result = ( BibliographicReference ) results.iterator().next();
@@ -83,9 +86,10 @@ public class BibliographicReferenceDaoImpl extends edu.columbia.gemma.common.des
      */
     @Override
     public BibliographicReference findOrCreate( BibliographicReference bibliographicReference ) {
-        if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null ) {
-            log.warn( "BibliographicReference was null or had no accession : " + bibliographicReference );
-            return null;
+        if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
+                || bibliographicReference.getPubAccession().getAccession() == null ) {
+            throw new NullPointerException( "BibliographicReference was null or had no accession : "
+                    + bibliographicReference );
         }
         BibliographicReference newBibliographicReference = find( bibliographicReference );
         if ( newBibliographicReference != null ) {

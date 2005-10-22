@@ -19,7 +19,7 @@
 <input type="hidden" name="_flowExecutionId"
     value="<c:out value="${flowExecutionId}"/>"> <input type="hidden"
     name="_eventId" value="submit"> <input type="hidden" name="pubMedId"
-    value="<%=request.getAttribute("pubMedId")%>">
+    value="<c:out value="${bibliographicReference.pubAccession.accession}" />">
 
 <table class="detail" width="75%">
     <c:set var="pageButtons">
@@ -27,7 +27,7 @@
             <td></td>
             <td class="buttonBar"><input type="submit" class="button"
                 name="save"
-                onclick="bCancel=false;this.form._eventId.value='submit'"
+                onclick="bCancel=false;this.form._eventId.value='update'"
                 value="<fmt:message key="button.save"/>" /> <c:if
                 test="${param.from == 'list'}">
                 <input type="submit" class="button" name="delete"

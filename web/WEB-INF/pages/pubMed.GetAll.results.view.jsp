@@ -18,7 +18,7 @@
 <h2>Search Results</h2>
 </DIV>
 
-<display:table name="bibliographicReferences" class="list" requestURI=""
+<display:table pagesize="5" name="bibliographicReferences" class="list" requestURI=""
     id="bibliographicReferenceList" export="true">
     <display:column sort="true" href="showBibRef.html"
         paramId="pubMedId" paramProperty="pubAccession.accession"
@@ -32,7 +32,7 @@
         titleKey="pubMed.publication" />
     <display:column property="authorList" sort="true"
         titleKey="pubMed.authors" />
-    <display:column property="publicationDate" sort="true"
+    <display:column property="publicationDate" sort="true" decorator="edu.columbia.gemma.web.taglib.displaytag.DateColumnDecorator"
         titleKey="pubMed.year" />
     <display:column property="volume" sort="true"
         titleKey="pubMed.volume" />
