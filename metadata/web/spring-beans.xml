@@ -229,11 +229,11 @@
 <bean id="pubMed.Search" class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedSearch-flow.xml" />
 </bean>
-<!-- 
-    <bean id="pubMed.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+
+<bean id="pubMed.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedEdit-flow.xml" />
-    </bean>
--->
+</bean>
+
 <bean id="arrayDesign.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
 </bean>

@@ -7,19 +7,20 @@
 <HTML>
 
 <HEAD>
+<title>pubMed.Detail.view</title>
 <SCRIPT LANGUAGE="JavaScript">
     function selectButton(target){
         if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
-                document.actionForm._flowId.value="pubMed.Search" 
-                document.actionForm._eventId.value="delete"
+          //      document.actionForm._flowId.value="pubMed.Search" 
+         //       document.actionForm._eventId.value="delete"
                 document.actionForm.action="<c:url value="/bibRef/deleteBibRef.html" />"
         }
         if(target == 2){
             document.actionForm._eventId.value="edit"
-            document.actionForm._flowId.value="pubMed.Search"
+            document.actionForm._flowId.value="pubMed.Edit"
             document.actionForm.action="<c:url value="/flowController.htm"/>"           
         }
-        
+     
         document.actionForm.submit();
     }
     </SCRIPT>
@@ -73,10 +74,24 @@
                         value="Edit"></DIV>
 
                 </authz:acl></td>
+
             </tr>
         </table>
         </td>
     </TR>
 </TABLE>
+
+<h2>New Gemma search:</h2>
+
+<form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><input
+    type="text" name="pubMedId" value="Enter PubMed Id" /> <input
+    type="submit" /></form>
+<hr />
+<DIV align="left"><INPUT type="button"
+    onclick="location.href='showAllBibRef.html'"
+    value="View all references"></DIV>
+<hr />
+<a href="<c:url value="/flowController.htm?_flowId=pubMed.Search"/>"><fmt:message
+    key="menu.flow.PubMedSearch" /></a>
 </BODY>
 </HTML>

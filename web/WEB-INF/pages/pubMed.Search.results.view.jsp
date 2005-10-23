@@ -7,8 +7,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
+<title>pubMed.Search.results.view</title>
 <script language="JavaScript">
-    function selectAction(event){
+    function selectAction( event){
         document.actionForm._eventId.value=event;
         document.actionForm.submit();
     }
@@ -54,7 +55,7 @@
                 <td align="left"><c:if
                     test="${!requestScope.existsInSystem}">
                     <DIV align="left"><INPUT type="button"
-                        onclick="javascript:selectAction('saveBibRef')"
+                        onclick="javascript:selectAction(  'saveBibRef')"
                         value="Add to Gemma Database"></DIV>
                 </c:if></td>
 
@@ -62,7 +63,7 @@
                 <td align="right"><c:if
                     test="${requestScope.existsInSystem}">
                     <DIV align="right"><INPUT type="button"
-                        onclick="javascript:selectAction('viewRecord')"
+                        onclick="javascript:selectAction( 'viewRecord')"
                         value="View Gemma Record"></DIV>
                 </c:if></td>
 -->
@@ -70,7 +71,7 @@
                     <authz:acl domainObject="${bibliographicReference}"
                         hasPermission="1,6">
                         <DIV align="right"><INPUT type="button"
-                            onclick="javascript:selectAction('delete')"
+                            onclick="javascript:selectAction(  'delete')"
                             value="Delete from Gemma"></DIV>
                     </authz:acl>
                 </c:if></td>
@@ -80,7 +81,7 @@
                         hasPermission="1,6">
 
                         <DIV align="right"><INPUT type="button"
-                            onclick="javascript:selectAction('edit')"
+                            onclick="javascript:selectAction( 'edit')"
                             value="Edit"></DIV>
 
                     </authz:acl>
@@ -88,7 +89,7 @@
                 <td align="right">
                 <DIV align="right"><INPUT type="button"
                     onclick="javascript:selectAction('newSearch')"
-                    value="New Search"></DIV>
+                    value="New NCBI Search"></DIV>
                 </td>
             </tr>
         </table>
