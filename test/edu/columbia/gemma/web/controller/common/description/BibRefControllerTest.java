@@ -81,7 +81,7 @@ public class BibRefControllerTest extends BaseControllerTestCase {
             br.setPubAccession( de );
 
             /* bibref is now set. Call service to persist to database. */
-            if ( !brs.alreadyExists( br ) ) brs.saveBibliographicReference( br );
+            if ( brs.find( br ) == null ) brs.saveBibliographicReference( br );
 
         } catch ( UnknownHostException e ) {
             skip = true;

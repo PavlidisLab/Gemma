@@ -98,7 +98,7 @@ public class PubMedXMLParser {
                 throw exception;
             }
 
-             @SuppressWarnings("unused")
+            @SuppressWarnings("unused")
             public void fatalError( SAXParseException exception ) throws SAXException {
             }
         } );
@@ -163,7 +163,7 @@ public class PubMedXMLParser {
     private String extractAuthorList( Document doc ) throws IOException {
 
         if ( doc.getElementsByTagName( "AuthorList" ).item( 0 ) == null ) {
-            throw new IOException( "No results found" );
+          return "(No authors listed)";
         }
 
         NodeList authorList = doc.getElementsByTagName( "AuthorList" ).item( 0 ).getChildNodes();
@@ -196,9 +196,10 @@ public class PubMedXMLParser {
                 }
             }
         }
+        if ( al.length() == 0 ) return "(No authors listed)";
+        if ( al.length() < 3 ) return al.toString();
         return al.toString().substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
     }
-
     /**
      * Get the date this was put in pubmed.
      * 

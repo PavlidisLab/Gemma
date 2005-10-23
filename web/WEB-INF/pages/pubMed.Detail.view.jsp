@@ -1,7 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<%-- This jsp demonstrates the use of the jsp taglib --%>
-
 <jsp:useBean id="bibliographicReference" scope="request"
     class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
 
@@ -12,13 +10,13 @@
 <SCRIPT LANGUAGE="JavaScript">
     function selectButton(target){
         if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
-                document.actionForm._flowId.value="pubMed.Edit" 
+                document.actionForm._flowId.value="pubMed.Search" 
                 document.actionForm._eventId.value="delete"
                 document.actionForm.action="<c:url value="/bibRef/deleteBibRef.html" />"
         }
         if(target == 2){
             document.actionForm._eventId.value="edit"
-            document.actionForm._flowId.value="pubMed.Edit"
+            document.actionForm._flowId.value="pubMed.Search"
             document.actionForm.action="<c:url value="/flowController.htm"/>"           
         }
         
