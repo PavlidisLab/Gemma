@@ -1,4 +1,5 @@
 <%-- Error Messages --%>
+<%@ include file="/common/taglibs.jsp"%>
 <c:if test="${not empty errors}">
     <div class="error">	
         <c:forEach var="error" items="${errors}">
