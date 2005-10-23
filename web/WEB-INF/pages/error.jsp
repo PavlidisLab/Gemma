@@ -16,6 +16,8 @@
 <div id="screen">
     <div id="content">
     <h2><fmt:message key="errorPage.heading"/></h2>
+    <p><a href="mainMenu.html" onclick="history.back();return false">&#171;
+Back</a></p>
     <%@ include file="/common/messages.jsp" %>
  <% if (request.getAttribute("exception") != null) { %>
     <p><%=((Exception)request.getAttribute("exception")).getLocalizedMessage() %></p>
@@ -30,5 +32,8 @@
     <p>The error information could not be obtained.</p>
  <% } %>
     </div>
+    <a href="mainMenu.html" onclick="history.back();return false">&#171;
+Back</a>
+    
 </body>
 </html>
