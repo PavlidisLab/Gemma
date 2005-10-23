@@ -40,35 +40,34 @@
             <action bean="pubMed.Search.criteria.formAction" method="bindAndValidate" />
         </transition>
     </view-state>
-
-    <view-state id="pubMed.Edit.view" view="pubMed.Edit.view">
-        <entry>
-            <action bean="bibRefFormEditAction" method="setupForm" />
-        </entry>
-        <transition on="update" to="update">
-            <action bean="bibRefFormEditAction" method="bindAndValidate" />
-        </transition>
-        <transition on="cancel" to="cancel" />
-    </view-state>
+   
+    <subflow-state id="pubMed.Edit.view" flow="pubMed.Edit">
+        <attribute-mapper>
+            <input name="pubMedId" />
+            <output name="pubMedId"/>
+        </attribute-mapper>
+        <transition on="finish" to="finish" />
+        <transition on="error" to="error" />
+    </subflow-state>
 
     <view-state id="results.view" view="pubMed.Search.results.view">
         <transition on="delete" to="delete" />
         <transition on="edit" to="pubMed.Edit.view" />
         <transition on="newSearch" to="criteria.view" />
-        <transition on="viewRecord" to="record" />
+        <transition on="viewfinish" to="finish" />
         <transition on="saveBibRef" to="save" />
         <transition on="error" to="error" />
     </view-state>
 
     <action-state id="cancel">
         <action bean="pubmedExecuteQueryAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
         <transition on="error" to="error" />
     </action-state>
 
     <action-state id="update">
         <action bean="bibRefFormEditAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
         <transition on="error" to="error" />
     </action-state>
 
@@ -86,17 +85,17 @@
 
     <action-state id="edit">
         <action bean="bibRefFormEditAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
         <transition on="error" to="error" />
     </action-state>
 
     <action-state id="delete">
         <action bean="pubmedExecuteQueryAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
         <transition on="error" to="error" />
     </action-state>
 
-    <end-state id="record" view="redirect:/bibRef/showBibRef.html?pubMedId=${flowScope.pubMedId}" />
+    <end-state id="finish" view="redirect:/bibRef/showBibRef.html?pubMedId=${flowScope.pubMedId}" />
     <end-state id="error" view="error" />
 
 </webflow>

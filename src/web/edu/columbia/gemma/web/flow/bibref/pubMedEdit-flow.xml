@@ -25,7 +25,7 @@
     
     This flow is used to get all bibliographicReferences.  
     
-    author: keshav
+    author: keshav, pavlidis
     version: $Id$
 -->
 
@@ -49,21 +49,21 @@
 
     <action-state id="cancel">
         <action bean="pubmedExecuteQueryAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
         <transition on="error" to="error" />
     </action-state>
 
     <action-state id="update">
         <action bean="bibRefFormEditAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
     </action-state>
 
     <action-state id="delete">
         <action bean="pubmedExecuteQueryAction" />
-        <transition on="success" to="record" />
+        <transition on="success" to="finish" />
     </action-state>
 
-    <end-state id="record" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
+    <end-state id="finish" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
 
     <end-state id="error" view="error" />
 
