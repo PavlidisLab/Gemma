@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.web.controller.common.auditAndSecurity;
 
+import java.io.Serializable;
+
 /**
  * Command class to handle uploading of a file. (From Appfuse)
  * <hr>
@@ -28,7 +30,7 @@ package edu.columbia.gemma.web.controller.common.auditAndSecurity;
  * @author pavlidis
  * @version $Id$
  */
-public class FileUpload {
+public class FileUpload implements Serializable{
     private String name;
     private byte[] file;
 
