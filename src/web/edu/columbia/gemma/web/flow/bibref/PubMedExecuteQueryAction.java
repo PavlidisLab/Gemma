@@ -101,7 +101,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getRequiredAttribute(
                 "bibliographicReference" );
         String accession = bibRef.getPubAccession().getAccession();
-        // String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
+
         if ( accession == null ) {
             this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
             return error();
@@ -114,7 +114,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         }
         this.bibliographicReferenceService.removeBibliographicReference( bibRefFound );
 
-        addMessage( context, "bilbiographicReference.deleted", new Object[] { accession } );
+        addMessage( context, "bibliographicReference.deleted", new Object[] { accession } );
         return success();
     }
 
@@ -129,7 +129,6 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
                 "bibliographicReference" );
 
         String accession = bibRef.getPubAccession().getAccession();
-        // String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
 
         if ( accession == null ) {
             this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
@@ -139,14 +138,19 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         // first see if we already have it in the system.
         BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
         if ( bibRefFound != null ) {
+
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
+            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
+
+            // FIXME: do we need _both_ of these?
             context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
             context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
-            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
         } else {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
             try {
                 bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
+
+                // FIXME do we need all of these?
                 context.getRequestScope().setAttribute( "accession", accession );
                 context.getFlowScope().setAttribute( "accession", accession );
                 context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
@@ -171,7 +175,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
                 "bibliographicReference" );
 
         String accession = bibRef.getPubAccession().getAccession();
-        // String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
+
         if ( accession == null ) {
             this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
             return error();
@@ -180,10 +184,13 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
         if ( bibRefFound != null ) {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-            context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
-            context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
             addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { bibRefFound.getPubAccession()
                     .getAccession() } );
+
+            // FIXME: do we need both of these?
+            context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
+            context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
+
         } else {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
         }
@@ -208,37 +215,50 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         if ( bibRefFound != null ) {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
             addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
+
+            // fixme: do we need both of these?
             context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
             context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
         } else { // it's new.
-            log.debug( "Saving bibliographic reference" );
-
-            // fill in the accession and the external database.
-            if ( bibRef.getPubAccession() == null ) {
-                DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-                dbEntry.setAccession( accession );
-                bibRef.setPubAccession( dbEntry );
-            }
-
             ExternalDatabase pubMedDb = this.externalDatabaseService.find( PUB_MED );
 
             if ( pubMedDb == null ) {
                 log.error( "There was no external database '" + PUB_MED + "'" );
-                // errors = new FormObjectAccessor( context ).getFormErrors();
-                // errors.reject( "ExternalDatabaseError", "There was no external database '" + PUB_MED + "'" );
+                this.getFormErrors( context ).reject( "No pubmed database" );
                 return error();
             }
 
-            bibRef.getPubAccession().setExternalDatabase( pubMedDb );
-            bibRef = this.bibliographicReferenceService.saveBibliographicReference( bibRef );
-
-            context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
-            context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
-            context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-            addMessage( context, "bibliographicReference.saved", new Object[] { accession } );
+            doSaveNewBibRef( context, bibRef, pubMedDb );
 
         }
         return success();
+    }
+
+    /**
+     * @param context
+     * @param bibRef
+     * @param accession
+     * @param pubMedDb
+     */
+    private void doSaveNewBibRef( RequestContext context, BibliographicReference bibRef, ExternalDatabase pubMedDb ) {
+        log.debug( "Saving bibliographic reference" );
+
+        // fill in the accession and the external database.
+        if ( bibRef.getPubAccession() == null ) {
+            DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+            dbEntry.setAccession( bibRef.getPubAccession().getAccession() );
+            bibRef.setPubAccession( dbEntry );
+        }
+
+        bibRef.getPubAccession().setExternalDatabase( pubMedDb );
+        bibRef = this.bibliographicReferenceService.saveBibliographicReference( bibRef );
+
+        context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
+        addMessage( context, "bibliographicReference.saved", new Object[] { bibRef.getPubAccession().getAccession() } );
+
+        // do we need both of these?
+        context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
+        context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
     }
 
 }
