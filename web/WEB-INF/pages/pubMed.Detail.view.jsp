@@ -1,13 +1,13 @@
 <%@ include file="/common/taglibs.jsp"%>
-
-<jsp:useBean id="bibliographicReference" scope="request"
-    class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
-
+<%@ page
+    import="edu.columbia.gemma.common.description.BibliographicReference"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 
 <HEAD>
 <title>pubMed.Detail.view</title>
+
+<%-- This script allows multiple submit buttons --%>
 <SCRIPT LANGUAGE="JavaScript">
     function selectButton(target){
         if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
@@ -25,10 +25,16 @@
 </HEAD>
 <BODY>
 
+<%-- Do we really need the accession passed in here separately? 
+The bibliographicRefernece is bound to this page in the flow? (yes...transition to edit needs it) --%>
 <FORM name="actionForm" action=""><input type="hidden" name="_eventId"
     value=""> <input type="hidden" name="_flowId" value=""> <input
     type="hidden" name="accession"
     value="<%=request.getAttribute("accession")%>"></FORM>
+
+
+<%BibliographicReference bibliographicReference = ( BibliographicReference ) request
+                    .getAttribute( "bibliographicReference" );%>
 
 <TABLE width="100%">
     <TR>
@@ -41,6 +47,7 @@
     </TR>
 
     <tr>
+        <%-- Display the bibliographicReference details --%>
         <td colspan="2"><Gemma:bibref
             bibliographicReference="<%=bibliographicReference%>" />
         <td>
@@ -56,6 +63,7 @@
         <TD COLSPAN="2">
         <table cellpadding="4">
             <tr>
+                <%-- These buttons are only shown if the user has appropriate permissions --%>
                 <TD><authz:acl domainObject="${bibliographicReference}"
                     hasPermission="1,6">
 
@@ -79,19 +87,22 @@
     </TR>
 </TABLE>
 
+<hr />
+
+<%-- This is basically the bibRefSearch.jsp view --%>
 <h2>New Gemma search:</h2>
 
-
-<form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><spring:bind
-    path="bibliographicReference.pubAccession.accession">
-    <input type="text" name="${status.expression}"
-        value="${status.value}">
-</spring:bind></form>
+<form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><input
+    type="text" name="accession"> <input type="submit"></form>
 <hr />
+
+<%-- show all link --%>
 <DIV align="left"><INPUT type="button"
     onclick="location.href='showAllBibRef.html'"
     value="View all references"></DIV>
 <hr />
+
+<%-- Search NCBI link --%>
 <a href="<c:url value="/flowController.htm?_flowId=pubMed.Search"/>"><fmt:message
     key="menu.flow.PubMedSearch" /></a>
 </BODY>

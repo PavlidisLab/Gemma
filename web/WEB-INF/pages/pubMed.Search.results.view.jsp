@@ -17,11 +17,11 @@
 </head>
 <body>
 
+<%-- This form is very similar to the pubMed.Detail.view.jsp --%>
 <form method="post" name="actionForm" action="flowController.htm"><INPUT
     type="hidden" name="_flowExecutionId"
     value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
-    type="hidden" name="_eventId" value=""> <INPUT type="hidden"
-    name="pubMedId" value="<%=request.getAttribute("pubMedId") %>"></FORM>
+    type="hidden" name="_eventId" value=""></FORM>
 
 
 <%BibliographicReference bibliographicReference = ( BibliographicReference ) request
@@ -30,7 +30,7 @@
             %>
 <TABLE width="100%">
     <tr>
-        <td colspan="2"><b>Bibliographic Reference</b></td>
+        <td colspan="2"><b>Bibliographic Reference Search Results</b></td>
     </tr>
     <tr>
         <td COLSPAN="2">
@@ -58,15 +58,6 @@
                         onclick="javascript:selectAction(  'saveBibRef')"
                         value="Add to Gemma Database"></DIV>
                 </c:if></td>
-
-                <!--
-                <td align="right"><c:if
-                    test="${requestScope.existsInSystem}">
-                    <DIV align="right"><INPUT type="button"
-                        onclick="javascript:selectAction( 'viewRecord')"
-                        value="View Gemma Record"></DIV>
-                </c:if></td>
--->
                 <TD><c:if test="${requestScope.existsInSystem}">
                     <authz:acl domainObject="${bibliographicReference}"
                         hasPermission="1,6">
