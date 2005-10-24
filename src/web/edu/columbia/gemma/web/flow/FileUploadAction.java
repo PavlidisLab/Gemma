@@ -21,17 +21,22 @@ package edu.columbia.gemma.web.flow;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
+import org.springframework.validation.Errors;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.action.FormAction;
 import org.springframework.webflow.execution.servlet.ServletEvent;
 
+import edu.columbia.gemma.web.Constants;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
@@ -41,10 +46,11 @@ import edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @spring.bean name="uploadFileAction"
+ * @author keshav
  * @author pavlidis
  * @version $Id$
  */
-public class FileUploadAction extends FormAction {
+public class FileUploadAction extends AbstractFlowFormAction {
 
     private static Log log = LogFactory.getLog( FileUploadAction.class.getName() );
 
@@ -59,44 +65,46 @@ public class FileUploadAction extends FormAction {
     @SuppressWarnings("unused")
     @Override
     protected void initBinder( RequestContext context, DataBinder binder ) {
-        // to actually be able to convert a multipart object to a byte[]
-        // we have to register a custom editor (in this case the
-        // ByteArrayMultipartFileEditor)
+        /*
+         * to actually be able to convert a multipart object to a byte[] we have to register a custom editor (in this
+         * case the ByteArrayMultipartFileEditor)
+         */
         binder.registerCustomEditor( byte[].class, new ByteArrayMultipartFileEditor() );
-        // now Spring knows how to handle multipart objects and convert them
+        /* now Spring knows how to handle multipart objects and convert them */
     }
 
     /**
      * @param context
-     * @return
+     * @return Event
      * @throws Exception
      */
     @Override
     public Event doExecute( RequestContext context ) throws Exception {
         assert context != null;
 
-        // FileUpload fub = ( FileUpload ) context.getSourceEvent().getAttribute( "fileUpload" ); //
-        // org.springframework.web.multipart.commons.CommonsMultipartFile
-        org.springframework.web.multipart.commons.CommonsMultipartFile fub = ( org.springframework.web.multipart.commons.CommonsMultipartFile ) context
-                .getSourceEvent().getAttribute( "file" );
-        if ( fub == null ) {
-            return error( new IOException( "FileUpload parameter was null" ) );
-        }
-        // byte[] fileData = fub.getFile();
-        byte[] fileData = fub.getBytes();
+        CommonsMultipartFile file = ( CommonsMultipartFile ) context.getSourceEvent().getAttribute( "file" );
+        log.debug( file );
 
-        if ( fileData == null || fileData.length == 0 ) {
-            return error( new IOException( "File data was null or empty" ) );
+        String filename = ( String ) context.getSourceEvent().getAttribute( "name" );
+
+        /* validate a file was entered */
+        if ( file.getBytes().length == 0 ) {
+            // Errors errors = getFormObjectAccessor( context ).getFormErrors();
+            // FIXME - errors are not getting displayed.
+            Errors errors = this.getFormErrors( context );
+            errors.reject( "file", "Must enter a file." );
+            return error();
         }
 
-        // the directory to upload to.. .I don't know what this does.
-        String uploadDir = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getContextPath();
+        /* the directory to upload to.. */
+        String contextPath = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getContextPath();
+
         String user = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getRemoteUser();
 
-        String uploadedFile = uploadDir + "/resources/" + user + "/";
-        log.warn( "Upload  path is " + uploadedFile );
+        String uploadDir = contextPath + "/resources/" + user + "/";
+        log.warn( "Upload  path is " + uploadDir );
 
-        // Create the directory if it doesn't exist
+        /* Create the directory if it doesn't exist */
         File dirPath = new File( uploadDir );
 
         if ( !dirPath.exists() ) {
@@ -106,14 +114,41 @@ public class FileUploadAction extends FormAction {
             }
         }
 
+        /* retrieve the file data */
+        InputStream stream = file.getInputStream();
+
         try {
-            OutputStream bos = new FileOutputStream( uploadedFile );
-            bos.write( fileData, 0, fileData.length );
+            /* write the file to the file specified */
+            OutputStream bos = new FileOutputStream( uploadDir + file.getOriginalFilename() );
+            int bytesRead = 0;
+            byte[] buffer = new byte[8192];
+
+            while ( ( bytesRead = stream.read( buffer, 0, 8192 ) ) != -1 ) {
+                bos.write( buffer, 0, bytesRead );
+            }
+
             bos.close();
+
+            /* close the stream */
+            stream.close();
         } catch ( IOException e ) {
             return error( e );
         }
-        context.getFlowScope().setAttribute( "readFile", uploadedFile );
+
+        /* place the data in flow scope to be used by the next view state (uploadDisplay.jsp) */
+        context.getFlowScope().setAttribute( "friendlyName", filename );
+        context.getFlowScope().setAttribute( "fileName", file.getOriginalFilename() );
+        context.getFlowScope().setAttribute( "contentType", file.getContentType() );
+        context.getFlowScope().setAttribute( "size", file.getSize() + " bytes" );
+        context.getFlowScope().setAttribute( "location",
+                dirPath.getAbsolutePath() + Constants.FILE_SEP + file.getOriginalFilename() );
+
+        String link = uploadDir;
+
+        context.getFlowScope().setAttribute( "link", link + file.getOriginalFilename() );
+
+        log.warn( "Uploaded file!" );
+        addMessage( context, "display.title", new Object[] {} );
         return success();
     }
 

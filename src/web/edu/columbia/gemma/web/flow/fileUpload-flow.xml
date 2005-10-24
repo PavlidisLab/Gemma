@@ -7,6 +7,7 @@
 
     <view-state id="selectFile" view="uploadForm">
         <transition on="submit" to="uploadFile"/>
+        <transition on="cancel" to="finish"/>
     </view-state>
 
     <action-state id="uploadFile">
@@ -16,7 +17,9 @@
     </action-state>
     
     <view-state id="displayConfirmation" view="uploadDisplay">
-        <transition on="back" to="selectFile"/>
+        <transition on="finish" to="selectFile"/>
     </view-state>
+    
+    <end-state id="finish" view="redirect:/mainMenu.html"/>
     
 </webflow>
