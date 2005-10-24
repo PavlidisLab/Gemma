@@ -19,7 +19,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
-import org.springframework.validation.commons.ValidatorFactory;
+import org.springmodules.commons.validator.ValidatorFactory;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.support.RequestContext;
@@ -254,7 +254,7 @@ public class LabelTag extends TagSupport {
 
     /**
      * Get the validator resources from a ValidatorFactory defined in the web application context or one of its parent
-     * contexts. The bean is resolved by type (org.springframework.validation.commons.ValidatorFactory).
+     * contexts. The bean is resolved by type (org.springmodules.commons.validator.ValidatorFactory).
      * 
      * @return ValidatorResources from a ValidatorFactory.
      */
