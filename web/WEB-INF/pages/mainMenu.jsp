@@ -30,7 +30,7 @@
     Gemma for PubMed Id</a></li>
     <li><a href="<c:url value="/editProfile.html"/>"><fmt:message
         key="menu.user" /></a></li>
-    <li><a href="<c:url value="/selectFile.html"/>"><fmt:message
+    <li><a href="<c:url value="/flowController.htm?_flowId=fileUploader"/>"><fmt:message
         key="menu.selectFile" /></a></li>
 </ul>
 </body>
