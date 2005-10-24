@@ -23,7 +23,9 @@ import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.ValidatorAction;
 import org.apache.commons.validator.util.ValidatorUtils;
 import org.springframework.validation.Errors;
-import org.springframework.validation.commons.Resources;
+import org.springmodules.commons.validator.FieldChecks;
+
+// import org.springmodules.commons.validator.Resources;
 
 /**
  * ValidationUtil Helper class for performing custom validations that aren't already included in the core Commons
@@ -36,10 +38,10 @@ import org.springframework.validation.commons.Resources;
  * @author pavlidis
  * @version $Id$
  */
-public class ValidationUtil {
+public class ValidationUtil extends FieldChecks {
 
     /**
-     * Validates that two fields match.
+     * Validates that two fields match. This goes with the custom declaration in the validation-rules.xml file.
      * 
      * @param bean
      * @param va
@@ -56,11 +58,11 @@ public class ValidationUtil {
         if ( !GenericValidator.isBlankOrNull( value ) ) {
             try {
                 if ( !value.equals( value2 ) ) {
-                    Resources.rejectValue( errors, field, va );
+                    FieldChecks.rejectValue( errors, field, va );
                     return false;
                 }
             } catch ( Exception e ) {
-                Resources.rejectValue( errors, field, va );
+                FieldChecks.rejectValue( errors, field, va );
                 return false;
             }
         }
