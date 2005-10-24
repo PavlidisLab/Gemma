@@ -7,7 +7,7 @@
 
 <jsp:useBean id="fileUpload" scope="request"
     class="edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload" />
-    
+ 
 <spring:bind path="fileUpload.*">
     <c:if test="${not empty status.errorMessages}">
         <div class="error"><c:forEach var="error"
@@ -24,7 +24,6 @@
 <fmt:message key="upload.message" />
 <div class="separator"></div>
 
-
 <%--
     The most important part is to declare your form's enctype to be "multipart/form-data"
 --%>
@@ -36,15 +35,14 @@
 --%>
 
 <%-- use this for flow version --%>
+
 <form method="post" action="<c:url value="/flowController.htm"/>"  enctype="multipart/form-data"
     id="uploadFile" onsubmit="return onFormSubmit(this)">
-    
-    <%-- The following fields are to support use of this form in flows --%>
-<input type="hidden" name="_flowExecutionId"  value="<%=request.getAttribute("flowExecutionId") %>"> 
-    <input  type="hidden" name="_eventId" value="submit">
-<input type="hidden"  name="_flowId" value=""> 
-    <input type="hidden" name="name"  value="<%=request.getAttribute("name") %>">
-    
+<%-- The following fields are to support use of this form in flows --%>
+	<input type="hidden" name="_flowExecutionId"  value="<%=request.getAttribute("flowExecutionId") %>"> 
+    <input  type="hidden" name="_eventId" value="">
+	<input type="hidden"  name="_flowId" value="fileUploader"> 
+   
 <table class="detail">
     <tr>
         <th><Gemma:label key="uploadForm.name" /></th>
@@ -67,10 +65,10 @@
     <tr>
         <td></td>
         <td class="buttonBar"><input type="submit" name="upload"
-            class="button" onclick="bCancel=false"
+            class="button" onclick="bCancel=false;this.form._eventId.value='submit'"
             value="<fmt:message key="button.upload"/>" /> <input
             type="submit" name="cancel" class="button"
-            onclick="bCancel=true"
+            onclick="bCancel=true;this.form._eventId.value='cancel'"
             value="<fmt:message key="button.cancel"/>" /></td>
     </tr>
 </table>
@@ -81,6 +79,8 @@
 highlightFormElements();
 // -->
 </script>
+<%--
 <html:javascript formName="fileUpload" staticJavascript="false" />
 <script type="text/javascript"
     src="<c:url value="/scripts/validator.jsp"/>"></script>
+--%>
