@@ -36,15 +36,18 @@
 <webflow id="pubMed.Search" start-state="criteria.view">
 
     <view-state id="criteria.view" view="pubMed.Search.criteria.view">
+        <entry>
+            <action bean="pubmedExecuteQueryAction" method="setupForm"/>
+        </entry>
         <transition on="searchPubMed" to="searchNCBI">
-            <action bean="pubMed.Search.criteria.formAction" method="bindAndValidate" />
+            <action bean="pubmedExecuteQueryAction" method="bindAndValidate" />
         </transition>
     </view-state>
    
     <subflow-state id="pubMed.Edit.view" flow="pubMed.Edit">
         <attribute-mapper>
-            <input name="pubMedId" />
-            <output name="pubMedId"/>
+            <input name="bibliographicReference" value="${flowScope.bibliographicReference}" />
+          <output name="bibliographicReference"/>
         </attribute-mapper>
         <transition on="finish" to="finish" />
         <transition on="error" to="error" />
@@ -95,7 +98,7 @@
         <transition on="error" to="error" />
     </action-state>
 
-    <end-state id="finish" view="redirect:/bibRef/showBibRef.html?pubMedId=${flowScope.pubMedId}" />
+    <end-state id="finish" view="redirect:/bibRef/showBibRef.html?accession=${flowScope.accession}" />
     <end-state id="error" view="error" />
 
 </webflow>

@@ -11,8 +11,6 @@
 <SCRIPT LANGUAGE="JavaScript">
     function selectButton(target){
         if(target == 1 && confirm("Are you sure you want to delete this reference from the system?")){
-          //      document.actionForm._flowId.value="pubMed.Search" 
-         //       document.actionForm._eventId.value="delete"
                 document.actionForm.action="<c:url value="/bibRef/deleteBibRef.html" />"
         }
         if(target == 2){
@@ -29,8 +27,8 @@
 
 <FORM name="actionForm" action=""><input type="hidden" name="_eventId"
     value=""> <input type="hidden" name="_flowId" value=""> <input
-    type="hidden" name="pubMedId"
-    value="<%=request.getAttribute("pubMedId")%>"></FORM>
+    type="hidden" name="accession"
+    value="<%=request.getAttribute("accession")%>"></FORM>
 
 <TABLE width="100%">
     <TR>
@@ -83,9 +81,12 @@
 
 <h2>New Gemma search:</h2>
 
-<form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><input
-    type="text" name="pubMedId" value="Enter PubMed Id" /> <input
-    type="submit" /></form>
+
+<form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><spring:bind
+    path="bibliographicReference.pubAccession.accession">
+    <input type="text" name="${status.expression}"
+        value="${status.value}">
+</spring:bind></form>
 <hr />
 <DIV align="left"><INPUT type="button"
     onclick="location.href='showAllBibRef.html'"

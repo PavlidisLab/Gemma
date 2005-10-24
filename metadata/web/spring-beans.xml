@@ -162,27 +162,47 @@
 <!-- ==================================================== -->
 <!--  Validation settings. -->
 <!-- ==================================================== -->
-<bean id="validatorFactory" class="org.springframework.validation.commons.DefaultValidatorFactory" init-method="init">
-    <property name="resources">
+<bean id="validatorFactory" class="org.springmodules.commons.validator.DefaultValidatorFactory" >
+    <property name="validationConfigLocations">
         <list>
             <value>/WEB-INF/validator-rules.xml</value>
             <value>/WEB-INF/validation.xml</value>
         </list>
     </property>
 </bean>
+
 <!--  Use this if the command class is not _actually_ an "Impl" -->
-<bean id="genericBeanValidator" class="org.springframework.validation.commons.BeanValidator">
+<bean id="genericBeanValidator" class="org.springmodules.commons.validator.DefaultBeanValidator">
     <property name="validatorFactory">
         <ref local="validatorFactory" />
     </property>
 </bean>
+
 <!-- Use this type of validator if you use a data model object as the command object -->
-<bean id="userValidator" class="org.springframework.validation.commons.NamedBeanValidator">
+<bean id="userValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
     <property name="validatorFactory">
         <ref local="validatorFactory" />
     </property>
-    <property name="beanName">
+    <property name="formName">
         <value>user</value>
+    </property>
+</bean>
+
+<bean id="bibliographicReferenceValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+    <property name="validatorFactory">
+        <ref local="validatorFactory" />
+    </property>
+    <property name="formName">
+        <value>bibliographicReference</value>
+    </property>
+</bean>
+
+<bean id="databaseEntryValidator"  class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+    <property name="validatorFactory">
+        <ref local="validatorFactory" />
+    </property>
+    <property name="formName">
+        <value>databaseEntry</value>
     </property>
 </bean>
 
@@ -217,15 +237,6 @@
 <!-- 
     Add one bean here for each flow. The actions are defined using XDoclet tags in the Action classes.   
 -->
-
-
-<bean id="pubMed.Search.criteria.formAction" class="org.springframework.webflow.action.FormAction">
-    <property name="formObjectName" value="bibliographicReference" />
-    <property name="formObjectClass" value="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
-    <property name="formObjectScopeAsString" value="flow" />
-</bean>
-
-
 
 <bean id="pubMed.Search" class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedSearch-flow.xml" />

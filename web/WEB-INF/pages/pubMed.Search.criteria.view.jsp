@@ -1,33 +1,11 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<jsp:useBean id="bibliographicReference" scope="request"
-    class="edu.columbia.gemma.common.description.BibliographicReferenceImpl" />
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//Dtd HTML 4.01 Transitional//EN">
 <HTML>
-
-
 <HEAD>
-<SCRIPT LANGUAGE="JavaScript">
-    function selectButton(target){
-        if(target == 0){
-            document.searchForm._eventId.value="searchPubMed"
-            document.searchForm._flowId.value="pubMed.Search" 
-            if (document.searchForm.pubMedId.value==""){
-                alert("Enter a valid PubMed ID.");
-                return false;
-            }
-            else{
-                document.searchForm.submit();
-            }
-        }
-    }
-    </SCRIPT>
+<title>NCBI PubMed search</title>
 </HEAD>
 <BODY>
-
-
-
 
 <h2>Search NCBI PubMed for a reference</h2>
 <spring:hasBindErrors name="bibliographicReference">
@@ -44,34 +22,36 @@
 
 <table>
     <TR>
-        <TD>PubMed ID</TD>
-        <TD>
-        <FORM name="searchForm" action="flowController.htm"><INPUT
-            type="hidden" name="_flowExecutionId"
-            value="<%=request.getAttribute("flowExecutionId") %>"> <INPUT
+        <td>PubMed ID</td>
+        <td>
+        <form name="searchForm" action="flowController.htm"><spring:bind
+            path="bibliographicReference.pubAccession.accession">
+            <input type="text" name="${status.expression}"
+                value="${status.value}">
+        </spring:bind> <input type="hidden" name="_flowExecutionId"
+            value="<%=request.getAttribute("flowExecutionId") %>"> <input
             type="hidden" name="_currentStateId" value="criteria.view">
-        <INPUT type="hidden" name="_eventId" value=""> <INPUT
-            type="hidden" name="_flowId" value=""> <INPUT type="text"
-            name="pubMedId"></form>
-        </TD>
+        <input type="hidden" name="_eventId" value="searchPubMed"> <input
+            type="hidden" name="_flowId" value=""><input type="submit"
+            value="Search"></form>
+        </td>
 
-        <TD align="left">
-        <DIV align="right"><INPUT type="button"
-            onclick="javascript:selectButton(0)" value="Search"></DIV>
-        </TD>
+        <td align="left">
+        <DIV align="right"></DIV>
+        </td>
     </TR>
     <TR>
-        <TD colspan="3">
+        <td colspan="3">
         <HR />
         </td>
     <tr>
     <tr>
         <td colspan="2">
         <DIV align="left"><b>View All Gemma Bibliographic References</b></DIV>
-        </TD>
+        </td>
 
-        <TD>
-        <DIV align="left"><INPUT type="button"
+        <td>
+        <DIV align="left"><input type="button"
             onclick="location.href='bibRef/showAllBibRef.html'"
             value="Select"></DIV>
         </td>

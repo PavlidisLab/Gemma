@@ -45,10 +45,18 @@ import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 public class BibRefFormEditAction extends AbstractFlowFormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private BibliographicReferenceService bibliographicReferenceService;
-    private BibliographicReference bibRef;
 
     /**
-     * Programmatically set the domain object, the class is refers to, and the scope.
+     * Programmatically set the form object, the class is refers to, and the scope. This is an alternative to the
+     * following XDoclet tags: (with the 'at' symbols removed to avoid interpretation by the XDoclet parser):
+     * <p>
+     * spring.property name="formObjectClass" value="edu.columbia.gemma.common.description.BibliographicReferenceImpl"
+     * <p>
+     * spring.property name="formObjectName" value="bibliographicReference"
+     * <p>
+     * spring.property name="formObjectScopeAsString" value="flow"
+     * <p>
+     * These will end up in the bean definition in actin-servlet.xml. DO NOT use both methods!
      */
     public BibRefFormEditAction() {
         setFormObjectName( "bibliographicReference" );
@@ -57,17 +65,54 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
     }
 
     /**
+     * This is the webflow equivalent of mvc's formBackingObject
+     * 
      * @param context
      */
     @Override
-    public Object createFormObject( RequestContext context ) {
-        bibRef = bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
-                "pubMedId" ) );
+    public Object loadFormObject( RequestContext context ) {
+        // depending on where we came from, we either get the object, or we get a pubmed id.
+        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getAttribute(
+                "bibliographicReference" );
+        if ( bibRef == null ) {
+            String accession = ( String ) context.getSourceEvent().getAttribute( "accession" );
+            if ( accession == null ) {
+                throw new IllegalStateException( "Accession for Bibliographic Reference was null" );
+            }
+            if ( log.isDebugEnabled() ) {
+                log.debug( "Seeking accession " + accession );
+            }
+            bibRef = bibliographicReferenceService.findByExternalId( accession );
+        }
+
+        if ( bibRef == null ) {
+            throw new IllegalStateException( "Could not get bibliographicReference for editing" );
+        }
+
         return bibRef;
     }
 
     /**
-     * This is the webflow equivalent of mvc's formBackingObject
+     * User has changed their mind about editing. Bail out.
+     * 
+     * @param context
+     * @return
+     * @throws Exception
+     */
+    public Event cancel( RequestContext context ) throws Exception {
+        String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
+        if ( accession == null ) {
+            this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
+            return error(new IllegalArgumentException() );
+        }
+        context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
+        context.getRequestScope().setAttribute( "accession", accession );
+        addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
+        return success();
+    }
+
+    /**
+     * 
      * 
      * @param context
      * @param binder
@@ -86,20 +131,17 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
      * @throws Exception
      */
     public Event update( RequestContext context ) throws Exception {
+        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getRequiredAttribute(
+                "bibliographicReference" );
 
-        bibRef = bibliographicReferenceService.findByExternalId( ( String ) context.getSourceEvent().getAttribute(
-                "pubMedId" ) );
-
-        // // copy all attributes that we get from the form. Can't we do this binding automatically?
-        bibRef.setTitle( ( String ) context.getSourceEvent().getAttribute( "title" ) );
-        bibRef.setAbstractText( ( String ) context.getSourceEvent().getAttribute( "abstractText" ) );
-        bibRef.setVolume( ( String ) context.getSourceEvent().getAttribute( "volume" ) );
+        // edited fields are automatically bound this. way.
 
         log.info( "Updating bibliographic reference " + bibRef.getPubAccession().getAccession() );
 
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
 
-        context.getFlowScope().setAttribute( "pubMedId", bibRef.getPubAccession().getAccession() );
+        context.getRequestScope().setAttribute( "accession", bibRef.getPubAccession().getAccession() );
+        context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
         addMessage( context, "bibliographicReference.updated", new Object[] { bibRef.getPubAccession().getAccession() } );
 
         return success();

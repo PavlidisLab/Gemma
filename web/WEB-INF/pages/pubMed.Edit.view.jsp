@@ -1,3 +1,4 @@
+<%-- $Id$ --%>
 <%@ include file="/common/taglibs.jsp"%>
 
 <spring:bind path="bibliographicReference.*">
@@ -14,35 +15,31 @@
 <html>
 <head></head>
 <body>
-<form method="post" action="<c:url value="/flowController.htm"/>"
-    id="bibliographicReferenceForm" onsubmit="return onFormSubmit(this)">
-<input type="hidden" name="_flowExecutionId"
-    value="<c:out value="${flowExecutionId}"/>"> <input type="hidden"
-    name="_eventId" value="submit"> <input type="hidden" name="pubMedId"
-    value="<c:out value="${bibliographicReference.pubAccession.accession}" />">
+
 
 <table class="detail" width="75%">
-    <c:set var="pageButtons">
-        <tr>
-            <td></td>
-            <td class="buttonBar"><input type="submit" class="button"
-                name="save"
-                onclick="bCancel=false;this.form._eventId.value='update'"
-                value="<fmt:message key="button.save"/>" /> <c:if
-                test="${param.from == 'list'}">
-                <input type="submit" class="button" name="delete"
-                    onclick="bCancel=false;this.form._eventId.value='delete'"
-                    value="<fmt:message key="button.delete"/>" />
-            </c:if> <input type="submit" class="button" name="cancel"
-                onclick="bCancel=true;this.form._eventId.value='cancel'"
-                value="<fmt:message key="button.cancel"/>" /></td>
-        </tr>
-    </c:set>
 
     <tr>
-        <th><Gemma:label key="pubMed.authors" /></th>
-        <td><c:out value="${bibliographicReference.authorList}" /> <%--<c:out value="${arrayDesign.designProvider.name}"/>--%>
+
+        <th>Accession</th>
+
+        <td>
+        <form method="post"
+            action="<c:url value="/flowController.htm"/>"
+            id="bibliographicReferenceForm"
+            onsubmit="return onFormSubmit(this)"><input type="hidden"
+            name="_flowExecutionId"
+            value="<c:out value="${flowExecutionId}"/>"> <input
+            type="hidden" name="_eventId" value="submit"> <spring:bind
+            path="bibliographicReference.pubAccession.accession">
+            <input  type="text" name="${status.expression}"
+                value="${status.value}">
+        </spring:bind>
         </td>
+    </tr>
+    <tr>
+        <th><Gemma:label key="pubMed.authors" /></th>
+        <td><c:out value="${bibliographicReference.authorList}" /></td>
     </tr>
 
     <tr>
@@ -98,20 +95,38 @@
         <td><spring:bind path="bibliographicReference.fullTextPDF">
             <input type="file" name="pdf" id="fullTextPDF" size="40">
             <c:out value="${status.value}" />
-            </textarea>
             <span class="fieldError"><c:out
                 value="${status.errorMessage}" /></span>
         </spring:bind></td>
 
     </tr>
+    <tr>
+        <c:set var="pageButtons">
+
+
+            <td></td>
+            <td class="buttonBar"><input type="submit" class="button"
+                name="save"
+                onclick="bCancel=false;this.form._eventId.value='update'"
+                value="<fmt:message key="button.save"/>" /> <c:if
+                test="${param.from == 'list'}">
+                <input type="submit" class="button" name="delete"
+                    onclick="bCancel=false;this.form._eventId.value='delete'"
+                    value="<fmt:message key="button.delete"/>" />
+            </c:if> <input type="submit" class="button" name="cancel"
+                onclick="bCancel=true;this.form._eventId.value='cancel'"
+                value="<fmt:message key="button.cancel"/>" /></td>
+        </c:set>
+    </tr>
+
 
 
     <%-- Print out buttons - defined at top of form --%>
     <%-- This is so you can put them at the top and the bottom if you like --%>
     <c:out value="${pageButtons}" escapeXml="false" />
-
+    </form>
 </table>
-</form>
+
 
 <script type="text/javascript">
 <!--

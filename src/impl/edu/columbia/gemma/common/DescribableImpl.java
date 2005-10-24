@@ -30,11 +30,13 @@ package edu.columbia.gemma.common;
  * @see edu.columbia.gemma.common.Describable
  */
 public abstract class DescribableImpl extends edu.columbia.gemma.common.Describable {
+
     /**
      * @see edu.columbia.gemma.common.Describable#toString()
      */
     public java.lang.String toString() {
-        return "Name: " + this.getName() + " Description: " + this.getDescription();
+        return this.getClass().getSimpleName() + " " + ( this.getId() == null ? "" : "Id=" + this.getId() )
+                + ( this.getName() == null ? "" : " Name=" + this.getName() );
     }
 
 }

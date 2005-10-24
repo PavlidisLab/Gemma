@@ -48,7 +48,7 @@
     </view-state>
 
     <action-state id="cancel">
-        <action bean="pubmedExecuteQueryAction" />
+        <action bean="bibRefFormEditAction" />
         <transition on="success" to="finish" />
         <transition on="error" to="error" />
     </action-state>
@@ -63,7 +63,7 @@
         <transition on="success" to="finish" />
     </action-state>
 
-    <end-state id="finish" view="redirect:/bibRef/searchBibRef.html?pubMedId=${flowScope.pubMedId}" />
+    <end-state id="finish" view="redirect:/bibRef/searchBibRef.html?accession=${requestScope.accession}" />
 
     <end-state id="error" view="error" />
 

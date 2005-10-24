@@ -30,7 +30,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
+import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
+import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -60,7 +62,7 @@ public class BibliographicReferenceController extends MultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        String pubMedId = request.getParameter( "pubMedId" );
+        String pubMedId = request.getParameter( "accession" );
 
         if ( pubMedId == null ) {
             // should be a validation error, on 'submit'.
@@ -73,7 +75,7 @@ public class BibliographicReferenceController extends MultiActionController {
         }
 
         this.addMessage( request, "bibliographicReference.found", new Object[] { pubMedId } );
-        request.setAttribute( "pubMedId", pubMedId );
+        request.setAttribute( "accession", pubMedId );
         return new ModelAndView( "pubMed.Detail.view" ).addObject( "bibliographicReference", bibRef );
     }
 
@@ -95,15 +97,14 @@ public class BibliographicReferenceController extends MultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        String pubMedId = request.getParameter( "pubMedId" );
+        String pubMedId = request.getParameter( "accession" );
 
         if ( pubMedId == null ) {
             // should be a validation error.
             throw new EntityNotFoundException( "Must provide a PubMed Id" );
         }
 
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( request
-                .getParameter( "pubMedId" ) );
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
             throw new EntityNotFoundException( pubMedId + " not found" );
         }
@@ -159,6 +160,22 @@ public class BibliographicReferenceController extends MultiActionController {
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.multiaction.MultiActionController#newCommandObject(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Object newCommandObject( Class clazz ) throws Exception {
+        if ( clazz.isAssignableFrom( BibliographicReferenceImpl.class ) ) {
+            BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+            bibRef.setPubAccession( DatabaseEntry.Factory.newInstance() );
+            return bibRef;
+        }
+        return super.newCommandObject( clazz );
     }
 
 }

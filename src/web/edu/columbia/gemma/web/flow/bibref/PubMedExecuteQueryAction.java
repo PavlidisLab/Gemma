@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
+import org.springframework.webflow.action.FormObjectRetrievalFailureException;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
@@ -40,6 +41,10 @@ import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
  * @author keshav
  * @author pavlidis
  * @spring.bean name="pubmedExecuteQueryAction"
+ * @spring.property name="formObjectClass" value="edu.columbia.gemma.common.description.BibliographicReference"
+ * @spring.property name="formObjectName" value="bibliographicReference"
+ * @spring.property name="formObjectScopeAsString" value="flow"
+ * @spring.property name="validator" ref="pubMedAccessionValidator"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name="pubMedXmlFetcher" ref="pubMedXmlFetcher"
@@ -54,6 +59,19 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
     private BibliographicReferenceService bibliographicReferenceService;
     private ExternalDatabaseService externalDatabaseService;
     private PubMedXMLFetcher pubMedXmlFetcher;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.webflow.action.FormAction#loadFormObject(org.springframework.webflow.RequestContext)
+     */
+    @Override
+    @SuppressWarnings("unused")
+    protected Object createFormObject( RequestContext context ) throws FormObjectRetrievalFailureException, Exception {
+        BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+        bibRef.setPubAccession( DatabaseEntry.Factory.newInstance() );
+        return bibRef;
+    }
 
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
@@ -79,17 +97,24 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
      * @throws Exception
      */
     public Event delete( RequestContext context ) throws Exception {
-        String pubMedId = ( String ) context.getSourceEvent().getParameter( "pubMedId" );
-        if ( pubMedId == null ) return error();
 
-        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( pubMedId );
+        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getRequiredAttribute(
+                "bibliographicReference" );
+        String accession = bibRef.getPubAccession().getAccession();
+        // String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
+        if ( accession == null ) {
+            this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
+            return error();
+        }
+
+        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
         if ( bibRefFound == null ) {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
             return error();
         }
         this.bibliographicReferenceService.removeBibliographicReference( bibRefFound );
 
-        addMessage( context, "bilbiographicReference.deleted", new Object[] { pubMedId } );
+        addMessage( context, "bilbiographicReference.deleted", new Object[] { accession } );
         return success();
     }
 
@@ -99,25 +124,36 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
      * @throws Exception
      */
     public Event searchNCBI( RequestContext context ) throws Exception {
-        String pubMedId = ( String ) context.getSourceEvent().getParameter( "pubMedId" );
 
-        if ( pubMedId == null ) return error();
+        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getRequiredAttribute(
+                "bibliographicReference" );
+
+        String accession = bibRef.getPubAccession().getAccession();
+        // String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
+
+        if ( accession == null ) {
+            this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
+            return error();
+        }
 
         // first see if we already have it in the system.
-        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( pubMedId );
+        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
         if ( bibRefFound != null ) {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
             context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
             context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
-            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { pubMedId } );
+            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
         } else {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
-            BibliographicReference bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-            context.getRequestScope().setAttribute( "pubMedId", pubMedId );
-            context.getFlowScope().setAttribute( "pubMedId", pubMedId );
-            context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
-            context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
-
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
+                context.getRequestScope().setAttribute( "accession", accession );
+                context.getFlowScope().setAttribute( "accession", accession );
+                context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
+                context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
+            } catch ( NumberFormatException e ) {
+                return error( e );
+            }
         }
         return success();
     }
@@ -130,10 +166,18 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
      * @throws Exception
      */
     public Event search( RequestContext context ) throws Exception {
-        String pubMedId = ( String ) context.getSourceEvent().getParameter( "pubMedId" );
-        if ( pubMedId == null ) return error();
 
-        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( pubMedId );
+        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getRequiredAttribute(
+                "bibliographicReference" );
+
+        String accession = bibRef.getPubAccession().getAccession();
+        // String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
+        if ( accession == null ) {
+            this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
+            return error();
+        }
+
+        BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
         if ( bibRefFound != null ) {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
             context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
@@ -146,33 +190,24 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         return success();
     }
 
-    public Event cancel( RequestContext context ) throws Exception {
-        String pubMedId = ( String ) context.getSourceEvent().getParameter( "pubMedId" );
-        if ( pubMedId == null ) return error();
-        context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-        addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { pubMedId } );
-        context.getFlowScope().setAttribute( "pubMedId", pubMedId );
-        return success();
-    }
-
     /**
      * @param context
      * @return
      * @throws Exception
      */
     public Event save( RequestContext context ) throws Exception {
-        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getAttribute(
+        BibliographicReference bibRef = ( BibliographicReference ) context.getFlowScope().getRequiredAttribute(
                 "bibliographicReference" );
 
         if ( bibRef == null || bibRef.getPubAccession() == null ) return error();
 
         BibliographicReference bibRefFound = this.bibliographicReferenceService.find( bibRef );
 
-        String pubMedId = bibRef.getPubAccession().getAccession();
+        String accession = bibRef.getPubAccession().getAccession();
 
         if ( bibRefFound != null ) {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { pubMedId } );
+            addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
             context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
             context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
         } else { // it's new.
@@ -181,7 +216,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
             // fill in the accession and the external database.
             if ( bibRef.getPubAccession() == null ) {
                 DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-                dbEntry.setAccession( pubMedId );
+                dbEntry.setAccession( accession );
                 bibRef.setPubAccession( dbEntry );
             }
 
@@ -200,7 +235,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
             context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
             context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
-            addMessage( context, "bibliographicReference.saved", new Object[] { pubMedId } );
+            addMessage( context, "bibliographicReference.saved", new Object[] { accession } );
 
         }
         return success();

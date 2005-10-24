@@ -4,15 +4,14 @@
 
 <html>
 <head>
-
+<title>Search Gemma for a PubMed reference</title>
 </head>
 
 <body>
 <h2>Search Gemma for a PubMed reference</h2>
 
 <form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><input
-    type="text" name="pubMedId" value="Enter PubMed Id" /> <input
-    type="submit" /></form>
+    type="text" name="accession"> <input type="submit"></form>
 <hr />
 <DIV align="left"><INPUT type="button"
     onclick="location.href='showAllBibRef.html'"
