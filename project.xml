@@ -347,10 +347,20 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-        <dependency>
+    <!--    <dependency>
             <groupId>spring</groupId>
             <artifactId>spring-sandbox</artifactId>
             <jar>spring-sandbox.jar</jar>
+            <type>jar</type>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>spring</groupId>
+            <artifactId>springmodules-validator</artifactId>
+            <version>0.2</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
