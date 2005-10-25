@@ -163,7 +163,7 @@ public class PubMedXMLParser {
     private String extractAuthorList( Document doc ) throws IOException {
 
         if ( doc.getElementsByTagName( "AuthorList" ).item( 0 ) == null ) {
-          return "(No authors listed)";
+            return "(No authors listed)";
         }
 
         NodeList authorList = doc.getElementsByTagName( "AuthorList" ).item( 0 ).getChildNodes();
@@ -200,6 +200,7 @@ public class PubMedXMLParser {
         if ( al.length() < 3 ) return al.toString();
         return al.toString().substring( 0, al.length() - 2 ); // trim trailing semicolon + space.
     }
+
     /**
      * Get the date this was put in pubmed.
      * 
@@ -267,6 +268,7 @@ public class PubMedXMLParser {
      * @throws IOException
      */
     protected String getTextValue( Element ele ) throws IOException {
+        if ( ele == null ) return null;
         StringBuilder value = new StringBuilder();
         NodeList nl = ele.getChildNodes();
         for ( int i = 0; i < nl.getLength(); i++ ) {
