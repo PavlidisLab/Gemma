@@ -38,6 +38,7 @@ public class LocalFileServiceImpl extends edu.columbia.gemma.common.description.
     /**
      * @see edu.columbia.gemma.common.description.LocalFileService#deleteFile(edu.columbia.gemma.common.description.LocalFile)
      */
+    @Override
     protected void handleDeleteFile( edu.columbia.gemma.common.description.LocalFile localFile )
             throws java.lang.Exception {
 
@@ -60,6 +61,7 @@ public class LocalFileServiceImpl extends edu.columbia.gemma.common.description.
      * @see edu.columbia.gemma.common.description.LocalFileService#copyFile(edu.columbia.gemma.common.description.LocalFile,
      *      edu.columbia.gemma.common.description.LocalFile)
      */
+    @Override
     protected edu.columbia.gemma.common.description.LocalFile handleCopyFile(
             edu.columbia.gemma.common.description.LocalFile sourceFile,
             edu.columbia.gemma.common.description.LocalFile targetFile ) throws java.lang.Exception {
@@ -87,6 +89,59 @@ public class LocalFileServiceImpl extends edu.columbia.gemma.common.description.
 
         this.getLocalFileDao().create( targetFile );
         return targetFile;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.LocalFileServiceBase#handleFindByPath(java.lang.String)
+     */
+    @Override
+    protected LocalFile handleFindByPath( String path ) throws Exception {
+        File f = new File( path );
+        LocalFile seek = LocalFile.Factory.newInstance();
+        seek.setLocalURI( f.toURI().toString() );
+        return this.getLocalFileDao().find( seek );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.LocalFileServiceBase#handleFind(edu.columbia.gemma.common.description.LocalFile)
+     */
+    @Override
+    protected LocalFile handleFind( LocalFile localFile ) throws Exception {
+        return this.getLocalFileDao().find( localFile );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.LocalFileServiceBase#handleSave(edu.columbia.gemma.common.description.LocalFile)
+     */
+    @Override
+    protected LocalFile handleSave( LocalFile localFile ) throws Exception {
+        return this.getLocalFileDao().create( localFile );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.LocalFileServiceBase#handleUpdate(edu.columbia.gemma.common.description.LocalFile)
+     */
+    @Override
+    protected void handleUpdate( LocalFile localFile ) throws Exception {
+        this.getLocalFileDao().update( localFile );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.description.LocalFileServiceBase#handleFindOrCreate(edu.columbia.gemma.common.description.LocalFile)
+     */
+    @Override
+    protected LocalFile handleFindOrCreate( LocalFile localFile ) throws Exception {
+        return this.getLocalFileDao().findOrCreate( localFile );
     }
 
 }
