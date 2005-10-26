@@ -150,6 +150,13 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
             try {
                 bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
 
+                if ( bibRef == null ) {
+                    log.info( accession + " not found in NCBI" );
+                    this.getFormErrors( context ).reject( "bibliographicReference.notfoundInNCBI",
+                            new Object[] { accession }, "Not found in NCBI" );
+                    return error();
+                }
+
                 // FIXME do we need all of these?
                 context.getRequestScope().setAttribute( "accession", accession );
                 context.getFlowScope().setAttribute( "accession", accession );

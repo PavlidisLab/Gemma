@@ -18,16 +18,30 @@
  */
 package edu.columbia.gemma.web.flow.bibref;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
+import org.springframework.validation.Errors;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
+import org.springframework.webflow.execution.servlet.ServletEvent;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
+import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.common.description.LocalFileService;
+import edu.columbia.gemma.util.ConfigUtils;
+import edu.columbia.gemma.web.Constants;
 import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 
 /**
@@ -38,6 +52,7 @@ import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
  * 
  * @spring.bean id="bibRefFormEditAction"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
+ * @spring.property name="localFileService" ref="localFileService"
  * @author keshav
  * @author pavlidis
  * @version $Id$
@@ -45,6 +60,7 @@ import edu.columbia.gemma.web.flow.AbstractFlowFormAction;
 public class BibRefFormEditAction extends AbstractFlowFormAction {
     protected final transient Log log = LogFactory.getLog( getClass() );
     private BibliographicReferenceService bibliographicReferenceService;
+    private LocalFileService localFileService;
 
     /**
      * Programmatically set the form object, the class is refers to, and the scope. This is an alternative to the
@@ -103,7 +119,7 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
         String accession = ( String ) context.getSourceEvent().getParameter( "pubAccession.accession" );
         if ( accession == null ) {
             this.getFormErrors( context ).reject( "error.noCriteria", "You must enter an accession number." );
-            return error(new IllegalArgumentException() );
+            return error( new IllegalArgumentException() );
         }
         context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
         context.getRequestScope().setAttribute( "accession", accession );
@@ -112,8 +128,6 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
     }
 
     /**
-     * 
-     * 
      * @param context
      * @param binder
      */
@@ -138,6 +152,52 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
 
         log.info( "Updating bibliographic reference " + bibRef.getPubAccession().getAccession() );
 
+        // / Deal with the file.
+        CommonsMultipartFile file = ( CommonsMultipartFile ) context.getSourceEvent().getAttribute( "pdfFile" );
+
+        if ( file == null ) {
+            throw new IOException( "File was null" );
+        }
+
+        String baseOutputPath = ConfigUtils.getProperty( "local.userfile.basepath" );
+        String user = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getRemoteUser();
+        String uploadDir = baseOutputPath + user + "/";
+
+        File dirPath = new File( uploadDir );
+        File saveToFile = new File( uploadDir + file.getOriginalFilename() );
+
+        try {
+            uploadFile( file, dirPath, saveToFile );
+        } catch ( IOException e ) {
+            // this.getFormErrors( context ).reject( e.getLocalizedMessage() );
+            // log.error( e, e );
+            // return error( e );
+            throw new RuntimeException( e );
+        }
+
+        /* place the data in flow scope to be used by the next view state */
+        context.getFlowScope().setAttribute( "fileName", file.getOriginalFilename() );
+        context.getFlowScope().setAttribute( "contentType", file.getContentType() );
+        context.getFlowScope().setAttribute( "size", file.getSize() + " bytes" );
+        context.getFlowScope().setAttribute( "location",
+                dirPath.getAbsolutePath() + Constants.FILE_SEP + file.getOriginalFilename() );
+
+        String link = uploadDir;
+
+        context.getFlowScope().setAttribute( "link", link + file.getOriginalFilename() );
+
+        log.warn( "Uploaded file!" );
+        addMessage( context, "display.title", new Object[] {} );
+        // end dealing with the file.
+
+        LocalFile pdf = LocalFile.Factory.newInstance();
+        pdf.setSize( file.getSize() );
+        pdf.setLocalURI( saveToFile.toURI().toString() );
+
+        pdf = localFileService.findOrCreate( pdf );
+
+        bibRef.setFullTextPDF( pdf );
+
         this.bibliographicReferenceService.updateBibliographicReference( bibRef );
 
         context.getRequestScope().setAttribute( "accession", bibRef.getPubAccession().getAccession() );
@@ -148,10 +208,53 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
     }
 
     /**
+     * @param file
+     * @param dirPath
+     * @param saveToFile
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    private void uploadFile( CommonsMultipartFile file, File dirPath, File saveToFile ) throws IOException,
+            FileNotFoundException {
+        if ( file.getBytes().length == 0 ) {
+            throw new IOException( "File was empty" );
+        }
+
+        if ( !dirPath.exists() ) {
+            boolean success = dirPath.mkdirs();
+            if ( !success ) {
+                throw new IOException( "Could not make output directory " + dirPath );
+            }
+        } else if ( !dirPath.canRead() ) {
+            throw new IOException( "Cannot accession output directory" + dirPath );
+        }
+
+        InputStream stream = file.getInputStream();
+        log.info( "Saving file to " + saveToFile.getAbsolutePath() );
+        OutputStream bos = new FileOutputStream( saveToFile );
+        int bytesRead = 0;
+        byte[] buffer = new byte[8192];
+        while ( ( bytesRead = stream.read( buffer, 0, 8192 ) ) != -1 ) {
+            bos.write( buffer, 0, bytesRead );
+        }
+
+        bos.close();
+
+        stream.close();
+    }
+
+    /**
      * @param bibliographicReferenceService
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param localFileService The localFileService to set.
+     */
+    public void setLocalFileService( LocalFileService localFileService ) {
+        this.localFileService = localFileService;
     }
 
 }
