@@ -23,7 +23,10 @@ import java.text.SimpleDateFormat;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.commons.lang.StringUtils;
+
 import edu.columbia.gemma.common.description.BibliographicReference;
+import edu.columbia.gemma.util.ConfigUtils;
 
 /**
  * Tag to output a bibliographic reference .
@@ -86,6 +89,19 @@ public class BibliographicReferenceTag extends TagSupport {
             buf.append( bibliographicReference.getAbstractText() );
         } else {
             buf.append( "(No abstract available)" );
+        }
+
+        if ( bibliographicReference.getFullTextPDF() != null ) {
+
+            String baseUrl = ConfigUtils.getProperty( "local.userfile.baseurl" );
+            String basePath = ConfigUtils.getProperty( "local.userfile.basepath" );
+            String localUriPath = bibliographicReference.getFullTextPDF().getLocalURI();
+            String relativeUrl = StringUtils.remove( localUriPath, "file:/" + basePath );
+            String absoluteUrl = baseUrl + relativeUrl;
+
+            buf.append( "</td></tr><tr><td valign=\"top\"><b>PDF</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            buf.append( "<a href=\"" + absoluteUrl + "\">" + absoluteUrl + "</a>" );
+            buf.append( "&nbsp;(" + bibliographicReference.getFullTextPDF().getSize() + " bytes)" );
         }
 
         buf.append( "</td></tr></table>" );

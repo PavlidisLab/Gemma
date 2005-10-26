@@ -32,7 +32,6 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
-import org.springframework.webflow.action.FormObjectAccessor;
 import org.springframework.webflow.execution.servlet.ServletEvent;
 
 import edu.columbia.gemma.web.Constants;
@@ -88,10 +87,9 @@ public class FileUploadAction extends AbstractFlowFormAction {
 
         /* validate the file that was entered */
         if ( file.getBytes().length == 0 ) {
-            // Errors errors = getFormObjectAccessor( context ).getFormErrors();
             // FIXME - errors are not getting displayed.
             Errors errors = this.getFormErrors( context );
-            log.debug(errors);
+            log.debug( errors );
             errors.reject( "file", "Must enter a file." );
             return error();
         }

@@ -67,7 +67,7 @@ public class PubMedXMLFetcher {
     public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException, SAXException,
             ParserConfigurationException {
         URL toBeGotten = new URL( uri + pubMedId );
-
+        log.info( "Fetching " + toBeGotten );
         PubMedXMLParser pmxp = new PubMedXMLParser();
         return pmxp.parse( toBeGotten.openStream() );
     }

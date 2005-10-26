@@ -57,6 +57,8 @@ public class PubMedXMLParser {
      */
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
 
+    private static final String ERROR_TAG = "Error";
+
     private static final String PUB_STATUS_ELEMENT = "PubStatus";
     private static final String PUBMED_PUB_DATE_ELEMENT = "PubMedPubDate";
     // private static final String ARTICLE_ELEMENT = "Article";
@@ -98,8 +100,8 @@ public class PubMedXMLParser {
                 throw exception;
             }
 
-            @SuppressWarnings("unused")
             public void fatalError( SAXParseException exception ) throws SAXException {
+                throw exception;
             }
         } );
 
@@ -113,6 +115,11 @@ public class PubMedXMLParser {
      * @throws IOException
      */
     private BibliographicReference setUpBibRef( Document doc ) throws IOException {
+
+        // Was there an error? (not found)
+        if ( doc.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
+            return null;
+        }
 
         BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
 
