@@ -1,4 +1,4 @@
-<%@ include file="include.jsp" %>
+<%@ include file="/common/taglibs.jsp"%>
 
 <html>
 <head><title>taxon</title></head>
