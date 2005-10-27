@@ -28,7 +28,6 @@ import java.io.OutputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
-import org.springframework.validation.Errors;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
