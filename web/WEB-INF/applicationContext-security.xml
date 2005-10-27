@@ -13,7 +13,8 @@
     <bean id="filterChainProxy" class="net.sf.acegisecurity.util.FilterChainProxy">
         <property name="filterInvocationDefinitionSource">
             <value>
-                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON PATTERN_TYPE_APACHE_ANT 
+                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON 
+                PATTERN_TYPE_APACHE_ANT 
                 /j_security_check*=httpSessionContextIntegrationFilter,authenticationProcessingFilter
                 /**/*.html*=httpSessionContextIntegrationFilter,remoteUserFilter,anonymousProcessingFilter,securityEnforcementFilter
                 /**/*.htm*=httpSessionContextIntegrationFilter,remoteUserFilter,anonymousProcessingFilter,securityEnforcementFilter
@@ -24,12 +25,14 @@
 
     <!-- ======================== FILTERS ======================= -->
 
+    <!--   Populates the SecurityContextHolder with information obtained from the HttpSession. -->
     <bean id="httpSessionContextIntegrationFilter" class="net.sf.acegisecurity.context.HttpSessionContextIntegrationFilter">
         <property name="context">
             <value>net.sf.acegisecurity.context.SecurityContextImpl</value>
         </property>
     </bean>
 
+ 
     <bean id="remoteUserFilter" class="net.sf.acegisecurity.wrapper.ContextHolderAwareRequestFilter" />
 
     <bean id="anonymousProcessingFilter" class="net.sf.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
@@ -41,7 +44,7 @@
         </property>
     </bean>
 
-    <!-- ======================== AUTHENTICATION ======================= -->
+    <!-- ======================== AUTHENTICATION FILTER ======================= -->
 
     <bean id="authenticationProcessingFilter" class="net.sf.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
         <property name="authenticationManager">
@@ -141,8 +144,13 @@
         </property>
         <property name="objectDefinitionSource">
             <value>
-                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON PATTERN_TYPE_APACHE_ANT /signup.html=ROLE_ANONYMOUS,admin,user /passwordhint.html*=ROLE_ANONYMOUS,admin,user
-                /**/*.html*=admin,user /**/*.htm*=admin,user /clickstreams.jsp=admin
+                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON 
+                PATTERN_TYPE_APACHE_ANT 
+                /signup.html=ROLE_ANONYMOUS,admin,user 
+                /passwordhint.html*=ROLE_ANONYMOUS,admin,user
+                /**/*.html*=admin,user 
+                /**/*.htm*=admin,user 
+                /clickstreams.jsp=admin
             </value>
         </property>
     </bean>
@@ -195,7 +203,7 @@
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_ARRAYDESIGN_EDIT
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_EDIT
-                edu.columbia.gemma.expression.bioAssay.BioAssayService.saveBioAssay=user,admin
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.saveBioAssay=user,admin 
                 edu.columbia.gemma.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin
                 edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.saveBioAssayDataVector=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.saveDesignElementDataVector=user,admin
@@ -213,34 +221,34 @@
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getBibliographicReferenceByTitle=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReferenceByLookup=user,admin
-                edu.columbia.gemma.common.description.ExternalDatabaseService.find=user,admin
+                edu.columbia.gemma.common.description.ExternalDatabaseService.find=user,admin 
                 edu.columbia.gemma.common.description.LocalFileService.copyFile=ACL_LOCALFILE_EDIT
                 edu.columbia.gemma.common.description.LocalFileService.deleteFile=ACL_LOCALFILE_EDIT 
                 edu.columbia.gemma.common.description.LocalFileService.find=user,admin
-                edu.columbia.gemma.common.description.LocalFileService.findByPath=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.findByPath=user,admin 
                 edu.columbia.gemma.common.description.LocalFileService.findOrCreate=user,admin
-                edu.columbia.gemma.common.auditAndSecurity.PersonService.savePerson=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.savePerson=user,admin 
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.getAllPersons=user,admin
-                edu.columbia.gemma.common.auditAndSecurity.PersonService.removePerson=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.removePerson=user,admin 
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.findByName=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.createByName=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.updateCandidateGeneList=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.removeCandidateGeneList=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByContributer=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByGeneOfficialName=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user,admin 
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByListOwner=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user,admin 
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.setActor=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
                 edu.columbia.gemma.genome.gene.GeneService.updateGene=ACL_GENE_EDIT
-                edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user,admin 
                 edu.columbia.gemma.genome.gene.GeneService.removeGene=ACL_GENE_EDIT
-                edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin 
                 edu.columbia.gemma.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin
-                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user,admin 
                 edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbolInexact=user,admin
-                edu.columbia.gemma.genome.gene.GeneService.findByID=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findByID=user,admin 
                 edu.columbia.gemma.genome.gene.GeneService.saveGene=user,admin
             </value>
         </property>
