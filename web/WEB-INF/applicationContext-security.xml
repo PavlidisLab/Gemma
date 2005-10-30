@@ -80,7 +80,9 @@
     <!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
     <bean id="loggerListener" class="net.sf.acegisecurity.providers.dao.event.LoggerListener" />
 	
-	<!-- TODO put the acegi passwordEncoder here.  we are currently using the appfuse password encoding. --> 
+	<!-- TODO put the acegi passwordEncoder here.  we are currently using the appfuse password encoding. 
+	     as well as in the jdbcDaoImpl.     
+    --> 
     <bean id="daoAuthenticationProvider" class="net.sf.acegisecurity.providers.dao.DaoAuthenticationProvider">
         <property name="authenticationDao">
             <ref local="jdbcDaoImpl" />
