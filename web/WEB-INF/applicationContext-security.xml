@@ -82,7 +82,7 @@
 
     <bean id="daoAuthenticationProvider" class="net.sf.acegisecurity.providers.dao.DaoAuthenticationProvider">
         <property name="authenticationDao">
-            <ref local="jdbcAuthenticationDao" />
+            <ref local="jdbcRealmImpl" />
         </property>
         <property name="userCache">
             <ref local="userCache" />
@@ -90,7 +90,7 @@
     </bean>
 
     <!-- Read users from database -->
-    <bean id="jdbcAuthenticationDao" class="net.sf.acegisecurity.providers.dao.jdbc.JdbcDaoImpl">
+    <bean id="jdbcRealmImpl" class="net.sf.acegisecurity.providers.dao.jdbc.JdbcDaoImpl">
         <property name="dataSource">
             <ref bean="dataSource" />
         </property>
