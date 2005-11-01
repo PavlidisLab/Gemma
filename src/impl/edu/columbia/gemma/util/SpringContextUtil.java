@@ -76,8 +76,8 @@ public class SpringContextUtil {
 
         // 
         // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "test", "test", new GrantedAuthority[] {
-                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "administrator" ) } );
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "pavlab", "pavlab", new GrantedAuthority[] {
+                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );
 
         // Override the regular spring configuration
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
@@ -134,7 +134,7 @@ public class SpringContextUtil {
 
         if ( testing ) {
             log.info( "************** Using test configuration ***************" );
-            return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
+            return new String[] { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
                     "applicationContext-security.xml", servletContext + "-servlet.xml",
                     "applicationContext-validation.xml" };
         }
