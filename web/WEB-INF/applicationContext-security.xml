@@ -321,10 +321,10 @@
             <ref bean="aclManager" />
         </property>
         <property name="processConfigAttribute">
-            <value>ACL_DESCRIBABLE_EDIT</value>
+            <value>ACL_SECURABLE_EDIT</value>
         </property>
         <property name="processDomainObjectClass">
-            <value>edu.columbia.gemma.common.Describable</value>
+            <value>edu.columbia.gemma.common.Securable</value>
         </property>
         <property name="requirePermission">
             <list>
