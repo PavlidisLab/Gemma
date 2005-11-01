@@ -32,13 +32,14 @@ import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
  * @author keshav
  * @version $Id$
  */
-public class BaseMultiActionController extends MultiActionController {
+public abstract class BaseMultiActionController extends MultiActionController {
 
     /**
      * @param request
      * @param messageName
      */
-    private void addMessage( HttpServletRequest request, String messageCode, Object[] parameters ) {
+    @SuppressWarnings("unused")
+    protected void addMessage( HttpServletRequest request, String messageCode, Object[] parameters ) {
         request.getSession()
                 .setAttribute( "messages", getMessageSourceAccessor().getMessage( messageCode, parameters ) );
     }
