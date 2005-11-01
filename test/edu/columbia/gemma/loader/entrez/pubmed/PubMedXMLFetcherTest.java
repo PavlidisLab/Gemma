@@ -18,10 +18,7 @@
  */
 package edu.columbia.gemma.loader.entrez.pubmed;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
-
-import org.xml.sax.SAXParseException;
 
 import junit.framework.TestCase;
 import edu.columbia.gemma.common.description.BibliographicReference;
@@ -59,12 +56,8 @@ public class PubMedXMLFetcherTest extends TestCase {
     }
 
     public final void testRetrieveByHTTPNotFound() throws Exception {
-        try {
-            pmf.retrieveByHTTP( 1517311444 );
-            fail( "Should have gotten a 'Not found' exception" );
-        } catch ( SAXParseException e ) {
-        } catch ( IOException e ) {
-        }
+        BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
+        assertEquals( null, br );
     }
 
 }
