@@ -33,6 +33,7 @@ import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.web.controller.BaseMultiActionController;
 import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -49,7 +50,7 @@ import edu.columbia.gemma.web.util.EntityNotFoundException;
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="methodNameResolver" ref="bibRefActions"
  */
-public class BibliographicReferenceController extends MultiActionController {
+public class BibliographicReferenceController extends BaseMultiActionController {
     private static Log log = LogFactory.getLog( BibliographicReferenceController.class.getName() );
 
     private BibliographicReferenceService bibliographicReferenceService = null;
@@ -74,7 +75,7 @@ public class BibliographicReferenceController extends MultiActionController {
             throw new EntityNotFoundException( pubMedId + " not found" );
         }
 
-        this.addMessage( request, "bibliographicReference.found", new Object[] { pubMedId } );
+        addMessage( request, "bibliographicReference.found", new Object[] { pubMedId } );
         request.setAttribute( "accession", pubMedId );
         return new ModelAndView( "pubMed.Detail.view" ).addObject( "bibliographicReference", bibRef );
     }
@@ -141,18 +142,9 @@ public class BibliographicReferenceController extends MultiActionController {
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.removeBibliographicReference( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-        this.addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
+        addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
                 .getAccession() } );
         return new ModelAndView( "bibRefSearch", "bibliographicReference", bibRef );
-    }
-
-    /**
-     * @param request
-     * @param messageName
-     */
-    private void addMessage( HttpServletRequest request, String messageCode, Object[] parameters ) {
-        request.getSession()
-                .setAttribute( "messages", getMessageSourceAccessor().getMessage( messageCode, parameters ) );
     }
 
     /**
