@@ -12,7 +12,7 @@
         <repository name="netBeansMDR">
             <models>
                 <model>
-                    <uri>file:${basedir}/src/uml/gemma-om.xmi</uri>
+                    <uri>jar:file:${basedir}/src/uml/gemma-om.zuml!/gemma-om.xmi</uri>
                 </model>
             </models>
         </repository>
