@@ -63,6 +63,6 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
         ModelAndView mav = a.showAll( request, ( HttpServletResponse ) null );
         Collection<ArrayDesign> c = ( mav.getModel() ).values();
         assertNotNull( c );
-        assertEquals( mav.getViewName(), "arrayDesign.GetAll.results.view" );
+        assertEquals( mav.getViewName(), "arrayDesigns" );
     }
 }
