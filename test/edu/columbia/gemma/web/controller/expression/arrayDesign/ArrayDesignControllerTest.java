@@ -57,10 +57,10 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testGetArrayDesigns() throws Exception {
+    public void testShowAllArrayDesigns() throws Exception {
         ArrayDesignController a = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
-        request.setRequestURI( "Gemma/arrayDesigns.htm" );
-        ModelAndView mav = a.handleRequest( request, ( HttpServletResponse ) null );
+        request.setRequestURI( "Gemma/arrayDesign/showAllArrayDesigns.html" );
+        ModelAndView mav = a.showAll( request, ( HttpServletResponse ) null );
         Collection<ArrayDesign> c = ( mav.getModel() ).values();
         assertNotNull( c );
         assertEquals( mav.getViewName(), "arrayDesign.GetAll.results.view" );
