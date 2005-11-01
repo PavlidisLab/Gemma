@@ -6,7 +6,7 @@ insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME,
 insert into CONTACT (CLASS, NAME, EMAIL) values ("edu.columbia.gemma.common.auditAndSecurity.ContactImpl", "admin", "admin@gemma.org");
 insert into USER_ROLE (NAME, USER_NAME) values ("admin", "administrator");
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED) values ("UserImpl", "pavlab", "lastname", "firstname", "pavlab_middlename", "pavlab", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1);
-insert into USER_ROLE (NAME, USER_NAME) values ("pavlab", "pavlab");
+insert into USER_ROLE (NAME, USER_NAME) values ("user", "pavlab");
 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Homo sapiens","human","9606");
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Mus musculus","mouse","10090"); 
