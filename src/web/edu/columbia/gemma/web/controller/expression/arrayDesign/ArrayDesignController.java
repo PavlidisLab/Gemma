@@ -21,36 +21,33 @@ package edu.columbia.gemma.web.controller.expression.arrayDesign;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
 
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.web.controller.BaseMultiActionController;
+import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2005 Columbia University
  * 
+ * 
+ *
+ * <hr>
+ * <p>Copyright (c) 2004 - 2005 Columbia University
  * @author keshav
  * @version $Id$
- * @spring.bean id="arrayDesignController" name="/arrayDesigns.htm /arrayDesignDetails.htm"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.bean id="arrayDesignController" name="/arrayDesign/*"
+ * @spring.property name = "arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  */
-public class ArrayDesignController implements Controller {
-    private static Log log = LogFactory.getLog( ArrayDesignController.class );
-    private String uri_separator = "/";
+public class ArrayDesignController extends BaseMultiActionController {
+    
+    private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
+
     private ArrayDesignService arrayDesignService = null;
-
-    /**
-     * @return Returns the arrayDesignService.
-     */
-    public ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
-    }
-
+    
     /**
      * @param arrayDesignService The arrayDesignService to set.
      */
@@ -58,33 +55,75 @@ public class ArrayDesignController implements Controller {
         this.arrayDesignService = arrayDesignService;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.Controller#handleRequest(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return
      */
     @SuppressWarnings("unused")
-    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        log.info( request.getRequestURI() );
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        String name = request.getParameter( "name" );
 
-        String uri = request.getRequestURI();
+        if ( name == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( "Must provide an Array Design name" );
+        }
 
-        String[] elements = StringUtils.split( uri, uri_separator );
-        String path = elements[1];
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName(name);
+        if ( arrayDesign == null ) {
+            throw new EntityNotFoundException( name + " not found" );
+        }
 
-        if ( path.equals( "arrayDesigns.htm" ) )
-            return new ModelAndView( "arrayDesign.GetAll.results.view", "arrayDesigns", arrayDesignService
-                    .getAllArrayDesigns() );
+        this.addMessage( request, "arrayDesign.found", new Object[] { name } );
+        request.setAttribute( "name", name );
+        return new ModelAndView( "arrayDesign.Detail.view" ).addObject( "arrayDesign", arrayDesign );
+    }
 
-        // Don't forget to pack the attribute 'name' in the request. If you don't do this you will lose it when you get
-        // to the arrayDesign.Detail.view.jsp (ie. you have all the parameters/attributes for the request right now, but
-        // as
-        // soon as you return ModelAndView, you will not have any parameters/attributes as this is treated as a new
-        // request.
-        request.setAttribute( "name", request.getParameter( "name" ) );
-        return new ModelAndView( "arrayDesign.Detail.view", "arrayDesign", arrayDesignService
-                .findArrayDesignByName( request.getParameter( "name" ) ) );
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "arrayDesign.GetAll.results.view" ).addObject( "arrayDesigns",
+                arrayDesignService.getAllArrayDesigns() );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
+        String name = request.getParameter( "name" );
+
+        if ( name == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( "Must provide a name" );
+        }
+
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name );
+        if ( arrayDesign == null ) {
+            throw new EntityNotFoundException( arrayDesign + " not found" );
+        }
+
+        return doDelete( request, arrayDesign );
+    }
+    
+    /**
+     * @param request
+     * @param locale
+     * @param bibRef
+     * @return
+     */
+    private ModelAndView doDelete( HttpServletRequest request, ArrayDesign arrayDesign ) {
+        arrayDesignService.removeArrayDesign(arrayDesign);
+        log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
+        addMessage( request, "arrayDesign.deleted", new Object[] { arrayDesign.getName()} );
+        return new ModelAndView( "arrayDesign.Search.criteria.view", "arrayDesign", arrayDesign );
     }
 
 }
