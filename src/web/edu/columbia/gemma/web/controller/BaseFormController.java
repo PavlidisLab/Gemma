@@ -57,7 +57,7 @@ import edu.columbia.gemma.web.util.MailEngine;
  * @author pavlidis
  * @version $Id$
  */
-public class BaseFormController extends SimpleFormController {
+public abstract class BaseFormController extends SimpleFormController {
     protected final transient Log log = LogFactory.getLog( getClass() );
     protected MailEngine mailEngine = null;
     protected SimpleMailMessage message = null;
