@@ -77,7 +77,7 @@ public class ArrayDesignController extends BaseMultiActionController {
 
         this.addMessage( request, "arrayDesign.found", new Object[] { name } );
         request.setAttribute( "name", name );
-        return new ModelAndView( "arrayDesign.Detail.view" ).addObject( "arrayDesign", arrayDesign );
+        return new ModelAndView( "arrayDesign.detail" ).addObject( "arrayDesign", arrayDesign );
     }
 
     /**
@@ -87,7 +87,7 @@ public class ArrayDesignController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "arrayDesign.GetAll.results.view" ).addObject( "arrayDesigns",
+        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns",
                 arrayDesignService.getAllArrayDesigns() );
     }
 
@@ -123,7 +123,7 @@ public class ArrayDesignController extends BaseMultiActionController {
         arrayDesignService.removeArrayDesign(arrayDesign);
         log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
         addMessage( request, "arrayDesign.deleted", new Object[] { arrayDesign.getName()} );
-        return new ModelAndView( "arrayDesign.Search.criteria.view", "arrayDesign", arrayDesign );
+        return new ModelAndView( "arrayDesigns", "arrayDesign", arrayDesign );
     }
 
 }

@@ -69,7 +69,7 @@
         <authz:acl domainObject="${arrayDesign}" hasPermission="1,6">
             <TD COLSPAN="2">    
             <DIV align="left"><input type="button"
-            onclick="location.href='editArrayDesigns.html'"
+            onclick="location.href='editArrayDesign.html?name=<%=request.getAttribute("name")%>'"
             value="Edit"></DIV>
             </TD>
         </authz:acl>
