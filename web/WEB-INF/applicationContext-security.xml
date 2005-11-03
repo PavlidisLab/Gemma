@@ -201,11 +201,12 @@
                 edu.columbia.gemma.expression.designElement.CompositeSequenceService.saveCompositeSequence=user,admin
                 edu.columbia.gemma.expression.designElement.CompositeSequenceService.getAllCompositeSequences=user,admin, AFTER_ACL_ARRAYDESIGN_COLLECTION_READ
                 edu.columbia.gemma.expression.designElement.ReporterService.saveReporter=user,admin
+                
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_ARRAYDESIGN_EDIT
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=user,admin               
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_ARRAYDESIGN_EDIT
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.expression.bioAssay.BioAssayService.saveBioAssay=user,admin 
                 edu.columbia.gemma.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin
                 edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.saveBioAssayDataVector=user,admin
@@ -216,8 +217,8 @@
                 edu.columbia.gemma.expression.biomaterial.TreatmentService.saveTreatment=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReference=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.removeBibliographicReference=ACL_BIBREF_EDIT
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_BIBREF_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.removeBibliographicReference=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.updateBibliographicReference=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.find=user,admin
@@ -244,9 +245,9 @@
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user,admin 
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.setActor=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
-                edu.columbia.gemma.genome.gene.GeneService.updateGene=ACL_GENE_EDIT
+                edu.columbia.gemma.genome.gene.GeneService.updateGene=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user,admin 
-                edu.columbia.gemma.genome.gene.GeneService.removeGene=ACL_GENE_EDIT
+                edu.columbia.gemma.genome.gene.GeneService.removeGene=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin 
                 edu.columbia.gemma.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin
                 edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user,admin 
@@ -265,11 +266,13 @@
         <property name="decisionVoters">
             <list>
                 <ref local="roleVoter" />
+                <!-- 
                 <ref bean="arrayDesignEditVoter" />
+                -->
                 <ref bean="bibliographicReferenceEditVoter" />
                 <ref bean="geneEditVoter" />
                 <ref bean="localFileEditVoter" />
-                <ref bean="describableVoter" />
+                <ref bean="securableVoter" />
             </list>
         </property>
     </bean>
@@ -298,6 +301,7 @@
     <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
 
     <!-- An access decision voters that read processConfigAttribute settings -->
+    <!-- 
     <bean id="arrayDesignEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
         <property name="aclManager">
             <ref bean="aclManager" />
@@ -315,8 +319,9 @@
             </list>
         </property>
     </bean>
-    <!--  voter that can be applied to any operation on a describable -->
-    <bean id="describableVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+    -->
+    <!--  voter that can be applied to any operation on a securable -->
+    <bean id="securableVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
         <property name="aclManager">
             <ref bean="aclManager" />
         </property>
