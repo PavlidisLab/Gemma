@@ -39,4 +39,15 @@ public class ReporterServiceImpl extends edu.columbia.gemma.expression.designEle
         this.getReporterDao().create( reporter );
     }
 
+    @Override
+    protected Reporter handleFindOrCreate( Reporter reporter ) throws Exception {
+        return this.getReporterDao().findOrCreate( reporter );
+    }
+
+    @Override
+    protected void handleRemove( Reporter reporter ) throws Exception {
+        this.getReporterDao().remove( reporter );
+
+    }
+
 }

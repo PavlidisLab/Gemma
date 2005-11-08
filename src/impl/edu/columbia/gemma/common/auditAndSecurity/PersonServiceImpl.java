@@ -28,6 +28,7 @@ import java.util.Collection;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.common.auditAndSecurity.PersonService
  */
@@ -73,5 +74,16 @@ public class PersonServiceImpl extends edu.columbia.gemma.common.auditAndSecurit
             result = ( edu.columbia.gemma.common.auditAndSecurity.Person ) results.iterator().next();
         }
         return result;
+    }
+
+    @Override
+    protected Collection handleFindByFullName( String firstName, String middleName, String lastName ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected Person handleFindOrCreate( Person person ) throws Exception {
+        return this.getPersonDao().findOrCreate(person);
     }
 }

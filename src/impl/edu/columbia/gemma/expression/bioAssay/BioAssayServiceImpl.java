@@ -26,6 +26,7 @@ package edu.columbia.gemma.expression.bioAssay;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.expression.bioAssay.BioAssayService
  */
@@ -44,6 +45,17 @@ public class BioAssayServiceImpl extends edu.columbia.gemma.expression.bioAssay.
      */
     protected java.util.Collection handleGetAllBioAssays() throws java.lang.Exception {
         return this.getBioAssayDao().loadAll();
+    }
+
+    @Override
+    protected BioAssay handleFindOrCreate( BioAssay bioAssay ) throws Exception {
+        return this.getBioAssayDao().findOrCreate( bioAssay );
+    }
+
+    @Override
+    protected void handleRemove( BioAssay bioAssay ) throws Exception {
+        this.getBioAssayDao().remove( bioAssay );
+        
     }
 
 }

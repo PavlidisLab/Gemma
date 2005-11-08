@@ -29,6 +29,7 @@ import java.util.List;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.expression.biomaterial.BioMaterialService
  */
@@ -50,6 +51,17 @@ public class BioMaterialServiceImpl extends edu.columbia.gemma.expression.biomat
     protected void handleSaveBioMaterial( edu.columbia.gemma.expression.biomaterial.BioMaterial bioMaterial )
             throws java.lang.Exception {
         this.getBioMaterialDao().create( bioMaterial );
+    }
+
+    @Override
+    protected BioMaterial handleFindOrCreate( BioMaterial bioMaterial ) throws Exception {
+        return this.getBioMaterialDao().findOrCreate( bioMaterial );
+    }
+
+    @Override
+    protected void handleRemove( BioMaterial bioMaterial ) throws Exception {
+        this.getBioMaterialDao().remove( bioMaterial );
+        
     }
 
 }

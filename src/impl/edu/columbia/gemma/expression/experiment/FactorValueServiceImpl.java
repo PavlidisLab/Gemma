@@ -26,6 +26,7 @@ package edu.columbia.gemma.expression.experiment;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.expression.experiment.FactorValueService
  */
@@ -44,6 +45,17 @@ public class FactorValueServiceImpl extends edu.columbia.gemma.expression.experi
     protected void handleSaveFactorValue( edu.columbia.gemma.expression.experiment.FactorValue factorValue )
             throws java.lang.Exception {
         this.getFactorValueDao().create( factorValue );
+    }
+
+    @Override
+    protected FactorValue handleFindOrCreate( FactorValue factorValue ) throws Exception {
+        return this.getFactorValueDao().findOrCreate(factorValue);
+    }
+
+    @Override
+    protected void handleRemove( FactorValue factorValue ) throws Exception {
+        // TODO Auto-generated method stub
+        
     }
 
 }

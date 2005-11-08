@@ -29,6 +29,7 @@ import edu.columbia.gemma.genome.Gene;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.genome.gene.GeneService
  */
@@ -39,7 +40,7 @@ public class GeneServiceImpl extends edu.columbia.gemma.genome.gene.GeneServiceB
      * 
      * @see edu.columbia.gemma.genome.gene.GeneService#updateGene(edu.columbia.gemma.genome.Gene)
      */
-    protected edu.columbia.gemma.genome.Gene handleUpdateGene( edu.columbia.gemma.genome.Gene gene )
+    protected edu.columbia.gemma.genome.Gene handleUpdate( edu.columbia.gemma.genome.Gene gene )
             throws java.lang.Exception {
         this.getGeneDao().update( gene );
         return gene;
@@ -55,18 +56,6 @@ public class GeneServiceImpl extends edu.columbia.gemma.genome.gene.GeneServiceB
             throws java.lang.Exception {
         this.getGeneDao().create( gene );
         return gene;
-    }
-
-    /**
-     * @see edu.columbia.gemma.genome.gene.GeneService#removeGene(java.lang.String)
-     */
-    protected void handleRemoveGene( java.lang.String officialName ) throws java.lang.Exception {
-        java.util.Collection col = this.getGeneDao().findByOfficialName( officialName );
-        Iterator iter = col.iterator();
-        while ( iter.hasNext() ) {
-            Gene g = ( Gene ) iter.next();
-            this.getGeneDao().remove( g );
-        }
     }
 
     /**
@@ -113,6 +102,26 @@ public class GeneServiceImpl extends edu.columbia.gemma.genome.gene.GeneServiceB
     @Override
     protected Collection handleGetAllGenes() throws Exception {
         return this.getGeneDao().loadAll();
+    }
+
+    @Override
+    protected void handleRemove( String officialName ) throws Exception {
+        java.util.Collection col = this.getGeneDao().findByOfficialName( officialName );
+        Iterator iter = col.iterator();
+        while ( iter.hasNext() ) {
+            Gene g = ( Gene ) iter.next();
+            this.getGeneDao().remove( g );
+        }
+    }
+
+    @Override
+    protected Gene handleFindOrCreate( Gene gene ) throws Exception {
+        return this.getGeneDao().findOrCreate( gene );
+    }
+
+    @Override
+    protected void handleRemove( Collection arrayDesigns ) throws Exception {
+        this.getGeneDao().remove(arrayDesigns);
     }
 
 }

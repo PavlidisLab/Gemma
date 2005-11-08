@@ -131,7 +131,7 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     @Override
-    protected void handleRemoveBibliographicReference( BibliographicReference bibliographicReference ) throws Exception {
+    protected void handleRemove( BibliographicReference bibliographicReference ) throws Exception {
         this.getBibliographicReferenceDao().remove( bibliographicReference );
     }
 
@@ -146,6 +146,11 @@ public class BibliographicReferenceServiceImpl extends
         bibliographicReference.setFullTextPDF( pdfFile );
         this.getBibliographicReferenceDao().update( bibliographicReference );
 
+    }
+
+    @Override
+    protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference ) throws Exception {
+        return this.getBibliographicReferenceDao().findOrCreate( bibliographicReference );
     }
 
 }

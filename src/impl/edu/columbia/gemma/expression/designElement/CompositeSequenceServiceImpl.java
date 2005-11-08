@@ -51,4 +51,22 @@ public class CompositeSequenceServiceImpl extends
         return this.getCompositeSequenceDao().loadAll();
     }
 
+    @Override
+    protected CompositeSequence handleFindOrCreate( CompositeSequence compositeSequence ) throws Exception {
+
+        return this.getCompositeSequenceDao().findOrCreate( compositeSequence );
+    }
+
+    @Override
+    protected void handleRemove( CompositeSequence compositeSequence ) throws Exception {
+        this.getCompositeSequenceDao().findOrCreate( compositeSequence );
+
+    }
+
+    @Override
+    protected CompositeSequence handleFind( CompositeSequence compositeSequence ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

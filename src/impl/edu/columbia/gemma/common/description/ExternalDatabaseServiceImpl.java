@@ -37,4 +37,15 @@ public class ExternalDatabaseServiceImpl extends edu.columbia.gemma.common.descr
         return this.getExternalDatabaseDao().findByName( name );
     }
 
+    @Override
+    protected ExternalDatabase handleFindOrCreate( ExternalDatabase externalDatabase ) throws Exception {
+        return this.getExternalDatabaseDao().findOrCreate( externalDatabase );
+    }
+
+    @Override
+    protected void handleRemove( ExternalDatabase externalDatabase ) throws Exception {
+        this.getExternalDatabaseDao().remove( externalDatabase );
+        
+    }
+
 }
