@@ -256,10 +256,6 @@
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/bibref/pubMedEdit-flow.xml" />
 </bean>
 
-<bean id="arrayDesign.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
-    <property name="location" value="classpath:edu/columbia/gemma/web/flow/expression/arrayDesign/arrayDesignEdit-flow.xml" />
-</bean>
-
 <bean id="expressionExperiment.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
     <property name="location" value="classpath:edu/columbia/gemma/web/flow/expression/experiment/expressionExperimentEdit-flow.xml" />
 </bean>
