@@ -73,7 +73,7 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
 
         /* Yes, we have access to the ctx in the setup. */
         ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
-        if ( ees.findByName( ee.getName() ) == null ) ees.createExpressionExperiment( ee );
+        if ( ees.findByName( ee.getName() ) == null ) ees.findOrCreate( ee );
     }
 
     /**

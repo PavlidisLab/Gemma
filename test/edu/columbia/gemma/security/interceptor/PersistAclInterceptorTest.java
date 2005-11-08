@@ -57,14 +57,13 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
      * actual method invocation.
      * <p>
-     * FIXME how do we know if it worked? Should check that the invoke method was called.
      * 
      * @throws Exception
      */
     public void testAddPermissionsInterceptor() throws Exception {
         log.info( "Testing saveArrayDesign(ArrayDesign ad)" );
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        ads.saveArrayDesign( ad );
+        ads.findOrCreate(ad);
     }
 
     /**

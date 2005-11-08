@@ -21,25 +21,25 @@ package edu.columbia.gemma.loader.genome.gene.ncbi;
 import java.util.Collection;
 
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
-import edu.columbia.gemma.common.description.DatabaseEntryDao;
-import edu.columbia.gemma.common.description.ExternalDatabaseDao;
-import edu.columbia.gemma.common.description.LocalFileDao;
-import edu.columbia.gemma.common.description.OntologyEntryDao;
-import edu.columbia.gemma.common.protocol.HardwareDao;
-import edu.columbia.gemma.common.protocol.ProtocolDao;
-import edu.columbia.gemma.common.protocol.SoftwareDao;
-import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
-import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
-import edu.columbia.gemma.expression.biomaterial.CompoundDao;
-import edu.columbia.gemma.expression.designElement.DesignElementDao;
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
-import edu.columbia.gemma.expression.experiment.FactorValueDao;
-import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
+import edu.columbia.gemma.common.auditAndSecurity.ContactService;
+import edu.columbia.gemma.common.auditAndSecurity.PersonService;
+import edu.columbia.gemma.common.description.DatabaseEntryService;
+import edu.columbia.gemma.common.description.ExternalDatabaseService;
+import edu.columbia.gemma.common.description.LocalFileService;
+import edu.columbia.gemma.common.description.OntologyEntryService;
+import edu.columbia.gemma.common.protocol.HardwareService;
+import edu.columbia.gemma.common.protocol.ProtocolService;
+import edu.columbia.gemma.common.protocol.SoftwareService;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.expression.bioAssay.BioAssayService;
+import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
+import edu.columbia.gemma.expression.biomaterial.CompoundService;
+import edu.columbia.gemma.expression.designElement.DesignElementService;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
+import edu.columbia.gemma.expression.experiment.FactorValueService;
+import edu.columbia.gemma.genome.TaxonService;
+import edu.columbia.gemma.genome.biosequence.BioSequenceService;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
@@ -59,26 +59,26 @@ public class NCBIGeneIntegrationTest extends BaseServiceTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         persisterHelper = new PersisterHelper();
-        persisterHelper.setBioMaterialDao( ( BioMaterialDao ) ctx.getBean( "bioMaterialDao" ) );
+        persisterHelper.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
         persisterHelper
-                .setExpressionExperimentDao( ( ExpressionExperimentDao ) ctx.getBean( "expressionExperimentDao" ) );
-        persisterHelper.setPersonDao( ( PersonDao ) ctx.getBean( "personDao" ) );
-        persisterHelper.setOntologyEntryDao( ( OntologyEntryDao ) ctx.getBean( "ontologyEntryDao" ) );
-        persisterHelper.setArrayDesignDao( ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" ) );
-        persisterHelper.setExternalDatabaseDao( ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) );
-        persisterHelper.setDesignElementDao( ( DesignElementDao ) ctx.getBean( "designElementDao" ) );
-        persisterHelper.setProtocolDao( ( ProtocolDao ) ctx.getBean( "protocolDao" ) );
-        persisterHelper.setHardwareDao( ( HardwareDao ) ctx.getBean( "hardwareDao" ) );
-        persisterHelper.setSoftwareDao( ( SoftwareDao ) ctx.getBean( "softwareDao" ) );
-        persisterHelper.setTaxonDao( ( TaxonDao ) ctx.getBean( "taxonDao" ) );
-        persisterHelper.setBioAssayDao( ( BioAssayDao ) ctx.getBean( "bioAssayDao" ) );
-        persisterHelper.setQuantitationTypeDao( ( QuantitationTypeDao ) ctx.getBean( "quantitationTypeDao" ) );
-        persisterHelper.setLocalFileDao( ( LocalFileDao ) ctx.getBean( "localFileDao" ) );
-        persisterHelper.setCompoundDao( ( CompoundDao ) ctx.getBean( "compoundDao" ) );
-        persisterHelper.setDatabaseEntryDao( ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" ) );
-        persisterHelper.setContactDao( ( ContactDao ) ctx.getBean( "contactDao" ) );
-        persisterHelper.setBioSequenceDao( ( BioSequenceDao ) ctx.getBean( "bioSequenceDao" ) );
-        persisterHelper.setFactorValueDao( ( FactorValueDao ) ctx.getBean( "factorValueDao" ) );
+                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
+        persisterHelper.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
+        persisterHelper.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
+        persisterHelper.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
+        persisterHelper.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
+        persisterHelper.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
+        persisterHelper.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
+        persisterHelper.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
+        persisterHelper.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
+        persisterHelper.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
+        persisterHelper.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
+        persisterHelper.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
+        persisterHelper.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
+        persisterHelper.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
+        persisterHelper.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
+        persisterHelper.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
+        persisterHelper.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
+        persisterHelper.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
     }
 
     /*

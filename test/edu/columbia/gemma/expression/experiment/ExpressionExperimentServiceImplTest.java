@@ -66,7 +66,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         ee.setOwner( nobody );
 
         ee.getInvestigators().add( admin );
-        ee = svc.createExpressionExperiment( ee );
+        ee = svc.findOrCreate( ee );
 
         c = new HashSet<ExpressionExperiment>();
         ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();

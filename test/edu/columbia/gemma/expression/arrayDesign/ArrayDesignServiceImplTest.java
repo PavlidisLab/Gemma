@@ -113,7 +113,7 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
          * Playback mode.
          */
         replay( arrayDesignDaoMock );
-        arrayDesignService.saveArrayDesign( tad );
+        arrayDesignService.findOrCreate( tad );
 
         /*
          * Verification.

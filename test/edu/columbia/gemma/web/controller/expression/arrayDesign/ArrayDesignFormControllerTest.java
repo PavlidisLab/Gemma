@@ -76,7 +76,7 @@ public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
         // ***********
         /* Yes, we have access to the ctx in the setup. */
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        if ( ads.findArrayDesignByName( ad.getName() ) == null ) ads.saveArrayDesign( ad );
+        if ( ads.findArrayDesignByName( ad.getName() ) == null ) ads.findOrCreate( ad );
     }
 
     public void testEdit() throws Exception {
