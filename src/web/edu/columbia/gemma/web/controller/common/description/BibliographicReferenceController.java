@@ -140,7 +140,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
      * @return
      */
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
-        bibliographicReferenceService.removeBibliographicReference( bibRef );
+        bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
         addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
                 .getAccession() } );

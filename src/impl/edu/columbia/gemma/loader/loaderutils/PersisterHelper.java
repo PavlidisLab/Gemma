@@ -29,59 +29,59 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
-import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
+import edu.columbia.gemma.common.auditAndSecurity.ContactService;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.auditAndSecurity.PersonService;
 import edu.columbia.gemma.common.description.Characteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
-import edu.columbia.gemma.common.description.DatabaseEntryDao;
+import edu.columbia.gemma.common.description.DatabaseEntryService;
 import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.common.description.ExternalDatabaseService;
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.common.description.LocalFileDao;
+import edu.columbia.gemma.common.description.LocalFileService;
 import edu.columbia.gemma.common.description.OntologyEntry;
-import edu.columbia.gemma.common.description.OntologyEntryDao;
+import edu.columbia.gemma.common.description.OntologyEntryService;
 import edu.columbia.gemma.common.protocol.Hardware;
 import edu.columbia.gemma.common.protocol.HardwareApplication;
-import edu.columbia.gemma.common.protocol.HardwareDao;
+import edu.columbia.gemma.common.protocol.HardwareService;
 import edu.columbia.gemma.common.protocol.Protocol;
 import edu.columbia.gemma.common.protocol.ProtocolApplication;
-import edu.columbia.gemma.common.protocol.ProtocolDao;
+import edu.columbia.gemma.common.protocol.ProtocolService;
 import edu.columbia.gemma.common.protocol.Software;
 import edu.columbia.gemma.common.protocol.SoftwareApplication;
-import edu.columbia.gemma.common.protocol.SoftwareDao;
+import edu.columbia.gemma.common.protocol.SoftwareService;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
-import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
-import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
+import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
-import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDao;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
+import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.Compound;
-import edu.columbia.gemma.expression.biomaterial.CompoundDao;
+import edu.columbia.gemma.expression.biomaterial.CompoundService;
 import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
-import edu.columbia.gemma.expression.designElement.CompositeSequenceDao;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
 import edu.columbia.gemma.expression.designElement.DesignElement;
-import edu.columbia.gemma.expression.designElement.DesignElementDao;
+import edu.columbia.gemma.expression.designElement.DesignElementService;
 import edu.columbia.gemma.expression.designElement.Reporter;
-import edu.columbia.gemma.expression.designElement.ReporterDao;
+import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet;
 import edu.columbia.gemma.expression.experiment.FactorValue;
-import edu.columbia.gemma.expression.experiment.FactorValueDao;
+import edu.columbia.gemma.expression.experiment.FactorValueService;
 import edu.columbia.gemma.genome.Gene;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
-import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.genome.TaxonService;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
-import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
+import edu.columbia.gemma.genome.biosequence.BioSequenceService;
+import edu.columbia.gemma.genome.gene.GeneService;
 
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
@@ -92,82 +92,83 @@ import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @spring.bean id="persisterHelper"
- * @spring.property name="ontologyEntryDao" ref="ontologyEntryDao"
- * @spring.property name="personDao" ref="personDao"
- * @spring.property name="expressionExperimentDao" ref="expressionExperimentDao"
- * @spring.property name="bioMaterialDao" ref="bioMaterialDao"
- * @spring.property name="arrayDesignDao" ref="arrayDesignDao"
- * @spring.property name="designElementDao" ref="designElementDao"
- * @spring.property name="protocolDao" ref="protocolDao"
- * @spring.property name="softwareDao" ref="softwareDao"
- * @spring.property name="hardwareDao" ref="hardwareDao"
- * @spring.property name="geneDao" ref="geneDao"
- * @spring.property name="taxonDao" ref="taxonDao"
- * @spring.property name="localFileDao" ref="localFileDao"
- * @spring.property name="bioAssayDao" ref="bioAssayDao"
- * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
- * @spring.property name="quantitationTypeDao" ref="quantitationTypeDao"
- * @spring.property name="compoundDao" ref="compoundDao"
- * @spring.property name="databaseEntryDao" ref="databaseEntryDao"
- * @spring.property name="contactDao" ref="contactDao"
- * @spring.property name="bioSequenceDao" ref="bioSequenceDao"
- * @spring.property name="factorValueDao" ref="factorValueDao"
- * @spring.property name="designElementDataVectorDao" ref="designElementDataVectorDao"
- * @spring.property name="compositeSequenceDao" ref="compositeSequenceDao"
- * @spring.property name="reporterDao" ref="reporterDao"
+ * @spring.property name="ontologyEntryService" ref="ontologyEntryService"
+ * @spring.property name="personService" ref="personService"
+ * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name="bioMaterialService" ref="bioMaterialService"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="designElementService" ref="designElementService"
+ * @spring.property name="protocolService" ref="protocolService"
+ * @spring.property name="softwareService" ref="softwareService"
+ * @spring.property name="hardwareService" ref="hardwareService"
+ * @spring.property name="geneService" ref="geneService"
+ * @spring.property name="taxonService" ref="taxonService"
+ * @spring.property name="localFileService" ref="localFileService"
+ * @spring.property name="bioAssayService" ref="bioAssayService"
+ * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
+ * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name="compoundService" ref="compoundService"
+ * @spring.property name="databaseEntryService" ref="databaseEntryService"
+ * @spring.property name="contactService" ref="contactService"
+ * @spring.property name="bioSequenceService" ref="bioSequenceService"
+ * @spring.property name="factorValueService" ref="factorValueService"
+ * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name="reporterService" ref="reporterService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
 
-    private ArrayDesignDao arrayDesignDao;
+    private ArrayDesignService arrayDesignService;
 
-    private BioAssayDao bioAssayDao;
+    private BioAssayService bioAssayService;
 
-    private BioMaterialDao bioMaterialDao;
+    private BioMaterialService bioMaterialService;
 
-    private BioSequenceDao bioSequenceDao;
+    private BioSequenceService bioSequenceService;
 
-    private CompoundDao compoundDao;
+    private CompoundService compoundService;
 
-    private ContactDao contactDao;
+    private ContactService contactService;
 
-    private DatabaseEntryDao databaseEntryDao;
+    private DatabaseEntryService databaseEntryService;
 
     private Person defaultOwner = null;
 
-    private DesignElementDao designElementDao;
+    private DesignElementService designElementService;
 
-    private ExpressionExperimentDao expressionExperimentDao;
+    private ExpressionExperimentService expressionExperimentService;
 
-    private ExternalDatabaseDao externalDatabaseDao;
+    private ExternalDatabaseService externalDatabaseService;
 
-    private FactorValueDao factorValueDao;
+    private FactorValueService factorValueService;
 
-    private GeneDao geneDao;
+    private GeneService geneService;
 
-    private HardwareDao hardwareDao;
+    private HardwareService hardwareService;
 
-    private LocalFileDao localFileDao;
+    private LocalFileService localFileService;
 
-    private OntologyEntryDao ontologyEntryDao;
+    private OntologyEntryService ontologyEntryService;
 
-    private PersonDao personDao;
+    private PersonService personService;
 
-    private ProtocolDao protocolDao;
+    private ProtocolService protocolService;
 
-    private QuantitationTypeDao quantitationTypeDao;
+    private QuantitationTypeService quantitationTypeService;
 
-    private SoftwareDao softwareDao;
+    private SoftwareService softwareService;
 
-    private TaxonDao taxonDao;
+    private TaxonService taxonService;
 
-    private CompositeSequenceDao compositeSequenceDao;
+    private CompositeSequenceService compositeSequenceService;
 
-    private ReporterDao reporterDao;
+    private ReporterService reporterService;
 
-    private DesignElementDataVectorDao designElementDataVectorDao;
+    private DesignElementDataVectorService designElementDataVectorService;
 
     private Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
 
@@ -289,7 +290,7 @@ public class PersisterHelper implements Persister {
 
         software.setHardware( persistHardware( software.getHardware() ) );
 
-        return softwareDao.findOrCreate( software );
+        return softwareService.findOrCreate( software );
 
     }
 
@@ -302,9 +303,9 @@ public class PersisterHelper implements Persister {
         designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
         if ( !isTransient( designElement ) ) return designElement;
         if ( designElement instanceof CompositeSequence ) {
-            return compositeSequenceDao.findOrCreate( ( CompositeSequence ) designElement );
+            return compositeSequenceService.findOrCreate( ( CompositeSequence ) designElement );
         } else if ( designElement instanceof Reporter ) {
-            return reporterDao.findOrCreate( ( Reporter ) designElement );
+            return reporterService.findOrCreate( ( Reporter ) designElement );
         } else {
             throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
         }
@@ -320,13 +321,13 @@ public class PersisterHelper implements Persister {
         DesignElement designElement = vector.getDesignElement();
 
         if ( designElement instanceof CompositeSequence ) {
-            CompositeSequence cs = ( CompositeSequence ) compositeSequenceDao.find( designElement );
+            CompositeSequence cs = ( CompositeSequence ) designElementService.find( ( designElement ) );
             if ( cs == null )
                 throw new IllegalStateException(
                         "Cannot persist DesignElementDataVector until DesignElements are stored" );
             vector.setDesignElement( cs );
         } else if ( designElement instanceof Reporter ) {
-            Reporter reporter = ( Reporter ) designElementDao.find( designElement );
+            Reporter reporter = ( Reporter ) designElementService.find( designElement );
             if ( reporter == null )
                 throw new IllegalStateException(
                         "Cannot persist DesignElementDataVector until DesignElements are stored" );
@@ -334,147 +335,14 @@ public class PersisterHelper implements Persister {
         }
 
         vector.setQuantitationType( persistQuantitationType( vector.getQuantitationType() ) );
-        return ( DesignElementDataVector ) designElementDataVectorDao.create( vector );
+        return ( DesignElementDataVector ) designElementDataVectorService.findOrCreate( vector );
     }
 
     /**
-     * @param arrayDesignDao The arrayDesignDao to set.
+     * @param arrayDesignService The arrayDesignService to set.
      */
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    /**
-     * @param bioAssayDao The bioAssayDao to set.
-     */
-    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
-        this.bioAssayDao = bioAssayDao;
-    }
-
-    /**
-     * @param bioMaterialDao The bioMaterialDao to set.
-     */
-    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
-        this.bioMaterialDao = bioMaterialDao;
-    }
-
-    /**
-     * @param bioSequenceDao The bioSequenceDao to set.
-     */
-    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
-        this.bioSequenceDao = bioSequenceDao;
-    }
-
-    /**
-     * @param compoundDao The compoundDao to set.
-     */
-    public void setCompoundDao( CompoundDao compoundDao ) {
-        this.compoundDao = compoundDao;
-    }
-
-    /**
-     * @param contactDao The contactDao to set.
-     */
-    public void setContactDao( ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * @param databaseEntryDao The databaseEntryDao to set.
-     */
-    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
-    }
-
-    /**
-     * @param designElementDao The designElementDao to set.
-     */
-    public void setDesignElementDao( DesignElementDao designElementDao ) {
-        this.designElementDao = designElementDao;
-    }
-
-    /**
-     * @param expressionExperimentDao The expressionExperimentDao to set.
-     */
-    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
-        this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    /**
-     * @param externalDatabaseDao The externalDatabaseDao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * @param factorValueDao The factorValueDao to set.
-     */
-    public void setFactorValueDao( FactorValueDao factorValueDao ) {
-        this.factorValueDao = factorValueDao;
-    }
-
-    /**
-     * @param geneDao The geneDao to set.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
-
-    /**
-     * @param hardwareDao The hardwareDao to set.
-     */
-    public void setHardwareDao( HardwareDao hardwareDao ) {
-        this.hardwareDao = hardwareDao;
-    }
-
-    /**
-     * @param localFileDao The localFileDao to set.
-     */
-    public void setLocalFileDao( LocalFileDao localFileDao ) {
-        this.localFileDao = localFileDao;
-    }
-
-    /**
-     * @param ontologyEntryDao
-     */
-    public void setOntologyEntryDao( OntologyEntryDao ontologyEntryDao ) {
-        this.ontologyEntryDao = ontologyEntryDao;
-    }
-
-    /**
-     * @param personDao
-     */
-    public void setPersonDao( PersonDao personDao ) {
-        this.personDao = personDao;
-    }
-
-    /**
-     * @param protocolDao The protocolDao to set
-     */
-    public void setProtocolDao( ProtocolDao protocolDao ) {
-        this.protocolDao = protocolDao;
-    }
-
-    /**
-     * @param quantitationTypeDao The quantitationTypeDao to set.
-     */
-    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    /**
-     * @param softwareDao The softwareDao to set.
-     */
-    public void setSoftwareDao( SoftwareDao softwareDao ) {
-        this.softwareDao = softwareDao;
-    }
-
-    /**
-     * @param taxonDao The taxonDao to set.
-     */
-    public void setTaxonDao( TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     /**
@@ -493,13 +361,13 @@ public class PersisterHelper implements Persister {
      * @param databaseEntry
      */
     private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
-        assert externalDatabaseDao != null;
+        assert externalDatabaseService != null;
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
         if ( externalDatabase == null ) {
             log.debug( "No externalDatabase" );
             return null;
         }
-        databaseEntry.setExternalDatabase( externalDatabaseDao.findOrCreate( externalDatabase ) );
+        databaseEntry.setExternalDatabase( externalDatabaseService.findOrCreate( externalDatabase ) );
         return databaseEntry;
     }
 
@@ -560,7 +428,7 @@ public class PersisterHelper implements Persister {
             }
         }
 
-        return hardwareDao.findOrCreate( hardware );
+        return hardwareService.findOrCreate( hardware );
     }
 
     /**
@@ -579,11 +447,11 @@ public class PersisterHelper implements Persister {
         if ( protocol.getName() == null ) throw new IllegalStateException( "Protocol must have a name" );
 
         fillInProtocol( protocol );
-        protocolApplication.setProtocol( protocolDao.findOrCreate( protocol ) );
+        protocolApplication.setProtocol( protocolService.findOrCreate( protocol ) );
 
         for ( Person performer : ( Collection<Person> ) protocolApplication.getPerformers() ) {
             log.debug( "Filling in performer" );
-            performer.setId( personDao.findOrCreate( performer ).getId() );
+            performer.setId( personService.findOrCreate( performer ).getId() );
         }
 
         for ( SoftwareApplication softwareApplication : ( Collection<SoftwareApplication> ) protocolApplication
@@ -596,7 +464,7 @@ public class PersisterHelper implements Persister {
             persistOntologyEntry( type );
             software.setType( type );
 
-            softwareApplication.setSoftware( softwareDao.findOrCreate( software ) );
+            softwareApplication.setSoftware( softwareService.findOrCreate( software ) );
 
         }
 
@@ -610,7 +478,7 @@ public class PersisterHelper implements Persister {
             persistOntologyEntry( type );
             hardware.setType( type );
 
-            HardwareApplication.setHardware( hardwareDao.findOrCreate( hardware ) );
+            HardwareApplication.setHardware( hardwareService.findOrCreate( hardware ) );
         }
     }
 
@@ -619,7 +487,7 @@ public class PersisterHelper implements Persister {
      */
     @SuppressWarnings("unchecked")
     private void initializeDefaultOwner() {
-        Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody", "nobody" );
+        Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody", "nobody" );
 
         assert matchingPersons.size() == 1 : "Found " + matchingPersons.size() + " contacts matching 'nobody'";
 
@@ -655,7 +523,7 @@ public class PersisterHelper implements Persister {
         if ( !isTransient( entity ) ) return entity;
 
         entity.setDesignProvider( persistContact( entity.getDesignProvider() ) );
-        ArrayDesign existing = arrayDesignDao.find( entity );
+        ArrayDesign existing = arrayDesignService.find( entity );
 
         if ( existing != null ) {
             assert existing.getId() != null;
@@ -699,7 +567,7 @@ public class PersisterHelper implements Persister {
             }
         }
 
-        return arrayDesignDao.findOrCreate( entity );
+        return arrayDesignService.findOrCreate( entity );
     }
 
     /**
@@ -741,7 +609,7 @@ public class PersisterHelper implements Persister {
             }
         }
 
-        return bioAssayDao.findOrCreate( assay );
+        return bioAssayService.findOrCreate( assay );
     }
 
     /**
@@ -755,7 +623,7 @@ public class PersisterHelper implements Persister {
 
         OntologyEntry materialType = entity.getMaterialType();
         if ( materialType != null ) {
-            entity.setMaterialType( ontologyEntryDao.findOrCreate( materialType ) );
+            entity.setMaterialType( ontologyEntryService.findOrCreate( materialType ) );
         }
 
         for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
@@ -770,7 +638,7 @@ public class PersisterHelper implements Persister {
 
         fillInOntologyEntries( entity.getCharacteristics() );
 
-        return bioMaterialDao.findOrCreate( entity );
+        return bioMaterialService.findOrCreate( entity );
     }
 
     /**
@@ -779,7 +647,7 @@ public class PersisterHelper implements Persister {
     private BioSequence persistBioSequence( BioSequence bioSequence ) {
         if ( bioSequence == null ) return null;
         fillInBioSequenceTaxon( bioSequence );
-        if ( isTransient( bioSequence ) ) return bioSequenceDao.findOrCreate( bioSequence );
+        if ( isTransient( bioSequence ) ) return bioSequenceService.findOrCreate( bioSequence );
         return bioSequence;
     }
 
@@ -801,7 +669,7 @@ public class PersisterHelper implements Persister {
         } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
             bioSequence.setTaxon( seenTaxa.get( ncbiId ) );
         } else if ( isTransient( t ) ) {
-            Taxon foundOrCreatedTaxon = taxonDao.findOrCreate( t );
+            Taxon foundOrCreatedTaxon = taxonService.findOrCreate( t );
             bioSequence.setTaxon( foundOrCreatedTaxon );
             if ( foundOrCreatedTaxon.getScientificName() != null )
                 seenTaxa.put( foundOrCreatedTaxon.getScientificName(), bioSequence.getTaxon() );
@@ -821,14 +689,14 @@ public class PersisterHelper implements Persister {
         persistOntologyEntry( compound.getCompoundIndices() );
         if ( compound.getIsSolvent() == null )
             throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
-        return compoundDao.findOrCreate( compound );
+        return compoundService.findOrCreate( compound );
     }
 
     /**
      * @param designProvider
      */
     private Contact persistContact( Contact designProvider ) {
-        return this.contactDao.findOrCreate( designProvider );
+        return this.contactService.findOrCreate( designProvider );
     }
 
     /**
@@ -838,7 +706,7 @@ public class PersisterHelper implements Persister {
     private DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) return null;
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
-        return databaseEntryDao.findOrCreate( databaseEntry );
+        return databaseEntryService.findOrCreate( databaseEntry );
     }
 
     /**
@@ -902,7 +770,7 @@ public class PersisterHelper implements Persister {
 
         for ( DesignElementDataVector vect : ( Collection<DesignElementDataVector> ) entity
                 .getDesignElementDataVectors() ) {
-            DesignElement persistentDesignElement = designElementDao.find( vect.getDesignElement() );
+            DesignElement persistentDesignElement = designElementService.find( vect.getDesignElement() );
             if ( persistentDesignElement == null ) {
                 throw new IllegalStateException( vect.getDesignElement() + " does not have a persistent version" );
             }
@@ -913,7 +781,7 @@ public class PersisterHelper implements Persister {
             vect.setDesignElement( persistentDesignElement );
         }
 
-        return expressionExperimentDao.findOrCreate( entity );
+        return expressionExperimentService.findOrCreate( entity );
     }
 
     /**
@@ -921,7 +789,7 @@ public class PersisterHelper implements Persister {
      */
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
         if ( database == null ) return null;
-        return externalDatabaseDao.findOrCreate( database );
+        return externalDatabaseService.findOrCreate( database );
     }
 
     /**
@@ -947,7 +815,7 @@ public class PersisterHelper implements Persister {
         }
 
         if ( isTransient( factorValue ) ) {
-            return factorValueDao.create( factorValue );
+            return factorValueService.findOrCreate( factorValue );
         }
         return factorValue;
     }
@@ -956,14 +824,14 @@ public class PersisterHelper implements Persister {
      * @param gene
      */
     private Object persistGene( Gene gene ) {
-        return geneDao.findOrCreate( gene );
+        return geneService.findOrCreate( gene );
     }
 
     /**
      * @param file
      */
     private LocalFile persistLocalFile( LocalFile file ) {
-        return localFileDao.findOrCreate( file );
+        return localFileService.findOrCreate( file );
     }
 
     /**
@@ -976,7 +844,7 @@ public class PersisterHelper implements Persister {
         if ( ontologyEntry == null ) return null;
         fillInPersistentExternalDatabase( ontologyEntry );
         if ( isTransient( ontologyEntry ) )
-            ontologyEntry.setId( ontologyEntryDao.findOrCreate( ontologyEntry ).getId() );
+            ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
         for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
             persistOntologyEntry( associatedOntologyEntry );
         }
@@ -987,7 +855,7 @@ public class PersisterHelper implements Persister {
      * @param entity
      */
     private QuantitationType persistQuantitationType( QuantitationType entity ) {
-        return quantitationTypeDao.findOrCreate( entity );
+        return quantitationTypeService.findOrCreate( entity );
     }
 
     /**
@@ -1013,23 +881,177 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param designElementDataVectorDao The designElementDataVectorDao to set.
+     * @param bioAssayService The bioAssayService to set.
      */
-    public void setDesignElementDataVectorDao( DesignElementDataVectorDao designElementDataVectorDao ) {
-        this.designElementDataVectorDao = designElementDataVectorDao;
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
     }
 
     /**
-     * @param compositeSequenceDao The compositeSequenceDao to set.
+     * @param bioMaterialService The bioMaterialService to set.
      */
-    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
-        this.compositeSequenceDao = compositeSequenceDao;
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
     }
 
     /**
-     * @param reporterDao The reporterDao to set.
+     * @param bioSequenceService The bioSequenceService to set.
      */
-    public void setReporterDao( ReporterDao reporterDao ) {
-        this.reporterDao = reporterDao;
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    /**
+     * @param compositeSequenceService The compositeSequenceService to set.
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param compoundService The compoundService to set.
+     */
+    public void setCompoundService( CompoundService compoundService ) {
+        this.compoundService = compoundService;
+    }
+
+    /**
+     * @param contactService The contactService to set.
+     */
+    public void setContactService( ContactService contactService ) {
+        this.contactService = contactService;
+    }
+
+    /**
+     * @param databaseEntryService The databaseEntryService to set.
+     */
+    public void setDatabaseEntryService( DatabaseEntryService databaseEntryService ) {
+        this.databaseEntryService = databaseEntryService;
+    }
+
+    /**
+     * @param defaultOwner The defaultOwner to set.
+     */
+    public void setDefaultOwner( Person defaultOwner ) {
+        this.defaultOwner = defaultOwner;
+    }
+
+    /**
+     * @param designElementDataVectorService The designElementDataVectorService to set.
+     */
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    /**
+     * @param designElementService The designElementService to set.
+     */
+    public void setDesignElementService( DesignElementService designElementService ) {
+        this.designElementService = designElementService;
+    }
+
+    /**
+     * @param expressionExperimentService The expressionExperimentService to set.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param externalDatabaseService The externalDatabaseService to set.
+     */
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+    }
+
+    /**
+     * @param factorValueService The factorValueService to set.
+     */
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
+    }
+
+    /**
+     * @param firstBioSequence The firstBioSequence to set.
+     */
+    public void setFirstBioSequence( boolean firstBioSequence ) {
+        this.firstBioSequence = firstBioSequence;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
+     * @param hardwareService The hardwareService to set.
+     */
+    public void setHardwareService( HardwareService hardwareService ) {
+        this.hardwareService = hardwareService;
+    }
+
+    /**
+     * @param localFileService The localFileService to set.
+     */
+    public void setLocalFileService( LocalFileService localFileService ) {
+        this.localFileService = localFileService;
+    }
+
+    /**
+     * @param ontologyEntryService The ontologyEntryService to set.
+     */
+    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
+        this.ontologyEntryService = ontologyEntryService;
+    }
+
+    /**
+     * @param personService The personService to set.
+     */
+    public void setPersonService( PersonService personService ) {
+        this.personService = personService;
+    }
+
+    /**
+     * @param protocolService The protocolService to set.
+     */
+    public void setProtocolService( ProtocolService protocolService ) {
+        this.protocolService = protocolService;
+    }
+
+    /**
+     * @param quantitationTypeService The quantitationTypeService to set.
+     */
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
+    }
+
+    /**
+     * @param reporterService The reporterService to set.
+     */
+    public void setReporterService( ReporterService reporterService ) {
+        this.reporterService = reporterService;
+    }
+
+    /**
+     * @param seenTaxa The seenTaxa to set.
+     */
+    public void setSeenTaxa( Map<Object, Taxon> seenTaxa ) {
+        this.seenTaxa = seenTaxa;
+    }
+
+    /**
+     * @param softwareService The softwareService to set.
+     */
+    public void setSoftwareService( SoftwareService softwareService ) {
+        this.softwareService = softwareService;
+    }
+
+    /**
+     * @param taxonService The taxonService to set.
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 }

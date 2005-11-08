@@ -120,7 +120,7 @@ public class ArrayDesignController extends BaseMultiActionController {
      * @return
      */
     private ModelAndView doDelete( HttpServletRequest request, ArrayDesign arrayDesign ) {
-        arrayDesignService.removeArrayDesign(arrayDesign);
+        arrayDesignService.remove(arrayDesign);
         log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
         addMessage( request, "arrayDesign.deleted", new Object[] { arrayDesign.getName()} );
         return new ModelAndView( "arrayDesigns", "arrayDesign", arrayDesign );

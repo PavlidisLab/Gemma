@@ -87,7 +87,7 @@ public class ExpressionExperimentController implements Controller {
 
             String event = request.getParameter( "_eventId" );
             if ( event != null && event.equals( "delete" ) ) {
-                expressionExperimentService.removeExpressionExperiment( ee );
+                expressionExperimentService.remove( ee );
                 log.info( "Expression experiment with name: " + ee.getName() + " deleted" );
                 request.getSession().setAttribute(
                         "messages",

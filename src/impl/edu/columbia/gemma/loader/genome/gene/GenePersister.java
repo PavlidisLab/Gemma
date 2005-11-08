@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.genome.Gene;
-import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.genome.gene.GeneService;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
@@ -37,14 +37,14 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * @author keshav
  * @version $Id$
  * @spring.bean id="geneLoader"
- * @spring.property name="geneDao" ref="geneDao"
+ * @spring.property name="geneService" ref="geneService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public class GenePersister implements Persister {
     protected static final Log log = LogFactory.getLog( GenePersister.class );
 
     private PersisterHelper persisterHelper;
-    private GeneDao geneDao;
+    private GeneService geneService;
 
     /**
      * Persist genes in collection.
@@ -73,22 +73,22 @@ public class GenePersister implements Persister {
      * 
      */
     public void removeAll() {
-        Collection col = geneDao.loadAll();
-        geneDao.remove( col );
+        Collection col = geneService.getAllGenes();
+        geneService.remove( col );
     }
 
     /**
      * @param col
      */
     public void removeAll( Collection<Gene> col ) {
-        geneDao.remove( col );
+        geneService.remove( col );
     }
 
     /**
-     * @param geneDao The geneDao to set.
+     * @param geneService The geneService to set.
      */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     /**

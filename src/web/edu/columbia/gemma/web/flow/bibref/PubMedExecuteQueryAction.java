@@ -112,7 +112,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.FALSE );
             return error();
         }
-        this.bibliographicReferenceService.removeBibliographicReference( bibRefFound );
+        this.bibliographicReferenceService.remove( bibRefFound );
 
         addMessage( context, "bibliographicReference.deleted", new Object[] { accession } );
         return success();
@@ -258,7 +258,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         }
 
         bibRef.getPubAccession().setExternalDatabase( pubMedDb );
-        bibRef = this.bibliographicReferenceService.saveBibliographicReference( bibRef );
+        bibRef = this.bibliographicReferenceService.findOrCreate( bibRef );
 
         context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
         addMessage( context, "bibliographicReference.saved", new Object[] { bibRef.getPubAccession().getAccession() } );

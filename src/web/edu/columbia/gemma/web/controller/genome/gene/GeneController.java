@@ -103,7 +103,7 @@ public class GeneController extends BaseCommandController {
                 Collection<BibliographicReference> cites = g.getCitations();
                 cites.add( br );
                 g.setCitations( cites );
-                g = this.getGeneService().updateGene( g );
+                g = this.getGeneService().update( g );
                 return new ModelAndView( new RedirectView(
                         "candidateGeneListActionComplete.htm?target=geneDetail&geneID=" + g.getId() ) );
             }
@@ -120,7 +120,7 @@ public class GeneController extends BaseCommandController {
                 }
             }
             g.setCitations( cites );
-            g = this.getGeneService().updateGene( g );
+            g = this.getGeneService().update( g );
             return new ModelAndView( new RedirectView( "candidateGeneListActionComplete.htm?target=geneDetail&geneID="
                     + g.getId() ) );
         }
@@ -135,7 +135,7 @@ public class GeneController extends BaseCommandController {
                 }
             }
             g.setCitations( cites );
-            g = this.getGeneService().updateGene( g );
+            g = this.getGeneService().update( g );
             return new ModelAndView( new RedirectView( "candidateGeneListActionComplete.htm?target=geneDetail&geneID="
                     + g.getId() ) );
 

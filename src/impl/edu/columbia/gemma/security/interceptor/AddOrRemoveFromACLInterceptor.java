@@ -61,17 +61,17 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         Object object = null;
         if ( log.isDebugEnabled() ) log.debug( "Before: method=[" + m + "], Target: " + target );
 
-        if ( m.getName().contains( "save" ) || m.getName().contains( "remove" ) ) {
+        if ( m.getName().equals( "findOrCreate" ) || m.getName().equals( "remove" ) ) {
 
             object = args[0];
 
             String fullyQualifiedName = object.getClass().getName();
             if ( log.isDebugEnabled() ) log.debug( "The object is: " + fullyQualifiedName );
 
-            if ( m.getName().startsWith( "save" ) )
+            if ( m.getName().equals( "findOrCreate" ) )
                 addPermission( object, getUsername(), getAuthority() );
 
-            else if ( m.getName().startsWith( "remove" ) ) deletePermission( object, getUsername() );
+            else if ( m.getName().equals( "remove" ) ) deletePermission( object, getUsername() );
 
         }
 

@@ -112,7 +112,7 @@ public class ExpressionExperimentFormEditAction extends AbstractFlowFormAction {
 
         log.info( "updating expression experiment reference " + exprExp.getName() );
 
-        expressionExperimentService.updateExpressionExperiment( exprExp );
+        expressionExperimentService.update( exprExp );
 
         addMessage( context, "expressionExperiment.update", null );
 
