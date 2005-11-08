@@ -182,78 +182,161 @@
             <ref bean="afterInvocationManager" />
         </property>
         <property name="objectDefinitionSource">
-            <value>
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.saveExpressionExperiment=user,admin
+            <value>            
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.getAllExpressionExperiments=user,admin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,admin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.createExpressionExperiment=user,admin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.updateExpressionExperiment=user,admin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.removeExpressionExperiment=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.update=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.remove=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByAccession=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByName=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalDesignService.getExperimentalDesigns=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalDesignService.saveExperimentalDesign=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalFactorService.getAllExperimentalFactors=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalFactorService.saveExperimentalFactor=user,admin
                 edu.columbia.gemma.expression.experiment.FactorValueService.getAllFactorValues=user,admin
-                edu.columbia.gemma.expression.experiment.FactorValueService.saveFactorValue=user,admin
+                edu.columbia.gemma.expression.experiment.FactorValueService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.experiment.FactorValueService.remove=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService.getAllExpressionExperimentSubSets=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService.saveExpressionExperimentSubSet=user,admin
-                edu.columbia.gemma.expression.designElement.CompositeSequenceService.saveCompositeSequence=user,admin
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.designElement.CompositeSequenceService.getAllCompositeSequences=user,admin, AFTER_ACL_ARRAYDESIGN_COLLECTION_READ
-                edu.columbia.gemma.expression.designElement.ReporterService.saveReporter=user,admin
-                
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.remove=user,admin
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.find=user,admin
+                edu.columbia.gemma.expression.designElement.ReporterService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.designElement.ReporterService.remove=user,admin
+                edu.columbia.gemma.expression.designElement.DesignElementService.find=user,admin
+                edu.columbia.gemma.expression.designElement.DesignElementService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.designElement.DesignElementService.remove=user,admin
+                edu.columbia.gemma.expression.designElement.DesignElementService.update=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.saveArrayDesign=user,admin               
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.removeArrayDesign=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.remove=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.updateArrayDesign=ACL_SECURABLE_EDIT
-                edu.columbia.gemma.expression.bioAssay.BioAssayService.saveBioAssay=user,admin 
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.update=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.find=user,admin
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin
-                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.saveBioAssayDataVector=user,admin
-                edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.saveDesignElementDataVector=user,admin
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.remove=user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
-                edu.columbia.gemma.expression.biomaterial.BioMaterialService.saveBioMaterial=user,admin
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.remove=user,admin
                 edu.columbia.gemma.expression.biomaterial.TreatmentService.getTreatments=user,admin
                 edu.columbia.gemma.expression.biomaterial.TreatmentService.saveTreatment=user,admin
+                edu.columbia.gemma.expression.biomaterial.CompoundService.find=user,admin
+                edu.columbia.gemma.expression.biomaterial.CompoundService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.biomaterial.CompoundService.update=user,admin
+                edu.columbia.gemma.expression.biomaterial.CompoundService.remove=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReference=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.removeBibliographicReference=ACL_SECURABLE_EDIT
-                edu.columbia.gemma.common.description.BibliographicReferenceService.updateBibliographicReference=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findOrCreate=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.find=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getBibliographicReferenceByTitle=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReferenceByLookup=user,admin
-                edu.columbia.gemma.common.description.ExternalDatabaseService.find=user,admin 
-                edu.columbia.gemma.common.description.LocalFileService.copyFile=ACL_LOCALFILE_EDIT
-                edu.columbia.gemma.common.description.LocalFileService.deleteFile=ACL_LOCALFILE_EDIT 
+                edu.columbia.gemma.common.description.BibliographicReferenceService.updateBibliographicReference=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.remove=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.addPDF=user,admin
+                edu.columbia.gemma.common.description.ExternalDatabaseService.find=user,admin
+                edu.columbia.gemma.common.description.ExternalDatabaseService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.ExternalDatabaseService.remove=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.createNewList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.addReferenceToList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.getAllReferencesForList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.setListDescription=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.setComment=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.removeList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.removeReferenceFromList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.setRating=user,admin
+                edu.columbia.gemma.common.description.FileFormatService.findByIdentifier=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.deleteFile=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.LocalFileService.copyFile=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.LocalFileService.findByPath=user,admin
                 edu.columbia.gemma.common.description.LocalFileService.find=user,admin
-                edu.columbia.gemma.common.description.LocalFileService.findByPath=user,admin 
-                edu.columbia.gemma.common.description.LocalFileService.findOrCreate=user,admin
-                edu.columbia.gemma.common.auditAndSecurity.PersonService.savePerson=user,admin 
+                edu.columbia.gemma.common.description.LocalFileService.save=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.update=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.findOrCreate=usr,admin
+                edu.columbia.gemma.common.description.DatabaseEntryService.find=user,admin
+                edu.columbia.gemma.common.description.DatabaseEntryService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.DatabaseEntryService.update=user,admin
+                edu.columbia.gemma.common.description.DatabaseEntryService.remove=user,admin
+                edu.columbia.gemma.common.description.OntologyEntryService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.OntologyEntryService.remove=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.savePerson=user,admin
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.getAllPersons=user,admin
-                edu.columbia.gemma.common.auditAndSecurity.PersonService.removePerson=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.removePerson=user,admin
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.findByName=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.findByFullName=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.findOrCreate=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.getUser=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.getUsers=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.saveUser=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.removeUser=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.checkLoginCookie=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.createLoginCookie=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.removeLoginCookies=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.addRole=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.findById=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.getRoles=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.getRole=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.saveRole=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.removeRole=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.findOrCreate=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.find=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.remove=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.update=user,admin
+                edu.columbia.gemma.common.protocol.HardwareService.find=user,admin
+                edu.columbia.gemma.common.protocol.HardwareService.findOrCreate=user,admin
+                edu.columbia.gemma.common.protocol.HardwareService.update=user,admin
+                edu.columbia.gemma.common.protocol.HardwareService.remove=user,admin
+                edu.columbia.gemma.common.protocol.ProtocolService.find=user,admin
+                edu.columbia.gemma.common.protocol.ProtocolService.findOrCreate=user,admin
+                edu.columbia.gemma.common.protocol.ProtocolService.update=user,admin
+                edu.columbia.gemma.common.protocol.ProtocolService.remove=user,admin
+                edu.columbia.gemma.common.protocol.SoftwareService.findOrCreate=user,admin
+                edu.columbia.gemma.common.protocol.SoftwareService.find=user,admin
+                edu.columbia.gemma.common.protocol.SoftwareService.update=user,admin
+                edu.columbia.gemma.common.protocol.SoftwareService.remove=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.find=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.findOrCreate=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.update=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.remove=user,admin
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.find=user,admin
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.remove=user,admin
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.findOrCreate=user,admin
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.update=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.createByName=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.updateCandidateGeneList=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.removeCandidateGeneList=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByContributer=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByGeneOfficialName=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user,admin 
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByListOwner=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user,admin 
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.setActor=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
-                edu.columbia.gemma.genome.gene.GeneService.updateGene=ACL_SECURABLE_EDIT
-                edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user,admin 
-                edu.columbia.gemma.genome.gene.GeneService.removeGene=ACL_SECURABLE_EDIT
-                edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin 
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.update=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.remove=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin
                 edu.columbia.gemma.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin
-                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user,admin 
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user,admin
                 edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbolInexact=user,admin
-                edu.columbia.gemma.genome.gene.GeneService.findByID=user,admin 
-                edu.columbia.gemma.genome.gene.GeneService.saveGene=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findByID=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findOrCreate=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.remove=user,admin
+                edu.columbia.gemma.genome.TaxonService.find=user,admin
+                edu.columbia.gemma.genome.TaxonService.update=user,admin
+                edu.columbia.gemma.genome.TaxonService.remove=user,admin
+                edu.columbia.gemma.genome.TaxonService.findOrCreate=user,admin
+                
+                
+                
             </value>
         </property>
     </bean>
@@ -266,13 +349,8 @@
         <property name="decisionVoters">
             <list>
                 <ref local="roleVoter" />
-                <!-- 
-                <ref bean="arrayDesignEditVoter" />
-                -->
-                <ref bean="bibliographicReferenceEditVoter" />
-                <ref bean="geneEditVoter" />
-                <ref bean="localFileEditVoter" />
                 <ref bean="securableVoter" />
+                <ref bean="localFileEditVoter" />             
             </list>
         </property>
     </bean>
@@ -301,25 +379,7 @@
     <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
 
     <!-- An access decision voters that read processConfigAttribute settings -->
-    <!-- 
-    <bean id="arrayDesignEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
-        <property name="aclManager">
-            <ref bean="aclManager" />
-        </property>
-        <property name="processConfigAttribute">
-            <value>ACL_ARRAYDESIGN_EDIT</value>
-        </property>
-        <property name="processDomainObjectClass">
-            <value>edu.columbia.gemma.expression.arrayDesign.ArrayDesign</value>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION" />
-                <ref local="SimpleAclEntry.READ_WRITE" />
-            </list>
-        </property>
-    </bean>
-    -->
+    
     <!--  voter that can be applied to any operation on a securable -->
     <bean id="securableVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
         <property name="aclManager">
@@ -347,40 +407,6 @@
         </property>
         <property name="processDomainObjectClass">
             <value>edu.columbia.gemma.common.description.LocalFile</value>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION" />
-                <ref local="SimpleAclEntry.READ_WRITE" />
-            </list>
-        </property>
-    </bean>
-    <bean id="geneEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
-        <property name="aclManager">
-            <ref bean="aclManager" />
-        </property>
-        <property name="processConfigAttribute">
-            <value>ACL_GENE_EDIT</value>
-        </property>
-        <property name="processDomainObjectClass">
-            <value>edu.columbia.gemma.genome.Gene</value>
-        </property>
-        <property name="requirePermission">
-            <list>
-                <ref local="SimpleAclEntry.ADMINISTRATION" />
-                <ref local="SimpleAclEntry.READ_WRITE" />
-            </list>
-        </property>
-    </bean>
-    <bean id="bibliographicReferenceEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
-        <property name="aclManager">
-            <ref bean="aclManager" />
-        </property>
-        <property name="processConfigAttribute">
-            <value>ACL_BIBREF_EDIT</value>
-        </property>
-        <property name="processDomainObjectClass">
-            <value>edu.columbia.gemma.common.description.BibliographicReference</value>
         </property>
         <property name="requirePermission">
             <list>
