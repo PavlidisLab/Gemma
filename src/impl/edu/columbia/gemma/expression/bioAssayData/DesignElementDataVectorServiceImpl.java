@@ -26,6 +26,7 @@ package edu.columbia.gemma.expression.bioAssayData;
  * Copyright (c) 2004-2005 Columbia University
  * 
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService
  */
@@ -39,6 +40,19 @@ public class DesignElementDataVectorServiceImpl extends
             edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector designElementDataVector )
             throws java.lang.Exception {
         this.getDesignElementDataVectorDao().create( designElementDataVector );
+    }
+
+    @Override
+    protected DesignElementDataVector handleFindOrCreate( DesignElementDataVector designElementDataVector )
+            throws Exception {
+
+        return this.getDesignElementDataVectorDao().findOrCreate( designElementDataVector );
+    }
+
+    @Override
+    protected void handleRemove( DesignElementDataVector designElementDataVector ) throws Exception {
+        this.getDesignElementDataVectorDao().remove( designElementDataVector );
+
     }
 
 }

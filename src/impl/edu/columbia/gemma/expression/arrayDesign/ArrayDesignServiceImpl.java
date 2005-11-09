@@ -39,29 +39,42 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
     }
 
     /**
-     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#saveArrayDesign(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
-     */
-    protected edu.columbia.gemma.expression.arrayDesign.ArrayDesign handleSaveArrayDesign( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception {
-        return this.getArrayDesignDao().findOrCreate( arrayDesign );
-    }
-
-    /**
      * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#removeArrayDesign(java.lang.String)
      */
-    protected void handleRemoveArrayDesign( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected void handleRemove( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception {
         this.getArrayDesignDao().remove( this.getArrayDesignDao().findByName( arrayDesign.getName() ) );
     }
-
+    
+    /**
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#findArrayDesignByName(java.lang.String)
+     */
     @Override
     protected edu.columbia.gemma.expression.arrayDesign.ArrayDesign handleFindArrayDesignByName( String name )
             throws Exception {
         return this.getArrayDesignDao().findByName( name );
     }
-
-    protected void handleUpdateArrayDesign( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
+    
+    /**
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#updateArrayDesign(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    protected void handleUpdate( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
             throws Exception {
         this.getArrayDesignDao().update( arrayDesign );
     }
+    
+    /**
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#find(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected ArrayDesign handleFind( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().find(arrayDesign);
+    }
+
+    @Override
+    protected ArrayDesign handleFindOrCreate( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().findOrCreate( arrayDesign );
+    }
+
+    
 }
