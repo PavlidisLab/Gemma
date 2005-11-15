@@ -76,6 +76,16 @@ public class ProbeThreePrimeLocator {
     private String threeprimeMethod = GoldenPath.RIGHTEND;
     private static Log log = LogFactory.getLog( ProbeThreePrimeLocator.class.getName() );
 
+    /**
+     * @param input
+     * @param output
+     * @return
+     * @throws IOException
+     * @throws SQLException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws ClassNotFoundException
+     */
     public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
@@ -231,8 +241,10 @@ public class ProbeThreePrimeLocator {
     public static void main( String[] args ) {
 
         try {
-            if ( args.length < 3 )
-                throw new IllegalArgumentException( "usage: input blat result file name, output filename, dbName (hg17)" );
+            if ( args.length < 3 ) {
+                System.err.println( "usage: input blat result file name, output filename, dbName (hg17)" );
+                System.exit( 0 );
+            }
             String filename = args[0];
             File f = new File( filename );
             if ( !f.canRead() ) throw new IOException( "Can't read file" );
@@ -241,7 +253,7 @@ public class ProbeThreePrimeLocator {
 
             File o = new File( outputFileName );
             // if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
-            String bestOutputFileName = outputFileName.replaceFirst( "\\.", ".best." );
+            String bestOutputFileName = outputFileName + ".best";
             log.info( "Saving best to " + bestOutputFileName );
 
             ptpl.databaseName = args[2];
@@ -390,9 +402,17 @@ public class ProbeThreePrimeLocator {
             buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap() );
             buf.append( "\t" + tpd.getDistance() );
             buf.append( "\t" + this.alignLength );
-            buf.append( "\t" + this.br.getTargetSequence().getName() );
-            buf.append( "\t" + this.br.getTargetStart() );
-            buf.append( "\t" + this.br.getTargetEnd() );
+            if ( this.br != null ) {
+                if ( this.br.getTargetSequence() != null ) {
+                    buf.append( "\t" + this.br.getTargetSequence().getName() );
+                } else {
+                    buf.append( "\t" );
+                }
+                buf.append( "\t" + this.br.getTargetStart() );
+                buf.append( "\t" + this.br.getTargetEnd() );
+            } else {
+                buf.append( "\t\t\t" );
+            }
             buf.append( "\t" + this.numTied );
             buf.append( "\n" );
             return buf.toString();
