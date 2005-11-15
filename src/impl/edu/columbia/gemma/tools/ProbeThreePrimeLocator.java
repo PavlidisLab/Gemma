@@ -106,8 +106,8 @@ public class ProbeThreePrimeLocator {
             }
 
             String[] sa = splitBlatQueryName( blatRes );
-            String probeName = sa[0];
-            String arrayName = sa[1];
+            String arrayName = sa[0];
+            String probeName = sa[1];
 
             List<ThreePrimeData> tpds = bp.getThreePrimeDistances( blatRes.getTargetChromosome().getName(), blatRes
                     .getTargetStart(), blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(),
@@ -122,6 +122,7 @@ public class ProbeThreePrimeLocator {
 
                 LocationData ld = new LocationData( tpd, blatRes );
                 if ( !allRes.containsKey( probeName ) ) {
+                    log.debug( "Adding " + probeName + " to results" );
                     allRes.put( probeName, new HashSet<LocationData>() );
                 }
                 allRes.get( probeName ).add( ld );
@@ -186,7 +187,9 @@ public class ProbeThreePrimeLocator {
      * @param writer
      */
     protected void getBest( Map<String, Collection<LocationData>> results, BufferedWriter writer ) throws IOException {
+        log.info( "Preparing 'best' matches" );
         for ( String probe : results.keySet() ) {
+            log.debug( "Checking " + probe );
             Collection<LocationData> probeResults = results.get( probe );
             double maxBlatScore = -1.0;
             int maxScore = 0;
@@ -225,6 +228,7 @@ public class ProbeThreePrimeLocator {
             best.setNumTied( numTied );
             writer.write( best.toString() );
         }
+        writer.close();
     }
 
     /**

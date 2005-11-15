@@ -34,7 +34,8 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
  * are valid PSL headers.
  * <p>
  * Target sequences are assumed to be chromosomes. If a chromosome name (chr10 or chr10.fa) is detected, the name is
- * stripped to be a chromosome number only (e.g. 10). Otherwise, the value is used as is.
+ * stripped to be a chromosome number only (e.g. 10). Otherwise, the value is used as is. If the query name starts with
+ * "target:", this is removed.
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -82,11 +83,11 @@ public class BlatResultParser extends BasicLineParser {
             // psLayout version 3
             //
             // match mis- rep. N's Q gap Q gap T gap T gap strand Q Q Q Q T T T T block blockSizes qStarts tStarts
-            // match match
+            // (spaces)match match
             // ------------------
             // check if it is a header line.
-            if ( line.startsWith( "psLayout" ) || line.startsWith( "match" )
-                    || line.startsWith( "       match   match" ) || line.startsWith( "-----------------------" ) ) {
+            if ( line.startsWith( "psLayout" ) || line.startsWith( "match" ) || line.startsWith( "    " )
+                    || line.startsWith( "-----------------------" ) ) {
                 return null;
             }
 
@@ -123,13 +124,15 @@ public class BlatResultParser extends BasicLineParser {
             result.setQueryStarts( f[QSTARTS_FIELD] );
             result.setTargetStarts( f[TSTARTS_FIELD] );
 
-            result.getQuerySequence().setName( f[QNAME_FIELD] );
+            String queryName = f[QNAME_FIELD];
+            queryName = cleanUpQueryName( queryName );
+            result.getQuerySequence().setName( queryName );
 
             String chrom = f[TNAME_FIELD];
             if ( chrom.startsWith( "chr" ) ) {
                 chrom = chrom.substring( chrom.indexOf( "chr" ) + 3 );
                 if ( chrom.endsWith( ".fa" ) ) {
-                    chrom = chrom.substring( 0, chrom.indexOf( ".fa" ) - 1 );
+                    chrom = chrom.substring( 0, chrom.indexOf( ".fa" ) );
                 }
             }
             result.getTargetChromosome().setName( chrom );
@@ -143,5 +146,15 @@ public class BlatResultParser extends BasicLineParser {
         } catch ( IllegalArgumentException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param queryName
+     * @return
+     */
+    private String cleanUpQueryName( String queryName ) {
+        queryName = queryName.replace( "target:", "" );
+        queryName = queryName.replaceFirst( ";$", "" );
+        return queryName;
     }
 }
