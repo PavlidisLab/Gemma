@@ -19,7 +19,6 @@
 package edu.columbia.gemma.loader.genome;
 
 import java.io.InputStream;
-import java.util.Collection;
 
 import junit.framework.TestCase;
 
