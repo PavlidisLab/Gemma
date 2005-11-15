@@ -18,7 +18,7 @@ import org.springframework.beans.factory.BeanFactory;
 import edu.columbia.gemma.util.SpringContextUtil;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
+
 
 
 /**
@@ -100,7 +100,7 @@ public class LiteratureAssociationLoaderCLI {
         BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
         //mPersister = new PersisterHelper();
         geneDao = ( GeneDao ) ctx.getBean( "geneDao" ) ;
-        laDao = ( LiteratureAssociationDao ) ctx.getBean( "LiteratureAssociationDao" ) ;
+        laDao = ( LiteratureAssociationDao ) ctx.getBean( "literatureAssociationDao" ) ;
     }
 
     /**

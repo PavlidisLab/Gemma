@@ -1,20 +1,8 @@
-/*
- * <hr>
- * <p>
- * Copyright (c) 2005 Columbia University
- * @author Anshu Sinha
- *
- */
+
 package edu.columbia.gemma.loader.association;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.Collection;
 
 import baseCode.util.StringUtil;
 
@@ -23,9 +11,20 @@ import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
-import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.Persister;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
+
+
+/**
+ * Class to parse a file of literature associations. 
+ * 
+ * Format: (read whole row)
+ * g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author anshu
+ * @version $Id$
+ */
 
 public class LitAssociationFileParserImpl extends BasicLineMapParser /*implements Persister*/ {
     
@@ -44,10 +43,6 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /*implement
         this.laDao=ldao;        
     }
     
-    public void parse (String filename)throws IOException {
-
-        this.parse(filename);
-    }
     
     /*
      * (non-Javadoc)
@@ -63,25 +58,29 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /*implement
                     + " fields, expected " + LIT_ASSOCIATION_FIELDS_PER_ROW );
         }
         
-        Collection c;
+        Collection<Gene> c;
         LiteratureAssociationImpl assoc = new LiteratureAssociationImpl();
         Gene g1=null;
         Gene g2=null;
+        Integer id=null;
         try {
-            c = geneDao.findByNcbiId(new Integer(fields[1]).intValue());
+            id=new Integer(fields[1]);
+            c =  geneDao.findByNcbiId(id);
             if ((c!=null) && (c.size()==1)) {
-                g1 = (Gene) (c.iterator()).next();
-            }
+                g1 = (c.iterator()).next();
+            }else throw new Exception("gene "+id+" not found. Entry skipped.");
  
-            c = geneDao.findByNcbiId(new Integer(fields[4]).intValue());
+            id=new Integer(fields[4]);
+            c = geneDao.findByNcbiId(id);
             if ((c!=null) && (c.size()==1)) {
-                g2 = (Gene) (c.iterator()).next();
-            }
+                g2 = (c.iterator()).next();
+            }else throw new Exception("gene "+id+" not found. Entry skipped.");
             assoc.setFirstGene(g1);
             assoc.setSecondGene(g2);
             assoc.setAction(fields[6]);
             assoc.setNumberOfMentions(new Integer(fields[7]).intValue());
-
+            assoc.setSource(null); //change to GENEWAYS
+            
             if (mPersist==PERSIST_CONCURRENTLY) {
                 laDao.create(fields[6],g1,new Integer(fields[7]),g2);
             }
