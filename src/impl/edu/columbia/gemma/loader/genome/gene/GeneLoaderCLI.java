@@ -1,6 +1,7 @@
 package edu.columbia.gemma.loader.genome.gene;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -54,6 +55,8 @@ import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 import edu.columbia.gemma.genome.biosequence.BioSequenceService;
 import edu.columbia.gemma.genome.gene.GeneService;
 import edu.columbia.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
+import edu.columbia.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
+import edu.columbia.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.util.SpringContextUtil;
 
@@ -125,8 +128,22 @@ public class GeneLoaderCLI {
                     i++;
                 }
 
+                //AS
                 geneInfoParser.parse( filenames[filenames.length - 1] );
-                cli.getGenePersister().persist( geneInfoParser.getResults() );
+                Collection<Object> keys =  geneInfoParser.getResults(); 
+                
+                NCBIGeneInfo info;
+                Object gene;
+                NcbiGeneConverter converter = new NcbiGeneConverter();
+                
+                for(Object key : keys) {
+                    info = (NCBIGeneInfo) geneInfoParser.get(key);
+                    gene=converter.convert(info);
+                    ((Gene) gene).setTaxon((Taxon) cli.getMl().persist(((Gene) gene).getTaxon()));
+                    cli.getGenePersister().persist(gene);
+                } 
+                //cli.getGenePersister().persist( geneInfoParser.getResults() );
+                //endAS
 
             } else if ( cl.hasOption( 'r' ) ) {
                 cli.getGenePersister().removeAll();
