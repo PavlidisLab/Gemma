@@ -253,6 +253,8 @@ public class PersisterHelper implements Persister {
             return persistCompound( ( Compound ) entity );
         } else if ( entity instanceof DesignElementDataVector ) {
             return persistDesignElementDataVector( ( DesignElementDataVector ) entity );
+        }else if (entity instanceof Taxon) { //AS
+            return persistTaxon( (Taxon) entity);
         } else if ( entity.getClass() == ( new HashMap() ).values().getClass() ) {
             // This is a kludge because Java thinks that HashMap() ).values() and Collections are not the same thing.
             // -PP
@@ -827,6 +829,15 @@ public class PersisterHelper implements Persister {
         return geneService.findOrCreate( gene );
     }
 
+    //AS
+    /**
+     * @param taxon
+     */
+    private Object persistTaxon( Taxon taxon) {
+        return taxonDao.findOrCreate( taxon );
+    }
+    //end AS 
+    
     /**
      * @param file
      */
