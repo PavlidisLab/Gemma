@@ -834,7 +834,7 @@ public class PersisterHelper implements Persister {
      * @param taxon
      */
     private Object persistTaxon( Taxon taxon) {
-        return taxonDao.findOrCreate( taxon );
+        return taxonService.findOrCreate( taxon );
     }
     //end AS 
     
