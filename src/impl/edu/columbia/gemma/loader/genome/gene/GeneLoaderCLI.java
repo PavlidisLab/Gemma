@@ -130,10 +130,10 @@ public class GeneLoaderCLI {
                     i++;
                 }
 
-                //AS
                 geneInfoParser.parse( filenames[filenames.length - 1] );
                 Collection<Object> keys =  geneInfoParser.getResults(); 
-                
+
+                //AS                
                 NCBIGeneInfo info;
                 Object gene;
                 NcbiGeneConverter converter = new NcbiGeneConverter();
@@ -182,6 +182,7 @@ public class GeneLoaderCLI {
         ml.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
         ml.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
         ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
+        ml.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
         genePersister = new GenePersister();
         genePersister.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
 

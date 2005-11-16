@@ -83,7 +83,7 @@ public class NcbiGeneConverter implements Converter {
         for ( String alias : info.getSynonyms() ) {
             GeneAlias newAlias = GeneAlias.Factory.newInstance();
             newAlias.setGene( gene );
-            newAlias.setSymbol( alias );
+            newAlias.setSymbol( gene.getOfficialSymbol() );
             newAlias.setAlias(alias);  //added by AS - non-nullable, won't work w/o it!
             aliases.add( newAlias );
         }
