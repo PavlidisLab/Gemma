@@ -3,6 +3,8 @@ package edu.columbia.gemma.loader.genome.gene;
 import java.io.IOException;
 import java.util.Collection;
 
+import javax.enterprise.deploy.spi.exceptions.ConfigurationException;
+
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -14,52 +16,33 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-import edu.columbia.gemma.common.auditAndSecurity.ContactDao;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
 import edu.columbia.gemma.common.auditAndSecurity.PersonService;
-import edu.columbia.gemma.common.description.DatabaseEntryDao;
 import edu.columbia.gemma.common.description.DatabaseEntryService;
-import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseService;
-import edu.columbia.gemma.common.description.LocalFileDao;
 import edu.columbia.gemma.common.description.LocalFileService;
-import edu.columbia.gemma.common.description.OntologyEntryDao;
 import edu.columbia.gemma.common.description.OntologyEntryService;
-import edu.columbia.gemma.common.protocol.HardwareDao;
 import edu.columbia.gemma.common.protocol.HardwareService;
-import edu.columbia.gemma.common.protocol.ProtocolDao;
 import edu.columbia.gemma.common.protocol.ProtocolService;
-import edu.columbia.gemma.common.protocol.SoftwareDao;
 import edu.columbia.gemma.common.protocol.SoftwareService;
-import edu.columbia.gemma.common.quantitationtype.QuantitationTypeDao;
 import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
-import edu.columbia.gemma.expression.bioAssay.BioAssayDao;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialDao;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
-import edu.columbia.gemma.expression.biomaterial.CompoundDao;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
-import edu.columbia.gemma.expression.designElement.DesignElementDao;
 import edu.columbia.gemma.expression.designElement.DesignElementService;
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
-import edu.columbia.gemma.expression.experiment.FactorValueDao;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Gene;
-import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonService;
-import edu.columbia.gemma.genome.biosequence.BioSequenceDao;
 import edu.columbia.gemma.genome.biosequence.BioSequenceService;
 import edu.columbia.gemma.genome.gene.GeneService;
-import edu.columbia.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
 import edu.columbia.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
+import edu.columbia.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
 import edu.columbia.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
+import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
@@ -130,22 +113,22 @@ public class GeneLoaderCLI {
                     i++;
                 }
 
+                // AS
                 geneInfoParser.parse( filenames[filenames.length - 1] );
-                Collection<Object> keys =  geneInfoParser.getResults(); 
+                Collection<Object> keys = geneInfoParser.getResults();
 
-                //AS                
                 NCBIGeneInfo info;
                 Object gene;
                 NcbiGeneConverter converter = new NcbiGeneConverter();
-                
-                for(Object key : keys) {
-                    info = (NCBIGeneInfo) geneInfoParser.get(key);
-                    gene=converter.convert(info);
-                    ((Gene) gene).setTaxon((Taxon) cli.getMl().persist(((Gene) gene).getTaxon()));
-                    cli.getGenePersister().persist(gene);
-                } 
-                //cli.getGenePersister().persist( geneInfoParser.getResults() );
-                //endAS
+
+                for ( Object key : keys ) {
+                    info = ( NCBIGeneInfo ) geneInfoParser.get( key );
+                    gene = converter.convert( info );
+                    ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getMl().persist( ( ( Gene ) gene ).getTaxon() ) );
+                    cli.getGenePersister().persist( gene );
+                }
+                // cli.getGenePersister().persist( geneInfoParser.getResults() );
+                // endAS
 
             } else if ( cl.hasOption( 'r' ) ) {
                 cli.getGenePersister().removeAll();
@@ -162,6 +145,12 @@ public class GeneLoaderCLI {
 
     public GeneLoaderCLI() {
         BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
+
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                .getBean( "manualAuthenticationProcessing" );
+
+        manAuthentication.validateRequest( "pavlab", "pavlab" );
+
         ml = new PersisterHelper();
         ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
         ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
