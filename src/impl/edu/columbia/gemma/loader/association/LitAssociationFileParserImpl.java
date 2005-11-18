@@ -9,6 +9,8 @@ import baseCode.util.StringUtil;
 import edu.columbia.gemma.association.LiteratureAssociationImpl;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
 import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 
@@ -17,7 +19,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * Class to parse a file of literature associations. 
  * 
  * Format: (read whole row)
- * g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count
+ * g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * <hr>
  * <p>
  * Copyright (c) 2004-2005 Columbia University
@@ -28,7 +30,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
 
 public class LitAssociationFileParserImpl extends BasicLineMapParser /*implements Persister*/ {
     
-    public static final int LIT_ASSOCIATION_FIELDS_PER_ROW=8;
+    public static final int LIT_ASSOCIATION_FIELDS_PER_ROW=9;
     public static final int PERSIST_CONCURRENTLY=1;
     public static final int DO_NOT_PERSIST_CONCURRENTLY=0;
     public static final int PERSIST_DEFAULT=0;
@@ -36,11 +38,13 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /*implement
     private int mPersist = PERSIST_DEFAULT;
     private GeneDao geneDao;
     private LiteratureAssociationDao laDao;
+    private ExternalDatabaseDao dbDao;
     
-    public LitAssociationFileParserImpl(int persistType, GeneDao gdao, LiteratureAssociationDao ldao){
+    public LitAssociationFileParserImpl(int persistType, GeneDao gdao, LiteratureAssociationDao ldao, ExternalDatabaseDao dDao){
         this.mPersist=persistType;
         this.geneDao=gdao;
         this.laDao=ldao;        
+        this.dbDao=dDao;
     }
     
     
@@ -63,6 +67,7 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /*implement
         Gene g1=null;
         Gene g2=null;
         Integer id=null;
+        ExternalDatabase db;
         try {
             id=new Integer(fields[1]);
             c =  geneDao.findByNcbiId(id);
@@ -79,7 +84,11 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /*implement
             assoc.setSecondGene(g2);
             assoc.setAction(fields[6]);
             assoc.setNumberOfMentions(new Integer(fields[7]).intValue());
-            assoc.setSource(null); //change to GENEWAYS
+            db=ExternalDatabase.Factory.newInstance();
+            db.setName(fields[8]);
+            db=dbDao.findOrCreate(db);
+            //db=dbDao.findByName(fields[8]); //calls fior external db to be pre-loaded
+            assoc.setSource(db); 
             
             if (mPersist==PERSIST_CONCURRENTLY) {
                 laDao.create(fields[6],g1,new Integer(fields[7]),g2);

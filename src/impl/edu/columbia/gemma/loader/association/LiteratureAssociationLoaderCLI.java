@@ -18,6 +18,7 @@ import org.springframework.beans.factory.BeanFactory;
 import edu.columbia.gemma.util.SpringContextUtil;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
+import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 
 
 
@@ -36,6 +37,7 @@ public class LiteratureAssociationLoaderCLI {
     //private PersisterHelper mPersister;
     private GeneDao geneDao;
     private LiteratureAssociationDao laDao;
+    private ExternalDatabaseDao dbDao;
     
 
     /**
@@ -72,7 +74,7 @@ public class LiteratureAssociationLoaderCLI {
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
 
-            LitAssociationFileParserImpl assocParser = new LitAssociationFileParserImpl(LitAssociationFileParserImpl.PERSIST_CONCURRENTLY,cli.geneDao,cli.laDao);
+            LitAssociationFileParserImpl assocParser = new LitAssociationFileParserImpl(LitAssociationFileParserImpl.PERSIST_CONCURRENTLY,cli.geneDao,cli.laDao, cli.dbDao);
 
             // interrogation stage
             if ( cl.hasOption( 'l' ) ) {
@@ -101,6 +103,7 @@ public class LiteratureAssociationLoaderCLI {
         //mPersister = new PersisterHelper();
         geneDao = ( GeneDao ) ctx.getBean( "geneDao" ) ;
         laDao = ( LiteratureAssociationDao ) ctx.getBean( "literatureAssociationDao" ) ;
+        dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
     }
 
     /**
