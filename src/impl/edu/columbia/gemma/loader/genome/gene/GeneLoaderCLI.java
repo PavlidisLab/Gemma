@@ -1,9 +1,28 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2005 Columbia University
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package edu.columbia.gemma.loader.genome.gene;
 
 import java.io.IOException;
 import java.util.Collection;
 
-//import javax.enterprise.deploy.spi.exceptions.ConfigurationException;
+import javax.enterprise.deploy.spi.exceptions.ConfigurationException;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -56,6 +75,16 @@ import edu.columbia.gemma.util.SpringContextUtil;
  */
 public class GeneLoaderCLI {
     protected static final Log log = LogFactory.getLog( GeneLoaderCLI.class );
+    protected static ManualAuthenticationProcessing manAuthentication = null;
+    protected static BeanFactory ctx = null;
+
+    private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-x <file>] [-l <file>] [-r] ";
+    private static final String HEADER = "The Gemma project, Copyright (c) 2005 Columbia University";
+    private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
+    private PersisterHelper ml;
+    private GenePersister genePersister;
+    private static String username = null;
+    private static String password = null;
 
     // FIXME this should use the SDOG (source domain object generator)
 
@@ -67,45 +96,105 @@ public class GeneLoaderCLI {
      * @throws IOException
      */
     public static void main( String args[] ) throws IOException {
-        GeneLoaderCLI cli = new GeneLoaderCLI();
+        GeneLoaderCLI cli = null;
 
         try {
-            // options stage
+            /* OPTIONS STAGE */
+
+            /* help */
             OptionBuilder.withDescription( "Print help for this application" );
             Option helpOpt = OptionBuilder.create( 'h' );
 
-            OptionBuilder.hasArg();
-            OptionBuilder.withDescription( "Parse File (requires file arg)" );
-            Option parseOpt = OptionBuilder.create( 'p' );
+            /* username */
+            OptionBuilder.hasArgs();
+            OptionBuilder.withDescription( "Username" );
+            Option usernameOpt = OptionBuilder.create( 'u' );
 
+            /* password */
+            OptionBuilder.hasArgs();
+            OptionBuilder.withDescription( "Password" );
+            Option passwordOpt = OptionBuilder.create( 'p' );
+
+            /* environment (test or prod) */
+            OptionBuilder.hasArgs();
+            OptionBuilder.withDescription( "Set use of test or production environment" );
+            Option testOpt = OptionBuilder.create( 't' );
+
+            /* parse */
+            OptionBuilder.hasArg();
+            OptionBuilder.withDescription( "Parse File" );
+            Option parseOpt = OptionBuilder.create( 'x' );
+
+            /* parse and load */
             OptionBuilder.hasArgs();
             OptionBuilder.withDescription( "1) Specify files\n" + "2) Load database with entries from file" );
             Option loadOpt = OptionBuilder.create( 'l' );
 
-            OptionBuilder.withDescription( "Remove genes from database" );
+            /* remove */
+            OptionBuilder.withDescription( "Remove from database" );
             Option removeOpt = OptionBuilder.create( 'r' );
 
             Options opt = new Options();
             opt.addOption( helpOpt );
+            opt.addOption( usernameOpt );
+            opt.addOption( passwordOpt );
+            opt.addOption( testOpt );
             opt.addOption( parseOpt );
             opt.addOption( loadOpt );
             opt.addOption( removeOpt );
 
-            // parser stage
+            /* COMMAND LINE PARSER STAGE */
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
 
-            NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            // NcbiGene2AccessionParser gene2AccParser = new NcbiGene2AccessionParser();
-
-            // interrogation stage
+            /* INTERROGATION STAGE */
             if ( cl.hasOption( 'h' ) ) {
                 printHelp( opt );
+                System.exit( 0 );
 
-            } else if ( cl.hasOption( 'p' ) ) {
-                geneInfoParser.parse( cl.getOptionValue( 'p' ) );
-            } else if ( cl.hasOption( 'l' ) ) {
+            }
 
+            /* check if using test or production context */
+            if ( cl.hasOption( 't' ) ) {
+                boolean isTest = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
+                if ( isTest )
+                    ctx = SpringContextUtil.getApplicationContext( true );
+                else
+                    ctx = SpringContextUtil.getApplicationContext( false );
+
+                cli = new GeneLoaderCLI();
+            }
+            // if no ctx is set, default to test environment.
+            else {
+                ctx = SpringContextUtil.getApplicationContext( true );
+                cli = new GeneLoaderCLI();
+            }
+
+            /* check username and password. */
+            if ( cl.hasOption( 'u' ) ) {
+                if ( cl.hasOption( 'p' ) ) {
+                    username = cl.getOptionValue( 'u' );
+                    password = cl.getOptionValue( 'p' );
+                    manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                            .getBean( "manualAuthenticationProcessing" );
+                    manAuthentication.validateRequest( username, password );
+                }
+            } else {
+                log.debug( "Not authenticated.  Make sure you entered a valid username and/or password" );
+                // TODO inform user of this (print to System.out).
+                System.exit( 0 );
+            }
+
+            /* check parse option. */
+            if ( cl.hasOption( 'x' ) ) {
+                NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
+                geneInfoParser.parse( cl.getOptionValue( 'x' ) );
+            }
+
+            /* check load option. */
+            else if ( cl.hasOption( 'l' ) ) {
+
+                NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
                 String[] filenames = cl.getOptionValues( 'l' );
 
                 for ( int i = 0; i < filenames.length - 1; i++ ) {
@@ -119,8 +208,8 @@ public class GeneLoaderCLI {
 
                 NCBIGeneInfo info;
                 Object gene;
-                NcbiGeneConverter converter = new NcbiGeneConverter();
 
+                NcbiGeneConverter converter = new NcbiGeneConverter();
                 for ( Object key : keys ) {
                     info = ( NCBIGeneInfo ) geneInfoParser.get( key );
                     gene = converter.convert( info );
@@ -130,9 +219,14 @@ public class GeneLoaderCLI {
                 // cli.getGenePersister().persist( geneInfoParser.getResults() );
                 // endAS
 
-            } else if ( cl.hasOption( 'r' ) ) {
+            }
+
+            /* check remove option. */
+            else if ( cl.hasOption( 'r' ) ) {
                 cli.getGenePersister().removeAll();
-            } else {
+            }
+            /* defaults to print help. */
+            else {
                 printHelp( opt );
             }
         } catch ( ParseException e ) {
@@ -140,20 +234,13 @@ public class GeneLoaderCLI {
         }
     }
 
-    private PersisterHelper ml;
-    private GenePersister genePersister;
-
     public GeneLoaderCLI() {
-        BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
-
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-                .getBean( "manualAuthenticationProcessing" );
-
-        manAuthentication.validateRequest( "pavlab", "pavlab" );
 
         ml = new PersisterHelper();
         ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
+        ml
+                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+                        .getBean( "expressionExperimentService" ) );
         ml.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
         ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
         ml.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
@@ -183,7 +270,8 @@ public class GeneLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        h.printHelp( "Options Tip", opt );
+        h.setWidth( 80 );
+        h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 
     /**
