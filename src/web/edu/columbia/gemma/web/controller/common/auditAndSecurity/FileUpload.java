@@ -30,7 +30,7 @@ import java.io.Serializable;
  * @author pavlidis
  * @version $Id$
  */
-public class FileUpload implements Serializable{
+public class FileUpload implements Serializable {
     private String name;
     private byte[] file;
 
@@ -42,17 +42,30 @@ public class FileUpload implements Serializable{
     }
 
     /**
+     * @return
+     */
+    public byte[] getFile() {
+        return file;
+    }
+
+    /**
      * @param name The name to set.
+     */
+    public void setFile( byte[] file ) {
+        /*
+         * NOTE: We did not add the xdoclet spring validation (commons validation for spring = spring-modules) tags to
+         * this because xdoclet cannot interpret the type byte[].
+         */
+        this.file = file;
+    }
+
+    /**
+     * @param name The name to set.
+     * @spring.validator type="required"
+     * @spring.validator-args arg0resource="uploadForm.name"
      */
     public void setName( String name ) {
         this.name = name;
     }
 
-    public void setFile( byte[] file ) {
-        this.file = file;
-    }
-
-    public byte[] getFile() {
-        return file;
-    }
 }
