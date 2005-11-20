@@ -14,51 +14,12 @@
     </constant>
 </global>
 <formset>
-    <form name="fileUpload">
-        <field property="name" depends="required">
-            <arg0 key="uploadForm.name" />
-        </field>
-        <!-- Client-side Javascript won't catch this in IE, but server-side will -->
-        <field property="file" depends="required">
-            <arg0 key="uploadForm.file" />
-        </field>
-    </form>
-
-    <!-- 
-        <form name="address">
-        <field property="city"
-        depends="required">
-        
-        <arg0 key="address.city"/>
-        </field>
-        <field property="country"
-        depends="required">
-        
-        <arg0 key="address.country"/>
-        </field>
-        <field property="postalCode"
-        depends="required,mask">
-        <msg
-        name="mask"
-        key="errors.zip"/>
-        
-        <arg0 key="address.postalCode"/>
-        <var>
-        <var-name>mask</var-name>
-        <var-value>${zip}</var-value>
-        </var>
-        </field>
-        <field property="province"
-        depends="required">
-        
-        <arg0 key="address.province"/>
-        </field>
-        </form>-->
     <form name="databaseEntry">
         <field property="accession" depends="required">
             <arg0 key="databaseEntry.accession" />
         </field>
     </form>
+    
     <form name="user">
         <field property="userName" depends="required,minlength">
 
