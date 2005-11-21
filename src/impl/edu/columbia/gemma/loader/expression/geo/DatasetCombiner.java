@@ -218,6 +218,15 @@ public class DatasetCombiner {
     }
 }
 
+/**
+ * Holds information about GEO samples that "go together".
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2005 Columbia University
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
 class GeoSampleCorrespondence {
 
     Collection<Set<String>> sets = new HashSet<Set<String>>();
