@@ -37,7 +37,11 @@ public class LiteratureAssociationLoaderCLI {
     protected static final Log log = LogFactory.getLog( LiteratureAssociationLoaderCLI.class );
     protected static BeanFactory ctx = null;
     protected static ManualAuthenticationProcessing manAuthentication = null;
-    
+
+    private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-l <file>] [-r] ";
+    private static final String HEADER = "The Gemma project, Copyright (c) 2005 Columbia University";
+    private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
+
     //private PersisterHelper mPersister;
     private GeneDao geneDao;
     private LiteratureAssociationDao laDao;
@@ -167,7 +171,8 @@ public class LiteratureAssociationLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        h.printHelp( "Options Tip", opt );
+        //h.printHelp( "Options Tip", opt );
+        h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 
     private static void printIncorrectUsage( Options opt, String errorString ) {
