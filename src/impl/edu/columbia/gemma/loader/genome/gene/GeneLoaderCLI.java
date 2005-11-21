@@ -211,6 +211,7 @@ public class GeneLoaderCLI {
                 for ( Object key : keys ) {
                     info = ( NCBIGeneInfo ) geneInfoParser.get( key );
                     gene = converter.convert( info );
+                   
                     ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getMl().persist( ( ( Gene ) gene ).getTaxon() ) );
                     cli.getGenePersister().persist( gene );
                 }
@@ -236,8 +237,7 @@ public class GeneLoaderCLI {
 
         ml = new PersisterHelper();
         ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ml
-                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+        ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx
                         .getBean( "expressionExperimentService" ) );
         ml.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
         ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
@@ -268,7 +268,7 @@ public class GeneLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        h.setWidth( 80 );
+        //h.setWidth( 80 );
         h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 
