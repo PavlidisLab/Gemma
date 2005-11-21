@@ -20,6 +20,7 @@ package edu.columbia.gemma.security.interceptor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 
 import net.sf.acegisecurity.Authentication;
 import net.sf.acegisecurity.GrantedAuthority;
@@ -55,7 +56,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
      *      java.lang.Object[], java.lang.Object)
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings( { "unused", "unchecked" })
     public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
 
         Object object = null;
@@ -65,16 +66,33 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
             object = args[0];
 
-            String fullyQualifiedName = object.getClass().getName();
-            if ( log.isDebugEnabled() ) log.debug( "The object is: " + fullyQualifiedName );
-
-            if ( m.getName().equals( "findOrCreate" ) )
-                addPermission( object, getUsername(), getAuthority() );
-
-            else if ( m.getName().equals( "remove" ) ) deletePermission( object, getUsername() );
+            if ( Collection.class.isAssignableFrom( object.getClass() ) ) {
+                for ( Object o : ( Collection<Object> ) object ) {
+                    processPermissions( m, o );
+                }
+            } else {
+                processPermissions( m, object );
+            }
 
         }
 
+    }
+
+    /**
+     * @param m
+     * @param object
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private void processPermissions( Method m, Object object ) throws IllegalAccessException, InvocationTargetException {
+        if ( log.isDebugEnabled() ) {
+            log.debug( "The object is: " + object.getClass().getName() );
+        }
+
+        if ( m.getName().equals( "findOrCreate" ) )
+            addPermission( object, getUsername(), getAuthority() );
+
+        else if ( m.getName().equals( "remove" ) ) deletePermission( object, getUsername() );
     }
 
     /**
