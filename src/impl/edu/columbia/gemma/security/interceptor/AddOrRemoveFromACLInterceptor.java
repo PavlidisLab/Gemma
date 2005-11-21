@@ -86,13 +86,16 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     private void processPermissions( Method m, Object object ) throws IllegalAccessException, InvocationTargetException {
         if ( log.isDebugEnabled() ) {
-            log.debug( "The object is: " + object.getClass().getName() );
+            log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         }
 
-        if ( m.getName().equals( "findOrCreate" ) )
+        if ( m.getName().equals( "findOrCreate" ) ) {
             addPermission( object, getUsername(), getAuthority() );
-
-        else if ( m.getName().equals( "remove" ) ) deletePermission( object, getUsername() );
+        } else if ( m.getName().equals( "remove" ) ) {
+            deletePermission( object, getUsername() );
+        } else {
+            // nothing to do.
+        }
     }
 
     /**
