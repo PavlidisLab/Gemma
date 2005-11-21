@@ -134,7 +134,7 @@ public class SpringContextUtil {
 
         if ( testing ) {
             log.info( "************** Using test configuration ***************" );
-            return new String[] { "applicationContext-localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
+            return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
                     "applicationContext-security.xml", servletContext + "-servlet.xml",
                     "applicationContext-validation.xml" };
         }
