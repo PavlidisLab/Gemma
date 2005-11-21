@@ -22,8 +22,6 @@ package edu.columbia.gemma.loader.genome.gene;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.enterprise.deploy.spi.exceptions.ConfigurationException;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
