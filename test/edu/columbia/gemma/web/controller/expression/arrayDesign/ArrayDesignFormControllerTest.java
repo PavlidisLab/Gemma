@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
@@ -40,20 +42,23 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
     private static Log log = LogFactory.getLog( ArrayDesignFormControllerTest.class.getName() );
 
+    ArrayDesign ad = null;
+
     private MockHttpServletRequest request = null;
 
-    private ArrayDesignFormController c = null;
-
+    /**
+     * setUp
+     */
     @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
 
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "Array Design" );
+        ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "AD Bot" );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
-        
-        //Contact c = Contact.Factory.newInstance();
-        //c.setName("\'Contact Name\'");
-        //ad.setDesignProvider(c);
+
+        Contact c = Contact.Factory.newInstance();
+        c.setName( "\'Contact Name\'" );
+        ad.setDesignProvider( c );
 
         /* Database entry is mandatory for expression experiments. */
         // FIXME - InvalidDataAccessApiUsageException - this is not a bi-directional relationship so
@@ -79,15 +84,42 @@ public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
         if ( ads.findArrayDesignByName( ad.getName() ) == null ) ads.findOrCreate( ad );
     }
 
+    /**
+     * @throws Exception
+     */
+    public void testSave() throws Exception {
+        log.debug( "testing save" );
+
+        ArrayDesignFormController c = ( ArrayDesignFormController ) ctx.getBean( "arrayDesignFormController" );
+
+        request = new MockHttpServletRequest( "POST", "/arrayDesign/editArrayDesign.html" );
+        request.addParameter( "name", ad.getName() );
+        request.addParameter( "description", ad.getDescription() );
+
+        ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
+
+        String errorsKey = BindException.ERROR_KEY_PREFIX + c.getCommandName();
+        Errors errors = ( Errors ) mav.getModel().get( errorsKey );
+
+        assertNull( errors );
+        assertNotNull( request.getSession().getAttribute( "messages" ) );
+        assertEquals( "redirect:/arrayDesign/showAllArrayDesigns.html", mav.getViewName() );
+
+    }
+
+    /**
+     * @throws Exception
+     */
     public void testEdit() throws Exception {
         log.debug( "testing edit" );
 
         ArrayDesignFormController c = ( ArrayDesignFormController ) ctx.getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "GET", "/arrayDesign/editArrayDesign.html" );
+        request.addParameter( "name", ad.getName() );
 
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
-        
-        assertEquals("arrayDesign.edit", mav.getViewName());
+
+        assertEquals( "arrayDesign.edit", mav.getViewName() );
     }
 }
