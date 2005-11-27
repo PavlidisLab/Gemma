@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
@@ -43,6 +44,8 @@ public class ArrayDesignPersister implements Persister {
     protected static final Log log = LogFactory.getLog( ArrayDesignPersister.class );
 
     private PersisterHelper persisterHelper;
+    
+    private ArrayDesignService arrayDesignService;
 
     /**
      * @param adCol
@@ -76,5 +79,12 @@ public class ArrayDesignPersister implements Persister {
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param arrayDesignService The arrayDesignService to set.
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 }
