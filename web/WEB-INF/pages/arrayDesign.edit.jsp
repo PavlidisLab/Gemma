@@ -12,14 +12,7 @@
 	</c:if>
 </spring:bind>
 
-<form method="post" action="<c:url value="arrayDesignEdit.html"/>">
-
-<spring:bind path="arrayDesign.name">
-	<input type="hidden" name="name" value="${status.value}">  
-</spring:bind>
-
-<%--	id="arrayDesignForm" onsubmit="return onFormSubmit(this)">>--%>
-	
+<form method="post" action="<c:url value="/arrayDesign/editArrayDesign.html"/>">
 
 <table>
 
@@ -48,7 +41,7 @@
             <Gemma:label key="arrayDesign.manufacturer"/>
         </th>
         <td>	
-        		<c:choose>
+        <c:choose>
             <c:when test="${empty arrayDesign.designProvider.name}">
                 <input type="text" name="${status.expression}" value="<c:out value="${status.value}"/>" id="contact.name"/>
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
@@ -57,14 +50,7 @@
                 <c:out value="${arrayDesign.designProvider.name}"/>
                 <input type="hidden" name="${status.expression}" value="<c:out value="${status.value}"/>" id="contact.name"/>
             </c:otherwise>
-        </c:choose>
-        <%--
-        		<spring:bind path="arrayDesign.designProvider.name">
-        		<input type="text" name="${status.expression}" value="${status.value}"/>
-        		<span class="fieldError">${status.errorMessage}</span>
-        		</spring:bind>
-        --%>
-        		
+        </c:choose>      		
         </td>
     </tr>
  
