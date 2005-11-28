@@ -140,7 +140,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
      * @throws Exception
      */
     public void testSaveArrayDesignWithoutMock() {
-
+        
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
 
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
