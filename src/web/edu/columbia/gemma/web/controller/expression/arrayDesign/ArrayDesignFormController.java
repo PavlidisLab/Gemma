@@ -24,7 +24,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.bean id="arrayDesignFormController" name="/arrayDesign/editArrayDesign.html"
  * @spring.property name = "commandName" value="arrayDesign"
  * @spring.property name = "formView" value="arrayDesign.edit"
- * @spring.property name = "successView" value="redirect:arrayDesignDetail.html"
+ * @spring.property name = "successView" value="redirect:/arrayDesign/showAllArrayDesigns.html"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  */
 public class ArrayDesignFormController extends BaseFormController {
@@ -40,7 +40,7 @@ public class ArrayDesignFormController extends BaseFormController {
 
     /**
      * Case = GET: Step 1 - return instance of command class (from database). This is not called in the POST case
-     * because the sessionForm is set to 'true' in the constructor. The means the command object was already bound to
+     * because the sessionForm is set to 'true' in the constructor. This means the command object was already bound to
      * the session in the GET case.
      * 
      * @param request
@@ -59,7 +59,7 @@ public class ArrayDesignFormController extends BaseFormController {
     }
 
     /**
-     * Case = POST: Step 4 - Used to process the form action (ie. clicking on the 'save' button or the 'cancel' button.
+     * Case = POST: Step 5 - Used to process the form action (ie. clicking on the 'save' button or the 'cancel' button.
      * 
      * @param request
      * @param response
@@ -70,9 +70,34 @@ public class ArrayDesignFormController extends BaseFormController {
      */
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
-        if ( request.getParameter( "cancel" ) != null ) return new ModelAndView( getSuccessView() );
+
+        log.debug( "entering processFormSubmission" );
 
         return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * Case = POST: Step 5 - Custom logic is here. For instance, this is where you would actually save or delete the
+     * object.
+     * 
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
+
+        log.debug( "entering onSubmit" );
+
+        ArrayDesign ad = ( ArrayDesign ) command;
+        arrayDesignService.update( ad );
+
+        saveMessage( request, getText( "arrayDesign.saved", new Object[] { ad.getName() }, request.getLocale() ) );
+
+        return new ModelAndView( getSuccessView() );
     }
 
     /**
