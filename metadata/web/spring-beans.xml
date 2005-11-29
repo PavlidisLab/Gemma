@@ -44,6 +44,16 @@
     </property>
 </bean>
 
+<bean id="designElementActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/designElement/showAllDesignElements.html">showAll</prop>
+            <prop key="/designElement/deleteDesignElement.html">delete</prop>
+            <prop key="/designElement/showDesignElement.html">show</prop>
+        </props>
+    </property>
+</bean>
+
 <!-- ==================================================== -->
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
