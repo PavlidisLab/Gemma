@@ -27,6 +27,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
 import edu.columbia.gemma.expression.designElement.DesignElement;
@@ -137,7 +138,6 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
 
         else {
             ads.remove( ad );
-            log.info( "*** REMOVED ***" );
         }
     }
 
@@ -169,6 +169,10 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         arrayDesign.setName( "AD Foo" );
         arrayDesign.setDescription( "a test ArrayDesign" );
 
+        Contact c = Contact.Factory.newInstance();
+        c.setName( "\' Design Provder Name\'" );
+        arrayDesign.setDesignProvider( c );
+
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
         cs1.setName( "DE Bar1" );
 
@@ -187,8 +191,6 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         arrayDesign.setDesignElements( col );
 
         ads.findOrCreate( arrayDesign );
-
-        log.info( "*** SAVED ***" );
 
     }
 
