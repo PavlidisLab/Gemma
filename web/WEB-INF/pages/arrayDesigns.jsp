@@ -24,8 +24,8 @@
 	<display:table name="arrayDesigns" class="list" requestURI="" id="arrayDesignList" export="true">
 		<display:column property="name" sort="true" href="showArrayDesign.html" paramId="name" paramProperty="name" titleKey="arrayDesign.name"/>
 		<display:column property="description" sort="true" titleKey="arrayDesign.description"/>
-		<display:column property="designProvider.name" sort="true" href="/auditAndSecurity/showContact.html" paramId="name" paramProperty="name" titleKey="arrayDesign.manufacturer"/>
-		<display:column title="Design Elements" sort="true" href="/designElement/showAllDesignElements.html" paramId="name" paramProperty="name" >
+		<%--<display:column property="designProvider.name" sort="true" href="/auditAndSecurity/showContact.html" paramId="name" paramProperty="name" titleKey="arrayDesign.manufacturer"/>--%>
+		<display:column title="Design Elements" sort="true" href="../designElement/showAllDesignElements.html" paramId="name" paramProperty="name" >
       		<c:out value="${fn:length(designElements)}"/>
     	</display:column>
 		<display:setProperty name="basic.empty.showtable" value="true"/>
