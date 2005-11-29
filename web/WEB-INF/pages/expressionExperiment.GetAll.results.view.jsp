@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <%@ page import="java.util.*"%>
 <%@ page import="edu.columbia.gemma.expression.experiment.ExpressionExperiment"%>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
