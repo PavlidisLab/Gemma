@@ -142,7 +142,8 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
     }
 
     /**
-     * Save an array design
+     * Save an array design This test does not use SpringContextUtil because I wanted to test the acegi implementation
+     * and SpringContextUtil grants authorization for all users.
      * 
      * @throws Exception
      */
@@ -197,7 +198,8 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
     /**
      * Tests getting all design elements given authorization on an array design (ie. tests getting the 'owned objects'
      * given the authorization on the owner). This test was used to test the Acegi Security functionality. Mock objects
-     * not used because I need the objects from the database.
+     * not used because I need the objects from the database. This test does not use SpringContextUtil because I wanted
+     * to test the acegi implementation and SpringContextUtil grants authorization for all users.
      * 
      * @throws Exception
      */
