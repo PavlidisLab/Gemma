@@ -170,7 +170,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         arrayDesign.setDescription( "a test ArrayDesign" );
 
         Contact c = Contact.Factory.newInstance();
-        c.setName( "\' Design Provder Name\'" );
+        c.setName( "\' Design Provider Name\'" );
         arrayDesign.setDesignProvider( c );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
