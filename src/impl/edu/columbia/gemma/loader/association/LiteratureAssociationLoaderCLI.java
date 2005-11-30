@@ -134,7 +134,7 @@ public class LiteratureAssociationLoaderCLI {
                 // TODO inform user of this (print to System.out).
                 System.exit( 0 );
             }
-            LitAssociationFileParserImpl assocParser = new LitAssociationFileParserImpl(LitAssociationFileParserImpl.PERSIST_CONCURRENTLY,cli.geneDao,cli.laDao, cli.dbDao);
+            LitAssociationFileParser assocParser = new LitAssociationFileParser(LitAssociationFileParser.PERSIST_CONCURRENTLY,cli.geneDao,cli.laDao, cli.dbDao);
             
             // interrogation stage
             if ( cl.hasOption( 'l' ) ) {
