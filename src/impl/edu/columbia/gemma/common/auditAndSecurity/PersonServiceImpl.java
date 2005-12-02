@@ -76,14 +76,23 @@ public class PersonServiceImpl extends edu.columbia.gemma.common.auditAndSecurit
         return result;
     }
 
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.PersonService#findByFullName(java.lang.String, java.lang.String,
+     *      java.lang.String)
+     */
     @Override
     protected Collection handleFindByFullName( String firstName, String middleName, String lastName ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        Collection results = this.getPersonDao().findByFullName( firstName, lastName, middleName );
+
+        return results;
     }
 
+    /**
+     * @see edu.columbia.gemma.common.auditAndSecurity.PersonService#findOrCreate(java.lang.String, java.lang.String,
+     *      java.lang.String)
+     */
     @Override
     protected Person handleFindOrCreate( Person person ) throws Exception {
-        return this.getPersonDao().findOrCreate(person);
+        return this.getPersonDao().findOrCreate( person );
     }
 }
