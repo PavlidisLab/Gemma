@@ -74,7 +74,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
+        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
                 "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
 
         BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
@@ -118,7 +118,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
+        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
                 "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
 
         BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
@@ -153,7 +153,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
+        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
                 "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
 
         BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
@@ -209,7 +209,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
+        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
                 "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
 
         BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
