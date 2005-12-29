@@ -213,7 +213,12 @@ public class GeneLoaderCLI {
                     gene = converter.convert( info );
                    
                     ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getMl().persist( ( ( Gene ) gene ).getTaxon() ) );
-                    cli.getGenePersister().persist( gene );
+                    if (gene==null) {
+                        System.out.println("gene null. skipping");
+                    }else {
+                        System.out.println("persisting gene: "+ ((Gene) gene).getNcbiId());
+                        cli.getGenePersister().persist( gene );
+                    }
                 }
                 // cli.getGenePersister().persist( geneInfoParser.getResults() );
                 // endAS

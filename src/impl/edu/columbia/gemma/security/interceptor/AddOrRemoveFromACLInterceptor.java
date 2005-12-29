@@ -36,6 +36,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.dao.DataAccessException;
 
+import edu.columbia.gemma.genome.Gene;
+
 /**
  * Adds security controls to newly created objects, and removes them for objects that are deleted.
  * <hr>
@@ -65,7 +67,9 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         if ( m.getName().equals( "findOrCreate" ) || m.getName().equals( "remove" ) ) {
 
             object = args[0];
-
+            if (object instanceof Gene) {
+                System.out.println("in afterReturning. persisting gene: "+ ((Gene) object).getNcbiId());
+            }
             if ( Collection.class.isAssignableFrom( object.getClass() ) ) {
                 for ( Object o : ( Collection<Object> ) object ) {
                     processPermissions( m, o );
@@ -93,7 +97,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         if ( log.isDebugEnabled() ) {
             log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         }
-
+        System.out.println( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         if ( m.getName().equals( "findOrCreate" ) ) {
             addPermission( object, getUsername(), getAuthority() );
         } else if ( m.getName().equals( "remove" ) ) {
@@ -116,6 +120,9 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void addPermission( Object object, String recipient, Integer permission ) throws IllegalArgumentException,
             IllegalAccessException, InvocationTargetException {
+        if (object instanceof Gene) {
+            System.out.println("in addPermission. persisting gene: "+ ((Gene) object).getNcbiId());
+        }
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
         simpleAclEntry.setMask( permission.intValue() );
