@@ -79,12 +79,17 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     }
 
     /**
-     * @param m
-     * @param object
+     * @param m method that was called.
+     * @param object. If null, no action is taken.
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
     private void processPermissions( Method m, Object object ) throws IllegalAccessException, InvocationTargetException {
+
+        if ( object == null ) return;
+
+        assert m != null;
+
         if ( log.isDebugEnabled() ) {
             log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         }
