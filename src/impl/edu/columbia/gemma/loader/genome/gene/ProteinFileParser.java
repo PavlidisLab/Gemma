@@ -70,8 +70,13 @@ public class ProteinFileParser extends BasicLineMapParser /*implements Persister
                 g1 = (c.iterator()).next();
             }else throw new Exception("gene "+id+" not found. Entry skipped.");
 
-            gp.setType(GeneProductType.PROTEIN);
+            if (((String) fields[3]).startsWith("NM_")) {
+                gp.setType(GeneProductType.RNA);
+            }else{
+                gp.setType(GeneProductType.PROTEIN);
+            }
             gp.setGene(g1);
+            gp.setNcbiId(fields[3]);
             gp.setName(fields[3]);
             gp.setDescription(fields[3]);
             

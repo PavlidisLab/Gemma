@@ -98,11 +98,11 @@ public class ProteinLoaderCLI {
 
             /* parse and load */
             OptionBuilder.hasArgs();
-            OptionBuilder.withDescription( "Specify file (requires file arg and load database with entries from file" );
+            OptionBuilder.withDescription( "Specify file (requires file arg) and load database with entries from file" );
             Option loadOpt = OptionBuilder.create( 'l' );
 
             /* remove */
-            OptionBuilder.withDescription( "Remove from database" );
+            OptionBuilder.withDescription( "Remove gene products (proteins, etc.) from database" );
             Option removeOpt = OptionBuilder.create( 'r' );
 
             Options opt = new Options();
