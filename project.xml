@@ -278,7 +278,7 @@
         <dependency>
             <groupId>acegisecurity</groupId>
             <artifactId>acegi-security</artifactId>
-            <version>0.9.0</version>
+            <version>1.0.0-RC1</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>

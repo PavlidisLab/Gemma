@@ -18,12 +18,12 @@
  */
 package edu.columbia.gemma.security.ui;
 
-import net.sf.acegisecurity.Authentication;
-import net.sf.acegisecurity.AuthenticationException;
-import net.sf.acegisecurity.AuthenticationManager;
-import net.sf.acegisecurity.context.SecurityContextHolder;
-import net.sf.acegisecurity.providers.UsernamePasswordAuthenticationToken;
-import net.sf.acegisecurity.ui.InteractiveAuthenticationSuccessEvent;
+import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthenticationException;
+import org.acegisecurity.AuthenticationManager;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.acegisecurity.event.authentication.InteractiveAuthenticationSuccessEvent;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

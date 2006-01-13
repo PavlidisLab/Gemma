@@ -62,7 +62,7 @@ class ArrayFilterer implements Filterer {
     // ~ Methods ================================================================
 
     /**
-     * @see net.sf.acegisecurity.afterinvocation.Filterer#getFilteredObject()
+     * @see org.acegisecurity.afterinvocation.Filterer#getFilteredObject()
      */
     public Object getFilteredObject() {
         // Recreate an array of same type and filter the removed objects.
@@ -88,14 +88,14 @@ class ArrayFilterer implements Filterer {
     }
 
     /**
-     * @see net.sf.acegisecurity.afterinvocation.Filterer#iterator()
+     * @see org.acegisecurity.afterinvocation.Filterer#iterator()
      */
     public Iterator iterator() {
         return new ArrayIterator( list );
     }
 
     /**
-     * @see net.sf.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
+     * @see org.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
      */
     public void remove( Object object ) {
         removeList.add( object );

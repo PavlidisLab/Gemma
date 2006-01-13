@@ -75,7 +75,11 @@
 	<classpathentry sourcepath="/MAVEN_REPO/hibernate/hibernate-3.0/src" kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-3.0.5.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/antlr/jars/antlr-2.7.2.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/mage/JavaGenerator" kind="var" path="MAVEN_REPO/mage/jars/mage.jar"/>
-	<classpathentry sourcepath="/MAVEN_REPO/acegisecurity/src" kind="var" path="MAVEN_REPO/acegisecurity/jars/acegi-security-0.9.0.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/acegisecurity/acegi-security-1.0.0-RC1/src" kind="var" path="MAVEN_REPO/acegisecurity/jars/acegi-security-1.0.0-RC1.jar">
+		<attributes>
+			<attribute value="file:/C:/java/.maven/repository/acegisecurity/acegi-security-1.0.0-RC1/docs/multiproject/acegi-security/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/MAVEN_REPO/ant/apache-ant-1.6.5/src/main" kind="var" path="MAVEN_REPO/ant/jars/ant-1.6.3.jar">
 		<attributes>
 			<attribute value="file:/C:/java/.maven/repository/ant/apache-ant-1.6.5/docs/manual/api/" name="javadoc_location"/>

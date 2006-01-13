@@ -107,16 +107,16 @@
                     true
                     </property>
                     <property name="acegiServiceSecurityInterceptor">
-                    net.sf.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor
+                    org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor
                     </property>
                     <property name="acegiAuthenticationManager">
                     authenticationManager
                     </property>
                     <property name="acegiServiceAccessDecisionManager">
-                    net.sf.acegisecurity.vote.AffirmativeBased
+                    org.acegisecurity.vote.AffirmativeBased
                     </property>
                     <property name="acegiServiceDecisionVoter">
-                    net.sf.acegisecurity.vote.RoleVoter
+                    org.acegisecurity.vote.RoleVoter
                     </property>
                 -->
             </properties>

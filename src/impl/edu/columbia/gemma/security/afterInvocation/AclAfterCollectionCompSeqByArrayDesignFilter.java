@@ -18,16 +18,16 @@ package edu.columbia.gemma.security.afterInvocation;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.acegisecurity.AccessDeniedException;
-import net.sf.acegisecurity.Authentication;
-import net.sf.acegisecurity.AuthorizationServiceException;
-import net.sf.acegisecurity.ConfigAttribute;
-import net.sf.acegisecurity.ConfigAttributeDefinition;
-import net.sf.acegisecurity.acl.AclEntry;
-import net.sf.acegisecurity.acl.AclManager;
-import net.sf.acegisecurity.acl.basic.AbstractBasicAclEntry;
-import net.sf.acegisecurity.acl.basic.SimpleAclEntry;
-import net.sf.acegisecurity.afterinvocation.AfterInvocationProvider;
+import org.acegisecurity.AccessDeniedException;
+import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthorizationServiceException;
+import org.acegisecurity.ConfigAttribute;
+import org.acegisecurity.ConfigAttributeDefinition;
+import org.acegisecurity.acl.AclEntry;
+import org.acegisecurity.acl.AclManager;
+import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
+import org.acegisecurity.acl.basic.SimpleAclEntry;
+import org.acegisecurity.afterinvocation.AfterInvocationProvider;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

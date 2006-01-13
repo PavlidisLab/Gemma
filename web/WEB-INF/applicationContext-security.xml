@@ -10,7 +10,7 @@
 <beans>
 
     <!-- ======================== FILTER CHAIN ======================= -->
-    <bean id="filterChainProxy" class="net.sf.acegisecurity.util.FilterChainProxy">
+    <bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">
         <property name="filterInvocationDefinitionSource">
             <value>
                 CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON 
@@ -26,16 +26,16 @@
     <!-- ======================== FILTERS ======================= -->
 
     <!--   Populates the SecurityContextHolder with information obtained from the HttpSession. -->
-    <bean id="httpSessionContextIntegrationFilter" class="net.sf.acegisecurity.context.HttpSessionContextIntegrationFilter">
+    <bean id="httpSessionContextIntegrationFilter" class="org.acegisecurity.context.HttpSessionContextIntegrationFilter">
         <property name="context">
-            <value>net.sf.acegisecurity.context.SecurityContextImpl</value>
+            <value>org.acegisecurity.context.SecurityContextImpl</value>
         </property>
     </bean>
 
  
-    <bean id="remoteUserFilter" class="net.sf.acegisecurity.wrapper.ContextHolderAwareRequestFilter" />
+    <bean id="remoteUserFilter" class="org.acegisecurity.wrapper.SecurityContextHolderAwareRequestFilter" />
 
-    <bean id="anonymousProcessingFilter" class="net.sf.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
+    <bean id="anonymousProcessingFilter" class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
         <property name="key">
             <value>anonymous</value>
         </property>
@@ -46,7 +46,7 @@
 
     <!-- ======================== AUTHENTICATION FILTER ======================= -->
 
-    <bean id="authenticationProcessingFilter" class="net.sf.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
+    <bean id="authenticationProcessingFilter" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
         <property name="authenticationManager">
             <ref local="authenticationManager" />
         </property>
@@ -68,7 +68,7 @@
 
     </bean>
 
-    <bean id="authenticationManager" class="net.sf.acegisecurity.providers.ProviderManager">
+    <bean id="authenticationManager" class="org.acegisecurity.providers.ProviderManager">
         <property name="providers">
             <list>
                 <ref local="daoAuthenticationProvider" />
@@ -78,13 +78,13 @@
     </bean>
 
     <!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
-    <bean id="loggerListener" class="net.sf.acegisecurity.providers.dao.event.LoggerListener" />
+    <bean id="loggerListener" class="org.acegisecurity.event.authentication.LoggerListener" />
 	
 	<!-- TODO put the acegi passwordEncoder here and in jdbcDaoImpl.  We are currently using the appfuse 
 	     password encoding.     
     --> 
-    <bean id="daoAuthenticationProvider" class="net.sf.acegisecurity.providers.dao.DaoAuthenticationProvider">
-        <property name="authenticationDao">
+    <bean id="daoAuthenticationProvider" class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
+        <property name="userDetailsService">
             <ref local="jdbcDaoImpl" />
         </property>
         <property name="userCache">
@@ -93,7 +93,7 @@
     </bean>
 
     <!-- Read users from database -->
-    <bean id="jdbcDaoImpl" class="net.sf.acegisecurity.providers.dao.jdbc.JdbcDaoImpl">
+    <bean id="jdbcDaoImpl" class="org.acegisecurity.userdetails.jdbc.JdbcDaoImpl">
         <property name="dataSource">
             <ref bean="dataSource" />
         </property>
@@ -105,7 +105,7 @@
         </property>
     </bean>
 
-    <bean id="userCache" class="net.sf.acegisecurity.providers.dao.cache.EhCacheBasedUserCache">
+    <bean id="userCache" class="org.acegisecurity.providers.dao.cache.EhCacheBasedUserCache">
         <property name="cache">
             <bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
                 <property name="cacheManager">
@@ -118,7 +118,7 @@
         </property>
     </bean>
 
-    <bean id="anonymousAuthenticationProvider" class="net.sf.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
+    <bean id="anonymousAuthenticationProvider" class="org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
         <property name="key">
             <value>anonymous</value>
         </property>
@@ -126,7 +126,7 @@
 
     <!-- ===================== HTTP REQUEST SECURITY ==================== -->
 
-    <bean id="securityEnforcementFilter" class="net.sf.acegisecurity.intercept.web.SecurityEnforcementFilter">
+    <bean id="securityEnforcementFilter" class="org.acegisecurity.intercept.web.SecurityEnforcementFilter">
         <property name="filterSecurityInterceptor">
             <ref local="filterInvocationInterceptor" />
         </property>
@@ -138,7 +138,7 @@
     <!-- Note the order that entries are placed against the objectDefinitionSource is critical.
         The FilterSecurityInterceptor will work from the top of the list down to the FIRST pattern that matches the request URL.
         Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
-    <bean id="filterInvocationInterceptor" class="net.sf.acegisecurity.intercept.web.FilterSecurityInterceptor">
+    <bean id="filterInvocationInterceptor" class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
         <property name="authenticationManager">
             <ref local="authenticationManager" />
         </property>
@@ -159,7 +159,7 @@
     </bean>
 
     <!-- if user requests a secure Http resource but has not been authenticated, they will be presented this login form -->
-    <bean id="authenticationProcessingFilterEntryPoint" class="net.sf.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
+    <bean id="authenticationProcessingFilterEntryPoint" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
         <property name="loginFormUrl">
             <value>/login.jsp</value>
         </property>
@@ -171,7 +171,7 @@
     <!-- ===================== AUTHORIZATION ==================== -->
 
     <!-- acegi serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. -->
-    <bean id="serviceSecurityInterceptor" class="net.sf.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor">
+    <bean id="serviceSecurityInterceptor" class="org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor">
         <property name="authenticationManager">
             <ref bean="authenticationManager" />
         </property>
@@ -342,7 +342,7 @@
     </bean>
 
     <!-- An access decision manager used by the serviceSecurityInterceptor -->
-    <bean id="businessAccessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
+    <bean id="businessAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
         <property name="allowIfAllAbstainDecisions">
             <value>false</value>
         </property>
@@ -356,7 +356,7 @@
     </bean>
 
     <!-- An access decision manager used by filterInvocationInterceptor -->
-    <bean id="accessDecisionManager" class="net.sf.acegisecurity.vote.AffirmativeBased">
+    <bean id="accessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
         <property name="allowIfAllAbstainDecisions">
             <value>false</value>
         </property>
@@ -370,7 +370,7 @@
     <!-- ===================== VOTING ==================== -->
 
     <!-- role-based voting -->
-    <bean id="roleVoter" class="net.sf.acegisecurity.vote.RoleVoter">
+    <bean id="roleVoter" class="org.acegisecurity.vote.RoleVoter">
         <property name="rolePrefix">
             <value />
         </property>
@@ -381,7 +381,7 @@
     <!-- An access decision voters that read processConfigAttribute settings -->
     
     <!--  voter that can be applied to any operation on a securable -->
-    <bean id="securableVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+    <bean id="securableVoter" class="org.acegisecurity.vote.BasicAclEntryVoter">
         <property name="aclManager">
             <ref bean="aclManager" />
         </property>
@@ -398,7 +398,7 @@
             </list>
         </property>
     </bean>
-    <bean id="localFileEditVoter" class="net.sf.acegisecurity.vote.BasicAclEntryVoter">
+    <bean id="localFileEditVoter" class="org.acegisecurity.vote.BasicAclEntryVoter">
         <property name="aclManager">
             <ref bean="aclManager" />
         </property>
@@ -418,7 +418,7 @@
 
     <!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
 
-    <bean id="afterInvocationManager" class="net.sf.acegisecurity.afterinvocation.AfterInvocationProviderManager">
+    <bean id="afterInvocationManager" class="org.acegisecurity.afterinvocation.AfterInvocationProviderManager">
         <property name="providers">
             <list>
                 <ref local="afterAclRead" />
@@ -429,7 +429,7 @@
     </bean>
 
     <!-- Processes AFTER_ACL_READ configuration settings -->
-    <bean id="afterAclRead" class="net.sf.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
+    <bean id="afterAclRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
         <property name="aclManager">
             <ref local="aclManager" />
         </property>
@@ -444,7 +444,7 @@
 
     <!-- Processes AFTER_ACL_COLLECTION_READ configuration settings (removes objects from the collection if you do not 
         have authorization priviliges based on -->
-    <bean id="afterAclCollectionRead" class="net.sf.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
+    <bean id="afterAclCollectionRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
         <property name="aclManager">
             <ref local="aclManager" />
         </property>
@@ -473,7 +473,7 @@
 
     <!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
 
-    <bean id="aclManager" class="net.sf.acegisecurity.acl.AclProviderManager">
+    <bean id="aclManager" class="org.acegisecurity.acl.AclProviderManager">
         <property name="providers">
             <list>
                 <ref local="basicAclProvider" />
@@ -481,13 +481,13 @@
         </property>
     </bean>
 
-    <bean id="basicAclProvider" class="net.sf.acegisecurity.acl.basic.BasicAclProvider">
+    <bean id="basicAclProvider" class="org.acegisecurity.acl.basic.BasicAclProvider">
         <property name="basicAclDao">
             <ref local="basicAclExtendedDao" />
         </property>
     </bean>
 
-    <bean id="basicAclExtendedDao" class="net.sf.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl">
+    <bean id="basicAclExtendedDao" class="org.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl">
         <property name="dataSource">
             <ref bean="dataSource" />
         </property>
@@ -499,31 +499,31 @@
 
     <bean id="SimpleAclEntry.ADMINISTRATION" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
         <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
         </property>
     </bean>
 
     <bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
         <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
         </property>
     </bean>
 
     <bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
         <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
         </property>
     </bean>
 
     <bean id="SimpleAclEntry.CREATE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
         <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
         </property>
     </bean>
 
     <bean id="SimpleAclEntry.DELETE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
         <property name="staticField">
-            <value>net.sf.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
         </property>
     </bean>
 

@@ -69,7 +69,7 @@ public class CollectionFilterer implements Filterer {
     // ~ Methods ================================================================
 
     /**
-     * @see net.sf.acegisecurity.afterinvocation.Filterer#getFilteredObject()
+     * @see org.acegisecurity.afterinvocation.Filterer#getFilteredObject()
      */
     public Object getFilteredObject() {
         // Now the Iterator has ended, remove Objects from Collection
@@ -90,7 +90,7 @@ public class CollectionFilterer implements Filterer {
     }
 
     /**
-     * @see net.sf.acegisecurity.afterinvocation.Filterer#iterator()
+     * @see org.acegisecurity.afterinvocation.Filterer#iterator()
      */
     public Iterator iterator() {
         collectionIter = collection.iterator();
@@ -99,7 +99,7 @@ public class CollectionFilterer implements Filterer {
     }
 
     /**
-     * @see net.sf.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
+     * @see org.acegisecurity.afterinvocation.Filterer#remove(java.lang.Object)
      */
     @SuppressWarnings("unused")
     public void remove( Object object ) {
