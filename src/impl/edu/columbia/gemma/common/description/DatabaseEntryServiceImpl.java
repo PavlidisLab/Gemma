@@ -35,9 +35,7 @@ public class DatabaseEntryServiceImpl extends edu.columbia.gemma.common.descript
      */
     protected edu.columbia.gemma.common.description.DatabaseEntry handleFind(
             edu.columbia.gemma.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.common.description.DatabaseEntry
-        // handleFind(edu.columbia.gemma.common.description.DatabaseEntry databaseEntry)
-        return null;
+        return this.getDatabaseEntryDao().find( databaseEntry );
     }
 
     /**
@@ -45,9 +43,7 @@ public class DatabaseEntryServiceImpl extends edu.columbia.gemma.common.descript
      */
     protected edu.columbia.gemma.common.description.DatabaseEntry handleCreate(
             edu.columbia.gemma.common.description.DatabaseEntry databaseEntry ) throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.common.description.DatabaseEntry
-        // handleCreate(edu.columbia.gemma.common.description.DatabaseEntry databaseEntry)
-        return null;
+        return this.getDatabaseEntryDao().create( databaseEntry );
     }
 
     /**
@@ -55,10 +51,7 @@ public class DatabaseEntryServiceImpl extends edu.columbia.gemma.common.descript
      */
     protected void handleUpdate( edu.columbia.gemma.common.description.DatabaseEntry databaseEntry )
             throws java.lang.Exception {
-        // @todo implement protected void handleUpdate(edu.columbia.gemma.common.description.DatabaseEntry
-        // databaseEntry)
-        throw new java.lang.UnsupportedOperationException(
-                "edu.columbia.gemma.common.description.DatabaseEntryService.handleUpdate(edu.columbia.gemma.common.description.DatabaseEntry databaseEntry) Not implemented!" );
+        this.getDatabaseEntryDao().update( databaseEntry );
     }
 
     /**

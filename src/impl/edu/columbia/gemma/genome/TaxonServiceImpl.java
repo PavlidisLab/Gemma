@@ -18,7 +18,6 @@
  */
 package edu.columbia.gemma.genome;
 
-
 /**
  * <hr>
  * <p>
@@ -34,17 +33,14 @@ public class TaxonServiceImpl extends edu.columbia.gemma.genome.TaxonServiceBase
      */
     protected edu.columbia.gemma.genome.Taxon handleFind( edu.columbia.gemma.genome.Taxon taxon )
             throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.genome.Taxon handleFind(edu.columbia.gemma.genome.Taxon taxon)
-        return null;
+        return this.getTaxonDao().find( taxon );
     }
 
     /**
      * @see edu.columbia.gemma.genome.TaxonService#update(edu.columbia.gemma.genome.Taxon)
      */
     protected void handleUpdate( edu.columbia.gemma.genome.Taxon taxon ) throws java.lang.Exception {
-        // @todo implement protected void handleUpdate(edu.columbia.gemma.genome.Taxon taxon)
-        throw new java.lang.UnsupportedOperationException(
-                "edu.columbia.gemma.genome.TaxonService.handleUpdate(edu.columbia.gemma.genome.Taxon taxon) Not implemented!" );
+        this.getTaxonDao().update( taxon );
     }
 
     /**
@@ -59,13 +55,11 @@ public class TaxonServiceImpl extends edu.columbia.gemma.genome.TaxonServiceBase
      */
     protected edu.columbia.gemma.genome.Taxon handleCreate( edu.columbia.gemma.genome.Taxon taxon )
             throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.genome.Taxon handleCreate(edu.columbia.gemma.genome.Taxon taxon)
-        return null;
+        return this.getTaxonDao().create( taxon );
     }
 
     @Override
     protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
-
         return this.getTaxonDao().findOrCreate( taxon );
     }
 

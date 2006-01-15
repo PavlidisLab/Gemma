@@ -19,12 +19,11 @@
 package edu.columbia.gemma.common.auditAndSecurity;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
+ * <p>
+ * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.auditAndSecurity.ContactService
  */
@@ -35,9 +34,7 @@ public class ContactServiceImpl extends edu.columbia.gemma.common.auditAndSecuri
      */
     protected edu.columbia.gemma.common.auditAndSecurity.Contact handleCreate(
             edu.columbia.gemma.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.common.auditAndSecurity.Contact
-        // handleCreate(edu.columbia.gemma.common.auditAndSecurity.Contact contact)
-        return null;
+        return ( Contact ) this.getContactDao().create( contact );
     }
 
     /**
@@ -45,9 +42,7 @@ public class ContactServiceImpl extends edu.columbia.gemma.common.auditAndSecuri
      */
     protected edu.columbia.gemma.common.auditAndSecurity.Contact handleFind(
             edu.columbia.gemma.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.common.auditAndSecurity.Contact
-        // handleFind(edu.columbia.gemma.common.auditAndSecurity.Contact contact)
-        return null;
+        return this.getContactDao().find( contact );
     }
 
     /**
@@ -63,9 +58,7 @@ public class ContactServiceImpl extends edu.columbia.gemma.common.auditAndSecuri
      */
     protected void handleUpdate( edu.columbia.gemma.common.auditAndSecurity.Contact contact )
             throws java.lang.Exception {
-        // @todo implement protected void handleUpdate(edu.columbia.gemma.common.auditAndSecurity.Contact contact)
-        throw new java.lang.UnsupportedOperationException(
-                "edu.columbia.gemma.common.auditAndSecurity.ContactService.handleUpdate(edu.columbia.gemma.common.auditAndSecurity.Contact contact) Not implemented!" );
+        this.getContactDao().update( contact );
     }
 
     @Override
