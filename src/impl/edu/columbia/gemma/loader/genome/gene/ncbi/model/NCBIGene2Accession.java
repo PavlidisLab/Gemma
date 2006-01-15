@@ -69,7 +69,7 @@ package edu.columbia.gemma.loader.genome.gene.ncbi.model;
  * 
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

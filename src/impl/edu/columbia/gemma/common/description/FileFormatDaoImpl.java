@@ -18,28 +18,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-package edu.columbia.gemma.genome;
-
-import org.apache.commons.lang.builder.CompareToBuilder;
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package edu.columbia.gemma.common.description;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
- * @author pavlidis
- * @version $Id$
- * @see edu.columbia.gemma.genome.CytogeneticLocation
+ * @see edu.columbia.gemma.common.description.FileFormat
  */
-public class CytogeneticLocationImpl extends edu.columbia.gemma.genome.CytogeneticLocation implements Comparable {
-
-    /**
-     * @see java.lang.Comparable#compareTo(Object)
-     */
-    public int compareTo( Object object ) {
-        CytogeneticLocationImpl other = ( CytogeneticLocationImpl ) object;
-        return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() ).append(
-                this.getBand(), other.getBand() ).toComparison();
-    }
-
+public class FileFormatDaoImpl
+    extends edu.columbia.gemma.common.description.FileFormatDaoBase
+{
 }

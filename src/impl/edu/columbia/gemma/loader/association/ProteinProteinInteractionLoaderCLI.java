@@ -28,7 +28,7 @@ import edu.columbia.gemma.common.description.ExternalDatabaseDao;
  * Command line interface to retrieve and load literature associations
  * <hr>
  * <p>
- * Copyright (c) 2004 - 2005 Columbia University
+ * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author anshu 
  * @version $Id$
@@ -39,7 +39,7 @@ public class ProteinProteinInteractionLoaderCLI {
     protected static ManualAuthenticationProcessing manAuthentication = null;
 
     private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-l <file>] [-r] ";
-    private static final String HEADER = "The Gemma project, Copyright (c) 2005 Columbia University";
+    private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
 
     //private PersisterHelper mPersister;

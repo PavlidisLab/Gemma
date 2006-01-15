@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2005 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import edu.columbia.gemma.genome.biosequence.BioSequence;
  * Parse an Illumina "manifest.txt" file (tab-delimited). A one-line header is permitted.
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

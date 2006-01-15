@@ -21,7 +21,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * pl_ncbiid\t  p2_ncbiid\t  external_db\t  db_id\t numMentions\t   action\t
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author anshu
  * @version $Id$

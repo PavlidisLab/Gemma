@@ -9,7 +9,7 @@ import edu.columbia.gemma.tools.RCommander;
  * Perform Robust Multiarray Average probe-level summarization of Affymetrix microarray data.
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

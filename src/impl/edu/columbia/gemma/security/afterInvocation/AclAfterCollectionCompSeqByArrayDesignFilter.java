@@ -39,7 +39,7 @@ import edu.columbia.gemma.expression.designElement.CompositeSequence;
 /**
  * For this particular AfterInvocationProvider, composite sequence authorization is determined based on the secured
  * array design acl. ie. composite sequence security is determined from an owning array desgin's security. Copyright (c)
- * 2004 - 2005 Columbia University
+ * 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @author Ben Alex

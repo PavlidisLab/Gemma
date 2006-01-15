@@ -21,7 +21,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * taxon\t  ncbi_gene_id\t  ncbi_prot_id
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author anshu
  * @version $Id$

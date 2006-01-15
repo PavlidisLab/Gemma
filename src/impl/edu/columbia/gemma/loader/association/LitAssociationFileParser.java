@@ -22,7 +22,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author anshu
  * @version $Id$

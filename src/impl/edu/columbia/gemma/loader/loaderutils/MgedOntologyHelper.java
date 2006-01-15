@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2005 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * therefore, they are not included in the tree
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author Stathis Sideris 5/12/2003 email: sideris at biochem.ucl.ac.uk
  * @author pavlidis (modifications, tidying )
@@ -555,7 +555,7 @@ public class MgedOntologyHelper {
     /**
      * <hr>
      * <p>
-     * Copyright (c) 2004-2005 Columbia University
+     * Copyright (c) 2004-2006 University of British Columbia
      * 
      * @author pavlidis
      * @version $Id$
@@ -715,7 +715,7 @@ public class MgedOntologyHelper {
     /**
      * <hr>
      * <p>
-     * Copyright (c) 2004-2005 Columbia University
+     * Copyright (c) 2004-2006 University of British Columbia
      * 
      * @author pavlidis
      * @version $Id$

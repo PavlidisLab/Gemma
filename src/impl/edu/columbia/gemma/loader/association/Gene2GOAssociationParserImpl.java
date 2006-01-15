@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2005 Columbia University
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * Gene2GoAssociations.
  * <hr>
  * <p>
- * Copyright (c) 2004 - 2005 Columbia University
+ * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @author pavlidis

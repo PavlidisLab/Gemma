@@ -13,7 +13,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  *
  * <hr>
- * <p>Copyright (c) 2004 - 2005 Columbia University
+ * <p>Copyright (c) 2004 - 2006 University of British Columbia
  * @author daq2101
  * @version $Id$
  */

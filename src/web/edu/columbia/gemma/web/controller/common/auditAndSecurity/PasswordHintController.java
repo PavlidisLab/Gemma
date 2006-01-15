@@ -24,7 +24,7 @@ import edu.columbia.gemma.common.auditAndSecurity.UserService;
  * Simple class to retrieve and send a password hint to users by email.
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis

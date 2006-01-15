@@ -12,7 +12,7 @@ import edu.columbia.gemma.loader.expression.smd.model.SMDPublication;
 /**
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University
+ * 
  * 
  * @author pavlidis
  * @version $Id$

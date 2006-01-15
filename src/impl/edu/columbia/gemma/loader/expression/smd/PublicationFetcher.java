@@ -23,7 +23,7 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
  * Retrieve information on SMD publications.
  * <hr>
  * <p>
- * Copyright (c) 2004 Columbia University
+ * 
  * 
  * @author pavlidis
  * @version $Id$

@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
  * Wraps Response Stream for GZipFilter
  * <hr>
  * <p>
- * Copyright (c) 2004 - 2005 Columbia University
+ * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author Matt Raible
  * @author keshav

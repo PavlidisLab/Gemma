@@ -14,7 +14,7 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * Given a collection of Gemma objects, persist them.
  * <hr>
  * <p>
- * Copyright (c) 2004-2005 Columbia University
+ * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
