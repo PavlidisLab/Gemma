@@ -72,7 +72,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/MAVEN_REPO/ognl/src/java" kind="var" path="MAVEN_REPO/ognl/jars/ognl-2.6.7.jar"/>
-	<classpathentry sourcepath="/MAVEN_REPO/hibernate/hibernate-3.0/src" kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-3.0.5.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/hibernate/hibernate-3.1/src" kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-3.1.jar">
+		<attributes>
+			<attribute value="file:/C:/java/.maven/repository/hibernate/hibernate-3.1/doc/api/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/antlr/jars/antlr-2.7.2.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/mage/JavaGenerator" kind="var" path="MAVEN_REPO/mage/jars/mage.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/acegisecurity/acegi-security-1.0.0-RC1/src" kind="var" path="MAVEN_REPO/acegisecurity/jars/acegi-security-1.0.0-RC1.jar">
@@ -99,6 +103,5 @@
 	<classpathentry kind="var" path="MAVEN_REPO/commons-pool/jars/commons-pool-1.2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xercesImpl-2.4.0.jar"/>
 	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/hibernate-3.1.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
