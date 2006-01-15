@@ -16,18 +16,13 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.common.protocol;
 
 /**
  * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.protocol.SoftwareService
  */
@@ -38,27 +33,21 @@ public class SoftwareServiceImpl extends edu.columbia.gemma.common.protocol.Soft
      */
     protected edu.columbia.gemma.common.protocol.Software handleFind(
             edu.columbia.gemma.common.protocol.Software software ) throws java.lang.Exception {
-        // @todo implement protected edu.columbia.gemma.common.protocol.Software
-        // handleFind(edu.columbia.gemma.common.protocol.Software software)
-        return null;
+        return this.getSoftwareDao().find( software );
     }
 
     /**
      * @see edu.columbia.gemma.common.protocol.SoftwareService#update(edu.columbia.gemma.common.protocol.Software)
      */
     protected void handleUpdate( edu.columbia.gemma.common.protocol.Software software ) throws java.lang.Exception {
-        // @todo implement protected void handleUpdate(edu.columbia.gemma.common.protocol.Software software)
-        throw new java.lang.UnsupportedOperationException(
-                "edu.columbia.gemma.common.protocol.SoftwareService.handleUpdate(edu.columbia.gemma.common.protocol.Software software) Not implemented!" );
+        this.getSoftwareDao().update( software );
     }
 
     /**
      * @see edu.columbia.gemma.common.protocol.SoftwareService#remove(edu.columbia.gemma.common.protocol.Software)
      */
     protected void handleRemove( edu.columbia.gemma.common.protocol.Software software ) throws java.lang.Exception {
-        // @todo implement protected void handleRemove(edu.columbia.gemma.common.protocol.Software software)
-        throw new java.lang.UnsupportedOperationException(
-                "edu.columbia.gemma.common.protocol.SoftwareService.handleRemove(edu.columbia.gemma.common.protocol.Software software) Not implemented!" );
+        this.getSoftwareDao().remove( software );
     }
 
     @Override

@@ -24,14 +24,11 @@ import java.util.Map;
 import org.springframework.webflow.Event;
 
 import edu.columbia.gemma.BaseFlowTestCase;
-import edu.columbia.gemma.common.description.BibliographicReference;
-import edu.columbia.gemma.common.description.DatabaseEntry;
 
 /**
  * Tests the pubMedSearch and edit flows.
  * <hr>
  * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
@@ -47,18 +44,15 @@ public class DetailBibRefFlowTests extends BaseFlowTestCase {
     }
 
     public void testEditing() throws Exception {
-        
+
         // need to to add this to the request context before the flow starts.
         // BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
         // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         // de.setAccession( "15173114" );
         // bibRef.setPubAccession( de );
         // getFlowContext().getActiveSession().getScope().setAttribute( "bibliographicReference", bibRef );
-         
-        
-        startFlow(); // this does a db lookup of the pubmed id by calling BibRefFormEditAction.createFormObject().
 
-        
+        startFlow(); // this does a db lookup of the pubmed id by calling BibRefFormEditAction.createFormObject().
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put( "pubMedId", "15173114" );

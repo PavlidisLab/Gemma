@@ -1,5 +1,22 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.association;
-
 
 import java.io.IOException;
 
@@ -14,15 +31,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.association.ProteinProteinInteractionDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
-
-
 
 /**
  * Command line interface to retrieve and load literature associations
@@ -30,7 +43,7 @@ import edu.columbia.gemma.common.description.ExternalDatabaseDao;
  * <p>
  * Copyright (c) 2004 - 2006 University of British Columbia
  * 
- * @author anshu 
+ * @author anshu
  * @version $Id$
  */
 public class ProteinProteinInteractionLoaderCLI {
@@ -42,13 +55,12 @@ public class ProteinProteinInteractionLoaderCLI {
     private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
 
-    //private PersisterHelper mPersister;
-    private GeneDao geneDao;
+    // private PersisterHelper mPersister;
     private GeneProductDao gpDao;
     private ProteinProteinInteractionDao ppiDao;
     private ExternalDatabaseDao dbDao;
     private static String username = null;
-    private static String password = null;    
+    private static String password = null;
 
     /**
      * Command line interface to run the gene parser/loader
@@ -58,14 +70,14 @@ public class ProteinProteinInteractionLoaderCLI {
      * @throws IOException
      */
     public static void main( String args[] ) throws IOException {
-       
+
         ProteinProteinInteractionLoaderCLI cli = null;
 
         // options stage
-        /*help*/
+        /* help */
         OptionBuilder.withDescription( "Print help for this application" );
         Option helpOpt = OptionBuilder.create( 'h' );
-        
+
         /* username */
         OptionBuilder.hasArgs();
         OptionBuilder.withDescription( "Username" );
@@ -80,13 +92,13 @@ public class ProteinProteinInteractionLoaderCLI {
         OptionBuilder.hasArgs();
         OptionBuilder.withDescription( "Set use of test or production environment" );
         Option testOpt = OptionBuilder.create( 't' );
-        
-        /*load*/
+
+        /* load */
         OptionBuilder.hasArg();
         OptionBuilder.withDescription( "Specify file (requires file arg) and load database" );
         Option loadOpt = OptionBuilder.create( 'l' );
 
-        /*remove*/
+        /* remove */
         OptionBuilder.withDescription( "Remove protein-protein interactions from database" );
         Option removeOpt = OptionBuilder.create( 'r' );
 
@@ -94,16 +106,14 @@ public class ProteinProteinInteractionLoaderCLI {
         opt.addOption( helpOpt );
         opt.addOption( usernameOpt );
         opt.addOption( passwordOpt );
-        opt.addOption( testOpt );        
+        opt.addOption( testOpt );
         opt.addOption( loadOpt );
         opt.addOption( removeOpt );
 
-        
         try {
             // parser stage
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
-
 
             /* check if using test or production context */
             if ( cl.hasOption( 't' ) ) {
@@ -135,36 +145,37 @@ public class ProteinProteinInteractionLoaderCLI {
                 // TODO inform user of this (print to System.out).
                 System.exit( 0 );
             }
-            PPIFileParser assocParser = new PPIFileParser(PPIFileParser.PERSIST_CONCURRENTLY,cli.gpDao,cli.ppiDao, cli.dbDao);
-            
+            PPIFileParser assocParser = new PPIFileParser( PPIFileParser.PERSIST_CONCURRENTLY, cli.gpDao, cli.ppiDao,
+                    cli.dbDao );
+
             // interrogation stage
             if ( cl.hasOption( 'l' ) ) {
 
                 String filename = cl.getOptionValue( 'l' );
-                System.out.println("option l: "+filename);
+                System.out.println( "option l: " + filename );
 
-                assocParser.parse(filename);
+                assocParser.parse( filename );
 
             } else if ( cl.hasOption( 'r' ) ) {
-                System.out.println("option r ");
+                System.out.println( "option r " );
                 assocParser.removeAll();
             } else {
                 printHelp( opt );
             }
-            
+
         } catch ( ParseException e ) {
-            printIncorrectUsage(opt,e.toString());
+            printIncorrectUsage( opt, e.toString() );
         }
-        
+
     }
 
     public ProteinProteinInteractionLoaderCLI() {
-        BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
-        //mPersister = new PersisterHelper();
-        //geneDao = ( GeneDao ) ctx.getBean( "geneDao" ) ;
-        gpDao = ( GeneProductDao ) ctx.getBean( "geneProductDao" ) ;
-        ppiDao = ( ProteinProteinInteractionDao ) ctx.getBean( "ProteinProteinInteractionDao" ) ;
-        dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
+        ctx = SpringContextUtil.getApplicationContext( false );
+        // mPersister = new PersisterHelper();
+        // geneDao = ( GeneDao ) ctx.getBean( "geneDao" ) ;
+        gpDao = ( GeneProductDao ) ctx.getBean( "geneProductDao" );
+        ppiDao = ( ProteinProteinInteractionDao ) ctx.getBean( "ProteinProteinInteractionDao" );
+        dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
     }
 
     /**
@@ -172,13 +183,13 @@ public class ProteinProteinInteractionLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        //h.printHelp( "Options Tip", opt );
+        // h.printHelp( "Options Tip", opt );
         h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 
     private static void printIncorrectUsage( Options opt, String errorString ) {
         HelpFormatter h = new HelpFormatter();
-        h.printHelp( "Incorrect Usage: "+errorString, opt );
+        h.printHelp( "Incorrect Usage: " + errorString, opt );
     }
 
 }

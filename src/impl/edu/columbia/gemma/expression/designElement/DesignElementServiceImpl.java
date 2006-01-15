@@ -16,65 +16,45 @@
  * limitations under the License.
  *
  */
-
 package edu.columbia.gemma.expression.designElement;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
+ * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.DesignElementService
  */
-public class DesignElementServiceImpl
-    extends edu.columbia.gemma.expression.designElement.DesignElementServiceBase
-{
+public class DesignElementServiceImpl extends edu.columbia.gemma.expression.designElement.DesignElementServiceBase {
 
     /**
      * @see edu.columbia.gemma.expression.designElement.DesignElementService#find(edu.columbia.gemma.expression.designElement.DesignElement)
      */
-    protected edu.columbia.gemma.expression.designElement.DesignElement handleFind(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.expression.designElement.DesignElement handleFind(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        return null;
-    }
-
-    /**
-     * @see edu.columbia.gemma.expression.designElement.DesignElementService#create(edu.columbia.gemma.expression.designElement.DesignElement)
-     */
-    protected edu.columbia.gemma.expression.designElement.DesignElement handleCreate(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.expression.designElement.DesignElement handleCreate(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        return null;
+    protected edu.columbia.gemma.expression.designElement.DesignElement handleFind(
+            edu.columbia.gemma.expression.designElement.DesignElement designElement ) throws java.lang.Exception {
+        return this.getDesignElementDao().find( designElement );
     }
 
     /**
      * @see edu.columbia.gemma.expression.designElement.DesignElementService#remove(edu.columbia.gemma.expression.designElement.DesignElement)
      */
-    protected void handleRemove(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        throws java.lang.Exception
-    {
-        this.getDesignElementDao().remove(designElement);
+    protected void handleRemove( edu.columbia.gemma.expression.designElement.DesignElement designElement )
+            throws java.lang.Exception {
+        this.getDesignElementDao().remove( designElement );
     }
 
     /**
      * @see edu.columbia.gemma.expression.designElement.DesignElementService#update(edu.columbia.gemma.expression.designElement.DesignElement)
      */
-    protected void handleUpdate(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        throws java.lang.Exception
-    {
-        //@todo implement protected void handleUpdate(edu.columbia.gemma.expression.designElement.DesignElement designElement)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.expression.designElement.DesignElementService.handleUpdate(edu.columbia.gemma.expression.designElement.DesignElement designElement) Not implemented!");
+    protected void handleUpdate( edu.columbia.gemma.expression.designElement.DesignElement designElement )
+            throws java.lang.Exception {
+        this.getDesignElementDao().update( designElement );
     }
 
     @Override
     protected DesignElement handleFindOrCreate( DesignElement designElement ) throws Exception {
-        return this.getDesignElementDao().findOrCreate(designElement);
+        return this.getDesignElementDao().findOrCreate( designElement );
     }
 
 }

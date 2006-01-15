@@ -24,17 +24,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * A service to load ArrayDesigns (from any user interface).
  * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @spring.bean id="arrayDesignPersister"
  * @spring.property name="persisterHelper" ref="persisterHelper"
@@ -44,8 +42,6 @@ public class ArrayDesignPersister implements Persister {
     protected static final Log log = LogFactory.getLog( ArrayDesignPersister.class );
 
     private PersisterHelper persisterHelper;
-    
-    private ArrayDesignService arrayDesignService;
 
     /**
      * @param adCol
@@ -81,10 +77,4 @@ public class ArrayDesignPersister implements Persister {
         this.persisterHelper = persisterHelper;
     }
 
-    /**
-     * @param arrayDesignService The arrayDesignService to set.
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
 }

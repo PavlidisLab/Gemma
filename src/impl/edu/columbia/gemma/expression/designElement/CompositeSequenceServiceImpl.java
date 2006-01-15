@@ -24,10 +24,9 @@ import java.util.Collection;
 
 /**
  * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.CompositeSequenceService
  */
@@ -65,8 +64,7 @@ public class CompositeSequenceServiceImpl extends
 
     @Override
     protected CompositeSequence handleFind( CompositeSequence compositeSequence ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        return ( CompositeSequence ) this.getCompositeSequenceDao().find( compositeSequence );
     }
 
 }

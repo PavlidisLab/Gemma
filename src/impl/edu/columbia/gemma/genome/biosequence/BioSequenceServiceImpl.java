@@ -16,18 +16,13 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package edu.columbia.gemma.genome.biosequence;
 
 /**
  * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.genome.biosequence.BioSequenceService
  */
@@ -54,9 +49,7 @@ public class BioSequenceServiceImpl extends edu.columbia.gemma.genome.biosequenc
      */
     protected void handleUpdate( edu.columbia.gemma.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception {
-        // @todo implement protected void handleUpdate(edu.columbia.gemma.genome.biosequence.BioSequence bioSequence)
-        throw new java.lang.UnsupportedOperationException(
-                "edu.columbia.gemma.genome.biosequence.BioSequenceService.handleUpdate(edu.columbia.gemma.genome.biosequence.BioSequence bioSequence) Not implemented!" );
+        this.getBioSequenceDao().update( bioSequence );
     }
 
     @Override

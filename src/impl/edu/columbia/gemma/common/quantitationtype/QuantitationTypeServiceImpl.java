@@ -16,59 +16,47 @@
  * limitations under the License.
  *
  */
-
 package edu.columbia.gemma.common.quantitationtype;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
+ * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.quantitationtype.QuantitationTypeService
  */
-public class QuantitationTypeServiceImpl
-    extends edu.columbia.gemma.common.quantitationtype.QuantitationTypeServiceBase
-{
+public class QuantitationTypeServiceImpl extends edu.columbia.gemma.common.quantitationtype.QuantitationTypeServiceBase {
 
     /**
      * @see edu.columbia.gemma.common.quantitationtype.QuantitationTypeService#find(edu.columbia.gemma.common.quantitationtype.QuantitationType)
      */
-    protected edu.columbia.gemma.common.quantitationtype.QuantitationType handleFind(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.common.quantitationtype.QuantitationType handleFind(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        return null;
+    protected edu.columbia.gemma.common.quantitationtype.QuantitationType handleFind(
+            edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
+        return this.getQuantitationTypeDao().find( quantitationType );
     }
 
     /**
      * @see edu.columbia.gemma.common.quantitationtype.QuantitationTypeService#create(edu.columbia.gemma.common.quantitationtype.QuantitationType)
      */
-    protected edu.columbia.gemma.common.quantitationtype.QuantitationType handleCreate(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.common.quantitationtype.QuantitationType handleCreate(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        return null;
+    protected edu.columbia.gemma.common.quantitationtype.QuantitationType handleCreate(
+            edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
+        return ( QuantitationType ) this.getQuantitationTypeDao().create( quantitationType );
     }
 
     /**
      * @see edu.columbia.gemma.common.quantitationtype.QuantitationTypeService#update(edu.columbia.gemma.common.quantitationtype.QuantitationType)
      */
-    protected void handleUpdate(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        throws java.lang.Exception
-    {
-        //@todo implement protected void handleUpdate(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.handleUpdate(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType) Not implemented!");
+    protected void handleUpdate( edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType )
+            throws java.lang.Exception {
+        this.getQuantitationTypeDao().update( quantitationType );
     }
 
     /**
      * @see edu.columbia.gemma.common.quantitationtype.QuantitationTypeService#remove(edu.columbia.gemma.common.quantitationtype.QuantitationType)
      */
-    protected void handleRemove(edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType)
-        throws java.lang.Exception
-    {
+    protected void handleRemove( edu.columbia.gemma.common.quantitationtype.QuantitationType quantitationType )
+            throws java.lang.Exception {
         this.getQuantitationTypeDao().remove( quantitationType );
     }
 

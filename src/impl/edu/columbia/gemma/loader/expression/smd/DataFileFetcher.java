@@ -51,12 +51,11 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
 public class DataFileFetcher extends FtpFetcher {
- 
+
     private Map<Integer, String> cuts;
     private Set<SMDFile> localFiles;
 
@@ -185,11 +184,13 @@ public class DataFileFetcher extends FtpFetcher {
         this.force = force;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see edu.columbia.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
     public Collection<LocalFile> fetch( String identifier ) {
         // TODO Auto-generated method stub FIXME
-      throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 }

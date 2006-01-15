@@ -19,46 +19,35 @@
 package edu.columbia.gemma.common.protocol;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
+ * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.protocol.HardwareService
  */
-public class HardwareServiceImpl
-    extends edu.columbia.gemma.common.protocol.HardwareServiceBase
-{
+public class HardwareServiceImpl extends edu.columbia.gemma.common.protocol.HardwareServiceBase {
 
     /**
      * @see edu.columbia.gemma.common.protocol.HardwareService#find(edu.columbia.gemma.common.protocol.Hardware)
      */
-    protected edu.columbia.gemma.common.protocol.Hardware handleFind(edu.columbia.gemma.common.protocol.Hardware hardware)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.common.protocol.Hardware handleFind(edu.columbia.gemma.common.protocol.Hardware hardware)
-        return null;
+    protected edu.columbia.gemma.common.protocol.Hardware handleFind(
+            edu.columbia.gemma.common.protocol.Hardware hardware ) throws java.lang.Exception {
+        return this.getHardwareDao().find( hardware );
     }
 
     /**
      * @see edu.columbia.gemma.common.protocol.HardwareService#update(edu.columbia.gemma.common.protocol.Hardware)
      */
-    protected void handleUpdate(edu.columbia.gemma.common.protocol.Hardware hardware)
-        throws java.lang.Exception
-    {
-        //@todo implement protected void handleUpdate(edu.columbia.gemma.common.protocol.Hardware hardware)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.protocol.HardwareService.handleUpdate(edu.columbia.gemma.common.protocol.Hardware hardware) Not implemented!");
+    protected void handleUpdate( edu.columbia.gemma.common.protocol.Hardware hardware ) throws java.lang.Exception {
+        this.getHardwareDao().update( hardware );
     }
 
     /**
      * @see edu.columbia.gemma.common.protocol.HardwareService#remove(edu.columbia.gemma.common.protocol.Hardware)
      */
-    protected void handleRemove(edu.columbia.gemma.common.protocol.Hardware hardware)
-        throws java.lang.Exception
-    {
-        this.getHardwareDao().remove(hardware);
+    protected void handleRemove( edu.columbia.gemma.common.protocol.Hardware hardware ) throws java.lang.Exception {
+        this.getHardwareDao().remove( hardware );
     }
 
     @Override

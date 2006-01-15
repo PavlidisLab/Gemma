@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceImpl;
@@ -40,8 +39,6 @@ import edu.columbia.gemma.web.util.EntityNotFoundException;
  * This controller is responsible for showing a list of all bibliographic references, as well sending the user to the
  * pubMed.Detail.view when they click on a specific link in that list.
  * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @author pavlidis
@@ -142,8 +139,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-        addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession()
-                .getAccession() } );
+        addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession().getAccession() } );
         return new ModelAndView( "bibRefSearch", "bibliographicReference", bibRef );
     }
 

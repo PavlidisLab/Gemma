@@ -16,50 +16,38 @@
  * limitations under the License.
  *
  */
-
 package edu.columbia.gemma.common.protocol;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
+ * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.protocol.ProtocolService
  */
-public class ProtocolServiceImpl
-    extends edu.columbia.gemma.common.protocol.ProtocolServiceBase
-{
+public class ProtocolServiceImpl extends edu.columbia.gemma.common.protocol.ProtocolServiceBase {
 
     /**
      * @see edu.columbia.gemma.common.protocol.ProtocolService#find(edu.columbia.gemma.common.protocol.Protocol)
      */
-    protected edu.columbia.gemma.common.protocol.Protocol handleFind(edu.columbia.gemma.common.protocol.Protocol protocol)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.common.protocol.Protocol handleFind(edu.columbia.gemma.common.protocol.Protocol protocol)
-        return null;
+    protected edu.columbia.gemma.common.protocol.Protocol handleFind(
+            edu.columbia.gemma.common.protocol.Protocol protocol ) throws java.lang.Exception {
+        return this.getProtocolDao().find( protocol );
     }
 
     /**
      * @see edu.columbia.gemma.common.protocol.ProtocolService#update(edu.columbia.gemma.common.protocol.Protocol)
      */
-    protected void handleUpdate(edu.columbia.gemma.common.protocol.Protocol protocol)
-        throws java.lang.Exception
-    {
-        //@todo implement protected void handleUpdate(edu.columbia.gemma.common.protocol.Protocol protocol)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.common.protocol.ProtocolService.handleUpdate(edu.columbia.gemma.common.protocol.Protocol protocol) Not implemented!");
+    protected void handleUpdate( edu.columbia.gemma.common.protocol.Protocol protocol ) throws java.lang.Exception {
+        this.getProtocolDao().update( protocol );
     }
 
     /**
      * @see edu.columbia.gemma.common.protocol.ProtocolService#remove(edu.columbia.gemma.common.protocol.Protocol)
      */
-    protected void handleRemove(edu.columbia.gemma.common.protocol.Protocol protocol)
-        throws java.lang.Exception
-    {
-        this.getProtocolDao().remove(protocol);
+    protected void handleRemove( edu.columbia.gemma.common.protocol.Protocol protocol ) throws java.lang.Exception {
+        this.getProtocolDao().remove( protocol );
     }
 
     @Override

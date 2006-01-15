@@ -42,12 +42,10 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * Command line interface to protein parsing and loading
  * <hr>
  * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author anshu
  * @version $Id$
  */
-
 public class ProteinLoaderCLI {
     protected static final Log log = LogFactory.getLog( ProteinLoaderCLI.class );
     protected static ManualAuthenticationProcessing manAuthentication = null;
@@ -56,7 +54,7 @@ public class ProteinLoaderCLI {
     private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-x <file>] [-l <file>] [-r] ";
     private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
-    //private PersisterHelper mPersister;
+    // private PersisterHelper mPersister;
     private GeneDao geneDao;
     private GeneProductDao gpDao;
     private static String username = null;
@@ -155,14 +153,15 @@ public class ProteinLoaderCLI {
                 System.exit( 0 );
             }
 
-            ProteinFileParser protInfoParser = new ProteinFileParser(ProteinFileParser.PERSIST_CONCURRENTLY,cli.geneDao,cli.gpDao);
+            ProteinFileParser protInfoParser = new ProteinFileParser( ProteinFileParser.PERSIST_CONCURRENTLY,
+                    cli.geneDao, cli.gpDao );
             /* check load option. */
             if ( cl.hasOption( 'l' ) ) {
-                
-                String filename = cl.getOptionValue( 'l' );
-                System.out.println("option l: "+filename);
 
-                protInfoParser.parse( filename);
+                String filename = cl.getOptionValue( 'l' );
+                System.out.println( "option l: " + filename );
+
+                protInfoParser.parse( filename );
 
             }
 
@@ -180,10 +179,10 @@ public class ProteinLoaderCLI {
     }
 
     public ProteinLoaderCLI() {
-        BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
-        geneDao = ( GeneDao ) ctx.getBean( "geneDao" ) ;
-        gpDao = (GeneProductDao) ctx.getBean( "geneProductDao" );
-        //dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
+        ctx = SpringContextUtil.getApplicationContext( false );
+        geneDao = ( GeneDao ) ctx.getBean( "geneDao" );
+        gpDao = ( GeneProductDao ) ctx.getBean( "geneProductDao" );
+        // dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
     }
 
     /**
@@ -191,7 +190,7 @@ public class ProteinLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        //h.setWidth( 80 );
+        // h.setWidth( 80 );
         h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 

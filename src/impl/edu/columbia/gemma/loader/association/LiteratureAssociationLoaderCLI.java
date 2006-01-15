@@ -1,6 +1,4 @@
-
 package edu.columbia.gemma.loader.association;
-
 
 import java.io.IOException;
 
@@ -15,14 +13,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
-
-
 
 /**
  * Command line interface to retrieve and load literature associations
@@ -30,7 +25,7 @@ import edu.columbia.gemma.common.description.ExternalDatabaseDao;
  * <p>
  * Copyright (c) 2004 - 2006 University of British Columbia
  * 
- * @author anshu 
+ * @author anshu
  * @version $Id$
  */
 public class LiteratureAssociationLoaderCLI {
@@ -42,12 +37,12 @@ public class LiteratureAssociationLoaderCLI {
     private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
 
-    //private PersisterHelper mPersister;
+    // private PersisterHelper mPersister;
     private GeneDao geneDao;
     private LiteratureAssociationDao laDao;
     private ExternalDatabaseDao dbDao;
     private static String username = null;
-    private static String password = null;    
+    private static String password = null;
 
     /**
      * Command line interface to run the gene parser/loader
@@ -57,14 +52,14 @@ public class LiteratureAssociationLoaderCLI {
      * @throws IOException
      */
     public static void main( String args[] ) throws IOException {
-       
+
         LiteratureAssociationLoaderCLI cli = null;
 
         // options stage
-        /*help*/
+        /* help */
         OptionBuilder.withDescription( "Print help for this application" );
         Option helpOpt = OptionBuilder.create( 'h' );
-        
+
         /* username */
         OptionBuilder.hasArgs();
         OptionBuilder.withDescription( "Username" );
@@ -79,13 +74,13 @@ public class LiteratureAssociationLoaderCLI {
         OptionBuilder.hasArgs();
         OptionBuilder.withDescription( "Set use of test or production environment" );
         Option testOpt = OptionBuilder.create( 't' );
-        
-        /*load*/
+
+        /* load */
         OptionBuilder.hasArg();
         OptionBuilder.withDescription( "Specify file (requires file arg) and load database" );
         Option loadOpt = OptionBuilder.create( 'l' );
 
-        /*remove*/
+        /* remove */
         OptionBuilder.withDescription( "Remove literature associations from database" );
         Option removeOpt = OptionBuilder.create( 'r' );
 
@@ -93,16 +88,14 @@ public class LiteratureAssociationLoaderCLI {
         opt.addOption( helpOpt );
         opt.addOption( usernameOpt );
         opt.addOption( passwordOpt );
-        opt.addOption( testOpt );        
+        opt.addOption( testOpt );
         opt.addOption( loadOpt );
         opt.addOption( removeOpt );
 
-        
         try {
             // parser stage
             BasicParser parser = new BasicParser();
             CommandLine cl = parser.parse( opt, args );
-
 
             /* check if using test or production context */
             if ( cl.hasOption( 't' ) ) {
@@ -134,36 +127,37 @@ public class LiteratureAssociationLoaderCLI {
                 // TODO inform user of this (print to System.out).
                 System.exit( 0 );
             }
-            LitAssociationFileParser assocParser = new LitAssociationFileParser(LitAssociationFileParser.PERSIST_CONCURRENTLY,cli.geneDao,cli.laDao, cli.dbDao);
-            
+            LitAssociationFileParser assocParser = new LitAssociationFileParser(
+                    LitAssociationFileParser.PERSIST_CONCURRENTLY, cli.geneDao, cli.laDao, cli.dbDao );
+
             // interrogation stage
             if ( cl.hasOption( 'l' ) ) {
 
                 String filename = cl.getOptionValue( 'l' );
-                System.out.println("option l: "+filename);
+                System.out.println( "option l: " + filename );
 
-                assocParser.parse(filename);
-                //cli.getGenePersister().persist( geneInfoParser.getResults() );
+                assocParser.parse( filename );
+                // cli.getGenePersister().persist( geneInfoParser.getResults() );
 
             } else if ( cl.hasOption( 'r' ) ) {
-                System.out.println("option r ");
+                System.out.println( "option r " );
                 assocParser.removeAll();
             } else {
                 printHelp( opt );
             }
-            
+
         } catch ( ParseException e ) {
-            printIncorrectUsage(opt,e.toString());
+            printIncorrectUsage( opt, e.toString() );
         }
-        
+
     }
 
     public LiteratureAssociationLoaderCLI() {
-        BeanFactory ctx = SpringContextUtil.getApplicationContext( false );
-        //mPersister = new PersisterHelper();
-        geneDao = ( GeneDao ) ctx.getBean( "geneDao" ) ;
-        laDao = ( LiteratureAssociationDao ) ctx.getBean( "literatureAssociationDao" ) ;
-        dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
+        ctx = SpringContextUtil.getApplicationContext( false );
+        // mPersister = new PersisterHelper();
+        geneDao = ( GeneDao ) ctx.getBean( "geneDao" );
+        laDao = ( LiteratureAssociationDao ) ctx.getBean( "literatureAssociationDao" );
+        dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
     }
 
     /**
@@ -171,13 +165,13 @@ public class LiteratureAssociationLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        //h.printHelp( "Options Tip", opt );
+        // h.printHelp( "Options Tip", opt );
         h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 
     private static void printIncorrectUsage( Options opt, String errorString ) {
         HelpFormatter h = new HelpFormatter();
-        h.printHelp( "Incorrect Usage: "+errorString, opt );
+        h.printHelp( "Incorrect Usage: " + errorString, opt );
     }
 
 }

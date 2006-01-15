@@ -19,61 +19,50 @@
 package edu.columbia.gemma.expression.biomaterial;
 
 /**
- * 
- * 
- *
  * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
+ * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.biomaterial.CompoundService
  */
-public class CompoundServiceImpl
-    extends edu.columbia.gemma.expression.biomaterial.CompoundServiceBase
-{
+public class CompoundServiceImpl extends edu.columbia.gemma.expression.biomaterial.CompoundServiceBase {
 
     /**
      * @see edu.columbia.gemma.expression.biomaterial.CompoundService#find(edu.columbia.gemma.expression.biomaterial.Compound)
      */
-    protected edu.columbia.gemma.expression.biomaterial.Compound handleFind(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.expression.biomaterial.Compound handleFind(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        return null;
+    protected edu.columbia.gemma.expression.biomaterial.Compound handleFind(
+            edu.columbia.gemma.expression.biomaterial.Compound compound ) throws java.lang.Exception {
+        return this.getCompoundDao().find( compound );
     }
 
     /**
      * @see edu.columbia.gemma.expression.biomaterial.CompoundService#create(edu.columbia.gemma.expression.biomaterial.Compound)
      */
-    protected edu.columbia.gemma.expression.biomaterial.Compound handleCreate(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        throws java.lang.Exception
-    {
-        //@todo implement protected edu.columbia.gemma.expression.biomaterial.Compound handleCreate(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        return null;
+    protected edu.columbia.gemma.expression.biomaterial.Compound handleCreate(
+            edu.columbia.gemma.expression.biomaterial.Compound compound ) throws java.lang.Exception {
+        return ( Compound ) this.getCompoundDao().create( compound );
     }
 
     /**
      * @see edu.columbia.gemma.expression.biomaterial.CompoundService#update(edu.columbia.gemma.expression.biomaterial.Compound)
      */
-    protected void handleUpdate(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        throws java.lang.Exception
-    {
-        //@todo implement protected void handleUpdate(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        throw new java.lang.UnsupportedOperationException("edu.columbia.gemma.expression.biomaterial.CompoundService.handleUpdate(edu.columbia.gemma.expression.biomaterial.Compound compound) Not implemented!");
+    protected void handleUpdate( edu.columbia.gemma.expression.biomaterial.Compound compound )
+            throws java.lang.Exception {
+        this.getCompoundDao().update( compound );
     }
 
     /**
      * @see edu.columbia.gemma.expression.biomaterial.CompoundService#remove(edu.columbia.gemma.expression.biomaterial.Compound)
      */
-    protected void handleRemove(edu.columbia.gemma.expression.biomaterial.Compound compound)
-        throws java.lang.Exception
-    {
-        this.getCompoundDao().remove(compound);
+    protected void handleRemove( edu.columbia.gemma.expression.biomaterial.Compound compound )
+            throws java.lang.Exception {
+        this.getCompoundDao().remove( compound );
     }
 
     @Override
     protected Compound handleFindOrCreate( Compound compound ) throws Exception {
-        return this.getCompoundDao().findOrCreate(compound);
+        return this.getCompoundDao().findOrCreate( compound );
     }
 
 }
