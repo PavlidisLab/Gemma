@@ -45,7 +45,7 @@
 			<attribute value="file:/C:/java/.maven/repository/easymock/easymock2.0_Pre-Release/javadoc/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="MAVEN_REPO/cglib/jars/cglib-full-2.0.2.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/cglib/jars/cglib-nodep-2.1_2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/colt/jars/colt-1.2.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-digester/jars/commons-digester-1.6.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/dom4j/dom4j-1.6.1/src/java" kind="var" path="MAVEN_REPO/dom4j/jars/dom4j-1.4.jar">
@@ -54,7 +54,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/ehcache/jars/ehcache-0.9.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/hessian/jars/hessian-3.0.8.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jta/jars/jta.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/log4j/jars/log4j-1.2.8.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/odmg/jars/odmg-3.0.jar"/>
