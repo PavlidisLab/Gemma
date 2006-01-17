@@ -18,7 +18,7 @@ CREATE TABLE ACL_PERMISSION (
 ) TYPE=InnoDB;
 
 --- (id, object identity (of form class:getId()), parent object, acl class)
-INSERT INTO ACL_OBJECT_IDENTITY VALUES (1, 'dummy:1', null, 'net.sf.acegisecurity.acl.basic.SimpleAclEntry');
+INSERT INTO ACL_OBJECT_IDENTITY VALUES (1, 'globalDummyParent:1', null, 'org.acegisecurity.acl.basic.SimpleAclEntry');
 
 --- (id, acl object identity, recepient (principal username), mask)
 INSERT INTO ACL_PERMISSION VALUES (null, 1, 'administrator', 1);
