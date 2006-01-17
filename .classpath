@@ -6,7 +6,6 @@
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/gen"/>
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/impl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="MAVEN_REPO/servlet/jars/servlet.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-webflow-pr5/dist/spring-webflow-src-pr5.zip" kind="var" path="MAVEN_REPO/spring/jars/spring-webflow-pr5.jar">
 		<attributes>
@@ -101,6 +100,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/jaxen/jars/jaxen-1.1-beta-5.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-pool/jars/commons-pool-1.2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xerces-2.4.0.jar"/>
-	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
+	<classpathentry kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
