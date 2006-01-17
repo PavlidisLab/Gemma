@@ -36,76 +36,32 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.dao.DataAccessException;
 
-import edu.columbia.gemma.genome.Gene;
-
 /**
- * Adds security controls to newly created objects, and removes them for objects that are deleted.
+ * Adds security controls to newly created objects, and removes them for objects that are deleted. Methods in this
+ * interceptor are run for all new objects (to add security if needed) and when objects are deleted.
  * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  */
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
+
+    /**
+     * Objects are grouped in a hierarchy. A default 'parent' is defined in the database. This must match an entry in
+     * the ACL_OBJECT_IDENTITY table. In Gemma this is added as part of database initialization (see mysql-acegy-acl.sql
+     * for MySQL version)
+     */
+    private static final String DEFAULT_PARENT = "globalDummyParent";
+
+    /**
+     * @see DEFAULT_PARENT
+     */
+    private static final String DEFAULT_PARENT_ID = "1";
+
     private static Log log = LogFactory.getLog( AddOrRemoveFromACLInterceptor.class.getName() );
 
     private BasicAclExtendedDao basicAclExtendedDao;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
-     *      java.lang.Object[], java.lang.Object)
-     */
-    @SuppressWarnings( { "unused", "unchecked" })
-    public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
-
-        Object object = null;
-        if ( log.isDebugEnabled() ) log.debug( "Before: method=[" + m + "], Target: " + target );
-
-        if ( m.getName().equals( "findOrCreate" ) || m.getName().equals( "remove" ) ) {
-
-            object = args[0];
-            if (object instanceof Gene) {
-                System.out.println("in afterReturning. persisting gene: "+ ((Gene) object).getNcbiId());
-            }
-            if ( Collection.class.isAssignableFrom( object.getClass() ) ) {
-                for ( Object o : ( Collection<Object> ) object ) {
-                    processPermissions( m, o );
-                }
-            } else {
-                processPermissions( m, object );
-            }
-
-        }
-
-    }
-
-    /**
-     * @param m method that was called.
-     * @param object. If null, no action is taken.
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     */
-    private void processPermissions( Method m, Object object ) throws IllegalAccessException, InvocationTargetException {
-
-        if ( object == null ) return;
-
-        assert m != null;
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
-        }
-        System.out.println( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
-        if ( m.getName().equals( "findOrCreate" ) ) {
-            addPermission( object, getUsername(), getAuthority() );
-        } else if ( m.getName().equals( "remove" ) ) {
-            deletePermission( object, getUsername() );
-        } else {
-            // nothing to do.
-        }
-    }
 
     /**
      * Creates the acl_permission object and the acl_object_identity object.
@@ -120,20 +76,46 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void addPermission( Object object, String recipient, Integer permission ) throws IllegalArgumentException,
             IllegalAccessException, InvocationTargetException {
-        if (object instanceof Gene) {
-            System.out.println("in addPermission. persisting gene: "+ ((Gene) object).getNcbiId());
-        }
+
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
         simpleAclEntry.setMask( permission.intValue() );
         simpleAclEntry.setRecipient( recipient );
 
-        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( "dummy", "1" ) );
+        /* By default we assign the object to have the default global parent. */
+        simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( DEFAULT_PARENT, DEFAULT_PARENT_ID ) );
 
         basicAclExtendedDao.create( simpleAclEntry );
 
         if ( log.isDebugEnabled() ) {
             log.debug( "Added permission " + permission + " for recipient " + recipient + " on " + object );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.aop.AfterReturningAdvice#afterReturning(java.lang.Object, java.lang.reflect.Method,
+     *      java.lang.Object[], java.lang.Object)
+     */
+    @SuppressWarnings( { "unused", "unchecked" })
+    public void afterReturning( Object retValue, Method m, Object[] args, Object target ) throws Throwable {
+
+        Object object = null;
+        if ( log.isDebugEnabled() ) log.debug( "Before: method=[" + m + "], Target: " + target );
+
+        if ( methodTriggersACLAction( m ) ) {
+
+            assert args != null;
+            object = args[0];
+
+            if ( Collection.class.isAssignableFrom( object.getClass() ) ) {
+                for ( Object o : ( Collection<Object> ) object ) {
+                    processPermissions( m, o );
+                }
+            } else {
+                processPermissions( m, object );
+            }
         }
     }
 
@@ -150,11 +132,17 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void deletePermission( Object object, String recipient ) throws DataAccessException,
             IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-        // basicAclExtendedDao.delete( makeObjectIdentity( object ), recipient );
         basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         if ( log.isDebugEnabled() ) {
             log.debug( "Deleted object " + object + " ACL permissions for recipient " + recipient );
         }
+    }
+
+    /**
+     * @param basicAclExtendedDao
+     */
+    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
+        this.basicAclExtendedDao = basicAclExtendedDao;
     }
 
     /**
@@ -172,23 +160,62 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     }
 
     /**
-     * Returns a String username.
+     * Test whether a method requires ACL permissions to be added.
      * 
+     * @param m
      * @return
      */
-    protected String getUsername() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if ( auth.getPrincipal() instanceof UserDetails ) {
-            return ( ( UserDetails ) auth.getPrincipal() ).getUsername();
-        }
-        return auth.getPrincipal().toString();
-
+    private boolean methodsTriggersACLAddition( Method m ) {
+        return m.getName().equals( "findOrCreate" ) || m.getName().equals( "create" );
     }
 
     /**
-     * For the current principal, return the permissions mask. If the current principal has role "admin", they are
-     * granted ADMINISTRATION authority. If they are role "user", they are granted READ_WRITE authority.
+     * Test whether a method requires any ACL action at all.
+     * 
+     * @param m
+     * @return
+     */
+    private boolean methodTriggersACLAction( Method m ) {
+        return methodsTriggersACLAddition( m ) || methodTriggersACLDelete( m );
+    }
+
+    /**
+     * Test whether a method requires ACL permissions to be deleted.
+     * 
+     * @param m
+     * @return
+     */
+    private boolean methodTriggersACLDelete( Method m ) {
+        return m.getName().equals( "remove" );
+    }
+
+    /**
+     * @param m method that was called. This is used to determine what action to take.
+     * @param object. If null, no action is taken.
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private void processPermissions( Method m, Object object ) throws IllegalAccessException, InvocationTargetException {
+
+        if ( object == null ) return;
+
+        assert m != null;
+
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
+        }
+        if ( methodsTriggersACLAddition( m ) ) {
+            addPermission( object, getUsername(), getAuthority() );
+        } else if ( methodTriggersACLDelete( m ) ) {
+            deletePermission( object, getUsername() );
+        } else {
+            // nothing to do.
+        }
+    }
+
+    /**
+     * For the current principal (user), return the permissions mask. If the current principal has role "admin", they
+     * are granted ADMINISTRATION authority. If they are role "user", they are granted READ_WRITE authority.
      * 
      * @return
      */
@@ -204,14 +231,21 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         }
         if ( log.isDebugEnabled() ) log.debug( "Granting READ_WRITE privileges" );
         return new Integer( SimpleAclEntry.READ_WRITE );
-
     }
 
     /**
-     * @param basicAclExtendedDao
+     * Returns a String username (the principal).
+     * 
+     * @return
      */
-    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
-        this.basicAclExtendedDao = basicAclExtendedDao;
+    protected String getUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if ( auth.getPrincipal() instanceof UserDetails ) {
+            return ( ( UserDetails ) auth.getPrincipal() ).getUsername();
+        }
+        return auth.getPrincipal().toString();
+
     }
 
 }
