@@ -37,8 +37,6 @@ import edu.columbia.gemma.web.controller.BaseFormController;
 /**
  * Controller to signup new users. Based on code from Appfuse.
  * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
@@ -68,16 +66,20 @@ public class SignupController extends BaseFormController {
         User user = ( User ) command;
         Locale locale = request.getLocale();
 
-        // TODO we need to get direct access to the ServletContext out of the controller. It is making the
-        // controller impossible to test!!
+        /*
+         * TODO we need to get direct access to the ServletContext out of the controller. It is making the controller
+         * impossible to test!!
+         */
         String algorithm;
         if ( request.getServletPath() != "/test.signup.html" )
             algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
         else {
             algorithm = "SHA";
         }
-        // TODO when testing, you would never get to this point without my check above. Again, we need to
-        // get the ServletContext access out of the controller.
+        /*
+         * TODO when testing, you would never get to this point without my check above. Again, we need to get the
+         * ServletContext access out of the controller.
+         */
         if ( algorithm == null ) { // should only happen for test case
             log.debug( "assuming testcase, setting algorithm to 'SHA'" );
             algorithm = "SHA";

@@ -33,7 +33,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *    taxon\t ncbi_gene_id\t ncbi_prot_id
+ *     taxon\t ncbi_gene_id\t ncbi_prot_id
  * </pre>
  * 
  * <hr>
@@ -99,7 +99,7 @@ public class ProteinFileParser extends BasicLineMapParser /* implements Persiste
                 gpDao.create( gp );
             }
         } catch ( Exception e ) {
-            System.out.println( e.toString() ); // FIXME
+            System.out.println( e.toString() ); // FIXME - use logger instead.
         }
         return null;
     }
