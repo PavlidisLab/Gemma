@@ -21,10 +21,6 @@
 package edu.columbia.gemma.expression.bioAssayData;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -45,7 +41,6 @@ public class BioAssayDataVectorServiceImpl extends
     @Override
     protected BioAssayDataVector handleFindOrCreate( BioAssayDataVector bioAssayDataVector ) throws Exception {
         return this.getBioAssayDataVectorDao().findOrCreate( bioAssayDataVector );
-        
     }
 
     @Override

@@ -21,10 +21,6 @@
 package edu.columbia.gemma.expression.bioAssayData;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @author keshav
  * @version $Id$
