@@ -21,10 +21,6 @@ package edu.columbia.gemma.analysis.preprocess;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */

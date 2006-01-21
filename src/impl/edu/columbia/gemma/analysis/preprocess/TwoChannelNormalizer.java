@@ -22,9 +22,6 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Interface representing a mechanism for normalizing two-color arrays.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

@@ -22,9 +22,6 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Represents probe-level summary methods for Affymetrix microarrays.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

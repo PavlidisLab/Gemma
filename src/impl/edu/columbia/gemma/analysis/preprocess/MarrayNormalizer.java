@@ -24,14 +24,12 @@ import edu.columbia.gemma.tools.MArrayRaw;
 import edu.columbia.gemma.tools.RCommander;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
+ * Normalizer that uses the mArray methods from BioConductor. This is used to build specific types of preprocessors.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class MarrayNormalizer extends RCommander {
+public abstract class MarrayNormalizer extends RCommander implements TwoChannelNormalizer {
 
     public MarrayNormalizer() {
         super();
@@ -55,7 +53,7 @@ public class MarrayNormalizer extends RCommander {
      * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
      * @return
      */
-    protected DoubleMatrixNamed mNorm( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
+    protected DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
             DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights,
             String method ) {
         MArrayRaw mRaw = new MArrayRaw( this.rc );
@@ -76,7 +74,17 @@ public class MarrayNormalizer extends RCommander {
         return resultObject;
     }
 
-    protected DoubleMatrixNamed mNorm( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
+    /**
+     * Apply a normalization method from the marray BioConductor package, disregarding background. This method yields
+     * normalized log ratios, so the summarization step is included as well.
+     * 
+     * @param channelOneSignal
+     * @param channelTwoSignal
+     * @param weights
+     * @param method Name of the method (or its valid abbreviation), such as "median", "loess", "printtiploess".
+     * @return
+     */
+    protected DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
             String method ) {
         MArrayRaw mRaw = new MArrayRaw( this.rc );
         mRaw.makeMArrayLayout( channelOneSignal.rows() );

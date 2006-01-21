@@ -23,9 +23,6 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Perform pairwise LOESS normalization on the columns of a matrix.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

@@ -21,10 +21,6 @@ package edu.columbia.gemma.analysis.preprocess;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -44,7 +40,7 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
     public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal,
             DoubleMatrixNamed channelOneBackground, DoubleMatrixNamed channelTwoBackground, DoubleMatrixNamed weights ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed resultObject = mNorm( channelOneSignal, channelTwoSignal, channelOneBackground,
+        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights, "loess" );
         return resultObject;
     }
@@ -57,7 +53,7 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer implements Tw
      */
     public DoubleMatrixNamed normalize( DoubleMatrixNamed channelOneSignal, DoubleMatrixNamed channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrixNamed resultObject = mNorm( channelOneSignal, channelTwoSignal, "loess" );
+        DoubleMatrixNamed resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
         return resultObject;
     }
 }

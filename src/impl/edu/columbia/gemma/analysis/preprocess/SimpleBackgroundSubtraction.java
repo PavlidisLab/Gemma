@@ -23,9 +23,6 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Implements simplest background subtraction, with the option to set small values to a preset value.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

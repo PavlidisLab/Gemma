@@ -31,10 +31,6 @@ import edu.columbia.gemma.tools.RCommander;
  * Bolstad, B. M., Irizarry R. A., Astrand, M, and Speed, T. P. (2003) _A Comparison of Normalization Methods for High
  * Density Oligonucleotide Array Data Based on Bias and Variance._ Bioinformatics 19(2) ,pp 185-193. <a
  * href="http://www.stat.berkeley.edu/~bolstad/normalize/normalize.html">web page</a>
- * </p>
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

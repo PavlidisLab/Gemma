@@ -25,9 +25,6 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Class to perform background adjustment for Affymetrix arrays, RMA-style.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
