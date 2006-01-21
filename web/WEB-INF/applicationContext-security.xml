@@ -206,8 +206,7 @@
                 edu.columbia.gemma.expression.designElement.CompositeSequenceService.find=user,admin
                 edu.columbia.gemma.expression.designElement.ReporterService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.designElement.ReporterService.remove=user,admin
-                edu.columbia.gemma.expression.designElement.DesignElementService.find=user,admin
-                edu.columbia.gemma.expression.designElement.DesignElementService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.designElement.ReporterService.find=user,admin
                 edu.columbia.gemma.expression.designElement.DesignElementService.remove=user,admin
                 edu.columbia.gemma.expression.designElement.DesignElementService.update=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
