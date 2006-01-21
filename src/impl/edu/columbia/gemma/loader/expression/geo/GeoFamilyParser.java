@@ -59,7 +59,8 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoVariable;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
- * Class for parsing GSE and GDS files from NCBI GEO.
+ * Class for parsing GSE and GDS files from NCBI GEO. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html for
+ * format information.
  * <hr>
  * 
  * @author pavlidis
@@ -470,7 +471,7 @@ public class GeoFamilyParser implements Parser {
             datasetSet( currentDatasetAccession, "numProbes", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_order" ) ) {
             datasetSet( currentDatasetAccession, "order", value );
-        } else if ( startsWithIgnoreCase( line, "!dataset_organism" ) ) {
+        } else if ( startsWithIgnoreCase( line, "!dataset_organism" ) ) { // note, redundant with 'sample_organism'.
             datasetSet( currentDatasetAccession, "organism", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_platform" ) ) {
             if ( !results.getPlatformMap().containsKey( value ) ) {
@@ -489,6 +490,8 @@ public class GeoFamilyParser implements Parser {
             results.getDatasetMap().get( currentDatasetAccession ).addSeries( results.getSeriesMap().get( value ) );
         } else if ( startsWithIgnoreCase( line, "!dataset_total_samples" ) ) {
             datasetSet( currentDatasetAccession, "numSamples", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_sample_count" ) ) { // is this the same as "total_samples"?
+            datasetSet( currentDatasetAccession, "numSamples", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_update_date" ) ) {
             datasetSet( currentDatasetAccession, "updateDate", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_value_type" ) ) {
@@ -497,6 +500,22 @@ public class GeoFamilyParser implements Parser {
             datasetSet( currentDatasetAccession, "completeness", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_experiment_type" ) ) {
             datasetSet( currentDatasetAccession, "experimentType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_type" ) ) {
+            datasetSet( currentDatasetAccession, "datasetType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_feature_count" ) ) {
+            datasetSet( currentDatasetAccession, "featureCount", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_sample_organism" ) ) {
+            datasetSet( currentDatasetAccession, "organism", value ); // note, redundant with 'organism'.
+        } else if ( startsWithIgnoreCase( line, "!dataset_sample_type" ) ) {
+            datasetSet( currentDatasetAccession, "sampleType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_pubmed_id" ) ) {
+            datasetSet( currentDatasetAccession, "pubmedId", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_table_begin" ) ) {
+            // FIXME - what to do?
+        } else if ( startsWithIgnoreCase( line, "!dataset_table_end" ) ) {
+            // FIXME
+        } else if ( startsWithIgnoreCase( line, "!dataset_channel_count" ) ) {
+            datasetSet( currentDatasetAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
         } else {
             throw new IllegalStateException( "Unknown flag: " + line );
         }
@@ -670,10 +689,16 @@ public class GeoFamilyParser implements Parser {
             platformContactSet( currentPlatformAccession, "laboratory", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_department" ) ) {
             platformContactSet( currentPlatformAccession, "department", value );
-        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) {
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) { // FIXME may not be used?
             platformContactSet( currentPlatformAccession, "address", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_city" ) ) {
             platformContactSet( currentPlatformAccession, "city", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_zip/postal_code" ) ) {
+            platformContactSet( currentPlatformAccession, "postCode", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_state" ) ) {
+            platformContactSet( currentPlatformAccession, "state", value );
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_country" ) ) {
+            platformContactSet( currentPlatformAccession, "country", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_phone" ) ) {
             platformContactSet( currentPlatformAccession, "phone", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_web_link" ) ) {
@@ -862,6 +887,12 @@ public class GeoFamilyParser implements Parser {
             sampleContactSet( currentSampleAccession, "address", value );
         } else if ( startsWithIgnoreCase( line, "!Sample_contact_city" ) ) {
             sampleContactSet( currentSampleAccession, "city", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_state" ) ) {
+            sampleContactSet( currentSampleAccession, "state", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_country" ) ) {
+            sampleContactSet( currentSampleAccession, "country", value );
+        } else if ( startsWithIgnoreCase( line, "!Sample_contact_zip/postal_code" ) ) {
+            sampleContactSet( currentSampleAccession, "postCode", value );
         } else if ( startsWithIgnoreCase( line, "!Sample_contact_phone" ) ) {
             sampleContactSet( currentSampleAccession, "phone", value );
         } else if ( startsWithIgnoreCase( line, "!Sample_contact_web_link" ) ) {
@@ -942,8 +973,14 @@ public class GeoFamilyParser implements Parser {
             seriesContactSet( currentSeriesAccession, "laboratory", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_department" ) ) {
             seriesContactSet( currentSeriesAccession, "department", value );
-        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) {
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) { // FIXME may not be used any longer.
             seriesContactSet( currentSeriesAccession, "address", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_state" ) ) { // new
+            seriesContactSet( currentSeriesAccession, "state", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_zip/postal_code" ) ) { // new
+            seriesContactSet( currentSeriesAccession, "postCode", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_country" ) ) { // new
+            seriesContactSet( currentSeriesAccession, "country", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_city" ) ) {
             seriesContactSet( currentSeriesAccession, "city", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_phone" ) ) {

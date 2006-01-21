@@ -113,8 +113,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             GeoParseResult results = ( GeoParseResult ) gfp.getResults().iterator().next();
 
             Map<String, GeoDataset> datasetMap = results.getDatasets();
-            if ( !datasetMap.containsKey( geoDataSetAccession ) )
+            if ( !datasetMap.containsKey( geoDataSetAccession ) ) {
                 throw new IllegalStateException( "Failed to get parse of " + geoDataSetAccession );
+            }
 
             GeoDataset gds = datasetMap.get( geoDataSetAccession );
 

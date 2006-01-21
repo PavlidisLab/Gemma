@@ -19,36 +19,42 @@
 package edu.columbia.gemma.loader.expression.geo.model;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
 public class GeoContact {
 
-    private String name;
-    private String email;
-    private String institute;
-    private String department;
     private String city;
-    private String phone;
+    private String department;
+    private String email;
     private String fax;
+    private String institute;
+    private String name;
+    private String phone;
+    private String postCode;
+    private String state;
     private String webLink;
+    private String country;
+    
+    /**
+     * @return Returns the country.
+     */
+    public String getCountry() {
+        return this.country;
+    }
+
+    /**
+     * @param country The country to set.
+     */
+    public void setCountry( String country ) {
+        this.country = country;
+    }
 
     /**
      * @return Returns the city.
      */
     public String getCity() {
         return this.city;
-    }
-
-    /**
-     * @param city The city to set.
-     */
-    public void setCity( String city ) {
-        this.city = city;
     }
 
     /**
@@ -59,24 +65,10 @@ public class GeoContact {
     }
 
     /**
-     * @param department The department to set.
-     */
-    public void setDepartment( String department ) {
-        this.department = department;
-    }
-
-    /**
      * @return Returns the email.
      */
     public String getEmail() {
         return this.email;
-    }
-
-    /**
-     * @param email The email to set.
-     */
-    public void setEmail( String email ) {
-        this.email = email;
     }
 
     /**
@@ -87,24 +79,10 @@ public class GeoContact {
     }
 
     /**
-     * @param fax The fax to set.
-     */
-    public void setFax( String fax ) {
-        this.fax = fax;
-    }
-
-    /**
      * @return Returns the institute.
      */
     public String getInstitute() {
         return this.institute;
-    }
-
-    /**
-     * @param institute The institute to set.
-     */
-    public void setInstitute( String institute ) {
-        this.institute = institute;
     }
 
     /**
@@ -115,17 +93,73 @@ public class GeoContact {
     }
 
     /**
-     * @param name The name to set.
-     */
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    /**
      * @return Returns the phone.
      */
     public String getPhone() {
         return this.phone;
+    }
+
+    /**
+     * @return Returns the postCode.
+     */
+    public String getPostCode() {
+        return this.postCode;
+    }
+
+    /**
+     * @return Returns the state.
+     */
+    public String getState() {
+        return this.state;
+    }
+
+    /**
+     * @return Returns the webLink.
+     */
+    public String getWebLink() {
+        return this.webLink;
+    }
+
+    /**
+     * @param city The city to set.
+     */
+    public void setCity( String city ) {
+        this.city = city;
+    }
+
+    /**
+     * @param department The department to set.
+     */
+    public void setDepartment( String department ) {
+        this.department = department;
+    }
+
+    /**
+     * @param email The email to set.
+     */
+    public void setEmail( String email ) {
+        this.email = email;
+    }
+
+    /**
+     * @param fax The fax to set.
+     */
+    public void setFax( String fax ) {
+        this.fax = fax;
+    }
+
+    /**
+     * @param institute The institute to set.
+     */
+    public void setInstitute( String institute ) {
+        this.institute = institute;
+    }
+
+    /**
+     * @param name The name to set.
+     */
+    public void setName( String name ) {
+        this.name = name;
     }
 
     /**
@@ -136,10 +170,17 @@ public class GeoContact {
     }
 
     /**
-     * @return Returns the webLink.
+     * @param postCode The postCode to set.
      */
-    public String getWebLink() {
-        return this.webLink;
+    public void setPostCode( String postCode ) {
+        this.postCode = postCode;
+    }
+
+    /**
+     * @param state The state to set.
+     */
+    public void setState( String state ) {
+        this.state = state;
     }
 
     /**
