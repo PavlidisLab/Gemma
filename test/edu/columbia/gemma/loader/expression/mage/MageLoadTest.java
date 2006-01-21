@@ -40,7 +40,6 @@ import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
 import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
@@ -77,7 +76,6 @@ public class MageLoadTest extends MageBaseTest {
         ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
         ml.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
         ml.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ml.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
         ml.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
         ml.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
         ml.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );

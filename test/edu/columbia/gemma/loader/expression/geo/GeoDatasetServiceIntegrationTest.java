@@ -33,7 +33,8 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
+import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
 import edu.columbia.gemma.genome.TaxonService;
@@ -64,12 +65,15 @@ public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
         PersisterHelper ml = new PersisterHelper();
         GeoConverter geoConv = new GeoConverter();
         ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
+        ml
+                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+                        .getBean( "expressionExperimentService" ) );
         ml.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
         ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
         ml.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
         ml.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ml.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
+        ml.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
+        ml.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
         ml.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
         ml.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
         ml.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );

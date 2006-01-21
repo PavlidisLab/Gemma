@@ -40,7 +40,6 @@ import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
 import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
@@ -77,7 +76,6 @@ public class ArrayDesignParserIntegrationTest extends BaseServiceTestCase {
         ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
         ph.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
         ph.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ph.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
         ph.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
         ph.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
         ph.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );

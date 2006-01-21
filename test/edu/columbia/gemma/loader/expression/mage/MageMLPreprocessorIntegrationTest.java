@@ -48,7 +48,6 @@ import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
 import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
@@ -58,9 +57,6 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * Integration test of MageML: Parser, Converter and Preprocessor
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
@@ -81,12 +77,13 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
         this.mageMLConverter = ( MageMLConverter ) ctx.getBean( "mageMLConverter" );
         ph = new PersisterHelper();
         ph.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ph.setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
+        ph
+                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+                        .getBean( "expressionExperimentService" ) );
         ph.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
         ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
         ph.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
         ph.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ph.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
         ph.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
         ph.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
         ph.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
@@ -101,7 +98,8 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
         ph.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
         ph.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
         ph.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
-        ph.setDesignElementDataVectorService((DesignElementDataVectorService)ctx.getBean("designElementDataVectorService"));
+        ph.setDesignElementDataVectorService( ( DesignElementDataVectorService ) ctx
+                .getBean( "designElementDataVectorService" ) );
         mageMLPreprocessor.setPersisterHelper( ph );
     }
 

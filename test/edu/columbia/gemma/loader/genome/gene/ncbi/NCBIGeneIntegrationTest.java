@@ -35,7 +35,8 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
+import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
 import edu.columbia.gemma.genome.TaxonService;
@@ -60,25 +61,29 @@ public class NCBIGeneIntegrationTest extends BaseServiceTestCase {
         super.setUp();
         persisterHelper = new PersisterHelper();
         persisterHelper.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        persisterHelper
-                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
+        persisterHelper.setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+                .getBean( "expressionExperimentService" ) );
         persisterHelper.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
         persisterHelper.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
         persisterHelper.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-        persisterHelper.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        persisterHelper.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
+        persisterHelper
+                .setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
         persisterHelper.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
         persisterHelper.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
         persisterHelper.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
         persisterHelper.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
         persisterHelper.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
-        persisterHelper.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
+        persisterHelper
+                .setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
         persisterHelper.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
         persisterHelper.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
         persisterHelper.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
         persisterHelper.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
         persisterHelper.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
         persisterHelper.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
+        persisterHelper.setCompositeSequenceService( ( CompositeSequenceService ) ctx
+                .getBean( "compositeSequenceService" ) );
+        persisterHelper.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
     }
 
     /*
