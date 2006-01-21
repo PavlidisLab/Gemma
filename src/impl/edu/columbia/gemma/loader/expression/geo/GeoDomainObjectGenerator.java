@@ -45,7 +45,6 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
  * </ol>
  * <hr>
  * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -188,8 +187,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         // sanity check.
         if ( !datasets.contains( geoDataSetAccession ) ) {
-            throw new IllegalStateException( "Somehow " + geoDataSetAccession + " isn't in "
-                    + series.getGeoAccession() );
+            throw new IllegalStateException( "Somehow " + geoDataSetAccession + " isn't in " + series.getGeoAccession() );
         }
 
         if ( datasets.size() > 1 ) {

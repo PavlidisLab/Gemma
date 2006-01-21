@@ -21,6 +21,10 @@ package edu.columbia.gemma.expression.designElement;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
  * <hr>
@@ -37,19 +41,56 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
     /*
      * (non-Javadoc)
      * 
+     * @see edu.columbia.gemma.expression.designElement.CompositeSequenceDaoBase#find(edu.columbia.gemma.expression.designElement.CompositeSequence)
+     */
+    @Override
+    public CompositeSequence find( CompositeSequence compositeSequence ) {
+
+        if ( compositeSequence.getName() == null ) return null;
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( CompositeSequence.class );
+
+            queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
+
+            queryObject.add( Restrictions.eq( "arrayDesign", compositeSequence.getArrayDesign() ) );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + CompositeSequence.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = ( CompositeSequence ) results.iterator().next();
+                }
+            }
+            return ( CompositeSequence ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see edu.columbia.gemma.expression.designElement.CompositeSequenceDaoBase#findOrCreate(edu.columbia.gemma.expression.designElement.CompositeSequence)
      */
     @Override
     public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
         if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
-            log.debug( "compositeSequence must name and arrayDesign." );
+            if ( log.isDebugEnabled() ) log.debug( "compositeSequence must name and arrayDesign." );
             return null;
         }
-        CompositeSequence newcompositeSequence = ( CompositeSequence ) this.find( compositeSequence );
+        CompositeSequence newcompositeSequence = this.find( compositeSequence );
         if ( newcompositeSequence != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing compositeSequence: " + newcompositeSequence );
+            BeanPropertyCompleter.complete( newcompositeSequence, compositeSequence );
             return newcompositeSequence;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence.getName() );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence );
         return ( CompositeSequence ) create( compositeSequence );
     }
 

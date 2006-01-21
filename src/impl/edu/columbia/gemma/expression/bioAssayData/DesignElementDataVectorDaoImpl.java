@@ -18,6 +18,14 @@
  */
 package edu.columbia.gemma.expression.bioAssayData;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector
  * @author pavlidis
@@ -26,26 +34,59 @@ package edu.columbia.gemma.expression.bioAssayData;
 public class DesignElementDataVectorDaoImpl extends
         edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDaoBase {
 
+    private static Log log = LogFactory.getLog( DesignElementDataVectorDaoImpl.class.getName() );
+
     /*
      * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDaoBase#findOrCreate(edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector)
      */
     @Override
     public DesignElementDataVector findOrCreate( DesignElementDataVector designElementDataVector ) {
-        // TODO Auto-generated method stub
-        return super.findOrCreate( designElementDataVector );
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( DesignElementDataVector.class );
+
+            queryObject.add( Restrictions.eq( "designElement", designElementDataVector.getDesignElement() ) );
+
+            queryObject.add( Restrictions.eq( "quantitationType", designElementDataVector.getQuantitationType() ) );
+
+            queryObject.add( Restrictions
+                    .eq( "expressionExperiment", designElementDataVector.getExpressionExperiment() ) );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + DesignElementDataVector.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = ( DesignElementDataVector ) results.iterator().next();
+                }
+            }
+            return ( DesignElementDataVector ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorDaoBase#find(edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector)
      */
     @Override
     public DesignElementDataVector find( DesignElementDataVector designElementDataVector ) {
-        // TODO Auto-generated method stub
-        return super.find( designElementDataVector );
+        if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
+                || designElementDataVector.getExpressionExperiment() == null ) {
+            log.warn( "DesignElementDataVector did not have comparable fields " + designElementDataVector );
+            return null;
+        }
+        DesignElementDataVector newDesignElementDataVector = find( designElementDataVector );
+        if ( newDesignElementDataVector != null ) {
+            log.debug( "Found existing designElementDataVector: " + newDesignElementDataVector );
+            BeanPropertyCompleter.complete( newDesignElementDataVector, designElementDataVector );
+            return newDesignElementDataVector;
+        }
+        log.debug( "Creating new designElementDataVector: " + designElementDataVector );
+        return ( DesignElementDataVector ) create( designElementDataVector );
     }
 
 }

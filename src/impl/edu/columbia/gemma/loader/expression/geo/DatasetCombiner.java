@@ -32,7 +32,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +67,6 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
  * Another problem is that there is no way to go from GDS-->GSE-->other GDS without scraping the GEO web site.
  * <hr>
  * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -215,90 +213,5 @@ public class DatasetCombiner {
         }
 
         return result;
-    }
-}
-
-/**
- * Holds information about GEO samples that "go together".
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
- * @author pavlidis
- * @version $Id$
- */
-class GeoSampleCorrespondence {
-
-    Collection<Set<String>> sets = new HashSet<Set<String>>();
-
-    /**
-     * @param gsmNumber
-     * @return Collection of sample accession values that correspond to the argument.
-     */
-    public Collection<String> getCorrespondingSamples( String gsmNumber ) {
-        // return this.map.get( gsmNumber );
-        for ( Set<String> set : sets ) {
-            if ( set.contains( gsmNumber ) ) {
-                return set;
-            }
-        }
-        return null; // not found!
-    }
-
-    /**
-     * @param gsmNumberA
-     * @param gsmNumberB
-     */
-    public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
-        // if ( !map.containsKey( gsmNumberA ) ) map.put( gsmNumberA, new HashSet<String>() );
-        // if ( !map.containsKey( gsmNumberB ) ) map.put( gsmNumberB, new HashSet<String>() );
-        // map.get( gsmNumberA ).add( gsmNumberB );
-        // map.get( gsmNumberB ).add( gsmNumberA );
-
-        // the following is to make sets that each contain just the samples that group together.
-        boolean found = false;
-        for ( Set<String> set : sets ) {
-            if ( set.contains( gsmNumberA ) ) {
-                set.add( gsmNumberB );
-                found = true;
-                break;
-            } else if ( set.contains( gsmNumberB ) ) {
-                set.add( gsmNumberA );
-                found = true;
-                break;
-            }
-        }
-
-        if ( !found ) {
-            Set<String> newSet = new HashSet<String>();
-            newSet.add( gsmNumberA );
-            newSet.add( gsmNumberB );
-            sets.add( newSet );
-        }
-
-    }
-
-    @Override
-    public String toString() {
-        StringBuffer buf = new StringBuffer();
-
-        List<String> groupStrings = new ArrayList<String>();
-        for ( Set<String> set : sets ) {
-            String group = "";
-            List<String> sortedSet = new ArrayList<String>( set );
-            Collections.sort( sortedSet );
-            for ( String string : sortedSet ) {
-                group = group + string + " <==> ";
-            }
-            group = group + "\n";
-            groupStrings.add( group );
-        }
-
-        Collections.sort( groupStrings );
-        for ( String string : groupStrings ) {
-            buf.append( string );
-        }
-
-        return buf.toString().replaceAll( " <==> \\n", "\n" );
     }
 }

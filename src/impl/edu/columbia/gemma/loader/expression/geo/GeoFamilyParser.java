@@ -61,8 +61,6 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
 /**
  * Class for parsing GSE and GDS files from NCBI GEO.
  * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

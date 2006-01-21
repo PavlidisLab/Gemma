@@ -66,7 +66,6 @@ import edu.columbia.gemma.expression.biomaterial.Treatment;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
 import edu.columbia.gemma.expression.designElement.DesignElement;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
 import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
@@ -87,9 +86,6 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
  * Where appropriate, objects are only created anew if they don't already exist in the database, according to rules
  * documented elsewhere.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @author keshav
@@ -100,7 +96,6 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="designElementService" ref="designElementService"
  * @spring.property name="protocolService" ref="protocolService"
  * @spring.property name="softwareService" ref="softwareService"
  * @spring.property name="hardwareService" ref="hardwareService"
@@ -137,8 +132,6 @@ public class PersisterHelper implements Persister {
     private DatabaseEntryService databaseEntryService;
 
     private Person defaultOwner = null;
-
-    private DesignElementService designElementService;
 
     private ExpressionExperimentService expressionExperimentService;
 
@@ -323,13 +316,13 @@ public class PersisterHelper implements Persister {
         DesignElement designElement = vector.getDesignElement();
 
         if ( designElement instanceof CompositeSequence ) {
-            CompositeSequence cs = ( CompositeSequence ) designElementService.find( ( designElement ) );
+            CompositeSequence cs = compositeSequenceService.find( ( ( CompositeSequence ) designElement ) );
             if ( cs == null )
                 throw new IllegalStateException(
                         "Cannot persist DesignElementDataVector until DesignElements are stored" );
             vector.setDesignElement( cs );
         } else if ( designElement instanceof Reporter ) {
-            Reporter reporter = ( Reporter ) designElementService.find( designElement );
+            Reporter reporter = reporterService.find( ( Reporter ) designElement );
             if ( reporter == null )
                 throw new IllegalStateException(
                         "Cannot persist DesignElementDataVector until DesignElements are stored" );
@@ -698,6 +691,7 @@ public class PersisterHelper implements Persister {
      * @param designProvider
      */
     private Contact persistContact( Contact designProvider ) {
+        if ( designProvider == null ) return null;
         return this.contactService.findOrCreate( designProvider );
     }
 
@@ -772,7 +766,16 @@ public class PersisterHelper implements Persister {
 
         for ( DesignElementDataVector vect : ( Collection<DesignElementDataVector> ) entity
                 .getDesignElementDataVectors() ) {
-            DesignElement persistentDesignElement = designElementService.find( vect.getDesignElement() );
+
+            DesignElement persistentDesignElement = null;
+            DesignElement maybeExistingDesignElement = vect.getDesignElement();
+            if ( maybeExistingDesignElement instanceof CompositeSequence ) {
+                persistentDesignElement = compositeSequenceService
+                        .find( ( CompositeSequence ) maybeExistingDesignElement );
+            } else if ( maybeExistingDesignElement instanceof Reporter ) {
+                persistentDesignElement = reporterService.find( ( Reporter ) maybeExistingDesignElement );
+            }
+
             if ( persistentDesignElement == null ) {
                 throw new IllegalStateException( vect.getDesignElement() + " does not have a persistent version" );
             }
@@ -953,13 +956,6 @@ public class PersisterHelper implements Persister {
      */
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    /**
-     * @param designElementService The designElementService to set.
-     */
-    public void setDesignElementService( DesignElementService designElementService ) {
-        this.designElementService = designElementService;
     }
 
     /**

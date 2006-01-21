@@ -29,7 +29,6 @@ import java.util.Set;
  * Holds information about GEO samples that "go together".
  * <hr>
  * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

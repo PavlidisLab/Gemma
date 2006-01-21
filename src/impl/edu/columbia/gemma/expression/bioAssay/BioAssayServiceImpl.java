@@ -21,10 +21,6 @@
 package edu.columbia.gemma.expression.bioAssay;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -55,7 +51,7 @@ public class BioAssayServiceImpl extends edu.columbia.gemma.expression.bioAssay.
     @Override
     protected void handleRemove( BioAssay bioAssay ) throws Exception {
         this.getBioAssayDao().remove( bioAssay );
-        
+
     }
 
 }

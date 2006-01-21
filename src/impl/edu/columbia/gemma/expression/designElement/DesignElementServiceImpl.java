@@ -19,22 +19,12 @@
 package edu.columbia.gemma.expression.designElement;
 
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.DesignElementService
  */
 public class DesignElementServiceImpl extends edu.columbia.gemma.expression.designElement.DesignElementServiceBase {
-
-    /**
-     * @see edu.columbia.gemma.expression.designElement.DesignElementService#find(edu.columbia.gemma.expression.designElement.DesignElement)
-     */
-    protected edu.columbia.gemma.expression.designElement.DesignElement handleFind(
-            edu.columbia.gemma.expression.designElement.DesignElement designElement ) throws java.lang.Exception {
-        return this.getDesignElementDao().find( designElement );
-    }
 
     /**
      * @see edu.columbia.gemma.expression.designElement.DesignElementService#remove(edu.columbia.gemma.expression.designElement.DesignElement)
@@ -50,11 +40,6 @@ public class DesignElementServiceImpl extends edu.columbia.gemma.expression.desi
     protected void handleUpdate( edu.columbia.gemma.expression.designElement.DesignElement designElement )
             throws java.lang.Exception {
         this.getDesignElementDao().update( designElement );
-    }
-
-    @Override
-    protected DesignElement handleFindOrCreate( DesignElement designElement ) throws Exception {
-        return this.getDesignElementDao().findOrCreate( designElement );
     }
 
 }

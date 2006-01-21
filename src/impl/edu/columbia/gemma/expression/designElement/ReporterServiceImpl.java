@@ -21,10 +21,6 @@
 package edu.columbia.gemma.expression.designElement;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.ReporterService
@@ -48,6 +44,16 @@ public class ReporterServiceImpl extends edu.columbia.gemma.expression.designEle
     protected void handleRemove( Reporter reporter ) throws Exception {
         this.getReporterDao().remove( reporter );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.designElement.ReporterServiceBase#handleFind(edu.columbia.gemma.expression.designElement.Reporter)
+     */
+    @Override
+    protected Reporter handleFind( Reporter reporter ) throws Exception {
+        return this.getReporterDao().find( reporter );
     }
 
 }

@@ -64,7 +64,7 @@ public class CompositeSequenceServiceImpl extends
 
     @Override
     protected CompositeSequence handleFind( CompositeSequence compositeSequence ) throws Exception {
-        return ( CompositeSequence ) this.getCompositeSequenceDao().find( compositeSequence );
+        return this.getCompositeSequenceDao().find( compositeSequence );
     }
 
 }

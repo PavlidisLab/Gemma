@@ -23,11 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.designElement.Reporter
@@ -42,7 +40,7 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
      * @see edu.columbia.gemma.expression.designElement.ReporterDaoBase#find(edu.columbia.gemma.expression.designElement.Reporter)
      */
     @Override
-    public Reporter find( DesignElement reporter ) {
+    public Reporter find( Reporter reporter ) {
 
         if ( reporter.getName() == null ) return null;
         try {
@@ -50,7 +48,10 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
 
             queryObject.add( Restrictions.eq( "name", reporter.getName() ) );
 
-            // join
+            // queryObject.add( Restrictions.eq( "arrayDesign", reporter.getArrayDesign() ) ); //only works if persistent arrayDesign.
+
+            // This allows finding without having a persistent arrayDesign. TODO make this use the full arraydesign
+            // business key.
             queryObject.createCriteria( "arrayDesign" ).add(
                     Restrictions.eq( "name", reporter.getArrayDesign().getName() ) );
 
@@ -81,16 +82,18 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
     @Override
     public Reporter findOrCreate( Reporter reporter ) {
         if ( reporter.getName() == null || reporter.getArrayDesign() == null ) {
-            log.debug( "reporter must name and arrayDesign." );
+            if ( log.isDebugEnabled() ) log.debug( "reporter must have name and arrayDesign." );
             return null;
         }
-        Reporter newreporter = this.find( reporter );
-        if ( newreporter != null ) {
-            return newreporter;
+        Reporter newReporter = this.find( reporter );
+        if ( newReporter != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing reporter: " + newReporter );
+            BeanPropertyCompleter.complete( newReporter, reporter );
+            return newReporter;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new reporter: " + reporter.getName() );
-        return ( Reporter ) create( reporter );
-
+        Reporter result = ( Reporter ) create( reporter );
+        return result;
     }
 
 }

@@ -47,7 +47,8 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
-import edu.columbia.gemma.expression.designElement.DesignElementService;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
+import edu.columbia.gemma.expression.designElement.ReporterService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.expression.experiment.FactorValueService;
 import edu.columbia.gemma.genome.Gene;
@@ -79,7 +80,7 @@ public class GeneLoaderCLI {
     private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-x <file>] [-l <file>] [-r] ";
     private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
-    private PersisterHelper ml;
+    private PersisterHelper ph;
     private GenePersister genePersister;
     private static String username = null;
     private static String password = null;
@@ -212,7 +213,7 @@ public class GeneLoaderCLI {
                     info = ( NCBIGeneInfo ) geneInfoParser.get( key );
                     gene = converter.convert( info );
                    
-                    ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getMl().persist( ( ( Gene ) gene ).getTaxon() ) );
+                    ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getPh().persist( ( ( Gene ) gene ).getTaxon() ) );
                     if (gene==null) {
                         System.out.println("gene null. skipping");
                     }else {
@@ -240,32 +241,33 @@ public class GeneLoaderCLI {
 
     public GeneLoaderCLI() {
 
-        ml = new PersisterHelper();
-        ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+        ph = new PersisterHelper();
+        ph.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
+        ph.setExpressionExperimentService( ( ExpressionExperimentService ) ctx
                         .getBean( "expressionExperimentService" ) );
-        ml.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
-        ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
-        ml.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-        ml.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ml.setDesignElementService( ( DesignElementService ) ctx.getBean( "designElementService" ) );
-        ml.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
-        ml.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
-        ml.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
-        ml.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
-        ml.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
-        ml.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
-        ml.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
-        ml.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
-        ml.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
-        ml.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
-        ml.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
-        ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
-        ml.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
+        ph.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
+        ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
+        ph.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
+        ph.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
+        ph.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
+        ph.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
+        ph.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
+        ph.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
+        ph.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
+        ph.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
+        ph.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
+        ph.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
+        ph.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
+        ph.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
+        ph.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
+        ph.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
+        ph.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
+        ph.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
+        ph.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
         genePersister = new GenePersister();
         genePersister.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
 
-        genePersister.setPersisterHelper( ml );
+        genePersister.setPersisterHelper( ph );
     }
 
     /**
@@ -287,8 +289,8 @@ public class GeneLoaderCLI {
     /**
      * @return Returns the ml.
      */
-    public PersisterHelper getMl() {
-        return this.ml;
+    public PersisterHelper getPh() {
+        return this.ph;
     }
 
 }
