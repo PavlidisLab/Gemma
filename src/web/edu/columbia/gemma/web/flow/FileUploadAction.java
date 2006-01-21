@@ -40,8 +40,6 @@ import edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload;
 /**
  * A flow version of the Spring MVC-based FileUploadController. Code taken partly from example.
  * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @spring.bean name="uploadFileAction"
  * @author keshav
