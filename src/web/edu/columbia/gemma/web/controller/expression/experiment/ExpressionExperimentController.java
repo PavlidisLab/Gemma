@@ -34,10 +34,6 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 import edu.columbia.gemma.web.controller.common.description.BibliographicReferenceController;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @author daq2101
  * @version $Id$
@@ -72,18 +68,19 @@ public class ExpressionExperimentController implements Controller {
         log.info( uri );
 
         /* handle "get all" case. */
-        if ( uri.equals( "/Gemma/expressionExperiments.htm" ) )
+        if ( uri.equals( "/Gemma/expressionExperiments.htm" ) ) {
             return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
                     expressionExperimentService.getAllExpressionExperiments() );
 
-        /* handle details or delete, depending on whether _eventId=delete. */
-        else if ( uri.equals( "/Gemma/expressionExperimentDetails.htm" ) ) {
+            /* handle details or delete, depending on whether _eventId=delete. */
+        } else if ( uri.equals( "/Gemma/expressionExperimentDetails.htm" ) ) {
 
             /* passed from jsp, and must be packed again to view in the next jsp. */
-            request.setAttribute( "name", request.getParameter( "name" ) );
-            log.debug( "request parameter: " + request.getAttribute( "name" ) );
+            request.setAttribute( "id", request.getParameter( "id" ) );
+            log.debug( "request parameter: " + request.getAttribute( "id" ) );
 
-            ExpressionExperiment ee = expressionExperimentService.findByName( request.getParameter( "name" ) );
+            ExpressionExperiment ee = expressionExperimentService.find( new Long( Long.parseLong( request
+                    .getParameter( "id" ) ) ) );
 
             String event = request.getParameter( "_eventId" );
             if ( event != null && event.equals( "delete" ) ) {
@@ -99,8 +96,7 @@ public class ExpressionExperimentController implements Controller {
             }
 
             /* details */
-            return new ModelAndView( "expressionExperiment.Detail.view", "expressionExperiment",
-                    expressionExperimentService.findByName( request.getParameter( "name" ) ) );
+            return new ModelAndView( "expressionExperiment.Detail.view", "expressionExperiment", ee );
         }
 
         /*

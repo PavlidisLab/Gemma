@@ -39,9 +39,6 @@ import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
 /**
  * Retrieve and unpack the raw data files for GEO series. These are the CEL and other files (RPT, EXP and maybe DAT) for
  * Affymetrix data sets. For other types of arrays there may also be raw data?
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -61,7 +58,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     public Collection<LocalFile> fetch( String identifier ) {
         try {
             if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
-
+            assert f != null;
             File newDir = mkdir( identifier );
             newDir = new File( newDir, "rawDataFiles" );
             if ( !newDir.canRead() && !newDir.mkdir() )

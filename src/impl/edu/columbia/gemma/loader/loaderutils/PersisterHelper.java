@@ -510,38 +510,47 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param entity
+     * Persist an array design. If possible we avoid re-checking all the design elements. This is done by comparing the
+     * number of design elements that already exist for the array design. If it is the same, no additional action is
+     * going to be taken. In this case the array design will not be updated at all.
+     * <p>
+     * Therefore, if an array design needs to be updated (e.g., manufacturer or description) but the design elements
+     * have already been entered, a different mechanism must be used.
+     * 
+     * @param arrayDesign
      */
     @SuppressWarnings("unchecked")
-    private ArrayDesign persistArrayDesign( ArrayDesign entity ) {
+    private ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
 
-        if ( !isTransient( entity ) ) return entity;
+        if ( !isTransient( arrayDesign ) ) return arrayDesign;
 
-        entity.setDesignProvider( persistContact( entity.getDesignProvider() ) );
-        ArrayDesign existing = arrayDesignService.find( entity );
+        arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
+        ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
         if ( existing != null ) {
             assert existing.getId() != null;
-            log.debug( "Array design " + existing.getName() + " already exists." );
-            Collection<DesignElement> existingDesignElements = entity.getDesignElements();
-            if ( existingDesignElements.size() == entity.getDesignElements().size() ) {
-                log.debug( "Number of design elements in existing version " + "is the same ("
+            log.info( "Array design " + existing.getName() + " already exists." );
+            Collection<DesignElement> existingDesignElements = arrayDesign.getDesignElements();
+            if ( existingDesignElements.size() == arrayDesign.getDesignElements().size() ) {
+                log.warn( "Number of design elements in existing version of " + arrayDesign + " is the same ("
                         + existingDesignElements.size() + "). No further processing will be done." );
                 return existing;
-            } else if ( entity.getDesignElements().size() == 0 ) {
-                log.debug( entity
-                        + ": No design elements in newly supplied version, no further processing will be done." );
+            } else if ( arrayDesign.getDesignElements().size() == 0 ) {
+                log.warn( arrayDesign + ": No design elements in newly supplied version of " + arrayDesign
+                        + ", no further processing of design elements will be done." );
                 return existing;
             } else {
-                log.debug( "Design exists but design elements are to be updated." );
-                entity = existing;
+                log.info( "Array Design " + arrayDesign + " exists but design elements are to be updated." );
+                arrayDesign = existing;
             }
+        } else {
+            log.info( "Array Design " + arrayDesign + " is new, processing..." );
         }
 
         int i = 0;
-        log.debug( "Filling in design elements for " + entity );
-        for ( DesignElement designElement : ( Collection<DesignElement> ) entity.getDesignElements() ) {
-            designElement.setArrayDesign( entity );
+        log.info( "Filling in or updating sequences in design elements for " + arrayDesign );
+        for ( DesignElement designElement : ( Collection<DesignElement> ) arrayDesign.getDesignElements() ) {
+            designElement.setArrayDesign( arrayDesign );
             if ( designElement instanceof CompositeSequence ) {
                 CompositeSequence cs = ( CompositeSequence ) designElement;
                 cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
@@ -558,11 +567,11 @@ public class PersisterHelper implements Persister {
                 }
             }
             if ( i % 1000 == 0 ) {
-                log.info( i + " design elements examined." );
+                log.info( i + " design element sequences examined for " + arrayDesign );
             }
         }
 
-        return arrayDesignService.findOrCreate( entity );
+        return arrayDesignService.findOrCreate( arrayDesign );
     }
 
     /**
@@ -880,6 +889,7 @@ public class PersisterHelper implements Persister {
         if ( entity instanceof Collection ) {
             this.remove( ( Collection ) entity );
         }
+        throw new UnsupportedOperationException( "remove not supported" );
         // String entityName = ReflectionUtil.getBaseForImpl( entity ).getSimpleName();
         // String daoName = StringUtil.lowerCaseFirstLetter( entityName ) + "Dao";
         // FIXME, make this work.

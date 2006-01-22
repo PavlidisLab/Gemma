@@ -70,8 +70,6 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
  * (which are curated Experiments). Note that a sample can belong to more than one series. A series can belong to more
  * than one dataSet. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
  * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -697,7 +695,9 @@ public class GeoConverter implements Converter {
         String dbIdentifierDescription = getDbIdentifierDescription( platform );
 
         String url = null;
-        if ( dbIdentifierDescription.indexOf( "LINK_PRE:" ) >= 0 ) {
+        if ( dbIdentifierDescription == null ) {
+            throw new IllegalStateException( "Could not identify database identifier column in " + platform );
+        } else if ( dbIdentifierDescription.indexOf( "LINK_PRE:" ) >= 0 ) {
             // example: #ORF = ORF reference LINK_PRE:"http://genome-www4.stanford.edu/cgi-bin/SGD/locus.pl?locus="
             url = dbIdentifierDescription.substring( dbIdentifierDescription.indexOf( "LINK_PRE:" ) );
             result.setWebUri( url );

@@ -18,7 +18,7 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
 import edu.columbia.gemma.common.auditAndSecurity.PersonService;
 import edu.columbia.gemma.common.description.DatabaseEntryService;
@@ -43,14 +43,11 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * This is an integration test
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
+public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
     GeoDatasetService gds;
 
     /*

@@ -24,10 +24,6 @@ import org.apache.commons.lang.time.FastDateFormat;
 import org.displaytag.decorator.ColumnDecorator;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */

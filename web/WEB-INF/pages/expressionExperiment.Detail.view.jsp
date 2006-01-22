@@ -1,12 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="java.util.*" %>
-<%@ page import="edu.columbia.gemma.expression.experiment.ExpressionExperiment" %>
-
-<jsp:useBean id="arrayDesign" scope="request" class="edu.columbia.gemma.expression.experiment.ExpressionExperimentImpl"/>
-
+<jsp:useBean id="expressionExperiment" scope="request"
+    class="edu.columbia.gemma.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<SCRIPT LANGUAGE = "JavaScript">
+<html>
+    <head>
+        <SCRIPT LANGUAGE="JavaScript">
 	function selectButton(target){
 		if(target == 0){
 			document.detailsForm._eventId.value="back"
@@ -31,66 +29,110 @@
 		}
 		document.detailsForm.submit();
 	}
-	</SCRIPT> 
-	<HEAD></HEAD>
-	<BODY>
-		<FORM name="detailsForm" action="">
-				<%--<input type="hidden" name="_flowExecutionId" value="<%=request.getAttribute("flowExecutionId") %>">--%>
-				<input type="hidden" name="_eventId" value="">
-				<input type="hidden" name="_flowId" value="">
-				<input type="hidden" name="name" value="<%=request.getAttribute("name") %>">
-		</FORM>
-		<TABLE width="100%">
-			<TR>
-				<TD><b>ExpressionExperiment Details</b></TD>
-			</TR>
-			<TR>
-				<TD COLSPAN="2"><HR></TD>
-			</TR>
-			<TR>
-				<TD><B>Name</B></TD>
-				<TD><jsp:getProperty name="expressionExperiment" property="name"/></TD>
-			</TR>
-			<%--
-			<TR>
-				<TD><B>Manufacturer</B></TD>
-				<TD><%=arrayDesign.getDesignProvider().getName()%></TD>
-			</TR>
-			--%>
-			<TR>
-				<TD><B>Source</B></TD>
-				<TD><jsp:getProperty name="expressionExperiment" property="source"/></TD>
-			</TR>		
-			<TR>
-				<TD><B>Database Entry</B></TD>
-				<%--<TD><%=expressionExperiment.getAccession().getAccession()%></TD>--%>
-			</TR>
-			<TR>
-				<TD COLSPAN="2"><HR></TD>
-			</TR>
-			<TR>
-				<TD COLSPAN="2">
-					<DIV align="right">
-						<INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
-					</DIV>
-				</TD>
-				
-				<%--<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">--%>
-				<TD COLSPAN="2">
-					<DIV align="right">
-						<INPUT type="button" onclick="javascript:selectButton(1)" value="Delete">
-					</DIV>
-				</TD>
-				<%--</authz:acl>--%>
-				
-				<%--<authz:acl domainObject="${bibliographicReference}" hasPermission="1,6">--%>
-				<TD COLSPAN="2">
-					<DIV align="right">
-						<INPUT type="button" onclick="javascript:selectButton(2)" value="Edit">
-					</DIV>
-				</TD>
-				<%--</authz:acl>--%>
-			</TR>
-		</TABLE>
-	</BODY>
-</HTML>
+	</SCRIPT>
+    </head>
+    <body>
+        <h2>
+            <fmt:message key="expressionExperiment.details" />
+        </h2>
+        <TABLE width="100%">
+            <tr>
+                <td>
+                    <B>
+                        <fmt:message key="name" />
+                    </B>
+                </td>
+                <td>
+                    <jsp:getProperty name="expressionExperiment" property="name" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <B>
+                        <fmt:message key="description" />
+                    </B>
+                </td>
+                <td>
+                    <jsp:getProperty name="expressionExperiment" property="description" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <B>
+                        <fmt:message key="source" />
+                    </B>
+                </td>
+                <td>
+                    <jsp:getProperty name="expressionExperiment" property="source" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <B>
+                        <fmt:message key="expressionExperiment.accession" />
+                    </B>
+                </td>
+                <td>
+                    <%=expressionExperiment.getAccession().getExternalDatabase().getName()%>
+                    :&nbsp;
+                    <%=expressionExperiment.getAccession().getAccession()%>
+                </td>
+            </tr>
+
+        </table>
+        <%=expressionExperiment.getOwner() %>
+        <br />
+
+        <%=expressionExperiment.getBioAssays() %>
+        <br />
+
+        <%=expressionExperiment.getExperimentalDesigns() %>
+        <br />
+
+        <%=expressionExperiment.getInvestigators() %>
+        <br />
+
+        <%=expressionExperiment.getPrimaryPublication() %>
+        <br />
+
+        <%=expressionExperiment.getSubsets() %>
+        <br />
+
+        <%=expressionExperiment.getAuditTrail() %>
+        <br />
+
+        <%=expressionExperiment.getAnalyses() %>
+        <br />
+
+        <%=expressionExperiment.getDesignElementDataVectors().size() %>
+        <br />
+
+        <hr />
+        <table>
+            <tr>
+                <TD>
+                    <DIV align="right">
+                        <INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
+                    </DIV>
+                </td>
+
+                <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+                    <TD>
+                        <DIV align="right">
+                            <INPUT type="button" onclick="javascript:selectButton(1)" value="Delete">
+                        </DIV>
+                    </td>
+                </authz:acl>
+
+                <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+                    <TD>
+                        <DIV align="right">
+                            <INPUT type="button" onclick="javascript:selectButton(2)" value="Edit">
+                        </DIV>
+                    </td>
+                </authz:acl>
+            </tr>
+        </table>
+        </TABLE>
+    </body>
+</html>
