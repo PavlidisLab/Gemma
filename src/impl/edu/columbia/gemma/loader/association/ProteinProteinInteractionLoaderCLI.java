@@ -141,8 +141,7 @@ public class ProteinProteinInteractionLoaderCLI {
                     manAuthentication.validateRequest( username, password );
                 }
             } else {
-                log.debug( "Not authenticated.  Make sure you entered a valid username and/or password" );
-                // TODO inform user of this (print to System.out).
+                log.error( "Not authenticated.  Make sure you entered a valid username and/or password" );
                 System.exit( 0 );
             }
             PPIFileParser assocParser = new PPIFileParser( PPIFileParser.PERSIST_CONCURRENTLY, cli.gpDao, cli.ppiDao,

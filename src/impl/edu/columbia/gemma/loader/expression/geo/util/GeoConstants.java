@@ -23,9 +23,6 @@ import java.util.HashSet;
 
 /**
  * Constants used to help decipher GEO data files.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -33,7 +30,13 @@ import java.util.HashSet;
 public class GeoConstants {
 
     public static Collection<String> idNames;
+
+    /**
+     * Collection of strings used to identify the column holding external database identifiers, usually Genbank
+     * accession or ORF numbers. This must be added to when new ones are encountered.
+     */
     public static Collection<String> extRefNames;
+
     public static Collection<String> descriptionNames;
 
     static {
@@ -43,6 +46,7 @@ public class GeoConstants {
 
         extRefNames = new HashSet<String>();
         extRefNames.add( "GB_ACC" );
+        extRefNames.add( "GB_LIST" );
         extRefNames.add( "ORF" );
 
         descriptionNames = new HashSet<String>();

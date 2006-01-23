@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.association;
 
 import java.util.Collection;
@@ -10,20 +28,19 @@ import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
-import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
+import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
- * Class to parse a file of literature associations. Format: (read whole row) g1_dbase\t gl_name\t g1_ncbiid\t
- * g2_dbase\t g2_name\t g2_ncbiid\t action\t count\t database
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
+ * Class to parse a file of literature associations. Format: (read whole row)
+ * 
+ * <pre>
+ *      g1_dbase\t gl_name\t g1_ncbiid\tg2_dbase\t g2_name\t g2_ncbiid\t action\t count\t database
+ * </pre>
  * 
  * @author anshu
  * @version $Id$
  */
-
-public class LitAssociationFileParserImpl extends BasicLineMapParser /* implements Persister */{
+public class LitAssociationFileParserImpl extends BasicLineParser /* implements Persister */{
 
     public static final int LIT_ASSOCIATION_FIELDS_PER_ROW = 9;
     public static final int PERSIST_CONCURRENTLY = 1;
@@ -50,7 +67,7 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /* implemen
      */
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
-        System.out.println( line );
+        log.debug( line );
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != LIT_ASSOCIATION_FIELDS_PER_ROW ) {
@@ -89,10 +106,10 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /* implemen
             assoc.setSource( db );
 
             if ( mPersist == PERSIST_CONCURRENTLY ) {
-                laDao.create( fields[6], g1, new Integer( fields[7] ), g2 );
+                laDao.create( fields[6], g1, new Integer( fields[7] ), g2 ); // FIXME parser should not create.
             }
         } catch ( Exception e ) {
-            System.out.println( e.toString() );
+            log.error( e, e );
         }
         return null;
     }
@@ -103,10 +120,6 @@ public class LitAssociationFileParserImpl extends BasicLineMapParser /* implemen
     public void removeAll() {
         Collection col = laDao.loadAll();
         laDao.remove( col );
-    }
-
-    public Object getKey( Object obj ) {
-        return null;
     }
 
 }

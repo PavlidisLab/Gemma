@@ -31,10 +31,6 @@ import junit.framework.TestCase;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004, 2006 University of British Columbia
- * 
  * @author daq2101
  * @version $Id$
  */
@@ -107,7 +103,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
     // replay( eeDao );
     // svc.findById( 13 );
     // verify( eeDao );
-    //    }
+    // }
 
     protected void tearDown() throws Exception {
         super.tearDown();

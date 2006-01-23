@@ -80,30 +80,77 @@
             </tr>
 
         </table>
+
+        <h3>
+            Owner
+        </h3>
         <%=expressionExperiment.getOwner() %>
         <br />
 
-        <%=expressionExperiment.getBioAssays() %>
-        <br />
+        <h3>
+            Bio Assays (arrays)
+        </h3>
+        <display:table name="expressionExperiment.bioAssays" class="list" pagesize="10" >
+         <display:column property="id" sort="true" />
+            <display:column property="name" maxWords="20" />
+            <display:column property="description" maxWords="100" />
+        </display:table>
 
-        <%=expressionExperiment.getExperimentalDesigns() %>
-        <br />
+        <h3>
+            Experimental designs
+        </h3>
+        <display:table name="expressionExperiment.experimentalDesigns" class="list">
 
+            <display:column property="name" sort="true" maxWords="20" />
+            <display:column property="description" sort="true" maxWords="100"  />
+            <display:setProperty name="basic.empty.showtable" value="false" />
+        </display:table>
+
+        <h3>
+            Investigators
+        </h3>
         <%=expressionExperiment.getInvestigators() %>
         <br />
 
-        <%=expressionExperiment.getPrimaryPublication() %>
-        <br />
+        <h3>
+            Publication
+        </h3>
+        <%if ( expressionExperiment.getPrimaryPublication() != null ) {
 
+                %>
+        <Gemma:bibref bibliographicReference="   <%=expressionExperiment.getPrimaryPublication() %>" />
+        <br />
+        <%} else {
+
+            %>
+        <p>
+            (No publication listed)
+        </p>
+        <%}
+
+            %>
+
+        <h3>
+            Subset
+        </h3>
         <%=expressionExperiment.getSubsets() %>
         <br />
 
+        <h3>
+            Audit trail
+        </h3>
         <%=expressionExperiment.getAuditTrail() %>
         <br />
 
+        <h3>
+            Analyses
+        </h3>
         <%=expressionExperiment.getAnalyses() %>
         <br />
 
+        <h3>
+            Number of design element data vectors
+        </h3>
         <%=expressionExperiment.getDesignElementDataVectors().size() %>
         <br />
 
@@ -133,6 +180,6 @@
                 </authz:acl>
             </tr>
         </table>
-        </TABLE>
+
     </body>
 </html>

@@ -28,14 +28,13 @@ import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.association.ProteinProteinInteractionDao;
-import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
+import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
  * Class to parse a file of protein-protein interactions (retrieved from BIND). Format: (read whole row)
  * 
  * <pre>
- *   pl_ncbiid\t
- *    p2_ncbiid\t external_db\t db_id\t numMentions\t action\t
+ *       pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
  * </pre>
  * 
  * <hr>
@@ -43,7 +42,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * @author anshu
  * @version $Id$
  */
-public class PPIFileParser extends BasicLineMapParser /* implements Persister */{
+public class PPIFileParser extends BasicLineParser /* implements Persister */{
 
     public static final int PPI_FIELDS_PER_ROW = 6;
     public static final int PERSIST_CONCURRENTLY = 1;
@@ -111,7 +110,7 @@ public class PPIFileParser extends BasicLineMapParser /* implements Persister */
                 ppiDao.create( assoc );
             }
         } catch ( Exception e ) {
-            System.out.println( e.toString() );
+            log.error( e.toString() );
         }
         return null;
     }
@@ -122,10 +121,6 @@ public class PPIFileParser extends BasicLineMapParser /* implements Persister */
     public void removeAll() {
         Collection col = ppiDao.loadAll();
         ppiDao.remove( col );
-    }
-
-    public Object getKey( Object obj ) {
-        return null;
     }
 
 }

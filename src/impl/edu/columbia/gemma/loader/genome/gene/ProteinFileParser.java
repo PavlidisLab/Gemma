@@ -20,6 +20,9 @@ package edu.columbia.gemma.loader.genome.gene;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import baseCode.util.StringUtil;
 
 import edu.columbia.gemma.genome.Gene;
@@ -27,13 +30,13 @@ import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.genome.gene.GeneProduct;
 import edu.columbia.gemma.genome.gene.GeneProductType;
-import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
+import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *     taxon\t ncbi_gene_id\t ncbi_prot_id
+ *   taxon\t ncbi_gene_id\t ncbi_prot_id
  * </pre>
  * 
  * <hr>
@@ -41,7 +44,9 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * @author anshu
  * @version $Id$
  */
-public class ProteinFileParser extends BasicLineMapParser /* implements Persister */{
+public class ProteinFileParser extends BasicLineParser {
+
+    private static Log log = LogFactory.getLog( ProteinFileParser.class.getName() );
 
     public static final int FIELDS_PER_ROW = 3;
     public static final int PERSIST_CONCURRENTLY = 1;
@@ -65,7 +70,7 @@ public class ProteinFileParser extends BasicLineMapParser /* implements Persiste
      */
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
-        System.out.println( line );
+        log.debug( line );
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != FIELDS_PER_ROW ) {
@@ -96,10 +101,10 @@ public class ProteinFileParser extends BasicLineMapParser /* implements Persiste
             gp.setDescription( fields[3] );
 
             if ( mPersist == PERSIST_CONCURRENTLY ) {
-                gpDao.create( gp );
+                gpDao.create( gp ); // FIXME parser should not be persisting.
             }
         } catch ( Exception e ) {
-            System.out.println( e.toString() ); // FIXME - use logger instead.
+            log.error( e, e );
         }
         return null;
     }
@@ -110,10 +115,6 @@ public class ProteinFileParser extends BasicLineMapParser /* implements Persiste
     public void removeAll() {
         Collection col = gpDao.loadAll();
         gpDao.remove( col );
-    }
-
-    public Object getKey( Object obj ) {
-        return null;
     }
 
 }

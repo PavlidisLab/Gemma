@@ -35,9 +35,6 @@ import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
 
 /**
  * Retrieve GEO files from the NCBI FTP server.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

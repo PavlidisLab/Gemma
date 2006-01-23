@@ -106,11 +106,12 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             throw new IllegalStateException( e );
         }
 
-        // FIXME we don't get a single ExpressionExperiment out of this - we get one for each dataset.
+        // FIXME we don't get a single ExpressionExperiment out of this - we get one for each dataset if there are
+        // multiple data sets. We also get one for each series.
         try {
             gfp.parse( dataSetPath );
 
-            GeoParseResult results = ( GeoParseResult ) gfp.getResults().iterator().next();
+            GeoParseResult results = ( GeoParseResult ) gfp.getResults().iterator().next(); // first result is where we start.
 
             Map<String, GeoDataset> datasetMap = results.getDatasets();
             if ( !datasetMap.containsKey( geoDataSetAccession ) ) {
@@ -135,7 +136,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             throw new RuntimeException( e );
         }
 
-        // fixme - we have to use this information.
+        // FIXME - we have to use this information.
         GeoSampleCorrespondence correspondence = DatasetCombiner.findGSECorrespondence( ( ( GeoParseResult ) gfp
                 .getResults().iterator().next() ).getDatasetMap().values() );
 

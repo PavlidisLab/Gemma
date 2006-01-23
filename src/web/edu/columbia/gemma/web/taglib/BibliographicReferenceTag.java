@@ -30,9 +30,6 @@ import edu.columbia.gemma.util.ConfigUtils;
 
 /**
  * Tag to output a bibliographic reference .
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @jsp.tag name="bibref" body-content="empty"
  * @author pavlidis

@@ -67,9 +67,15 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
  * Convert GEO domain objects into Gemma objects.
  * <p>
  * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
- * (which are curated Experiments). Note that a sample can belong to more than one series. A series can belong to more
- * than one dataSet. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
- * <hr>
+ * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
+ * than one dataset. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
+ * <p>
+ * For our purposes, a usable expression data set is represented by a GEO "GDS" number (a curated dataset), which
+ * corresponds to a series. HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the
+ * "A" and "B" arrays were both run on the same samples.
+ * <p>
+ * We don't want the GSE and the GDS for a single experiment to be both converted to ExpressionExperiments. We want the
+ * information contained to be combined into one ExpressionExperiment.
  * 
  * @author pavlidis
  * @version $Id$
@@ -125,7 +131,7 @@ public class GeoConverter implements Converter {
         if ( geoObject instanceof Collection ) {
             return convert( ( Collection ) geoObject );
         } else if ( geoObject instanceof GeoDataset ) {
-            return convert( ( GeoDataset ) geoObject );
+            return convertDataset( ( GeoDataset ) geoObject );
         } else if ( geoObject instanceof GeoSeries ) {
             return convertSeries( ( GeoSeries ) geoObject );
         } else if ( geoObject instanceof GeoSubset ) {
@@ -168,7 +174,7 @@ public class GeoConverter implements Converter {
     /**
      * @param geoDataset
      */
-    private ExpressionExperiment convert( GeoDataset geoDataset ) {
+    private ExpressionExperiment convertDataset( GeoDataset geoDataset ) {
 
         log.debug( "Converting dataset:" + geoDataset.getGeoAccession() );
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
@@ -176,7 +182,7 @@ public class GeoConverter implements Converter {
         result.setName( geoDataset.getTitle() );
         result.setAccession( convertDatabaseEntry( geoDataset ) );
 
-        // convertSubsetAssociations( result, geoDataset ); // if we keep this we get a stack overflow.
+        // convertSubsetAssociations( result, geoDataset ); // FIXME if we keep this we get a stack overflow.
         convertSeriesAssociations( result, geoDataset );
         return result;
     }
@@ -325,6 +331,7 @@ public class GeoConverter implements Converter {
         String organism = organisms.iterator().next();
         log.debug( "Organism: " + organism );
 
+        // FIXME yucky hard-coding of Rattus.
         if ( organism.startsWith( "Rattus" ) || organism.startsWith( "rattus" ) ) {
             organism = "rattus"; // we don't distinguish between species.
         }
@@ -517,7 +524,7 @@ public class GeoConverter implements Converter {
         for ( GeoSeries series : geoDataset.getSeries() ) {
             log.debug( "Converting series associated with dataset: " + series.getGeoAccession() );
             ExpressionExperiment newInfo = convertSeries( series, result );
-            BeanPropertyCompleter.complete( newInfo, result ); // not good enough.
+            BeanPropertyCompleter.complete( newInfo, result ); // FIXME not good enough.
         }
     }
 
@@ -529,7 +536,8 @@ public class GeoConverter implements Converter {
 
         ExpressionExperimentSubSet expExp = ExpressionExperimentSubSet.Factory.newInstance();
 
-        ExpressionExperiment source = convert( subset.getOwningDataset() ); // dataset --> subsets --> back here.
+        ExpressionExperiment source = convertDataset( subset.getOwningDataset() ); // dataset --> subsets --> back
+        // here.
 
         expExp.setSourceExperiment( source );
 
@@ -703,12 +711,12 @@ public class GeoConverter implements Converter {
             result.setWebUri( url );
         }
 
-        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) ) {
+        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" ) ) {
             result.setName( "Genbank" );
             result.setType( DatabaseType.SEQUENCE );
         } else if ( likelyExternalDatabaseIdentifier.equals( "ORF" ) ) {
             String organism = platform.getOrganisms().iterator().next();
-            result.setName( organism );// what else can we do?
+            result.setName( organism );// FIXME what else can we do?
         }
 
         return result;

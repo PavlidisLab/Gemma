@@ -511,9 +511,9 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!dataset_pubmed_id" ) ) {
             datasetSet( currentDatasetAccession, "pubmedId", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_table_begin" ) ) {
-            // FIXME - what to do?
+            this.inDatasetTable = true;
         } else if ( startsWithIgnoreCase( line, "!dataset_table_end" ) ) {
-            // FIXME
+            this.inDatasetTable = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_channel_count" ) ) {
             datasetSet( currentDatasetAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
         } else {
@@ -689,7 +689,7 @@ public class GeoFamilyParser implements Parser {
             platformContactSet( currentPlatformAccession, "laboratory", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_department" ) ) {
             platformContactSet( currentPlatformAccession, "department", value );
-        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) { // FIXME may not be used?
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) { // TODO may not be used any more.
             platformContactSet( currentPlatformAccession, "address", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_city" ) ) {
             platformContactSet( currentPlatformAccession, "city", value );
@@ -973,7 +973,7 @@ public class GeoFamilyParser implements Parser {
             seriesContactSet( currentSeriesAccession, "laboratory", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_department" ) ) {
             seriesContactSet( currentSeriesAccession, "department", value );
-        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) { // FIXME may not be used any longer.
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) { // TODO may not be used any longer.
             seriesContactSet( currentSeriesAccession, "address", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_state" ) ) { // new
             seriesContactSet( currentSeriesAccession, "state", value );

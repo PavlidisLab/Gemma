@@ -179,8 +179,7 @@ public class GeneLoaderCLI {
                     manAuthentication.validateRequest( username, password );
                 }
             } else {
-                log.debug( "Not authenticated.  Make sure you entered a valid username and/or password" );
-                // TODO inform user of this (print to System.out).
+                log.error( "Not authenticated.  Make sure you entered a valid username and/or password" );
                 System.exit( 0 );
             }
 
@@ -212,12 +211,12 @@ public class GeneLoaderCLI {
                 for ( Object key : keys ) {
                     info = ( NCBIGeneInfo ) geneInfoParser.get( key );
                     gene = converter.convert( info );
-                   
+
                     ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getPh().persist( ( ( Gene ) gene ).getTaxon() ) );
-                    if (gene==null) {
-                        System.out.println("gene null. skipping");
-                    }else {
-                        System.out.println("persisting gene: "+ ((Gene) gene).getNcbiId());
+                    if ( gene == null ) {
+                        System.out.println( "gene null. skipping" );
+                    } else {
+                        System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
                         cli.getGenePersister().persist( gene );
                     }
                 }
@@ -243,7 +242,8 @@ public class GeneLoaderCLI {
 
         ph = new PersisterHelper();
         ph.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ph.setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+        ph
+                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
                         .getBean( "expressionExperimentService" ) );
         ph.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
         ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
@@ -275,7 +275,7 @@ public class GeneLoaderCLI {
      */
     private static void printHelp( Options opt ) {
         HelpFormatter h = new HelpFormatter();
-        //h.setWidth( 80 );
+        // h.setWidth( 80 );
         h.printHelp( USAGE, HEADER, opt, FOOTER );
     }
 

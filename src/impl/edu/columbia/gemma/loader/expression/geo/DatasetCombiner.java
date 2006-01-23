@@ -52,7 +52,7 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
  * different microarrays used such as the "A" and B" HG-U133 Affymetrix arrays. (Each GDS can only refer to a single
  * platform)</li>
  * <li>Rarely, there can be two series, as well as two data sets, for the situation described above. I haven't seen one
- * of these yet!</li>
+ * of these yet.</li>
  * </ol>
  * <p>
  * One major problem is figuring out which samples (GSMs) correspond across the datasets. In the example of GSE674,
@@ -87,7 +87,7 @@ public class DatasetCombiner {
      */
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
         /*
-         * go from GSE to GDS.
+         * go from GSE to GDS, using screen scraping.
          */
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
         // grep on "GDS[[digits]] record"

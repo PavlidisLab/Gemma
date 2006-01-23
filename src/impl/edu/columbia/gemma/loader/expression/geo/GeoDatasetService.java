@@ -27,9 +27,6 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

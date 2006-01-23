@@ -148,8 +148,7 @@ public class ProteinLoaderCLI {
                     manAuthentication.validateRequest( username, password );
                 }
             } else {
-                log.debug( "Not authenticated.  Make sure you entered a valid username and/or password" );
-                // TODO inform user of this (print to System.out).
+                log.error( "Not authenticated.  Make sure you entered a valid username and/or password" );
                 System.exit( 0 );
             }
 

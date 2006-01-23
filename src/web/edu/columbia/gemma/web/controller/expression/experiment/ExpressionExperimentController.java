@@ -77,6 +77,7 @@ public class ExpressionExperimentController implements Controller {
 
             /* passed from jsp, and must be packed again to view in the next jsp. */
             request.setAttribute( "id", request.getParameter( "id" ) );
+
             log.debug( "request parameter: " + request.getAttribute( "id" ) );
 
             ExpressionExperiment ee = expressionExperimentService.find( new Long( Long.parseLong( request

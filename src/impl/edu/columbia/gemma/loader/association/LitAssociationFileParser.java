@@ -28,13 +28,13 @@ import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
-import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
+import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *     g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
+ *           g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * </pre>
  * 
  * <hr>
@@ -44,7 +44,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineMapParser;
  * @version $Id$
  */
 
-public class LitAssociationFileParser extends BasicLineMapParser /* implements Persister */{
+public class LitAssociationFileParser extends BasicLineParser {
 
     public static final int LIT_ASSOCIATION_FIELDS_PER_ROW = 9;
     public static final int PERSIST_CONCURRENTLY = 1;
@@ -71,7 +71,7 @@ public class LitAssociationFileParser extends BasicLineMapParser /* implements P
      */
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
-        System.out.println( line );
+        log.debug( line );
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != LIT_ASSOCIATION_FIELDS_PER_ROW ) {
@@ -115,10 +115,10 @@ public class LitAssociationFileParser extends BasicLineMapParser /* implements P
             assoc.setSource( db );
 
             if ( mPersist == PERSIST_CONCURRENTLY ) {
-                laDao.create( fields[6], g1, new Integer( fields[7] ), g2 );
+                laDao.create( fields[6], g1, new Integer( fields[7] ), g2 ); // FIXME parser should not create
             }
         } catch ( Exception e ) {
-            System.out.println( e.toString() );
+            log.error( e, e );
         }
         return null;
     }
@@ -129,10 +129,6 @@ public class LitAssociationFileParser extends BasicLineMapParser /* implements P
     public void removeAll() {
         Collection col = laDao.loadAll();
         laDao.remove( col );
-    }
-
-    public Object getKey( Object obj ) {
-        return null;
     }
 
 }

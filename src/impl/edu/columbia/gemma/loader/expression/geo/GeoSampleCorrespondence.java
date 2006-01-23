@@ -27,8 +27,7 @@ import java.util.Set;
 
 /**
  * Holds information about GEO samples that "go together".
- * <hr>
- * <p>
+ 
  * 
  * @author pavlidis
  * @version $Id$

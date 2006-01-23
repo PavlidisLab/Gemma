@@ -21,9 +21,6 @@ import edu.columbia.gemma.common.description.ExternalDatabaseDao;
 
 /**
  * Command line interface to retrieve and load literature associations
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author anshu
  * @version $Id$
@@ -123,8 +120,7 @@ public class LiteratureAssociationLoaderCLI {
                     manAuthentication.validateRequest( username, password );
                 }
             } else {
-                log.debug( "Not authenticated.  Make sure you entered a valid username and/or password" );
-                // TODO inform user of this (print to System.out).
+                log.error( "Not authenticated.  Make sure you entered a valid username and/or password" );
                 System.exit( 0 );
             }
             LitAssociationFileParser assocParser = new LitAssociationFileParser(
