@@ -36,10 +36,6 @@ import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
  * ArrayExpress stores files in an FTP site as tarred-gzipped archives. Each tar file contains the MAGE file and the
  * datacube external files. This class can download an experiment, unpack the tar file, and put the resulting files onto
  * a local filesystem.
- * <p>
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
