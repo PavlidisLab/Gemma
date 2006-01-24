@@ -35,10 +35,6 @@ import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  */
@@ -68,13 +64,13 @@ public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
         LocalFile lf = LocalFile.Factory.newInstance();
         lf.setLocalURI( "Remote file.  See remote uri for details." );
         lf.setRemoteURI( url );
-        lf.setSize( 1656000 );
+        lf.setSize( 1656000L );
 
         // add a second local file
         LocalFile lf2 = LocalFile.Factory.newInstance();
         lf2.setLocalURI( "2nd local file local uri." );
         lf2.setRemoteURI( "2nd local file remote uri." );
-        lf2.setSize( 1656000 );
+        lf2.setSize( 1656000L );
 
         Object[] dependencies = new Object[3];
         dependencies[0] = ed;
