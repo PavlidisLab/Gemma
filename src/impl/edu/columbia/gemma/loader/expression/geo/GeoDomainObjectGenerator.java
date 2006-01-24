@@ -59,7 +59,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     private boolean generateHasBeenCalled = false;
     private Collection<String> doneDatasets;
-
     private Collection<String> doneSeries;
 
     /**
@@ -94,9 +93,16 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     @SuppressWarnings("unused")
     private Collection<Object> generate( String geoDataSetAccession, boolean addOn ) {
 
+        if ( doneDatasets.contains( geoDataSetAccession ) ) return null;
+
         Collection<LocalFile> result = datasetFetcher.fetch( geoDataSetAccession );
 
         if ( result == null ) return null;
+
+        if ( result.size() != 1 ) {
+            throw new IllegalStateException( "Got " + result.size() + " files for " + geoDataSetAccession
+                    + ", expected only one." );
+        }
 
         LocalFile dataSetFile = ( result.iterator() ).next();
         String dataSetPath;
@@ -111,7 +117,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         try {
             gfp.parse( dataSetPath );
 
-            GeoParseResult results = ( GeoParseResult ) gfp.getResults().iterator().next(); // first result is where we start.
+            GeoParseResult results = ( GeoParseResult ) gfp.getResults().iterator().next(); // first result is where we
+            // start.
 
             Map<String, GeoDataset> datasetMap = results.getDatasets();
             if ( !datasetMap.containsKey( geoDataSetAccession ) ) {
@@ -145,13 +152,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     /**
+     * Fetch and parse GEO series.
+     * 
      * @param series
      * @throws IOException
      */
     private void processSeries( GeoSeries series ) throws IOException {
         log.info( "Processing series " + series );
 
-        // fetch series referred to by the dataset.
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( series.getGeoAccession() );
         LocalFile seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath;

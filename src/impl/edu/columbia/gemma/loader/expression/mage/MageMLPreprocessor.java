@@ -44,8 +44,6 @@ import edu.columbia.gemma.util.ConfigUtils;
  * Parse and persist the raw data files from MAGE-ML files. Files are also created that contain the data organized by
  * quantitation type. The input files are normally organized by bioassay. Note that this does not perform any
  * normalization or other types of preprocessing.
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author pavlidis
  * @author keshav

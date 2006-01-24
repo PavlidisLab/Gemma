@@ -174,9 +174,6 @@ import edu.columbia.gemma.util.ReflectionUtil;
  * <p>
  * In Gemma we only have BioMaterial, not distinct BioSample, BioSource and LabeledExtract objects.
  * </p>
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @see edu.columbia.gemma.loader.mage.MageMLParser
  * @author pavlidis

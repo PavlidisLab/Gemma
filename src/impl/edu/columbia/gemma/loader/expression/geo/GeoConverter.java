@@ -64,7 +64,7 @@ import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 
 /**
- * Convert GEO domain objects into Gemma objects.
+ * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.
  * <p>
  * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
  * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
@@ -89,6 +89,8 @@ public class GeoConverter implements Converter {
     private Collection<Object> results = new HashSet<Object>();
 
     private Collection<String> seenPlatforms = new HashSet<String>();
+
+    private Collection<ExpressionExperiment> convertedExpressionExperiments = new HashSet<ExpressionExperiment>();
 
     public GeoConverter() {
         geoDatabase = ExternalDatabase.Factory.newInstance();
@@ -176,11 +178,23 @@ public class GeoConverter implements Converter {
      */
     private ExpressionExperiment convertDataset( GeoDataset geoDataset ) {
 
+        // make sure that we don't already have an expression experiment corresponding to this dataset.
+
         log.debug( "Converting dataset:" + geoDataset.getGeoAccession() );
         ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
         result.setDescription( geoDataset.getDescription() );
         result.setName( geoDataset.getTitle() );
         result.setAccession( convertDatabaseEntry( geoDataset ) );
+
+        for ( ExpressionExperiment expressionExperiment : convertedExpressionExperiments ) {
+            if ( expressionExperiment.getAccession() == result.getAccession() ) {
+                log.info( "Already have expressionExperiment corresondponding to " + result.getAccession() );
+                result = expressionExperiment;
+                // convertSubsetAssociations( result, geoDataset ); // FIXME if we keep this we get a stack overflow.
+                convertSeriesAssociations( result, geoDataset );
+                return null;
+            }
+        }
 
         // convertSubsetAssociations( result, geoDataset ); // FIXME if we keep this we get a stack overflow.
         convertSeriesAssociations( result, geoDataset );

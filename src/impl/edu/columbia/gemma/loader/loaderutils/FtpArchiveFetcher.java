@@ -43,14 +43,14 @@ import baseCode.util.NetUtils;
 import edu.columbia.gemma.common.description.LocalFile;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
 public abstract class FtpArchiveFetcher extends AbstractFetcher implements ArchiveFetcher {
+    /**
+     * 
+     */
+    private static final int INFO_UPDATE_INTERVAL = 2000;
     protected static Log log = LogFactory.getLog( FtpArchiveFetcher.class.getName() );
     public Untar untarrer;
     protected boolean doDelete = false;
@@ -113,7 +113,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         try {
             while ( !future.isDone() ) {
                 try {
-                    Thread.sleep( 1000 );
+                    Thread.sleep( INFO_UPDATE_INTERVAL );
                 } catch ( InterruptedException ie ) {
                     ;
                 }
@@ -177,6 +177,10 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         return result;
     }
 
+    /**
+     * @param newDir
+     * @param seekFile
+     */
     protected void unPack( final File newDir, final String seekFile ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             @SuppressWarnings("synthetic-access")
@@ -195,7 +199,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         s.start();
         while ( !future.isDone() ) {
             try {
-                Thread.sleep( 2000 );
+                Thread.sleep( INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
                 ;
             }

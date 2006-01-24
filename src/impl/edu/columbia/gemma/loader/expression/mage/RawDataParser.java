@@ -51,9 +51,6 @@ import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
 
 /**
  * Parse the raw files from ArrayExpress (MAGE-ML). The format for the raw files is to have no column or row labels.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author pavlidis
  * @author keshav

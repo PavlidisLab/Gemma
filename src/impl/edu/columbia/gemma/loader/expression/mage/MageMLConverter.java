@@ -35,9 +35,6 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects SDO.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -207,7 +204,9 @@ public class MageMLConverter implements Converter {
         return mageConverterHelper.convert( mageObject );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see edu.columbia.gemma.loader.expression.mage.MageMLConverterHelper#getBioAssayDimensions()
      */
     public BioAssayDimensions getBioAssayDimensions() {

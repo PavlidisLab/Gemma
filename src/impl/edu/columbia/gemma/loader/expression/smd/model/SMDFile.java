@@ -40,7 +40,7 @@ public class SMDFile {
     public LocalFile toFile( FileFormat form ) {
         LocalFile f = new LocalFileImpl();
 
-        f.setSize( ( int ) this.size );
+        f.setSize(new Long( this.size ));
         f.setFormat( form );
         return f;
     }

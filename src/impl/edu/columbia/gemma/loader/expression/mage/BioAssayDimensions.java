@@ -30,9 +30,6 @@ import java.util.Map;
  * Implementation note: We have to store things as Maps of Strings to the objects of interest, rather than using the
  * object itself as a key, because hashCode() for our entities looks just at the primary key (the id), which is not
  * filled in in many cases (when working with non-persistent objects).
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

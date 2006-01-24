@@ -26,10 +26,6 @@ import junit.framework.TestCase;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */

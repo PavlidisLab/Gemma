@@ -15,10 +15,6 @@ import baseCode.util.NetUtils;
 import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */

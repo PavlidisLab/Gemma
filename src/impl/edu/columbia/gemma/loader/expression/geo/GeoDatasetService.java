@@ -41,8 +41,9 @@ public class GeoDatasetService {
      * Given a GEO data set id:
      * <ol>
      * <li>Download and parse GDS file</li>
-     * <li>Download, parse and convert the associated GSE family file(s)</li>
-     * <li>Load the resulting data into Gemma</li>
+     * <li>Download and parse GSE family file(s).</li>
+     * <li>Convert the GDS and GSE into a ExpressionExperiment.
+     * <li>Load the resulting ExpressionExperiment into Gemma</li>
      * </ol>
      * 
      * @param geoDataSetAccession

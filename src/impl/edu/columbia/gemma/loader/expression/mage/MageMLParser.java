@@ -58,9 +58,6 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
  * Class to parse MAGE-ML files and convert them into Source domain objects SDO.
- * <hr>
- * <p>
- * 
  * 
  * @see edu.columbia.gemma.loader.mage.MageMLConverter
  * @author pavlidis
