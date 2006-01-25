@@ -35,7 +35,7 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 public class GeoSubset extends GeoData {
 
     private GeoDataset owningDataset;
-    private String description;
+    private String description = "";
     private Collection<GeoSample> samples;
 
     private VariableType type;

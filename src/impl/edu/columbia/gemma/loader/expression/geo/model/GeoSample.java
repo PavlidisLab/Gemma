@@ -26,9 +26,6 @@ import java.util.List;
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
  * BioAssay in Gemma. Some fields are only relevant for SAGE.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

@@ -42,6 +42,7 @@ import org.apache.commons.logging.LogFactory;
 import baseCode.math.StringDistance;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
+import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 
 /**
@@ -78,6 +79,70 @@ public class DatasetCombiner {
     }
 
     private static Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
+
+    /**
+     * Given a GDS, find the corresponding GSE.
+     * 
+     * @param datasetAccession
+     * @return
+     */
+    public static String findGSEforGDS( String datasetAccession ) {
+        /*
+         * go from GDS to GSE, using screen scraping.
+         */
+        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+        // grep on "GDS[[digits]] record"
+        URL url;
+
+        Pattern pat = Pattern.compile( "(GSE\\d+)\\srecord" );
+
+        Collection<String> associatedSeriesAccession = new HashSet<String>();
+
+        try {
+            url = new URL( "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=" + datasetAccession
+                    + "[Accession]&cmd=search" );
+
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            InputStream is = conn.getInputStream();
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            String line = null;
+            while ( ( line = br.readLine() ) != null ) {
+                Matcher mat = pat.matcher( line );
+
+                if ( mat.find() ) {
+                    String capturedAccession = mat.group( 1 );
+                    associatedSeriesAccession.add( capturedAccession );
+                }
+            }
+            is.close();
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        if ( associatedSeriesAccession.size() > 1 ) {
+            throw new UnsupportedOperationException( "Multiple GSE per GDS not supported." );
+        }
+
+        if ( associatedSeriesAccession.size() == 0 ) {
+            throw new IllegalStateException( "No GSE found for " + datasetAccession );
+        }
+
+        return associatedSeriesAccession.iterator().next();
+
+    }
+
+    /**
+     * Given a GEO dataset it, find all GDS ids that are associated with it.
+     * 
+     * @param seriesAccession
+     * @return
+     */
+    public static Collection<String> findGDSforGDS( String datasetAccession ) {
+        return findGDSforGSE( findGSEforGDS( datasetAccession ) );
+    }
 
     /**
      * Given a GEO series id, find all associated data sets.
@@ -123,6 +188,16 @@ public class DatasetCombiner {
 
         return associatedDatasetAccessions;
 
+    }
+
+    /**
+     * Try to line up samples across datasets contained in a series.
+     * 
+     * @param series
+     * @return
+     */
+    public static GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
+        return findGSECorrespondence( series.getDatasets() );
     }
 
     /**
@@ -209,7 +284,7 @@ public class DatasetCombiner {
 
             result.addCorrespondence( targetAcc, bestMatchAcc );
 
-            log.debug( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch + "\n" );
+            log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch + "\n" );
         }
 
         return result;

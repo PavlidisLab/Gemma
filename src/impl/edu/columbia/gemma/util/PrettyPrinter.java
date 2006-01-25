@@ -30,11 +30,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Very simple class to produce String versions of any Gemma domain objects. The entire hierarchy of associations for
- * each object is printed in a tree-like format. This is primarily used for testing.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
+ * Very simple class to produce String versions of beans. The entire hierarchy of associations for each object is
+ * printed in a tree-like format. This is primarily used for testing. Beans that are not part of this project are
+ * ignored.
  * 
  * @author pavlidis
  * @version $Id$
@@ -80,7 +78,7 @@ public class PrettyPrinter {
     }
 
     /**
-     * Pretty-print a single Gemma domain object.
+     * Pretty-print a single bean
      * 
      * @param gemmaObj
      * @return String representing the object.

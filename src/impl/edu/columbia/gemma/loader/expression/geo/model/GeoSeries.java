@@ -23,38 +23,39 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import edu.columbia.gemma.loader.expression.geo.GeoSampleCorrespondence;
+
 /**
  * Represents a set of GEO samples that were submitted together. In many cases this corresponds to a full study, but for
  * studies that used more than one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class GeoSeries extends GeoData {
 
-    String title;
-    String summary;
-    String overallDesign;
-    Collection<String> keywords;
+    String title = "";
+    String summary = "";
+    String overallDesign = "";
+    Collection<String> keyWords;
     Collection<String> pubmedIds;
     Collection<String> webLinks;
-    Collection<String> contributers;
+    Collection<GeoContact> contributers;
     Map<Integer, GeoVariable> variables;
     Map<Integer, GeoReplication> replicates;
-
+    GeoSampleCorrespondence sampleCorrespondence;
+    Collection<GeoDataset> dataSets;
     Collection<GeoSample> samples;
 
     public GeoSeries() {
-        keywords = new HashSet<String>();
+        keyWords = new HashSet<String>();
         pubmedIds = new HashSet<String>();
         variables = new HashMap<Integer, GeoVariable>();
         replicates = new HashMap<Integer, GeoReplication>();
         webLinks = new HashSet<String>();
-        contributers = new HashSet<String>();
+        contributers = new HashSet<GeoContact>();
         samples = new HashSet<GeoSample>();
+        dataSets = new HashSet<GeoDataset>();
     }
 
     public void addSample( GeoSample sample ) {
@@ -68,15 +69,22 @@ public class GeoSeries extends GeoData {
     /**
      * @return Returns the contributers.
      */
-    public Collection<String> getContributers() {
+    public Collection<GeoContact> getContributers() {
         return this.contributers;
     }
 
     /**
      * @param contributers The contributers to set.
      */
-    public void setContributers( Collection<String> contributers ) {
+    public void setContributers( Collection<GeoContact> contributers ) {
         this.contributers = contributers;
+    }
+
+    /**
+     * @param contributer
+     */
+    public void addContributer( GeoContact contributer ) {
+        this.contributers.add( contributer );
     }
 
     /**
@@ -145,15 +153,15 @@ public class GeoSeries extends GeoData {
     /**
      * @return Returns the type.
      */
-    public Collection<String> getKeywords() {
-        return this.keywords;
+    public Collection<String> getKeyWords() {
+        return this.keyWords;
     }
 
     /**
      * @param type The type to set.
      */
-    public void setKeywords( Collection<String> type ) {
-        this.keywords = type;
+    public void setKeyWords( Collection<String> type ) {
+        this.keyWords = type;
     }
 
     /**
@@ -166,8 +174,8 @@ public class GeoSeries extends GeoData {
     /**
      * @param keyword
      */
-    public void addToKeywords( String keyword ) {
-        this.keywords.add( keyword );
+    public void addToKeyWords( String keyword ) {
+        this.keyWords.add( keyword );
     }
 
     public void addToPubmedIds( String id ) {
@@ -211,6 +219,35 @@ public class GeoSeries extends GeoData {
      */
     public void setReplicates( Map<Integer, GeoReplication> replicates ) {
         this.replicates = replicates;
+    }
+
+    /**
+     * @param dataset
+     */
+    public void addDataSet( GeoDataset dataset ) {
+        dataset.addSeries( this );
+        this.dataSets.add( dataset );
+    }
+
+    /**
+     * @return
+     */
+    public Collection<GeoDataset> getDatasets() {
+        return this.dataSets;
+    }
+
+    /**
+     * @return Returns the sampleCorrespondence.
+     */
+    public GeoSampleCorrespondence getSampleCorrespondence() {
+        return this.sampleCorrespondence;
+    }
+
+    /**
+     * @param sampleCorrespondence The sampleCorrespondence to set.
+     */
+    public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
+        this.sampleCorrespondence = sampleCorrespondence;
     }
 
 }

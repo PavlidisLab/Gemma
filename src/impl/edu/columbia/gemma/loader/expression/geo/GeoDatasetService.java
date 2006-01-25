@@ -18,8 +18,11 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
-import java.util.Collection;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
@@ -33,6 +36,7 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
  */
 public class GeoDatasetService {
 
+    private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
     private SourceDomainObjectGenerator generator;
     private Persister expLoader;
     private Converter converter;
@@ -53,12 +57,18 @@ public class GeoDatasetService {
 
         generator = new GeoDomainObjectGenerator();
 
-        GeoParseResult results = ( GeoParseResult ) generator.generate( geoDataSetAccession ).iterator().next();
+        GeoSeries series = ( GeoSeries ) generator.generate( geoDataSetAccession ).iterator().next();
 
-        Collection<Object> convertedResults = ( Collection<Object> ) converter.convert( results.getDatasets().values() );
+        log.info( "Generated GEO domain objects for " + geoDataSetAccession );
+
+        ExpressionExperiment result = ( ExpressionExperiment ) converter.convert( series );
+
+        log.info( "Converted " + series.getGeoAccession() );
 
         assert expLoader != null;
-        expLoader.persist( convertedResults );
+        expLoader.persist( result );
+
+        log.info( "Persisted " + series.getGeoAccession() );
     }
 
     /**
@@ -71,7 +81,7 @@ public class GeoDatasetService {
     /**
      * @param geoConv to set
      */
-    public void setConverter( GeoConverter geoConv ) {
+    public void setConverter( Converter geoConv ) {
         this.converter = geoConv;
     }
 

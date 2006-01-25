@@ -803,6 +803,7 @@ public class PersisterHelper implements Persister {
      */
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
         if ( database == null ) return null;
+        log.debug( "Persisting " + database );
         return externalDatabaseService.findOrCreate( database );
     }
 

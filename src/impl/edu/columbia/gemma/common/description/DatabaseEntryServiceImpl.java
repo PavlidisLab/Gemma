@@ -20,10 +20,6 @@
 package edu.columbia.gemma.common.description;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.common.description.DatabaseEntryService

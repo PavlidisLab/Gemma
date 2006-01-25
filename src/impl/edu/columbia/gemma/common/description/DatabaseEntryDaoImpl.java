@@ -26,10 +26,6 @@ import org.hibernate.criterion.Restrictions;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.description.DatabaseEntry
