@@ -25,9 +25,6 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoVariable.VariableType;
 
 /**
  * Represents a subset of samples.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

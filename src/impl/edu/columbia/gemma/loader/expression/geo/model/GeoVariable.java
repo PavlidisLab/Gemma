@@ -30,9 +30,6 @@ import java.util.Collection;
  * <p>
  * These map to ExperimentalFactors in Gemma.
  * </p>
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

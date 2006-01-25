@@ -23,9 +23,6 @@ import java.util.HashSet;
 
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

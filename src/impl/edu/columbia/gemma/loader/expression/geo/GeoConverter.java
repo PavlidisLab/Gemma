@@ -19,7 +19,6 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,9 +77,9 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
  * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
  * than one dataset. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
  * <p>
- * For our purposes, a usable expression data set is represented by a GEO "GDS" number (a curated dataset), which
- * corresponds to a series. HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the
- * "A" and "B" arrays were both run on the same samples.
+ * For our purposes, a usable expression data set is at first represented by a GEO "GDS" number (a curated dataset),
+ * which corresponds to a series. HOWEVER, multiple datasets may go together to form a series (GSE). This can happen
+ * when the "A" and "B" arrays were both run on the same samples. Thus we actually normally go by GSE.
  * 
  * @author pavlidis
  * @version $Id$
@@ -89,15 +88,15 @@ public class GeoConverter implements Converter {
 
     private static Log log = LogFactory.getLog( GeoConverter.class.getName() );
 
+    private ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
+
     private ExternalDatabase geoDatabase;
+
+    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
 
     private Collection<Object> results = new HashSet<Object>();
 
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
-
-    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
-
-    private ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     public GeoConverter() {
         geoDatabase = ExternalDatabase.Factory.newInstance();
@@ -178,163 +177,27 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param dataset
-     * @param expExp
-     */
-    private ExpressionExperiment convertDataset( GeoDataset geoDataset, ExpressionExperiment expExp ) {
-        log.info( "Converting dataset:" + geoDataset );
-
-        if ( StringUtils.isEmpty( expExp.getDescription() ) ) {
-            expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
-        }
-
-        expExp.setDescription( expExp.getDescription() + " Includes " + geoDataset.getGeoAccession() + ". " );
-        if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
-            expExp.setDescription( expExp.getDescription() + " Update date " + geoDataset.getUpdateDate() + ". " );
-        }
-
-        if ( StringUtils.isEmpty( expExp.getName() ) ) {
-            expExp.setName( geoDataset.getTitle() );
-        } else {
-            expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
-                    + ": " + geoDataset.getTitle() + ". " );
-        }
-
-        ArrayDesign ad = seenPlatforms.get( geoDataset.getPlatform().getGeoAccession() );
-        if ( ad == null )
-            throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
-                    + geoDataset.getPlatform() );
-
-        Map<String, List<String>> data = geoDataset.getData();
-
-        BioAssayDimension bioAssayDimension = convertDataColumnHeadings( geoDataset, expExp );
-
-        for ( String probe : data.keySet() ) {
-            List<String> dataVector = data.get( probe );
-
-            byte[] blob = convertData( dataVector );
-
-            CompositeSequence designElement = platformDesignElementMap.get( ad.getName() ).get( probe );
-
-            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-            vector.setDesignElement( designElement );
-            vector.setExpressionExperiment( expExp );
-
-            // vector.setQuantitationType(); // FIXME
-            vector.setBioAssayDimension( bioAssayDimension );
-            vector.setData( blob );
-        }
-
-        convertSubsetAssociations( expExp, geoDataset );
-        return expExp;
-
-    }
-
-    /**
-     * Convert a vector of strings into a byte[] for saving in the database. This tries to guess the type (integer or
-     * double).
-     * 
-     * @param vector
-     * @return
-     */
-    public byte[] convertData( List<String> vector ) {
-
-        if ( vector == null || vector.size() == 0 ) return null;
-
-        String sample = vector.iterator().next();
-
-        List<Object> toConvert = new ArrayList<Object>();
-
-        try {
-
-            try {
-                Integer.parseInt( sample );
-                for ( String string : vector ) {
-                    toConvert.add( Integer.parseInt( string ) );
-                }
-            } catch ( NumberFormatException e ) {
-                // no problem, we try doubles.
-            }
-
-            try {
-                Double.parseDouble( sample );
-                for ( String string : vector ) {
-                    toConvert.add( Double.parseDouble( string ) );
-                }
-            } catch ( NumberFormatException e ) {
-                throw new RuntimeException( sample + " is not in a recognized numeric format" );
-            }
-
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Strings in data vector must all be of the same type! " );
-        }
-
-        return byteArrayConverter.toBytes( toConvert.toArray() );
-    }
-
-    /**
-     * @param dataset
-     * @param expExp
+     * @param subSet
+     * @param accession
+     * @param experimentBioAssays
      * @return
      */
     @SuppressWarnings("unchecked")
-    private BioAssayDimension convertDataColumnHeadings( GeoDataset dataset, ExpressionExperiment expExp ) {
-        BioAssayDimension result = BioAssayDimension.Factory.newInstance();
-        result.setName( "BioAssayDimension for GEO " + dataset );
-        for ( String sampleAcc : dataset.getColumnNames() ) {
-            boolean found = false;
-            // some extra sanity checking here would be wise. What if two columns have the same id.
-            for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
-                if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-                    result.getBioAssays().add( bioAssay );
-                    found = true;
-                    break;
-                }
+    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, BioAssay bioAssay,
+            ExpressionExperiment expExp ) {
+        String accession = bioAssay.getAccession().getAccession();
+        Collection<BioAssay> experimentBioAssays = expExp.getBioAssays();
+        boolean found = false;
+        for ( BioAssay assay : experimentBioAssays ) {
+            String testAccession = assay.getAccession().getAccession();
+            if ( testAccession.equals( accession ) ) {
+                subSet.getBioAssays().add( assay );
+                found = true;
+                break;
             }
-            if ( !found ) {
-                log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
-                // sample ids.
-            }
+
         }
-        return result;
-    }
-
-    /**
-     * @param geoDataset
-     */
-    private ExpressionExperiment convertDataset( GeoDataset geoDataset ) {
-
-        if ( geoDataset.getSeries().size() == 0 ) {
-            throw new IllegalArgumentException( "GEO Dataset must have associated series" );
-        }
-
-        if ( geoDataset.getSeries().size() > 1 ) {
-            throw new UnsupportedOperationException( "GEO Dataset can only be associated with one series" );
-        }
-
-        return this.convertSeries( geoDataset.getSeries().iterator().next() );
-
-        // // make sure that we don't already have an expression experiment corresponding to this dataset.
-        //
-        // log.debug( "Converting dataset:" + geoDataset.getGeoAccession() );
-        // ExpressionExperiment result = ExpressionExperiment.Factory.newInstance();
-        // result.setDescription( geoDataset.getDescription() );
-        // result.setName( geoDataset.getTitle() );
-        // result.setAccession( convertDatabaseEntry( geoDataset ) );
-        //
-        // for ( ExpressionExperiment expressionExperiment : convertedExpressionExperiments ) {
-        // if ( expressionExperiment.getAccession() == result.getAccession() ) {
-        // log.info( "Already have expressionExperiment corresondponding to " + result.getAccession() );
-        // result = expressionExperiment;
-        // // convertSubsetAssociations( result, geoDataset );
-        // convertSeriesAssociations( result, geoDataset );
-        // return null;
-        // }
-        // }
-        //
-        // // convertSubsetAssociations( result, geoDataset );
-        // convertSeriesAssociations( result, geoDataset );
-        // return result;
+        return found;
     }
 
     /**
@@ -390,6 +253,24 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.
+     * 
+     * @param series
+     * @param expExp
+     */
+    @SuppressWarnings("unchecked")
+    private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
+        expExp.getInvestigators().add( convertContact( series.getContact() ) );
+        // FIXME possibly add contributers to the investigators.
+        if ( series.getContributers().size() > 0 ) {
+            expExp.setDescription( expExp.getDescription() + " -- Contributers: " );
+            for ( GeoContact contributer : series.getContributers() ) {
+                expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
+            }
+        }
+    }
+
+    /**
      * Often-needed generation of a valid databaseentry object.
      * 
      * @param geoData
@@ -400,6 +281,103 @@ public class GeoConverter implements Converter {
         result.setExternalDatabase( this.geoDatabase );
         result.setAccession( geoData.getGeoAccession() );
         return result;
+    }
+
+    /**
+     * @param dataset
+     * @param expExp
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private BioAssayDimension convertDataColumnHeadings( GeoDataset dataset, ExpressionExperiment expExp ) {
+        BioAssayDimension result = BioAssayDimension.Factory.newInstance();
+        result.setName( "BioAssayDimension for GEO " + dataset );
+        for ( String sampleAcc : dataset.getColumnNames() ) {
+            boolean found = false;
+            // some extra sanity checking here would be wise. What if two columns have the same id.
+            for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
+                if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
+                    result.getBioAssays().add( bioAssay );
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found ) {
+                log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
+                // sample ids.
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param geoDataset
+     */
+    private ExpressionExperiment convertDataset( GeoDataset geoDataset ) {
+
+        if ( geoDataset.getSeries().size() == 0 ) {
+            throw new IllegalArgumentException( "GEO Dataset must have associated series" );
+        }
+
+        if ( geoDataset.getSeries().size() > 1 ) {
+            throw new UnsupportedOperationException( "GEO Dataset can only be associated with one series" );
+        }
+
+        return this.convertSeries( geoDataset.getSeries().iterator().next() );
+
+    }
+
+    /**
+     * @param dataset
+     * @param expExp
+     */
+    private ExpressionExperiment convertDataset( GeoDataset geoDataset, ExpressionExperiment expExp ) {
+        log.info( "Converting dataset:" + geoDataset );
+
+        if ( StringUtils.isEmpty( expExp.getDescription() ) ) {
+            expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
+        }
+
+        expExp.setDescription( expExp.getDescription() + " Includes " + geoDataset.getGeoAccession() + ". " );
+        if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
+            expExp.setDescription( expExp.getDescription() + " Update date " + geoDataset.getUpdateDate() + ". " );
+        }
+
+        if ( StringUtils.isEmpty( expExp.getName() ) ) {
+            expExp.setName( geoDataset.getTitle() );
+        } else {
+            expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
+                    + ": " + geoDataset.getTitle() + ". " );
+        }
+
+        ArrayDesign ad = seenPlatforms.get( geoDataset.getPlatform().getGeoAccession() );
+        if ( ad == null )
+            throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
+                    + geoDataset.getPlatform() );
+
+        Map<String, List<String>> data = geoDataset.getData();
+
+        BioAssayDimension bioAssayDimension = convertDataColumnHeadings( geoDataset, expExp );
+
+        for ( String probe : data.keySet() ) {
+            List<String> dataVector = data.get( probe );
+            
+            byte[] blob = convertData( dataVector );
+
+            CompositeSequence designElement = platformDesignElementMap.get( ad.getName() ).get( probe );
+
+            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            vector.setDesignElement( designElement );
+            vector.setExpressionExperiment( expExp );
+
+            // vector.setQuantitationType(); // FIXME
+            vector.setBioAssayDimension( bioAssayDimension );
+            vector.setData( blob );
+        }
+
+        convertSubsetAssociations( expExp, geoDataset );
+        return expExp;
+
     }
 
     /**
@@ -754,24 +732,6 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.
-     * 
-     * @param series
-     * @param expExp
-     */
-    @SuppressWarnings("unchecked")
-    private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
-        expExp.getInvestigators().add( convertContact( series.getContact() ) );
-        // FIXME possibly add contributers to the investigators.
-        if ( series.getContributers().size() > 0 ) {
-            expExp.setDescription( expExp.getDescription() + " -- Contributers: " );
-            for ( GeoContact contributer : series.getContributers() ) {
-                expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
-            }
-        }
-    }
-
-    /**
      * @param expExp
      * @param geoSubSet
      */
@@ -793,30 +753,6 @@ public class GeoConverter implements Converter {
                     + "properly by converting the samples before converting the subsets.";
         }
         return subSet;
-    }
-
-    /**
-     * @param subSet
-     * @param accession
-     * @param experimentBioAssays
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, BioAssay bioAssay,
-            ExpressionExperiment expExp ) {
-        String accession = bioAssay.getAccession().getAccession();
-        Collection<BioAssay> experimentBioAssays = expExp.getBioAssays();
-        boolean found = false;
-        for ( BioAssay assay : experimentBioAssays ) {
-            String testAccession = assay.getAccession().getAccession();
-            if ( testAccession.equals( accession ) ) {
-                subSet.getBioAssays().add( assay );
-                found = true;
-                break;
-            }
-
-        }
-        return found;
     }
 
     /**
@@ -1042,6 +978,47 @@ public class GeoConverter implements Converter {
             index++;
         }
         return null;
+    }
+
+    /**
+     * Convert a vector of strings into a byte[] for saving in the database. This tries to guess the type (integer or
+     * double).
+     * 
+     * @param vector
+     * @return
+     */
+    protected byte[] convertData( List<String> vector ) {
+
+        if ( vector == null || vector.size() == 0 ) return null;
+
+        String sample = vector.iterator().next();
+
+        List<Object> toConvert = new ArrayList<Object>();
+
+        try {
+
+            try {
+                Integer.parseInt( sample );
+                for ( String string : vector ) {
+                    toConvert.add( Integer.parseInt( string ) );
+                }
+            } catch ( NumberFormatException e ) {
+                // no problem, we try doubles.
+                try {
+                    Double.parseDouble( sample );
+                    for ( String string : vector ) {
+                        toConvert.add( Double.parseDouble( string ) );
+                    }
+                } catch ( NumberFormatException e1 ) {
+                    throw new RuntimeException( sample + " is not in a recognized numeric format" );
+                }
+            }
+
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Strings in data vector must all be of the same type! " );
+        }
+
+        return byteArrayConverter.toBytes( toConvert.toArray() );
     }
 
 }

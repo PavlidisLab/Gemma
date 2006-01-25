@@ -25,9 +25,6 @@ import java.util.Map;
 
 /**
  * Abstract class from which many Geo objects are descended.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
