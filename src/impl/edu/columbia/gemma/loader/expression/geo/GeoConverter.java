@@ -295,7 +295,7 @@ public class GeoConverter implements Converter {
         for ( String sampleAcc : dataset.getColumnNames() ) {
             boolean found = false;
             // some extra sanity checking here would be wise. What if two columns have the same id.
-            for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
+            for ( BioAssay bioAssay : ( List<BioAssay> ) expExp.getBioAssays() ) {
                 if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
                     result.getBioAssays().add( bioAssay );
                     found = true;
