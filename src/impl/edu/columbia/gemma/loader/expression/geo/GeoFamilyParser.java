@@ -192,8 +192,9 @@ public class GeoFamilyParser implements Parser {
             log.debug( "New sample (for series): " + value );
             GeoSample sample = new GeoSample();
             sample.setGeoAccession( value );
+            results.getSampleMap().put( value, sample );
         }
-        log.debug( "Adding existing sample: " + value + " to series " + currentSeriesAccession );
+        log.info( "Adding sample: " + value + " to series " + currentSeriesAccession );
         results.getSeriesMap().get( currentSeriesAccession ).addSample( results.getSampleMap().get( value ) );
     }
 
@@ -689,7 +690,7 @@ public class GeoFamilyParser implements Parser {
             platformContactSet( currentPlatformAccession, "laboratory", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_department" ) ) {
             platformContactSet( currentPlatformAccession, "department", value );
-        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) { // TODO may not be used any more.
+        } else if ( startsWithIgnoreCase( line, "!Platform_contact_address" ) ) { // may not be used any more.
             platformContactSet( currentPlatformAccession, "address", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_contact_city" ) ) {
             platformContactSet( currentPlatformAccession, "city", value );
@@ -956,11 +957,19 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!Series_pubmed_id" ) ) {
             seriesAddTo( currentSeriesAccession, "pubmedIds", value );
         } else if ( startsWithIgnoreCase( line, "!Series_summary" ) ) {
-            seriesAddTo( currentSeriesAccession, "summary", value );
+            if ( value.toLowerCase().contains( "keyword" ) ) {
+                String keyword = extractValue( value );
+                seriesAddTo( currentSeriesAccession, "keyWords", keyword );
+            } else {
+                seriesAddTo( currentSeriesAccession, "summary", value );
+            }
         } else if ( startsWithIgnoreCase( line, "!Series_type" ) ) {
-            seriesSet( currentSeriesAccession, "type", value );
+            seriesSet( currentSeriesAccession, "overallDesign", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contributor" ) ) {
-            results.getSeriesMap().get( currentSeriesAccession ).getContributers().add( value );
+            GeoContact contributer = new GeoContact();
+            String[] nameFields = StringUtils.split( value, "," );
+            contributer.setName( StringUtils.join( nameFields, " " ) );
+            results.getSeriesMap().get( currentSeriesAccession ).addContributer( contributer );
         } else if ( startsWithIgnoreCase( line, "!Series_sample_id" ) ) {
             addSeriesSample( value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_name" ) ) {
@@ -973,7 +982,7 @@ public class GeoFamilyParser implements Parser {
             seriesContactSet( currentSeriesAccession, "laboratory", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_department" ) ) {
             seriesContactSet( currentSeriesAccession, "department", value );
-        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) { // TODO may not be used any longer.
+        } else if ( startsWithIgnoreCase( line, "!Series_contact_address" ) ) { // may not be used any longer.
             seriesContactSet( currentSeriesAccession, "address", value );
         } else if ( startsWithIgnoreCase( line, "!Series_contact_state" ) ) { // new
             seriesContactSet( currentSeriesAccession, "state", value );
