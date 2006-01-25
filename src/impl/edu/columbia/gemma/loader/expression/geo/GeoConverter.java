@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +32,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import baseCode.io.ByteArrayConverter;
+
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.description.Characteristic;
@@ -39,6 +43,7 @@ import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
@@ -76,9 +81,6 @@ import edu.columbia.gemma.loader.loaderutils.Converter;
  * For our purposes, a usable expression data set is represented by a GEO "GDS" number (a curated dataset), which
  * corresponds to a series. HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the
  * "A" and "B" arrays were both run on the same samples.
- * <p>
- * We don't want the GSE and the GDS for a single experiment to be both converted to ExpressionExperiments. We want the
- * information contained to be combined into one ExpressionExperiment.
  * 
  * @author pavlidis
  * @version $Id$
@@ -94,6 +96,8 @@ public class GeoConverter implements Converter {
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
 
     private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
+
+    private ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     public GeoConverter() {
         geoDatabase = ExternalDatabase.Factory.newInstance();
@@ -202,22 +206,97 @@ public class GeoConverter implements Converter {
                     + geoDataset.getPlatform() );
 
         Map<String, List<String>> data = geoDataset.getData();
+
+        BioAssayDimension bioAssayDimension = convertDataColumnHeadings( geoDataset, expExp );
+
         for ( String probe : data.keySet() ) {
             List<String> dataVector = data.get( probe );
-            // convert this into a Blob.
+
+            byte[] blob = convertData( dataVector );
+
             CompositeSequence designElement = platformDesignElementMap.get( ad.getName() ).get( probe );
 
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
             vector.setDesignElement( designElement );
             vector.setExpressionExperiment( expExp );
-            // vector.setQuantitationType();
-            // vector.setBioAssayDimension();
-            // vector.setData();
+
+            // vector.setQuantitationType(); // FIXME
+            vector.setBioAssayDimension( bioAssayDimension );
+            vector.setData( blob );
         }
 
         convertSubsetAssociations( expExp, geoDataset );
         return expExp;
 
+    }
+
+    /**
+     * Convert a vector of strings into a byte[] for saving in the database. This tries to guess the type (integer or
+     * double).
+     * 
+     * @param vector
+     * @return
+     */
+    public byte[] convertData( List<String> vector ) {
+
+        if ( vector == null || vector.size() == 0 ) return null;
+
+        String sample = vector.iterator().next();
+
+        List<Object> toConvert = new ArrayList<Object>();
+
+        try {
+
+            try {
+                Integer.parseInt( sample );
+                for ( String string : vector ) {
+                    toConvert.add( Integer.parseInt( string ) );
+                }
+            } catch ( NumberFormatException e ) {
+                // no problem, we try doubles.
+            }
+
+            try {
+                Double.parseDouble( sample );
+                for ( String string : vector ) {
+                    toConvert.add( Double.parseDouble( string ) );
+                }
+            } catch ( NumberFormatException e ) {
+                throw new RuntimeException( sample + " is not in a recognized numeric format" );
+            }
+
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Strings in data vector must all be of the same type! " );
+        }
+
+        return byteArrayConverter.toBytes( toConvert.toArray() );
+    }
+
+    /**
+     * @param dataset
+     * @param expExp
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private BioAssayDimension convertDataColumnHeadings( GeoDataset dataset, ExpressionExperiment expExp ) {
+        BioAssayDimension result = BioAssayDimension.Factory.newInstance();
+        result.setName( "BioAssayDimension for GEO " + dataset );
+        for ( String sampleAcc : dataset.getColumnNames() ) {
+            boolean found = false;
+            // some extra sanity checking here would be wise. What if two columns have the same id.
+            for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
+                if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
+                    result.getBioAssays().add( bioAssay );
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found ) {
+                log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
+                // sample ids.
+            }
+        }
+        return result;
     }
 
     /**
@@ -269,7 +348,7 @@ public class GeoConverter implements Converter {
         BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
 
         bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) ); /*
-                                                                             * this can be wrong, because the same
+                                                                             * FIXME this can be wrong, because the same
                                                                              * biomaterial can be run on multiple
                                                                              * arrays.
                                                                              */
@@ -691,18 +770,6 @@ public class GeoConverter implements Converter {
             }
         }
     }
-
-    // /**
-    // * @param result
-    // * @param geoDataset
-    // */
-    // private void convertSeriesAssociations( ExpressionExperiment result, GeoDataset geoDataset ) {
-    // for ( GeoSeries series : geoDataset.getSeries() ) {
-    // log.debug( "Converting series associated with dataset: " + series.getGeoAccession() );
-    // ExpressionExperiment newInfo = convertSeries( series, result );
-    // BeanPropertyCompleter.complete( newInfo, result ); // FIXME not good enough.
-    // }
-    // }
 
     /**
      * @param expExp
