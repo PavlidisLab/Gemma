@@ -705,11 +705,11 @@ public class GeoConverter implements Converter {
         ExpressionExperimentSubSet subSet = ExpressionExperimentSubSet.Factory.newInstance();
 
         subSet.setSourceExperiment( expExp );
+        subSet.setBioAssays( new HashSet() );
 
-        expExp.setBioAssays( new HashSet() );
         for ( GeoSample sample : geoSubSet.getSamples() ) {
 
-            BioAssay bioAssay = convertSample( sample ); // converted object here is not used.
+            BioAssay bioAssay = convertSample( sample ); // converted object only used for searching.
 
             boolean found = addMatchingBioAssayToSubSet( subSet, bioAssay, expExp );
             assert found : "No matching bioassay found for " + bioAssay.getAccession().getAccession() + " in subset. "

@@ -111,6 +111,7 @@ public class GeoFamilyParser implements Parser {
     private int sampleDataLines = 0;
 
     private int seriesDataLines = 0;
+    private String currentDatasetPlatformAccession;
 
     public GeoFamilyParser() {
         results = new GeoParseResult();
@@ -472,14 +473,23 @@ public class GeoFamilyParser implements Parser {
             datasetSet( currentDatasetAccession, "numProbes", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_order" ) ) {
             datasetSet( currentDatasetAccession, "order", value );
-        } else if ( startsWithIgnoreCase( line, "!dataset_organism" ) ) { // note, redundant with 'sample_organism'.
+        } else if ( startsWithIgnoreCase( line, "!dataset_organism" ) ) { // note, no longer used?
             datasetSet( currentDatasetAccession, "organism", value );
-        } else if ( startsWithIgnoreCase( line, "!dataset_platform" ) ) {
+        } else if ( startsWithIgnoreCase( line, "!dataset_platform_organism" ) ) { // redundant, we get this from the
+            // series
+            // results.getPlatformMap().get( currentDatasetPlatformAccession ).addToOrganisms( value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_platform_technology_type" ) ) {
+            // results.getPlatformMap().get( currentDatasetPlatformAccession ).setTechnology( value ); // we also get
+            // this
+            // // from the platform
+            // // directly.
+        } else if ( startsWithIgnoreCase(line,  "!dataset_platform =" ) ) {
             if ( !results.getPlatformMap().containsKey( value ) ) {
                 results.getPlatformMap().put( value, new GeoPlatform() );
                 results.getPlatformMap().get( value ).setGeoAccession( value );
             }
             results.getDatasetMap().get( currentDatasetAccession ).setPlatform( results.getPlatformMap().get( value ) );
+            currentDatasetPlatformAccession = value;
         } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) {
             datasetSet( currentDatasetAccession, "probeType", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_reference_series" ) ) {
