@@ -268,7 +268,11 @@ public class GeoConverter implements Converter {
         log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
         BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
 
-        bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) );
+        bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) ); /*
+                                                                             * this can be wrong, because the same
+                                                                             * biomaterial can be run on multiple
+                                                                             * arrays.
+                                                                             */
         bioMaterial.setName( sample.getGeoAccession() + "_channel_" + channel.getChannelNumber() );
         bioMaterial.setDescription( "Channel sample source="
                 + channel.getOrganism()
@@ -535,16 +539,21 @@ public class GeoConverter implements Converter {
         }
 
         for ( GeoChannel channel : sample.getChannels() ) {
+            /*
+             * FIXME we also add biomaterials based on the datasets. Thus we get 'doubles' here. In reality GEO does not
+             * have information about the samples run on each channel. We're just making it up.
+             */
             BioMaterial bioMaterial = convertChannel( sample, channel );
             bioAssay.getSamplesUsed().add( bioMaterial );
         }
 
         for ( GeoPlatform platform : sample.getPlatforms() ) {
-            if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) continue;
-            log.info( "Converting " + platform );
-            ArrayDesign arrayDesign = convertPlatform( platform );
-            results.add( arrayDesign );
-            seenPlatforms.put( platform.getGeoAccession(), arrayDesign );
+            ArrayDesign arrayDesign;
+            if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
+                arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
+            } else {
+                arrayDesign = convertPlatform( platform );
+            }
             bioAssay.getArrayDesignsUsed().add( arrayDesign );
         }
 
@@ -618,7 +627,7 @@ public class GeoConverter implements Converter {
         expExp.getExperimentalDesigns().add( design );
 
         // GEO does not have the concept of a biomaterial.
-        Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
+        // Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
         Collection<GeoSample> samples = series.getSamples();
         expExp.setBioAssays( new HashSet() );
         int i = 1;
@@ -653,7 +662,7 @@ public class GeoConverter implements Converter {
                 if ( !found ) log.error( "No sample found for " + cSample );
             }
 
-            bioMaterials.add( bioMaterial );
+            // bioMaterials.add( bioMaterial );
         }
 
         // Dataset has additional information about the samples.
