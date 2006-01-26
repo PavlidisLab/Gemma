@@ -36,8 +36,10 @@ public class DatabaseEntryDaoImpl extends edu.columbia.gemma.common.description.
     public DatabaseEntry find( DatabaseEntry databaseEntry ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( DatabaseEntry.class );
-            queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).add(
-                    Restrictions.eq( "externalDatabase", databaseEntry.getExternalDatabase() ) );
+
+            queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
+                    "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -45,7 +47,7 @@ public class DatabaseEntryDaoImpl extends edu.columbia.gemma.common.description.
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
                                     + edu.columbia.gemma.common.description.DatabaseEntry.class.getName()
-                                    + "' was found when executing query" );
+                                    + "' was found when executing query for " + databaseEntry );
 
                 } else if ( results.size() == 1 ) {
                     result = ( edu.columbia.gemma.common.description.DatabaseEntry ) results.iterator().next();
@@ -59,7 +61,8 @@ public class DatabaseEntryDaoImpl extends edu.columbia.gemma.common.description.
 
     @Override
     public DatabaseEntry findOrCreate( DatabaseEntry databaseEntry ) {
-        if ( databaseEntry == null || databaseEntry.getAccession() == null ) return null;
+        if ( databaseEntry == null || databaseEntry.getAccession() == null
+                || databaseEntry.getExternalDatabase() == null ) return null;
         DatabaseEntry newDatabaseEntry = find( databaseEntry );
         if ( newDatabaseEntry != null ) {
             BeanPropertyCompleter.complete( newDatabaseEntry, databaseEntry );
