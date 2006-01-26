@@ -20,8 +20,11 @@ package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
@@ -43,6 +46,35 @@ public class GeoSample extends GeoData {
 
     Collection<GeoReplication> replicates;
     Collection<GeoVariable> variables;
+
+    /*
+     * quantitationType -> designelement -> value
+     */
+    Map<String, Map<String, String>> data = new HashMap<String, Map<String, String>>();
+
+    /**
+     * @param designElement
+     * @param quantitationType
+     * @param value
+     */
+    public void addDatum( String designElement, String quantitationType, String value ) {
+        if ( !data.containsKey( quantitationType ) ) {
+            data.put( quantitationType, new HashMap<String, String>() );
+        }
+        data.get( quantitationType ).put( designElement, value );
+    }
+
+    /**
+     * @param designElement
+     * @param quantitationType
+     * @return
+     */
+    public String getDatum( String designElement, String quantitationType ) {
+        if ( !data.containsKey( quantitationType ) ) {
+            throw new IllegalArgumentException( "No such quantitation type \"" + quantitationType + "\"" );
+        }
+        return data.get( quantitationType ).get( designElement );
+    }
 
     // SAGE items.
     String anchor;

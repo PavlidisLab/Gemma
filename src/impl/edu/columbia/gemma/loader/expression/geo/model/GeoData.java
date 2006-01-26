@@ -31,7 +31,7 @@ import java.util.Map;
  */
 public abstract class GeoData {
 
-    private Map<String, List<String>> data = new HashMap<String, List<String>>();;
+ //  private Map<String, List<String>> data = new HashMap<String, List<String>>();;
 
     protected GeoContact contact = new GeoContact();
 
@@ -48,12 +48,12 @@ public abstract class GeoData {
         return this.columnNames;
     }
 
-    /**
-     * @return
-     */
-    public Map<String, List<String>> getData() {
-        return this.data;
-    }
+//    /**
+//     * @return
+//     */
+//    public Map<String, List<String>> getData() {
+//        return this.data;
+//    }
 
     /**
      * @return

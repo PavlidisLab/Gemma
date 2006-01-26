@@ -50,11 +50,11 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
  */
 public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
-    private static Log log = LogFactory.getLog( GeoDomainObjectGenerator.class.getName() );
+    protected static Log log = LogFactory.getLog( GeoDomainObjectGenerator.class.getName() );
 
-    private Fetcher datasetFetcher;
-    private Fetcher seriesFetcher;
-    private GeoFamilyParser gfp = new GeoFamilyParser();
+    protected Fetcher datasetFetcher;
+    protected Fetcher seriesFetcher;
+    protected GeoFamilyParser gfp = new GeoFamilyParser();
 
     /**
      * 
@@ -126,6 +126,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private GeoSeries processSeries( String seriesAccession ) {
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
+        if ( fullSeries == null ) {
+            throw new RuntimeException( "No series file found for " + seriesAccession );
+        }
         LocalFile seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath;
         try {
@@ -197,7 +200,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @param series
      */
     private void processRawData( GeoSeries series ) {
-
         RawDataFetcher rawFetcher = new RawDataFetcher();
         Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getGeoAccession() );
         if ( rawFiles != null ) {

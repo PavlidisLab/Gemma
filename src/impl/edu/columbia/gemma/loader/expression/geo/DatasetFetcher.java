@@ -43,7 +43,7 @@ public class DatasetFetcher extends FtpFetcher {
     /**
      * 
      */
-    private static final String SOFT_GZ = ".soft.gz";
+    protected static final String SOFT_GZ = ".soft.gz";
 
     /**
      * @throws ConfigurationException

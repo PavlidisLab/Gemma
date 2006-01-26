@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.biomage.BioAssayData.DesignElementDimension;
 
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
@@ -56,8 +57,11 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
+import edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.Compound;
@@ -113,6 +117,8 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="reporterService" ref="reporterService"
+ * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
+ * @spring.property name="quantitationTypeDimensionService" ref="quantitationTypeDimensionService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -162,6 +168,10 @@ public class PersisterHelper implements Persister {
     private ReporterService reporterService;
 
     private DesignElementDataVectorService designElementDataVectorService;
+
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    private QuantitationTypeDimensionService quantitationTypeDimensionService;
 
     private Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
 
@@ -589,6 +599,8 @@ public class PersisterHelper implements Persister {
             factorValue.setId( persistFactorValue( factorValue ).getId() );
         }
 
+        assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
+
         for ( Iterator iter = assay.getArrayDesignsUsed().iterator(); iter.hasNext(); ) {
             ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
             arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
@@ -792,10 +804,28 @@ public class PersisterHelper implements Persister {
             ArrayDesign ad = persistentDesignElement.getArrayDesign();
             ad.setId( this.persistArrayDesign( ad ).getId() );
 
+            vect.setBioAssayDimension( persistBioAssayDimension( vect.getBioAssayDimension() ) );
+
             vect.setDesignElement( persistentDesignElement );
         }
 
         return expressionExperimentService.findOrCreate( entity );
+    }
+
+    /**
+     * @param bioAssayDimension
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null ) return null;
+        if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
+
+        for ( BioAssay bioAssay : ( Collection<BioAssay> ) bioAssayDimension.getBioAssays() ) {
+            bioAssay.setId( persistBioAssay( bioAssay ).getId() );
+        }
+
+        return bioAssayDimensionService.findOrCreate( bioAssayDimension );
     }
 
     /**
@@ -880,6 +910,8 @@ public class PersisterHelper implements Persister {
      * @param entity
      */
     private QuantitationType persistQuantitationType( QuantitationType entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
         return quantitationTypeService.findOrCreate( entity );
     }
 
@@ -1072,5 +1104,19 @@ public class PersisterHelper implements Persister {
      */
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /**
+     * @param bioAssayDimensionService The bioAssayDimensionService to set.
+     */
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+        this.bioAssayDimensionService = bioAssayDimensionService;
+    }
+
+    /**
+     * @param quantitationTypeDimensionService The quantitationTypeDimensionService to set.
+     */
+    public void setQuantitationTypeDimensionService( QuantitationTypeDimensionService quantitationTypeDimensionService ) {
+        this.quantitationTypeDimensionService = quantitationTypeDimensionService;
     }
 }

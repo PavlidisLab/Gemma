@@ -26,12 +26,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -85,7 +83,6 @@ public class GeoFamilyParser implements Parser {
     private boolean haveReadPlatformHeader = false;
 
     private boolean haveReadSampleDataHeader = false;
-    private boolean haveReadSeriesDataHeader = false;
     private boolean inDatabase = false;
     private boolean inDataset = false;
     private boolean inDatasetTable = false;
@@ -111,6 +108,7 @@ public class GeoFamilyParser implements Parser {
     private int sampleDataLines = 0;
 
     private int seriesDataLines = 0;
+
     private String currentDatasetPlatformAccession;
 
     public GeoFamilyParser() {
@@ -299,7 +297,6 @@ public class GeoFamilyParser implements Parser {
     private Boolean doParse( BufferedReader dis ) {
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
-        haveReadSeriesDataHeader = false;
         String line = "";
         parsedLines = 0;
         try {
@@ -431,31 +428,31 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
-    /**
-     * @param line
-     */
-    private void parseDataSetDataLine( String line ) {
-
-        if ( !haveReadDatasetDataHeader ) {
-            haveReadDatasetDataHeader = true;
-            return;
-        }
-
-        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
-
-        Map<String, List<String>> dataSetDataMap = results.getDatasetMap().get( currentDatasetAccession ).getData();
-
-        for ( int i = 0; i < tokens.length; i++ ) {
-            String token = tokens[i];
-            String columnName = results.getDatasetMap().get( currentDatasetAccession ).getColumnNames().get( i );
-            if ( !dataSetDataMap.containsKey( columnName ) ) {
-                dataSetDataMap.put( columnName, new ArrayList<String>() );
-            }
-            dataSetDataMap.get( columnName ).add( token );
-        }
-
-        dataSetDataLines++;
-    }
+    // /**
+    // * @param line
+    // */
+    // private void parseDataSetDataLine( String line ) {
+    //
+    // if ( !haveReadDatasetDataHeader ) {
+    // haveReadDatasetDataHeader = true;
+    // return;
+    // }
+    //
+    // String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
+    //
+    // Map<String, List<String>> dataSetDataMap = results.getDatasetMap().get( currentDatasetAccession ).getData();
+    //
+    // for ( int i = 0; i < tokens.length; i++ ) {
+    // String token = tokens[i];
+    // String columnName = results.getDatasetMap().get( currentDatasetAccession ).getColumnNames().get( i );
+    // if ( !dataSetDataMap.containsKey( columnName ) ) {
+    // dataSetDataMap.put( columnName, new ArrayList<String>() );
+    // }
+    // dataSetDataMap.get( columnName ).add( token );
+    // }
+    //
+    // dataSetDataLines++;
+    // }
 
     /**
      * @param line
@@ -483,7 +480,7 @@ public class GeoFamilyParser implements Parser {
             // this
             // // from the platform
             // // directly.
-        } else if ( startsWithIgnoreCase(line,  "!dataset_platform =" ) ) {
+        } else if ( startsWithIgnoreCase( line, "!dataset_platform =" ) ) {
             if ( !results.getPlatformMap().containsKey( value ) ) {
                 results.getPlatformMap().put( value, new GeoPlatform() );
                 results.getPlatformMap().get( value ).setGeoAccession( value );
@@ -523,6 +520,7 @@ public class GeoFamilyParser implements Parser {
             datasetSet( currentDatasetAccession, "pubmedId", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_table_begin" ) ) {
             this.inDatasetTable = true;
+            haveReadDatasetDataHeader = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_table_end" ) ) {
             this.inDatasetTable = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_channel_count" ) ) {
@@ -649,15 +647,12 @@ public class GeoFamilyParser implements Parser {
             return;
         }
 
-        Map<String, List<String>> platformDataMap = results.getPlatformMap().get( currentPlatformAccession ).getData();
+        GeoPlatform platform = results.getPlatformMap().get( currentPlatformAccession );
 
         for ( int i = 0; i < tokens.length; i++ ) {
             String token = tokens[i];
             String columnName = results.getPlatformMap().get( currentPlatformAccession ).getColumnNames().get( i );
-            if ( !platformDataMap.containsKey( columnName ) ) {
-                platformDataMap.put( columnName, new ArrayList<String>() );
-            }
-            platformDataMap.get( columnName ).add( token );
+            platform.addToColumnData( columnName, token );
         }
         platformLines++;
     }
@@ -722,6 +717,7 @@ public class GeoFamilyParser implements Parser {
             platformSet( currentPlatformAccession, "id", value );
         } else if ( startsWithIgnoreCase( line, "!Platform_table_begin" ) ) {
             inPlatformTable = true;
+            haveReadPlatformHeader = false;
         } else if ( startsWithIgnoreCase( line, "!Platform_table_end" ) ) {
             inPlatformTable = false;
         } else if ( startsWithIgnoreCase( line, "!Platform_contributor" ) ) {
@@ -766,9 +762,10 @@ public class GeoFamilyParser implements Parser {
             } else if ( inSampleTable ) {
                 parseSampleDataLine( line );
             } else if ( inSeriesTable ) {
-                parseSeriesDataLine( line );
+                throw new UnsupportedOperationException( "Whoops, shouldn't be handling series data tables" );
+                // parseSeriesDataLine( line );
             } else if ( inDatasetTable ) {
-                parseDataSetDataLine( line );
+                // parseDataSetDataLine( line ); // we ignore this and use the sample data instead.
             } else if ( inSubset ) {
                 // do nothing.
             } else {
@@ -792,15 +789,18 @@ public class GeoFamilyParser implements Parser {
 
         String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
 
-        Map<String, List<String>> sampleDataMap = results.getSampleMap().get( currentSampleAccession ).getData();
+        if ( tokens.length <= 1 )
+            throw new IllegalStateException( "Parse error, sample data line has too few elements (" + tokens.length
+                    + ")" );
 
-        for ( int i = 0; i < tokens.length; i++ ) {
+        GeoSample sample = results.getSampleMap().get( currentSampleAccession );
+
+        String designElement = tokens[0]; // FIXME is it safe to assume the identifier is in the first column?
+
+        for ( int i = 1; i < tokens.length; i++ ) {
             String token = tokens[i];
-            String columnName = results.getSampleMap().get( currentSampleAccession ).getColumnNames().get( i );
-            if ( !sampleDataMap.containsKey( columnName ) ) {
-                sampleDataMap.put( columnName, new ArrayList<String>() );
-            }
-            sampleDataMap.get( columnName ).add( token );
+            String quantitationType = results.getSampleMap().get( currentSampleAccession ).getColumnNames().get( i );
+            sample.addDatum( designElement, quantitationType, token );
         }
 
         sampleDataLines++;
@@ -816,6 +816,7 @@ public class GeoFamilyParser implements Parser {
          **************************************************************************************************************/
         if ( startsWithIgnoreCase( line, "!sample_table_begin" ) ) {
             inSampleTable = true;
+            haveReadSampleDataHeader = false;
         } else if ( startsWithIgnoreCase( line, "!sample_table_end" ) ) {
             inSampleTable = false;
         } else if ( startsWithIgnoreCase( line, "!Sample_title" ) ) {
@@ -922,31 +923,31 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
-    /**
-     * @param line
-     */
-    private void parseSeriesDataLine( String line ) {
-        // FIXME: is this ever called?
-        if ( !haveReadSeriesDataHeader ) {
-            haveReadSeriesDataHeader = true;
-            return;
-        }
-
-        String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
-
-        Map<String, List<String>> seriesDataMap = results.getSeriesMap().get( currentSeriesAccession ).getData();
-
-        for ( int i = 0; i < tokens.length; i++ ) {
-            String token = tokens[i];
-            String columnName = results.getSeriesMap().get( currentSeriesAccession ).getColumnNames().get( i );
-            if ( !seriesDataMap.containsKey( columnName ) ) {
-                seriesDataMap.put( columnName, new ArrayList<String>() );
-            }
-            seriesDataMap.get( columnName ).add( token );
-        }
-
-        seriesDataLines++;
-    }
+    // /**
+    // * @param line
+    // */
+    // private void parseSeriesDataLine( String line ) {
+    // // : is this ever called?
+    // if ( !haveReadSeriesDataHeader ) {
+    // haveReadSeriesDataHeader = true;
+    // return;
+    // }
+    //
+    // String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
+    //
+    // Map<String, List<String>> seriesDataMap = results.getSeriesMap().get( currentSeriesAccession ).getData();
+    //
+    // for ( int i = 0; i < tokens.length; i++ ) {
+    // String token = tokens[i];
+    // String columnName = results.getSeriesMap().get( currentSeriesAccession ).getColumnNames().get( i );
+    // if ( !seriesDataMap.containsKey( columnName ) ) {
+    // seriesDataMap.put( columnName, new ArrayList<String>() );
+    // }
+    // seriesDataMap.get( columnName ).add( token );
+    // }
+    //
+    // seriesDataLines++;
+    // }
 
     /**
      * @param line

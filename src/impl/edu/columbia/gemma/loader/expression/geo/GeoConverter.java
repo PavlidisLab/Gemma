@@ -284,18 +284,17 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param dataset
-     * @param expExp
+     * @param datasetSamples
      * @return
      */
     @SuppressWarnings("unchecked")
-    private BioAssayDimension convertDataColumnHeadings( GeoDataset dataset, ExpressionExperiment expExp ) {
+    private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
         BioAssayDimension result = BioAssayDimension.Factory.newInstance();
-        result.setName( "BioAssayDimension for GEO " + dataset );
-        for ( String sampleAcc : dataset.getColumnNames() ) {
+        for ( GeoSample sample : datasetSamples ) {
             boolean found = false;
+            String sampleAcc = sample.getGeoAccession();
             // some extra sanity checking here would be wise. What if two columns have the same id.
-            for ( BioAssay bioAssay : ( List<BioAssay> ) expExp.getBioAssays() ) {
+            for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
                 if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
                     result.getBioAssays().add( bioAssay );
                     found = true;
@@ -310,6 +309,34 @@ public class GeoConverter implements Converter {
         return result;
     }
 
+    /**
+     * // *
+     * 
+     * @param dataset // *
+     * @param expExp // *
+     * @return //
+     */
+    // @SuppressWarnings("unchecked")
+    // private BioAssayDimension convertDataColumnHeadings( GeoDataset dataset, ExpressionExperiment expExp ) {
+    // BioAssayDimension result = BioAssayDimension.Factory.newInstance();
+    // result.setName( "BioAssayDimension for GEO " + dataset );
+    // for ( String sampleAcc : dataset.getColumnNames() ) {
+    // boolean found = false;
+    // // some extra sanity checking here would be wise. What if two columns have the same id.
+    // for ( BioAssay bioAssay : ( List<BioAssay> ) expExp.getBioAssays() ) {
+    // if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
+    // result.getBioAssays().add( bioAssay );
+    // found = true;
+    // break;
+    // }
+    // }
+    // if ( !found ) {
+    // log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
+    // // sample ids.
+    // }
+    // }
+    // return result;
+    // }
     /**
      * @param geoDataset
      */
@@ -334,6 +361,25 @@ public class GeoConverter implements Converter {
     private ExpressionExperiment convertDataset( GeoDataset geoDataset, ExpressionExperiment expExp ) {
         log.info( "Converting dataset:" + geoDataset );
 
+        convertDatasetDescriptions( geoDataset, expExp );
+
+        ArrayDesign ad = seenPlatforms.get( geoDataset.getPlatform().getGeoAccession() );
+        if ( ad == null )
+            throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
+                    + geoDataset.getPlatform() );
+
+        convertDataSetDataVectors( geoDataset, expExp );
+
+        convertSubsetAssociations( expExp, geoDataset );
+        return expExp;
+
+    }
+
+    /**
+     * @param geoDataset
+     * @param expExp
+     */
+    private void convertDatasetDescriptions( GeoDataset geoDataset, ExpressionExperiment expExp ) {
         if ( StringUtils.isEmpty( expExp.getDescription() ) ) {
             expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
         }
@@ -349,35 +395,111 @@ public class GeoConverter implements Converter {
             expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
                     + ": " + geoDataset.getTitle() + ". " );
         }
+    }
 
-        ArrayDesign ad = seenPlatforms.get( geoDataset.getPlatform().getGeoAccession() );
-        if ( ad == null )
-            throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
-                    + geoDataset.getPlatform() );
+    /**
+     * @param geoDataset
+     * @param expExp
+     */
+    @SuppressWarnings("unchecked")
+    private void convertDataSetDataVectors( GeoDataset geoDataset, ExpressionExperiment expExp ) {
+        List<GeoSample> datasetSamples = new ArrayList<GeoSample>( getDatasetSamples( geoDataset ) );
 
-        Map<String, List<String>> data = geoDataset.getData();
+        BioAssayDimension bioAssayDimension = convertGeoSampleList( datasetSamples, expExp );
 
-        BioAssayDimension bioAssayDimension = convertDataColumnHeadings( geoDataset, expExp );
+        Collection<String> quantitationTypes = datasetSamples.iterator().next().getColumnNames();
+        boolean first = true;
+        for ( String quantitationType : quantitationTypes ) {
 
-        for ( String probe : data.keySet() ) {
-            List<String> dataVector = data.get( probe );
-            
-            byte[] blob = convertData( dataVector );
+            // skip the first quantitationType, it's the ID or ID_REF.
+            if ( first ) {
+                first = false;
+                continue;
+            }
 
-            CompositeSequence designElement = platformDesignElementMap.get( ad.getName() ).get( probe );
+            Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationType );
 
-            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-            vector.setDesignElement( designElement );
-            vector.setExpressionExperiment( expExp );
-
-            // vector.setQuantitationType(); // FIXME
-            vector.setBioAssayDimension( bioAssayDimension );
-            vector.setData( blob );
+            for ( String designElementName : dataVectors.keySet() ) {
+                List<String> dataVector = dataVectors.get( designElementName );
+                assert dataVector != null && dataVector.size() != 0;
+                DesignElementDataVector vector = convertDesignElementDataVector( geoDataset, expExp, bioAssayDimension,
+                        designElementName, dataVector );
+                expExp.getDesignElementDataVectors().add( vector );
+            }
         }
+    }
 
-        convertSubsetAssociations( expExp, geoDataset );
-        return expExp;
+    /**
+     * @param geoDataset
+     * @param expExp
+     * @param bioAssayDimension
+     * @param designElementName
+     * @param dataVector
+     * @return
+     */
+    private DesignElementDataVector convertDesignElementDataVector( GeoDataset geoDataset, ExpressionExperiment expExp,
+            BioAssayDimension bioAssayDimension, String designElementName, List<String> dataVector ) {
+        byte[] blob = convertData( dataVector );
 
+        CompositeSequence compositeSequence = platformDesignElementMap.get(
+                convertPlatform( geoDataset.getPlatform() ).getName() ).get( designElementName );
+
+        DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+        vector.setDesignElement( compositeSequence );
+        vector.setExpressionExperiment( expExp );
+
+        vector.setBioAssayDimension( bioAssayDimension );
+        vector.setData( blob );
+        return vector;
+    }
+
+    /**
+     * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
+     * 
+     * @param datasetSamples
+     * @param quantitationType
+     * @return
+     */
+    private Map<String, List<String>> makeDataVectors( List<GeoSample> datasetSamples, String quantitationType ) {
+        Map<String, List<String>> dataVectors = new HashMap<String, List<String>>();
+        for ( GeoSample sample : datasetSamples ) {
+            Collection<GeoPlatform> platforms = sample.getPlatforms();
+            assert platforms.size() != 0;
+            if ( platforms.size() > 1 ) {
+                throw new UnsupportedOperationException(
+                        "Can't handle GEO sample ids associated with multiple platforms just yet" );
+            }
+            GeoPlatform platform = platforms.iterator().next();
+            String identifier = determinePlatformIdentifier( platform );
+            List<String> designElements = platform.getColumnData( identifier );
+            for ( String designElementName : designElements ) {
+                if ( !dataVectors.containsKey( designElementName ) ) {
+                    dataVectors.put( designElementName, new ArrayList<String>() );
+                }
+                String datum = sample.getDatum( designElementName, quantitationType );
+                assert datum != null;
+                dataVectors.get( designElementName ).add( datum );
+            }
+
+        }
+        return dataVectors;
+    }
+
+    /**
+     * @param geoDataset
+     * @return
+     */
+    private Collection<GeoSample> getDatasetSamples( GeoDataset geoDataset ) {
+        Collection<GeoSample> seriesSamples = geoDataset.getSeries().iterator().next().getSamples();
+        // get just the samples used in this series
+        Collection<GeoSample> datasetSamples = new ArrayList<GeoSample>();
+        for ( GeoSample sample : seriesSamples ) {
+            if ( geoDataset.getColumnNames().contains( sample.getGeoAccession() ) ) {
+                log.info( "Dataset " + geoDataset + " includes sample " + sample );
+                datasetSamples.add( sample );
+            }
+        }
+        return datasetSamples;
     }
 
     /**
@@ -405,9 +527,9 @@ public class GeoConverter implements Converter {
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
-        List<String> identifiers = platform.getData().get( identifier );
-        List<String> externalRefs = platform.getData().get( externalReference );
-        List<String> descriptions = platform.getData().get( descriptionColumn );
+        List<String> identifiers = platform.getColumnData( identifier );
+        List<String> externalRefs = platform.getColumnData( externalReference );
+        List<String> descriptions = platform.getColumnData( descriptionColumn );
 
         assert identifier != null;
         assert externalRefs != null;
@@ -955,7 +1077,7 @@ public class GeoConverter implements Converter {
         int index = 0;
         for ( String string : columnNames ) {
             if ( GeoConstants.likelyId( string ) ) {
-                log.info( string + " appears to indicate the array element identifier in column " + index
+                log.debug( string + " appears to indicate the array element identifier in column " + index
                         + " for platform " + platform );
                 return string;
             }
@@ -992,6 +1114,8 @@ public class GeoConverter implements Converter {
         if ( vector == null || vector.size() == 0 ) return null;
 
         String sample = vector.iterator().next();
+
+        if ( sample == null ) throw new IllegalStateException( "Vector contained null string as first element" );
 
         List<Object> toConvert = new ArrayList<Object>();
 

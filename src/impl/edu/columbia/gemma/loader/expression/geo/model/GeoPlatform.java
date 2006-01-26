@@ -20,8 +20,10 @@ package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Bean describing a microarray platform.
@@ -30,6 +32,11 @@ import java.util.List;
  * @version $Id$
  */
 public class GeoPlatform extends GeoData {
+
+    /**
+     * Store information on the platform here. Map of designElements to other information.
+     */
+    private Map<String, List<String>> data = new HashMap<String, List<String>>();
 
     private Collection<String> catalogNumbers = new HashSet<String>();
 
@@ -59,12 +66,37 @@ public class GeoPlatform extends GeoData {
 
     private Collection<String> webLinks = new HashSet<String>();
 
+    /**
+     * @param s
+     */
     public void addToDescription( String s ) {
         this.description = this.description + " " + s;
     }
 
+    /**
+     * @param org
+     */
     public void addToOrganisms( String org ) {
         this.organisms.add( org );
+    }
+
+    /**
+     * @param designElement
+     * @return
+     */
+    public List<String> getColumnData( String columnName ) {
+        return data.get( columnName );
+    }
+
+    /**
+     * @param designElement
+     * @param value
+     */
+    public void addToColumnData( String columnName, String value ) {
+        if ( !data.containsKey( columnName ) ) {
+            data.put( columnName, new ArrayList<String>() );
+        }
+        getColumnData( columnName ).add( value );
     }
 
     /**

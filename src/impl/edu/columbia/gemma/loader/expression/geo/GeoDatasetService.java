@@ -55,7 +55,7 @@ public class GeoDatasetService {
     @SuppressWarnings("unchecked")
     public void fetchAndLoad( String geoDataSetAccession ) {
 
-        generator = new GeoDomainObjectGenerator();
+        if ( generator == null ) generator = new GeoDomainObjectGenerator();
 
         GeoSeries series = ( GeoSeries ) generator.generate( geoDataSetAccession ).iterator().next();
 
@@ -69,6 +69,15 @@ public class GeoDatasetService {
         expLoader.persist( result );
 
         log.info( "Persisted " + series.getGeoAccession() );
+    }
+
+    /**
+     * This is supplied to allow plugging in non-standard generators for testing (e.g., using local files only)
+     * 
+     * @param generator
+     */
+    public void setGenerator( SourceDomainObjectGenerator generator ) {
+        this.generator = generator;
     }
 
     /**
