@@ -21,27 +21,27 @@ package edu.columbia.gemma.expression.bioAssayData;
 /**
  * @author pavlidis
  * @version $Id$
- * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDataVector
+ * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDimension
  */
-public class BioAssayDataVectorDaoImpl extends edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorDaoBase {
+public class BioAssayDimensionDaoImpl extends edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionDaoBase {
 
     /*
      * (non-Javadoc)
      * 
-     * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorDaoBase#find(edu.columbia.gemma.expression.bioAssayData.BioAssayDataVector)
+     * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionDaoBase#find(edu.columbia.gemma.expression.bioAssayData.BioAssayDimension)
      */
     @Override
-    public BioAssayDataVector find( BioAssayDataVector bioAssayDataVector ) {
-        throw new UnsupportedOperationException();
+    public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
+        throw new UnsupportedOperationException(); // TODO Auto-generated method stub
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorDaoBase#findOrCreate(edu.columbia.gemma.expression.bioAssayData.BioAssayDataVector)
+     * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionDaoBase#findOrCreate(edu.columbia.gemma.expression.bioAssayData.BioAssayDimension)
      */
     @Override
-    public BioAssayDataVector findOrCreate( BioAssayDataVector bioAssayDataVector ) {
+    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
         throw new UnsupportedOperationException();
     }
 }
