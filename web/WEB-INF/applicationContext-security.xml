@@ -222,7 +222,7 @@
                 edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
-                edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionsService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.findOrCreate=user,admin
