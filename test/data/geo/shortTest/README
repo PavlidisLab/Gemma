@@ -1,0 +1,7 @@
+# paths would have to be changed but you get the idea.
+gzip -dc GSE674_family.soft.gz | chopSoft.pl | gzip -c  GSE674_family.soft.gz
+gzip -dc ../GDS473/GDS473.soft.gz | chopSoft.pl | gzip -c > GDS473.soft.gz
+gzip -dc ../GDS472/GDS472.soft.gz | chopSoft.pl | gzip -c > GDS472.soft.gz
+
+
+
