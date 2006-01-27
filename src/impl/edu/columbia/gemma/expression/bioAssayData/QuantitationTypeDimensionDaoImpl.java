@@ -18,31 +18,77 @@
  */
 package edu.columbia.gemma.expression.bioAssayData;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * @author pavlidis
  * @version $Id$
- * @see edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimension
+ * @see edu.columbia.gemma.expression.quantitationTypeData.QuantitationTypeDimension
  */
 public class QuantitationTypeDimensionDaoImpl extends
         edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionDaoBase {
+    private static Log log = LogFactory.getLog( QuantitationTypeDimensionDaoImpl.class.getName() );
 
     /*
      * (non-Javadoc)
      * 
-     * @see edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionDaoBase#find(edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimension)
+     * @see edu.columbia.gemma.expression.quantitationTypeData.QuantitationTypeDimensionDaoBase#find(edu.columbia.gemma.expression.quantitationTypeData.QuantitationTypeDimension)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public QuantitationTypeDimension find( QuantitationTypeDimension quantitationTypeDimension ) {
-        throw new UnsupportedOperationException(); // TODO Auto-generated method stub
+        Criteria queryObject = super.getSession( false ).createCriteria( BioAssayDimension.class );
+        if ( StringUtils.isNotBlank( quantitationTypeDimension.getName() ) ) {
+            queryObject.add( Restrictions.ilike( "name", quantitationTypeDimension.getName() ) );
+        }
+
+        if ( StringUtils.isNotBlank( quantitationTypeDimension.getDescription() ) ) {
+            queryObject.add( Restrictions.ilike( "description", quantitationTypeDimension.getDescription() ) );
+        }
+
+        queryObject.add( Restrictions.sizeEq( "dimensionQuantitationTypes", quantitationTypeDimension
+                .getDimensionQuantitationTypes().size() ) );
+
+        // this will not work with detached bioassays.
+        // queryObject.add( Restrictions.in( "quantitationTypes", quantitationTypeDimension.getQuantitationTypes() ) );
+        try {
+            Collection<String> names = new HashSet<String>();
+            for ( QuantitationType quantitationType : ( Collection<QuantitationType> ) quantitationTypeDimension
+                    .getDimensionQuantitationTypes() ) {
+                names.add( quantitationType.getName() );
+            }
+            queryObject.createCriteria( "dimensionQuantitationTypes" ).add( Restrictions.in( "name", names ) );
+            return ( QuantitationTypeDimension ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionDaoBase#findOrCreate(edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimension)
+     * @see edu.columbia.gemma.expression.quantitationTypeData.QuantitationTypeDimensionDaoBase#findOrCreate(edu.columbia.gemma.expression.quantitationTypeData.QuantitationTypeDimension)
      */
     @Override
     public QuantitationTypeDimension findOrCreate( QuantitationTypeDimension quantitationTypeDimension ) {
-        throw new UnsupportedOperationException(); // TODO Auto-generated method stub
+        if ( quantitationTypeDimension == null || quantitationTypeDimension.getDimensionQuantitationTypes() == null )
+            return null;
+        QuantitationTypeDimension newQuantitationTypeDimension = find( quantitationTypeDimension );
+        if ( newQuantitationTypeDimension != null ) {
+            BeanPropertyCompleter.complete( newQuantitationTypeDimension, quantitationTypeDimension );
+            return newQuantitationTypeDimension;
+        }
+        log.debug( "Creating new " + quantitationTypeDimension );
+        return ( QuantitationTypeDimension ) create( quantitationTypeDimension );
     }
 }

@@ -110,7 +110,7 @@
             </properties>
         </namespace>
 
-     <!--    <namespace name="bpm4struts">
+        <namespace name="bpm4struts">
             <properties>
 
                 <property name="manageableServiceAccessorPattern">org.andromda.crud.ManageableServiceLocator.instance().get{1}()</property>
@@ -125,7 +125,7 @@
                 <property name="configuration">${maven.andromda.web.generated.dir}/WEB-INF</property>
 
             </properties>
-        </namespace>-->
+        </namespace>
     </namespaces>
 </andromda>
 

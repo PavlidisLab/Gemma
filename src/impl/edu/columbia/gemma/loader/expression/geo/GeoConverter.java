@@ -20,6 +20,7 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,6 +41,11 @@ import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
+import edu.columbia.gemma.common.quantitationtype.GeneralType;
+import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.common.quantitationtype.ScaleType;
+import edu.columbia.gemma.common.quantitationtype.StandardQuantitationType;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
@@ -290,13 +296,17 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
         BioAssayDimension result = BioAssayDimension.Factory.newInstance();
+
+        StringBuilder buf = new StringBuilder();
+        Collections.sort( datasetSamples );
         for ( GeoSample sample : datasetSamples ) {
             boolean found = false;
             String sampleAcc = sample.getGeoAccession();
+            buf.append( sampleAcc + "\n" );
             // some extra sanity checking here would be wise. What if two columns have the same id.
             for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
                 if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-                    result.getBioAssays().add( bioAssay );
+                    result.getDimensionBioAssays().add( bioAssay );
                     found = true;
                     break;
                 }
@@ -306,6 +316,8 @@ public class GeoConverter implements Converter {
                 // sample ids.
             }
         }
+        result.setName( buf.toString().substring( 0, 100 ) + "..." );
+        result.setDescription( buf.toString() );
         return result;
     }
 
@@ -411,6 +423,14 @@ public class GeoConverter implements Converter {
         boolean first = true;
         for ( String quantitationType : quantitationTypes ) {
 
+            QuantitationType qt = QuantitationType.Factory.newInstance(); // FIXME fill in representation etc.
+            qt.setName( quantitationType );
+            qt.setGeneralType( GeneralType.QUANTITATIVE );// FIXME
+            qt.setRepresentation( PrimitiveType.DOUBLE ); // FIXME
+            qt.setScale( ScaleType.UNSCALED );// FIXME
+            qt.setType( StandardQuantitationType.MEASUREDSIGNAL );// FIXME
+            qt.setIsBackground( new Boolean( false ) ); // FIXME
+
             // skip the first quantitationType, it's the ID or ID_REF.
             if ( first ) {
                 first = false;
@@ -424,6 +444,7 @@ public class GeoConverter implements Converter {
                 assert dataVector != null && dataVector.size() != 0;
                 DesignElementDataVector vector = convertDesignElementDataVector( geoDataset, expExp, bioAssayDimension,
                         designElementName, dataVector );
+                vector.setQuantitationType( qt );
                 expExp.getDesignElementDataVectors().add( vector );
             }
         }
@@ -460,8 +481,10 @@ public class GeoConverter implements Converter {
      * @param quantitationType
      * @return
      */
+    @SuppressWarnings("unchecked")
     private Map<String, List<String>> makeDataVectors( List<GeoSample> datasetSamples, String quantitationType ) {
         Map<String, List<String>> dataVectors = new HashMap<String, List<String>>();
+        Collections.sort( datasetSamples );
         for ( GeoSample sample : datasetSamples ) {
             Collection<GeoPlatform> platforms = sample.getPlatforms();
             assert platforms.size() != 0;

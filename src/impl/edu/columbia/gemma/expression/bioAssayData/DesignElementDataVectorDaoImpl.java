@@ -44,12 +44,18 @@ public class DesignElementDataVectorDaoImpl extends
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( DesignElementDataVector.class );
 
-            queryObject.add( Restrictions.eq( "designElement", designElementDataVector.getDesignElement() ) );
+            queryObject.createCriteria( "designElement" ).add(
+                    Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) ).createCriteria(
+                    "arrayDesign" ).add(
+                    Restrictions.eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
 
-            queryObject.add( Restrictions.eq( "quantitationType", designElementDataVector.getQuantitationType() ) );
+            queryObject.createCriteria( "quantitationType" ).add(
+                    Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
 
             queryObject.add( Restrictions
                     .eq( "expressionExperiment", designElementDataVector.getExpressionExperiment() ) );
+
+            // FIXME - finish filling in criteria so we never use 'equals' on a domain object.
 
             java.util.List results = queryObject.list();
             Object result = null;

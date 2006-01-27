@@ -41,7 +41,7 @@
     </category>
 
     <category name="org.andromda">
-        <priority value="INFO" />
+        <priority value="WARN" />
     </category>
 
     <category name="org.andromda.namespaces.hibernate">

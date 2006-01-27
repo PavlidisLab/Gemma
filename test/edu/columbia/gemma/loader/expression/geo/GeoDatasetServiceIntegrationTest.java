@@ -31,6 +31,8 @@ import edu.columbia.gemma.common.protocol.SoftwareService;
 import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
+import edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
@@ -83,6 +85,9 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         ml.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
         ml.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
         ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
+        ml.setBioAssayDimensionService( ( BioAssayDimensionService ) ctx.getBean( "bioAssayDimensionService" ) );
+        ml.setQuantitationTypeDimensionService( ( QuantitationTypeDimensionService ) ctx
+                .getBean( "quantitationTypeDimensionService" ) );
         gds.setPersister( ml );
         gds.setConverter( geoConv );
     }
@@ -97,33 +102,22 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         super.tearDown();
     }
 
-    public void testFetchAndLoadMultiChipPerSeries() throws Exception {
+    // public void testFetchAndLoadMultiChipPerSeries() throws Exception {
+    // gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
+    // // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+    // }
+
+    public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
+        gds.setGenerator( new GeoDomainObjectGeneratorLocal( "C:/java/workspace/Gemma/test/data/geo/shortTest" ) );
         gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
     }
 
-    public void testFetchAndLoadWithRawData() throws Exception {
-        gds.fetchAndLoad( "GDS562" );
-    }
-
-    public void testFetchAndLoadB() throws Exception {
-        gds.fetchAndLoad( "GDS942" );
-    }
-
-    public void testFetchAndLoadC() throws Exception {
-        gds.fetchAndLoad( "GDS100" );
-    }
-
-    public void testFetchAndLoadD() throws Exception {
-        gds.fetchAndLoad( "GDS1033" );
-    }
-
-    public void testFetchAndLoadE() throws Exception {
-        gds.fetchAndLoad( "GDS835" );
-    }
-
-    public void testFetchAndLoadF() throws Exception {
-        gds.fetchAndLoad( "GDS58" );
-    }
-
+    /*
+     * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void
+     * testFetchAndLoadB() throws Exception { gds.fetchAndLoad( "GDS942" ); } public void testFetchAndLoadC() throws
+     * Exception { gds.fetchAndLoad( "GDS100" ); } public void testFetchAndLoadD() throws Exception { gds.fetchAndLoad(
+     * "GDS1033" ); } public void testFetchAndLoadE() throws Exception { gds.fetchAndLoad( "GDS835" ); } public void
+     * testFetchAndLoadF() throws Exception { gds.fetchAndLoad( "GDS58" ); }
+     */
 }

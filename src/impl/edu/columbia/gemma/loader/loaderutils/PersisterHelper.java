@@ -798,7 +798,7 @@ public class PersisterHelper implements Persister {
             }
 
             if ( persistentDesignElement == null ) {
-                throw new IllegalStateException( vect.getDesignElement() + " does not have a persistent version" );
+                throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
             }
 
             ArrayDesign ad = persistentDesignElement.getArrayDesign();
@@ -807,6 +807,9 @@ public class PersisterHelper implements Persister {
             vect.setBioAssayDimension( persistBioAssayDimension( vect.getBioAssayDimension() ) );
 
             vect.setDesignElement( persistentDesignElement );
+
+            assert vect.getQuantitationType() != null;
+            vect.getQuantitationType().setId( persistQuantitationType( vect.getQuantitationType() ).getId() );
         }
 
         return expressionExperimentService.findOrCreate( entity );
@@ -821,7 +824,7 @@ public class PersisterHelper implements Persister {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
 
-        for ( BioAssay bioAssay : ( Collection<BioAssay> ) bioAssayDimension.getBioAssays() ) {
+        for ( BioAssay bioAssay : ( Collection<BioAssay> ) bioAssayDimension.getDimensionBioAssays() ) {
             bioAssay.setId( persistBioAssay( bioAssay ).getId() );
         }
 

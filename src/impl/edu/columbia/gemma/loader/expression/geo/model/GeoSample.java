@@ -33,7 +33,7 @@ import java.util.Map;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoSample extends GeoData {
+public class GeoSample extends GeoData implements Comparable {
 
     private String title = "";
     private List<GeoChannel> channels;
@@ -292,6 +292,15 @@ public class GeoSample extends GeoData {
      */
     public void addReplication( GeoReplication replication ) {
         this.replicates.add( replication );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Comparable#compareTo(T)
+     */
+    public int compareTo( Object o ) {
+        return ( ( GeoSample ) o ).getGeoAccession().compareTo( this.getGeoAccession() );
     }
 
 }
