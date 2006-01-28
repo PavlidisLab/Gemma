@@ -21,20 +21,19 @@ package edu.columbia.gemma.loader.association;
 import java.util.Collection;
 
 import baseCode.util.StringUtil;
-
+import edu.columbia.gemma.association.LiteratureAssociationDao;
 import edu.columbia.gemma.association.LiteratureAssociationImpl;
-import edu.columbia.gemma.genome.Gene;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
-import edu.columbia.gemma.association.LiteratureAssociationDao;
+import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *           g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
+ *            g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * </pre>
  * 
  * <hr>
@@ -83,11 +82,11 @@ public class LitAssociationFileParser extends BasicLineParser {
         LiteratureAssociationImpl assoc = new LiteratureAssociationImpl();
         Gene g1 = null;
         Gene g2 = null;
-        Integer id = null;
+        String id = null;
         ExternalDatabase db;
         try {
-            id = new Integer( fields[1] );
-            c = geneDao.findByNcbiId( id.intValue() );
+            id = fields[1];
+            c = geneDao.findByNcbiId( id );
 
             if ( ( c != null ) && ( c.size() == 1 ) ) {
                 g1 = ( c.iterator() ).next();
@@ -95,8 +94,8 @@ public class LitAssociationFileParser extends BasicLineParser {
                 throw new Exception( "gene " + id + " not found. Entry skipped." );
             }
 
-            id = new Integer( fields[4] );
-            c = geneDao.findByNcbiId( id.intValue() );
+            id = fields[4];
+            c = geneDao.findByNcbiId( id );
 
             if ( ( c != null ) && ( c.size() == 1 ) ) {
                 g2 = ( c.iterator() ).next();
@@ -114,9 +113,9 @@ public class LitAssociationFileParser extends BasicLineParser {
             // db=dbDao.findByName(fields[8]); //calls fior external db to be pre-loaded
             assoc.setSource( db );
 
-            if ( mPersist == PERSIST_CONCURRENTLY ) {
-                laDao.create( fields[6], g1, new Integer( fields[7] ), g2 ); // FIXME parser should not create
-            }
+            // if ( mPersist == PERSIST_CONCURRENTLY ) {
+            // laDao.create( fields[6], g1, new Integer( fields[7] ), g2 ); // FIXME parser should not create
+            // }
         } catch ( Exception e ) {
             log.error( e, e );
         }

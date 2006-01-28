@@ -46,7 +46,7 @@ public class BibliographicReferenceServiceImpl extends
             edu.columbia.gemma.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception {
 
-       return getBibliographicReferenceDao().find( bibliographicReference );
+        return getBibliographicReferenceDao().find( bibliographicReference );
     }
 
     /**
@@ -126,7 +126,7 @@ public class BibliographicReferenceServiceImpl extends
      * @see edu.columbia.gemma.common.description.BibliographicReferenceServiceBase#handleGetAllBibliographicReferences()
      */
     @Override
-    protected Collection handleGetAllBibliographicReferences() throws Exception {
+    protected Collection handleGetAll() throws Exception {
         return this.getBibliographicReferenceDao().loadAll();
     }
 
@@ -149,7 +149,8 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     @Override
-    protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference ) throws Exception {
+    protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference )
+            throws Exception {
         return this.getBibliographicReferenceDao().findOrCreate( bibliographicReference );
     }
 

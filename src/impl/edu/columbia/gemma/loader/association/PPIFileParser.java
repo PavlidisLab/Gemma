@@ -21,13 +21,12 @@ package edu.columbia.gemma.loader.association;
 import java.util.Collection;
 
 import baseCode.util.StringUtil;
-
+import edu.columbia.gemma.association.ProteinProteinInteractionDao;
 import edu.columbia.gemma.association.ProteinProteinInteractionImpl;
-import edu.columbia.gemma.genome.gene.GeneProduct;
-import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
-import edu.columbia.gemma.association.ProteinProteinInteractionDao;
+import edu.columbia.gemma.genome.gene.GeneProduct;
+import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
 /**
@@ -81,18 +80,18 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
         ProteinProteinInteractionImpl assoc = new ProteinProteinInteractionImpl();
         GeneProduct g1 = null;
         GeneProduct g2 = null;
-        Integer id = null;
+        String id = null;
         ExternalDatabase db;
         try {
-            id = new Integer( fields[1] );
-            c = gpDao.findByNcbiId( id.intValue() );
+            id =  fields[1] ;
+            c = gpDao.findByNcbiId( id  );
             if ( ( c != null ) && ( c.size() == 1 ) ) {
                 g1 = ( c.iterator() ).next();
             } else
                 throw new Exception( "gene product " + id + " not found. Entry skipped." );
 
-            id = new Integer( fields[2] );
-            c = gpDao.findByNcbiId( id.intValue() );
+            id =  fields[2] ;
+            c = gpDao.findByNcbiId( id  );
             if ( ( c != null ) && ( c.size() == 1 ) ) {
                 g2 = ( c.iterator() ).next();
             } else
@@ -106,9 +105,9 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
             // db=dbDao.findByName(fields[8]); //calls fior external db to be pre-loaded
             assoc.setSource( db );
 
-            if ( mPersist == PERSIST_CONCURRENTLY ) {
-                ppiDao.create( assoc );
-            }
+            // if ( mPersist == PERSIST_CONCURRENTLY ) {
+            // ppiDao.create( assoc ); // FIXME parser should not persist
+            //            }
         } catch ( Exception e ) {
             log.error( e.toString() );
         }

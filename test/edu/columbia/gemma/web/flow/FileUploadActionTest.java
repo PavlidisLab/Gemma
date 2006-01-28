@@ -27,7 +27,6 @@ import org.springframework.webflow.test.AbstractFlowExecutionTests;
 import org.springframework.webflow.test.MockRequestContext;
 
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.FileUpload;
-import edu.columbia.gemma.web.flow.FileUploadAction;
 
 /**
  * <hr>

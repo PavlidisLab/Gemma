@@ -11,3 +11,4 @@ validation.xml
 action-servlet.xml
 .struts-config.mex
 applicationContext-localDataSource.xml
+applicationContext-manageable.xml

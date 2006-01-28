@@ -1,8 +1,8 @@
 package edu.columbia.gemma.loader.loaderutils;
 
+import junit.framework.TestCase;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
-import junit.framework.TestCase;
 
 /**
  * <hr>

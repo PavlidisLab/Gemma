@@ -20,9 +20,8 @@ package edu.columbia.gemma.loader.expression.geo;
 
 import java.util.Collection;
 
-import edu.columbia.gemma.common.description.LocalFile;
-
 import junit.framework.TestCase;
+import edu.columbia.gemma.common.description.LocalFile;
 
 /**
  * @author pavlidis

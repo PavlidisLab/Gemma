@@ -18,10 +18,10 @@
  */
 package edu.columbia.gemma.analysis.preprocess;
 
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.tools.AffyBatch;
 import edu.columbia.gemma.tools.RCommander;
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Class to perform background adjustment for Affymetrix arrays, RMA-style.

@@ -22,11 +22,12 @@
 package edu.columbia.gemma.genome.gene;
 
 import java.util.Collection;
-import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
-import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
-import edu.columbia.gemma.common.auditAndSecurity.AuditAction;
 import java.util.Date;
+
+import edu.columbia.gemma.common.auditAndSecurity.AuditAction;
+import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
  * <hr>
@@ -51,7 +52,7 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
     }
 
     @Override
-    public CandidateGeneList handleFindByID( long id ) {
+    public CandidateGeneList handleFindByID( Long id ) {
         return this.getCandidateGeneListDao().findByID( id );
     }
 
@@ -61,7 +62,7 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
     }
 
     @Override
-    public Collection handleGetAll() {
+    public Collection handleFindAll() {
         return this.getCandidateGeneListDao().loadAll();
     }
 

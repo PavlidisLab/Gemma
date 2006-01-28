@@ -31,10 +31,33 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
+import edu.columbia.gemma.common.auditAndSecurity.ContactService;
+import edu.columbia.gemma.common.auditAndSecurity.PersonService;
+import edu.columbia.gemma.common.description.DatabaseEntryService;
+import edu.columbia.gemma.common.description.ExternalDatabaseService;
+import edu.columbia.gemma.common.description.LocalFileService;
+import edu.columbia.gemma.common.description.OntologyEntryService;
+import edu.columbia.gemma.common.protocol.HardwareService;
+import edu.columbia.gemma.common.protocol.ProtocolService;
+import edu.columbia.gemma.common.protocol.SoftwareService;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.expression.bioAssay.BioAssayService;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService;
+import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
+import edu.columbia.gemma.expression.biomaterial.CompoundService;
+import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
+import edu.columbia.gemma.expression.designElement.ReporterService;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
+import edu.columbia.gemma.expression.experiment.FactorValueService;
+import edu.columbia.gemma.genome.TaxonService;
+import edu.columbia.gemma.genome.biosequence.BioSequenceService;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
- * Base class for running DAO tests. Based on code from Appfuse.
+ * Base class for running DAO tests. Based partly on code from Appfuse.
  * 
  * @author mraible
  * @author pavlidis
@@ -78,5 +101,40 @@ public class BaseDAOTestCase extends TestCase {
         BeanUtils.copyProperties( obj, map );
 
         return obj;
+    }
+
+    /**
+     * Supply a configured PersisterHelper.
+     * 
+     * @return
+     */
+    protected PersisterHelper getPersisterHelper() {
+        PersisterHelper ml = new PersisterHelper();
+        ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
+        ml
+                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
+                        .getBean( "expressionExperimentService" ) );
+        ml.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
+        ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
+        ml.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
+        ml.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
+        ml.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
+        ml.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
+        ml.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
+        ml.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
+        ml.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
+        ml.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
+        ml.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
+        ml.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
+        ml.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
+        ml.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
+        ml.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
+        ml.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
+        ml.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
+        ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
+        ml.setBioAssayDimensionService( ( BioAssayDimensionService ) ctx.getBean( "bioAssayDimensionService" ) );
+        ml.setDesignElementDimensionService( ( DesignElementDimensionService ) ctx
+                .getBean( "designElementDimensionService" ) );
+        return ml;
     }
 }

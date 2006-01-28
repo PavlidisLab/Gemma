@@ -20,10 +20,11 @@ package edu.columbia.gemma.analysis.preprocess;
 
 import java.util.zip.GZIPInputStream;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
 

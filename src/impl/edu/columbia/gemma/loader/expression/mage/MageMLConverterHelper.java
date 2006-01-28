@@ -937,7 +937,7 @@ public class MageMLConverterHelper {
                 .newInstance();
 
         result.setSequence( mageObj.getSequence() );
-        if ( mageObj.getLength() != null ) result.setLength( mageObj.getLength().intValue() );
+        if ( mageObj.getLength() != null ) result.setLength( mageObj.getLength().longValue() );
         if ( mageObj.getIsApproximateLength() != null )
             result.setIsApproximateLength( mageObj.getIsApproximateLength().booleanValue() );
         if ( mageObj.getIsCircular() != null ) result.setIsCircular( mageObj.getIsCircular().booleanValue() );
@@ -2703,7 +2703,7 @@ public class MageMLConverterHelper {
                 Integer m = rps.getStart();
                 if ( m == null ) continue;
 
-                conv.setStartInBioChar( m.intValue() );
+                conv.setStartInBioChar( m.longValue() );
             }
             break; // only take the first one;
         }

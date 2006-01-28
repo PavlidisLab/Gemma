@@ -21,10 +21,9 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import java.util.Collection;
 import java.util.Date;
 
-import org.hibernate.SessionFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 

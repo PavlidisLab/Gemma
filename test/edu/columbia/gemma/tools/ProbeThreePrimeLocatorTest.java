@@ -25,8 +25,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
-import edu.columbia.gemma.tools.ProbeThreePrimeLocator.LocationData;
 import junit.framework.TestCase;
+import edu.columbia.gemma.tools.ProbeThreePrimeLocator.LocationData;
 
 /**
  * <hr>

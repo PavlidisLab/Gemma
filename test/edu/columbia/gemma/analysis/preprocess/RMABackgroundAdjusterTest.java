@@ -22,13 +22,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import junit.framework.TestCase;
 
 /**
  * <hr>

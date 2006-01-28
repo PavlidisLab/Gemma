@@ -64,7 +64,7 @@ public class ExpressionExperimentServiceImpl extends
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleFind(java.lang.Long)
      */
     @Override
-    protected ExpressionExperiment handleFind( Long id ) throws Exception {
+    protected ExpressionExperiment handleFindByID( Long id ) throws Exception {
         return ( ExpressionExperiment ) this.getExpressionExperimentDao().load( id );
     }
 

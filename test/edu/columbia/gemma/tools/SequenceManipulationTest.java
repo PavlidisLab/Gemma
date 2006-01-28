@@ -68,11 +68,11 @@ public class SequenceManipulationTest extends TestCase {
         dr.setImmobilizedCharacteristic( d );
         er.setImmobilizedCharacteristic( e );
 
-        ar.setStartInBioChar( 1 );
-        br.setStartInBioChar( 5 );
-        cr.setStartInBioChar( 9 );
-        dr.setStartInBioChar( 13 );
-        er.setStartInBioChar( 17 );
+        ar.setStartInBioChar( 1L );
+        br.setStartInBioChar( 5L );
+        cr.setStartInBioChar( 9L );
+        dr.setStartInBioChar( 13L );
+        er.setStartInBioChar( 17L );
 
         tester = CompositeSequence.Factory.newInstance();
         tester.setReporters( new HashSet() );
@@ -120,7 +120,7 @@ public class SequenceManipulationTest extends TestCase {
         for ( int i = 0; i < exonStarts.length; i++ ) {
             PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
             pl.setStrand( "+" );
-            pl.setNucleotide( new Integer( exonStarts[i] ) );
+            pl.setNucleotide( new Long( exonStarts[i] ) );
             pl.setNucleotideLength( new Integer( exonEnds[i] - exonStarts[i] ) );
             exons.add( pl );
         }

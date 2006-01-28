@@ -28,7 +28,6 @@ import org.acegisecurity.acl.AclManager;
 import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
 import org.acegisecurity.acl.basic.SimpleAclEntry;
 import org.acegisecurity.afterinvocation.AfterInvocationProvider;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;

@@ -62,8 +62,8 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#FindById(long)
      */
-    protected User handleFindById( long id ) throws java.lang.Exception {
-        return ( User ) this.getUserDao().load( new Long( id ) );
+    protected User handleFindById( Long id ) throws java.lang.Exception {
+        return ( User ) this.getUserDao().load( id );
     }
 
     /**

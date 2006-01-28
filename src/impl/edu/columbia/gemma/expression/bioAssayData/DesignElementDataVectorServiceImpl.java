@@ -20,6 +20,11 @@
  */
 package edu.columbia.gemma.expression.bioAssayData;
 
+import java.util.Collection;
+
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+
 /**
  * @author pavlidis
  * @author keshav
@@ -28,15 +33,6 @@ package edu.columbia.gemma.expression.bioAssayData;
  */
 public class DesignElementDataVectorServiceImpl extends
         edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceBase {
-
-    /**
-     * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService#saveDesignElementDataVector(edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector)
-     */
-    protected void handleSaveDesignElementDataVector(
-            edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector designElementDataVector )
-            throws java.lang.Exception {
-        this.getDesignElementDataVectorDao().create( designElementDataVector );
-    }
 
     @Override
     protected DesignElementDataVector handleFindOrCreate( DesignElementDataVector designElementDataVector )
@@ -49,6 +45,21 @@ public class DesignElementDataVectorServiceImpl extends
     protected void handleRemove( DesignElementDataVector designElementDataVector ) throws Exception {
         this.getDesignElementDataVectorDao().remove( designElementDataVector );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceBase#handleLoadAll(edu.columbia.gemma.expression.experiment.ExpressionExperiment,
+     *      edu.columbia.gemma.common.quantitationtype.QuantitationType,
+     *      edu.columbia.gemma.expression.bioAssayData.BioAssayDimension)
+     */
+    @Override
+    protected Collection handleLoadAll( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
+            BioAssayDimension bioAssayDimension ) throws Exception {
+
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

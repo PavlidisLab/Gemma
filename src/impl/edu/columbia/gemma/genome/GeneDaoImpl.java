@@ -25,8 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import edu.columbia.gemma.genome.Gene;
-
 /**
  * <hr>
  * <p>

@@ -19,7 +19,6 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;

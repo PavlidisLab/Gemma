@@ -195,7 +195,7 @@ public class ProbeThreePrimeLocator {
             int maxScore = 0;
             LocationData best = null;
             double maxOverlap = 0.0;
-            int alignLength = 0;
+            long alignLength = 0L;
             for ( LocationData ld : probeResults ) {
                 double blatScore = ld.getBr().score();
                 double overlap = ( double ) ld.getTpd().getExonOverlap()
@@ -294,7 +294,7 @@ public class ProbeThreePrimeLocator {
         private double maxOverlap;
         private int numHits;
         private ThreePrimeData tpd;
-        private int alignLength;
+        private long alignLength;
         private int numTied;
 
         /**
@@ -425,14 +425,14 @@ public class ProbeThreePrimeLocator {
         /**
          * @return Returns the alignLength.
          */
-        public int getAlignLength() {
+        public long getAlignLength() {
             return this.alignLength;
         }
 
         /**
          * @param alignLength The alignLength to set.
          */
-        public void setAlignLength( int alignLength ) {
+        public void setAlignLength( long alignLength ) {
             this.alignLength = alignLength;
         }
 

@@ -39,7 +39,7 @@ public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.B
      * @see edu.columbia.gemma.sequence.sequenceAnalysis.BlatResult#score()
      */
     @Override
-    public double score() {
+    public Double score() {
         assert this.getQuerySequence() != null;
         return ( ( double ) this.getMatches() - ( double ) this.getQueryGapCount() - this.getTargetGapCount() )
                 / this.getQuerySequence().getLength();
@@ -52,15 +52,15 @@ public class BlatResultImpl extends edu.columbia.gemma.genome.sequenceAnalysis.B
      * @see http:// genome.ucsc.edu/FAQ/FAQblat#blat5
      */
     @Override
-    public double identity() {
+    public Double identity() {
         int sizeMul = 1; // assuming DNA; use 3 for protein.
-        int qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
-        int tAliSize = this.getTargetEnd() - this.getTargetStart();
-        int aliSize = Math.min( qAliSize, tAliSize );
+        long qAliSize = sizeMul * this.getQueryEnd() - this.getQueryStart();
+        long tAliSize = this.getTargetEnd() - this.getTargetStart();
+        long aliSize = Math.min( qAliSize, tAliSize );
 
         if ( aliSize <= 0 ) return 0.0;
 
-        int sizeDif = qAliSize = tAliSize;
+        long sizeDif = qAliSize = tAliSize;
         if ( sizeDif < 0 ) {
             sizeDif = -sizeDif; // here assuming "isMrna" is false;
         }

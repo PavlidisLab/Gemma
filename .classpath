@@ -28,7 +28,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-collections/jars/commons-collections-3.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-validator/jars/commons-validator-1.1.4.jar"/>
-	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-framework-1.2.5/src" kind="var" path="MAVEN_REPO/spring/jars/spring.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-framework-1.2.6/src" kind="var" path="MAVEN_REPO/spring/jars/spring.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/spring/jars/spring-mock.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/velocity/jars/velocity-1.4.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/commons-lang/commons-lang-2.1-src.zip" kind="var" path="MAVEN_REPO/commons-lang/jars/commons-lang-2.1.jar"/>
@@ -100,6 +100,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/jaxen/jars/jaxen-1.1-beta-5.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-pool/jars/commons-pool-1.2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xerces-2.4.0.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
+	<classpathentry sourcepath="/WORKSPACE/baseCode/src" kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>

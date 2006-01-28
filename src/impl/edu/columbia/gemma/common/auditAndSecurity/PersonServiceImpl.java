@@ -23,10 +23,6 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import java.util.Collection;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -37,9 +33,9 @@ public class PersonServiceImpl extends edu.columbia.gemma.common.auditAndSecurit
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.PersonService#savePerson(edu.columbia.gemma.common.auditAndSecurity.Person)
      */
-    protected void handleSavePerson( edu.columbia.gemma.common.auditAndSecurity.Person person )
+    protected Person handleSavePerson( edu.columbia.gemma.common.auditAndSecurity.Person person )
             throws java.lang.Exception {
-        this.getPersonDao().create( person );
+        return ( Person ) this.getPersonDao().create( person );
     }
 
     /**

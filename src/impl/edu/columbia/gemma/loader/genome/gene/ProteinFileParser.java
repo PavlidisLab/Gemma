@@ -24,11 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import baseCode.util.StringUtil;
-
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
-import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.genome.gene.GeneProduct;
+import edu.columbia.gemma.genome.gene.GeneProductDao;
 import edu.columbia.gemma.genome.gene.GeneProductType;
 import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
 
@@ -36,7 +35,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *   taxon\t ncbi_gene_id\t ncbi_prot_id
+ *    taxon\t ncbi_gene_id\t ncbi_prot_id
  * </pre>
  * 
  * <hr>
@@ -81,10 +80,10 @@ public class ProteinFileParser extends BasicLineParser {
         Collection<Gene> c;
         GeneProduct gp = GeneProduct.Factory.newInstance();
         Gene g1 = null;
-        Integer id = null;
+        String id = null;
         try {
-            id = new Integer( fields[2] );
-            c = geneDao.findByNcbiId( id.intValue() );
+            id = fields[2];
+            c = geneDao.findByNcbiId( id );
             if ( ( c != null ) && ( c.size() == 1 ) ) {
                 g1 = ( c.iterator() ).next();
             } else
@@ -100,9 +99,9 @@ public class ProteinFileParser extends BasicLineParser {
             gp.setName( fields[3] );
             gp.setDescription( fields[3] );
 
-            if ( mPersist == PERSIST_CONCURRENTLY ) {
-                gpDao.create( gp ); // FIXME parser should not be persisting.
-            }
+            // if ( mPersist == PERSIST_CONCURRENTLY ) {
+            // gpDao.create( gp ); // FIXME parser should not be persisting.
+            //            }
         } catch ( Exception e ) {
             log.error( e, e );
         }

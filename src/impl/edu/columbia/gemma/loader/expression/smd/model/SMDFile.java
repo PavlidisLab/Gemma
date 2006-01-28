@@ -18,8 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.smd.model;
 
-import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.FileFormat;
+import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileImpl;
 
 /**

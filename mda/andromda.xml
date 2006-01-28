@@ -12,8 +12,13 @@
         <repository name="netBeansMDR">
             <models>
                 <model>
-                    <uri>jar:file:${basedir}/src/uml/gemma-om.zuml!/gemma-om.xmi</uri>
+                    <!--    <uri>jar:file:${basedir}/src/uml/gemma-om.zuml!/gemma-om.xmi</uri> -->
+                    <uri>jar:file:${basedir}/src/uml/gemma-om.xml.zip!/gemma-om.xml</uri>
+                    <moduleSearchLocations>
+                        <location>${maven.repo.local}/andromda/xml.zips</location>
+                    </moduleSearchLocations>
                 </model>
+
             </models>
         </repository>
     </repositories>
@@ -115,14 +120,14 @@
 
                 <property name="manageableServiceAccessorPattern">org.andromda.crud.ManageableServiceLocator.instance().get{1}()</property>
                 <property name="serviceAccessorPattern">org.andromda.crud.ServiceLocator.instance().get{1}()</property>
-                <property name="forms">${maven.andromda.web.generated.dir}</property>
-                <property name="pages">${maven.andromda.web.generated.dir}</property>
-                <property name="controller-impls">${maven.andromda.web.generated.dir}</property>
-                <property name="decorators">${maven.andromda.web.generated.dir}</property>
-                <property name="actions">${maven.andromda.web.generated.dir}</property>
-                <property name="controllers">${maven.andromda.web.generated.dir}</property>
-                <property name="messages">${maven.andromda.web.generated.dir}/WEB-INF/classes</property>
-                <property name="configuration">${maven.andromda.web.generated.dir}/WEB-INF</property>
+                <property name="actions">${maven.andromda.hibernate.generated.dir}</property>
+                <property name="forms">${maven.andromda.web.generated.dir}/pages</property>
+                <property name="pages">${maven.andromda.web.generated.dir}/pages</property>
+                <property name="controllers">${maven.andromda.hibernate.generated.dir}</property>
+                <property name="controller-impls">${maven.andromda.hibernate.manual.dir}</property>
+                <property name="decorators">${maven.andromda.hibernate.manual.dir}</property>
+                <property name="messages">maven.andromda.spring.spring.configuration.dir/classes</property>
+                <property name="configuration">${maven.andromda.spring.spring.configuration.dir}</property>
 
             </properties>
         </namespace>

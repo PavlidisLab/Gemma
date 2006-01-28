@@ -20,7 +20,6 @@ package edu.columbia.gemma.util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
 import java.util.Date;
 
 import org.apache.commons.beanutils.ConversionException;

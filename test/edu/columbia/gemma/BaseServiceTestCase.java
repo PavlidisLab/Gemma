@@ -18,42 +18,28 @@
  */
 package edu.columbia.gemma;
 
-import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 
-import edu.columbia.gemma.util.ConvertUtil;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * A service is a class that uses daos. To test the service without testing the daos (and using the database), we use
  * mock daos.
  * <p>
- * This code from AppFuse. Provides utilities to read in objects from resources (properties files).
- * <hr>
- * <p>
- * 
+ * This partly code from AppFuse. Provides utilities to read in objects from resources (properties files).
  * 
  * @author pavlidis
  * @author raible
  * @version $Id$
  */
-public class BaseServiceTestCase extends TestCase {
-    // ~ Static fields/initializers =============================================
+public class BaseServiceTestCase extends BaseDAOTestCase {
 
     protected final Log log = LogFactory.getLog( getClass() );
     protected ResourceBundle rb;
-
-    protected BeanFactory ctx = SpringContextUtil.getApplicationContext( true );
-
-    // ~ Constructors ===========================================================
 
     public BaseServiceTestCase() {
 
@@ -70,22 +56,4 @@ public class BaseServiceTestCase extends TestCase {
         }
     }
 
-    // ~ Methods ================================================================
-
-    /**
-     * Utility method to populate a javabean-style object with values from a Properties file
-     * 
-     * @param obj
-     * @return
-     * @throws Exception
-     */
-    protected Object populate( Object obj ) throws Exception {
-        // loop through all the beans methods and set its properties from
-        // its .properties file
-        Map map = ConvertUtil.convertBundleToMap( rb );
-
-        BeanUtils.copyProperties( obj, map );
-
-        return obj;
-    }
 }

@@ -102,7 +102,7 @@ public class BlatResultParser extends BasicLineParser {
             String name = ( "BlatResult:" + f[QNAME_FIELD] + ":" + f[QSTART_FIELD] + ":" + f[TSTART_FIELD] + ":" + f[TNAME_FIELD] );
             result.setId( new Long( name.hashCode() ) );
             result.setQuerySequence( BioSequence.Factory.newInstance() );
-            result.getQuerySequence().setLength( Integer.parseInt( f[QSIZE_FIELD] ) );
+            result.getQuerySequence().setLength( Long.parseLong( f[QSIZE_FIELD] ) );
 
             result.setMatches( Integer.parseInt( f[MATCHES_FIELD] ) );
             result.setMismatches( Integer.parseInt( f[MISMATCHES_FIELD] ) );
@@ -116,8 +116,8 @@ public class BlatResultParser extends BasicLineParser {
             result.setTargetChromosome( Chromosome.Factory.newInstance() );
             result.setQueryStart( Integer.parseInt( f[QSTART_FIELD] ) );
             result.setQueryEnd( Integer.parseInt( f[QEND_FIELD] ) );
-            result.setTargetStart( Integer.parseInt( f[TSTART_FIELD] ) );
-            result.setTargetEnd( Integer.parseInt( f[TEND_FIELD] ) );
+            result.setTargetStart( Long.parseLong( f[TSTART_FIELD] ) );
+            result.setTargetEnd( Long.parseLong( f[TEND_FIELD] ) );
             result.setBlockCount( Integer.parseInt( f[BLOCKCOUNT_FIELD] ) );
             result.setBlockSizes( f[BLOCKSIZES_FIELD] ); // FIXME - there should be an aligned regions
             // association.
@@ -138,7 +138,7 @@ public class BlatResultParser extends BasicLineParser {
             result.getTargetChromosome().setName( chrom );
             result.getTargetChromosome().setSequence( BioSequence.Factory.newInstance() );
             result.getTargetChromosome().getSequence().setName( chrom );
-            result.getTargetChromosome().getSequence().setLength( Integer.parseInt( f[TSIZE_FIELD] ) );
+            result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
             return result;
         } catch ( NumberFormatException e ) {
             log.error( "Invalid number format", e );

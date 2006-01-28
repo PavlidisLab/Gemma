@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.biomage.BioAssayData.DesignElementDimension;
 
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
@@ -61,7 +60,7 @@ import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
-import edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionService;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.Compound;
@@ -118,7 +117,7 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="reporterService" ref="reporterService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
- * @spring.property name="quantitationTypeDimensionService" ref="quantitationTypeDimensionService"
+ * @spring.property name="designElementDimensionService" ref="designElementDimensionService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -171,7 +170,7 @@ public class PersisterHelper implements Persister {
 
     private BioAssayDimensionService bioAssayDimensionService;
 
-    private QuantitationTypeDimensionService quantitationTypeDimensionService;
+    private DesignElementDimensionService designElementDimensionService;
 
     private Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
 
@@ -1117,9 +1116,9 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param quantitationTypeDimensionService The quantitationTypeDimensionService to set.
+     * @param designElementDimensionService The designElementDimensionService to set.
      */
-    public void setQuantitationTypeDimensionService( QuantitationTypeDimensionService quantitationTypeDimensionService ) {
-        this.quantitationTypeDimensionService = quantitationTypeDimensionService;
+    public void setDesignElementDimensionService( DesignElementDimensionService designElementDimensionService ) {
+        this.designElementDimensionService = designElementDimensionService;
     }
 }

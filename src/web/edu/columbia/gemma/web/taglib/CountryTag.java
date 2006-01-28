@@ -19,9 +19,7 @@
 package edu.columbia.gemma.web.taglib;
 
 import java.io.IOException;
-
 import java.text.Collator;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

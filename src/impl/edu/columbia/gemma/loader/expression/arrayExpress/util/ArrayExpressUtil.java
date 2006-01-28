@@ -11,7 +11,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
 
 import baseCode.util.NetUtils;
-
 import edu.columbia.gemma.loader.expression.smd.util.SmdUtil;
 
 /**

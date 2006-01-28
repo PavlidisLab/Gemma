@@ -13,11 +13,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
-import edu.columbia.gemma.util.SpringContextUtil;
-import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.association.LiteratureAssociationDao;
 import edu.columbia.gemma.common.description.ExternalDatabaseDao;
+import edu.columbia.gemma.genome.GeneDao;
+import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
+import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * Command line interface to retrieve and load literature associations

@@ -189,7 +189,7 @@
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.remove=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByAccession=user,admin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByID=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByName=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalDesignService.getExperimentalDesigns=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalDesignService.saveExperimentalDesign=user,admin
@@ -207,8 +207,6 @@
                 edu.columbia.gemma.expression.designElement.ReporterService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.designElement.ReporterService.remove=user,admin
                 edu.columbia.gemma.expression.designElement.ReporterService.find=user,admin
-                edu.columbia.gemma.expression.designElement.DesignElementService.remove=user,admin
-                edu.columbia.gemma.expression.designElement.DesignElementService.update=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.remove=ACL_SECURABLE_EDIT
@@ -223,7 +221,7 @@
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
                 edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
-                edu.columbia.gemma.expression.bioAssayData.QuantitationTypeDimensionService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.remove=user,admin
@@ -233,7 +231,7 @@
                 edu.columbia.gemma.expression.biomaterial.CompoundService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.biomaterial.CompoundService.update=user,admin
                 edu.columbia.gemma.expression.biomaterial.CompoundService.remove=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.getAllBibliographicReferences=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.getAll=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findOrCreate=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
@@ -318,11 +316,11 @@
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByGeneOfficialName=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.findByListOwner=user,admin
-                edu.columbia.gemma.genome.gene.CandidateGeneListService.getAll=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findAll=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.setActor=user,admin
                 edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin
                 edu.columbia.gemma.genome.gene.GeneService.update=ACL_SECURABLE_EDIT
-                edu.columbia.gemma.genome.gene.GeneService.getAllGenes=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findAll=user,admin
                 edu.columbia.gemma.genome.gene.GeneService.remove=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin
                 edu.columbia.gemma.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin

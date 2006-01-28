@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
-
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
@@ -80,10 +79,10 @@ public class CandidateGeneListServiceImplTest extends TestCase {
         reset( candidateGeneListDaoMock );
         CandidateGeneList cgl = this.createTestList();
 
-        candidateGeneListDaoMock.findByID( 190409 );
+        candidateGeneListDaoMock.findByID( 190409L );
         expectLastCall().andReturn( cgl );
         replay( candidateGeneListDaoMock );
-        svc.findByID( 190409 );
+        svc.findByID( 190409L );
         verify( candidateGeneListDaoMock );
 
     }

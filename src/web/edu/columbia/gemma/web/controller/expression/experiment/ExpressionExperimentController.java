@@ -80,7 +80,7 @@ public class ExpressionExperimentController implements Controller {
 
             log.debug( "request parameter: " + request.getAttribute( "id" ) );
 
-            ExpressionExperiment ee = expressionExperimentService.find( new Long( Long.parseLong( request
+            ExpressionExperiment ee = expressionExperimentService.findByID( new Long( Long.parseLong( request
                     .getParameter( "id" ) ) ) );
 
             String event = request.getParameter( "_eventId" );

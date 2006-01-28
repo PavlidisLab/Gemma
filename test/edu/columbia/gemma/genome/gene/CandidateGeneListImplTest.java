@@ -2,9 +2,8 @@ package edu.columbia.gemma.genome.gene;
 
 
 import edu.columbia.gemma.BaseDAOTestCase;
-
-import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.Gene;
+import edu.columbia.gemma.genome.Taxon;
 
 /**
  * <hr>

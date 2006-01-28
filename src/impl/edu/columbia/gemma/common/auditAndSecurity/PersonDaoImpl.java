@@ -23,7 +23,6 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**

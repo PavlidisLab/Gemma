@@ -21,9 +21,8 @@ package edu.columbia.gemma.loader.expression.geo;
 import java.util.ArrayList;
 import java.util.List;
 
-import baseCode.io.ByteArrayConverter;
-
 import junit.framework.TestCase;
+import baseCode.io.ByteArrayConverter;
 
 /**
  * Unit test for GeoConversion. Not for integration tests.

@@ -73,7 +73,7 @@ public class AffyProbeReader extends BasicLineMapParser {
         try {
             reporter.setRow( Integer.parseInt( xcoord ) );
             reporter.setCol( Integer.parseInt( ycoord ) );
-            reporter.setStartInBioChar( Integer.parseInt( sArray[sequenceField - 1] ) );
+            reporter.setStartInBioChar( Long.parseLong( sArray[sequenceField - 1] ) );
         } catch ( NumberFormatException e ) {
             log.warn( "Invalid row: could not parse coordinates." );
             return null;

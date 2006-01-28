@@ -56,7 +56,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         if ( tx == null ) {
             tx = Taxon.Factory.newInstance();
             tx.setCommonName( "mouse" );
-            tx.setNcbiId( new Integer( 9609 ) );
+            tx.setNcbiId( 9609);
             tx = taxonDao.create( tx );
         }
 
@@ -70,7 +70,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         for ( int i = 0; i < NUM_LOCS; i++ ) {
             pls[i] = PhysicalLocation.Factory.newInstance();
             pls[i].setChromosome( chrom );
-            pls[i].setNucleotide( new Integer( LOC_SPACING * i ) );
+            pls[i].setNucleotide( new Long( LOC_SPACING * i ) );
 
             pls[i] = ( PhysicalLocation ) plDao.create( pls[i] );
 

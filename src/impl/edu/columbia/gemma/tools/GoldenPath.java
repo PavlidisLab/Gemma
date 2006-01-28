@@ -105,9 +105,7 @@ public class GoldenPath {
      * @param strand
      * @return
      */
-    public List<Gene> findKnownGenesByLocation( String chromosome, int start, int end, String strand ) {
-        Integer starti = new Integer( start );
-        Integer endi = new Integer( end );
+    public List<Gene> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds "
                 + " FROM knownGene as kg INNER JOIN"
@@ -121,7 +119,7 @@ public class GoldenPath {
             query = query + " order by txStart ";
         }
 
-        return findGenesByQuery( starti, endi, searchChrom, strand, query );
+        return findGenesByQuery( start, end, searchChrom, strand, query );
     }
 
     /**
@@ -132,9 +130,7 @@ public class GoldenPath {
      * @param strand
      * @param end
      */
-    public List<Gene> findRefGenesByLocation( String chromosome, int start, int end, String strand ) {
-        Integer starti = new Integer( start );
-        Integer endi = new Integer( end );
+    public List<Gene> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
                 + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
@@ -146,7 +142,7 @@ public class GoldenPath {
             query = query + " order by txStart ";
         }
 
-        return findGenesByQuery( starti, endi, searchChrom, strand, query );
+        return findGenesByQuery( start, end, searchChrom, strand, query );
 
     }
 
@@ -164,8 +160,8 @@ public class GoldenPath {
      *         overhangs the found genes (rather than providing a negative distance). If no genes are found, the result
      *         is null;
      */
-    public List<ThreePrimeData> getThreePrimeDistances( String chromosome, int queryStart, int queryEnd, String starts,
-            String sizes, String strand, String method ) {
+    public List<ThreePrimeData> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
+            String starts, String sizes, String strand, String method ) {
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 
@@ -201,7 +197,8 @@ public class GoldenPath {
      *      FIXME it will improve performance to cache the results of these queries, because we often look in the same
      *      place for other hits.
      */
-    private int checkRNAs( String chromosome, int queryStart, int queryEnd, String starts, String sizes, int exonOverlap ) {
+    private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
+            int exonOverlap ) {
         List<Gene> mRNAs = findRNAs( chromosome, queryStart, queryEnd );
 
         if ( mRNAs.size() > 0 ) {
@@ -241,7 +238,7 @@ public class GoldenPath {
      *      <p>
      *      FIXME this should take a PhysicalLocation as an argument.
      */
-    private ThreePrimeData computeLocationInGene( String chromosome, int queryStart, int queryEnd, String starts,
+    private ThreePrimeData computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
             String sizes, Gene gene, String method ) {
         ThreePrimeData tpd = new ThreePrimeData( gene );
         PhysicalLocation geneLoc = gene.getPhysicalLocation();
@@ -264,10 +261,10 @@ public class GoldenPath {
             int center = SequenceManipulation.findCenter( starts, sizes );
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
-                tpd.setDistance( Math.max( 0, geneEnd - center ) );
+                tpd.setDistance( new Long( Math.max( 0, geneEnd - center ) ) );
             } else if ( gene.getPhysicalLocation().getStrand().equals( "-" ) ) {
                 // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
-                tpd.setDistance( Math.max( 0, center - geneStart ) );
+                tpd.setDistance( new Long( Math.max( 0, center - geneStart ) ) );
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
@@ -300,8 +297,7 @@ public class GoldenPath {
      * @throws SQLException
      */
     @SuppressWarnings("unchecked")
-    private List<Gene> findGenesByQuery( Integer starti, Integer endi, final String chromosome, String strand,
-            String query ) {
+    private List<Gene> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand, String query ) {
         // Cases:
         // 1. gene is contained within the region: txStart > start & txEnd < end;
         // 2. region is conained within the gene: txStart < start & txEnd > end;
@@ -332,8 +328,8 @@ public class GoldenPath {
                         gene.setId( new Long( gene.getNcbiId().hashCode() ) );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( new Integer( rs.getInt( 3 ) ) );
-                        pl.setNucleotideLength( new Integer( rs.getInt( 4 ) - rs.getInt( 3 ) ) );
+                        pl.setNucleotide( rs.getLong( 3 ) );
+                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
 
                         Chromosome c = Chromosome.Factory.newInstance();
@@ -368,9 +364,8 @@ public class GoldenPath {
      * @return The number of mRNAs which overlap the query region.
      */
     @SuppressWarnings("unchecked")
-    private List<Gene> findRNAs( final String chromosome, int regionStart, int regionEnd ) {
-        Integer starti = new Integer( regionStart );
-        Integer endi = new Integer( regionEnd );
+    private List<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd ) {
+
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT mrna.qName, mrna.qName, mrna.tStart, mrna.tEnd, mrna.strand, mrna.blockSizes, mrna.tStarts  "
                 + " FROM all_mrna as mrna  WHERE "
@@ -379,7 +374,8 @@ public class GoldenPath {
 
         query = query + " order by mrna.tStart ";
 
-        Object[] params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, searchChrom };
+        Object[] params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
+                regionStart, regionEnd, searchChrom };
         try {
             return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
 
@@ -396,8 +392,8 @@ public class GoldenPath {
                         gene.setId( new Long( gene.getNcbiId().hashCode() ) );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( new Integer( rs.getInt( 3 ) ) );
-                        pl.setNucleotideLength( new Integer( rs.getInt( 4 ) - rs.getInt( 3 ) ) );
+                        pl.setNucleotide( rs.getLong( 3 ) );
+                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
                         pl.setStrand( rs.getString( 5 ) );
 
                         Chromosome c = Chromosome.Factory.newInstance();
@@ -448,11 +444,11 @@ public class GoldenPath {
         GeneProduct gp = GeneProduct.Factory.newInstance();
         Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
         for ( int i = 0; i < exonSizeInts.length; i++ ) {
-            int exonStart = exonStartInts[i];
+            long exonStart = exonStartInts[i];
             int exonSize = exonSizeInts[i];
             PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
             if ( gene.getPhysicalLocation() != null ) exon.setChromosome( gene.getPhysicalLocation().getChromosome() );
-            exon.setNucleotide( new Integer( exonStart ) );
+            exon.setNucleotide( exonStart );
             exon.setNucleotideLength( new Integer( exonSize ) );
             exons.add( exon );
         }
@@ -492,7 +488,7 @@ public class GoldenPath {
             int exonEnd = exonEndsInts[i];
             PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
             if ( gene.getPhysicalLocation() != null ) exon.setChromosome( gene.getPhysicalLocation().getChromosome() );
-            exon.setNucleotide( new Integer( exonStart ) );
+            exon.setNucleotide( new Long( exonStart ) );
             exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
             exons.add( exon );
         }
@@ -511,7 +507,7 @@ public class GoldenPath {
         /**
          * The distance from the gene (measured from a point defined by the caller)
          */
-        private int distance;
+        private Long distance;
         private int exonOverlap = 0;
 
         private Gene gene;
@@ -522,7 +518,7 @@ public class GoldenPath {
             this.gene = gene;
         }
 
-        public int getDistance() {
+        public Long getDistance() {
             return this.distance;
         }
 
@@ -541,7 +537,7 @@ public class GoldenPath {
             return this.inIntron;
         }
 
-        public void setDistance( int i ) {
+        public void setDistance( Long i ) {
             this.distance = i;
         }
 

@@ -334,10 +334,10 @@ public class SequenceManipulation {
      * @return
      */
     private static Reporter findLeftMostProbe( Set<Reporter> copyOfProbes ) {
-        int minLocation = Integer.MAX_VALUE;
+        Long minLocation = new Long( Integer.MAX_VALUE );
         Reporter next = null;
         for ( Reporter probe : copyOfProbes ) {
-            int loc = probe.getStartInBioChar();
+            Long loc = probe.getStartInBioChar();
             if ( loc <= minLocation ) {
                 minLocation = loc;
                 next = probe;

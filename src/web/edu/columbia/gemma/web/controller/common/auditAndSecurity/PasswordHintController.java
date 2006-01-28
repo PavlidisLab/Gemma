@@ -16,9 +16,9 @@ import org.springframework.web.servlet.mvc.Controller;
 import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.common.auditAndSecurity.User;
+import edu.columbia.gemma.common.auditAndSecurity.UserService;
 import edu.columbia.gemma.util.RequestUtil;
 import edu.columbia.gemma.web.util.MailEngine;
-import edu.columbia.gemma.common.auditAndSecurity.UserService;
 
 /**
  * Simple class to retrieve and send a password hint to users by email.

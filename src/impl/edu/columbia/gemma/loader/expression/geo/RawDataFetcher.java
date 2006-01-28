@@ -31,7 +31,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
 import baseCode.util.NetUtils;
-
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.geo.util.GeoUtil;
 import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;

@@ -34,7 +34,6 @@ import org.springframework.beans.factory.BeanFactory;
 
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.gene.GeneProductDao;
-
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 import edu.columbia.gemma.util.SpringContextUtil;
 

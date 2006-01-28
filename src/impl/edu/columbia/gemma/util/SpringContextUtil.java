@@ -29,7 +29,6 @@ import org.acegisecurity.context.SecurityContextImpl;
 import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.TestingAuthenticationProvider;
 import org.acegisecurity.providers.TestingAuthenticationToken;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -38,10 +37,6 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -96,9 +91,9 @@ public class SpringContextUtil {
      * 
      * @return XmlWebApplicationContext
      */
-    public static BeanFactory getXmlWebApplicationContext(boolean testing) {
+    public static BeanFactory getXmlWebApplicationContext( boolean testing ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations(testing);
+            String[] paths = getConfigLocations( testing );
             ctx = new XmlWebApplicationContext();
             ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( paths );
             ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );

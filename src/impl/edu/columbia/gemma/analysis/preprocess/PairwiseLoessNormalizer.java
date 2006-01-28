@@ -18,8 +18,8 @@
  */
 package edu.columbia.gemma.analysis.preprocess;
 
-import edu.columbia.gemma.tools.RCommander;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import edu.columbia.gemma.tools.RCommander;
 
 /**
  * Perform pairwise LOESS normalization on the columns of a matrix.

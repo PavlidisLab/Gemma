@@ -18,8 +18,8 @@
  */
 package edu.columbia.gemma.genome.sequenceAnalysis;
 
-import edu.columbia.gemma.genome.biosequence.BioSequence;
 import junit.framework.TestCase;
+import edu.columbia.gemma.genome.biosequence.BioSequence;
 
 /**
  * <hr>
@@ -55,7 +55,7 @@ public class BlatResultImplTest extends TestCase {
         brtest.setTargetGapCount( 2 );
         brtest.setMismatches( 1 );
         brtest.setQuerySequence( BioSequence.Factory.newInstance() );
-        brtest.getQuerySequence().setLength( 50 );
+        brtest.getQuerySequence().setLength( 50L );
         double actualReturn = brtest.score();
         double expectedReturn = 47.0 / 50.0;
         assertEquals( expectedReturn, actualReturn, 0.001 );

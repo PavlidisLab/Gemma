@@ -85,7 +85,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "pubMed.GetAll.results.view" ).addObject( "bibliographicReferences",
-                bibliographicReferenceService.getAllBibliographicReferences() );
+                bibliographicReferenceService.getAll() );
     }
 
     /**

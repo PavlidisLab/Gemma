@@ -68,7 +68,10 @@ public class MageLoadTest extends MageBaseTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        
+        
         this.setMageMLConverter( ( MageMLConverter ) ctx.getBean( "mageMLConverter" ) );
+        
         ml = new PersisterHelper();
         ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
         ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );

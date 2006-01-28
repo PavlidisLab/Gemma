@@ -23,7 +23,6 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import edu.columbia.gemma.common.auditAndSecurity.Person;
 
 /**
  * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail

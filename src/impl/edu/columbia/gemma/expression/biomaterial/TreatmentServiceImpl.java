@@ -24,10 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.biomaterial.TreatmentService
@@ -47,9 +43,9 @@ public class TreatmentServiceImpl extends edu.columbia.gemma.expression.biomater
     /**
      * @see edu.columbia.gemma.expression.biomaterial.TreatmentService#saveTreatment(edu.columbia.gemma.expression.biomaterial.Treatment)
      */
-    protected void handleSaveTreatment( edu.columbia.gemma.expression.biomaterial.Treatment treatment )
+    protected Treatment handleSaveTreatment( edu.columbia.gemma.expression.biomaterial.Treatment treatment )
             throws java.lang.Exception {
-        this.getTreatmentDao().create( treatment );
+        return ( Treatment ) this.getTreatmentDao().create( treatment );
     }
 
 }

@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**

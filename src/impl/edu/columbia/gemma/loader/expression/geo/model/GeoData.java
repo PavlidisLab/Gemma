@@ -19,9 +19,7 @@
 package edu.columbia.gemma.loader.expression.geo.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Abstract class from which many Geo objects are descended.

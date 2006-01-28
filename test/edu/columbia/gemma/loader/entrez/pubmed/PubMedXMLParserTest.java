@@ -23,7 +23,6 @@ import java.text.SimpleDateFormat;
 
 import junit.framework.TestCase;
 import edu.columbia.gemma.common.description.BibliographicReference;
-import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParser;
 
 /**
  * <hr>

@@ -135,7 +135,7 @@ public class CandidateGeneListController extends BaseCommandController {
             } else {
                 String limitToUser = request.getParameter( "limit" );
                 if ( limitToUser == null )
-                    candidateGeneListModel.put( "candidateGeneLists", this.getCandidateGeneListService().getAll() );
+                    candidateGeneListModel.put( "candidateGeneLists", this.getCandidateGeneListService().findAll() );
                 else
                     candidateGeneListModel.put( "candidateGeneLists", this.getCandidateGeneListService()
                             .findByListOwner( usr ) );

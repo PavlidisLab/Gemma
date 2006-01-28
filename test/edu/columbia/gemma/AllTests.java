@@ -50,7 +50,6 @@ import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserIntegrationTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
-// import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceIntegrationTest;
 import edu.columbia.gemma.loader.expression.geo.GeoConverterTest;
 import edu.columbia.gemma.loader.expression.geo.GeoFamilyParserTest;
 import edu.columbia.gemma.loader.expression.geo.RawDataFetcherTest;
