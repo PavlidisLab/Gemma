@@ -51,6 +51,8 @@
                 <property name="daos">${maven.andromda.spring.daos.dir}</property>
                 <property name="dao-impls">${maven.andromda.spring.dao.impls.dir}</property>
                 <property name="spring-configuration">${maven.andromda.spring.spring.configuration.dir}</property>
+ <property name="service-interfaces">${maven.andromda.hibernate.generated.dir}</property>
+
                 <property name="services">${maven.andromda.spring.services.dir}</property>
                 <property name="service-impls">${maven.andromda.spring.service.impls.dir}</property>
                 <property name="mergeLocation">${maven.andromda.spring.merge.custom}</property>
@@ -91,6 +93,9 @@
                 <property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
                 <property name="entities">${maven.andromda.hibernate.generated.dir}</property>
                 <property name="entity-impls">${maven.andromda.hibernate.manual.dir}</property>
+                <property name="entity-mappings">${maven.andromda.hibernate.generated.dir}</property>
+                <property name="user-types">${maven.andromda.hibernate.generated.dir}</property>
+               
                 <property name="customTypesPackage">${application.package}</property>
                 <property name="compositionDefinesEagerLoading">true</property>
                 <property name="mergeLocation">${maven.andromda.hibernate.merge.custom}</property>
@@ -117,7 +122,6 @@
 
         <namespace name="bpm4struts">
             <properties>
-
                 <property name="manageableServiceAccessorPattern">org.andromda.crud.ManageableServiceLocator.instance().get{1}()</property>
                 <property name="serviceAccessorPattern">org.andromda.crud.ServiceLocator.instance().get{1}()</property>
                 <property name="actions">${maven.andromda.hibernate.generated.dir}</property>
