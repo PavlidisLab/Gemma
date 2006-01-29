@@ -29,6 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.web.controller.BaseMultiActionController;
 
 /**
@@ -77,7 +78,7 @@ public class DesignElementController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings({"unused","unchecked"})
+    @SuppressWarnings({"unused"})
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( "entered showAll from " + request.getRequestURI() );
@@ -85,7 +86,7 @@ public class DesignElementController extends BaseMultiActionController {
         String name = request.getParameter( "name" );
 
         ArrayDesign ad = arrayDesignService.findArrayDesignByName( name );
-        Collection<ArrayDesign> ads = ad.getDesignElements();
+        Collection<DesignElement> ads = ad.getDesignElements();
 
         return new ModelAndView( "designElements" ).addObject( "designElements", ads );
     }
