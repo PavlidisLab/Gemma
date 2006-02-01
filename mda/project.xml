@@ -76,6 +76,11 @@
             <artifactId>andromda-hibernate-cartridge</artifactId>
             <version>3.2-RC1-SNAPSHOT</version>
         </dependency>
+                <dependency>
+            <groupId>andromda</groupId>
+            <artifactId>andromda-bpm4struts-cartridge</artifactId>
+            <version>3.2-RC1-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>andromda</groupId>
             <artifactId>andromda-java-cartridge</artifactId>
