@@ -56,7 +56,7 @@
         <dependency>
             <groupId>hibernate</groupId>
             <artifactId>hibernate</artifactId>
-            <version>3.1</version>
+            <version>3.1.2</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -219,6 +219,15 @@
             <groupId>jta</groupId>
             <artifactId>jta</artifactId>
             <jar>jta.jar</jar>
+            <type>jar</type>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>struts</groupId>
+            <artifactId>struts</artifactId>
+            <version>1.2.7</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
