@@ -91,7 +91,7 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         log.info( "testing removing gene from list" );
         CandidateGene cg = cgl.addCandidate( g2 );
         log.info( cgl.getCandidates().size() + " candidates to start" );
-        cg = ( CandidateGene ) cgl.getCandidates().iterator().next(); // get the persistent object.
+        cg = cgl.getCandidates().iterator().next(); // get the persistent object.
         log.info( cgl.getCandidates().size() + " candidates just before deleting" );
         cgl.removeCandidate( cg );
         log.info( cgl.getCandidates().size() + " candidates left" );

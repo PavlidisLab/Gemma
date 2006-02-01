@@ -39,14 +39,14 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
         if ( event == null ) throw new IllegalArgumentException( "AuditEvent cannot be null" );
         assert this.getEvents() != null;
         this.getEvents().add( event );
-    } 
+    }
 
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getCreationEvent()
      */
     public AuditEvent getCreationEvent() {
         assert this.getEvents() != null;
-        return ( AuditEvent ) ((List)this.getEvents()).get( 0 );
+        return ( ( List<AuditEvent> ) this.getEvents() ).get( 0 );
     }
 
     /**
@@ -54,7 +54,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
      */
     public AuditEvent getLast() {
         assert this.getEvents() != null;
-        return ( AuditEvent ) ((List)this.getEvents()).get( this.getEvents().size() - 1 );
+        return ( ( List<AuditEvent> ) this.getEvents() ).get( this.getEvents().size() - 1 );
     }
 
     /**
@@ -85,12 +85,12 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
         AuditEvent newEvent = AuditEvent.Factory.newInstance();
         newEvent.setAction( AuditAction.CREATE );
         newEvent.setDate( new Date() );
-        newEvent.setPerformer(actor);
+        newEvent.setPerformer( actor );
         if ( note != null ) newEvent.setNote( note );
 
         this.addEvent( newEvent );
     }
-    
+
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update()
      */
@@ -124,19 +124,19 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
 
         AuditEvent newEvent = AuditEvent.Factory.newInstance();
         newEvent.setAction( AuditAction.UPDATE );
-        newEvent.setPerformer(actor);
+        newEvent.setPerformer( actor );
         newEvent.setDate( new Date() );
         if ( note != null ) newEvent.setNote( note );
 
         this.addEvent( newEvent );
     }
-    
+
     /**
      * If this AuditTrail's list is empty or null, initialize it. Otherwise, clear any events.
      */
     private void initialize() {
         if ( trailIsNull() ) {
-            this.setEvents( new ArrayList() );
+            this.setEvents( new ArrayList<AuditEvent>() );
         } else {
             this.getEvents().clear();
         }

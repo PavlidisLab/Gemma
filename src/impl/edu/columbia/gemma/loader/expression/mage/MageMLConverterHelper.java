@@ -3412,8 +3412,7 @@ public class MageMLConverterHelper {
 
         // check to make sure we aren't addin the same array design twice.
         Set<String> alreadyLinkedArrayDesigns = new HashSet<String>();
-        for ( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign : ( Collection<edu.columbia.gemma.expression.arrayDesign.ArrayDesign> ) result
-                .getArrayDesignsUsed() ) {
+        for ( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign : result.getArrayDesignsUsed() ) {
             alreadyLinkedArrayDesigns.add( arrayDesign.getName() );
         }
 

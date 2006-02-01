@@ -64,7 +64,7 @@ public class NcbiGeneConverter implements Converter {
         gene.setNcbiId( info.getGeneId() );
         gene.setOfficialSymbol( info.getDefaultSymbol() );
         gene.setOfficialName( info.getDefaultSymbol() );
-        gene.setDescription(info.getDescription());
+        gene.setDescription( info.getDescription() );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setNcbiId( new Integer( info.getTaxId() ) );
@@ -74,25 +74,25 @@ public class NcbiGeneConverter implements Converter {
         // gene.setCytogenicLocation();
         // gene.setGeneticLocation();
         // gene.setProducts();
-        //        gene.setAccessions();
+        // gene.setAccessions();
 
-        //System.out.println("synonyms: "+info.getSynonyms());
-        //System.out.println("aliases: "+gene.getGeneAliasses());
-        //System.out.println("aliases null: "+(gene.getGeneAliasses()==null));
-        Collection<GeneAlias> aliases = gene.getGeneAliasses();
+        // System.out.println("synonyms: "+info.getSynonyms());
+        // System.out.println("aliases: "+gene.getGeneAliasses());
+        // System.out.println("aliases null: "+(gene.getGeneAliasses()==null));
+        Collection<GeneAlias> aliases = gene.getGeneAlias();
         for ( String alias : info.getSynonyms() ) {
             GeneAlias newAlias = GeneAlias.Factory.newInstance();
             newAlias.setGene( gene );
             newAlias.setSymbol( gene.getOfficialSymbol() );
-            newAlias.setAlias(alias);  //added by AS - non-nullable, won't work w/o it!
+            newAlias.setAlias( alias ); // added by AS - non-nullable, won't work w/o it!
             aliases.add( newAlias );
         }
-        
-        System.out.println("added aliases");
+
+        System.out.println( "added aliases" );
         return gene;
 
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -102,7 +102,7 @@ public class NcbiGeneConverter implements Converter {
     public Object convert( Object sourceDomainObject ) {
         assert sourceDomainObject instanceof NCBIGene2Accession;
         NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
-        return convert(ncbiGene.getInfo());
+        return convert( ncbiGene.getInfo() );
 
     }
 }

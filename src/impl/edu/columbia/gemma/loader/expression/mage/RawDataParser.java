@@ -42,7 +42,6 @@ import baseCode.util.StringUtil;
 import cern.colt.list.ByteArrayList;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
@@ -262,7 +261,7 @@ public class RawDataParser implements FileCombiningParser {
             if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
         } else {
             de = Reporter.Factory.newInstance();
-            de.setArrayDesign( ( ArrayDesign ) currentBioAssay.getArrayDesignsUsed().iterator().next() );
+            de.setArrayDesign( currentBioAssay.getArrayDesignsUsed().iterator().next() );
             de.setName( "R_" + Integer.toString( linesParsed ) );
         }
         return de;

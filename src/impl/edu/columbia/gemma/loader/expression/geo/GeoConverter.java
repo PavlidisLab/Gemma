@@ -303,7 +303,7 @@ public class GeoConverter implements Converter {
             String sampleAcc = sample.getGeoAccession();
             buf.append( sampleAcc + "\n" );
             // some extra sanity checking here would be wise. What if two columns have the same id.
-            for ( BioAssay bioAssay : ( Collection<BioAssay> ) expExp.getBioAssays() ) {
+            for ( BioAssay bioAssay : expExp.getBioAssays() ) {
                 if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
                     result.getDimensionBioAssays().add( bioAssay );
                     found = true;

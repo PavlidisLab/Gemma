@@ -273,7 +273,6 @@ public class PersisterHelper implements Persister {
      * @param software
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Software persistSoftware( Software software ) {
 
         if ( !isTransient( software ) ) return software;
@@ -287,7 +286,7 @@ public class PersisterHelper implements Persister {
         }
 
         if ( software.getSoftwareManufacturers() != null && software.getSoftwareManufacturers().size() > 0 ) {
-            for ( Contact manufacturer : ( Collection<Contact> ) software.getSoftwareManufacturers() ) {
+            for ( Contact manufacturer : software.getSoftwareManufacturers() ) {
                 manufacturer.setId( persistContact( manufacturer ).getId() );
             }
         }
@@ -378,10 +377,10 @@ public class PersisterHelper implements Persister {
     /**
      * @param ontologyEntry
      */
-    @SuppressWarnings("unchecked")
+
     private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
         this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
-        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
+        for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
             fillInPersistentExternalDatabase( associatedOntologyEntry );
         }
     }
@@ -389,7 +388,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param protocol
      */
-    @SuppressWarnings("unchecked")
+
     private void fillInProtocol( Protocol protocol ) {
         if ( protocol == null ) {
             log.warn( "Null protocol" );
@@ -399,11 +398,11 @@ public class PersisterHelper implements Persister {
         persistOntologyEntry( type );
         protocol.setType( type );
 
-        for ( Software software : ( Collection<Software> ) protocol.getSoftwareUsed() ) {
+        for ( Software software : protocol.getSoftwareUsed() ) {
             software.setId( persistSoftware( software ).getId() );
         }
 
-        for ( Hardware hardware : ( Collection<Hardware> ) protocol.getHardwares() ) {
+        for ( Hardware hardware : protocol.getHardwares() ) {
             hardware.setId( persistHardware( hardware ).getId() );
         }
     }
@@ -412,14 +411,14 @@ public class PersisterHelper implements Persister {
      * @param hardware
      * @return
      */
-    @SuppressWarnings("unchecked")
+
     private Hardware persistHardware( Hardware hardware ) {
 
         if ( hardware == null ) return null;
         if ( !isTransient( hardware ) ) return hardware;
 
         if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
-            for ( Software software : ( Collection<Software> ) hardware.getSoftwares() ) {
+            for ( Software software : hardware.getSoftwares() ) {
                 software.setId( persistSoftware( software ).getId() );
             }
         }
@@ -427,7 +426,7 @@ public class PersisterHelper implements Persister {
         hardware.setType( persistOntologyEntry( hardware.getType() ) );
 
         if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
-            for ( Contact manufacturer : ( Collection<Contact> ) hardware.getHardwareManufacturers() ) {
+            for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
                 manufacturer.setId( persistContact( manufacturer ).getId() );
             }
         }
@@ -438,7 +437,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param protocolApplication
      */
-    @SuppressWarnings("unchecked")
+
     private void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
         if ( protocolApplication == null ) return;
 
@@ -453,13 +452,12 @@ public class PersisterHelper implements Persister {
         fillInProtocol( protocol );
         protocolApplication.setProtocol( protocolService.findOrCreate( protocol ) );
 
-        for ( Person performer : ( Collection<Person> ) protocolApplication.getPerformers() ) {
+        for ( Person performer : protocolApplication.getPerformers() ) {
             log.debug( "Filling in performer" );
             performer.setId( personService.findOrCreate( performer ).getId() );
         }
 
-        for ( SoftwareApplication softwareApplication : ( Collection<SoftwareApplication> ) protocolApplication
-                .getSoftwareApplications() ) {
+        for ( SoftwareApplication softwareApplication : protocolApplication.getSoftwareApplications() ) {
             Software software = softwareApplication.getSoftware();
             if ( software == null )
                 throw new IllegalStateException( "Must have software associated with SoftwareApplication" );
@@ -472,8 +470,7 @@ public class PersisterHelper implements Persister {
 
         }
 
-        for ( HardwareApplication HardwareApplication : ( Collection<HardwareApplication> ) protocolApplication
-                .getHardwareApplications() ) {
+        for ( HardwareApplication HardwareApplication : protocolApplication.getHardwareApplications() ) {
             Hardware hardware = HardwareApplication.getHardware();
             if ( hardware == null )
                 throw new IllegalStateException( "Must have hardware associated with HardwareApplication" );
@@ -489,7 +486,7 @@ public class PersisterHelper implements Persister {
     /**
      * Fetch the fallback owner to use for newly-imported data.
      */
-    @SuppressWarnings("unchecked")
+
     private void initializeDefaultOwner() {
         Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody", "nobody" );
 
@@ -528,7 +525,7 @@ public class PersisterHelper implements Persister {
      * 
      * @param arrayDesign
      */
-    @SuppressWarnings("unchecked")
+
     private ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
 
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
@@ -558,7 +555,7 @@ public class PersisterHelper implements Persister {
 
         int i = 0;
         log.info( "Filling in or updating sequences in design elements for " + arrayDesign );
-        for ( DesignElement designElement : ( Collection<DesignElement> ) arrayDesign.getDesignElements() ) {
+        for ( DesignElement designElement : arrayDesign.getDesignElements() ) {
             designElement.setArrayDesign( arrayDesign );
             if ( designElement instanceof CompositeSequence ) {
                 CompositeSequence cs = ( CompositeSequence ) designElement;
@@ -586,14 +583,14 @@ public class PersisterHelper implements Persister {
     /**
      * @param assay
      */
-    @SuppressWarnings("unchecked")
+
     private BioAssay persistBioAssay( BioAssay assay ) {
 
         if ( assay == null ) return null;
 
         if ( !isTransient( assay ) ) return assay;
 
-        for ( FactorValue factorValue : ( Collection<FactorValue> ) assay.getFactorValues() ) {
+        for ( FactorValue factorValue : assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
             factorValue.setId( persistFactorValue( factorValue ).getId() );
         }
@@ -605,11 +602,11 @@ public class PersisterHelper implements Persister {
             arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
         }
 
-        for ( LocalFile file : ( Collection<LocalFile> ) assay.getDerivedDataFiles() ) {
+        for ( LocalFile file : assay.getDerivedDataFiles() ) {
             file.setId( persistLocalFile( file ).getId() );
         }
 
-        for ( BioMaterial bioMaterial : ( Collection<BioMaterial> ) assay.getSamplesUsed() ) {
+        for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
             bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
         }
 
@@ -630,7 +627,7 @@ public class PersisterHelper implements Persister {
     /**
      * @param entity
      */
-    @SuppressWarnings("unchecked")
+
     private BioMaterial persistBioMaterial( BioMaterial entity ) {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
@@ -641,12 +638,11 @@ public class PersisterHelper implements Persister {
             entity.setMaterialType( ontologyEntryService.findOrCreate( materialType ) );
         }
 
-        for ( Treatment treatment : ( Collection<Treatment> ) entity.getTreatments() ) {
+        for ( Treatment treatment : entity.getTreatments() ) {
             OntologyEntry action = treatment.getAction();
             action.setId( persistOntologyEntry( action ).getId() );
 
-            for ( ProtocolApplication protocolApplication : ( Collection<ProtocolApplication> ) treatment
-                    .getProtocolApplications() ) {
+            for ( ProtocolApplication protocolApplication : treatment.getProtocolApplications() ) {
                 fillInProtocolApplication( protocolApplication );
             }
         }
@@ -731,7 +727,7 @@ public class PersisterHelper implements Persister {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    @SuppressWarnings("unchecked")
+
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
         if ( entity == null ) return null;
@@ -746,17 +742,15 @@ public class PersisterHelper implements Persister {
             log.warn( "Null accession for expressionExperiment" );
         }
 
-        for ( ExperimentalDesign experimentalDesign : ( Collection<ExperimentalDesign> ) entity
-                .getExperimentalDesigns() ) {
+        for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
 
             // type
-            for ( OntologyEntry type : ( Collection<OntologyEntry> ) experimentalDesign.getTypes() ) {
+            for ( OntologyEntry type : experimentalDesign.getTypes() ) {
                 type.setId( persistOntologyEntry( type ).getId() );
             }
 
-            for ( ExperimentalFactor experimentalFactor : ( Collection<ExperimentalFactor> ) experimentalDesign
-                    .getExperimentalFactors() ) {
-                for ( OntologyEntry annotation : ( Collection<OntologyEntry> ) experimentalFactor.getAnnotations() ) {
+            for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
+                for ( OntologyEntry annotation : experimentalFactor.getAnnotations() ) {
                     annotation.setId( persistOntologyEntry( annotation ).getId() );
                 }
 
@@ -768,24 +762,23 @@ public class PersisterHelper implements Persister {
                     log.debug( "ExperimentalDesign.category=" + category.getId() );
                 }
 
-                for ( FactorValue factorValue : ( Collection<FactorValue> ) experimentalFactor.getFactorValues() ) {
+                for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
                     factorValue.setId( persistFactorValue( factorValue ).getId() );
                 }
             }
         }
 
-        for ( BioAssay bA : ( Collection<BioAssay> ) entity.getBioAssays() ) {
+        for ( BioAssay bA : entity.getBioAssays() ) {
             bA.setId( persistBioAssay( bA ).getId() );
         }
 
-        for ( ExpressionExperimentSubSet subset : ( Collection<ExpressionExperimentSubSet> ) entity.getSubsets() ) {
-            for ( BioAssay bA : ( Collection<BioAssay> ) subset.getBioAssays() ) {
+        for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
+            for ( BioAssay bA : subset.getBioAssays() ) {
                 bA.setId( persistBioAssay( bA ).getId() );
             }
         }
 
-        for ( DesignElementDataVector vect : ( Collection<DesignElementDataVector> ) entity
-                .getDesignElementDataVectors() ) {
+        for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
 
             DesignElement persistentDesignElement = null;
             DesignElement maybeExistingDesignElement = vect.getDesignElement();
@@ -818,12 +811,12 @@ public class PersisterHelper implements Persister {
      * @param bioAssayDimension
      * @return
      */
-    @SuppressWarnings("unchecked")
+
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
 
-        for ( BioAssay bioAssay : ( Collection<BioAssay> ) bioAssayDimension.getDimensionBioAssays() ) {
+        for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
             bioAssay.setId( persistBioAssay( bioAssay ).getId() );
         }
 
@@ -896,13 +889,13 @@ public class PersisterHelper implements Persister {
      * 
      * @param ontologyEntry
      */
-    @SuppressWarnings("unchecked")
+
     private OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
         fillInPersistentExternalDatabase( ontologyEntry );
         if ( isTransient( ontologyEntry ) )
             ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
-        for ( OntologyEntry associatedOntologyEntry : ( Collection<OntologyEntry> ) ontologyEntry.getAssociations() ) {
+        for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
             persistOntologyEntry( associatedOntologyEntry );
         }
         return ontologyEntry;

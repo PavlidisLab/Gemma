@@ -44,7 +44,6 @@ public class BioAssayDimensionDaoImpl extends edu.columbia.gemma.expression.bioA
      * 
      * @see edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionDaoBase#find(edu.columbia.gemma.expression.bioAssayData.BioAssayDimension)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
         try {
@@ -67,7 +66,7 @@ public class BioAssayDimensionDaoImpl extends edu.columbia.gemma.expression.bioA
             // FIXME this isn't fail-safe, and also doesn't distinguish between dimensions that differ only in the
             // ordering.
             Collection<String> names = new HashSet<String>();
-            for ( BioAssay bioAssay : ( Collection<BioAssay> ) bioAssayDimension.getDimensionBioAssays() ) {
+            for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
                 names.add( bioAssay.getName() );
             }
             queryObject.createCriteria( "dimensionBioAssays" ).add( Restrictions.in( "name", names ) );

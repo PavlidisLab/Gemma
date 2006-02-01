@@ -148,7 +148,7 @@ public class SequenceManipulation {
                         deBlatFormatChromosomeName( chromosome ) ) ) return 0;
 
         int bestOverlap = 0;
-        for ( GeneProduct geneProduct : ( Collection<GeneProduct> ) gene.getProducts() ) {
+        for ( GeneProduct geneProduct : gene.getProducts() ) {
             int overlap = getGeneProductExonOverlap( starts, sizes, strand, geneProduct );
             if ( overlap > bestOverlap ) {
                 bestOverlap = overlap;
@@ -295,7 +295,7 @@ public class SequenceManipulation {
         Set<Reporter> copyOfProbes = new HashSet<Reporter>();
         if ( compositeSequence == null ) throw new IllegalArgumentException( "CompositeSequence cannot be null" );
         assert compositeSequence.getReporters() != null : "Null reporters for composite sequence";
-        for ( Reporter next : ( Collection<Reporter> ) compositeSequence.getReporters() ) {
+        for ( Reporter next : compositeSequence.getReporters() ) {
             Reporter copy = Reporter.Factory.newInstance();
             copy.setImmobilizedCharacteristic( next.getImmobilizedCharacteristic() );
             copy.setStartInBioChar( next.getStartInBioChar() );
