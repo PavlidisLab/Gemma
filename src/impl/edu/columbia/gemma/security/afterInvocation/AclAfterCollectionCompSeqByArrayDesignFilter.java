@@ -37,28 +37,20 @@ import edu.columbia.gemma.expression.designElement.CompositeSequence;
 
 /**
  * For this particular AfterInvocationProvider, composite sequence authorization is determined based on the secured
- * array design acl. ie. composite sequence security is determined from an owning array desgin's security. Copyright (c)
- * 2004 - 2006 University of British Columbia
+ * array design acl. ie. composite sequence security is determined from an owning array desgin's security.
  * 
- * @author keshav
- * @author Ben Alex
- * @author Paulo Neves
+ * @author keshav (based in part on code from Acegi)
  * @version $Id: BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider.java,v 1.2 2005/08/17 21:46:32
  *          keshav Exp $
  * @see AfterInvocationProvider
  */
 public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvocationProvider, InitializingBean {
-    // ~ Static fields/initializers =============================================
 
     protected static final Log logger = LogFactory.getLog( AclAfterCollectionCompSeqByArrayDesignFilter.class );
-
-    // ~ Instance fields ========================================================
 
     private AclManager aclManager;
     private String processConfigAttribute = "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
     private int[] requirePermission = { SimpleAclEntry.READ };
-
-    // ~ Methods ================================================================
 
     public void setAclManager( AclManager aclManager ) {
         this.aclManager = aclManager;
@@ -109,12 +101,6 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
      */
     public Object decide( Authentication authentication, Object object, ConfigAttributeDefinition config,
             Object returnedObject ) throws AccessDeniedException {
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( object );
-            logger.debug( config );
-            logger.debug( returnedObject );
-        }
 
         Iterator iter = config.getConfigAttributes();
 
@@ -226,9 +212,8 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
      * @param clazz the secure object
      * @return always <code>true</code>
      */
+    @SuppressWarnings("unused")
     public boolean supports( Class clazz ) {
-        if ( logger.isDebugEnabled() ) logger.debug( clazz );
-
         return true;
     }
 }
