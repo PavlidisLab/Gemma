@@ -18,6 +18,7 @@
  */
 package edu.columbia.gemma.security.interceptor;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -34,10 +35,12 @@ import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.AfterReturningAdvice;
+import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.association.Relationship;
+import edu.columbia.gemma.common.Securable;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDataVector;
@@ -71,6 +74,11 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     private static final Collection<Class> unsecuredClasses = new HashSet<Class>();
 
+    /*
+     * Classes to skip because they aren't secured. Either these are always "public" objects, or they are secured by
+     * composition. In principle this shouldn't needed in most cases because the methods for the corresponding services
+     * are not interccepted anyway.
+     */
     static {
         unsecuredClasses.add( BioAssayDataVector.class );
         unsecuredClasses.add( DatabaseEntry.class );
@@ -112,22 +120,26 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public void addPermission( Method method, Object object, String recipient, Integer permission )
-            throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    public void addPermission( Method method, Object object ) throws IllegalArgumentException, IllegalAccessException,
+            InvocationTargetException {
 
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
-        simpleAclEntry.setMask( permission );
-        simpleAclEntry.setRecipient( recipient );
+        simpleAclEntry.setMask( getAuthority() );
+        simpleAclEntry.setRecipient( getUsername() );
 
         /* By default we assign the object to have the default global parent. */
         simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( DEFAULT_PARENT, DEFAULT_PARENT_ID ) );
 
         try {
             basicAclExtendedDao.create( simpleAclEntry );
+            if ( log.isDebugEnabled() ) {
+                log.debug( "Added permission " + getAuthority() + " for recipient " + getUsername() + " on " + object );
+            }
         } catch ( DataIntegrityViolationException e ) {
             if ( method.getName().equals( "findOrCreate" ) ) {
-                // do nothing. This happens when the object already exists (that is, findOrCreate resulted in a 'find')
+                // do nothing. This happens when the object already exists and has permissions assigned (for example,
+                // findOrCreate resulted in a 'find')
                 // FIXME this is an unpleasant hack.
             } else {
                 // something else must be wrong.
@@ -135,9 +147,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             }
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Added permission " + permission + " for recipient " + recipient + " on " + object );
-        }
     }
 
     /*
@@ -154,8 +163,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             assert args != null;
             assert args.length == 1;
             Object persistentObject = getPersistentObject( retValue, m, args );
-
-            log.debug( "processing " + persistentObject );
             if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
                 for ( Object o : ( Collection<Object> ) persistentObject ) {
                     processObject( m, o );
@@ -184,7 +191,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @return
      */
     private Object getPersistentObject( Object retValue, Method m, Object[] args ) {
-        if ( m.getName().equals( "delete" ) ) {
+        if ( methodTriggersACLDelete( m ) ) {
             return args[0];
         }
         assert retValue != null;
@@ -192,21 +199,20 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     }
 
     /**
-     * Delete object and acl permissions
+     * Delete acl permissions for an object.
      * 
      * @param object
-     * @param recipient
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      * @throws NoSuchMethodException
      * @throws IllegalArgumentException
      * @throws DataAccessException
      */
-    public void deletePermission( Object object, String recipient ) throws DataAccessException,
-            IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    public void deletePermission( Object object ) throws DataAccessException, IllegalArgumentException,
+            IllegalAccessException, InvocationTargetException {
         basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         if ( log.isDebugEnabled() ) {
-            log.debug( "Deleted object " + object + " ACL permissions for recipient " + recipient );
+            log.debug( "Deleted object " + object + " ACL permissions for recipient " + this.getUsername() );
         }
     }
 
@@ -279,7 +285,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @return
      */
     private boolean methodTriggersACLDelete( Method m ) {
-        return m.getName().equals( "remove" );
+        return m.getName().equals( "remove" ) || m.getName().equals( "delete" );
     }
 
     /**
@@ -294,7 +300,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
         assert m != null;
 
-        if ( unsecuredClassesContains( object.getClass() ) ) {
+        if ( !Securable.class.isAssignableFrom( object.getClass() ) || unsecuredClassesContains( object.getClass() ) ) {
             if ( log.isDebugEnabled() ) {
                 log.debug( object.getClass().getName() + " is not a secured object, skipping permissions processing." );
             }
@@ -305,12 +311,40 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         }
         if ( methodsTriggersACLAddition( m ) ) {
-            addPermission( m, object, getUsername(), getAuthority() );
+            addPermission( m, object );
+            processAssociations( m, object ); // FIXME, this probably does no harm, but is a waste of effort if the
+                                                // assocations aren't compositional.
         } else if ( methodTriggersACLDelete( m ) ) {
-            deletePermission( object, getUsername() );
+            deletePermission( object );
+            processAssociations( m, object ); // FIXME, shouldn't delete ACL unless by composition!!!
         } else {
             // nothing to do.
         }
+    }
+
+    /**
+     * @param m
+     * @param object
+     */
+    private void processAssociations( Method m, Object object ) throws IllegalAccessException,
+            InvocationTargetException {
+        PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors( object.getClass() );
+        for ( PropertyDescriptor descriptor : descriptors ) {
+            if ( Securable.class.isAssignableFrom( descriptor.getPropertyType() ) ) {
+                Method getter = descriptor.getReadMethod();
+                Object associatedObject = getter.invoke( object, new Object[] {} );
+                processObject( m, associatedObject );
+            } else if ( Collection.class.isAssignableFrom( descriptor.getPropertyType() ) ) {
+                Method getter = descriptor.getReadMethod();
+                Collection associatedObjects = ( Collection ) getter.invoke( object, new Object[] {} );
+                for ( Object object2 : associatedObjects ) {
+                    if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+                        processObject( m, object2 );
+                    }
+                }
+            }
+        }
+
     }
 
     /**
@@ -325,12 +359,12 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         GrantedAuthority[] ga = auth.getAuthorities();
         for ( int i = 0; i < ga.length; i++ ) {
             if ( ga[i].equals( "admin" ) ) {
-                if ( log.isDebugEnabled() ) log.debug( "Granting ADMINISTRATION privileges" );
-                return new Integer( SimpleAclEntry.ADMINISTRATION );
+                // if ( log.isDebugEnabled() ) log.debug( "Granting ADMINISTRATION privileges" );
+                return SimpleAclEntry.ADMINISTRATION;
             }
         }
-        if ( log.isDebugEnabled() ) log.debug( "Granting READ_WRITE privileges" );
-        return new Integer( SimpleAclEntry.READ_WRITE );
+        // if ( log.isDebugEnabled() ) log.debug( "Granting READ_WRITE privileges" );
+        return SimpleAclEntry.READ_WRITE;
     }
 
     /**
