@@ -34,11 +34,7 @@ import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
 
 /**
- * Use this to test the acegi functionality. Namely, this is a good test to illustrate how getting This test class
- * represents an integration style test.
- * <hr>
- * <p>
- * 
+ * Use this to test the acegi functionality.
  * 
  * @author pavlidis
  * @author keshav
