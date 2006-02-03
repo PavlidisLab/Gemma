@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
@@ -76,6 +77,11 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         g2.setOfficialName( "testmygene2" );
         g2.setTaxon( t );
         daoGene.findOrCreate( g2 );
+
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        this.getPersisterHelper().persist( ad );
+
+        cgl.setAuditTrail( ad );
 
         daoCGL.create( cgl );
     }

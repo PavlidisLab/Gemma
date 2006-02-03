@@ -26,13 +26,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
  * features.
  * <hr>
  * <p>
- * 
  * 
  * @author pavlidis
  * @version $Id$
@@ -77,6 +77,10 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+
+        testBibRef.setAuditTrail( ad );
 
         dao.create( testBibRef );
     }

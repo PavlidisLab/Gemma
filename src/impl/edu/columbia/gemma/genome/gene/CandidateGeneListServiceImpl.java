@@ -28,6 +28,7 @@ import edu.columbia.gemma.common.auditAndSecurity.AuditAction;
 import edu.columbia.gemma.common.auditAndSecurity.AuditEvent;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
+import edu.columbia.gemma.common.auditAndSecurity.User;
 
 /**
  * <hr>
@@ -39,7 +40,7 @@ import edu.columbia.gemma.common.auditAndSecurity.Person;
  */
 public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene.CandidateGeneListServiceBase {
 
-    Person actor = null;
+    User actor = null;
 
     @Override
     public Collection handleFindByContributer( Person person ) {
@@ -94,7 +95,7 @@ public class CandidateGeneListServiceImpl extends edu.columbia.gemma.genome.gene
     }
 
     @Override
-    protected void handleSetActor( Person actor1 ) {
+    protected void handleSetActor( User actor1 ) {
         this.actor = actor1;
     }
 

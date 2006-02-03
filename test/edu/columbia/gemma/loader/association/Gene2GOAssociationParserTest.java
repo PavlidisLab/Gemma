@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryDao;
@@ -99,6 +100,11 @@ public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
             g.setTaxon( t );
         } else
             g.setTaxon( taxa.iterator().next() );
+
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        this.getPersisterHelper().persist( ad );
+
+        g.setAuditTrail( ad );
 
         Object[] dependencies = new Object[2];
 

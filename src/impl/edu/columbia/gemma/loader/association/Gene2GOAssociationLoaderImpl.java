@@ -30,10 +30,6 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="gene2GOAssociationLoader"
@@ -44,8 +40,8 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
 
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationLoaderImpl.class );
 
-    private PersisterHelper persisterHelper;
     private Gene2GOAssociationDao gene2GOAssociationDao;
+    private PersisterHelper persisterHelper;
 
     /**
      * @param oeCol
@@ -71,6 +67,13 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
     }
 
     /**
+     * @param gene2GOAssociationDao The gene2GOAssociationDao to set.
+     */
+    public void setGene2GOAssociationDao( Gene2GOAssociationDao gene2GOAssociationDao ) {
+        this.gene2GOAssociationDao = gene2GOAssociationDao;
+    }
+
+    /**
      * @param persisterHelper The persisterHelper to set.
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
@@ -86,13 +89,6 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
         persisterHelper.persist( entity.getOntologyEntry() );
         persisterHelper.persist( entity.getSource() );
         return gene2GOAssociationDao.create( entity );
-    }
-
-    /**
-     * @param gene2GOAssociationDao The gene2GOAssociationDao to set.
-     */
-    public void setGene2GOAssociationDao( Gene2GOAssociationDao gene2GOAssociationDao ) {
-        this.gene2GOAssociationDao = gene2GOAssociationDao;
     }
 
 }

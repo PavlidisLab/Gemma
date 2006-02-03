@@ -31,29 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
 
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.common.auditAndSecurity.ContactService;
-import edu.columbia.gemma.common.auditAndSecurity.PersonService;
-import edu.columbia.gemma.common.description.DatabaseEntryService;
-import edu.columbia.gemma.common.description.ExternalDatabaseService;
-import edu.columbia.gemma.common.description.LocalFileService;
-import edu.columbia.gemma.common.description.OntologyEntryService;
-import edu.columbia.gemma.common.protocol.HardwareService;
-import edu.columbia.gemma.common.protocol.ProtocolService;
-import edu.columbia.gemma.common.protocol.SoftwareService;
-import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
-import edu.columbia.gemma.expression.bioAssay.BioAssayService;
-import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
-import edu.columbia.gemma.expression.biomaterial.CompoundService;
-import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.expression.designElement.ReporterService;
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
-import edu.columbia.gemma.expression.experiment.FactorValueService;
-import edu.columbia.gemma.genome.TaxonService;
-import edu.columbia.gemma.genome.biosequence.BioSequenceService;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * Integration test of MageML: Parser, Converter and Preprocessor
@@ -67,7 +45,6 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
     private MageMLParser mageMLParser = null;
     private MageMLConverter mageMLConverter = null;
     private MageMLPreprocessor mageMLPreprocessor = null;
-    private PersisterHelper ph;
 
     @Override
     public void setUp() throws Exception {
@@ -75,32 +52,7 @@ public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
         this.mageMLPreprocessor = new MageMLPreprocessor( "testPreprocess" );
         this.mageMLParser = ( MageMLParser ) ctx.getBean( "mageMLParser" );
         this.mageMLConverter = ( MageMLConverter ) ctx.getBean( "mageMLConverter" );
-        ph = new PersisterHelper();
-        ph.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ph
-                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
-                        .getBean( "expressionExperimentService" ) );
-        ph.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
-        ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
-        ph.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-        ph.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ph.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
-        ph.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
-        ph.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
-        ph.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
-        ph.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
-        ph.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
-        ph.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
-        ph.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
-        ph.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
-        ph.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
-        ph.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
-        ph.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
-        ph.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
-        ph.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
-        ph.setDesignElementDataVectorService( ( DesignElementDataVectorService ) ctx
-                .getBean( "designElementDataVectorService" ) );
-        mageMLPreprocessor.setPersisterHelper( ph );
+        mageMLPreprocessor.setPersisterHelper( this.getPersisterHelper() );
     }
 
     @Override

@@ -19,10 +19,6 @@
 package edu.columbia.gemma.common.description;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.description.ExternalDatabaseService
@@ -45,7 +41,7 @@ public class ExternalDatabaseServiceImpl extends edu.columbia.gemma.common.descr
     @Override
     protected void handleRemove( ExternalDatabase externalDatabase ) throws Exception {
         this.getExternalDatabaseDao().remove( externalDatabase );
-        
+
     }
 
 }

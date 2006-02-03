@@ -44,14 +44,17 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getCreationEvent()
      */
+    @Override
     public AuditEvent getCreationEvent() {
         assert this.getEvents() != null;
+        if ( this.getEvents().size() == 0 ) return null;
         return ( ( List<AuditEvent> ) this.getEvents() ).get( 0 );
     }
 
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#getLast()
      */
+    @Override
     public AuditEvent getLast() {
         assert this.getEvents() != null;
         return ( ( List<AuditEvent> ) this.getEvents() ).get( this.getEvents().size() - 1 );
@@ -60,6 +63,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start()
      */
+    @Override
     public void start() {
         this.start( null );
     }
@@ -67,20 +71,16 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start(java.lang.String)
      */
+    @Override
     public void start( String note ) {
-        this.initialize(); // ensure that this is the first event.
-        AuditEvent newEvent = AuditEvent.Factory.newInstance();
-        newEvent.setAction( AuditAction.CREATE );
-        newEvent.setDate( new Date() );
-        if ( note != null ) newEvent.setNote( note );
-
-        this.addEvent( newEvent );
+        this.start( note, null );
     }
 
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#start(java.lang.String, Person)
      */
-    public void start( String note, Person actor ) {
+    @Override
+    public void start( String note, User actor ) {
         this.initialize(); // ensure that this is the first event.
         AuditEvent newEvent = AuditEvent.Factory.newInstance();
         newEvent.setAction( AuditAction.CREATE );
@@ -94,6 +94,7 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update()
      */
+    @Override
     public void update() {
         this.update( null );
     }
@@ -101,23 +102,16 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update(java.lang.String)
      */
+    @Override
     public void update( String note ) {
-        assert this.getEvents() != null;
-        assert this.getEvents().size() > 0; // can't have update as the first
-        // event.
-
-        AuditEvent newEvent = AuditEvent.Factory.newInstance();
-        newEvent.setAction( AuditAction.UPDATE );
-        newEvent.setDate( new Date() );
-        if ( note != null ) newEvent.setNote( note );
-
-        this.addEvent( newEvent );
+        this.update( note, null );
     }
 
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#update(java.lang.String, Person)
      */
-    public void update( String note, Person actor ) {
+    @Override
+    public void update( String note, User actor ) {
         assert this.getEvents() != null;
         assert this.getEvents().size() > 0; // can't have update as the first
         // event.
@@ -149,6 +143,50 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
      */
     private boolean trailIsNull() {
         return this.getEvents() == null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#read()
+     */
+    @Override
+    public void read() {
+        this.read( null );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#read(java.lang.String)
+     */
+    @Override
+    public void read( String note ) {
+        this.read( note, null );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrail#read(java.lang.String,
+     *      edu.columbia.gemma.common.auditAndSecurity.User)
+     */
+    @Override
+    public void read( String note, User actor ) {
+        assert this.getEvents() != null;
+        assert this.getEvents().size() > 0; // can't have read as the first
+        // event.
+
+        AuditEvent newEvent = AuditEvent.Factory.newInstance();
+        newEvent.setAction( AuditAction.READ );
+        newEvent.setPerformer( actor );
+        newEvent.setDate( new Date() );
+        if ( note != null ) newEvent.setNote( note );
+
+        this.addEvent( newEvent );
+
     }
 
 }

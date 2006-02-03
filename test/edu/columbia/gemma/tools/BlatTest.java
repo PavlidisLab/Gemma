@@ -94,7 +94,7 @@ public class BlatTest extends TestCase {
         Collection<Object> results = b.GfClient( bs, BlattableGenome.HUMAN );
         assertTrue( results.size() == 1 );
         BlatResult br = ( BlatResult ) results.iterator().next();
-        assertEquals( new Long( 789 ), br.getMatches() );
+        assertEquals( new Integer( 789 ), br.getMatches() );
     }
 
 }

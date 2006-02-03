@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.sequence;
 
 import java.util.Iterator;
@@ -8,6 +26,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.genome.Chromosome;
 import edu.columbia.gemma.genome.ChromosomeDao;
 import edu.columbia.gemma.genome.PhysicalLocation;
@@ -19,6 +38,11 @@ import edu.columbia.gemma.genome.QtlDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
 
+/**
+ * @author pavlidis
+ * @author daq?
+ * @version $Id$
+ */
 public class QtlDaoImplTest extends BaseDAOTestCase {
 
     QtlDao qtlDao = null;
@@ -56,7 +80,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         if ( tx == null ) {
             tx = Taxon.Factory.newInstance();
             tx.setCommonName( "mouse" );
-            tx.setNcbiId( 9609);
+            tx.setNcbiId( 9609 );
             tx = taxonDao.create( tx );
         }
 
@@ -77,6 +101,8 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
             pms[i] = PhysicalMarker.Factory.newInstance();
             pms[i].setPhysicalLocation( pls[i] );
             pms[i] = ( PhysicalMarker ) pmDao.create( pms[i] );
+            AuditTrail ad = AuditTrail.Factory.newInstance();
+            pms[i].setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
         }
 
         // create qtls - one for every two locations, so they might be 2000-4000, 4000-6000 etc.
@@ -86,6 +112,8 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
             q.setStartMarker( pms[j] );
             q.setEndMarker( pms[j + 1] );
             qtls[i] = ( Qtl ) qtlDao.create( q );
+            AuditTrail ad = AuditTrail.Factory.newInstance();
+            qtls[i].setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
         }
 
     }

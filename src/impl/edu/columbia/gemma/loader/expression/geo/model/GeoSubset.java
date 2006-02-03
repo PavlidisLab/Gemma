@@ -104,5 +104,7 @@ public class GeoSubset extends GeoData {
     public void setOwningDataset( GeoDataset owningDataset ) {
         this.owningDataset = owningDataset;
     }
+    
+   
 
 }

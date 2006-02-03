@@ -478,12 +478,31 @@
     <!-- ================================================================== -->
 
     <!--  Interceptor to persist ACL objects -->
-    <bean id="addOrRemoveFromACLInterceptor" class="edu.columbia.gemma.security.interceptor.AddOrRemoveFromACLInterceptor">
+    <bean id="addOrRemoveFromACLInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+        <property name="advice">
+            <ref local="aclAdvice" />
+        </property>
+        <property name="pointcut">
+            <bean class="edu.columbia.gemma.security.interceptor.AclPointcut" />
+        </property>
+    </bean>
+
+    <bean id="aclAdvice" class="edu.columbia.gemma.security.interceptor.AddOrRemoveFromACLInterceptor">
         <property name="basicAclExtendedDao">
             <ref bean="basicAclExtendedDao" />
         </property>
         <property name="hibernateInterceptor">
             <ref bean="hibernateInterceptor" />
+        </property>
+    </bean>
+
+    <!--  Interceptor for audit trail -->
+    <bean id="auditInterceptor" class="edu.columbia.gemma.security.interceptor.AuditInterceptor">
+        <property name="auditTrailDao">
+            <ref bean="auditTrailDao" />
+        </property>
+        <property name="userDao">
+            <ref bean="userDao" />
         </property>
     </bean>
 

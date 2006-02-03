@@ -276,7 +276,13 @@ public class GeoFamilyParser implements Parser {
         if ( dataset == null ) throw new IllegalArgumentException( "Unknown dataset " + accession );
 
         if ( property.equals( "experimentType" ) ) {
-            value = GeoDataset.convertStringToType( ( String ) value );
+            value = GeoDataset.convertStringToExperimentType( ( String ) value );
+        } else if ( property.equals( "platformType" ) ) {
+            value = GeoDataset.convertStringToPlatformType( ( String ) value );
+        } else if ( property.equals( "sampleType" ) ) {
+            value = GeoDataset.convertStringToSampleType( ( String ) value );
+        } else if ( property.equals( "valueType" ) ) {
+            value = GeoDataset.convertStringToValueType( ( String ) value );
         }
 
         try {
@@ -487,8 +493,10 @@ public class GeoFamilyParser implements Parser {
             }
             results.getDatasetMap().get( currentDatasetAccession ).setPlatform( results.getPlatformMap().get( value ) );
             currentDatasetPlatformAccession = value;
-        } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) {
-            datasetSet( currentDatasetAccession, "probeType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) { // obsolete
+            datasetSet( currentDatasetAccession, "platformType", value );
+        } else if ( startsWithIgnoreCase( line, "!dataset_platform_technology_type" ) ) {
+            datasetSet( currentDatasetAccession, "platformType", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_reference_series" ) ) {
             if ( !results.getSeriesMap().containsKey( value ) ) {
                 log.debug( "Adding series " + value );
@@ -1133,6 +1141,11 @@ public class GeoFamilyParser implements Parser {
     private void platformSet( String accession, String property, Object value ) {
         GeoPlatform platform = results.getPlatformMap().get( accession );
         if ( platform == null ) throw new IllegalArgumentException( "Unknown platform " + accession );
+
+        if ( property.equals( "technology" ) ) {
+            // FIXME
+        }
+
         try {
             BeanUtils.setProperty( platform, property, value );
         } catch ( IllegalAccessException e ) {

@@ -29,8 +29,8 @@ import java.util.HashSet;
 
 import junit.framework.TestCase;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
-import edu.columbia.gemma.common.auditAndSecurity.Person;
-import edu.columbia.gemma.common.auditAndSecurity.PersonDao;
+import edu.columbia.gemma.common.auditAndSecurity.User;
+import edu.columbia.gemma.common.auditAndSecurity.UserDao;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
@@ -52,8 +52,8 @@ public class CandidateGeneListServiceImplTest extends TestCase {
     private Gene g, g2, g3, g4 = null;
 
     private GeneDao geneDaoMock;
-    private Person p = null;
-    private PersonDao personDaoMock;
+    private User p = null;
+    private UserDao UserDaoMock;
     private CandidateGeneListServiceImpl svc;
     private Taxon t = null;
 
@@ -157,7 +157,7 @@ public class CandidateGeneListServiceImplTest extends TestCase {
 
     protected void setUp() throws Exception {
 
-        personDaoMock = createMock( PersonDao.class );
+        UserDaoMock = createMock( UserDao.class );
         taxonDaoMock = createMock( TaxonDao.class );
         geneDaoMock = createMock( GeneDao.class );
         candidateGeneDaoMock = createMock( CandidateGeneDao.class );
@@ -188,12 +188,12 @@ public class CandidateGeneListServiceImplTest extends TestCase {
         g4.setOfficialName( "test gene four" );
         g4.setTaxon( t );
 
-        p = Person.Factory.newInstance();
+        p = User.Factory.newInstance();
 
         p.setFirstName( "David" );
         p.setLastName( "Quigley" );
         p.setEmail( "daq2101@columbia.edu" );
-        personDaoMock.create( p );
+        UserDaoMock.create( p );
 
         svc = new CandidateGeneListServiceImpl();
         svc.setCandidateGeneDao( this.candidateGeneDaoMock );

@@ -24,10 +24,6 @@ import junit.framework.TestCase;
 import edu.columbia.gemma.common.description.BibliographicReference;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */

@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
 import edu.columbia.gemma.common.auditAndSecurity.PersonService;
 import edu.columbia.gemma.common.description.DatabaseEntryService;
@@ -133,6 +134,7 @@ public class BaseDAOTestCase extends TestCase {
         ml.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
         ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
         ml.setBioAssayDimensionService( ( BioAssayDimensionService ) ctx.getBean( "bioAssayDimensionService" ) );
+        ml.setAuditTrailService( ( AuditTrailService ) ctx.getBean( "auditTrailService" ) );
         ml.setDesignElementDimensionService( ( DesignElementDimensionService ) ctx
                 .getBean( "designElementDimensionService" ) );
         return ml;

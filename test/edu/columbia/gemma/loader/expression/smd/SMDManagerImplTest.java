@@ -21,10 +21,6 @@ package edu.columbia.gemma.loader.expression.smd;
 import junit.framework.TestCase;
 
 /**
- * <hr>
- * <p>
- * 
- * 
  * @author pavlidis
  * @version $Id$
  */

@@ -24,41 +24,13 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.common.auditAndSecurity.ContactService;
-import edu.columbia.gemma.common.auditAndSecurity.PersonService;
-import edu.columbia.gemma.common.description.DatabaseEntryService;
-import edu.columbia.gemma.common.description.ExternalDatabaseService;
-import edu.columbia.gemma.common.description.LocalFileService;
-import edu.columbia.gemma.common.description.OntologyEntryService;
-import edu.columbia.gemma.common.protocol.HardwareService;
-import edu.columbia.gemma.common.protocol.ProtocolService;
-import edu.columbia.gemma.common.protocol.SoftwareService;
-import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
-import edu.columbia.gemma.expression.bioAssay.BioAssayService;
-import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
-import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
-import edu.columbia.gemma.expression.biomaterial.CompoundService;
-import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.expression.designElement.ReporterService;
-import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
-import edu.columbia.gemma.expression.experiment.FactorValueService;
-import edu.columbia.gemma.genome.TaxonService;
-import edu.columbia.gemma.genome.biosequence.BioSequenceService;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
 public class MageLoadTest extends MageBaseTest {
     private static Log log = LogFactory.getLog( MageLoadTest.class.getName() );
     MageMLConverter mageMLConverter = null;
-    PersisterHelper ml;
 
     /*
      * (non-Javadoc)
@@ -68,34 +40,8 @@ public class MageLoadTest extends MageBaseTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
-        
+
         this.setMageMLConverter( ( MageMLConverter ) ctx.getBean( "mageMLConverter" ) );
-        
-        ml = new PersisterHelper();
-        ml.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ml.setExpressionExperimentService( ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" ) );
-        ml.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
-        ml.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
-        ml.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-        ml.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ml.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
-        ml.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
-        ml.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
-        ml.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
-        ml.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
-        ml.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
-        ml.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
-        ml.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
-        ml.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
-        ml.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
-        ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
-        ml.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
-        ml.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
-        ml.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
-        ml.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
-        ml.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
-        ml.setDesignElementDataVectorService( ( DesignElementDataVectorService ) ctx.getBean( "designElementDataVectorService" ) );
     }
 
     @Override
@@ -152,7 +98,7 @@ public class MageLoadTest extends MageBaseTest {
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
-        ml.persist( result );
+        this.getPersisterHelper().persist( result );
     }
 
     /**
@@ -177,7 +123,7 @@ public class MageLoadTest extends MageBaseTest {
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
-        ml.persist( result );
+        this.getPersisterHelper().persist( result );
     }
 
     /**

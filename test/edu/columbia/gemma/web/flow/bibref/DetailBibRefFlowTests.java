@@ -27,18 +27,12 @@ import edu.columbia.gemma.BaseFlowTestCase;
 
 /**
  * Tests the pubMedSearch and edit flows.
- * <hr>
- * <p>
  * 
  * @author keshav
  * @version $Id$
  */
 public class DetailBibRefFlowTests extends BaseFlowTestCase {
 
-    /**
-     * 
-     *
-     */
     public DetailBibRefFlowTests() {
         setDependencyCheck( false );
     }

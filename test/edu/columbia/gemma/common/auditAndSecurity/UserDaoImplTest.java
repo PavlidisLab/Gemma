@@ -29,9 +29,6 @@ import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
  * Tests the Contact, Person, User interitance hierarchy and the association between User and UserRole.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
@@ -83,7 +80,9 @@ public class UserDaoImplTest extends BaseDAOTestCase {
         testUser.setPassword( "root" );
         testUser.setConfirmPassword( "root" );
         testUser.setPasswordHint( "test hint" );
-
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        testUser.setAuditTrail( ad );
         testUser.getRoles().add( ur );
 
         // dao.create( testUser );

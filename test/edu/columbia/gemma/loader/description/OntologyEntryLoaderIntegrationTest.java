@@ -113,8 +113,8 @@ public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-        ph.remove( createdObjects );
-        ph = null;
+        // ph.remove( createdObjects ); // FIXME, put this back when we can.
+        // ph = null;
         ontologyEntryPersister = null;
     }
 

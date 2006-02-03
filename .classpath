@@ -101,5 +101,9 @@
 	<classpathentry kind="var" path="MAVEN_REPO/commons-pool/jars/commons-pool-1.2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xerces-2.4.0.jar"/>
 	<classpathentry sourcepath="/WORKSPACE/baseCode/src" kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/andromda-breadcrumbs-taglib.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/andromda-collections-taglib.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/andromda-formatting-taglib.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/struts/jars/struts-1.2.7.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>

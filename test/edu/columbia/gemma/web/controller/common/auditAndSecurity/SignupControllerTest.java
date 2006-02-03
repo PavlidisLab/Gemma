@@ -27,6 +27,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 
 import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserRole;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
@@ -111,6 +112,10 @@ public class SignupControllerTest extends BaseControllerTestCase {
         testUser.setPasswordHint( "test hint" );
 
         testUser.getRoles().add( ur );
+
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+
+        testUser.setAuditTrail( ad );
 
         signupController.onSubmit( request, response, testUser, ( BindException ) null );
 

@@ -45,14 +45,14 @@ public class GeoDataset extends GeoData {
     private String organism;
 
     private GeoPlatform platform;
-    private String probeType;
+    private PlatformType platformType;
     private String pubmedId;
-    private String sampleType;
+    private SampleType sampleType;
     private Collection<GeoSeries> series;
     private Collection<GeoSubset> subsets;
     private String title;
     private String updateDate;
-    private String valueType;
+    private ValueType valueType;
 
     public GeoDataset() {
         this.subsets = new HashSet<GeoSubset>();
@@ -145,8 +145,8 @@ public class GeoDataset extends GeoData {
     /**
      * @return Returns the probeType.
      */
-    public String getProbeType() {
-        return this.probeType;
+    public PlatformType getPlatformType() {
+        return this.platformType;
     }
 
     /**
@@ -159,7 +159,7 @@ public class GeoDataset extends GeoData {
     /**
      * @return Returns the sampleType.
      */
-    public String getSampleType() {
+    public SampleType getSampleType() {
         return this.sampleType;
     }
 
@@ -194,7 +194,7 @@ public class GeoDataset extends GeoData {
     /**
      * @return Returns the valueType.
      */
-    public String getValueType() {
+    public ValueType getValueType() {
         return this.valueType;
     }
 
@@ -271,8 +271,8 @@ public class GeoDataset extends GeoData {
     /**
      * @param probeType The probeType to set.
      */
-    public void setProbeType( String probeType ) {
-        this.probeType = probeType;
+    public void setPlatformType( PlatformType platformType ) {
+        this.platformType = platformType;
     }
 
     /**
@@ -285,7 +285,7 @@ public class GeoDataset extends GeoData {
     /**
      * @param sampleType The sampleType to set.
      */
-    public void setSampleType( String sampleType ) {
+    public void setSampleType( SampleType sampleType ) {
         this.sampleType = sampleType;
     }
 
@@ -320,30 +320,72 @@ public class GeoDataset extends GeoData {
     /**
      * @param valueType The valueType to set.
      */
-    public void setValueType( String valueType ) {
+    public void setValueType( ValueType valueType ) {
         this.valueType = valueType;
     }
 
-    public static ExperimentType convertStringToType( String string ) {
+    public static PlatformType convertStringToPlatformType( String string ) {
         if ( string.equals( "single channel" ) ) {
-            return ExperimentType.singleChannel;
+            return PlatformType.singleChannel;
         } else if ( string.equals( "dual channel" ) ) {
-            return ExperimentType.dualChannel;
+            return PlatformType.dualChannel;
         } else if ( string.equals( "single channel genomic" ) ) {
-            return ExperimentType.singleChannelGenomic;
+            return PlatformType.singleChannelGenomic;
         } else if ( string.equals( "dual channel genomic" ) ) {
-            return ExperimentType.dualChannelGenomic;
+            return PlatformType.dualChannelGenomic;
         } else if ( string.equals( "SAGE" ) ) {
-            return ExperimentType.SAGE;
+            return PlatformType.SAGE;
         } else if ( string.equals( "MPSS" ) ) {
-            return ExperimentType.MPSS;
+            return PlatformType.MPSS;
         } else {
+            // FIXME for the rest of them
+
             throw new IllegalArgumentException( "Unknown experiment type " + string );
         }
     }
 
+    /**
+     * @param string
+     * @return
+     */
+    public static SampleType convertStringToSampleType( String string ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param string
+     * @return
+     */
+    public static ValueType convertStringToValueType( String string ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * @param string
+     * @return
+     */
+    public static ExperimentType convertStringToExperimentType( String string ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     public enum ExperimentType {
-        dualChannel, dualChannelGenomic, MPSS, SAGE, singleChannel, singleChannelGenomic
+        geneExpressionArraybased, geneExpressionSAGEbased, geneExpressionMPSSBased, geneExpressionRTPCRbased, proteinExpressionArraybased, proteinExpressionMSBased, arrayCGH, ChIPChip, SNP
+    }
+
+    public enum PlatformType {
+        dualChannel, dualChannelGenomic, SAGE, singleChannel, singleChannelGenomic, spottedDNAOrcDNA, spottedOligonucleotide, inSituOligonucleotide, oligonucleotideBeads, SAGENlaIII, SAGESau3A, SAGERsaI, SARST, RTPCR, MPSS, antibody, MS, other
+
+    }
+
+    public enum ValueType {
+        count, logRatio, log2Ratio, log10ratio, logERatio, transformedCount
+    }
+
+    public enum SampleType {
+        cDNA, RNA, genomic, protein, mixed, SAGE, MPSS, SARST
     }
 
 }

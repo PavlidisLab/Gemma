@@ -23,11 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.experiment.ExpressionExperiment
@@ -83,6 +81,7 @@ public class ExpressionExperimentDaoImpl extends edu.columbia.gemma.expression.e
         }
         ExpressionExperiment newExpressionExperiment = this.find( expressionExperiment );
         if ( newExpressionExperiment != null ) {
+            BeanPropertyCompleter.complete( newExpressionExperiment, expressionExperiment );
             return newExpressionExperiment;
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );

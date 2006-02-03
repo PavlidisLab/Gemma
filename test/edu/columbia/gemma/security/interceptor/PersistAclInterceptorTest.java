@@ -20,8 +20,6 @@ package edu.columbia.gemma.security.interceptor;
 
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.protocol.Hardware;
@@ -66,28 +64,22 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "fooblyDoobly" );
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        ad = ads.findOrCreate( ad );
+        ad = ( ArrayDesign ) this.getPersisterHelper().persist( ad );
 
-        try {
-            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ad ) );
-            fail( "Whoops, ACL entry doesn't exist for " + ad );
-        } catch ( DataIntegrityViolationException e ) {
-            // ok
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) == null ) {
+            fail( "Failed to create ACL for " + ad );
         }
+
         ads.remove( ad );
         // make sure it got deleted.
-        try {
-            basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ad ) );
-            fail( "Failed to delete ACL after deleting entity for " + ad );
-        } catch ( DataAccessException e ) {
-            // ok
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) != null ) {
+            fail( "Failed to  delete ACL for " + ad );
         }
     }
 
     /**
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void testCascadeCreateAndDelete() throws Exception {
         ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
@@ -97,38 +89,26 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( "foo" );
         ee.getExperimentalDesigns().add( ed );
-        ee = ees.findOrCreate( ee );
+        this.getPersisterHelper().persist( ee );
 
-        try {
-            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ee ) );
-            fail( "Whoops, ACL entry doesn't exist for " + ee );
-        } catch ( DataIntegrityViolationException e ) {
-            // ok
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
+            fail( "Failed to create ACL for " + ee );
         }
 
         ed = ee.getExperimentalDesigns().iterator().next();
-        try {
-            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ed ) );
-            fail( "Failed to create ACL entry on create of entity " + ed );
-        } catch ( DataIntegrityViolationException e ) {
-            // ok
+
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ed ) ) == null ) {
+            fail( "Failed to cascade create ACL for " + ed );
         }
 
         ees.remove( ee );
 
-        try {
-            basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ee ) );
-            fail( "Failed to delete ACL for " + ee );
-        } catch ( DataAccessException e ) {
-            // ok
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) != null ) {
+            fail( "Failed to  delete ACL for " + ee );
         }
 
-        // now after delete, the acl for ed should also be gone:
-        try {
-            basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ed ) );
-            fail( "Failed to cascade delete ACL after deleting entity for " + ee );
-        } catch ( DataAccessException e ) {
-            // ok
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ed ) ) != null ) {
+            fail( "Failed to cascade delete ACL after deleting entity for " + ed );
         }
 
     }
@@ -142,20 +122,29 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         h.setName( "hardware" );
 
         HardwareService hs = ( HardwareService ) ctx.getBean( "hardwareService" );
-        h = hs.findOrCreate( h );
+        h = ( Hardware ) this.getPersisterHelper().persist( h );
 
         p.getHardwares().add( h );
-        ps.findOrCreate( p );
+        p = ps.findOrCreate( p );
+
+        // make sure the ACL for h is there in the first place.
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( h ) ) == null ) {
+            fail( "No ACL created or exists for " + h );
+        }
+
         ps.remove( p );
 
         // make sure the ACL for h is still there
-        try {
-            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( h ) );
-            fail( "Whoops, ACL entry doesn't exist for " + h + ", indicates inappropriate cascade of ACL!" );
-        } catch ( DataIntegrityViolationException e ) {
-            // ok
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( h ) ) == null ) {
+            fail( "Inappropriate cascade delete of ACL for " + h );
         }
 
         hs.remove( h );
+
+        // now it should be gone.
+        if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( h ) ) != null ) {
+            fail( "Failed to  delete ACL for " + h );
+        }
+
     }
 }

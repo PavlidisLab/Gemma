@@ -45,7 +45,7 @@ public class GeoVariable {
     Collection<GeoSample> samples;
 
     /**
-     * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma.
+     * Permitted descriptions of terms. These will correspond to OntologyEntries in Gemma. Also known as subset type.
      */
     public enum VariableType {
         age, agent, cellLine, cellType, developmentStage, diseaseState, dose, gender, genotypeOrVariation, growthProtocol, individual, infection, isolate, metabolism, other, protocol, shock, species, specimen, stress, strain, temperature, time, tissue

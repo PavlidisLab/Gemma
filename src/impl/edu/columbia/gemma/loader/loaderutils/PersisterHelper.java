@@ -28,6 +28,9 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.Describable;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
@@ -118,6 +121,7 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="reporterService" ref="reporterService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @spring.property name="designElementDimensionService" ref="designElementDimensionService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -176,6 +180,8 @@ public class PersisterHelper implements Persister {
 
     private boolean firstBioSequence = true;
 
+    private AuditTrailService auditTrailService;
+
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
      */
@@ -204,6 +210,9 @@ public class PersisterHelper implements Persister {
         if ( entity == null ) return null;
 
         log.debug( "Persisting " + entity.getClass().getName() + " " + entity );
+
+        basePersist( entity );
+
         if ( entity instanceof ExpressionExperiment ) {
             return persistExpressionExperiment( ( ExpressionExperiment ) entity );
         } else if ( entity instanceof ArrayDesign ) {
@@ -217,21 +226,7 @@ public class PersisterHelper implements Persister {
             // deal with in cascade from array design? Do nothing, probably.
         } else if ( entity instanceof Protocol ) {
             return null;
-        } else if ( entity instanceof CompositeSequence ) {
-            // if ( firstCompositeSequence )
-            // log.warn( "*** Attempt to directly persist a CompositeSequence "
-            // + "*** CompositeSequences are only persisted by association to other objects." );
-            // firstCompositeSequence = false;
-            // return null;
-            return persistDesignElement( ( DesignElement ) entity );
-            // cascade from array design, do nothing
-        } else if ( entity instanceof Reporter ) {
-            // if ( firstReporter )
-            // log.warn( "*** Attempt to directly persist a reporter "
-            // + "*** Reporters are only persisted by association to other objects." );
-            // firstReporter = false;
-            // return null;
-            // // cascade from array design, do nothing
+        } else if ( DesignElement.class.isAssignableFrom( entity.getClass() ) ) {
             return persistDesignElement( ( DesignElement ) entity );
         } else if ( entity instanceof Hardware ) {
             return null;
@@ -263,6 +258,8 @@ public class PersisterHelper implements Persister {
             return persist( ( Collection<Object> ) entity );
         } else if ( entity instanceof Collection ) {
             return persist( ( Collection<Object> ) entity );
+        } else if ( entity instanceof AuditTrail ) {
+            return persistAuditTrail( entity );
         } else {
             throw new IllegalArgumentException( "Don't know how to persist a " + entity.getClass().getName() );
         }
@@ -270,13 +267,38 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param entity
+     * @return
+     */
+    private Object persistAuditTrail( Object entity ) {
+        if ( this.isTransient( entity ) ) return auditTrailService.create( ( AuditTrail ) entity );
+
+        return entity;
+    }
+
+    /**
+     * @param entity
+     */
+    private void basePersist( Object entity ) {
+        if ( Describable.class.isAssignableFrom( entity.getClass() ) ) {
+            Describable d = ( Describable ) entity;
+            if ( d.getAuditTrail() == null ) {
+                AuditTrail at = AuditTrail.Factory.newInstance();
+                d.setAuditTrail( auditTrailService.create( at ) );
+            } else if ( isTransient( d.getAuditTrail() ) ) {
+                d.setAuditTrail( auditTrailService.create( d.getAuditTrail() ) );
+            }
+        }
+    }
+
+    /**
      * @param software
      * @return
      */
     private Software persistSoftware( Software software ) {
-
+        if ( software == null ) return null;
         if ( !isTransient( software ) ) return software;
-
+        this.basePersist( software );
         Collection<Software> components = software.getSoftwareComponents();
 
         if ( components != null && components.size() > 0 ) {
@@ -394,6 +416,7 @@ public class PersisterHelper implements Persister {
             log.warn( "Null protocol" );
             return;
         }
+        this.basePersist( protocol );
         OntologyEntry type = protocol.getType();
         persistOntologyEntry( type );
         protocol.setType( type );
@@ -416,7 +439,7 @@ public class PersisterHelper implements Persister {
 
         if ( hardware == null ) return null;
         if ( !isTransient( hardware ) ) return hardware;
-
+        this.basePersist( hardware );
         if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
             for ( Software software : hardware.getSoftwares() ) {
                 software.setId( persistSoftware( software ).getId() );
@@ -486,7 +509,7 @@ public class PersisterHelper implements Persister {
     /**
      * Fetch the fallback owner to use for newly-imported data.
      */
-
+    @SuppressWarnings("unchecked")
     private void initializeDefaultOwner() {
         Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody", "nobody" );
 
@@ -527,9 +550,9 @@ public class PersisterHelper implements Persister {
      */
 
     private ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
-
+        if ( arrayDesign == null ) return null;
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
-
+        this.basePersist( arrayDesign );
         arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
@@ -590,6 +613,8 @@ public class PersisterHelper implements Persister {
 
         if ( !isTransient( assay ) ) return assay;
 
+        basePersist( assay );
+
         for ( FactorValue factorValue : assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
             factorValue.setId( persistFactorValue( factorValue ).getId() );
@@ -631,6 +656,7 @@ public class PersisterHelper implements Persister {
     private BioMaterial persistBioMaterial( BioMaterial entity ) {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
+        basePersist( entity );
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
 
         OntologyEntry materialType = entity.getMaterialType();
@@ -706,9 +732,10 @@ public class PersisterHelper implements Persister {
     /**
      * @param designProvider
      */
-    private Contact persistContact( Contact designProvider ) {
-        if ( designProvider == null ) return null;
-        return this.contactService.findOrCreate( designProvider );
+    private Contact persistContact( Contact contact ) {
+        if ( contact == null ) return null;
+        basePersist( contact );
+        return this.contactService.findOrCreate( contact );
     }
 
     /**
@@ -732,6 +759,8 @@ public class PersisterHelper implements Persister {
 
         if ( entity == null ) return null;
 
+        basePersist( entity );
+
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
         }
@@ -744,12 +773,17 @@ public class PersisterHelper implements Persister {
 
         for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
 
+            basePersist( experimentalDesign );
+
             // type
             for ( OntologyEntry type : experimentalDesign.getTypes() ) {
                 type.setId( persistOntologyEntry( type ).getId() );
             }
 
             for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
+                
+                basePersist( experimentalFactor );
+                
                 for ( OntologyEntry annotation : experimentalFactor.getAnnotations() ) {
                     annotation.setId( persistOntologyEntry( annotation ).getId() );
                 }
@@ -815,7 +849,8 @@ public class PersisterHelper implements Persister {
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
-
+        this.basePersist( bioAssayDimension );
+        basePersist( bioAssayDimension );
         for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
             bioAssay.setId( persistBioAssay( bioAssay ).getId() );
         }
@@ -837,7 +872,9 @@ public class PersisterHelper implements Persister {
      * @return
      */
     private FactorValue persistFactorValue( FactorValue factorValue ) {
-
+        if ( factorValue == null ) return null;
+        if ( !isTransient( factorValue ) ) return factorValue;
+        this.basePersist( factorValue );
         if ( factorValue.getOntologyEntry() != null ) {
             if ( factorValue.getMeasurement() != null || factorValue.getMeasurement() != null ) {
                 throw new IllegalStateException(
@@ -864,6 +901,7 @@ public class PersisterHelper implements Persister {
      * @param gene
      */
     private Object persistGene( Gene gene ) {
+        this.basePersist( gene );
         return geneService.findOrCreate( gene );
     }
 
@@ -1113,5 +1151,12 @@ public class PersisterHelper implements Persister {
      */
     public void setDesignElementDimensionService( DesignElementDimensionService designElementDimensionService ) {
         this.designElementDimensionService = designElementDimensionService;
+    }
+
+    /**
+     * @param auditTrailService The auditTrailService to set.
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
     }
 }
