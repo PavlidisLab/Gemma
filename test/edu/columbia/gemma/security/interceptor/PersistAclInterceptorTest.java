@@ -18,17 +18,12 @@
  */
 package edu.columbia.gemma.security.interceptor;
 
-import java.util.Date;
-
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.protocol.Hardware;
 import edu.columbia.gemma.common.protocol.HardwareService;
 import edu.columbia.gemma.common.protocol.Protocol;
@@ -40,9 +35,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * Tests of ACL management.
  * 
  * @author keshav
  * @version $Id$
