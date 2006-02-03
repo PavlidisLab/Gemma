@@ -74,6 +74,20 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ad.setName( "fooblyDoobly" );
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
         ads.findOrCreate( ad );
+        try {
+            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ad ) );
+            fail( "Whoops, ACL entry doesn't exist for " + ad );
+        } catch ( DataIntegrityViolationException e ) {
+            // ok
+        }
+        ads.remove( ad );
+        // make sure it got deleted.
+        try {
+            basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ad ) );
+            fail( "Failed to delete ACL after deleting entity for " + ad );
+        } catch ( DataAccessException e ) {
+            // ok
+        }
     }
 
     /**
@@ -101,7 +115,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ed = ee.getExperimentalDesigns().iterator().next();
         try {
             basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ed ) );
-            fail( "Whoops, ACL entry doesn't exist for " + ed );
+            fail( "Failed to create ACL entry on create of entity " + ed );
         } catch ( DataIntegrityViolationException e ) {
             // ok
         }
@@ -110,7 +124,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
 
         try {
             basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ee ) );
-            fail( "Whoops, failed to delete ACL for " + ee );
+            fail( "Failed to delete ACL for " + ee );
         } catch ( DataAccessException e ) {
             // ok
         }
@@ -118,7 +132,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         // now after delete, the acl for ed should also be gone:
         try {
             basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ed ) );
-            fail( "Whoops, failed to cascade delete ACL for " + ee );
+            fail( "Failed to cascade delete ACL after deleting entity for " + ee );
         } catch ( DataAccessException e ) {
             // ok
         }

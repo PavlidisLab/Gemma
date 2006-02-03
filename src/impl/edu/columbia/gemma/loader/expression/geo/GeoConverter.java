@@ -231,7 +231,7 @@ public class GeoConverter implements Converter {
                         + channel.getLabelProtocol() )
                 + ( StringUtils.isBlank( channel.getTreatmentProtocol() ) ? "" : " Treatment Protocol: "
                         + channel.getTreatmentProtocol() ) );
-        // FIXME: these protocols could be made into 'real' protocols, if anybody cares.
+        // these protocols could be made into 'real' protocols, if anybody cares.
 
         for ( String characteristic : channel.getCharacteristics() ) {
             Characteristic gemmaChar = Characteristic.Factory.newInstance();
@@ -301,15 +301,8 @@ public class GeoConverter implements Converter {
         for ( GeoSample sample : datasetSamples ) {
             boolean found = false;
             String sampleAcc = sample.getGeoAccession();
-            buf.append( sampleAcc + "\n" );
-            // some extra sanity checking here would be wise. What if two columns have the same id.
-            for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-                if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-                    result.getDimensionBioAssays().add( bioAssay );
-                    found = true;
-                    break;
-                }
-            }
+            buf.append( sampleAcc + "," );
+            found = matchSampleToBioAssay( expExp, result, found, sampleAcc );
             if ( !found ) {
                 log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
                 // sample ids.
@@ -318,6 +311,25 @@ public class GeoConverter implements Converter {
         result.setName( buf.toString().substring( 0, 100 ) + "..." );
         result.setDescription( buf.toString() );
         return result;
+    }
+
+    /**
+     * @param expExp
+     * @param result
+     * @param found
+     * @param sampleAcc
+     * @return
+     */
+    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension result, boolean found,
+            String sampleAcc ) {
+        for ( BioAssay bioAssay : expExp.getBioAssays() ) {
+            if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
+                result.getDimensionBioAssays().add( bioAssay );
+                found = true;
+                break;
+            }
+        }
+        return found;
     }
 
     /**
@@ -418,23 +430,34 @@ public class GeoConverter implements Converter {
 
         BioAssayDimension bioAssayDimension = convertGeoSampleList( datasetSamples, expExp );
 
-        Collection<String> quantitationTypes = datasetSamples.iterator().next().getColumnNames();
-        boolean first = true;
-        for ( String quantitationType : quantitationTypes ) {
+        sanityCheckQuantitationTypes( datasetSamples );
 
-            QuantitationType qt = QuantitationType.Factory.newInstance(); // FIXME fill in representation etc.
-            qt.setName( quantitationType );
-            qt.setGeneralType( GeneralType.QUANTITATIVE );// FIXME
-            qt.setRepresentation( PrimitiveType.DOUBLE ); // FIXME
-            qt.setScale( ScaleType.UNSCALED );// FIXME
-            qt.setType( StandardQuantitationType.MEASUREDSIGNAL );// FIXME
-            qt.setIsBackground( new Boolean( false ) ); // FIXME
+        List<String> quantitationTypes = datasetSamples.iterator().next().getColumnNames();
+        List<String> quantitationTypeDescriptions = datasetSamples.iterator().next().getColumnDescriptions();
+        boolean first = true;
+
+        /*
+         * For the data that are put in 'datasets' (GDS), we know the type of data, but it can be misleading (e.g., Affy
+         * data is 'counts'). For others we just have free text in the column descriptions
+         */
+
+        int i = 0;
+        for ( String quantitationType : quantitationTypes ) {
 
             // skip the first quantitationType, it's the ID or ID_REF.
             if ( first ) {
                 first = false;
                 continue;
             }
+
+            String description = quantitationTypeDescriptions.get( i );
+            i++;
+
+            QuantitationType qt = QuantitationType.Factory.newInstance();
+            qt.setName( quantitationType );
+            qt.setDescription( description );
+
+            guessQuantitationTypeParameters( qt, quantitationType, description );
 
             Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationType );
 
@@ -445,6 +468,76 @@ public class GeoConverter implements Converter {
                         designElementName, dataVector );
                 vector.setQuantitationType( qt );
                 expExp.getDesignElementDataVectors().add( vector );
+            }
+        }
+    }
+
+    /**
+     * Attempt to fill in the details of the quantitation type. FIXME, this needs work and testing.
+     * 
+     * @param qt QuantitationType to fill in details for.
+     * @param name of the quantitation type from the GEO sample column
+     * @param description of the quantitation type from the GEO sample column
+     */
+    private void guessQuantitationTypeParameters( QuantitationType qt, String name, String description ) {
+
+        GeneralType gType = GeneralType.QUANTITATIVE;
+        PrimitiveType pType = PrimitiveType.DOUBLE;
+        ScaleType sType = ScaleType.UNSCALED;
+        StandardQuantitationType qType = StandardQuantitationType.MEASUREDSIGNAL;
+        Boolean isBackground = Boolean.FALSE;
+
+        if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
+            qType = StandardQuantitationType.DERIVEDSIGNAL;
+            sType = ScaleType.LINEAR;
+        } else if ( name.equals( "DET_P" ) ) {
+            qType = StandardQuantitationType.CONFIDENCEINDICATOR;
+        } else if ( name.equals( "VALUE" ) ) {
+            if ( description.toLowerCase().contains( "signal" ) || description.contains( "RMA" ) ) {
+                qType = StandardQuantitationType.DERIVEDSIGNAL;
+            }
+        }
+
+        if ( description.toLowerCase().contains( "background" ) ) {
+            qType = StandardQuantitationType.DERIVEDSIGNAL;
+            isBackground = Boolean.TRUE;
+        }
+
+        if ( description.contains( "log2" ) ) {
+            sType = ScaleType.LOG2;
+        }
+
+        if ( name.matches( "TOP" ) || name.matches( "LEFT" ) || name.matches( "RIGHT" ) || name.matches( "^BOT.*" ) ) {
+            qType = StandardQuantitationType.COORDINATE;
+        } else if ( name.matches( "^RAT[12]N?_(MEAN|MEDIAN)" ) ) {
+            qType = StandardQuantitationType.RATIO;
+        } else if ( name.matches( "fold_change" ) ) {
+            qType = StandardQuantitationType.RATIO;
+        }
+
+        qt.setGeneralType( gType );
+        qt.setRepresentation( pType );
+        qt.setScale( sType );
+        qt.setType( qType );
+        qt.setIsBackground( isBackground );
+
+        log.info( "Inferred that quantitation type " + name + " (" + description + ") corresponds to: " + qType + ",  "
+                + sType );
+
+    }
+
+    /**
+     * Sanity check hopefully the first one is representative.
+     * 
+     * @param datasetSamples
+     */
+    private void sanityCheckQuantitationTypes( List<GeoSample> datasetSamples ) {
+        List<String> reference = datasetSamples.iterator().next().getColumnNames();
+        for ( GeoSample sample : datasetSamples ) {
+            List<String> columnNames = sample.getColumnNames();
+            if ( !reference.equals( columnNames ) ) {
+                throw new IllegalStateException( "Two samples don't have the same data columns in sample "
+                        + sample.getGeoAccession() );
             }
         }
     }
@@ -575,8 +668,8 @@ public class GeoConverter implements Converter {
             BioSequence bs = BioSequence.Factory.newInstance();
             bs.setName( externalRef );
             bs.setTaxon( taxon );
-            bs.setPolymerType( PolymerType.DNA ); // FIXME: need to determine PolymerType.
-            bs.setType( SequenceType.DNA ); // FIXME need to determine SequenceType
+            bs.setPolymerType( PolymerType.DNA );
+            bs.setType( SequenceType.DNA ); // FIXME need to determine SequenceType and PolymerType.
 
             DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
             dbe.setAccession( externalRef );
@@ -626,7 +719,7 @@ public class GeoConverter implements Converter {
         log.debug( "Organism: " + organism );
 
         // FIXME yucky hard-coding of Rattus.
-        if ( organism.startsWith( "Rattus" ) || organism.startsWith( "rattus" ) ) {
+        if ( organism.toLowerCase().startsWith( "rattus" ) ) {
             organism = "rattus"; // we don't distinguish between species.
         }
 
@@ -1018,6 +1111,7 @@ public class GeoConverter implements Converter {
             throw new IllegalStateException();
         }
 
+        log.debug( "Category term: " + categoryTerm.getValue() + " " );
         return categoryTerm;
 
     }
@@ -1066,7 +1160,8 @@ public class GeoConverter implements Converter {
             result.setType( DatabaseType.SEQUENCE );
         } else if ( likelyExternalDatabaseIdentifier.equals( "ORF" ) ) {
             String organism = platform.getOrganisms().iterator().next();
-            result.setName( organism );// FIXME what else can we do?
+            result.setName( organism + " ORFs" ); // TODO this is silly.
+            result.setType( DatabaseType.GENOME );
         }
 
         return result;

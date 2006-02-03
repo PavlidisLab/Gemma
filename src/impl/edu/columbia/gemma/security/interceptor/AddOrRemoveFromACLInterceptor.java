@@ -38,7 +38,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.CascadeStyle.MultipleCascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.beans.BeanUtils;
@@ -65,7 +64,6 @@ import edu.columbia.gemma.genome.gene.GeneProduct;
  * Implementation Note: For permissions modification to be triggered, the method name must match certain patterns, which
  * include "create" and "remove". Other methods that would require changes to permissions will not work without
  * modifying the source code.
- * <hr>
  * 
  * @author keshav
  * @author pavlidis
@@ -233,7 +231,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             IllegalAccessException, InvocationTargetException {
         basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         if ( log.isDebugEnabled() ) {
-            log.debug( "Deleted object " + object + " ACL permissions for recipient " + this.getUsername() );
+            log.debug( "Deleted object " + object + " ACL permissions for recipient " + getUsername() );
         }
     }
 
@@ -287,7 +285,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @return
      */
     private boolean methodsTriggersACLAddition( Method m ) {
-        return m.getName().equals( "create" ) || m.getName().equals( "findOrCreate" );
+        return m.getName().equals( "create" ) || m.getName().equals( "save" ) || m.getName().equals( "findOrCreate" );
     }
 
     /**
@@ -452,6 +450,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void setHibernateInterceptor( HibernateInterceptor hibernateInterceptor ) {
         this.hibernateInterceptor = hibernateInterceptor;
+        initMetaData( hibernateInterceptor );
+    }
+
+    /**
+     * @param hibernateInterceptor
+     */
+    private void initMetaData( HibernateInterceptor hibernateInterceptor ) {
         metaData = hibernateInterceptor.getSessionFactory().getAllClassMetadata();
     }
 

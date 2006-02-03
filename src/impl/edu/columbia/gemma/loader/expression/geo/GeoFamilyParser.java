@@ -777,6 +777,9 @@ public class GeoFamilyParser implements Parser {
 
     /**
      * The data for one sample is all the values for each quantitation type.
+     * <p>
+     * Important implementation note: In the sample table sections of GSEXXX_family files, the first column is always
+     * ID_REF, according to the kind folks at NCBI. If this changes, this code will BREAK.
      * 
      * @param line
      */
@@ -795,7 +798,7 @@ public class GeoFamilyParser implements Parser {
 
         GeoSample sample = results.getSampleMap().get( currentSampleAccession );
 
-        String designElement = tokens[0]; // FIXME is it safe to assume the identifier is in the first column?
+        String designElement = tokens[0]; // ID_REF.
 
         for ( int i = 1; i < tokens.length; i++ ) {
             String token = tokens[i];
