@@ -1164,12 +1164,14 @@ public class MageMLConverterHelper {
      * @return
      */
     public ExternalDatabase convertDatabase( Database mageObj ) {
-        if ( mageObj == null ) return null;
+        if ( mageObj == null ) {
+            return null;
+        }
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
         result.setWebUri( mageObj.getURI() );
         // we don't use version.
         convertIdentifiable( mageObj, result );
-        // avoid getting multiple databases with the same name.
+        // FIXME avoid getting multiple databases with the same name.
         if ( mgedOntologyAliases.contains( result.getName() ) ) {
             result.setName( "MGED Ontology" );
         }
@@ -3326,7 +3328,9 @@ public class MageMLConverterHelper {
      */
     private void specialConvertOntologyEntryDatabaseEntry( org.biomage.Description.DatabaseEntry databaseEntry,
             edu.columbia.gemma.common.description.OntologyEntry gemmaObj ) {
-        gemmaObj.setExternalDatabase( convertDatabase( databaseEntry.getDatabase() ) );
+        ExternalDatabase ed = convertDatabase( databaseEntry.getDatabase() );
+        assert ed != null : "Null externalDatabase for MAGE version of " + gemmaObj;
+        gemmaObj.setExternalDatabase( ed );
         gemmaObj.setAccession( databaseEntry.getAccession() );
     }
 

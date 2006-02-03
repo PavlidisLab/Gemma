@@ -63,12 +63,15 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         t.setCommonName( "mouse" );
         t.setScientificName( "Mus musculus" );
         t = daoTaxon.findOrCreate( t );
-
+        AuditTrail ad = AuditTrail.Factory.newInstance();
         g = Gene.Factory.newInstance();
         g.setName( "testmygene" );
         g.setOfficialSymbol( "foo" );
         g.setOfficialName( "testmygene" );
         g.setTaxon( t );
+        ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        g.setAuditTrail( ad );
         daoGene.findOrCreate( g );
 
         g2 = Gene.Factory.newInstance();
@@ -76,10 +79,13 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         g2.setOfficialSymbol( "foo2" );
         g2.setOfficialName( "testmygene2" );
         g2.setTaxon( t );
+        ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        g2.setAuditTrail( ad );
         daoGene.findOrCreate( g2 );
 
-        AuditTrail ad = AuditTrail.Factory.newInstance();
-        this.getPersisterHelper().persist( ad );
+        ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
 
         cgl.setAuditTrail( ad );
 

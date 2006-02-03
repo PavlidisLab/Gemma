@@ -28,6 +28,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.Auditable;
 import edu.columbia.gemma.common.Describable;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
@@ -280,8 +281,8 @@ public class PersisterHelper implements Persister {
      * @param entity
      */
     private void basePersist( Object entity ) {
-        if ( Describable.class.isAssignableFrom( entity.getClass() ) ) {
-            Describable d = ( Describable ) entity;
+        if ( Auditable.class.isAssignableFrom( entity.getClass() ) ) {
+            Auditable d = ( Auditable ) entity;
             if ( d.getAuditTrail() == null ) {
                 AuditTrail at = AuditTrail.Factory.newInstance();
                 d.setAuditTrail( auditTrailService.create( at ) );
@@ -386,12 +387,8 @@ public class PersisterHelper implements Persister {
      * @param databaseEntry
      */
     private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
-        assert externalDatabaseService != null;
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
-        if ( externalDatabase == null ) {
-            log.debug( "No externalDatabase" );
-            return null;
-        }
+        assert ( externalDatabase != null );
         databaseEntry.setExternalDatabase( externalDatabaseService.findOrCreate( externalDatabase ) );
         return databaseEntry;
     }
@@ -402,9 +399,6 @@ public class PersisterHelper implements Persister {
 
     private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
         this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
-        for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
-            fillInPersistentExternalDatabase( associatedOntologyEntry );
-        }
     }
 
     /**
@@ -781,9 +775,9 @@ public class PersisterHelper implements Persister {
             }
 
             for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-                
+
                 basePersist( experimentalFactor );
-                
+
                 for ( OntologyEntry annotation : experimentalFactor.getAnnotations() ) {
                     annotation.setId( persistOntologyEntry( annotation ).getId() );
                 }
@@ -930,9 +924,16 @@ public class PersisterHelper implements Persister {
 
     private OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
+
+        if ( !isTransient( ontologyEntry ) ) {
+            return ontologyEntry;
+        }
+
         fillInPersistentExternalDatabase( ontologyEntry );
-        if ( isTransient( ontologyEntry ) )
-            ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
+        assert ontologyEntry.getExternalDatabase() != null;
+        assert ontologyEntry.getExternalDatabase().getId() != null;
+        ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
+
         for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
             persistOntologyEntry( associatedOntologyEntry );
         }

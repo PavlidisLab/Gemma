@@ -18,19 +18,15 @@
  */
 package edu.columbia.gemma.security.interceptor;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.aop.MethodBeforeAdvice;
 
-import edu.columbia.gemma.common.Describable;
+import edu.columbia.gemma.common.Auditable;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailDao;
 import edu.columbia.gemma.common.auditAndSecurity.User;
@@ -46,7 +42,7 @@ public class AuditInterceptor implements MethodInterceptor {
 
     private static Log log = LogFactory.getLog( AuditInterceptor.class.getName() );
 
-    AuditTrailDao auditTrailDao;
+    AuditTrailDao auditTrailDao; 
 
     UserDao userDao;
 
@@ -88,13 +84,13 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( Collection.class.isAssignableFrom( object.getClass() ) ) {
             for ( Object object2 : ( Collection<?> ) object ) {
-                processBefore( method, ( Describable ) object2 );
+                processBefore( method, ( Auditable ) object2 );
             }
-        } else if ( !Describable.class.isAssignableFrom( object.getClass() ) ) {
+        } else if ( !Auditable.class.isAssignableFrom( object.getClass() ) ) {
             return;
         }
 
-        Describable d = ( Describable ) object;
+        Auditable d = ( Auditable ) object;
 
         processBefore( method, d );
 
@@ -104,7 +100,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param method
      * @param d
      */
-    private void processBefore( Method method, Describable d ) {
+    private void processBefore( Method method, Auditable d ) {
         if ( method.getName().equals( "create" ) ) {
             // defer until afterwards
         } else if ( method.getName().equals( "update" ) ) {
@@ -121,7 +117,7 @@ public class AuditInterceptor implements MethodInterceptor {
     /**
      * @param d
      */
-    private void addDeleteAuditEvent( Describable d ) {
+    private void addDeleteAuditEvent( Auditable d ) {
         // what else could we do? But need to keep this record in a good place.
         User user = getCurrentUser();
         log.info( "Delete event on " + d + " by " + user.getUserName() );
@@ -139,7 +135,7 @@ public class AuditInterceptor implements MethodInterceptor {
     /**
      * @param d
      */
-    private void addUpdateAuditEvent( Describable d ) {
+    private void addUpdateAuditEvent( Auditable d ) {
         AuditTrail at = d.getAuditTrail();
         if ( at == null ) {
             log.warn( "No audit trail for update method call" );
@@ -160,9 +156,9 @@ public class AuditInterceptor implements MethodInterceptor {
      * @param d
      * @param user
      */
-    private void addCreateAuditEvent( Describable d ) {
+    private void addCreateAuditEvent( Auditable d ) {
         AuditTrail at = d.getAuditTrail();
-        if ( at == null ) throw new IllegalStateException( "Describable " + d + " had no audit trail" );
+        if ( at == null ) throw new IllegalStateException( "Auditable " + d + " had no audit trail" );
         User user = getCurrentUser();
         at.start( "start", user );
         at = auditTrailDao.create( at );
@@ -193,17 +189,17 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
-     * @param describable
+     * @param Auditable
      */
-    private void addLoadOrCreateAuditEvent( Describable describable, Object target ) {
-        if ( describable.getAuditTrail() != null && describable.getAuditTrail().getCreationEvent() != null ) {
-            addLoadAuditEvent( describable );
+    private void addLoadOrCreateAuditEvent( Auditable Auditable, Object target ) {
+        if ( Auditable.getAuditTrail() != null && Auditable.getAuditTrail().getCreationEvent() != null ) {
+            addLoadAuditEvent( Auditable );
         } else {
-            addCreateAuditEvent( describable );
+            addCreateAuditEvent( Auditable );
             // // the target should be a service that hopefully has a update method.
             // try {
-            // Method updater = target.getClass().getMethod( "update", new Class[] { Describable.class } );
-            // updater.invoke( target, new Object[] { describable } );
+            // Method updater = target.getClass().getMethod( "update", new Class[] { Auditable.class } );
+            // updater.invoke( target, new Object[] { Auditable } );
             // } catch ( SecurityException e ) {
             // throw new RuntimeException( e );
             // } catch ( NoSuchMethodException e ) {
@@ -221,20 +217,20 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
-     * @param describable
+     * @param Auditable
      */
-    private void addLoadAuditEvent( Describable describable ) {
-        AuditTrail at = describable.getAuditTrail();
+    private void addLoadAuditEvent( Auditable Auditable ) {
+        AuditTrail at = Auditable.getAuditTrail();
         if ( at == null ) {
             log.warn( "No audit trail for update method call" );
             at = AuditTrail.Factory.newInstance();
-            describable.setAuditTrail( at );
-            addCreateAuditEvent( describable );
+            Auditable.setAuditTrail( at );
+            addCreateAuditEvent( Auditable );
         } else {
 
             User user = getCurrentUser();
             at.read( "Loaded", user );
-            log.info( "Read event on " + describable + " by " + user.getUserName() );
+            log.info( "Read event on " + Auditable + " by " + user.getUserName() );
         }
 
     }
@@ -247,23 +243,23 @@ public class AuditInterceptor implements MethodInterceptor {
         String methodName = m.getName();
 
         if ( methodName.equals( "findOrCreate" ) ) {
-            addLoadOrCreateAuditEvent( ( Describable ) returnValue, target );
+            addLoadOrCreateAuditEvent( ( Auditable ) returnValue, target );
         } else if ( methodName.startsWith( "find" ) || methodName.equals( "load" ) || methodName.equals( "read" ) ) {
             if ( returnValue != null ) {
                 if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
                     for ( Object object : ( Collection<?> ) returnValue ) {
-                        if ( !Describable.class.isAssignableFrom( object.getClass() ) ) {
+                        if ( !Auditable.class.isAssignableFrom( object.getClass() ) ) {
                             break;
                         }
-                        addLoadAuditEvent( ( Describable ) returnValue );
+                        addLoadAuditEvent( ( Auditable ) returnValue );
                     }
-                } else if ( Describable.class.isAssignableFrom( returnValue.getClass() ) ) {
-                    addLoadAuditEvent( ( Describable ) returnValue );
+                } else if ( Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
+                    addLoadAuditEvent( ( Auditable ) returnValue );
                 }
             }
 
         } else if ( methodName.equals( "create" ) ) {
-            addCreateAuditEvent( ( Describable ) returnValue );
+            addCreateAuditEvent( ( Auditable ) returnValue );
         }
     }
 }

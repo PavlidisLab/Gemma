@@ -27,8 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
- * A service is a class that uses daos. To test the service without testing the daos (and using the database), we use
- * mock daos.
+ * This adds to the DAO base in that it grants a 'test' permissions to the application.
  * <p>
  * This partly code from AppFuse. Provides utilities to read in objects from resources (properties files).
  * 

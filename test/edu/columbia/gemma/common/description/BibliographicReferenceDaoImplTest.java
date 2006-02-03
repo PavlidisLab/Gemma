@@ -71,13 +71,16 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         ed = ExternalDatabase.Factory.newInstance();
         ed.setLocalInstallDbName( "testDatabase" );
         ed.setName( "database" );
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ed.setAuditTrail( ad );
         ed = ( ExternalDatabase ) exdbdao.create( ed );
 
         de.setExternalDatabase( ed );
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );
-        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
 
         testBibRef.setAuditTrail( ad );

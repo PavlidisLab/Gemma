@@ -19,8 +19,6 @@
 package edu.columbia.gemma.common.auditAndSecurity;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,9 +71,6 @@ public class UserDaoImplTest extends BaseDAOTestCase {
             ur.setUserName( rand );
             ur.setName( userName );
         }
-
-        Set set = new HashSet();
-        testUser.setRoles( set );
 
         testUser.setPassword( "root" );
         testUser.setConfirmPassword( "root" );

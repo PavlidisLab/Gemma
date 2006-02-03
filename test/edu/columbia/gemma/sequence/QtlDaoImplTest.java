@@ -100,9 +100,9 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
 
             pms[i] = PhysicalMarker.Factory.newInstance();
             pms[i].setPhysicalLocation( pls[i] );
-            pms[i] = ( PhysicalMarker ) pmDao.create( pms[i] );
             AuditTrail ad = AuditTrail.Factory.newInstance();
             pms[i].setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
+            pms[i] = ( PhysicalMarker ) pmDao.create( pms[i] );
         }
 
         // create qtls - one for every two locations, so they might be 2000-4000, 4000-6000 etc.

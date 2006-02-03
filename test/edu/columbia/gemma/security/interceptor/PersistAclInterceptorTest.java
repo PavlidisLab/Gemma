@@ -22,6 +22,7 @@ import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.protocol.Hardware;
 import edu.columbia.gemma.common.protocol.HardwareService;
 import edu.columbia.gemma.common.protocol.Protocol;
@@ -89,7 +90,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( "foo" );
         ee.getExperimentalDesigns().add( ed );
-        this.getPersisterHelper().persist( ee );
+        ee = ( ExpressionExperiment ) this.getPersisterHelper().persist( ee );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );
@@ -123,6 +124,10 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
 
         HardwareService hs = ( HardwareService ) ctx.getBean( "hardwareService" );
         h = ( Hardware ) this.getPersisterHelper().persist( h );
+
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        p.setAuditTrail( ad );
 
         p.getHardwares().add( h );
         p = ps.findOrCreate( p );

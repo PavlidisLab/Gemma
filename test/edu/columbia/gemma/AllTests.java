@@ -60,6 +60,7 @@ import edu.columbia.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleterTest;
 import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
+import edu.columbia.gemma.security.SecurityIntegrationTest;
 import edu.columbia.gemma.security.interceptor.AuditInterceptor;
 import edu.columbia.gemma.security.interceptor.PersistAclInterceptorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
@@ -74,8 +75,9 @@ import edu.columbia.gemma.web.flow.bibref.DetailBibRefFlowTests;
 import edu.columbia.gemma.web.flow.bibref.SearchPubMedFlowTests;
 
 /**
- * <hr>
- * <p>
+ * Combines all the tests. Tests that require resources that might not be available during a test (e.g., a network
+ * device or web site) should not fail under those conditions. Integration tests should clean up after themselves
+ * (delete entries put into the database, in particular).
  * 
  * @author pavlidis
  * @author keshav
@@ -166,6 +168,9 @@ public class AllTests {
 
         // loader.loaderutils
         suite.addTestSuite( BeanPropertyCompleterTest.class );
+
+        // security
+        suite.addTestSuite( SecurityIntegrationTest.class );
 
         // security.interceptor
         suite.addTestSuite( PersistAclInterceptorTest.class );

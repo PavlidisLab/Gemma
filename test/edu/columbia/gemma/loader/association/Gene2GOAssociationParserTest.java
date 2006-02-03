@@ -44,10 +44,6 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
- * loading.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
@@ -102,7 +98,7 @@ public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
             g.setTaxon( taxa.iterator().next() );
 
         AuditTrail ad = AuditTrail.Factory.newInstance();
-        this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
 
         g.setAuditTrail( ad );
 

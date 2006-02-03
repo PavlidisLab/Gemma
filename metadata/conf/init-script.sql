@@ -12,6 +12,8 @@ insert into AUDIT_TRAIL VALUES ();
 insert into AUDIT_TRAIL VALUES ();
 insert into AUDIT_TRAIL VALUES ();
 insert into AUDIT_TRAIL VALUES ();
+insert into AUDIT_TRAIL VALUES ();
+insert into AUDIT_TRAIL VALUES ();
 
 --administrator
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "nobody", "nobody", "nobody", "nobody", "administrator", "cec6877e42b179b133c2a6c1285488755aefc071", "cec6877e42b179b133c2a6c1285488755aefc071", 1, 1);
@@ -27,6 +29,10 @@ insert into USER_ROLE (NAME, USER_NAME, AUDIT_TRAIL_FK) values ("user", "pavlab"
 --Paul Pavlidis
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "pavlidis", "Pavlidis", "Paul", "<middlename>", "pavlidis", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1, 3);
 insert into USER_ROLE (NAME, USER_NAME, AUDIT_TRAIL_FK) values ("user", "pavlidis", 9);
+
+--Keshav
+insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "keshav", "Keshav", "Kiran", "Dattatri", "keshav", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1, 11);
+insert into USER_ROLE (NAME, USER_NAME, AUDIT_TRAIL_FK) values ("user", "keshav", 10);
 
 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Homo sapiens","human","9606");

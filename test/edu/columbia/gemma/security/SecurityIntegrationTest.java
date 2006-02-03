@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.expression.arrayDesign;
+package edu.columbia.gemma.security;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,7 +27,11 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
 import edu.columbia.gemma.expression.designElement.DesignElement;
@@ -40,7 +44,7 @@ import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
+public class SecurityIntegrationTest extends BaseServiceTestCase {
 
     /*
      * @see TestCase#setUp()
@@ -161,13 +165,21 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         manAuthentication.validateRequest( "keshav", "pavlab" );
 
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-
+        AuditTrailService ats = ( AuditTrailService ) cpCtx.getBean( "auditTrailService" );
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "AD Foo" );
         arrayDesign.setDescription( "a test ArrayDesign" );
 
+        AuditTrail at = AuditTrail.Factory.newInstance();
+        at = ats.create( at );
+        arrayDesign.setAuditTrail( at );
+
         Contact c = Contact.Factory.newInstance();
         c.setName( "\' Design Provider Name\'" );
+        at = AuditTrail.Factory.newInstance();
+        at = ats.create( at );
+        c.setAuditTrail( at );
+
         arrayDesign.setDesignProvider( c );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
@@ -179,6 +191,7 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
         Collection<DesignElement> col = new HashSet();
         col.add( cs1 );
         col.add( cs2 );
+
         /*
          * Note this sequence. Remember, inverse="true" if using this. If you do not make an explicit call to
          * cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
@@ -223,6 +236,8 @@ public class ArrayDesignServiceImplIntegrationTest extends BaseServiceTestCase {
             log.debug( cs );
         }
 
-        if ( col.size() == 0 ) fail( "User not authorized for to access at least one of the objects in the graph" );
+        if ( col.size() == 0 ) {
+            fail( "User not authorized for to access at least one of the objects in the graph" );
+        }
     }
 }
