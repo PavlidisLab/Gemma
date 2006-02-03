@@ -60,6 +60,7 @@ import edu.columbia.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleterTest;
 import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
+import edu.columbia.gemma.security.interceptor.AuditInterceptor;
 import edu.columbia.gemma.security.interceptor.PersistAclInterceptorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
 import edu.columbia.gemma.tools.AffyBatchTest;
@@ -75,7 +76,6 @@ import edu.columbia.gemma.web.flow.bibref.SearchPubMedFlowTests;
 /**
  * <hr>
  * <p>
- * 
  * 
  * @author pavlidis
  * @author keshav
@@ -169,6 +169,7 @@ public class AllTests {
 
         // security.interceptor
         suite.addTestSuite( PersistAclInterceptorTest.class );
+        suite.addTestSuite( AuditInterceptor.class );
 
         // sequence
         suite.addTestSuite( QtlDaoImplTest.class );
