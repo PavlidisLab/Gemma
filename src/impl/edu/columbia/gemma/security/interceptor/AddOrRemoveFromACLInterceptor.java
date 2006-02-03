@@ -23,9 +23,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.acegisecurity.Authentication;
 import org.acegisecurity.GrantedAuthority;
+import org.acegisecurity.acl.basic.AbstractBasicAclEntry;
 import org.acegisecurity.acl.basic.AclObjectIdentity;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
@@ -34,19 +36,22 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.engine.CascadeStyle;
+import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.CascadeStyle.MultipleCascadeStyle;
+import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.hibernate3.HibernateInterceptor;
 
 import edu.columbia.gemma.association.Relationship;
 import edu.columbia.gemma.common.Securable;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDataVector;
-import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.DesignElement;
-import edu.columbia.gemma.expression.designElement.Reporter;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
@@ -108,6 +113,10 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
     private BasicAclExtendedDao basicAclExtendedDao;
 
+    private HibernateInterceptor hibernateInterceptor;
+
+    private Map metaData;
+
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
@@ -123,10 +132,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     public void addPermission( Method method, Object object ) throws IllegalArgumentException, IllegalAccessException,
             InvocationTargetException {
 
-        SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
-        simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
-        simpleAclEntry.setMask( getAuthority() );
-        simpleAclEntry.setRecipient( getUsername() );
+        AbstractBasicAclEntry simpleAclEntry = getAclEntry( object );
 
         /* By default we assign the object to have the default global parent. */
         simpleAclEntry.setAclObjectParentIdentity( new NamedEntityObjectIdentity( DEFAULT_PARENT, DEFAULT_PARENT_ID ) );
@@ -147,6 +153,21 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             }
         }
 
+    }
+
+    /**
+     * @param object
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    public static AbstractBasicAclEntry getAclEntry( Object object ) throws IllegalAccessException,
+            InvocationTargetException {
+        SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
+        simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
+        simpleAclEntry.setMask( getAuthority() );
+        simpleAclEntry.setRecipient( getUsername() );
+        return simpleAclEntry;
     }
 
     /*
@@ -230,10 +251,9 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @return object identity.
      * @throws InvocationTargetException
      * @throws IllegalAccessException
-     * @throws IllegalArgumentException
      */
-    private AclObjectIdentity makeObjectIdentity( Object object ) throws IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
+    private static AclObjectIdentity makeObjectIdentity( Object object ) throws IllegalAccessException,
+            InvocationTargetException {
         assert checkValidPrimaryKey( object ) : "No valid primary key for object " + object;
         return new NamedEntityObjectIdentity( object );
     }
@@ -243,11 +263,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private boolean checkValidPrimaryKey( Object object ) throws IllegalAccessException, InvocationTargetException {
+    private static boolean checkValidPrimaryKey( Object object ) throws IllegalAccessException,
+            InvocationTargetException {
         Class clazz = object.getClass();
         try {
-            Method method = clazz.getMethod( "getId", new Class[] {} );
-            Object result = method.invoke( object, new Object[] {} );
+            String methodName = "getId";
+            Method m = clazz.getMethod( methodName, new Class[] {} );
+            Object result = m.invoke( object, new Object[] {} );
             if ( result == null ) {
                 return false;
             }
@@ -312,11 +334,10 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         }
         if ( methodsTriggersACLAddition( m ) ) {
             addPermission( m, object );
-            processAssociations( m, object ); // FIXME, this probably does no harm, but is a waste of effort if the
-                                                // assocations aren't compositional.
+            processAssociations( m, object );
         } else if ( methodTriggersACLDelete( m ) ) {
             deletePermission( object );
-            processAssociations( m, object ); // FIXME, shouldn't delete ACL unless by composition!!!
+            processAssociations( m, object );
         } else {
             // nothing to do.
         }
@@ -328,22 +349,66 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     private void processAssociations( Method m, Object object ) throws IllegalAccessException,
             InvocationTargetException {
-        PropertyDescriptor[] descriptors = BeanUtils.getPropertyDescriptors( object.getClass() );
-        for ( PropertyDescriptor descriptor : descriptors ) {
-            if ( Securable.class.isAssignableFrom( descriptor.getPropertyType() ) ) {
-                Method getter = descriptor.getReadMethod();
-                Object associatedObject = getter.invoke( object, new Object[] {} );
+
+        EntityPersister persister = ( ( EntityPersister ) metaData.get( object.getClass().getName() ) );
+        CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+        String[] propertyNames = persister.getPropertyNames();
+
+        for ( int j = 0; j < propertyNames.length; j++ ) {
+            CascadeStyle cs = cascadeStyles[j];
+            if ( !needCascade( m, cs ) ) {
+                // log.debug( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
+                continue;
+            }
+
+            PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );
+            Class<?> propertyType = descriptor.getPropertyType();
+
+            if ( Securable.class.isAssignableFrom( propertyType ) ) {
+                Object associatedObject = getProperty( object, descriptor );
+                log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
                 processObject( m, associatedObject );
-            } else if ( Collection.class.isAssignableFrom( descriptor.getPropertyType() ) ) {
-                Method getter = descriptor.getReadMethod();
-                Collection associatedObjects = ( Collection ) getter.invoke( object, new Object[] {} );
+            } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
+                Collection associatedObjects = ( Collection ) getProperty( object, descriptor );
                 for ( Object object2 : associatedObjects ) {
                     if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+                        log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
+                                + ", Cascade=" + cs );
                         processObject( m, object2 );
                     }
                 }
             }
         }
+    }
+
+    /**
+     * FIXME put this method somewhere more useful...
+     * 
+     * @param object
+     * @param descriptor
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    private Object getProperty( Object object, PropertyDescriptor descriptor ) throws IllegalAccessException,
+            InvocationTargetException {
+        Method getter = descriptor.getReadMethod();
+        Object associatedObject = getter.invoke( object, new Object[] {} );
+        return associatedObject;
+    }
+
+    /**
+     * @param m
+     * @param cs
+     * @return
+     */
+    private boolean needCascade( Method m, CascadeStyle cs ) {
+
+        if ( methodTriggersACLDelete( m ) ) {
+            return cs.doCascade( CascadingAction.DELETE );
+        }
+        return cs.doCascade( CascadingAction.PERSIST ) || cs.doCascade( CascadingAction.SAVE_UPDATE )
+                || cs.doCascade( CascadingAction.SAVE_UPDATE_COPY );
 
     }
 
@@ -353,7 +418,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * 
      * @return
      */
-    protected Integer getAuthority() {
+    protected static Integer getAuthority() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         GrantedAuthority[] ga = auth.getAuthorities();
@@ -372,7 +437,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * 
      * @return
      */
-    protected String getUsername() {
+    protected static String getUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if ( auth.getPrincipal() instanceof UserDetails ) {
@@ -380,6 +445,14 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         }
         return auth.getPrincipal().toString();
 
+    }
+
+    /**
+     * @param hibernateInterceptor
+     */
+    public void setHibernateInterceptor( HibernateInterceptor hibernateInterceptor ) {
+        this.hibernateInterceptor = hibernateInterceptor;
+        metaData = hibernateInterceptor.getSessionFactory().getAllClassMetadata();
     }
 
 }

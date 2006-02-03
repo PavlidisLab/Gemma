@@ -20,12 +20,24 @@ package edu.columbia.gemma.security.interceptor;
 
 import java.util.Date;
 
+import org.acegisecurity.acl.basic.BasicAclExtendedDao;
+import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.description.OntologyEntry;
+import edu.columbia.gemma.common.protocol.Hardware;
+import edu.columbia.gemma.common.protocol.HardwareService;
+import edu.columbia.gemma.common.protocol.Protocol;
+import edu.columbia.gemma.common.protocol.ProtocolService;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
 /**
  * <hr>
@@ -36,19 +48,16 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
  * @version $Id$
  */
 public class PersistAclInterceptorTest extends BaseServiceTestCase {
-    private static Log log = LogFactory.getLog( PersistAclInterceptorTest.class.getName() );
-    ArrayDesign ad = null;
+    private BasicAclExtendedDao basicAclExtendedDao;
 
     protected void setUp() throws Exception {
         super.setUp();
+        basicAclExtendedDao = ( BasicAclExtendedDao ) ctx.getBean( "basicAclExtendedDao" );
 
-        ad = ArrayDesign.Factory.newInstance();
-        ad.setName( ( new Date() ).toString() );
-    }
+    } /*
+         * @see TestCase#tearDown()
+         */
 
-    /*
-     * @see TestCase#tearDown()
-     */
     protected void tearDown() throws Exception {
         super.tearDown();
     }
@@ -61,19 +70,84 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
      * @throws Exception
      */
     public void testAddPermissionsInterceptor() throws Exception {
-        log.info( "Testing saveArrayDesign(ArrayDesign ad)" );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "fooblyDoobly" );
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        ads.findOrCreate(ad);
+        ads.findOrCreate( ad );
     }
 
     /**
-     * Tests an invalid method
-     * 
      * @throws Exception
      */
-    // public void testInvalidMethodToIntercept() throws Exception {
-    // log.info( "Testing an invalid method to intercept" );
-    //
-    // ( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) ).getAllArrayDesigns();
-    // }
+    @SuppressWarnings("unchecked")
+    public void testCascadeCreateAndDelete() throws Exception {
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setDescription( "From test" );
+        ee.setName( "Test experiment" );
+
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.setName( "foo" );
+        ee.getExperimentalDesigns().add( ed );
+        ee = ees.findOrCreate( ee );
+
+        try {
+            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ee ) );
+            fail( "Whoops, ACL entry doesn't exist for " + ee );
+        } catch ( DataIntegrityViolationException e ) {
+            // ok
+        }
+
+        ed = ee.getExperimentalDesigns().iterator().next();
+        try {
+            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ed ) );
+            fail( "Whoops, ACL entry doesn't exist for " + ed );
+        } catch ( DataIntegrityViolationException e ) {
+            // ok
+        }
+
+        ees.remove( ee );
+
+        try {
+            basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ee ) );
+            fail( "Whoops, failed to delete ACL for " + ee );
+        } catch ( DataAccessException e ) {
+            // ok
+        }
+
+        // now after delete, the acl for ed should also be gone:
+        try {
+            basicAclExtendedDao.delete( new NamedEntityObjectIdentity( ed ) );
+            fail( "Whoops, failed to cascade delete ACL for " + ee );
+        } catch ( DataAccessException e ) {
+            // ok
+        }
+
+    }
+
+    public void testNoCascadeDelete() throws Exception {
+        ProtocolService ps = ( ProtocolService ) ctx.getBean( "protocolService" );
+        Protocol p = Protocol.Factory.newInstance();
+        p.setName( "protocol" );
+
+        Hardware h = Hardware.Factory.newInstance();
+        h.setName( "hardware" );
+
+        HardwareService hs = ( HardwareService ) ctx.getBean( "hardwareService" );
+        h = hs.findOrCreate( h );
+
+        p.getHardwares().add( h );
+        ps.findOrCreate( p );
+        ps.remove( p );
+
+        // make sure the ACL for h is still there
+        try {
+            basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( h ) );
+            fail( "Whoops, ACL entry doesn't exist for " + h + ", indicates inappropriate cascade of ACL!" );
+        } catch ( DataIntegrityViolationException e ) {
+            // ok
+        }
+
+        hs.remove( h );
+    }
 }
