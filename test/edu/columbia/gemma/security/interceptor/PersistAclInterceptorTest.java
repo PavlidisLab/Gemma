@@ -73,7 +73,8 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "fooblyDoobly" );
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        ads.findOrCreate( ad );
+        ad = ads.findOrCreate( ad );
+
         try {
             basicAclExtendedDao.create( AddOrRemoveFromACLInterceptor.getAclEntry( ad ) );
             fail( "Whoops, ACL entry doesn't exist for " + ad );

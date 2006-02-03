@@ -450,13 +450,14 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      */
     public void setHibernateInterceptor( HibernateInterceptor hibernateInterceptor ) {
         this.hibernateInterceptor = hibernateInterceptor;
-        initMetaData( hibernateInterceptor );
+        initMetaData();
     }
 
     /**
-     * @param hibernateInterceptor
+     * 
+     *
      */
-    private void initMetaData( HibernateInterceptor hibernateInterceptor ) {
+    private void initMetaData() {
         metaData = hibernateInterceptor.getSessionFactory().getAllClassMetadata();
     }
 
