@@ -21,6 +21,8 @@ package edu.columbia.gemma.common.auditAndSecurity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.columbia.gemma.common.Auditable;
+
 /**
  * @see edu.columbia.gemma.common.auditAndSecurity.AuditTrailService
  * @author pavlidis
@@ -35,8 +37,8 @@ public class AuditTrailServiceImpl extends edu.columbia.gemma.common.auditAndSec
      *      edu.columbia.gemma.common.auditAndSecurity.AuditEvent)
      */
     @Override
-    protected void handleAudit( edu.columbia.gemma.common.Describable entity,
-            edu.columbia.gemma.common.auditAndSecurity.AuditEvent auditEvent ) throws java.lang.Exception {
+    protected void handleAudit( Auditable entity, edu.columbia.gemma.common.auditAndSecurity.AuditEvent auditEvent )
+            throws java.lang.Exception {
 
         if ( entity == null || entity.getId() == null ) return;
 
