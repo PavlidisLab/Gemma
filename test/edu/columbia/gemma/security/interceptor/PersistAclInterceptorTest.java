@@ -127,7 +127,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
 
         HardwareService hs = ( HardwareService ) ctx.getBean( "hardwareService" );
         h = ( Hardware ) this.getPersisterHelper().persist( h );
-
+        assert h != null;
         AuditTrail ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
         p.setAuditTrail( ad );
