@@ -65,9 +65,11 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "fooblyDoobly" );
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+
         ad = ( ArrayDesign ) this.getPersisterHelper().persist( ad );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) == null ) {
+            ads.remove( ad );
             fail( "Failed to create ACL for " + ad );
         }
 
@@ -76,6 +78,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) != null ) {
             fail( "Failed to  delete ACL for " + ad );
         }
+
     }
 
     /**

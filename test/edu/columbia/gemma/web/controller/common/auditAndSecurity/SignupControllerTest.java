@@ -31,6 +31,7 @@ import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserRole;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * Tests the SignupController. Is also used to add an admin.
@@ -49,8 +50,9 @@ public class SignupControllerTest extends BaseControllerTestCase {
     SignupController signupController;
 
     User testUser;
-    UserRole ur;
+    UserRole userRole;
     UserService userService;
+    PersisterHelper persisterHelper;
 
     /**
      * @throws Exception
@@ -61,9 +63,9 @@ public class SignupControllerTest extends BaseControllerTestCase {
         response = new MockHttpServletResponse();
 
         signupController = ( SignupController ) ctx.getBean( "signupController" );
-
+        persisterHelper = ( PersisterHelper ) ctx.getBean( "persisterHelper" );
         testUser = User.Factory.newInstance();
-        ur = UserRole.Factory.newInstance();
+        userRole = UserRole.Factory.newInstance();
         userService = ( UserService ) ctx.getBean( "userService" );
 
     }
@@ -95,26 +97,21 @@ public class SignupControllerTest extends BaseControllerTestCase {
 
         if ( ( checkUser == null ) ) {
             testUser.setUserName( adminName );
-            ur.setUserName( adminName );
-            ur.setName( adminName );
+            userRole.setUserName( adminName );
+            userRole.setName( adminName );
 
         } else {
             testUser.setUserName( rand );
-            ur.setUserName( rand );
-            ur.setName( userName );
+            userRole.setUserName( rand );
+            userRole.setName( userName );
         }
-
-        Set set = new HashSet();
-        testUser.setRoles( set );
 
         testUser.setPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
         testUser.setConfirmPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
         testUser.setPasswordHint( "test hint" );
 
-        testUser.getRoles().add( ur );
-
         AuditTrail ad = AuditTrail.Factory.newInstance();
-
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         testUser.setAuditTrail( ad );
 
         signupController.onSubmit( request, response, testUser, ( BindException ) null );

@@ -162,16 +162,6 @@ public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
 
-        gene2GOAssParser = null;
-
-        gene2GOAssParser = null;
-
-        gene2GOCol = null;
-
-        gene2GOMap = null;
-
-        taxonDao = null;
-
     }
 
 }

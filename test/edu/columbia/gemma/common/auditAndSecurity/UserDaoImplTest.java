@@ -78,6 +78,7 @@ public class UserDaoImplTest extends BaseDAOTestCase {
         AuditTrail ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
         testUser.setAuditTrail( ad );
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
         testUser.getRoles().add( ur );
 
         // dao.create( testUser );

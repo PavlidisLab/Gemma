@@ -53,7 +53,7 @@ public class PubMedXMLFetcherTest extends TestCase {
 
     public final void testRetrieveByHTTPNotFound() throws Exception {
         BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );
-        assertEquals( null, br );
+        assertEquals( "(No authors listed)", br.getAuthorList() );
     }
 
 }

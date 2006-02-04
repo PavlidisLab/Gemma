@@ -60,6 +60,7 @@ public class GeoFamilyParserTest extends TestCase {
 
     public void testParseDataset() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/geo/GDS100.soft.txt.gz" ) );
+        assert is != null;
         parser.parse( is );
         assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
     }

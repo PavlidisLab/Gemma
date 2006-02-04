@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
@@ -58,12 +59,15 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         daoTaxon = ( TaxonDao ) ctx.getBean( "taxonDao" );
 
         cgl = CandidateGeneList.Factory.newInstance();
+        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        cgl.setAuditTrail( ad );
 
         t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "Mus musculus" );
         t = daoTaxon.findOrCreate( t );
-        AuditTrail ad = AuditTrail.Factory.newInstance();
+        ad = AuditTrail.Factory.newInstance();
         g = Gene.Factory.newInstance();
         g.setName( "testmygene" );
         g.setOfficialSymbol( "foo" );
@@ -72,7 +76,7 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
         g.setAuditTrail( ad );
-        daoGene.findOrCreate( g );
+        g = daoGene.findOrCreate( g );
 
         g2 = Gene.Factory.newInstance();
         g2.setName( "testmygene2" );
@@ -82,12 +86,19 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
         g2.setAuditTrail( ad );
-        daoGene.findOrCreate( g2 );
+        g2 = daoGene.findOrCreate( g2 );
 
         ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
 
         cgl.setAuditTrail( ad );
+
+        Person u = Person.Factory.newInstance();
+        u.setName( "Joe Blow" );
+        u = ( Person ) this.getPersisterHelper().persist( u );
+        assert u != null;
+
+        cgl.setOwner( u );
 
         daoCGL.create( cgl );
     }
