@@ -209,7 +209,7 @@
                 edu.columbia.gemma.expression.designElement.ReporterService.remove=user,admin
                 edu.columbia.gemma.expression.designElement.ReporterService.find=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
-                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.remove=ACL_SECURABLE_EDIT
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.update=ACL_SECURABLE_EDIT 
