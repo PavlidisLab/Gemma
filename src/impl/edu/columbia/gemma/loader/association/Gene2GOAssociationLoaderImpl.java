@@ -26,6 +26,9 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.association.Gene2GOAssociation;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
+import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.description.OntologyEntry;
+import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
@@ -85,10 +88,9 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
      * @return
      */
     private Object persistGene2GOAssociation( Gene2GOAssociation entity ) {
-        persisterHelper.persist( entity.getGene() );
-        persisterHelper.persist( entity.getOntologyEntry() );
-        persisterHelper.persist( entity.getSource() );
+        entity.setGene( ( Gene ) persisterHelper.persist( entity.getGene() ) );
+        entity.setOntologyEntry( ( OntologyEntry ) persisterHelper.persist( entity.getOntologyEntry() ) );
+        entity.setSource( ( ExternalDatabase ) persisterHelper.persist( entity.getSource() ) );
         return gene2GOAssociationDao.create( entity );
     }
-
 }

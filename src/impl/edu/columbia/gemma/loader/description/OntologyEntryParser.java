@@ -20,10 +20,6 @@ import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="ontologyEntryParser"
@@ -75,7 +71,7 @@ public class OntologyEntryParser implements Parser {
         newOE.setDescription( goNames.getDefinitionForId( goId ) );
         newOE.setExternalDatabase( goDB );
 
-        Collection<OntologyEntry> oeChildren = new HashSet();
+        Collection<OntologyEntry> oeChildren = new HashSet<OntologyEntry>();
 
         Collection<String> children = goNames.getChildren( goId );
         for ( String childId : children ) {

@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.util.ReflectHelper;
 
 import edu.columbia.gemma.common.Auditable;
 import edu.columbia.gemma.common.Describable;
@@ -230,7 +231,7 @@ public class PersisterHelper implements Persister {
         } else if ( DesignElement.class.isAssignableFrom( entity.getClass() ) ) {
             return persistDesignElement( ( DesignElement ) entity );
         } else if ( entity instanceof Hardware ) {
-            return null;
+            return persistHardware( ( Hardware ) entity );
         } else if ( entity instanceof QuantitationType ) {
             return persistQuantitationType( ( QuantitationType ) entity );
         } else if ( entity instanceof BioMaterial ) {
@@ -254,13 +255,17 @@ public class PersisterHelper implements Persister {
         } else if ( entity instanceof Taxon ) { // AS
             return persistTaxon( ( Taxon ) entity );
         } else if ( entity.getClass() == ( new HashMap() ).values().getClass() ) {
-            // This is a kludge because Java thinks that HashMap() ).values() and Collections are not the same thing.
-            // -PP
+            /*
+             * This is a kludge because Java thinks that HashMap() ).values() and Collections are not the same thing.
+             * -PP
+             */
             return persist( ( Collection<Object> ) entity );
         } else if ( entity instanceof Collection ) {
             return persist( ( Collection<Object> ) entity );
         } else if ( entity instanceof AuditTrail ) {
             return persistAuditTrail( entity );
+        } else if ( Contact.class.isAssignableFrom( entity.getClass() ) ) {
+            return persistContact( ( Contact ) entity );
         } else {
             throw new IllegalArgumentException( "Don't know how to persist a " + entity.getClass().getName() );
         }
@@ -949,28 +954,23 @@ public class PersisterHelper implements Persister {
         return quantitationTypeService.findOrCreate( entity );
     }
 
-    /**
-     * @param entity
-     */
-    public void remove( Object entity ) {
-        if ( entity instanceof Collection ) {
-            this.remove( ( Collection ) entity );
-        }
-        throw new UnsupportedOperationException( "remove not supported" );
-        // String entityName = ReflectionUtil.getBaseForImpl( entity ).getSimpleName();
-        // String daoName = StringUtil.lowerCaseFirstLetter( entityName ) + "Dao";
-        // FIXME, make this work.
-    }
-
-    /**
-     * @param entity
-     */
-    public void remove( Collection entities ) {
-        if ( entities == null ) return;
-        for ( Object object : entities ) {
-            remove( object );
-        }
-    }
+    //
+    // /**
+    // * @param entity
+    // */
+    // @SuppressWarnings("unchecked")
+    // public void remove( Object entity ) {
+    // if ( entity instanceof Collection ) {
+    // for ( Object object : ( Collection ) entity ) {
+    // remove( object );
+    // }
+    // } else {
+    // String rawServiceName = entity.getClass().getSimpleName() + "Service";
+    // String serviceName = rawServiceName.substring( 0, 1 ).toLowerCase() + rawServiceName.substring( 1 );
+    // log.info( serviceName );
+    // }
+    //
+    // }
 
     /**
      * @param bioAssayService The bioAssayService to set.
