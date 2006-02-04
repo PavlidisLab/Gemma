@@ -148,7 +148,7 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testSaveArrayDesignWithoutMock() {
+    public void testSaveArrayDesignWithoutMock() throws Exception {
 
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
@@ -213,7 +213,7 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() {
+    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
 
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );

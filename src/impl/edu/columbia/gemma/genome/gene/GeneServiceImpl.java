@@ -25,10 +25,6 @@ import java.util.Iterator;
 import edu.columbia.gemma.genome.Gene;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @author keshav
  * @version $Id$

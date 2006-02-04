@@ -32,9 +32,6 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Utilities to be used by parsers and loaders.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$

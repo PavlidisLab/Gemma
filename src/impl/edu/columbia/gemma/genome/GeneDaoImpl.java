@@ -25,11 +25,9 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.genome.Gene
@@ -47,8 +45,14 @@ public class GeneDaoImpl extends edu.columbia.gemma.genome.GeneDaoBase {
     public Gene find( Gene gene ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Gene.class );
-            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) ).add(
-                    Restrictions.eq( "taxon", gene.getTaxon() ) );
+
+            if ( gene.getOfficialSymbol() != null && gene.getTaxon() != null ) {
+                queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) ).add(
+                        Restrictions.eq( "taxon", gene.getTaxon() ) );
+            }
+            if ( gene.getNcbiId() != null ) {
+                queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+            }
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -74,12 +78,13 @@ public class GeneDaoImpl extends edu.columbia.gemma.genome.GeneDaoBase {
      */
     @Override
     public Gene findOrCreate( Gene gene ) {
-        if ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) {
-            log.debug( "Gene must have official symbol and taxon." );
+        if ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getNcbiId() == null ) {
+            log.error( "Gene must have official symbol and taxon, or ncbiId" );
             return null;
         }
         Gene newGene = this.find( gene );
         if ( newGene != null ) {
+            BeanPropertyCompleter.complete( newGene, gene );
             return newGene;
         }
         log.debug( "Creating new gene: " + gene.getName() );

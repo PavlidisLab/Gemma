@@ -1,7 +1,24 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.association;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
@@ -13,15 +30,15 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.association.GOEvidenceCode;
 import edu.columbia.gemma.association.Gene2GOAssociation;
+import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.common.description.DatabaseType;
+import edu.columbia.gemma.common.description.ExternalDatabase;
+import edu.columbia.gemma.common.description.OntologyEntry;
+import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.Taxon;
-import edu.columbia.gemma.genome.TaxonDao;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  */
@@ -33,39 +50,25 @@ public class Gene2GOAssociationMappings {
 
     private final int EVIDENCE_CODE = conf.getInt( "gene2go.evidence_code" );
 
-    private TaxonDao taxonDao = null;
+    private final int GENE_ID = conf.getInt( "gene2go.gene_id" );
+
+    private final int GO_ID = conf.getInt( "gene2go.go_id" );
 
     Map<Integer, Taxon> taxaMap = null;
 
     Collection<String> evidenceCodes = null;
 
+    ExternalDatabase goDb;
+    ExternalDatabase ncbiDb;
+
     public Gene2GOAssociationMappings() throws ConfigurationException {
         initializeEvidenceCodes();
-    }
-
-    /**
-     * @param taxonDao
-     * @throws ConfigurationException
-     * @spring.constructor-arg id="gene2GOAssociationMappings" ref="taxonDao"
-     */
-    public Gene2GOAssociationMappings( TaxonDao taxonDao ) throws ConfigurationException {
-        if ( taxonDao == null ) throw new IllegalArgumentException();
-        this.taxonDao = taxonDao;
-        initializeTaxa();
-        initializeEvidenceCodes();
-    }
-
-    /**
-     * initializes the taxa.
-     */
-    @SuppressWarnings("unchecked")
-    private void initializeTaxa() {
-        Collection<Taxon> taxa = taxonDao.loadAll();
-        taxaMap = new HashMap<Integer, Taxon>();
-
-        for ( Taxon t : taxa ) {
-            taxaMap.put( t.getNcbiId(), t );
-        }
+        goDb = ExternalDatabase.Factory.newInstance();
+        goDb.setName( "GO" );
+        goDb.setType( DatabaseType.ONTOLOGY );
+        ncbiDb = ExternalDatabase.Factory.newInstance();
+        ncbiDb.setName( "NCBI" );
+        ncbiDb.setType( DatabaseType.SEQUENCE );
     }
 
     /**
@@ -83,14 +86,21 @@ public class Gene2GOAssociationMappings {
 
         Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance();
 
-        for ( String evidenceCode : evidenceCodes ) {
+        Gene gene = Gene.Factory.newInstance();
+        gene.setNcbiId( values[GENE_ID] );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setAccession( values[GENE_ID] );
+        dbe.setExternalDatabase( ncbiDb );
+        gene.getAccessions().add( dbe );
 
-            if ( values[EVIDENCE_CODE].equalsIgnoreCase( evidenceCode ) ) {
-                g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( evidenceCode ) );
-                // log.info("Evidence code is: " + evidenceCode + " value: " + values[EVIDENCE_CODE]);
-                break;
-            }
-        }
+        OntologyEntry oe = OntologyEntry.Factory.newInstance();
+        oe.setAccession( values[GO_ID] );
+        oe.setExternalDatabase( goDb );
+
+        g2GOAss.setGene( gene );
+        g2GOAss.setOntologyEntry( oe );
+
+        g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( values[EVIDENCE_CODE] ) );
 
         return g2GOAss;
     }
