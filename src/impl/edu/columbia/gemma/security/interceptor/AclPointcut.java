@@ -19,13 +19,10 @@
 package edu.columbia.gemma.security.interceptor;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
-
-import edu.columbia.gemma.common.Securable;
 
 /**
  * Pointcut to narrow methods looked at for ACL permissions modifications.
@@ -64,8 +61,7 @@ public class AclPointcut extends StaticMethodMatcherPointcut {
      * @return
      */
     private boolean methodTriggersACLAction( Method m, Class targetClass ) {
-        return ( Securable.class.isAssignableFrom( targetClass ) || Collection.class.isAssignableFrom( targetClass ) )
-                && ( methodsTriggersACLAddition( m ) || methodTriggersACLDelete( m ) );
+        return methodsTriggersACLAddition( m ) || methodTriggersACLDelete( m );
     }
 
     /**

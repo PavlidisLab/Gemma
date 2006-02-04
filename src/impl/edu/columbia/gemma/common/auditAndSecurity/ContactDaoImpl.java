@@ -18,21 +18,21 @@
  */
 package edu.columbia.gemma.common.auditAndSecurity;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.auditAndSecurity.Contact
  */
 public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.ContactDaoBase {
+
+    private static Log log = LogFactory.getLog( ContactDaoImpl.class.getName() );
 
     @Override
     public Contact find( Contact contact ) {
@@ -70,7 +70,10 @@ public class ContactDaoImpl extends edu.columbia.gemma.common.auditAndSecurity.C
     public Contact findOrCreate( Contact contact ) {
         if ( contact == null
                 || ( contact.getName() == null && contact.getAddress() == null && contact.getEmail() == null && contact
-                        .getPhone() == null ) ) return null;
+                        .getPhone() == null ) ) {
+            log.error( "User must have at least some information filled in!" );
+            return null;
+        }
         Contact newContact = find( contact );
         if ( newContact != null ) {
             BeanPropertyCompleter.complete( newContact, contact );

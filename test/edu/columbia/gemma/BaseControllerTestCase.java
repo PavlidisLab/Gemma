@@ -26,16 +26,13 @@ import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * Controller tests must extend this to make use of the XmlWebApplicationContext.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @author raible
  * @version $Id$
  */
 public class BaseControllerTestCase extends TestCase {
-    protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext(true);
+    protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext( true );
 
     // ~ Constructors ===========================================================
 

@@ -62,6 +62,7 @@ import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
 import edu.columbia.gemma.security.SecurityIntegrationTest;
 import edu.columbia.gemma.security.interceptor.AuditInterceptor;
+import edu.columbia.gemma.security.interceptor.AuditInterceptorTest;
 import edu.columbia.gemma.security.interceptor.PersistAclInterceptorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
 import edu.columbia.gemma.tools.AffyBatchTest;
@@ -174,7 +175,7 @@ public class AllTests {
 
         // security.interceptor
         suite.addTestSuite( PersistAclInterceptorTest.class );
-        suite.addTestSuite( AuditInterceptor.class );
+        suite.addTestSuite( AuditInterceptorTest.class );
 
         // sequence
         suite.addTestSuite( QtlDaoImplTest.class );

@@ -55,7 +55,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
     private static final int NUM_LOCS = 10;
     private static final int LOC_SPACING = 1000;
     private static final String CHROM_NAME = "12";
-    private static final String TAXON = "mouse";
+    private static final String TAXON = "thingy";
     private static final int LEFT_TEST_MARKER = 2;
     private static final int RIGHT_TEST_MARKER = 5;
 
@@ -79,8 +79,8 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         tx = taxonDao.findByCommonName( TAXON );
         if ( tx == null ) {
             tx = Taxon.Factory.newInstance();
-            tx.setCommonName( "mouse" );
-            tx.setNcbiId( 9609 );
+            tx.setCommonName( TAXON );
+            tx.setNcbiId( 4994949 );
             tx = taxonDao.create( tx );
         }
 
@@ -111,27 +111,24 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
             q.setName( "qtl-" + i );
             q.setStartMarker( pms[j] );
             q.setEndMarker( pms[j + 1] );
-            qtls[i] = ( Qtl ) qtlDao.create( q );
             AuditTrail ad = AuditTrail.Factory.newInstance();
-            qtls[i].setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
+            q.setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
+            qtls[i] = ( Qtl ) qtlDao.create( q );
         }
 
     }
 
     protected void tearDown() throws Exception {
         super.tearDown();
-
-        chromosomeDao.remove( chrom );
-        taxonDao.remove( tx );
-        for ( int i = 0; i < NUM_LOCS; i++ ) {
-            pmDao.remove( pms[i] ); // cascade will delete physical location.
-            // plDao.remove( pls[i] );
-        }
-
         for ( int i = 0, j = 0; j < NUM_LOCS - 1; i++, j += 2 ) {
             qtlDao.remove( qtls[i] );
         }
+        for ( int i = 0; i < NUM_LOCS; i++ ) {
+            pmDao.remove( pms[i] ); // cascade will delete physical location.
+        }
 
+        chromosomeDao.remove( chrom );
+        taxonDao.remove( tx );
     }
 
     /**
