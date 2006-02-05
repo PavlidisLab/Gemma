@@ -42,7 +42,7 @@ import edu.columbia.gemma.loader.loaderutils.Parser;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="ontologyEntryParser"
+ * @spring.bean id="geneOntologyEntryParser"
  */
 public class GeneOntologyEntryParser implements Parser {
     protected static final Log log = LogFactory.getLog( GeneOntologyEntryParser.class );
