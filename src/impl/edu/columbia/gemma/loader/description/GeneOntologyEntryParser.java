@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package edu.columbia.gemma.loader.description;
 
 import java.io.File;
@@ -20,19 +38,21 @@ import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.loader.loaderutils.Parser;
 
 /**
+ * Parses GO entries from GO XML.
+ * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="ontologyEntryParser"
  */
-public class OntologyEntryParser implements Parser {
-    protected static final Log log = LogFactory.getLog( OntologyEntryParser.class );
+public class GeneOntologyEntryParser implements Parser {
+    protected static final Log log = LogFactory.getLog( GeneOntologyEntryParser.class );
     Map<String, Object> cache = new HashMap<String, Object>();
 
     GONames goNames;
 
     ExternalDatabase goDB;
 
-    public OntologyEntryParser() {
+    public GeneOntologyEntryParser() {
         goDB = ExternalDatabase.Factory.newInstance();
         goDB.setName( "GO" );
         goDB.setType( DatabaseType.ONTOLOGY );
@@ -49,12 +69,17 @@ public class OntologyEntryParser implements Parser {
         try {
             goNames = new GONames( is );
             Map<String, String> goidMap = goNames.getMap();
+            int i = 0;
             for ( String goId : goidMap.keySet() ) {
                 createNewOntologyEntry( goId );
+                if ( log.isDebugEnabled() && i > 0 && i % 5000 == 0 ) {
+                    log.debug( "Created " + i + " ontology entries from GO" );
+                }
+                i++;
             }
 
         } catch ( SAXException e ) {
-            e.printStackTrace();
+            throw new RuntimeException( e );
         }
 
     }
@@ -70,6 +95,7 @@ public class OntologyEntryParser implements Parser {
         newOE.setValue( goNames.getNameForId( goId ) );
         newOE.setDescription( goNames.getDefinitionForId( goId ) );
         newOE.setExternalDatabase( goDB );
+        newOE.setCategory( goNames.getAspectForId( goId ) );
 
         Collection<OntologyEntry> oeChildren = new HashSet<OntologyEntry>();
 
@@ -77,7 +103,6 @@ public class OntologyEntryParser implements Parser {
         for ( String childId : children ) {
             if ( !cache.containsKey( childId ) ) {
                 cache.put( childId, createNewOntologyEntry( childId ) );
-
             }
             oeChildren.add( ( OntologyEntry ) cache.get( childId ) );
         }

@@ -28,10 +28,7 @@ import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * A service to load OntologyEntries (from any user interface).
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * A service to load OntologyEntries.
  * 
  * @author keshav
  * @author pavlidis
@@ -46,8 +43,13 @@ public class OntologyEntryPersister implements Persister {
     private PersisterHelper persisterHelper;
 
     public Collection<Object> persist( Collection<Object> oeCol ) {
+        int i = 0;
         for ( Object oe : oeCol ) {
             persist( oe );
+            if ( log.isDebugEnabled() && i > 0 && i % 5000 == 0 ) {
+                log.debug( "Persisted " + i + " ontology entries from GO" );
+            }
+            i++;
         }
         return oeCol;
     }
@@ -57,6 +59,10 @@ public class OntologyEntryPersister implements Persister {
      */
     public Object persist( Object oe ) {
         assert oe instanceof OntologyEntry;
+        assert ( ( OntologyEntry ) oe ).getExternalDatabase() != null;
+        for ( OntologyEntry o : ( ( OntologyEntry ) oe ).getAssociations() ) {
+            assert o.getExternalDatabase() != null;
+        }
         return persisterHelper.persist( oe );
     }
 
