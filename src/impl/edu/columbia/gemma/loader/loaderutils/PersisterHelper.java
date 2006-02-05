@@ -25,12 +25,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.util.ReflectHelper;
 
 import edu.columbia.gemma.common.Auditable;
-import edu.columbia.gemma.common.Describable;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
@@ -195,7 +194,7 @@ public class PersisterHelper implements Persister {
                 persist( entity );
             }
         } catch ( Exception e ) {
-            log.error( e, e );
+            log.error( "While persisting collection " + col, e );
             throw new RuntimeException( e );
         }
         return col;
@@ -238,12 +237,14 @@ public class PersisterHelper implements Persister {
             return persistBioMaterial( ( BioMaterial ) entity );
         } else if ( entity instanceof ExternalDatabase ) {
             return persistExternalDatabase( ( ExternalDatabase ) entity );
+        } else if ( entity instanceof OntologyEntry ) {
+            return persistOntologyEntry( ( OntologyEntry ) entity );
+        } else if ( entity instanceof DatabaseEntry ) {
+            return persistDatabaseEntry( ( DatabaseEntry ) entity );
         } else if ( entity instanceof LocalFile ) {
             return persistLocalFile( ( LocalFile ) entity );
         } else if ( entity instanceof BioAssay ) {
             return persistBioAssay( ( BioAssay ) entity );
-        } else if ( entity instanceof OntologyEntry ) {
-            return persistOntologyEntry( ( OntologyEntry ) entity );
         } else if ( entity instanceof Software ) {
             return persistSoftware( ( Software ) entity );
         } else if ( entity instanceof Gene ) {
@@ -283,9 +284,12 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * Handle persistence tasks on common types of objects.
+     * 
      * @param entity
      */
     private void basePersist( Object entity ) {
+        if ( entity == null ) return;
         if ( Auditable.class.isAssignableFrom( entity.getClass() ) ) {
             Auditable d = ( Auditable ) entity;
             if ( d.getAuditTrail() == null ) {
@@ -393,6 +397,7 @@ public class PersisterHelper implements Persister {
      */
     private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
+        basePersist( externalDatabase );
         assert ( externalDatabase != null );
         databaseEntry.setExternalDatabase( externalDatabaseService.findOrCreate( externalDatabase ) );
         return databaseEntry;
@@ -862,7 +867,9 @@ public class PersisterHelper implements Persister {
      */
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
         if ( database == null ) return null;
+        if ( !isTransient( database ) ) return database;
         log.debug( "Persisting " + database );
+        basePersist( database );
         return externalDatabaseService.findOrCreate( database );
     }
 
@@ -899,8 +906,12 @@ public class PersisterHelper implements Persister {
     /**
      * @param gene
      */
+    @SuppressWarnings("unchecked")
     private Object persistGene( Gene gene ) {
+        if ( gene == null ) return null;
+        if ( !isTransient( gene ) ) return gene;
         this.basePersist( gene );
+        gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         return geneService.findOrCreate( gene );
     }
 
@@ -930,18 +941,26 @@ public class PersisterHelper implements Persister {
     private OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
 
+//        if ( StringUtils.isBlank( ontologyEntry.getValue() ) || StringUtils.isBlank( ontologyEntry.getCategory() ) ) {
+//            throw new IllegalArgumentException( "Not-null values were empty in " + ontologyEntry );
+//        }
+
         if ( !isTransient( ontologyEntry ) ) {
             return ontologyEntry;
         }
 
-        fillInPersistentExternalDatabase( ontologyEntry );
+        // fillInPersistentExternalDatabase( ontologyEntry );
+
+        ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
+
         assert ontologyEntry.getExternalDatabase() != null;
         assert ontologyEntry.getExternalDatabase().getId() != null;
-        ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
 
         for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
             persistOntologyEntry( associatedOntologyEntry );
         }
+
+        ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
         return ontologyEntry;
     }
 
