@@ -69,7 +69,6 @@ public class SpringContextUtil {
 
         assert ctx != null;
 
-        // 
         // Grant all roles to test user.
         TestingAuthenticationToken token = new TestingAuthenticationToken( "pavlab", "pavlab", new GrantedAuthority[] {
                 new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );

@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -45,6 +44,8 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.description.LocalFileService;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.common.description.OntologyEntryService;
+import edu.columbia.gemma.common.measurement.Measurement;
+import edu.columbia.gemma.common.measurement.MeasurementService;
 import edu.columbia.gemma.common.protocol.Hardware;
 import edu.columbia.gemma.common.protocol.HardwareApplication;
 import edu.columbia.gemma.common.protocol.HardwareService;
@@ -123,17 +124,24 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @spring.property name="designElementDimensionService" ref="designElementDimensionService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
+ * @spring.property name="measurementService" ref="measurementService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
 
     private ArrayDesignService arrayDesignService;
 
+    private AuditTrailService auditTrailService;
+
+    private BioAssayDimensionService bioAssayDimensionService;
+
     private BioAssayService bioAssayService;
 
     private BioMaterialService bioMaterialService;
 
     private BioSequenceService bioSequenceService;
+
+    private CompositeSequenceService compositeSequenceService;
 
     private CompoundService compoundService;
 
@@ -143,17 +151,25 @@ public class PersisterHelper implements Persister {
 
     private Person defaultOwner = null;
 
+    private DesignElementDataVectorService designElementDataVectorService;
+
+    private DesignElementDimensionService designElementDimensionService;
+
     private ExpressionExperimentService expressionExperimentService;
 
     private ExternalDatabaseService externalDatabaseService;
 
     private FactorValueService factorValueService;
 
+    private boolean firstBioSequence = true;
+
     private GeneService geneService;
 
     private HardwareService hardwareService;
 
     private LocalFileService localFileService;
+
+    private MeasurementService measurementService;
 
     private OntologyEntryService ontologyEntryService;
 
@@ -163,25 +179,13 @@ public class PersisterHelper implements Persister {
 
     private QuantitationTypeService quantitationTypeService;
 
-    private SoftwareService softwareService;
-
-    private TaxonService taxonService;
-
-    private CompositeSequenceService compositeSequenceService;
-
     private ReporterService reporterService;
-
-    private DesignElementDataVectorService designElementDataVectorService;
-
-    private BioAssayDimensionService bioAssayDimensionService;
-
-    private DesignElementDimensionService designElementDimensionService;
 
     private Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
 
-    private boolean firstBioSequence = true;
+    private SoftwareService softwareService;
 
-    private AuditTrailService auditTrailService;
+    private TaxonService taxonService;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -274,13 +278,206 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param entity
-     * @return
+     * @param arrayDesignService The arrayDesignService to set.
      */
-    private Object persistAuditTrail( Object entity ) {
-        if ( this.isTransient( entity ) ) return auditTrailService.create( ( AuditTrail ) entity );
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
 
-        return entity;
+    /**
+     * @param auditTrailService The auditTrailService to set.
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param bioAssayDimensionService The bioAssayDimensionService to set.
+     */
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+        this.bioAssayDimensionService = bioAssayDimensionService;
+    }
+
+    /**
+     * @param bioAssayService The bioAssayService to set.
+     */
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param bioMaterialService The bioMaterialService to set.
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param bioSequenceService The bioSequenceService to set.
+     */
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
+    }
+
+    /**
+     * @param compositeSequenceService The compositeSequenceService to set.
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param compoundService The compoundService to set.
+     */
+    public void setCompoundService( CompoundService compoundService ) {
+        this.compoundService = compoundService;
+    }
+
+    /**
+     * @param contactService The contactService to set.
+     */
+    public void setContactService( ContactService contactService ) {
+        this.contactService = contactService;
+    }
+
+    /**
+     * @param databaseEntryService The databaseEntryService to set.
+     */
+    public void setDatabaseEntryService( DatabaseEntryService databaseEntryService ) {
+        this.databaseEntryService = databaseEntryService;
+    }
+
+    /**
+     * @param defaultOwner The defaultOwner to set.
+     */
+    public void setDefaultOwner( Person defaultOwner ) {
+        this.defaultOwner = defaultOwner;
+    }
+
+    /**
+     * @param designElementDataVectorService The designElementDataVectorService to set.
+     */
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    /**
+     * @param designElementDimensionService The designElementDimensionService to set.
+     */
+    public void setDesignElementDimensionService( DesignElementDimensionService designElementDimensionService ) {
+        this.designElementDimensionService = designElementDimensionService;
+    }
+
+    /**
+     * @param expressionExperimentService The expressionExperimentService to set.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param externalDatabaseService The externalDatabaseService to set.
+     */
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+    }
+
+    /**
+     * @param factorValueService The factorValueService to set.
+     */
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
+    }
+
+    /**
+     * @param firstBioSequence The firstBioSequence to set.
+     */
+    public void setFirstBioSequence( boolean firstBioSequence ) {
+        this.firstBioSequence = firstBioSequence;
+    }
+
+    /**
+     * @param geneService The geneService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
+     * @param hardwareService The hardwareService to set.
+     */
+    public void setHardwareService( HardwareService hardwareService ) {
+        this.hardwareService = hardwareService;
+    }
+
+    /**
+     * @param localFileService The localFileService to set.
+     */
+    public void setLocalFileService( LocalFileService localFileService ) {
+        this.localFileService = localFileService;
+    }
+
+    /**
+     * @param measurementService The measurmentService to set.
+     */
+    public void setMeasurementService( MeasurementService measurementService ) {
+        this.measurementService = measurementService;
+    }
+
+    /**
+     * @param ontologyEntryService The ontologyEntryService to set.
+     */
+    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
+        this.ontologyEntryService = ontologyEntryService;
+    }
+
+    /**
+     * @param personService The personService to set.
+     */
+    public void setPersonService( PersonService personService ) {
+        this.personService = personService;
+    }
+
+    /**
+     * @param protocolService The protocolService to set.
+     */
+    public void setProtocolService( ProtocolService protocolService ) {
+        this.protocolService = protocolService;
+    }
+
+    /**
+     * @param quantitationTypeService The quantitationTypeService to set.
+     */
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
+    }
+
+    /**
+     * @param reporterService The reporterService to set.
+     */
+    public void setReporterService( ReporterService reporterService ) {
+        this.reporterService = reporterService;
+    }
+
+    /**
+     * @param seenTaxa The seenTaxa to set.
+     */
+    public void setSeenTaxa( Map<Object, Taxon> seenTaxa ) {
+        this.seenTaxa = seenTaxa;
+    }
+
+    /**
+     * @param softwareService The softwareService to set.
+     */
+    public void setSoftwareService( SoftwareService softwareService ) {
+        this.softwareService = softwareService;
+    }
+
+    /**
+     * @param taxonService The taxonService to set.
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**
@@ -301,83 +498,35 @@ public class PersisterHelper implements Persister {
         }
     }
 
-    /**
-     * @param software
-     * @return
-     */
-    private Software persistSoftware( Software software ) {
-        if ( software == null ) return null;
-        if ( !isTransient( software ) ) return software;
-        this.basePersist( software );
-        Collection<Software> components = software.getSoftwareComponents();
-
-        if ( components != null && components.size() > 0 ) {
-            for ( Software component : components ) {
-                component.setId( persistSoftware( component ).getId() );
-            }
-        }
-
-        if ( software.getSoftwareManufacturers() != null && software.getSoftwareManufacturers().size() > 0 ) {
-            for ( Contact manufacturer : software.getSoftwareManufacturers() ) {
-                manufacturer.setId( persistContact( manufacturer ).getId() );
-            }
-        }
-
-        software.setHardware( persistHardware( software.getHardware() ) );
-
-        return softwareService.findOrCreate( software );
-
-    }
+    // end AS
 
     /**
-     * @param designElement
-     * @return
+     * @param bioSequence
      */
-    private DesignElement persistDesignElement( DesignElement designElement ) {
-        if ( designElement == null ) return null;
-        designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
-        if ( !isTransient( designElement ) ) return designElement;
-        if ( designElement instanceof CompositeSequence ) {
-            return compositeSequenceService.findOrCreate( ( CompositeSequence ) designElement );
-        } else if ( designElement instanceof Reporter ) {
-            return reporterService.findOrCreate( ( Reporter ) designElement );
-        } else {
-            throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
+    private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
+        Taxon t = bioSequence.getTaxon();
+        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
+
+        // Avoid trips to the database to get the taxon.
+        String scientificName = t.getScientificName();
+        String commonName = t.getCommonName();
+        Integer ncbiId = t.getNcbiId();
+        if ( scientificName != null && seenTaxa.get( scientificName ) != null ) {
+            bioSequence.setTaxon( seenTaxa.get( scientificName ) );
+        } else if ( commonName != null && seenTaxa.get( commonName ) != null ) {
+            bioSequence.setTaxon( seenTaxa.get( commonName ) );
+        } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
+            bioSequence.setTaxon( seenTaxa.get( ncbiId ) );
+        } else if ( isTransient( t ) ) {
+            Taxon foundOrCreatedTaxon = taxonService.findOrCreate( t );
+            bioSequence.setTaxon( foundOrCreatedTaxon );
+            if ( foundOrCreatedTaxon.getScientificName() != null )
+                seenTaxa.put( foundOrCreatedTaxon.getScientificName(), bioSequence.getTaxon() );
+            if ( foundOrCreatedTaxon.getCommonName() != null )
+                seenTaxa.put( foundOrCreatedTaxon.getCommonName(), bioSequence.getTaxon() );
+            if ( foundOrCreatedTaxon.getNcbiId() != null )
+                seenTaxa.put( foundOrCreatedTaxon.getNcbiId(), bioSequence.getTaxon() );
         }
-
-    }
-
-    /**
-     * @param vector
-     * @return
-     */
-    private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
-        if ( vector == null ) return null;
-        DesignElement designElement = vector.getDesignElement();
-
-        if ( designElement instanceof CompositeSequence ) {
-            CompositeSequence cs = compositeSequenceService.find( ( ( CompositeSequence ) designElement ) );
-            if ( cs == null )
-                throw new IllegalStateException(
-                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
-            vector.setDesignElement( cs );
-        } else if ( designElement instanceof Reporter ) {
-            Reporter reporter = reporterService.find( ( Reporter ) designElement );
-            if ( reporter == null )
-                throw new IllegalStateException(
-                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
-            vector.setDesignElement( reporter );
-        }
-
-        vector.setQuantitationType( persistQuantitationType( vector.getQuantitationType() ) );
-        return designElementDataVectorService.findOrCreate( vector );
-    }
-
-    /**
-     * @param arrayDesignService The arrayDesignService to set.
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**
@@ -402,6 +551,24 @@ public class PersisterHelper implements Persister {
         databaseEntry.setExternalDatabase( externalDatabaseService.findOrCreate( externalDatabase ) );
         return databaseEntry;
     }
+
+    //
+    // /**
+    // * @param entity
+    // */
+    // @SuppressWarnings("unchecked")
+    // public void remove( Object entity ) {
+    // if ( entity instanceof Collection ) {
+    // for ( Object object : ( Collection ) entity ) {
+    // remove( object );
+    // }
+    // } else {
+    // String rawServiceName = entity.getClass().getSimpleName() + "Service";
+    // String serviceName = rawServiceName.substring( 0, 1 ).toLowerCase() + rawServiceName.substring( 1 );
+    // log.info( serviceName );
+    // }
+    //
+    // }
 
     /**
      * @param ontologyEntry
@@ -432,33 +599,6 @@ public class PersisterHelper implements Persister {
         for ( Hardware hardware : protocol.getHardwares() ) {
             hardware.setId( persistHardware( hardware ).getId() );
         }
-    }
-
-    /**
-     * @param hardware
-     * @return
-     */
-
-    private Hardware persistHardware( Hardware hardware ) {
-
-        if ( hardware == null ) return null;
-        if ( !isTransient( hardware ) ) return hardware;
-        this.basePersist( hardware );
-        if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
-            for ( Software software : hardware.getSoftwares() ) {
-                software.setId( persistSoftware( software ).getId() );
-            }
-        }
-
-        hardware.setType( persistOntologyEntry( hardware.getType() ) );
-
-        if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
-            for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
-                manufacturer.setId( persistContact( manufacturer ).getId() );
-            }
-        }
-
-        return hardwareService.findOrCreate( hardware );
     }
 
     /**
@@ -608,6 +748,16 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param entity
+     * @return
+     */
+    private Object persistAuditTrail( Object entity ) {
+        if ( this.isTransient( entity ) ) return auditTrailService.create( ( AuditTrail ) entity );
+
+        return entity;
+    }
+
+    /**
      * @param assay
      */
 
@@ -654,6 +804,23 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param bioAssayDimension
+     * @return
+     */
+
+    private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null ) return null;
+        if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
+        this.basePersist( bioAssayDimension );
+        basePersist( bioAssayDimension );
+        for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
+            bioAssay.setId( persistBioAssay( bioAssay ).getId() );
+        }
+
+        return bioAssayDimensionService.findOrCreate( bioAssayDimension );
+    }
+
+    /**
      * @param entity
      */
 
@@ -665,10 +832,11 @@ public class PersisterHelper implements Persister {
 
         OntologyEntry materialType = entity.getMaterialType();
         if ( materialType != null ) {
-            entity.setMaterialType( ontologyEntryService.findOrCreate( materialType ) );
+            entity.setMaterialType( persistOntologyEntry( materialType ) );
         }
 
         for ( Treatment treatment : entity.getTreatments() ) {
+            basePersist( treatment );
             OntologyEntry action = treatment.getAction();
             action.setId( persistOntologyEntry( action ).getId() );
 
@@ -690,35 +858,6 @@ public class PersisterHelper implements Persister {
         fillInBioSequenceTaxon( bioSequence );
         if ( isTransient( bioSequence ) ) return bioSequenceService.findOrCreate( bioSequence );
         return bioSequence;
-    }
-
-    /**
-     * @param bioSequence
-     */
-    private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
-        Taxon t = bioSequence.getTaxon();
-        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
-
-        // Avoid trips to the database to get the taxon.
-        String scientificName = t.getScientificName();
-        String commonName = t.getCommonName();
-        Integer ncbiId = t.getNcbiId();
-        if ( scientificName != null && seenTaxa.get( scientificName ) != null ) {
-            bioSequence.setTaxon( seenTaxa.get( scientificName ) );
-        } else if ( commonName != null && seenTaxa.get( commonName ) != null ) {
-            bioSequence.setTaxon( seenTaxa.get( commonName ) );
-        } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
-            bioSequence.setTaxon( seenTaxa.get( ncbiId ) );
-        } else if ( isTransient( t ) ) {
-            Taxon foundOrCreatedTaxon = taxonService.findOrCreate( t );
-            bioSequence.setTaxon( foundOrCreatedTaxon );
-            if ( foundOrCreatedTaxon.getScientificName() != null )
-                seenTaxa.put( foundOrCreatedTaxon.getScientificName(), bioSequence.getTaxon() );
-            if ( foundOrCreatedTaxon.getCommonName() != null )
-                seenTaxa.put( foundOrCreatedTaxon.getCommonName(), bioSequence.getTaxon() );
-            if ( foundOrCreatedTaxon.getNcbiId() != null )
-                seenTaxa.put( foundOrCreatedTaxon.getNcbiId(), bioSequence.getTaxon() );
-        }
     }
 
     /**
@@ -750,6 +889,50 @@ public class PersisterHelper implements Persister {
         if ( databaseEntry == null ) return null;
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
         return databaseEntryService.findOrCreate( databaseEntry );
+    }
+
+    /**
+     * @param designElement
+     * @return
+     */
+    private DesignElement persistDesignElement( DesignElement designElement ) {
+        if ( designElement == null ) return null;
+        designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
+        if ( !isTransient( designElement ) ) return designElement;
+        if ( designElement instanceof CompositeSequence ) {
+            return compositeSequenceService.findOrCreate( ( CompositeSequence ) designElement );
+        } else if ( designElement instanceof Reporter ) {
+            return reporterService.findOrCreate( ( Reporter ) designElement );
+        } else {
+            throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
+        }
+
+    }
+
+    /**
+     * @param vector
+     * @return
+     */
+    private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
+        if ( vector == null ) return null;
+        DesignElement designElement = vector.getDesignElement();
+
+        if ( designElement instanceof CompositeSequence ) {
+            CompositeSequence cs = compositeSequenceService.find( ( ( CompositeSequence ) designElement ) );
+            if ( cs == null )
+                throw new IllegalStateException(
+                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
+            vector.setDesignElement( cs );
+        } else if ( designElement instanceof Reporter ) {
+            Reporter reporter = reporterService.find( ( Reporter ) designElement );
+            if ( reporter == null )
+                throw new IllegalStateException(
+                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
+            vector.setDesignElement( reporter );
+        }
+
+        vector.setQuantitationType( persistQuantitationType( vector.getQuantitationType() ) );
+        return designElementDataVectorService.findOrCreate( vector );
     }
 
     /**
@@ -846,23 +1029,6 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param bioAssayDimension
-     * @return
-     */
-
-    private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null ) return null;
-        if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
-        this.basePersist( bioAssayDimension );
-        basePersist( bioAssayDimension );
-        for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
-            bioAssay.setId( persistBioAssay( bioAssay ).getId() );
-        }
-
-        return bioAssayDimensionService.findOrCreate( bioAssayDimension );
-    }
-
-    /**
      * @param database
      */
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
@@ -894,13 +1060,11 @@ public class PersisterHelper implements Persister {
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
         } else {
-            // no need to do anything, the measurement will be cascaded in.
+            Measurement measurement = factorValue.getMeasurement();
+            measurement.setId( persistMeasurement( measurement ).getId() );
         }
 
-        if ( isTransient( factorValue ) ) {
-            return factorValueService.findOrCreate( factorValue );
-        }
-        return factorValue;
+        return factorValueService.findOrCreate( factorValue );
     }
 
     /**
@@ -915,21 +1079,46 @@ public class PersisterHelper implements Persister {
         return geneService.findOrCreate( gene );
     }
 
-    // AS
     /**
-     * @param taxon
+     * @param hardware
+     * @return
      */
-    private Object persistTaxon( Taxon taxon ) {
-        return taxonService.findOrCreate( taxon );
-    }
 
-    // end AS
+    private Hardware persistHardware( Hardware hardware ) {
+
+        if ( hardware == null ) return null;
+        if ( !isTransient( hardware ) ) return hardware;
+        this.basePersist( hardware );
+        if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
+            for ( Software software : hardware.getSoftwares() ) {
+                software.setId( persistSoftware( software ).getId() );
+            }
+        }
+
+        hardware.setType( persistOntologyEntry( hardware.getType() ) );
+
+        if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
+            for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
+                manufacturer.setId( persistContact( manufacturer ).getId() );
+            }
+        }
+
+        return hardwareService.findOrCreate( hardware );
+    }
 
     /**
      * @param file
      */
     private LocalFile persistLocalFile( LocalFile file ) {
         return localFileService.findOrCreate( file );
+    }
+
+    /**
+     * @param measurement
+     * @return
+     */
+    private Measurement persistMeasurement( Measurement measurement ) {
+        return measurementService.create( measurement );
     }
 
     /**
@@ -941,9 +1130,10 @@ public class PersisterHelper implements Persister {
     private OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
 
-//        if ( StringUtils.isBlank( ontologyEntry.getValue() ) || StringUtils.isBlank( ontologyEntry.getCategory() ) ) {
-//            throw new IllegalArgumentException( "Not-null values were empty in " + ontologyEntry );
-//        }
+        // if ( StringUtils.isBlank( ontologyEntry.getValue() ) || StringUtils.isBlank( ontologyEntry.getCategory() ) )
+        // {
+        // throw new IllegalArgumentException( "Not-null values were empty in " + ontologyEntry );
+        // }
 
         if ( !isTransient( ontologyEntry ) ) {
             return ontologyEntry;
@@ -953,8 +1143,8 @@ public class PersisterHelper implements Persister {
 
         ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
 
-        assert ontologyEntry.getExternalDatabase() != null;
-        assert ontologyEntry.getExternalDatabase().getId() != null;
+        // assert ontologyEntry.getExternalDatabase() != null;
+        // assert ontologyEntry.getExternalDatabase().getId() != null;
 
         for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
             persistOntologyEntry( associatedOntologyEntry );
@@ -973,210 +1163,39 @@ public class PersisterHelper implements Persister {
         return quantitationTypeService.findOrCreate( entity );
     }
 
-    //
-    // /**
-    // * @param entity
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void remove( Object entity ) {
-    // if ( entity instanceof Collection ) {
-    // for ( Object object : ( Collection ) entity ) {
-    // remove( object );
-    // }
-    // } else {
-    // String rawServiceName = entity.getClass().getSimpleName() + "Service";
-    // String serviceName = rawServiceName.substring( 0, 1 ).toLowerCase() + rawServiceName.substring( 1 );
-    // log.info( serviceName );
-    // }
-    //
-    // }
-
     /**
-     * @param bioAssayService The bioAssayService to set.
+     * @param software
+     * @return
      */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
+    private Software persistSoftware( Software software ) {
+        if ( software == null ) return null;
+        if ( !isTransient( software ) ) return software;
+        this.basePersist( software );
+        Collection<Software> components = software.getSoftwareComponents();
+
+        if ( components != null && components.size() > 0 ) {
+            for ( Software component : components ) {
+                component.setId( persistSoftware( component ).getId() );
+            }
+        }
+
+        if ( software.getSoftwareManufacturers() != null && software.getSoftwareManufacturers().size() > 0 ) {
+            for ( Contact manufacturer : software.getSoftwareManufacturers() ) {
+                manufacturer.setId( persistContact( manufacturer ).getId() );
+            }
+        }
+
+        software.setHardware( persistHardware( software.getHardware() ) );
+
+        return softwareService.findOrCreate( software );
+
     }
 
+    // AS
     /**
-     * @param bioMaterialService The bioMaterialService to set.
+     * @param taxon
      */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param bioSequenceService The bioSequenceService to set.
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
-    /**
-     * @param compositeSequenceService The compositeSequenceService to set.
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param compoundService The compoundService to set.
-     */
-    public void setCompoundService( CompoundService compoundService ) {
-        this.compoundService = compoundService;
-    }
-
-    /**
-     * @param contactService The contactService to set.
-     */
-    public void setContactService( ContactService contactService ) {
-        this.contactService = contactService;
-    }
-
-    /**
-     * @param databaseEntryService The databaseEntryService to set.
-     */
-    public void setDatabaseEntryService( DatabaseEntryService databaseEntryService ) {
-        this.databaseEntryService = databaseEntryService;
-    }
-
-    /**
-     * @param defaultOwner The defaultOwner to set.
-     */
-    public void setDefaultOwner( Person defaultOwner ) {
-        this.defaultOwner = defaultOwner;
-    }
-
-    /**
-     * @param designElementDataVectorService The designElementDataVectorService to set.
-     */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    /**
-     * @param expressionExperimentService The expressionExperimentService to set.
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param externalDatabaseService The externalDatabaseService to set.
-     */
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
-    }
-
-    /**
-     * @param factorValueService The factorValueService to set.
-     */
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
-    }
-
-    /**
-     * @param firstBioSequence The firstBioSequence to set.
-     */
-    public void setFirstBioSequence( boolean firstBioSequence ) {
-        this.firstBioSequence = firstBioSequence;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    /**
-     * @param hardwareService The hardwareService to set.
-     */
-    public void setHardwareService( HardwareService hardwareService ) {
-        this.hardwareService = hardwareService;
-    }
-
-    /**
-     * @param localFileService The localFileService to set.
-     */
-    public void setLocalFileService( LocalFileService localFileService ) {
-        this.localFileService = localFileService;
-    }
-
-    /**
-     * @param ontologyEntryService The ontologyEntryService to set.
-     */
-    public void setOntologyEntryService( OntologyEntryService ontologyEntryService ) {
-        this.ontologyEntryService = ontologyEntryService;
-    }
-
-    /**
-     * @param personService The personService to set.
-     */
-    public void setPersonService( PersonService personService ) {
-        this.personService = personService;
-    }
-
-    /**
-     * @param protocolService The protocolService to set.
-     */
-    public void setProtocolService( ProtocolService protocolService ) {
-        this.protocolService = protocolService;
-    }
-
-    /**
-     * @param quantitationTypeService The quantitationTypeService to set.
-     */
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
-    }
-
-    /**
-     * @param reporterService The reporterService to set.
-     */
-    public void setReporterService( ReporterService reporterService ) {
-        this.reporterService = reporterService;
-    }
-
-    /**
-     * @param seenTaxa The seenTaxa to set.
-     */
-    public void setSeenTaxa( Map<Object, Taxon> seenTaxa ) {
-        this.seenTaxa = seenTaxa;
-    }
-
-    /**
-     * @param softwareService The softwareService to set.
-     */
-    public void setSoftwareService( SoftwareService softwareService ) {
-        this.softwareService = softwareService;
-    }
-
-    /**
-     * @param taxonService The taxonService to set.
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /**
-     * @param bioAssayDimensionService The bioAssayDimensionService to set.
-     */
-    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
-        this.bioAssayDimensionService = bioAssayDimensionService;
-    }
-
-    /**
-     * @param designElementDimensionService The designElementDimensionService to set.
-     */
-    public void setDesignElementDimensionService( DesignElementDimensionService designElementDimensionService ) {
-        this.designElementDimensionService = designElementDimensionService;
-    }
-
-    /**
-     * @param auditTrailService The auditTrailService to set.
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
+    private Object persistTaxon( Taxon taxon ) {
+        return taxonService.findOrCreate( taxon );
     }
 }

@@ -27,7 +27,8 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
@@ -38,12 +39,12 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * @author keshav
  * @version $Id$
  */
-public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
+public class OntologyEntryLoaderIntegrationTest extends BaseServiceTestCase {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderIntegrationTest.class );
     String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
     OntologyEntryPersister ontologyEntryPersister = null;
 
-    OntologyEntryParser ontologyEntryParser = null;
+    GeneOntologyEntryParser ontologyEntryParser = null;
     Collection<Object> createdObjects = null;
     PersisterHelper ph;
 
@@ -60,6 +61,9 @@ public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
         ed.setName( "GO" );
         ed.setWebUri( "http://archive.godatabase.org" );
         ed.setType( DatabaseType.ONTOLOGY );
+
+        AuditTrail at = AuditTrail.Factory.newInstance();
+        ed.setAuditTrail( at );
 
         LocalFile lf = LocalFile.Factory.newInstance();
         lf.setLocalURI( "Remote file.  See remote uri for details." );
@@ -100,7 +104,7 @@ public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        ontologyEntryParser = new OntologyEntryParser();
+        ontologyEntryParser = new GeneOntologyEntryParser();
 
         ontologyEntryPersister = new OntologyEntryPersister();
         ph = ( PersisterHelper ) ctx.getBean( "persisterHelper" );

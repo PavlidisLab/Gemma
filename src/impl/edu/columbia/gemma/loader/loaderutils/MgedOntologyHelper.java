@@ -44,8 +44,6 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * Limitation: some properties point to classes that are external to the ontology. those are not parsed properly,
  * therefore, they are not included in the tree
  * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author Stathis Sideris 5/12/2003 email: sideris at biochem.ucl.ac.uk
  * @author pavlidis (modifications, tidying )

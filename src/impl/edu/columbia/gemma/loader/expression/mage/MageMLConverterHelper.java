@@ -107,6 +107,7 @@ import org.dom4j.Element;
 
 import edu.columbia.gemma.common.description.Characteristic;
 import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.measurement.Measurement;
@@ -206,6 +207,11 @@ public class MageMLConverterHelper {
     private static final String MGED_DATABASE_IDENTIFIER = "MGED Ontology";
 
     /**
+     * 
+     */
+    private static final String UNKNOWN_DATABASE_IDENTIFIER = "Unknown";
+
+    /**
      * Different ways to refer to the MAGE Ontology
      */
     public Set<String> mgedOntologyAliases;
@@ -229,6 +235,8 @@ public class MageMLConverterHelper {
      * Places where, according to the current configuration, local MAGE bioDataCube external files are stored.
      */
     private Collection<String> localExternalDataPaths;
+
+    private ExternalDatabase mgedOntology;
 
     /**
      * @param simplifiedXml
@@ -1167,16 +1175,16 @@ public class MageMLConverterHelper {
         if ( mageObj == null ) {
             return null;
         }
+
+        if ( mgedOntologyAliases.contains( mageObj.getName() ) ) {
+            return this.getMAGEOntologyDatabaseObject();
+        }
+
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
         result.setWebUri( mageObj.getURI() );
         // we don't use version.
         convertIdentifiable( mageObj, result );
-        // FIXME avoid getting multiple databases with the same name.
-        if ( mgedOntologyAliases.contains( result.getName() ) ) {
-            result.setName( "MGED Ontology" );
-        }
         convertAssociations( mageObj, result );
-
         return result;
     }
 
@@ -1927,7 +1935,42 @@ public class MageMLConverterHelper {
         result.setDescription( mageObj.getDescription() );
         result.setValue( mageObj.getValue() );
         convertAssociations( mageObj, result );
+        if ( result.getExternalDatabase() == null ) { // Maybe its in MO (often the case)
+            if ( mgedOntologyHelper.classExists( StringUtils.capitalize( mageObj.getCategory() ) ) ) {
+                result.setExternalDatabase( this.getMAGEOntologyDatabaseObject() );
+                log.debug( "Automatically identified MO as database for " + result );
+            } else {
+                log.warn( "Using 'unknown' for source of OntologyEntry " + result + " (Converted from MAGE "
+                        + mageObj.getCategory() + " " + mageObj.getValue() + ")" );
+                result.setExternalDatabase( this.getUnknownDatabaseObject() );
+            }
+        }
         return result;
+    }
+
+    /**
+     * @return
+     */
+    private ExternalDatabase getUnknownDatabaseObject() {
+        ExternalDatabase unknownDatabase = ExternalDatabase.Factory.newInstance();
+        unknownDatabase.setName( UNKNOWN_DATABASE_IDENTIFIER );
+        return unknownDatabase;
+    }
+
+    /**
+     * Convenience method to access a ready-made ExternalDatabase representing the MGED Ontology.
+     * 
+     * @return
+     */
+    private ExternalDatabase getMAGEOntologyDatabaseObject() {
+        if ( this.mgedOntology != null ) {
+            return mgedOntology;
+        }
+        this.mgedOntology = ExternalDatabase.Factory.newInstance();
+        mgedOntology.setName( MGED_DATABASE_IDENTIFIER );
+        mgedOntology.setType( DatabaseType.ONTOLOGY );
+        mgedOntology.setWebUri( MGED_ONTOLOGY_URL );
+        return mgedOntology;
     }
 
     /**
@@ -2584,7 +2627,11 @@ public class MageMLConverterHelper {
         if ( mageObj == null ) return null;
         Treatment result = Treatment.Factory.newInstance();
         Integer order = mageObj.getOrder();
-        if ( order != null ) result.setOrderApplied( order.intValue() );
+        if ( order != null ) {
+            result.setOrderApplied( order.intValue() );
+        } else {
+            result.setOrderApplied( 1 );
+        }
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;

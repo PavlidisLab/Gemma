@@ -31,11 +31,6 @@ import edu.columbia.gemma.web.controller.BaseMultiActionController;
 import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
- * 
- * 
- *
- * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
  * @author keshav
  * @version $Id$
  * @spring.bean id="arrayDesignController" name="/arrayDesign/*"
@@ -43,11 +38,11 @@ import edu.columbia.gemma.web.util.EntityNotFoundException;
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"
  */
 public class ArrayDesignController extends BaseMultiActionController {
-    
+
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
 
     private ArrayDesignService arrayDesignService = null;
-    
+
     /**
      * @param arrayDesignService The arrayDesignService to set.
      */
@@ -70,7 +65,7 @@ public class ArrayDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( "Must provide an Array Design name" );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName(name);
+        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name );
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( name + " not found" );
         }
@@ -87,8 +82,7 @@ public class ArrayDesignController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns",
-                arrayDesignService.getAllArrayDesigns() );
+        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns", arrayDesignService.getAllArrayDesigns() );
     }
 
     /**
@@ -112,7 +106,7 @@ public class ArrayDesignController extends BaseMultiActionController {
 
         return doDelete( request, arrayDesign );
     }
-    
+
     /**
      * @param request
      * @param locale
@@ -120,9 +114,9 @@ public class ArrayDesignController extends BaseMultiActionController {
      * @return
      */
     private ModelAndView doDelete( HttpServletRequest request, ArrayDesign arrayDesign ) {
-        arrayDesignService.remove(arrayDesign);
+        arrayDesignService.remove( arrayDesign );
         log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
-        addMessage( request, "arrayDesign.deleted", new Object[] { arrayDesign.getName()} );
+        addMessage( request, "arrayDesign.deleted", new Object[] { arrayDesign.getName() } );
         return new ModelAndView( "arrayDesigns", "arrayDesign", arrayDesign );
     }
 

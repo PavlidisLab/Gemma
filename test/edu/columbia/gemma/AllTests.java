@@ -91,17 +91,19 @@ public class AllTests {
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
 
-        // analysis
-        suite.addTestSuite( QuantileNormalizerTest.class );
-        suite.addTestSuite( RMATest.class );
-        suite.addTestSuite( RMABackgroundAdjusterTest.class );
-        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
-
+     
         // common.auditAndSecurity
         suite.addTestSuite( AuditTrailDaoTest.class );
         suite.addTestSuite( UserRoleServiceImplTest.class );
         suite.addTestSuite( UserServiceImplTest.class );
         suite.addTestSuite( UserDaoImplTest.class );
+        
+        // security
+        suite.addTestSuite( SecurityIntegrationTest.class );
+
+        // security.interceptor
+        suite.addTestSuite( PersistAclInterceptorTest.class );
+        suite.addTestSuite( AuditInterceptorTest.class );
 
         // common.description
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
@@ -170,12 +172,7 @@ public class AllTests {
         // loader.loaderutils
         suite.addTestSuite( BeanPropertyCompleterTest.class );
 
-        // security
-        suite.addTestSuite( SecurityIntegrationTest.class );
-
-        // security.interceptor
-        suite.addTestSuite( PersistAclInterceptorTest.class );
-        suite.addTestSuite( AuditInterceptorTest.class );
+     
 
         // sequence
         suite.addTestSuite( QtlDaoImplTest.class );
@@ -196,6 +193,15 @@ public class AllTests {
         // web.controller.flow.entrez.pubmed
         suite.addTestSuite( SearchPubMedFlowTests.class );
         suite.addTestSuite( DetailBibRefFlowTests.class );
+        
+        
+        // analysis (last because these are slow)
+        suite.addTestSuite( QuantileNormalizerTest.class );
+        suite.addTestSuite( RMATest.class );
+        suite.addTestSuite( RMABackgroundAdjusterTest.class );
+        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
+
+        
         // $JUnit-END$
 
         return suite;

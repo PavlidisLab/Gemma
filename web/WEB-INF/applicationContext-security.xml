@@ -191,7 +191,7 @@
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByAccession=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByID=user,admin
                 edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByName=user,admin
-                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 edu.columbia.gemma.expression.experiment.ExperimentalDesignService.getExperimentalDesigns=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalDesignService.saveExperimentalDesign=user,admin
                 edu.columbia.gemma.expression.experiment.ExperimentalFactorService.getAllExperimentalFactors=user,admin
@@ -214,10 +214,10 @@
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.update=ACL_SECURABLE_EDIT 
                 edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.find=user,admin
-                edu.columbia.gemma.expression.bioAssay.BioAssayService.findOrCreate=ACL_SECURABLE_EDIT 
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.findOrCreate=ACL_SECURABLE_EDIT,user,admin 
                 edu.columbia.gemma.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin
                 edu.columbia.gemma.expression.bioAssay.BioAssayService.remove=ACL_SECURABLE_EDIT
-                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
                 edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
@@ -233,7 +233,7 @@
                 edu.columbia.gemma.expression.biomaterial.CompoundService.update=user,admin
                 edu.columbia.gemma.expression.biomaterial.CompoundService.remove=user,admin 
                 edu.columbia.gemma.common.description.BibliographicReferenceService.getAll=user,admin
-                edu.columbia.gemma.common.description.BibliographicReferenceService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 edu.columbia.gemma.common.description.BibliographicReferenceService.find=user,admin
@@ -260,7 +260,7 @@
                 edu.columbia.gemma.common.description.LocalFileService.find=user,admin 
                 edu.columbia.gemma.common.description.LocalFileService.save=user,admin
                 edu.columbia.gemma.common.description.LocalFileService.update=user,admin 
-                edu.columbia.gemma.common.description.LocalFileService.findOrCreate=usr,admin
+                edu.columbia.gemma.common.description.LocalFileService.findOrCreate=user,admin
                 edu.columbia.gemma.common.description.DatabaseEntryService.find=user,admin 
                 edu.columbia.gemma.common.description.DatabaseEntryService.findOrCreate=user,admin
                 edu.columbia.gemma.common.description.DatabaseEntryService.update=user,admin 

@@ -19,8 +19,6 @@
 package edu.columbia.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -34,10 +32,7 @@ import edu.columbia.gemma.common.auditAndSecurity.UserService;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * Tests the SignupController. Is also used to add an admin.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * Tests the SignupController.
  * 
  * @author keshav
  * @version $Id$
@@ -116,7 +111,6 @@ public class SignupControllerTest extends BaseControllerTestCase {
 
         signupController.onSubmit( request, response, testUser, ( BindException ) null );
 
-        // assertEquals( "pubMedList", mav.getViewName() );
         // FIXME this test has no fail condition.
     }
 

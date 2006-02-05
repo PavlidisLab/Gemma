@@ -28,7 +28,6 @@ import org.hibernate.criterion.Restrictions;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
-
  * @author pavlidis
  * @version $Id$
  */
@@ -40,7 +39,6 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
      * @see edu.columbia.gemma.common.description.LocalFile#findOrCreate(int, java.lang.String,
      *      edu.columbia.gemma.common.description.LocalFile)
      */
-    @SuppressWarnings("boxing")
     @Override
     public LocalFile find( edu.columbia.gemma.common.description.LocalFile localFile ) {
         try {
@@ -48,7 +46,9 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
 
             queryObject.add( Restrictions.eq( "localURI", localFile.getLocalURI() ) );
 
-            if ( localFile.getSize() != 0 ) queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
+            assert localFile != null;
+            if ( localFile.getSize() != null && localFile.getSize() != 0 )
+                queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
 
             if ( localFile.getRemoteURI() != null )
                 queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURI() ) );

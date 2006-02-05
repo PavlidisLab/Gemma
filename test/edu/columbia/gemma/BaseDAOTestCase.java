@@ -38,6 +38,7 @@ import edu.columbia.gemma.common.description.DatabaseEntryService;
 import edu.columbia.gemma.common.description.ExternalDatabaseService;
 import edu.columbia.gemma.common.description.LocalFileService;
 import edu.columbia.gemma.common.description.OntologyEntryService;
+import edu.columbia.gemma.common.measurement.MeasurementService;
 import edu.columbia.gemma.common.protocol.HardwareService;
 import edu.columbia.gemma.common.protocol.ProtocolService;
 import edu.columbia.gemma.common.protocol.SoftwareService;
@@ -137,6 +138,7 @@ public class BaseDAOTestCase extends TestCase {
         ml.setAuditTrailService( ( AuditTrailService ) ctx.getBean( "auditTrailService" ) );
         ml.setDesignElementDimensionService( ( DesignElementDimensionService ) ctx
                 .getBean( "designElementDimensionService" ) );
+        ml.setMeasurementService( ( MeasurementService ) ctx.getBean( "measurementService" ) );
         return ml;
     }
 }
