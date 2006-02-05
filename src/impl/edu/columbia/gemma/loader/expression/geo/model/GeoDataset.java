@@ -21,6 +21,9 @@ package edu.columbia.gemma.loader.expression.geo.model;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A GEO-curated dataset. In many cases this is associated with just one GeoSeries, but for studies that used more than
  * one type of microarray (e.g., A and B chips in Affy sets), there will be two series.
@@ -29,6 +32,8 @@ import java.util.HashSet;
  * @version $Id$
  */
 public class GeoDataset extends GeoData {
+
+    private static Log log = LogFactory.getLog( GeoDataset.class.getName() );
 
     public ExperimentType experimentType;
     private String completeness;
@@ -324,6 +329,8 @@ public class GeoDataset extends GeoData {
         this.valueType = valueType;
     }
 
+    // spotted DNA/cDNA, spotted oligonucleotide, in situ oligonucleotide, oligonucleotide beads, SAGE NlaIII, SAGE
+    // Sau3A, SAGE RsaI, SARST, RT-PCR, MPSS, antibody, MS, other
     public static PlatformType convertStringToPlatformType( String string ) {
         if ( string.equals( "single channel" ) ) {
             return PlatformType.singleChannel;
@@ -337,10 +344,35 @@ public class GeoDataset extends GeoData {
             return PlatformType.SAGE;
         } else if ( string.equals( "MPSS" ) ) {
             return PlatformType.MPSS;
+        } else if ( string.equals( "spotted DNA/cDNA" ) ) {
+            return PlatformType.spottedDNAOrcDNA;
+        } else if ( string.equals( "spottedOligonucleotide" ) ) {
+            return PlatformType.spottedOligonucleotide;
+        } else if ( string.equals( "in Situ Oligonucleotide" ) ) {
+            return PlatformType.inSituOligonucleotide;
+        } else if ( string.equals( "oligonucleotide Beads" ) ) {
+            return PlatformType.oligonucleotideBeads;
+        } else if ( string.equals( "SAGE NlaIII" ) ) {
+            return PlatformType.SAGENlaIII;
+        } else if ( string.equals( "SAGE Sau3A" ) ) {
+            return PlatformType.SAGESau3A;
+        } else if ( string.equals( "SAGE RsaI" ) ) {
+            return PlatformType.SAGERsaI;
+        } else if ( string.equals( "SARST" ) ) {
+            return PlatformType.SARST;
+        } else if ( string.equals( "RT-PCR" ) ) {
+            return PlatformType.RTPCR;
+        } else if ( string.equals( "antibody" ) ) {
+            return PlatformType.antibody;
+        } else if ( string.equals( "MS" ) ) {
+            return PlatformType.MS;
+        } else if ( string.equals( "other" ) ) {
+            return PlatformType.other;
+        } else if ( string.equals( "nucleotide" ) ) { // legacy terminology
+            log.warn( "Platform Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+            return PlatformType.singleChannel;
         } else {
-            // FIXME for the rest of them
-
-            throw new IllegalArgumentException( "Unknown experiment type " + string );
+            throw new IllegalArgumentException( "Unknown platform technology type " + string );
         }
     }
 
@@ -349,26 +381,83 @@ public class GeoDataset extends GeoData {
      * @return
      */
     public static SampleType convertStringToSampleType( String string ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( string.equals( "cDNA" ) ) {
+            return SampleType.RNA;
+        } else if ( string.equals( "RNA" ) ) {
+            return SampleType.RNA;
+        } else if ( string.equals( "genomic" ) ) {
+            return SampleType.genomic;
+        } else if ( string.equals( "protein" ) ) {
+            return SampleType.protein;
+        } else if ( string.equals( "mixed" ) ) {
+            return SampleType.mixed;
+        } else if ( string.equals( "SAGE" ) ) {
+            return SampleType.SAGE;
+        } else if ( string.equals( "MPSS" ) ) {
+            return SampleType.MPSS;
+        } else if ( string.equals( "SARST" ) ) {
+            return SampleType.SARST;
+        } else {
+            throw new IllegalArgumentException( "Unknown sample type " + string );
+        }
     }
 
     /**
+     * count, log ratio, log2 ratio, log10 ratio, logE ratio, transformed count
+     * 
      * @param string
      * @return
      */
     public static ValueType convertStringToValueType( String string ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( string.equals( "count" ) ) {
+            return ValueType.count;
+        } else if ( string.equals( "log ratio" ) ) {
+            return ValueType.logRatio;
+        } else if ( string.equals( "log2 ratio" ) ) {
+            return ValueType.log2Ratio;
+        } else if ( string.equals( "log10 ratio" ) ) {
+            return ValueType.log10ratio;
+        } else if ( string.equals( "logE ratio" ) ) {
+            return ValueType.logERatio;
+        } else if ( string.equals( "transformed count" ) ) {
+            return ValueType.transformedCount;
+        } else {
+            throw new IllegalArgumentException( "Unknown value type " + string );
+        }
     }
 
     /**
+     * gene expression array-based, gene expression SAGE-based, gene expression MPSS-based, gene expression
+     * RT-PCR-based, protein expression array-based, protein expression MS-based, array CGH, ChIP-chip, SNP
+     * 
      * @param string
      * @return
      */
     public static ExperimentType convertStringToExperimentType( String string ) {
-        // TODO Auto-generated method stub
-        return null;
+        if ( string.equals( "gene expression array-based" ) ) {
+            return ExperimentType.geneExpressionArraybased;
+        } else if ( string.equals( "gene expression SAGE-based" ) ) {
+            return ExperimentType.geneExpressionSAGEbased;
+        } else if ( string.equals( "gene expression MPSS-based" ) ) {
+            return ExperimentType.geneExpressionMPSSBased;
+        } else if ( string.equals( "gene expression RT-PCR-based" ) ) {
+            return ExperimentType.geneExpressionRTPCRbased;
+        } else if ( string.equals( "protein expression array-based" ) ) {
+            return ExperimentType.proteinExpressionArraybased;
+        } else if ( string.equals( "protein expression MS-based" ) ) {
+            return ExperimentType.proteinExpressionMSBased;
+        } else if ( string.equals( "array CGH" ) ) {
+            return ExperimentType.arrayCGH;
+        } else if ( string.equals( "ChIP-chip" ) ) {
+            return ExperimentType.ChIPChip;
+        } else if ( string.equals( "SNP" ) ) {
+            return ExperimentType.SNP;
+        } else if ( string.equals( "dual channel" ) ) { // legacy term.
+            log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+            return ExperimentType.geneExpressionArraybased;
+        } else {
+            throw new IllegalArgumentException( "Unknown experiment type " + string );
+        }
     }
 
     public enum ExperimentType {
@@ -385,7 +474,7 @@ public class GeoDataset extends GeoData {
     }
 
     public enum SampleType {
-        cDNA, RNA, genomic, protein, mixed, SAGE, MPSS, SARST
+        RNA, genomic, protein, mixed, SAGE, MPSS, SARST
     }
 
 }

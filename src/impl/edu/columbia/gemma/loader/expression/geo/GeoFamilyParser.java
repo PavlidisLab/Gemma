@@ -315,7 +315,7 @@ public class GeoFamilyParser implements Parser {
                 parsedLines++;
             }
         } catch ( Exception e ) {
-            log.error( e );
+            log.error( e, e );
             throw new RuntimeException( e );
         }
         log.debug( "Parsed " + parsedLines + " lines." );
@@ -515,7 +515,8 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!dataset_completeness" ) ) {
             datasetSet( currentDatasetAccession, "completeness", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_experiment_type" ) ) {
-            datasetSet( currentDatasetAccession, "experimentType", value );
+            datasetSet( currentDatasetAccession, "experimentType", value ); // this is now "platform type"? in new GEO
+            // files?
         } else if ( startsWithIgnoreCase( line, "!dataset_type" ) ) {
             datasetSet( currentDatasetAccession, "datasetType", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_feature_count" ) ) {
@@ -770,7 +771,7 @@ public class GeoFamilyParser implements Parser {
             } else if ( inSampleTable ) {
                 parseSampleDataLine( line );
             } else if ( inSeriesTable ) {
-                throw new UnsupportedOperationException( "Whoops, shouldn't be handling series data tables" );
+                // we ignore this and use the sample data instead.
                 // parseSeriesDataLine( line );
             } else if ( inDatasetTable ) {
                 // parseDataSetDataLine( line ); // we ignore this and use the sample data instead.
@@ -1143,7 +1144,8 @@ public class GeoFamilyParser implements Parser {
         if ( platform == null ) throw new IllegalArgumentException( "Unknown platform " + accession );
 
         if ( property.equals( "technology" ) ) {
-            // FIXME
+            assert value instanceof String;
+            value = GeoDataset.convertStringToPlatformType( ( String ) value );
         }
 
         try {
