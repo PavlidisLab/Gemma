@@ -35,22 +35,23 @@
         <h2>
             <fmt:message key="expressionExperiment.details" />
         </h2>
-        <TABLE width="100%">
+        <table width="100%">
             <tr>
                 <td>
-                    <B>
+                    <b>
                         <fmt:message key="name" />
-                    </B>
+                    </b>
                 </td>
                 <td>
                     <jsp:getProperty name="expressionExperiment" property="name" />
                 </td>
             </tr>
+        
             <tr>
                 <td>
-                    <B>
+                    <b>
                         <fmt:message key="description" />
-                    </B>
+                    </b>
                 </td>
                 <td>
                     <jsp:getProperty name="expressionExperiment" property="description" />
@@ -58,24 +59,27 @@
             </tr>
             <tr>
                 <td>
-                    <B>
+                    <b>
                         <fmt:message key="source" />
-                    </B>
+                    </b>
                 </td>
                 <td>
                     <jsp:getProperty name="expressionExperiment" property="source" />
                 </td>
-            </tr>
+            </tr>    
+       
             <tr>
                 <td>
-                    <B>
+                    <b>
                         <fmt:message key="expressionExperiment.accession" />
-                    </B>
+                    </b>
                 </td>
                 <td>
-                    <%=expressionExperiment.getAccession().getExternalDatabase().getName()%>
+                <% if (expressionExperiment.getAccession() != null) { %>
+                     expressionExperiment.getAccession().getExternalDatabase().getName() 
                     :&nbsp;
-                    <%=expressionExperiment.getAccession().getAccession()%>
+                       expressionExperiment.getAccession().getAccession() 
+                       <% } %>
                 </td>
             </tr>
 

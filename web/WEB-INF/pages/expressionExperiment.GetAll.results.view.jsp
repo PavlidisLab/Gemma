@@ -27,5 +27,6 @@
 
             <display:setProperty name="basic.empty.showtable" value="true" />
         </display:table>
+
     </body>
 </html>
