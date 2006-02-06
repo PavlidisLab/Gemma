@@ -346,9 +346,9 @@ public class GeoDataset extends GeoData {
             return PlatformType.MPSS;
         } else if ( string.equals( "spotted DNA/cDNA" ) ) {
             return PlatformType.spottedDNAOrcDNA;
-        } else if ( string.equals( "spottedOligonucleotide" ) ) {
+        } else if ( string.equals( "spotted oligonucleotide" ) ) {
             return PlatformType.spottedOligonucleotide;
-        } else if ( string.equals( "in Situ Oligonucleotide" ) ) {
+        } else if ( string.equals( "in situ oligonucleotide" ) ) {
             return PlatformType.inSituOligonucleotide;
         } else if ( string.equals( "oligonucleotide Beads" ) ) {
             return PlatformType.oligonucleotideBeads;

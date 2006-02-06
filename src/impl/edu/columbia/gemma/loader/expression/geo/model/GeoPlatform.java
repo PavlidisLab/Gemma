@@ -60,7 +60,7 @@ public class GeoPlatform extends GeoData {
 
     private String support = "";
 
-    private String technology = "";
+    private GeoDataset.PlatformType technology;
 
     private String title = "";
 
@@ -186,7 +186,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @return Returns the technology.
      */
-    public String getTechnology() {
+    public GeoDataset.PlatformType getTechnology() {
         return this.technology;
     }
 
@@ -284,7 +284,7 @@ public class GeoPlatform extends GeoData {
     /**
      * @param technology The technology to set.
      */
-    public void setTechnology( String technology ) {
+    public void setTechnology( GeoDataset.PlatformType technology ) {
         this.technology = technology;
     }
 
