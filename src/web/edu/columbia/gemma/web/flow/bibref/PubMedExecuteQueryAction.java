@@ -24,6 +24,7 @@ import org.springframework.webflow.Event;
 import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.action.FormObjectRetrievalFailureException;
 
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.DatabaseEntry;
@@ -258,6 +259,8 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
         }
 
         bibRef.getPubAccession().setExternalDatabase( pubMedDb );
+        AuditTrail at = AuditTrail.Factory.newInstance();
+        bibRef.setAuditTrail( at );
         bibRef = this.bibliographicReferenceService.findOrCreate( bibRef );
 
         context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
