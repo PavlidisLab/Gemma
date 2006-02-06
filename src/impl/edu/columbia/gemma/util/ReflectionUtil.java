@@ -18,11 +18,14 @@
  */
 package edu.columbia.gemma.util;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  * Various methods useful for manipulating Gemma objects using Reflection.
  * <hr>
  * <p>
- * 
  * 
  * @author pavlidis
  * @version $Id$
@@ -70,6 +73,20 @@ public class ReflectionUtil {
      */
     public static String objectToTypeName( Object obj ) {
         return obj.getClass().getSimpleName();
+    }
+
+    /**
+     * @param object
+     * @param descriptor
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
+    public static Object getProperty( Object object, PropertyDescriptor descriptor ) throws IllegalAccessException,
+            InvocationTargetException {
+        Method getter = descriptor.getReadMethod();
+        Object associatedObject = getter.invoke( object, new Object[] {} );
+        return associatedObject;
     }
 
 }

@@ -151,8 +151,7 @@ public class ProteinLoaderCLI {
                 System.exit( 0 );
             }
 
-            ProteinFileParser protInfoParser = new ProteinFileParser( ProteinFileParser.PERSIST_CONCURRENTLY,
-                    cli.geneDao, cli.gpDao );
+            ProteinFileParser protInfoParser = new ProteinFileParser( cli.geneDao, cli.gpDao );
             /* check load option. */
             if ( cl.hasOption( 'l' ) ) {
 

@@ -20,6 +20,8 @@
  */
 package edu.columbia.gemma.expression.experiment;
 
+import java.util.Collection;
+
 /**
  * <hr>
  * 
@@ -51,8 +53,18 @@ public class FactorValueServiceImpl extends edu.columbia.gemma.expression.experi
     }
 
     @Override
-    protected void handleRemove( FactorValue factorValue ) throws Exception {
+    protected void handleDelete( FactorValue factorValue ) throws Exception {
         this.getFactorValueDao().remove( factorValue );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.FactorValueServiceBase#handleLoadAll()
+     */
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getFactorValueDao().loadAll();
     }
 
 }

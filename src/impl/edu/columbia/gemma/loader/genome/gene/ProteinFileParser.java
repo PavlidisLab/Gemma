@@ -35,7 +35,7 @@ import edu.columbia.gemma.loader.loaderutils.BasicLineParser;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *    taxon\t ncbi_gene_id\t ncbi_prot_id
+ *            taxon\t ncbi_gene_id\t ncbi_prot_id
  * </pre>
  * 
  * <hr>
@@ -48,16 +48,11 @@ public class ProteinFileParser extends BasicLineParser {
     private static Log log = LogFactory.getLog( ProteinFileParser.class.getName() );
 
     public static final int FIELDS_PER_ROW = 3;
-    public static final int PERSIST_CONCURRENTLY = 1;
-    public static final int DO_NOT_PERSIST_CONCURRENTLY = 0;
-    public static final int PERSIST_DEFAULT = 0;
 
-    private int mPersist = PERSIST_DEFAULT;
     private GeneDao geneDao;
     private GeneProductDao gpDao;
 
-    public ProteinFileParser( int persistType, GeneDao gdao, GeneProductDao pdao ) {
-        this.mPersist = persistType;
+    public ProteinFileParser( GeneDao gdao, GeneProductDao pdao ) {
         this.geneDao = gdao;
         this.gpDao = pdao;
     }
@@ -81,30 +76,23 @@ public class ProteinFileParser extends BasicLineParser {
         GeneProduct gp = GeneProduct.Factory.newInstance();
         Gene g1 = null;
         String id = null;
-        try {
-            id = fields[2];
-            c = geneDao.findByNcbiId( id );
-            if ( ( c != null ) && ( c.size() == 1 ) ) {
-                g1 = ( c.iterator() ).next();
-            } else
-                throw new Exception( "gene " + id + " not found. Entry skipped." );
-
-            if ( ( fields[3] ).startsWith( "NM_" ) ) {
-                gp.setType( GeneProductType.RNA );
-            } else {
-                gp.setType( GeneProductType.PROTEIN );
-            }
-            gp.setGene( g1 );
-            gp.setNcbiId( fields[3] );
-            gp.setName( fields[3] );
-            gp.setDescription( fields[3] );
-
-            // if ( mPersist == PERSIST_CONCURRENTLY ) {
-            // gpDao.create( gp ); // FIXME parser should not be persisting.
-            //            }
-        } catch ( Exception e ) {
-            log.error( e, e );
+        id = fields[2];
+        c = geneDao.findByNcbiId( id ); // FIXME this should only parse, not use the database.
+        if ( ( c != null ) && ( c.size() == 1 ) ) {
+            g1 = ( c.iterator() ).next();
+        } else {
+            throw new RuntimeException( "gene " + id + " not found. Entry skipped." );
         }
+        if ( ( fields[3] ).startsWith( "NM_" ) ) {
+            gp.setType( GeneProductType.RNA );
+        } else {
+            gp.setType( GeneProductType.PROTEIN );
+        }
+        gp.setGene( g1 );
+        gp.setNcbiId( fields[3] );
+        gp.setName( fields[3] );
+        gp.setDescription( fields[3] );
+
         return null;
     }
 

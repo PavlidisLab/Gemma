@@ -21,10 +21,6 @@
 package edu.columbia.gemma.expression.experiment;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService
@@ -35,17 +31,19 @@ public class ExpressionExperimentSubSetServiceImpl extends
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
      */
-    protected java.util.Collection handleGetAllExpressionExperimentSubSets() throws java.lang.Exception {
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getExpressionExperimentSubSetDao().loadAll();
     }
 
     /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet)
      */
-    protected void handleSaveExpressionExperimentSubSet(
+    @Override
+    protected ExpressionExperimentSubSet handleCreate(
             edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
             throws java.lang.Exception {
-        this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
+        return this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
     }
 
 }

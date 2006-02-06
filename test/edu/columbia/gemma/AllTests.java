@@ -189,7 +189,7 @@ public class AllTests {
 
         // web.controller.flow.entrez.pubmed
         suite.addTestSuite( SearchPubMedFlowTests.class );
-        suite.addTestSuite( DetailBibRefFlowTests.class );
+        // suite.addTestSuite( DetailBibRefFlowTests.class ); // no tests.
 
         // analysis (last because these are slow)
         suite.addTestSuite( QuantileNormalizerTest.class );

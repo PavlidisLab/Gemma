@@ -24,9 +24,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 /**
  * Conveneience class to access Gemma properties defined in a resource.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia,
  * 
  * @author pavlidis
  * @version $Id$

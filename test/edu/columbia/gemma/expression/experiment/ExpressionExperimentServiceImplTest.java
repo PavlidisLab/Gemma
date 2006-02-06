@@ -92,7 +92,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         eeDao.loadAll();
         expectLastCall().andReturn( c );
         replay( eeDao );
-        svc.getAllExpressionExperiments();
+        svc.loadAll();
         verify( eeDao );
     }
 

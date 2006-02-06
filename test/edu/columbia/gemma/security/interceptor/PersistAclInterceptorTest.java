@@ -105,7 +105,7 @@ public class PersistAclInterceptorTest extends BaseServiceTestCase {
             fail( "Failed to cascade create ACL for " + ed );
         }
 
-        ees.remove( ee );
+        ees.delete( ee );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) != null ) {
             fail( "Failed to  delete ACL for " + ee );

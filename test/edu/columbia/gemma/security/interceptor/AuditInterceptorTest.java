@@ -19,7 +19,6 @@
 package edu.columbia.gemma.security.interceptor;
 
 import edu.columbia.gemma.BaseServiceTestCase;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
@@ -34,9 +33,8 @@ public class AuditInterceptorTest extends BaseServiceTestCase {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );
-        ee.setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( AuditTrail.Factory.newInstance() ) );
         ee = ees.findOrCreate( ee );
-        ees.remove( ee );
+        ees.delete( ee );
     }
 
     // FIXME add tests on collections and of update, create, remove...

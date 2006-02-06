@@ -37,14 +37,6 @@ public class ExpressionExperimentServiceImpl extends
         edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase {
 
     /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentService#getAllExpressionExperiments()
-     */
-    @Override
-    protected java.util.Collection handleGetAllExpressionExperiments() throws java.lang.Exception {
-        return this.getExpressionExperimentDao().loadAll();
-    }
-
-    /**
      * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(edu.columbia.gemma.common.auditAndSecurity.Contact)
      */
     @Override
@@ -60,17 +52,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByAccession( accession );
     }
 
-    /**
-     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleFind(java.lang.Long)
-     */
-    @Override
-    protected ExpressionExperiment handleFindByID( Long id ) throws Exception {
-        return ( ExpressionExperiment ) this.getExpressionExperimentDao().load( id );
-    }
-
     @Override
     protected ExpressionExperiment handleFindByName( String name ) throws Exception {
-        return this.getExpressionExperimentDao().findByName(name);
+        return this.getExpressionExperimentDao().findByName( name );
     }
 
     @Override
@@ -81,12 +65,57 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().update( expressionExperiment );
-        
+
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleGetAllExpressionExperiments()
+     */
     @Override
-    protected void handleRemove( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Collection handleLoadAll() throws Exception {
+        return this.getExpressionExperimentDao().loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleDelete(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected void handleDelete( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().remove( expressionExperiment );
-        
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleRead(java.lang.Long)
+     */
+    @Override
+    protected ExpressionExperiment handleRead( Long id ) throws Exception {
+        return ( ExpressionExperiment ) this.getExpressionExperimentDao().load( id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleCreate(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected ExpressionExperiment handleCreate( ExpressionExperiment expressionExperiment ) throws Exception {
+        return ( ExpressionExperiment ) this.getExpressionExperimentDao().create( expressionExperiment );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceBase#handleFind(edu.columbia.gemma.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected ExpressionExperiment handleFind( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().find( expressionExperiment );
     }
 }

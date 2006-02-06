@@ -60,6 +60,7 @@ public class AclPointcut extends StaticMethodMatcherPointcut {
      * @param m
      * @return
      */
+    @SuppressWarnings("unused")
     private boolean methodTriggersACLAction( Method m, Class targetClass ) {
         return methodsTriggersACLAddition( m ) || methodTriggersACLDelete( m );
     }

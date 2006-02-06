@@ -20,14 +20,7 @@
  */
 package edu.columbia.gemma.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.experiment.ExperimentalDesignService
@@ -38,18 +31,18 @@ public class ExperimentalDesignServiceImpl extends
     /**
      * @see edu.columbia.gemma.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
      */
-    @SuppressWarnings("unchecked")
-    protected java.util.List handleGetExperimentalDesigns() throws java.lang.Exception {
-        List result = new ArrayList();
-        result.addAll( this.getExperimentalDesignDao().loadAll() );
-        return result;
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+        return this.getExperimentalDesignDao().loadAll();
     }
 
-    /**
-     * @see edu.columbia.gemma.expression.experiment.ExperimentalDesignService#saveExperimentalDesign(edu.columbia.gemma.expression.experiment.ExperimentalDesign)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExperimentalDesignServiceBase#handleCreate(edu.columbia.gemma.expression.experiment.ExperimentalDesign)
      */
-    protected void handleSaveExperimentalDesign(
-            edu.columbia.gemma.expression.experiment.ExperimentalDesign experimentalDesign ) throws java.lang.Exception {
-        this.getExperimentalDesignDao().create( experimentalDesign );
+    @Override
+    protected ExperimentalDesign handleCreate( ExperimentalDesign experimentalDesign ) throws Exception {
+        return ( ExperimentalDesign ) this.getExperimentalDesignDao().create( experimentalDesign );
     }
 }

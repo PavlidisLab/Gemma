@@ -21,10 +21,6 @@
 package edu.columbia.gemma.expression.experiment;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.experiment.ExperimentalFactorService
@@ -35,16 +31,19 @@ public class ExperimentalFactorServiceImpl extends
     /**
      * @see edu.columbia.gemma.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
      */
-    protected java.util.Collection handleGetAllExperimentalFactors() throws java.lang.Exception {
+    @Override
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getExperimentalFactorDao().loadAll();
     }
 
-    /**
-     * @see edu.columbia.gemma.expression.experiment.ExperimentalFactorService#saveExperimentalFactor(edu.columbia.gemma.expression.experiment.ExperimentalFactor)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.experiment.ExperimentalFactorServiceBase#handleCreate(edu.columbia.gemma.expression.experiment.ExperimentalFactor)
      */
-    protected void handleSaveExperimentalFactor(
-            edu.columbia.gemma.expression.experiment.ExperimentalFactor experimentalFactor ) throws java.lang.Exception {
-        this.getExperimentalFactorDao().create( experimentalFactor );
+    @Override
+    protected ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor ) throws Exception {
+        return ( ExperimentalFactor ) this.getExperimentalFactorDao().create( experimentalFactor );
     }
 
 }

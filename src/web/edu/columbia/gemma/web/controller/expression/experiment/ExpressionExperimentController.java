@@ -70,7 +70,7 @@ public class ExpressionExperimentController implements Controller {
         /* handle "get all" case. */
         if ( uri.equals( "/Gemma/expressionExperiments.htm" ) ) {
             return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
-                    expressionExperimentService.getAllExpressionExperiments() );
+                    expressionExperimentService.loadAll() );
 
             /* handle details or delete, depending on whether _eventId=delete. */
         } else if ( uri.equals( "/Gemma/expressionExperimentDetails.htm" ) ) {
@@ -80,12 +80,12 @@ public class ExpressionExperimentController implements Controller {
 
             log.debug( "request parameter: " + request.getAttribute( "id" ) );
 
-            ExpressionExperiment ee = expressionExperimentService.findByID( new Long( Long.parseLong( request
+            ExpressionExperiment ee = expressionExperimentService.read( new Long( Long.parseLong( request
                     .getParameter( "id" ) ) ) );
 
             String event = request.getParameter( "_eventId" );
             if ( event != null && event.equals( "delete" ) ) {
-                expressionExperimentService.remove( ee );
+                expressionExperimentService.delete( ee );
                 log.info( "Expression experiment with name: " + ee.getName() + " deleted" );
                 request.getSession().setAttribute(
                         "messages",
@@ -93,7 +93,7 @@ public class ExpressionExperimentController implements Controller {
                                 .getMessage( "expressionExperiment.deleted", new Object[] { ee.getName() }, locale ) );
                 /* delete */
                 return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
-                        expressionExperimentService.getAllExpressionExperiments() );
+                        expressionExperimentService.loadAll() );
             }
 
             /* details */

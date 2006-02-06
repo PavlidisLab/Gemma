@@ -216,8 +216,6 @@ public class PersisterHelper implements Persister {
 
         log.debug( "Persisting " + entity.getClass().getName() + " " + entity );
 
-        basePersist( entity );
-
         if ( entity instanceof ExpressionExperiment ) {
             return persistExpressionExperiment( ( ExpressionExperiment ) entity );
         } else if ( entity instanceof ArrayDesign ) {
@@ -481,26 +479,6 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * Handle persistence tasks on common types of objects.
-     * 
-     * @param entity
-     */
-    private void basePersist( Object entity ) {
-        if ( entity == null ) return;
-        if ( Auditable.class.isAssignableFrom( entity.getClass() ) ) {
-            Auditable d = ( Auditable ) entity;
-            if ( d.getAuditTrail() == null ) {
-                AuditTrail at = AuditTrail.Factory.newInstance();
-                d.setAuditTrail( auditTrailService.create( at ) );
-            } else if ( isTransient( d.getAuditTrail() ) ) {
-                d.setAuditTrail( auditTrailService.create( d.getAuditTrail() ) );
-            }
-        }
-    }
-
-    // end AS
-
-    /**
      * @param bioSequence
      */
     private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
@@ -546,7 +524,7 @@ public class PersisterHelper implements Persister {
      */
     private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
         ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
-        basePersist( externalDatabase );
+
         assert ( externalDatabase != null );
         databaseEntry.setExternalDatabase( externalDatabaseService.findOrCreate( externalDatabase ) );
         return databaseEntry;
@@ -587,7 +565,7 @@ public class PersisterHelper implements Persister {
             log.warn( "Null protocol" );
             return;
         }
-        this.basePersist( protocol );
+
         OntologyEntry type = protocol.getType();
         persistOntologyEntry( type );
         protocol.setType( type );
@@ -696,7 +674,7 @@ public class PersisterHelper implements Persister {
     private ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) return null;
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
-        this.basePersist( arrayDesign );
+
         arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
@@ -767,8 +745,6 @@ public class PersisterHelper implements Persister {
 
         if ( !isTransient( assay ) ) return assay;
 
-        basePersist( assay );
-
         for ( FactorValue factorValue : assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
             factorValue.setId( persistFactorValue( factorValue ).getId() );
@@ -811,8 +787,7 @@ public class PersisterHelper implements Persister {
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
-        this.basePersist( bioAssayDimension );
-        basePersist( bioAssayDimension );
+
         for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
             bioAssay.setId( persistBioAssay( bioAssay ).getId() );
         }
@@ -827,7 +802,7 @@ public class PersisterHelper implements Persister {
     private BioMaterial persistBioMaterial( BioMaterial entity ) {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
-        basePersist( entity );
+
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
 
         OntologyEntry materialType = entity.getMaterialType();
@@ -836,7 +811,7 @@ public class PersisterHelper implements Persister {
         }
 
         for ( Treatment treatment : entity.getTreatments() ) {
-            basePersist( treatment );
+
             OntologyEntry action = treatment.getAction();
             action.setId( persistOntologyEntry( action ).getId() );
 
@@ -877,7 +852,7 @@ public class PersisterHelper implements Persister {
      */
     private Contact persistContact( Contact contact ) {
         if ( contact == null ) return null;
-        basePersist( contact );
+
         return this.contactService.findOrCreate( contact );
     }
 
@@ -946,8 +921,6 @@ public class PersisterHelper implements Persister {
 
         if ( entity == null ) return null;
 
-        basePersist( entity );
-
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
         }
@@ -960,16 +933,12 @@ public class PersisterHelper implements Persister {
 
         for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
 
-            basePersist( experimentalDesign );
-
             // type
             for ( OntologyEntry type : experimentalDesign.getTypes() ) {
                 type.setId( persistOntologyEntry( type ).getId() );
             }
 
             for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-
-                basePersist( experimentalFactor );
 
                 for ( OntologyEntry annotation : experimentalFactor.getAnnotations() ) {
                     annotation.setId( persistOntologyEntry( annotation ).getId() );
@@ -1035,7 +1004,7 @@ public class PersisterHelper implements Persister {
         if ( database == null ) return null;
         if ( !isTransient( database ) ) return database;
         log.debug( "Persisting " + database );
-        basePersist( database );
+
         return externalDatabaseService.findOrCreate( database );
     }
 
@@ -1046,7 +1015,7 @@ public class PersisterHelper implements Persister {
     private FactorValue persistFactorValue( FactorValue factorValue ) {
         if ( factorValue == null ) return null;
         if ( !isTransient( factorValue ) ) return factorValue;
-        this.basePersist( factorValue );
+
         if ( factorValue.getOntologyEntry() != null ) {
             if ( factorValue.getMeasurement() != null || factorValue.getMeasurement() != null ) {
                 throw new IllegalStateException(
@@ -1074,7 +1043,7 @@ public class PersisterHelper implements Persister {
     private Object persistGene( Gene gene ) {
         if ( gene == null ) return null;
         if ( !isTransient( gene ) ) return gene;
-        this.basePersist( gene );
+
         gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         return geneService.findOrCreate( gene );
     }
@@ -1088,7 +1057,7 @@ public class PersisterHelper implements Persister {
 
         if ( hardware == null ) return null;
         if ( !isTransient( hardware ) ) return hardware;
-        this.basePersist( hardware );
+
         if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
             for ( Software software : hardware.getSoftwares() ) {
                 software.setId( persistSoftware( software ).getId() );
@@ -1170,7 +1139,7 @@ public class PersisterHelper implements Persister {
     private Software persistSoftware( Software software ) {
         if ( software == null ) return null;
         if ( !isTransient( software ) ) return software;
-        this.basePersist( software );
+
         Collection<Software> components = software.getSoftwareComponents();
 
         if ( components != null && components.size() > 0 ) {
