@@ -1,17 +1,9 @@
 package edu.columbia.gemma.web.flow.bibref;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.webflow.Event;
-
 import edu.columbia.gemma.BaseFlowTestCase;
 
 /**
  * Tests the pubMedSearch-flow.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$

@@ -18,11 +18,6 @@
  */
 package edu.columbia.gemma.web.flow.bibref;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.webflow.Event;
-
 import edu.columbia.gemma.BaseFlowTestCase;
 
 /**
@@ -38,26 +33,26 @@ public class DetailBibRefFlowTests extends BaseFlowTestCase {
     }
 
     // This test disabled as we aren't using flows.
-//    public void testEditing() throws Exception {
-//
-//        // need to to add this to the request context before the flow starts.
-//        // BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
-//        // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-//        // de.setAccession( "15173114" );
-//        // bibRef.setPubAccession( de );
-//        // getFlowContext().getActiveSession().getScope().setAttribute( "bibliographicReference", bibRef );
-//
-//        startFlow(); // this does a db lookup of the pubmed id by calling BibRefFormEditAction.createFormObject().
-//
-//        Map<String, Object> properties = new HashMap<String, Object>();
-//        properties.put( "pubMedId", "15173114" );
-//
-//        assertCurrentStateEquals( "pubMed.Edit.view" );
-//
-//        this.signalEvent( new Event( this, "submit", properties ) );
-//        assertCurrentStateEquals( "save" );
-//
-//    }
+    // public void testEditing() throws Exception {
+    //
+    // // need to to add this to the request context before the flow starts.
+    // // BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+    // // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+    // // de.setAccession( "15173114" );
+    // // bibRef.setPubAccession( de );
+    // // getFlowContext().getActiveSession().getScope().setAttribute( "bibliographicReference", bibRef );
+    //
+    // startFlow(); // this does a db lookup of the pubmed id by calling BibRefFormEditAction.createFormObject().
+    //
+    // Map<String, Object> properties = new HashMap<String, Object>();
+    // properties.put( "pubMedId", "15173114" );
+    //
+    // assertCurrentStateEquals( "pubMed.Edit.view" );
+    //
+    // this.signalEvent( new Event( this, "submit", properties ) );
+    // assertCurrentStateEquals( "save" );
+    //
+    // }
 
     protected String flowId() {
         return "pubMed.Edit";

@@ -20,7 +20,6 @@ package edu.columbia.gemma.security;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.ResourceBundle;
 
 import org.springframework.beans.factory.BeanFactory;
