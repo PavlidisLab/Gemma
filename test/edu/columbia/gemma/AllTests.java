@@ -51,6 +51,7 @@ import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserIntegra
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
 import edu.columbia.gemma.loader.expression.geo.GeoConverterTest;
+import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceIntegrationTest;
 import edu.columbia.gemma.loader.expression.geo.GeoFamilyParserTest;
 import edu.columbia.gemma.loader.expression.geo.RawDataFetcherTest;
 import edu.columbia.gemma.loader.expression.mage.MageLoadTest;
@@ -61,7 +62,6 @@ import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleterTest;
 import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
 import edu.columbia.gemma.loader.smd.model.PublicationMetaTest;
 import edu.columbia.gemma.security.SecurityIntegrationTest;
-import edu.columbia.gemma.security.interceptor.AuditInterceptor;
 import edu.columbia.gemma.security.interceptor.AuditInterceptorTest;
 import edu.columbia.gemma.security.interceptor.PersistAclInterceptorTest;
 import edu.columbia.gemma.sequence.QtlDaoImplTest;
@@ -91,13 +91,12 @@ public class AllTests {
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
 
-     
         // common.auditAndSecurity
         suite.addTestSuite( AuditTrailDaoTest.class );
         suite.addTestSuite( UserRoleServiceImplTest.class );
         suite.addTestSuite( UserServiceImplTest.class );
         suite.addTestSuite( UserDaoImplTest.class );
-        
+
         // security
         suite.addTestSuite( SecurityIntegrationTest.class );
 
@@ -150,7 +149,7 @@ public class AllTests {
         suite.addTestSuite( DataFileFetcherTest.class );
 
         // loader.expression.geo
-        // suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
+        suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         suite.addTestSuite( GeoFamilyParserTest.class );
         suite.addTestSuite( RawDataFetcherTest.class );
         suite.addTestSuite( GeoConverterTest.class );
@@ -172,8 +171,6 @@ public class AllTests {
         // loader.loaderutils
         suite.addTestSuite( BeanPropertyCompleterTest.class );
 
-     
-
         // sequence
         suite.addTestSuite( QtlDaoImplTest.class );
 
@@ -193,15 +190,13 @@ public class AllTests {
         // web.controller.flow.entrez.pubmed
         suite.addTestSuite( SearchPubMedFlowTests.class );
         suite.addTestSuite( DetailBibRefFlowTests.class );
-        
-        
+
         // analysis (last because these are slow)
         suite.addTestSuite( QuantileNormalizerTest.class );
         suite.addTestSuite( RMATest.class );
         suite.addTestSuite( RMABackgroundAdjusterTest.class );
         suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
 
-        
         // $JUnit-END$
 
         return suite;

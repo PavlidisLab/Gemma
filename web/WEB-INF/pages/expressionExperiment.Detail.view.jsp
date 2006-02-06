@@ -35,9 +35,9 @@
         <h2>
             <fmt:message key="expressionExperiment.details" />
         </h2>
-        <table width="100%">
+        <table width="100%" cellspacing="10">
             <tr>
-                <td>
+                <td valign="top">
                     <b>
                         <fmt:message key="name" />
                     </b>
@@ -48,7 +48,7 @@
             </tr>
         
             <tr>
-                <td>
+                <td valign="top">
                     <b>
                         <fmt:message key="description" />
                     </b>
@@ -58,7 +58,7 @@
                 </td>
             </tr>
             <tr>
-                <td>
+                <td valign="top">
                     <b>
                         <fmt:message key="source" />
                     </b>
@@ -69,16 +69,16 @@
             </tr>    
        
             <tr>
-                <td>
+                <td valign="top">
                     <b>
                         <fmt:message key="expressionExperiment.accession" />
                     </b>
                 </td>
                 <td>
                 <% if (expressionExperiment.getAccession() != null) { %>
-                     expressionExperiment.getAccession().getExternalDatabase().getName() 
+                    <%= expressionExperiment.getAccession().getExternalDatabase().getName() %>
                     :&nbsp;
-                       expressionExperiment.getAccession().getAccession() 
+                      <%= expressionExperiment.getAccession().getAccession() %>
                        <% } %>
                 </td>
             </tr>
@@ -94,7 +94,7 @@
         <h3>
             Bio Assays (arrays)
         </h3>
-        <display:table name="expressionExperiment.bioAssays" class="list" pagesize="10" >
+        <display:table name="expressionExperiment.bioAssays" class="list" pagesize="50" >
          <display:column property="id" sort="true" />
             <display:column property="name" maxWords="20" />
             <display:column property="description" maxWords="100" />
@@ -143,7 +143,8 @@
         <h3>
             Audit trail
         </h3>
-        <%=expressionExperiment.getAuditTrail() %>
+        <Gemma:auditTrail
+            auditTrail="<%=expressionExperiment.getAuditTrail()%>" />
         <br />
 
         <h3>
