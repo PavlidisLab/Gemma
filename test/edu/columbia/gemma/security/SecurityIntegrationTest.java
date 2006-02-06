@@ -87,18 +87,11 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
 
         ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
 
-        Collection<ArrayDesign> col = ads.getAllArrayDesigns();
-        if ( col.size() == 0 )
-            log.info( "There are no arrayDesigns in database" );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "deleteme" );
+        ad = ( ArrayDesign ) this.getPersisterHelper().persist( ad );
 
-        else {
-            Iterator iter = col.iterator();
-            ArrayDesign ad = ( ArrayDesign ) iter.next();
-
-            ads.remove( ad );
-        }
-
-        assertNull( null, null );
+        ads.remove( ad );
     }
 
     /**

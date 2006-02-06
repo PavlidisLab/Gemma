@@ -28,7 +28,7 @@ public class SearchPubMedFlowTests extends BaseFlowTestCase {
     /**
      * Test criteria.view with an invalid argument. Expect to return to the criteria.view.
      */
-    // TODO add validator object. Fail on validation should take me back to the criteria.view.
+    // should add validator object. Fail on validation should take me back to the criteria.view.
     // public void testCriteriaView_Submit_Error() {
     // startFlow();
     // ViewDescriptor view = signalEvent( new SimpleEvent( this, "submit", null ) );
@@ -38,16 +38,16 @@ public class SearchPubMedFlowTests extends BaseFlowTestCase {
      * Test criteria.view with a valid argument. Expect the results.view to be entered. Expect 1 bibliographic reference
      * to be returned from 1 pubMed Id.
      */
-    public void testCriteriaView_Submit_Success() {
-        startFlow();
-        Map<String, String> properties = new HashMap<String, String>();
-        properties.put( "pubMedId", "15173114" );
-        properties.put( "_eventId", "pubMedSearch" );
-        signalEvent( new Event( this, "searchPubMed", properties ) );
-        assertCurrentStateEquals( "results.view" );
-        // asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 1 );
-    }
-
+    // This test disabled as we aren't using flows.
+    // public void testCriteriaView_Submit_Success() {
+    // startFlow();
+    // Map<String, String> properties = new HashMap<String, String>();
+    // properties.put( "pubMedId", "15173114" );
+    // properties.put( "_eventId", "pubMedSearch" );
+    // signalEvent( new Event( this, "searchPubMed", properties ) );
+    // assertCurrentStateEquals( "results.view" );
+    // // asserts().assertCollectionAttributeSize( view, "bibliographicReferences", 1 );
+    // }
     /**
      * Test the start of the flow
      */
