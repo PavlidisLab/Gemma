@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
+import java.io.IOException;
+
 import edu.columbia.gemma.BaseServiceTestCase;
 
 /**
@@ -28,6 +30,13 @@ import edu.columbia.gemma.BaseServiceTestCase;
  */
 public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
     GeoDatasetService gds;
+
+    /**
+     * 
+     */
+    public GeoDatasetServiceIntegrationTest() {
+        super();
+    }
 
     /*
      * (non-Javadoc)
@@ -61,16 +70,19 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
     // }
 
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
-        gds.setGenerator( new GeoDomainObjectGeneratorLocal( "C:/java/workspace/Gemma/test/data/geo/shortTest" ) );
+        assert config != null;
+        String path = config.getString( "gemma.home" );
+        if ( path == null ) {
+            throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
+        }
+        gds.setGenerator( new GeoDomainObjectGeneratorLocal( path + "/test/data/geo/shortTest" ) );
         gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
-    }
-
-    /*
-     * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void
-     * testFetchAndLoadB() throws Exception { gds.fetchAndLoad( "GDS942" ); } public void testFetchAndLoadC() throws
-     * Exception { gds.fetchAndLoad( "GDS100" ); } public void testFetchAndLoadD() throws Exception { gds.fetchAndLoad(
-     * "GDS1033" ); } public void testFetchAndLoadE() throws Exception { gds.fetchAndLoad( "GDS835" ); } public void
-     * testFetchAndLoadF() throws Exception { gds.fetchAndLoad( "GDS58" ); }
-     */
+    } /*
+         * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void
+         * testFetchAndLoadB() throws Exception { gds.fetchAndLoad( "GDS942" ); } public void testFetchAndLoadC() throws
+         * Exception { gds.fetchAndLoad( "GDS100" ); } public void testFetchAndLoadD() throws Exception {
+         * gds.fetchAndLoad( "GDS1033" ); } public void testFetchAndLoadE() throws Exception { gds.fetchAndLoad(
+         * "GDS835" ); } public void testFetchAndLoadF() throws Exception { gds.fetchAndLoad( "GDS58" ); }
+         */
 }

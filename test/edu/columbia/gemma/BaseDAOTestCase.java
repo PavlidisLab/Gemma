@@ -27,6 +27,10 @@ import java.util.ResourceBundle;
 import junit.framework.TestCase;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -69,6 +73,7 @@ public class BaseDAOTestCase extends TestCase {
     protected final Log log = LogFactory.getLog( getClass() );
     protected final static BeanFactory ctx = SpringContextUtil.getApplicationContext( true );
     protected ResourceBundle rb;
+    protected CompositeConfiguration config;
 
     public BaseDAOTestCase() {
         // Since a ResourceBundle is not required for each class, just
@@ -76,9 +81,14 @@ public class BaseDAOTestCase extends TestCase {
         String className = this.getClass().getName();
 
         try {
+            config = new CompositeConfiguration();
+            config.addConfiguration( new SystemConfiguration() );
+            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
             rb = ResourceBundle.getBundle( className ); // will look for <className>.properties
         } catch ( MissingResourceException mre ) {
             // log.warn("No resource bundle found for: " + className);
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
         }
     }
 

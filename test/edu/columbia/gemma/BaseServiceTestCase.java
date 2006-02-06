@@ -50,6 +50,7 @@ public class BaseServiceTestCase extends BaseDAOTestCase {
 
         try {
             rb = ResourceBundle.getBundle( className );
+
         } catch ( MissingResourceException mre ) {
             // log.warn("No resource bundle found for: " + className);
         }
