@@ -28,7 +28,6 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.common.Auditable;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
@@ -519,17 +518,6 @@ public class PersisterHelper implements Persister {
         }
     }
 
-    /**
-     * @param databaseEntry
-     */
-    private DatabaseEntry fillInPersistentExternalDatabase( DatabaseEntry databaseEntry ) {
-        ExternalDatabase externalDatabase = databaseEntry.getExternalDatabase();
-
-        assert ( externalDatabase != null );
-        databaseEntry.setExternalDatabase( externalDatabaseService.findOrCreate( externalDatabase ) );
-        return databaseEntry;
-    }
-
     //
     // /**
     // * @param entity
@@ -549,17 +537,8 @@ public class PersisterHelper implements Persister {
     // }
 
     /**
-     * @param ontologyEntry
-     */
-
-    private void fillInPersistentExternalDatabase( OntologyEntry ontologyEntry ) {
-        this.fillInPersistentExternalDatabase( ( DatabaseEntry ) ontologyEntry );
-    }
-
-    /**
      * @param protocol
      */
-
     private void fillInProtocol( Protocol protocol ) {
         if ( protocol == null ) {
             log.warn( "Null protocol" );

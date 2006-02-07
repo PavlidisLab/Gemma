@@ -27,10 +27,6 @@ import org.hibernate.criterion.Restrictions;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -52,7 +48,10 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
 
             queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
 
-            queryObject.add( Restrictions.eq( "arrayDesign", compositeSequence.getArrayDesign() ) );
+            // TODO make this use the full arraydesign
+            // business key.
+            queryObject.createCriteria( "arrayDesign" ).add(
+                    Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;

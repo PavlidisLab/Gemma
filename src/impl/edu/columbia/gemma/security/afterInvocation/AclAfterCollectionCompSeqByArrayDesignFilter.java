@@ -99,6 +99,7 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter implements AfterInvoca
      * @return Object
      * @throws AccessDeniedException
      */
+    @SuppressWarnings("unused")
     public Object decide( Authentication authentication, Object object, ConfigAttributeDefinition config,
             Object returnedObject ) throws AccessDeniedException {
 

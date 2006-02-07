@@ -19,8 +19,21 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.IOException;
+import java.util.Collection;
 
+import baseCode.io.ByteArrayConverter;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.common.quantitationtype.GeneralType;
+import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
+import edu.columbia.gemma.common.quantitationtype.StandardQuantitationType;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
 /**
  * This is an integration test
@@ -69,6 +82,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
     // // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
     // }
 
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         assert config != null;
         String path = config.getString( "gemma.home" );
@@ -78,11 +92,44 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         gds.setGenerator( new GeoDomainObjectGeneratorLocal( path + "/test/data/geo/shortTest" ) );
         gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
-    } /*
-         * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void
-         * testFetchAndLoadB() throws Exception { gds.fetchAndLoad( "GDS942" ); } public void testFetchAndLoadC() throws
-         * Exception { gds.fetchAndLoad( "GDS100" ); } public void testFetchAndLoadD() throws Exception {
-         * gds.fetchAndLoad( "GDS1033" ); } public void testFetchAndLoadE() throws Exception { gds.fetchAndLoad(
-         * "GDS835" ); } public void testFetchAndLoadF() throws Exception { gds.fetchAndLoad( "GDS58" ); }
-         */
+
+        // get the data back out.
+
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) BaseDAOTestCase.ctx
+                .getBean( "expressionExperimentService" );
+        QuantitationTypeService qts = ( QuantitationTypeService ) BaseDAOTestCase.ctx
+                .getBean( "quantitationTypeService" );
+
+        ExpressionExperiment ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
+        QuantitationType qtf = QuantitationType.Factory.newInstance();
+        qtf.setName( "VALUE" );
+        qtf.setRepresentation( PrimitiveType.DOUBLE );
+        qtf.setGeneralType( GeneralType.QUANTITATIVE );
+        qtf.setType( StandardQuantitationType.MEASUREDSIGNAL );
+        QuantitationType qt = qts.find( qtf );
+
+        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) BaseDAOTestCase.ctx
+                .getBean( "designElementDataVectorService" );
+
+        ByteArrayConverter bac = new ByteArrayConverter();
+
+        Collection<DesignElementDataVector> co = dedvs.findAllForMatrix( ee, qt );
+        // assertEquals( 20, co.size() );
+        for ( DesignElementDataVector dedv : co ) {
+            BioAssayDimension bad = dedv.getBioAssayDimension();
+            byte[] bytes = dedv.getData();
+            log.info( "Read " + bytes.length + " bytes" );
+            double[] vals = bac.byteArrayToDoubles( bytes );
+            log.info( bad.getName().substring( 0, 20 ) + "... Elements: " + vals.length );
+  //          assertEquals( bad.getDimensionBioAssays().size(), vals.length );
+        }
+    }
+
+    /*
+     * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void
+     * testFetchAndLoadB() throws Exception { gds.fetchAndLoad( "GDS942" ); } public void testFetchAndLoadC() throws
+     * Exception { gds.fetchAndLoad( "GDS100" ); } public void testFetchAndLoadD() throws Exception { gds.fetchAndLoad(
+     * "GDS1033" ); } public void testFetchAndLoadE() throws Exception { gds.fetchAndLoad( "GDS835" ); } public void
+     * testFetchAndLoadF() throws Exception { gds.fetchAndLoad( "GDS58" ); }
+     */
 }

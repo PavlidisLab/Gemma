@@ -465,8 +465,12 @@ public class GeoConverter implements Converter {
                 List<String> dataVector = dataVectors.get( designElementName );
                 assert dataVector != null && dataVector.size() != 0;
                 DesignElementDataVector vector = convertDesignElementDataVector( geoDataset, expExp, bioAssayDimension,
-                        designElementName, dataVector );
-                vector.setQuantitationType( qt );
+                        designElementName, dataVector, qt );
+
+                if ( log.isDebugEnabled() ) {
+                    log.debug( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " "
+                            + dataVector.size() + " elements in vector" );
+                }
                 expExp.getDesignElementDataVectors().add( vector );
             }
         }
@@ -551,9 +555,9 @@ public class GeoConverter implements Converter {
      * @return
      */
     private DesignElementDataVector convertDesignElementDataVector( GeoDataset geoDataset, ExpressionExperiment expExp,
-            BioAssayDimension bioAssayDimension, String designElementName, List<String> dataVector ) {
-        byte[] blob = convertData( dataVector );
-
+            BioAssayDimension bioAssayDimension, String designElementName, List<String> dataVector, QuantitationType qt ) {
+        byte[] blob = convertData( dataVector, qt );
+        log.debug( blob.length + " bytes for " + dataVector.size() + " raw elements" );
         CompositeSequence compositeSequence = platformDesignElementMap.get(
                 convertPlatform( geoDataset.getPlatform() ).getName() ).get( designElementName );
 
@@ -562,6 +566,7 @@ public class GeoConverter implements Converter {
         vector.setExpressionExperiment( expExp );
 
         vector.setBioAssayDimension( bioAssayDimension );
+        vector.setQuantitationType( qt );
         vector.setData( blob );
         return vector;
     }
@@ -1220,13 +1225,13 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Convert a vector of strings into a byte[] for saving in the database. This tries to guess the type (integer or
-     * double).
+     * Convert a vector of strings into a byte[] for saving in the database.
      * 
-     * @param vector
+     * @param vector of Strings to be converted to primitive values (double, int etc)
+     * @param qt The quantitation type for the values to be converted.
      * @return
      */
-    protected byte[] convertData( List<String> vector ) {
+    protected byte[] convertData( List<String> vector, QuantitationType qt ) {
 
         if ( vector == null || vector.size() == 0 ) return null;
 
@@ -1235,31 +1240,40 @@ public class GeoConverter implements Converter {
         if ( sample == null ) throw new IllegalStateException( "Vector contained null string as first element" );
 
         List<Object> toConvert = new ArrayList<Object>();
+        PrimitiveType pt = qt.getRepresentation();
 
         try {
 
-            try {
-                Integer.parseInt( sample );
+            if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+                int count = 0;
+                for ( String string : vector ) {
+                    toConvert.add( Double.parseDouble( string ) );
+                    count++;
+                }
+                log.debug( count + " doubles found" );
+            } else if ( pt.equals( PrimitiveType.INT ) ) {
+                int count = 0;
                 for ( String string : vector ) {
                     toConvert.add( Integer.parseInt( string ) );
+                    count++;
                 }
-            } catch ( NumberFormatException e ) {
-                // no problem, we try doubles.
-                try {
-                    Double.parseDouble( sample );
-                    for ( String string : vector ) {
-                        toConvert.add( Double.parseDouble( string ) );
-                    }
-                } catch ( NumberFormatException e1 ) {
-                    throw new RuntimeException( sample + " is not in a recognized numeric format" );
+                log.debug( count + " integers found" );
+            } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+                int count = 0;
+                for ( String string : vector ) {
+                    toConvert.add( Boolean.parseBoolean( string ) );
+                    count++;
                 }
+                log.debug( count + " booleans found" );
+
+            } else {
+                throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
             }
 
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Strings in data vector must all be of the same type! " );
+            throw new RuntimeException( e );
         }
 
         return byteArrayConverter.toBytes( toConvert.toArray() );
     }
-
 }

@@ -40,15 +40,18 @@ public class QuantitationTypeDaoImpl extends edu.columbia.gemma.common.quantitat
     public QuantitationType find( QuantitationType quantitationType ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( QuantitationType.class );
+            
             queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
 
             queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
 
             queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
 
-            queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
+            if ( quantitationType.getRepresentation() != null )
+                queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
 
-            queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
+            if ( quantitationType.getScale() != null )
+                queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;

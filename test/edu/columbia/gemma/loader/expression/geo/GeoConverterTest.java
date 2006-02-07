@@ -21,6 +21,9 @@ package edu.columbia.gemma.loader.expression.geo;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+
 import junit.framework.TestCase;
 import baseCode.io.ByteArrayConverter;
 
@@ -57,7 +60,9 @@ public class GeoConverterTest extends TestCase {
         testList.add( "1" );
         testList.add( "2929202" );
         testList.add( "-394949" );
-        byte[] actualResult = gc.convertData( testList );
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setRepresentation( PrimitiveType.INT );
+        byte[] actualResult = gc.convertData( testList, qt );
         int[] revertedResult = bac.byteArrayToInts( actualResult );
         assertEquals( revertedResult[0], 1 );
         assertEquals( revertedResult[1], 2929202 );
@@ -69,7 +74,9 @@ public class GeoConverterTest extends TestCase {
         testList.add( "1.1" );
         testList.add( "2929202e-4" );
         testList.add( "-394949.44422" );
-        byte[] actualResult = gc.convertData( testList );
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        byte[] actualResult = gc.convertData( testList, qt );
         double[] revertedResult = bac.byteArrayToDoubles( actualResult );
         assertEquals( revertedResult[0], 1.1, 0.00001 );
         assertEquals( revertedResult[1], 2929202e-4, 0.00001 );
@@ -81,8 +88,10 @@ public class GeoConverterTest extends TestCase {
         testList.add( "1" ); // should trigger use of integers
         testList.add( "2929202e-4" ); // uh-oh
         testList.add( "-394949.44422" );
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setRepresentation( PrimitiveType.INT );
         try {
-            gc.convertData( testList );
+            gc.convertData( testList, qt );
             fail( "Should have gotten an exception" );
         } catch ( RuntimeException e ) {
 

@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ * 
  */
 package edu.columbia.gemma;
 
@@ -72,7 +72,6 @@ import edu.columbia.gemma.tools.MArrayRawTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import edu.columbia.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
-import edu.columbia.gemma.web.flow.bibref.DetailBibRefFlowTests;
 import edu.columbia.gemma.web.flow.bibref.SearchPubMedFlowTests;
 
 /**

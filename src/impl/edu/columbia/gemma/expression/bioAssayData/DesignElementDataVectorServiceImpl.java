@@ -27,7 +27,6 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
- * @author keshav
  * @version $Id$
  * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService
  */
@@ -50,16 +49,14 @@ public class DesignElementDataVectorServiceImpl extends
     /*
      * (non-Javadoc)
      * 
-     * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceBase#handleLoadAll(edu.columbia.gemma.expression.experiment.ExpressionExperiment,
+     * @see edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceBase#handleFindAllForMatrix(edu.columbia.gemma.expression.experiment.ExpressionExperiment,
      *      edu.columbia.gemma.common.quantitationtype.QuantitationType,
-     *      edu.columbia.gemma.expression.bioAssayData.BioAssayDimension)
+     *      edu.columbia.gemma.expression.designElement.DesignElement)
      */
     @Override
-    protected Collection handleLoadAll( ExpressionExperiment expressionExperiment, QuantitationType quantitationType,
-            BioAssayDimension bioAssayDimension ) throws Exception {
-
-        // TODO Auto-generated method stub
-        return null;
+    protected Collection handleFindAllForMatrix( ExpressionExperiment expressionExperiment,
+            QuantitationType quantitationType ) throws Exception {
+        return this.getDesignElementDataVectorDao().findAllForMatrix( expressionExperiment, quantitationType );
     }
 
 }
