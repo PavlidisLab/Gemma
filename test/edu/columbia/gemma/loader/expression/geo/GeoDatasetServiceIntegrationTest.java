@@ -114,14 +114,14 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         ByteArrayConverter bac = new ByteArrayConverter();
 
         Collection<DesignElementDataVector> co = dedvs.findAllForMatrix( ee, qt );
-        // assertEquals( 20, co.size() );
+        assertEquals( 42, co.size() ); // this number depends on our test file size.
         for ( DesignElementDataVector dedv : co ) {
             BioAssayDimension bad = dedv.getBioAssayDimension();
             byte[] bytes = dedv.getData();
-            log.info( "Read " + bytes.length + " bytes" );
+            log.debug( "Read " + bytes.length + " bytes" );
             double[] vals = bac.byteArrayToDoubles( bytes );
-            log.info( bad.getName().substring( 0, 20 ) + "... Elements: " + vals.length );
-  //          assertEquals( bad.getDimensionBioAssays().size(), vals.length );
+            log.debug( bad.getName().substring( 0, 20 ) + "... Elements: " + vals.length );
+            assertEquals( bad.getDimensionBioAssays().size(), vals.length );
         }
     }
 
