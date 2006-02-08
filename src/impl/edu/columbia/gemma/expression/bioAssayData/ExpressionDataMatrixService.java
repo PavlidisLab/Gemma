@@ -18,22 +18,28 @@
  */
 package edu.columbia.gemma.expression.bioAssayData;
 
-import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
-import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
+import java.util.Collection;
+import java.util.List;
+
+import baseCode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import baseCode.io.ByteArrayConverter;
+import edu.columbia.gemma.common.quantitationtype.QuantitationType;
+import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 
 /**
  * TODO - DOCUMENT ME
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="bioAssayDataMatrixService"
- * @spring.property  name="designElementDataVectorService" ref = "designElementDataVectorService"
+ * @spring.bean id="expressionDataMatrixService"
+ * @spring.property name="designElementDataVectorService" ref = "designElementDataVectorService"
  */
 public class ExpressionDataMatrixService {
 
-    DesignElementDataVectorService  designElementDataVectorService;
-    
+    DesignElementDataVectorService designElementDataVectorService;
+
     /**
      * @param designElementDataVectorService The designElementDataVectorService to set.
      */
@@ -42,27 +48,46 @@ public class ExpressionDataMatrixService {
     }
 
     /**
-     * @param assayDimension
-     * @param arrayDesign
-     * @return
-     */
-    public DoubleMatrixNamed getMatrix( BioAssayDimension assayDimension, ArrayDesign arrayDesign ) {
-        
-        /*
-         * get all the design elements for the arraydesign
-         * find design
-         */
-        
-        return null;
-    }
-
-    /**
      * @param expExp
      * @param assayDimension
      * @return
      */
-    public DoubleMatrixNamed getMatrix( ExpressionExperiment expExp, BioAssayDimension assayDimension ) {
-        return null;
+    @SuppressWarnings("unchecked")
+    public DoubleMatrixNamed getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
+        Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
+        return vectorsToDoubleMatrix( vectors );
+    }
+
+    /**
+     * @param vectors
+     * @return
+     */
+    private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
+        if ( vectors == null || vectors.size() == 0 ) return null;
+
+        ByteArrayConverter bac = new ByteArrayConverter();
+
+        List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension()
+                .getDimensionBioAssays();
+
+        DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
+
+        for ( BioAssay assay : bioAssays ) {
+            matrix.addColumnName( assay.getName() );
+        }
+
+        int rowNum = 0;
+        for ( DesignElementDataVector vector : vectors ) {
+            String name = vector.getDesignElement().getName();
+            matrix.addRowName( name );
+            byte[] bytes = vector.getData();
+            double[] vals = bac.byteArrayToDoubles( bytes );
+            for ( int i = 0; i < vals.length; i++ ) {
+                matrix.setQuick( rowNum, i, vals[i] );
+            }
+            rowNum++;
+        }
+        return matrix;
     }
 
 }

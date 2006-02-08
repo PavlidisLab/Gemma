@@ -310,6 +310,7 @@ public class GeoConverter implements Converter {
         }
         result.setName( buf.toString().substring( 0, 100 ) + "..." );
         result.setDescription( buf.toString() );
+        // expExp.getBioAssayDimensions().add( result );
         return result;
     }
 
@@ -597,7 +598,11 @@ public class GeoConverter implements Converter {
                     dataVectors.put( designElementName, new ArrayList<String>() );
                 }
                 String datum = sample.getDatum( designElementName, quantitationType );
-                assert datum != null;
+                // assert datum != null; // this can happen if the platform has probes that aren't in the data
+                if ( datum == null ) {
+                    log.warn( "Data for sample " + sample.getGeoAccession() + " was missing for element "
+                            + designElementName );
+                }
                 dataVectors.get( designElementName ).add( datum );
             }
 

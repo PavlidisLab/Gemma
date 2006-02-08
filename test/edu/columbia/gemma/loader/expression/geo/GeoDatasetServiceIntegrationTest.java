@@ -19,9 +19,8 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.IOException;
-import java.util.Collection;
 
-import baseCode.io.ByteArrayConverter;
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.quantitationtype.GeneralType;
@@ -29,9 +28,7 @@ import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
 import edu.columbia.gemma.common.quantitationtype.StandardQuantitationType;
-import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
-import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
-import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
+import edu.columbia.gemma.expression.bioAssayData.ExpressionDataMatrixService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
@@ -100,6 +97,9 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         QuantitationTypeService qts = ( QuantitationTypeService ) BaseDAOTestCase.ctx
                 .getBean( "quantitationTypeService" );
 
+        ExpressionDataMatrixService edms = ( ExpressionDataMatrixService ) BaseDAOTestCase.ctx
+                .getBean( "expressionDataMatrixService" );
+
         ExpressionExperiment ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
         QuantitationType qtf = QuantitationType.Factory.newInstance();
         qtf.setName( "VALUE" );
@@ -108,22 +108,41 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         qtf.setType( StandardQuantitationType.MEASUREDSIGNAL );
         QuantitationType qt = qts.find( qtf );
 
-        DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) BaseDAOTestCase.ctx
-                .getBean( "designElementDataVectorService" );
+        DoubleMatrixNamed matrix = edms.getMatrix( ee, qt );
 
-        ByteArrayConverter bac = new ByteArrayConverter();
+        assertEquals( 42, matrix.rows() );
 
-        Collection<DesignElementDataVector> co = dedvs.findAllForMatrix( ee, qt );
-        assertEquals( 42, co.size() ); // this number depends on our test file size.
-        for ( DesignElementDataVector dedv : co ) {
-            BioAssayDimension bad = dedv.getBioAssayDimension();
-            byte[] bytes = dedv.getData();
-            log.debug( "Read " + bytes.length + " bytes" );
-            double[] vals = bac.byteArrayToDoubles( bytes );
-            log.debug( bad.getName().substring( 0, 20 ) + "... Elements: " + vals.length );
-            assertEquals( bad.getDimensionBioAssays().size(), vals.length );
-        }
+        assertEquals( 15, matrix.columns() );
+
+        double k = matrix.getRowByName( "200000_s_at" )[matrix.getColIndexByName( "D7-U133B" )];
+        assertEquals( 6357.0, k, 0.00001 );
+
+        k = matrix.getRowByName( "1007_s_at" )[matrix.getColIndexByName( "D7-U133B" )];
+        assertEquals( 1558.0, k, 0.00001 );
+
+        // printMatrix( matrix );
+
     }
+
+//    /**
+//     * @param matrix
+//     */
+//    private void printMatrix( DoubleMatrixNamed matrix ) {
+//        System.err.print( "probe" );
+//        for ( String columnName : ( Collection<String> ) matrix.getColNames() ) {
+//            System.err.print( "\t" + columnName );
+//        }
+//        System.err.print( "\n" );
+//        for ( String rowName : ( Collection<String> ) matrix.getRowNames() ) {
+//            System.err.print( rowName );
+//            double[] array = matrix.getRowByName( rowName );
+//            for ( int i = 0; i < array.length; i++ ) {
+//                double array_element = array[i];
+//                System.err.print( "\t" + array_element );
+//            }
+//            System.err.print( "\n" );
+//        }
+//    }
 
     /*
      * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void

@@ -965,8 +965,8 @@ public class PersisterHelper implements Persister {
             ArrayDesign ad = persistentDesignElement.getArrayDesign();
             ad.setId( this.persistArrayDesign( ad ).getId() );
 
-            vect.setBioAssayDimension( persistBioAssayDimension( vect.getBioAssayDimension() ) );
-
+            BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
+            vect.setBioAssayDimension( bAd );
             vect.setDesignElement( persistentDesignElement );
 
             assert vect.getQuantitationType() != null;
