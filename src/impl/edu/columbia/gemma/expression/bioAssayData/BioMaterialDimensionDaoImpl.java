@@ -18,32 +18,67 @@
  */
 package edu.columbia.gemma.expression.bioAssayData;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import edu.columbia.gemma.expression.biomaterial.BioMaterial;
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
+
 /**
  * @author pavlidis
  * @version $Id$
- * @see edu.columbia.gemma.expression.bioAssayData.BioMaterialDimension
+ * @see edu.columbia.gemma.expression.bioMaterialData.BioMaterialDimension
  */
 public class BioMaterialDimensionDaoImpl extends edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionDaoBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionDaoBase#find(edu.columbia.gemma.expression.bioAssayData.BioMaterialDimension)
-     */
+    private static Log log = LogFactory.getLog( BioMaterialDimensionDaoImpl.class.getName() );
+
     @Override
     public BioMaterialDimension find( BioMaterialDimension bioMaterialDimension ) {
-        // TODO Auto-generated method stub
-        return super.find( bioMaterialDimension );
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( BioMaterialDimension.class );
+
+            if ( StringUtils.isNotBlank( bioMaterialDimension.getName() ) ) {
+                queryObject.add( Restrictions.eq( "name", bioMaterialDimension.getName() ) );
+            }
+
+            if ( StringUtils.isNotBlank( bioMaterialDimension.getDescription() ) ) {
+                queryObject.add( Restrictions.eq( "description", bioMaterialDimension.getDescription() ) );
+            }
+
+            queryObject.add( Restrictions.sizeEq( "bioMaterials", bioMaterialDimension.getBioMaterials().size() ) );
+
+            // this will not work with detached bioassays.
+            // queryObject.add( Restrictions.in( "bioMaterials", bioMaterialDimension.getBioMaterials() ) );
+
+            // FIXME this isn't fail-safe, and also doesn't distinguish between dimensions that differ only in the
+            // ordering.
+            Collection<String> names = new HashSet<String>();
+            for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
+                names.add( bioMaterial.getName() );
+            }
+            queryObject.createCriteria( "bioMaterials" ).add( Restrictions.in( "name", names ) );
+            return ( BioMaterialDimension ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionDaoBase#findOrCreate(edu.columbia.gemma.expression.bioAssayData.BioMaterialDimension)
-     */
     @Override
     public BioMaterialDimension findOrCreate( BioMaterialDimension bioMaterialDimension ) {
-        // TODO Auto-generated method stub
-        return super.findOrCreate( bioMaterialDimension );
+        if ( bioMaterialDimension == null || bioMaterialDimension.getBioMaterials() == null ) return null;
+        BioMaterialDimension newBioMaterialDimension = find( bioMaterialDimension );
+        if ( newBioMaterialDimension != null ) {
+            BeanPropertyCompleter.complete( newBioMaterialDimension, bioMaterialDimension );
+            return newBioMaterialDimension;
+        }
+        log.debug( "Creating new " + bioMaterialDimension );
+        return ( BioMaterialDimension ) create( bioMaterialDimension );
     }
 }

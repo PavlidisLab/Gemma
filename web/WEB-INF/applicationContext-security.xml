@@ -223,6 +223,7 @@
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
                 edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
                 edu.columbia.gemma.expression.biomaterial.BioMaterialService.findOrCreate=user,admin 

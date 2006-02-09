@@ -50,6 +50,7 @@ import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
+import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService;
 import edu.columbia.gemma.expression.biomaterial.BioMaterialService;
 import edu.columbia.gemma.expression.biomaterial.CompoundService;
@@ -148,6 +149,9 @@ public class BaseDAOTestCase extends TestCase {
         ml.setAuditTrailService( ( AuditTrailService ) ctx.getBean( "auditTrailService" ) );
         ml.setDesignElementDimensionService( ( DesignElementDimensionService ) ctx
                 .getBean( "designElementDimensionService" ) );
+        ml
+                .setBioMaterialDimensionService( ( BioMaterialDimensionService ) ctx
+                        .getBean( "bioMaterialDimensionService" ) );
         ml.setMeasurementService( ( MeasurementService ) ctx.getBean( "measurementService" ) );
         return ml;
     }

@@ -26,6 +26,7 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.ByteArrayConverter;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 
 /**
@@ -70,10 +71,17 @@ public class ExpressionDataMatrixService {
         List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension()
                 .getDimensionBioAssays();
 
+        List<BioMaterial> biomaterials = ( List<BioMaterial> ) vectors.iterator().next().getBioAssayDimension()
+                .getBioMaterialDimensions().iterator().next().getBioMaterials();
+
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
 
-        for ( BioAssay assay : bioAssays ) {
-            matrix.addColumnName( assay.getName() );
+        // for ( BioAssay assay : bioAssays ) {
+        // matrix.addColumnName( assay.getName() );
+        // }
+
+        for ( BioMaterial bioMaterial : biomaterials ) {
+            matrix.addColumnName( bioMaterial.getName() );
         }
 
         int rowNum = 0;
@@ -89,5 +97,4 @@ public class ExpressionDataMatrixService {
         }
         return matrix;
     }
-
 }

@@ -19,6 +19,7 @@
 package edu.columbia.gemma.loader.expression.geo;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import edu.columbia.gemma.BaseDAOTestCase;
@@ -110,39 +111,42 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
 
         DoubleMatrixNamed matrix = edms.getMatrix( ee, qt );
 
-        assertEquals( 42, matrix.rows() );
+        printMatrix( matrix );
+        
+        
+
+        assertEquals( 31, matrix.rows() );
 
         assertEquals( 15, matrix.columns() );
 
-        double k = matrix.getRowByName( "200000_s_at" )[matrix.getColIndexByName( "D7-U133B" )];
+        double k = matrix.getRowByName( "200000_s_at" )[matrix.getColIndexByName( "GSE674_bioMaterial_14" )];
         assertEquals( 6357.0, k, 0.00001 );
 
-        k = matrix.getRowByName( "1007_s_at" )[matrix.getColIndexByName( "D7-U133B" )];
+        k = matrix.getRowByName( "1007_s_at" )[matrix.getColIndexByName( "GSE674_bioMaterial_14" )];
         assertEquals( 1558.0, k, 0.00001 );
-
-        // printMatrix( matrix );
 
     }
 
-//    /**
-//     * @param matrix
-//     */
-//    private void printMatrix( DoubleMatrixNamed matrix ) {
-//        System.err.print( "probe" );
-//        for ( String columnName : ( Collection<String> ) matrix.getColNames() ) {
-//            System.err.print( "\t" + columnName );
-//        }
-//        System.err.print( "\n" );
-//        for ( String rowName : ( Collection<String> ) matrix.getRowNames() ) {
-//            System.err.print( rowName );
-//            double[] array = matrix.getRowByName( rowName );
-//            for ( int i = 0; i < array.length; i++ ) {
-//                double array_element = array[i];
-//                System.err.print( "\t" + array_element );
-//            }
-//            System.err.print( "\n" );
-//        }
-//    }
+    /**
+     * @param matrix
+     */
+    @SuppressWarnings( { "unchecked", "unused" })
+    private void printMatrix( DoubleMatrixNamed matrix ) {
+        System.err.print( "probe" );
+        for ( String columnName : ( Collection<String> ) matrix.getColNames() ) {
+            System.err.print( "\t" + columnName );
+        }
+        System.err.print( "\n" );
+        for ( String rowName : ( Collection<String> ) matrix.getRowNames() ) {
+            System.err.print( rowName );
+            double[] array = matrix.getRowByName( rowName );
+            for ( int i = 0; i < array.length; i++ ) {
+                double array_element = array[i];
+                System.err.print( "\t" + array_element );
+            }
+            System.err.print( "\n" );
+        }
+    }
 
     /*
      * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void

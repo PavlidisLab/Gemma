@@ -62,6 +62,7 @@ import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
+import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimension;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService;
@@ -87,6 +88,7 @@ import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonService;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.biosequence.BioSequenceService;
+import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionService;
 import edu.columbia.gemma.genome.gene.GeneService;
 
 /**
@@ -124,6 +126,7 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="designElementDimensionService" ref="designElementDimensionService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="measurementService" ref="measurementService"
+ * @spring property name="bioMaterialDimensionService" ref="bioMaterialDimensionService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -135,6 +138,8 @@ public class PersisterHelper implements Persister {
     private BioAssayDimensionService bioAssayDimensionService;
 
     private BioAssayService bioAssayService;
+
+    private BioMaterialDimensionService bioMaterialDimensionService;
 
     private BioMaterialService bioMaterialService;
 
@@ -300,6 +305,13 @@ public class PersisterHelper implements Persister {
      */
     public void setBioAssayService( BioAssayService bioAssayService ) {
         this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param bioMaterialDimensionService The bioMaterialDimensionService to set.
+     */
+    public void setBioMaterialDimensionService( BioMaterialDimensionService bioMaterialDimensionService ) {
+        this.bioMaterialDimensionService = bioMaterialDimensionService;
     }
 
     /**
@@ -771,6 +783,10 @@ public class PersisterHelper implements Persister {
             bioAssay.setId( persistBioAssay( bioAssay ).getId() );
         }
 
+        for ( BioMaterialDimension bad : bioAssayDimension.getBioMaterialDimensions() ) {
+            bad.setId( persistBioMaterialDimension( bad ).getId() );
+        }
+
         return bioAssayDimensionService.findOrCreate( bioAssayDimension );
     }
 
@@ -802,6 +818,14 @@ public class PersisterHelper implements Persister {
         fillInOntologyEntries( entity.getCharacteristics() );
 
         return bioMaterialService.findOrCreate( entity );
+    }
+
+    /**
+     * @param bioMaterialDimension
+     * @return
+     */
+    private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
+        return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
     }
 
     /**

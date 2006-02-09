@@ -48,6 +48,7 @@ import edu.columbia.gemma.common.quantitationtype.StandardQuantitationType;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
+import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimension;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
@@ -206,22 +207,25 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * GEO does not keep track of 'biomaterials' that make up different channels. Therefore the two channels effectively
+     * make up a single biomaterial, as far as we're concerned. We're losing information here.
+     * 
      * @param sample
      * @param channel
      * @return
      */
     @SuppressWarnings("unchecked")
-    private BioMaterial convertChannel( GeoSample sample, GeoChannel channel ) {
-        log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
-        BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+    private BioMaterial convertChannel( GeoSample sample, GeoChannel channel, BioMaterial bioMaterial ) {
+        if ( bioMaterial == null ) return null;
+        log.info( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
+        // BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
 
-        bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) ); /*
-                                                                             * FIXME this can be wrong, because the same
-                                                                             * biomaterial can be run on multiple
-                                                                             * arrays.
-                                                                             */
-        bioMaterial.setName( sample.getGeoAccession() + "_channel_" + channel.getChannelNumber() );
-        bioMaterial.setDescription( "Channel sample source="
+        // bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) );
+        // bioMaterial.setName( sample.getGeoAccession() + "_channel_" + channel.getChannelNumber() );
+        bioMaterial.setDescription( ( bioMaterial.getDescription() == null ? "" : bioMaterial.getDescription() + ";" )
+                + "Channel "
+                + channel.getChannelNumber()
+                + " sample source="
                 + channel.getOrganism()
                 + " "
                 + channel.getSourceName()
@@ -236,7 +240,7 @@ public class GeoConverter implements Converter {
         for ( String characteristic : channel.getCharacteristics() ) {
             Characteristic gemmaChar = Characteristic.Factory.newInstance();
             gemmaChar.setCategory( characteristic );
-            gemmaChar.setValue( characteristic ); // FIXME need to put in actual value.
+            gemmaChar.setValue( characteristic ); // TODO need to put in actual value.
             bioMaterial.getCharacteristics().add( gemmaChar );
         }
         return bioMaterial;
@@ -253,7 +257,7 @@ public class GeoConverter implements Converter {
         result.setName( contact.getName() );
         result.setEmail( contact.getEmail() );
 
-        // FIXME - set other contact fields
+        // TODO - set other contact fields
         return result;
     }
 
@@ -266,7 +270,7 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
         expExp.getInvestigators().add( convertContact( series.getContact() ) );
-        // FIXME possibly add contributers to the investigators.
+        // TODO possibly add contributers to the investigators.
         if ( series.getContributers().size() > 0 ) {
             expExp.setDescription( expExp.getDescription() + " -- Contributers: " );
             for ( GeoContact contributer : series.getContributers() ) {
@@ -323,14 +327,53 @@ public class GeoConverter implements Converter {
      */
     private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension result, boolean found,
             String sampleAcc ) {
+
+        BioMaterialDimension bioMaterialDimension = getAssociatedBioMaterialDimension( result );
+
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
             if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
                 result.getDimensionBioAssays().add( bioAssay );
+
+                matchBioMaterialToBioAssay( bioMaterialDimension, bioAssay );
+
                 found = true;
                 break;
             }
         }
         return found;
+    }
+
+    /**
+     * @param result
+     * @return
+     */
+    private BioMaterialDimension getAssociatedBioMaterialDimension( BioAssayDimension result ) {
+        Collection<BioMaterialDimension> bioMaterialDimensions = result.getBioMaterialDimensions();
+        BioMaterialDimension bioMaterialDimension;
+        if ( bioMaterialDimensions == null || bioMaterialDimensions.isEmpty() ) {
+            bioMaterialDimension = BioMaterialDimension.Factory.newInstance();
+            result.getBioMaterialDimensions().add( bioMaterialDimension );
+        } else {
+            if ( bioMaterialDimensions.size() > 1 )
+                throw new UnsupportedOperationException( "Can't handle more than one BioMaterialDimension." );
+            bioMaterialDimension = bioMaterialDimensions.iterator().next();
+        }
+        return bioMaterialDimension;
+    }
+
+    /**
+     * @param bioMaterialDimension
+     * @param bioAssay
+     */
+    private void matchBioMaterialToBioAssay( BioMaterialDimension bioMaterialDimension, BioAssay bioAssay ) {
+        Collection<BioMaterial> bioMaterials = bioAssay.getSamplesUsed();
+        assert !( bioMaterials == null || bioMaterials.isEmpty() );
+        if ( bioMaterials.size() > 1 ) {
+            throw new UnsupportedOperationException(
+                    "Can't handle more than one biomaterial per bioassay (sample used per bioassay)" );
+        }
+        BioMaterial matchingBioMaterial = bioMaterials.iterator().next();
+        bioMaterialDimension.getBioMaterials().add( matchingBioMaterial );
     }
 
     /**
@@ -510,6 +553,8 @@ public class GeoConverter implements Converter {
 
         if ( description.contains( "log2" ) ) {
             sType = ScaleType.LOG2;
+        } else if ( description.contains( "log10" ) ) {
+            sType = ScaleType.LOG10;
         }
 
         if ( name.matches( "TOP" ) || name.matches( "LEFT" ) || name.matches( "RIGHT" ) || name.matches( "^BOT.*" ) ) {
@@ -679,7 +724,7 @@ public class GeoConverter implements Converter {
             bs.setName( externalRef );
             bs.setTaxon( taxon );
             bs.setPolymerType( PolymerType.DNA );
-            bs.setType( SequenceType.DNA ); // FIXME need to determine SequenceType and PolymerType.
+            bs.setType( SequenceType.DNA ); // TODO need to determine SequenceType and PolymerType.
 
             DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
             dbe.setAccession( externalRef );
@@ -809,7 +854,7 @@ public class GeoConverter implements Converter {
      * @param sample
      */
     @SuppressWarnings("unchecked")
-    private BioAssay convertSample( GeoSample sample ) {
+    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
             return null;
@@ -844,11 +889,11 @@ public class GeoConverter implements Converter {
 
         for ( GeoChannel channel : sample.getChannels() ) {
             /*
-             * FIXME we also add biomaterials based on the datasets. Thus we get 'doubles' here. In reality GEO does not
-             * have information about the samples run on each channel. We're just making it up.
+             * In reality GEO does not have information about the samples run on each channel. We're just making it up.
+             * So we need to just add the channel information to the biomaterials we have already.
              */
-            BioMaterial bioMaterial = convertChannel( sample, channel );
-            bioAssay.getSamplesUsed().add( bioMaterial );
+            convertChannel( sample, channel, bioMaterial );
+            // bioAssay.getSamplesUsed().add( bioMaterial );
         }
 
         for ( GeoPlatform platform : sample.getPlatforms() ) {
@@ -931,14 +976,14 @@ public class GeoConverter implements Converter {
         expExp.getExperimentalDesigns().add( design );
 
         // GEO does not have the concept of a biomaterial.
-        // Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
         Collection<GeoSample> samples = series.getSamples();
         expExp.setBioAssays( new HashSet() );
         int i = 1;
+
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( series.getGeoAccession() + "_" + i );
+            bioMaterial.setName( series.getGeoAccession() + "_bioMaterial_" + i );
             i++;
 
             // Find the sample and convert it.
@@ -954,7 +999,7 @@ public class GeoConverter implements Converter {
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
-                        BioAssay ba = convertSample( sample );
+                        BioAssay ba = convertSample( sample, bioMaterial );
                         ba.getSamplesUsed().add( bioMaterial );
                         log.info( "Adding " + ba + " and associating with  " + bioMaterial );
                         expExp.getBioAssays().add( ba );
@@ -992,7 +1037,7 @@ public class GeoConverter implements Converter {
 
         for ( GeoSample sample : geoSubSet.getSamples() ) {
 
-            BioAssay bioAssay = convertSample( sample ); // converted object only used for searching.
+            BioAssay bioAssay = convertSample( sample, null ); // converted object only used for searching.
 
             boolean found = addMatchingBioAssayToSubSet( subSet, bioAssay, expExp );
             assert found : "No matching bioassay found for " + bioAssay.getAccession().getAccession() + " in subset. "
