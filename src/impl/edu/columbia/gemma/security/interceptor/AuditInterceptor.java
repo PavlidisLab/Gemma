@@ -152,15 +152,11 @@ public class AuditInterceptor implements MethodInterceptor {
     private void addUpdateAuditEvent( Auditable d ) {
         AuditTrail at = d.getAuditTrail();
         if ( at == null ) {
-            log.warn( "No audit trail for update method call" );
-            at = AuditTrail.Factory.newInstance();
-            at.start();
-            d.setAuditTrail( at );
-            d.setAuditTrail( at );
+            log.warn( "No audit trail for update method call, performing 'create'" );
             addCreateAuditEvent( d );
         } else {
             User user = getCurrentUser();
-            at.update( "Updated", user );
+            at.update( "Updated" + d, user );
             log.debug( "Update event on " + d + " by " + user.getUserName() );
         }
 
@@ -174,11 +170,15 @@ public class AuditInterceptor implements MethodInterceptor {
         AuditTrail at = d.getAuditTrail();
         if ( at == null ) {
             at = AuditTrail.Factory.newInstance();
+            at = auditTrailDao.create( at );
+            d.setAuditTrail( at );
         }
-        User user = getCurrentUser();
-        at.start( "start", user );
-        at = auditTrailDao.create( at );
-        log.debug( "Create event on " + d + " by " + user.getUserName() );
+
+        if ( at.getEvents().size() == 0 ) {
+            User user = getCurrentUser();
+            at.start( "create " + d, user );
+            log.debug( "Create event on " + d + " by " + user.getUserName() );
+        }
     }
 
     /**
@@ -207,15 +207,14 @@ public class AuditInterceptor implements MethodInterceptor {
     /**
      * @param Auditable
      */
-    private void addLoadOrCreateAuditEvent( Auditable Auditable ) {
-        if ( AUDIT_READ && Auditable.getAuditTrail() != null && Auditable.getAuditTrail().getCreationEvent() != null ) {
+    private void addLoadOrCreateAuditEvent( Auditable auditable ) {
+        if ( AUDIT_READ && auditable.getAuditTrail() != null && auditable.getAuditTrail().getCreationEvent() != null ) {
             log.debug( "FindOrCreate..just load" );
-            addLoadAuditEvent( Auditable );
-        } else {
-            log.debug( "FindOrCreate..create" );
-            if ( AUDIT_CREATE ) addCreateAuditEvent( Auditable );
+            addLoadAuditEvent( auditable );
+        } else if ( AUDIT_CREATE ) {
+            log.debug( "FindOrCreate..create on " + auditable );
+            addCreateAuditEvent( auditable );
         }
-
     }
 
     /**
@@ -225,8 +224,6 @@ public class AuditInterceptor implements MethodInterceptor {
         AuditTrail at = Auditable.getAuditTrail();
         if ( at == null ) {
             log.warn( "No audit trail for update method call" );
-            at = AuditTrail.Factory.newInstance();
-            Auditable.setAuditTrail( at );
             addCreateAuditEvent( Auditable );
         } else {
             User user = getCurrentUser();
@@ -271,10 +268,10 @@ public class AuditInterceptor implements MethodInterceptor {
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
 
-                log.debug( "Checking " + propertyNames[j] + " for cascade audit" );
+                // log.debug( "Checking " + propertyNames[j] + " for cascade audit" );
 
                 if ( !CrudInterceptorUtils.needCascade( m, cs ) ) {
-                    log.debug( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
+                    // log.debug( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
                     continue;
                 }
 
