@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN"
+    "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<!-- 
+    author: keshav    
+    $Id$ 
+-->
+
+<beans>
+
+    <!-- ======================== FILTER CHAIN ======================= -->
+    <bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">
+        <property name="filterInvocationDefinitionSource">
+            <value>
+                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON PATTERN_TYPE_APACHE_ANT 
+                /j_security_check*=httpSessionContextIntegrationFilter,authenticationProcessingFilter
+                /**/*.html*=httpSessionContextIntegrationFilter,remoteUserFilter,anonymousProcessingFilter,securityEnforcementFilter
+                /**/*.htm*=httpSessionContextIntegrationFilter,remoteUserFilter,anonymousProcessingFilter,securityEnforcementFilter
+                /**/*.jsp*=httpSessionContextIntegrationFilter,remoteUserFilter,securityEnforcementFilter
+            </value>
+        </property>
+    </bean>
+
+    <!-- ======================== FILTERS ======================= -->
+
+    <!--   Populates the SecurityContextHolder with information obtained from the HttpSession. -->
+    <bean id="httpSessionContextIntegrationFilter" class="org.acegisecurity.context.HttpSessionContextIntegrationFilter">
+        <property name="context">
+            <value>org.acegisecurity.context.SecurityContextImpl</value>
+        </property>
+    </bean>
+
+
+    <bean id="remoteUserFilter" class="org.acegisecurity.wrapper.SecurityContextHolderAwareRequestFilter" />
+
+    <bean id="anonymousProcessingFilter" class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
+        <property name="key">
+            <value>anonymous</value>
+        </property>
+        <property name="userAttribute">
+            <value>anonymous,ROLE_ANONYMOUS</value>
+        </property>
+    </bean>
+
+    <!-- ======================== AUTHENTICATION FILTER ======================= -->
+
+    <bean id="authenticationProcessingFilter" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
+        <property name="authenticationManager">
+            <ref local="authenticationManager" />
+        </property>
+        <property name="authenticationFailureUrl">
+            <value>/login.jsp?error=true</value>
+        </property>
+        <property name="defaultTargetUrl">
+            <value>/</value>
+        </property>
+        <property name="filterProcessesUrl">
+            <value>/j_security_check</value>
+        </property>
+    </bean>
+
+    <bean id="manualAuthenticationProcessing" class="edu.columbia.gemma.security.ui.ManualAuthenticationProcessing">
+        <property name="authenticationManager">
+            <ref bean="authenticationManager" />
+        </property>
+
+    </bean>
+
+    <bean id="authenticationManager" class="org.acegisecurity.providers.ProviderManager">
+        <property name="providers">
+            <list>
+                <ref local="daoAuthenticationProvider" />
+                <ref local="anonymousAuthenticationProvider" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
+    <bean id="loggerListener" class="org.acegisecurity.event.authentication.LoggerListener" />
+
+    <!-- TODO put the acegi passwordEncoder here and in jdbcDaoImpl.  We are currently using the appfuse 
+        password encoding.     
+    -->
+    <bean id="daoAuthenticationProvider" class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
+        <property name="userDetailsService">
+            <ref local="jdbcDaoImpl" />
+        </property>
+        <property name="userCache">
+            <ref local="userCache" />
+        </property>
+    </bean>
+
+    <!-- Read users from database -->
+    <bean id="jdbcDaoImpl" class="org.acegisecurity.userdetails.jdbc.JdbcDaoImpl">
+        <property name="dataSource">
+            <ref bean="dataSource" />
+        </property>
+        <property name="usersByUsernameQuery">
+            <value>SELECT USER_NAME,PASSWORD, enabled as "true" FROM CONTACT WHERE USER_NAME = ?</value>
+        </property>
+        <property name="authoritiesByUsernameQuery">
+            <value>SELECT USER_NAME,NAME FROM USER_ROLE WHERE USER_NAME = ?</value>
+        </property>
+    </bean>
+
+    <bean id="userCache" class="org.acegisecurity.providers.dao.cache.EhCacheBasedUserCache">
+        <property name="cache">
+            <bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+                <property name="cacheManager">
+                    <bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" />
+                </property>
+                <property name="cacheName">
+                    <value>userCache</value>
+                </property>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="anonymousAuthenticationProvider" class="org.acegisecurity.providers.anonymous.AnonymousAuthenticationProvider">
+        <property name="key">
+            <value>anonymous</value>
+        </property>
+    </bean>
+
+    <!-- ===================== HTTP REQUEST SECURITY ==================== -->
+
+    <bean id="securityEnforcementFilter" class="org.acegisecurity.intercept.web.SecurityEnforcementFilter">
+        <property name="filterSecurityInterceptor">
+            <ref local="filterInvocationInterceptor" />
+        </property>
+        <property name="authenticationEntryPoint">
+            <ref local="authenticationProcessingFilterEntryPoint" />
+        </property>
+    </bean>
+
+    <!-- Note the order that entries are placed against the objectDefinitionSource is critical.
+        The FilterSecurityInterceptor will work from the top of the list down to the FIRST pattern that matches the request URL.
+        Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
+    <bean id="filterInvocationInterceptor" class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
+        <property name="authenticationManager">
+            <ref local="authenticationManager" />
+        </property>
+        <property name="accessDecisionManager">
+            <ref local="accessDecisionManager" />
+        </property>
+        <property name="objectDefinitionSource">
+            <value>
+                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON 
+                PATTERN_TYPE_APACHE_ANT 
+                /signup.html=ROLE_ANONYMOUS,admin,user 
+                /passwordhint.html*=ROLE_ANONYMOUS,admin,user
+                /**/*.html*=admin,user 
+                /**/*.htm*=admin,user 
+                /clickstreams.jsp=admin
+            </value>
+        </property>
+    </bean>
+
+    <!-- if user requests a secure Http resource but has not been authenticated, they will be presented this login form -->
+    <bean id="authenticationProcessingFilterEntryPoint" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
+        <property name="loginFormUrl">
+            <value>/login.jsp</value>
+        </property>
+        <property name="forceHttps">
+            <value>false</value>
+        </property>
+    </bean>
+
+    <!-- ===================== AUTHORIZATION ==================== -->
+
+    <!-- acegi serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. -->
+    <bean id="serviceSecurityInterceptor" class="org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor">
+        <property name="authenticationManager">
+            <ref bean="authenticationManager" />
+        </property>
+        <property name="accessDecisionManager">
+            <ref bean="businessAccessDecisionManager" />
+        </property>
+        <property name="afterInvocationManager">
+            <ref bean="afterInvocationManager" />
+        </property>
+        <property name="objectDefinitionSource">
+            <value>
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.loadAll=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.update=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.create=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.find=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.delete=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByAccession=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.read=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findByName=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
+                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.loadAll=user,admin
+                edu.columbia.gemma.expression.experiment.ExperimentalDesignService.create=user,admin
+                edu.columbia.gemma.expression.experiment.ExperimentalFactorService.loadAll=user,admin
+                edu.columbia.gemma.expression.experiment.ExperimentalFactorService.create=user,admin
+                edu.columbia.gemma.expression.experiment.FactorValueService.loadAll=user,admin
+                edu.columbia.gemma.expression.experiment.FactorValueService.findOrCreate=user,admin 
+                edu.columbia.gemma.expression.experiment.FactorValueService.delete=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService.loadAll=user,admin
+                edu.columbia.gemma.expression.experiment.ExpressionExperimentSubSetService.create=user,admin
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.getAllCompositeSequences=user,admin, AFTER_ACL_ARRAYDESIGN_COLLECTION_READ
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.remove=user,admin
+                edu.columbia.gemma.expression.designElement.CompositeSequenceService.find=user,admin
+                edu.columbia.gemma.expression.designElement.ReporterService.findOrCreate=user,admin 
+                edu.columbia.gemma.expression.designElement.ReporterService.remove=user,admin
+                edu.columbia.gemma.expression.designElement.ReporterService.find=user,admin
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.remove=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.update=ACL_SECURABLE_EDIT 
+                edu.columbia.gemma.expression.arrayDesign.ArrayDesignService.find=user,admin
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin 
+                edu.columbia.gemma.expression.bioAssay.BioAssayService.remove=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.findOrCreate=user,admin 
+                edu.columbia.gemma.expression.biomaterial.BioMaterialService.remove=user,admin
+                edu.columbia.gemma.expression.biomaterial.TreatmentService.getTreatments=user,admin
+                edu.columbia.gemma.expression.biomaterial.TreatmentService.saveTreatment=user,admin 
+                edu.columbia.gemma.expression.biomaterial.CompoundService.find=user,admin
+                edu.columbia.gemma.expression.biomaterial.CompoundService.findOrCreate=user,admin 
+                edu.columbia.gemma.expression.biomaterial.CompoundService.update=user,admin
+                edu.columbia.gemma.expression.biomaterial.CompoundService.remove=user,admin 
+                edu.columbia.gemma.common.description.BibliographicReferenceService.getAll=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.findByExternalId=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.find=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.getBibliographicReferenceByTitle=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.saveBibliographicReferenceByLookup=user,admin
+                edu.columbia.gemma.common.description.BibliographicReferenceService.updateBibliographicReference=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.remove=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.BibliographicReferenceService.addPDF=user,admin 
+                edu.columbia.gemma.common.description.ExternalDatabaseService.find=user,admin
+                edu.columbia.gemma.common.description.ExternalDatabaseService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.ExternalDatabaseService.remove=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.createNewList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.addReferenceToList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.getAllReferencesForList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.setListDescription=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.setComment=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.removeList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.removeReferenceFromList=user,admin
+                edu.columbia.gemma.common.description.NotedReferenceListService.setRating=user,admin
+                edu.columbia.gemma.common.description.FileFormatService.findByIdentifier=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.deleteFile=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.common.description.LocalFileService.copyFile=ACL_SECURABLE_EDIT 
+                edu.columbia.gemma.common.description.LocalFileService.findByPath=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.find=user,admin 
+                edu.columbia.gemma.common.description.LocalFileService.save=user,admin
+                edu.columbia.gemma.common.description.LocalFileService.update=user,admin 
+                edu.columbia.gemma.common.description.LocalFileService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.DatabaseEntryService.find=user,admin 
+                edu.columbia.gemma.common.description.DatabaseEntryService.findOrCreate=user,admin
+                edu.columbia.gemma.common.description.DatabaseEntryService.update=user,admin 
+                edu.columbia.gemma.common.description.DatabaseEntryService.remove=user,admin
+                edu.columbia.gemma.common.description.OntologyEntryService.findOrCreate=user,admin 
+                edu.columbia.gemma.common.description.OntologyEntryService.remove=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.savePerson=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.getAllPersons=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.removePerson=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.findByName=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.findByFullName=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.PersonService.findOrCreate=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.getUser=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.UserService.getUsers=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.saveUser=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.removeUser=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.checkLoginCookie=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.createLoginCookie=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.removeLoginCookies=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.UserService.addRole=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserService.findById=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.getRoles=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.getRole=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.saveRole=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.UserRoleService.removeRole=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.findOrCreate=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.find=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.remove=user,admin
+                edu.columbia.gemma.common.auditAndSecurity.ContactService.update=user,admin 
+                edu.columbia.gemma.common.protocol.HardwareService.find=user,admin
+                edu.columbia.gemma.common.protocol.HardwareService.findOrCreate=user,admin 
+                edu.columbia.gemma.common.protocol.HardwareService.update=user,admin
+                edu.columbia.gemma.common.protocol.HardwareService.remove=user,admin 
+                edu.columbia.gemma.common.protocol.ProtocolService.find=user,admin
+                edu.columbia.gemma.common.protocol.ProtocolService.findOrCreate=user,admin 
+                edu.columbia.gemma.common.protocol.ProtocolService.update=user,admin
+                edu.columbia.gemma.common.protocol.ProtocolService.remove=user,admin 
+                edu.columbia.gemma.common.protocol.SoftwareService.findOrCreate=user,admin
+                edu.columbia.gemma.common.protocol.SoftwareService.find=user,admin 
+                edu.columbia.gemma.common.protocol.SoftwareService.update=user,admin
+                edu.columbia.gemma.common.protocol.SoftwareService.remove=user,admin 
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.find=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.findOrCreate=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.update=user,admin
+                edu.columbia.gemma.common.quantitationtype.QuantitationTypeService.remove=user,admin 
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.find=user,admin
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.remove=user,admin
+                 edu.columbia.gemma.genome.biosequence.BioSequenceService.findOrCreate=user,admin
+                edu.columbia.gemma.genome.biosequence.BioSequenceService.update=user,admin 
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.createByName=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.updateCandidateGeneList=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.removeCandidateGeneList=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByContributer=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByGeneOfficialName=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByID=user,admin 
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findByListOwner=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.findAll=user,admin 
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.setActor=user,admin
+                edu.columbia.gemma.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
+                edu.columbia.gemma.genome.gene.GeneService.update=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.genome.gene.GeneService.findAll=user,admin 
+                edu.columbia.gemma.genome.gene.GeneService.remove=ACL_SECURABLE_EDIT
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialName=user,admin 
+                edu.columbia.gemma.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbol=user,admin 
+                edu.columbia.gemma.genome.gene.GeneService.findByOfficialSymbolInexact=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.findByID=user,admin 
+                edu.columbia.gemma.genome.gene.GeneService.findOrCreate=user,admin
+                edu.columbia.gemma.genome.gene.GeneService.remove=user,admin 
+                edu.columbia.gemma.genome.TaxonService.find=user,admin
+                edu.columbia.gemma.genome.TaxonService.update=user,admin 
+                edu.columbia.gemma.genome.TaxonService.remove=user,admin
+                edu.columbia.gemma.genome.TaxonService.findOrCreate=user,admin
+
+
+
+            </value>
+        </property>
+    </bean>
+
+    <!-- An access decision manager used by the serviceSecurityInterceptor -->
+    <bean id="businessAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
+        <property name="allowIfAllAbstainDecisions">
+            <value>false</value>
+        </property>
+        <property name="decisionVoters">
+            <list>
+                <ref local="roleVoter" />
+                <ref bean="securableVoter" />
+                <ref bean="localFileEditVoter" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- An access decision manager used by filterInvocationInterceptor -->
+    <bean id="accessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
+        <property name="allowIfAllAbstainDecisions">
+            <value>false</value>
+        </property>
+        <property name="decisionVoters">
+            <list>
+                <ref bean="roleVoter" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- ===================== VOTING ==================== -->
+
+    <!-- role-based voting -->
+    <bean id="roleVoter" class="org.acegisecurity.vote.RoleVoter">
+        <property name="rolePrefix">
+            <value />
+        </property>
+    </bean>
+
+    <!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
+
+    <!-- An access decision voters that read processConfigAttribute settings -->
+
+    <!--  voter that can be applied to any operation on a securable -->
+    <bean id="securableVoter" class="org.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager">
+            <ref bean="aclManager" />
+        </property>
+        <property name="processConfigAttribute">
+            <value>ACL_SECURABLE_EDIT</value>
+        </property>
+        <property name="processDomainObjectClass">
+            <value>edu.columbia.gemma.common.Securable</value>
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION" />
+                <ref local="SimpleAclEntry.READ_WRITE" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="localFileEditVoter" class="org.acegisecurity.vote.BasicAclEntryVoter">
+        <property name="aclManager">
+            <ref bean="aclManager" />
+        </property>
+        <property name="processConfigAttribute">
+            <value>ACL_LOCALFILE_EDIT</value>
+        </property>
+        <property name="processDomainObjectClass">
+            <value>edu.columbia.gemma.common.description.LocalFile</value>
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref local="SimpleAclEntry.ADMINISTRATION" />
+                <ref local="SimpleAclEntry.READ_WRITE" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
+
+    <bean id="afterInvocationManager" class="org.acegisecurity.afterinvocation.AfterInvocationProviderManager">
+        <property name="providers">
+            <list>
+                <ref local="afterAclRead" />
+                <ref local="afterAclCollectionRead" />
+                <ref local="afterAclArrayDesignCollectionRead" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- Processes AFTER_ACL_READ configuration settings -->
+    <bean id="afterAclRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
+        <property name="aclManager">
+            <ref local="aclManager" />
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref bean="SimpleAclEntry.ADMINISTRATION" />
+                <ref bean="SimpleAclEntry.READ_WRITE" />
+                <ref bean="SimpleAclEntry.READ" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- Processes AFTER_ACL_COLLECTION_READ configuration settings (removes objects from the collection if you do not 
+        have authorization priviliges based on -->
+    <bean id="afterAclCollectionRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
+        <property name="aclManager">
+            <ref local="aclManager" />
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref bean="SimpleAclEntry.ADMINISTRATION" />
+                <ref bean="SimpleAclEntry.READ_WRITE" />
+                <ref bean="SimpleAclEntry.READ" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- Process AFTER_ACL_ARRAYDESIGN_COLLECTION_READ -->
+    <bean id="afterAclArrayDesignCollectionRead" class="edu.columbia.gemma.security.afterInvocation.AclAfterCollectionCompSeqByArrayDesignFilter">
+        <property name="aclManager">
+            <ref local="aclManager" />
+        </property>
+        <property name="requirePermission">
+            <list>
+                <ref bean="SimpleAclEntry.ADMINISTRATION" />
+                <ref bean="SimpleAclEntry.READ_WRITE" />
+                <ref bean="SimpleAclEntry.READ" />
+            </list>
+        </property>
+    </bean>
+
+    <!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
+
+    <bean id="aclManager" class="org.acegisecurity.acl.AclProviderManager">
+        <property name="providers">
+            <list>
+                <ref local="basicAclProvider" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="basicAclProvider" class="org.acegisecurity.acl.basic.BasicAclProvider">
+        <property name="basicAclDao">
+            <ref local="basicAclExtendedDao" />
+        </property>
+    </bean>
+
+    <bean id="basicAclExtendedDao" class="org.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl">
+        <property name="dataSource">
+            <ref bean="dataSource" />
+        </property>
+    </bean>
+
+    <!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~~~~ -->
+
+    <!-- ACL permission masks -->
+
+    <bean id="SimpleAclEntry.ADMINISTRATION" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.ADMINISTRATION</value>
+        </property>
+    </bean>
+
+    <bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
+        </property>
+    </bean>
+
+    <bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
+        </property>
+    </bean>
+
+    <bean id="SimpleAclEntry.CREATE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
+        </property>
+    </bean>
+
+    <bean id="SimpleAclEntry.DELETE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+        <property name="staticField">
+            <value>org.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
+        </property>
+    </bean>
+
+    <!-- ================================================================== -->
+
+    <!--  Interceptor to persist ACL objects -->
+    <bean id="addOrRemoveFromACLInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+        <property name="advice">
+            <ref local="aclAdvice" />
+        </property>
+        <property name="pointcut">
+            <bean class="edu.columbia.gemma.security.interceptor.AclPointcut" />
+        </property>
+    </bean>
+
+    <bean id="aclAdvice" class="edu.columbia.gemma.security.interceptor.AddOrRemoveFromACLInterceptor">
+        <property name="basicAclExtendedDao">
+            <ref bean="basicAclExtendedDao" />
+        </property>
+        <property name="hibernateInterceptor">
+            <ref bean="hibernateInterceptor" />
+        </property>
+    </bean>
+
+    <!--  pointcut that identifies crud operations -->
+    <bean id="crudPointcut" class="edu.columbia.gemma.security.interceptor.AclPointcut" />
+
+    <!--  Interceptor for audit trail -->
+    <bean id="auditAdvice" class="edu.columbia.gemma.security.interceptor.AuditInterceptor">
+        <property name="auditTrailDao">
+            <ref bean="auditTrailDao" />
+        </property>
+        <property name="userDao">
+            <ref bean="userDao" />
+        </property>
+    </bean>
+
+    <bean id="auditInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+        <property name="advice">
+            <ref local="auditAdvice" />
+        </property>
+        <property name="pointcut">
+            <ref bean="crudPointcut" />
+        </property>
+    </bean>
+
+</beans>
