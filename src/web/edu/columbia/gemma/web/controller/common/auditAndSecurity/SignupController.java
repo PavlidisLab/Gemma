@@ -23,11 +23,19 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.providers.ProviderManager;
+import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.validation.BindException;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserExistsException;
+import edu.columbia.gemma.common.auditAndSecurity.UserRole;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.util.RequestUtil;
 import edu.columbia.gemma.util.StringUtil;
@@ -61,43 +69,36 @@ public class SignupController extends BaseFormController {
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        log.debug( "entering 'onSubmit' method..." );
-
         User user = ( User ) command;
         Locale locale = request.getLocale();
 
-        /*
-         * TODO we need to get direct access to the ServletContext out of the controller. It is making the controller
-         * impossible to test!!
-         */
-        String algorithm;
-        if ( request.getServletPath() != "/test.signup.html" )
-            algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
-        else {
-            algorithm = "SHA";
-        }
-        /*
-         * TODO when testing, you would never get to this point without my check above. Again, we need to get the
-         * ServletContext access out of the controller.
-         */
-        if ( algorithm == null ) { // should only happen for test case
-            log.debug( "assuming testcase, setting algorithm to 'SHA'" );
-            algorithm = "SHA";
-        }
+        Boolean encrypt = ( Boolean ) getConfiguration().get( Constants.ENCRYPT_PASSWORD );
 
-        user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
+        if ( encrypt != null && encrypt.booleanValue() ) {
+            String algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
+
+            if ( algorithm == null ) { // should only happen for test case
+                log.debug( "assuming testcase, setting algorithm to 'SHA'" );
+                algorithm = "SHA";
+            }
+
+            user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
+        }
 
         user.setEnabled( true );
 
         // Set the default user role on this new user
-        this.getUserService().addRole( user, userRoleService.getRole( Constants.USER_ROLE ) );
+        UserRole role = this.userRoleService.getRole( Constants.USER_ROLE );
+        role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+        user.getRoles().add( role );
 
         try {
-            this.getUserService().saveUser( user );
+            log.info( "Signing up " + user + " " + user.getUserName() );
+            this.userService.saveUser( user );
         } catch ( UserExistsException e ) {
             log.warn( e.getMessage() );
 
-            errors.rejectValue( "userName", "errors.existing.user",
+            errors.rejectValue( "username", "errors.existing.user",
                     new Object[] { user.getUserName(), user.getEmail() }, "duplicate user" );
 
             // redisplay the unencrypted passwords
@@ -105,16 +106,28 @@ public class SignupController extends BaseFormController {
             return showForm( request, response, errors );
         }
 
-        // Set cookies for auto-magical login ;-)
-        String loginCookie = this.getUserService().createLoginCookie( user.getUserName() );
-        RequestUtil.setCookie( response, Constants.LOGIN_COOKIE, loginCookie, request.getContextPath() );
-
         saveMessage( request, getText( "user.registered", user.getUserName(), locale ) );
-
         request.getSession().setAttribute( Constants.REGISTERED, Boolean.TRUE );
 
+        // log user in automatically
+        Authentication auth = new UsernamePasswordAuthenticationToken( user.getUserName(), user.getConfirmPassword() );
+        try {
+            ApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext( request.getSession()
+                    .getServletContext() );
+            if ( ctx != null ) {
+                ProviderManager authenticationManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+                SecurityContextHolder.getContext().setAuthentication( authenticationManager.doAuthentication( auth ) );
+            }
+        } catch ( NoSuchBeanDefinitionException n ) {
+            // ignore, should only happen when testing
+        }
+
         // Send user an e-mail
-        log.debug( "Sending user '" + user.getUserName() + "' an account information e-mail" );
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Sending user '" + user.getName() + "' an account information e-mail" );
+        }
+
+        // Send an account information e-mail
         message.setSubject( getText( "signup.email.subject", locale ) );
         sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
 

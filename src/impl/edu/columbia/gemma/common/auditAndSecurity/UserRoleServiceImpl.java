@@ -22,9 +22,6 @@ package edu.columbia.gemma.common.auditAndSecurity;
 
 /**
  * Implementation of UserRole services.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
