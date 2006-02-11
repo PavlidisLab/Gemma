@@ -1,0 +1,3 @@
+applicationContext-hibernate.xml
+applicationContext-localDataSource.xml
+beanRefFactory.xml
