@@ -33,8 +33,15 @@
 </context-param>
 <!-- Context Configuration locations for Spring XML files -->
 <context-param>
-	<param-name>contextConfigLocation</param-name>
-	<param-value>/WEB-INF/applicationContext-*.xml,/WEB-INF/beanRefFactory.xml</param-value>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>
+        classpath:/applicationContext-hibernate.xml,
+        classpath:/applicationContext-security.xml,
+        classpath:/applicationContext-localDataSource.xml,
+        classpath:/applicationContext-validation.xml,
+        classpath:/applicationContext-resources.xml,
+        classpath:/beanRefFactory.xml
+    </param-value>
 </context-param>
 <!-- Add the bootstrap listener to start the root WebApplicationContext -->
 <listener>

@@ -1,6 +1,6 @@
 <!-- Dispatch Servlet Configuration -->
 <servlet>
-	<description>Everything from Gemma, at the moment.</description>
+	<description>Everything from Gemma.</description>
 	<servlet-name>action</servlet-name>
 	<servlet-class>
 		org.springframework.web.servlet.DispatcherServlet
