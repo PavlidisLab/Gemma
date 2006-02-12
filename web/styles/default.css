@@ -16,6 +16,12 @@ a:hover, .cmMenuOver, .cmItemOver {
     text-decoration: underline overline;
 }
 
+div#logo {
+    float: left,top;
+    padding: 3px 3px 3px 3px;
+     background: transparent;
+    }
+
 a img { border: 0 }
 
 /* 0 means zero regardless of measurement */
@@ -68,7 +74,7 @@ div#footer a:hover {
 }
 
 div#header {
-    margin: 50px 0px 10px 0px;
+    margin: 11px 0px 10px 0px;
     padding: 17px 0px 5px 20px;
     /* For IE5/Win's benefit height = [correct height] + [top padding] + [top and bottom border widths] */
     height: 33px; /* 14px + 17px + 2px = 33px */

@@ -34,6 +34,12 @@
         <%-- Must come after body to work in IE --%>
         <script type="text/javascript" src="<c:url value='/scripts/coolmenu4-config.js'/>"></script>
 
+        <div id="logo">
+            <a href="<%=request.getContextPath()%>">
+                <img src="<%=request.getContextPath()%>/images/logo/gemOnlyTiny.gif" />
+            </a>
+        </div>
+
         <div id="screen">
 
             <div id="header">
