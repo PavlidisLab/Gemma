@@ -38,23 +38,23 @@ import edu.columbia.gemma.web.Constants;
  * <br />
  * 
  * <pre>
- *      
  *       
- *        &lt;tag:secure /&gt;
- *        or
- *        &lt;tag:secure mode=&quot;secured&quot; /&gt;
  *        
- *       
+ *         &lt;tag:secure /&gt;
+ *         or
+ *         &lt;tag:secure mode=&quot;secured&quot; /&gt;
+ *         
+ *        
  * </pre>
  * 
  * If you want the force the page to be viewed in over standard http, then you would do something like:<br />
  * 
  * <pre>
- *      
  *       
- *        &lt;tag:secure mode=&quot;unsecured&quot; /&gt;
  *        
- *       
+ *         &lt;tag:secure mode=&quot;unsecured&quot; /&gt;
+ *         
+ *        
  * </pre>
  * 
  * @jsp.tag name="secure" body-content="empty"

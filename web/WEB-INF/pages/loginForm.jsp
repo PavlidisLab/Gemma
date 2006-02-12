@@ -1,10 +1,10 @@
 <%@ include file="/common/taglibs.jsp"%>
-
+<%-- $Id$ -%>
 <div id="loginTable">
 <%-- If you don't want to encrypt passwords programmatically, or you don't
      care about using SSL for the login, you can change this form's action
-     to "j_security_check" --%>
-<form method="post" id="loginForm" action="<c:url value="/authorize"/>" 
+     from "authorize" to "j_security_check" --%>
+<form method="post" id="loginForm" action="<c:url value="/j_security_check"/>" 
     onsubmit="saveUsername(this);return validateForm(this)">
 <table width="100%">
     <tr>
@@ -50,14 +50,13 @@
     </tr>
     </c:if>
     <tr>
-        <td></td>
+         <td></td>
         <td>
-            <!-- for Resin -->
-            <input type="hidden" name="j_uri" value="" />
             <input type="submit" class="button" name="login" value="<fmt:message key="button.login"/>" tabindex="4" />
-            <input type="reset" class="button" name="reset" value="<fmt:message key="button.reset"/>" tabindex="5" 
-                onclick="document.getElementById('j_username').focus()" />
+            <input type="reset" class="button" name="reset" value="<fmt:message key="button.reset"/>" tabindex="5"
+                onclick="$('j_username').focus()" />
         </td>
+
     </tr>
     <tr>
 		<td></td>

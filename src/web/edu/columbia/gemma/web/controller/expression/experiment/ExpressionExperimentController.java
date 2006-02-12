@@ -37,8 +37,8 @@ import edu.columbia.gemma.web.controller.common.description.BibliographicReferen
  * @author keshav
  * @author daq2101
  * @version $Id$
- * @spring.bean id="expressionExperimentController" name="/expressionExperiments.htm /experimentalDesigns.htm
- *              /expressionExperimentDetails.htm"
+ * @spring.bean id="expressionExperimentController" name="/expressionExperiments.html /experimentalDesigns.html
+ *              /expressionExperimentDetails.html"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "messageSource" ref="messageSource"
  */
@@ -68,12 +68,12 @@ public class ExpressionExperimentController implements Controller {
         log.info( uri );
 
         /* handle "get all" case. */
-        if ( uri.equals( "/Gemma/expressionExperiments.htm" ) ) {
+        if ( uri.equals( "/Gemma/expressionExperiments.html" ) ) {
             return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
                     expressionExperimentService.loadAll() );
 
             /* handle details or delete, depending on whether _eventId=delete. */
-        } else if ( uri.equals( "/Gemma/expressionExperimentDetails.htm" ) ) {
+        } else if ( uri.equals( "/Gemma/expressionExperimentDetails.html" ) ) {
 
             /* passed from jsp, and must be packed again to view in the next jsp. */
             request.setAttribute( "id", request.getParameter( "id" ) );
@@ -104,7 +104,7 @@ public class ExpressionExperimentController implements Controller {
          * handle the event of clicking on the experimental designs (expressed as the number of experimental designs in
          * the collection) link for this expression experiment.
          */
-        else if ( uri.equals( "/Gemma/experimentalDesigns.htm" ) ) {
+        else if ( uri.equals( "/Gemma/experimentalDesigns.html" ) ) {
             /*
              * What is the difference between getParameter vs. getAttribute? I have used getAttribute because the
              * MockHttpServletRequest does not have a setParameter method. getAttribute does not work when you fire up
@@ -115,8 +115,9 @@ public class ExpressionExperimentController implements Controller {
                     "experimentalDesign.GetAll.results.view",
                     "experimentalDesigns",
                     ( expressionExperimentService.findByName( request.getParameter( "name" ) ).getExperimentalDesigns() ) );
-        } else
+        } else {
             throw new RuntimeException( "There is no view to match the url" );
+        }
     }
 
     /**

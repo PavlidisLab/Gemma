@@ -6,6 +6,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.AuthenticationTrustResolver;
+import org.acegisecurity.AuthenticationTrustResolverImpl;
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
@@ -26,8 +31,6 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * <p>
  * Based on Appfuse code.
  * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
@@ -48,9 +51,15 @@ import edu.columbia.gemma.web.controller.BaseFormController;
 public class UserFormController extends BaseFormController {
     private UserRoleService userRoleService;
 
+    public UserFormController() {
+        setCommandName( "user" );
+        setCommandClass( User.class );
+    }
+
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
+
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'onSubmit' method..." );
         }
@@ -59,12 +68,16 @@ public class UserFormController extends BaseFormController {
         Locale locale = request.getLocale();
 
         if ( request.getParameter( "delete" ) != null ) {
-            userService.removeUser( user.getUserName() );
+            this.getUserService().removeUser( user.getUserName() );
             saveMessage( request, getText( "user.deleted", user.getFullName(), locale ) );
 
             return new ModelAndView( getSuccessView() );
         }
-        if ( "true".equals( request.getParameter( "encryptPass" ) ) ) {
+        Boolean encrypt = ( Boolean ) getConfiguration().get( Constants.ENCRYPT_PASSWORD );
+
+        if ( StringUtils.equals( request.getParameter( "encryptPass" ), "true" )
+                && ( encrypt != null && encrypt.booleanValue() ) ) {
+
             String algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
 
             if ( algorithm == null ) { // should only happen for test case
@@ -77,15 +90,6 @@ public class UserFormController extends BaseFormController {
             }
 
             user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
-            user.setConfirmPassword( StringUtil.encodePassword( user.getConfirmPassword(), algorithm ) ); // this was
-            // not
-            // included
-            // in
-            // appfuse
-            // --
-            // probably
-            // not
-            // persisted.
         }
 
         String[] userRoles = request.getParameterValues( "userRoles" );
@@ -96,12 +100,14 @@ public class UserFormController extends BaseFormController {
             user.getRoles().clear();
             for ( int i = 0; i < userRoles.length; i++ ) {
                 String roleName = userRoles[i];
-                userService.addRole( user, userRoleService.getRole( roleName ) );
+                UserRole role = this.userRoleService.getRole( roleName );
+                role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+                user.getRoles().add( role );
             }
         }
 
         try {
-            userService.saveUser( user );
+            this.getUserService().saveUser( user );
         } catch ( UserExistsException e ) {
             log.warn( e.getMessage() );
 
@@ -117,17 +123,6 @@ public class UserFormController extends BaseFormController {
         if ( !StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
             HttpSession session = request.getSession();
             session.setAttribute( Constants.USER_KEY, user );
-
-            // update the user's remember me cookie if they didn't login
-            // with a cookie
-            if ( ( RequestUtil.getCookie( request, Constants.LOGIN_COOKIE ) != null )
-                    && ( session.getAttribute( "cookieLogin" ) == null ) ) {
-                // delete all user cookies and add a new one
-                userService.removeLoginCookies( user.getUserName() );
-
-                String autoLogin = userService.createLoginCookie( user.getUserName() );
-                RequestUtil.setCookie( response, Constants.LOGIN_COOKIE, autoLogin, request.getContextPath() );
-            }
 
             saveMessage( request, getText( "user.saved", user.getFullName(), locale ) );
 
@@ -147,6 +142,7 @@ public class UserFormController extends BaseFormController {
         saveMessage( request, getText( "user.updated.byAdmin", user.getFullName(), locale ) );
 
         return showForm( request, response, errors );
+
     }
 
     @Override
@@ -154,7 +150,8 @@ public class UserFormController extends BaseFormController {
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
             if ( !StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
-                return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+                return new ModelAndView( new RedirectView( "mainMenu.html" ) ); // FIXME this should be a cancel
+                                                                                // message.
             }
             return new ModelAndView( getSuccessView() );
         }
@@ -172,31 +169,76 @@ public class UserFormController extends BaseFormController {
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         String username = request.getParameter( "userName" );
 
-        if ( request.getSession().getAttribute( "cookieLogin" ) != null ) {
-            saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
+        // if user logged in with remember me, display a warning that they can't change passwords
+        log.debug( "checking for remember me login..." );
+
+        AuthenticationTrustResolver resolver = new AuthenticationTrustResolverImpl();
+        SecurityContext ctx = SecurityContextHolder.getContext();
+
+        if ( ctx.getAuthentication() != null ) {
+            Authentication auth = ctx.getAuthentication();
+
+            if ( resolver.isRememberMe( auth ) ) {
+                request.getSession().setAttribute( "cookieLogin", "true" );
+
+                // add warning message
+                saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
+            }
         }
 
         User user = null;
 
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
-            user = userService.getUser( getUser( request ).getUserName() );
-        } else if ( !StringUtils.isBlank( username ) /* && !"".equals( request.getParameter( "version" ) ) */) { // we
-            // don't
-            // have
-            // 'version'.
-            user = userService.getUser( username );
+            user = this.getUserService().getUser( request.getRemoteUser() );
+        } else if ( !StringUtils.isBlank( username ) && !"".equals( request.getParameter( "version" ) ) ) {
+            user = this.getUserService().getUser( username );
         } else {
-            user = User.Factory.newInstance();
-            UserRole newRole = UserRole.Factory.newInstance();
-            user.setUserName( username );
-            newRole.setName( Constants.USER_ROLE );
-            newRole.setUserName( username );
-            userService.addRole( user, newRole );
+            UserRole role = this.userRoleService.getRole( Constants.USER_ROLE );
+            role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+            user.getRoles().add( role );
         }
 
         user.setConfirmPassword( user.getPassword() );
 
         return user;
+
+        //        
+        //        
+        //        
+        //        
+        //        
+        //        
+        //        
+        //        
+        //        
+        // String username = request.getParameter( "userName" );
+        //
+        // if ( request.getSession().getAttribute( "cookieLogin" ) != null ) {
+        // saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
+        // }
+        //
+        // User user = null;
+        //
+        // if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
+        // user = userService.getUser( getUser( request ).getUserName() );
+        // } else if ( !StringUtils.isBlank( username ) /* && !"".equals( request.getParameter( "version" ) ) */) { //
+        // we
+        // // don't
+        // // have
+        // // 'version'.
+        // user = userService.getUser( username );
+        // } else {
+        // user = User.Factory.newInstance();
+        // UserRole newRole = UserRole.Factory.newInstance();
+        // user.setUserName( username );
+        // newRole.setName( Constants.USER_ROLE );
+        // newRole.setUserName( username );
+        // userService.addRole( user, newRole );
+        // }
+        //
+        // user.setConfirmPassword( user.getPassword() );
+        //
+        // return user;
     }
 
     @Override
@@ -213,6 +255,7 @@ public class UserFormController extends BaseFormController {
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
+
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
             // if URL is "editProfile" - make sure it's the current user
             // reject if username passed in or "list" parameter passed in
@@ -243,5 +286,6 @@ public class UserFormController extends BaseFormController {
         }
 
         return super.showForm( request, response, errors );
+
     }
 }

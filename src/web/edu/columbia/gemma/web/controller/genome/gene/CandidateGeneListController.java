@@ -44,8 +44,8 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * 
  * @author daq2101
  * @version $Id$
- * @spring.bean id="candidateGeneListController" name="/candidateGeneList.htm /candidateGeneListDetail.htm
- *              /candidateGeneListActionComplete.htm"
+ * @spring.bean id="candidateGeneListController" name="/candidateGeneList.html /candidateGeneListDetail.html
+ *              /candidateGeneListActionComplete.html"
  * @spring.property name="candidateGeneListService" ref="candidateGeneListService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="userService" ref="userService"

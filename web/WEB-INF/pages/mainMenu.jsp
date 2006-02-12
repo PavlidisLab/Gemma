@@ -15,16 +15,16 @@
 
 <ul class="glassList">
     <li><!--    Paul, uncomment to use webflow implementation    
-		<a href="<c:url value="/flowController.htm?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
+		<a href="<c:url value="/flowController.html?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
 --> <a href="<c:url value="/arrayDesign/showAllArrayDesigns.html"/>"><fmt:message
         key="menu.flow.ArrayDesignSearch" /></a></li>
     <li><!-- <a href="<c:url value="/ExperimentList.html"/>">Show Expression Experiments</a>-->
-    <a href="<c:url value="/expressionExperiments.htm"/>">Show
+    <a href="<c:url value="/expressionExperiments.html"/>">Show
     Expression Experiments</a></li>
-    <li><a href="<c:url value="/candidateGeneList.htm"/>"><fmt:message
+    <li><a href="<c:url value="/candidateGeneList.html"/>"><fmt:message
         key="menu.CandidateGeneList" /></li>
     <li><a
-        href="<c:url value="/flowController.htm?_flowId=pubMed.Search"/>"><fmt:message
+        href="<c:url value="/flowController.html?_flowId=pubMed.Search"/>"><fmt:message
         key="menu.flow.PubMedSearch" /></a></li>
     <li><a href="<c:url value="/bibRef/searchBibRef.html"/>">Search
     Gemma for PubMed Id</a></li>

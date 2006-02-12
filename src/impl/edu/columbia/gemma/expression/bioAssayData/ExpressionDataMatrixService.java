@@ -30,7 +30,7 @@ import edu.columbia.gemma.expression.biomaterial.BioMaterial;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 
 /**
- * TODO - DOCUMENT ME
+ * Produces DoubleMatrix objects for ExpressionExperiments.
  * 
  * @author pavlidis
  * @version $Id$

@@ -39,7 +39,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDetailsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getAccession() != null ) {
-            return "<a href=\"expressionExperimentDetails.htm?id=" + object.getId() + "\">"
+            return "<a href=\"expressionExperimentDetails.html?id=" + object.getId() + "\">"
                     + object.getAccession().getAccession() + "</a>";
         }
         return "No accession";
@@ -51,7 +51,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getAssaysLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getBioAssays() != null ) {
-            return "<a href=\"expressionExperimentDetails.htm?id=" + object.getId() + "\">"
+            return "<a href=\"expressionExperimentDetails.html?id=" + object.getId() + "\">"
                     + object.getBioAssays().size() + "</a>";
         }
         return "No bioassays";
@@ -63,7 +63,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDesignsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getExperimentalDesigns() != null ) {
-            return "<a href=\"expressionExperimentDetails.htm?id=" + object.getId() + "\">"
+            return "<a href=\"expressionExperimentDetails.html?id=" + object.getId() + "\">"
                     + object.getExperimentalDesigns().size() + "</a>";
         }
         return "No design";

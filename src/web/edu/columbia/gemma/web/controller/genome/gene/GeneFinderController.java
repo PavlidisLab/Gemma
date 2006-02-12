@@ -39,7 +39,7 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * 
  * @author daq2101
  * @version $Id$
- * @spring.bean id="geneFinderController" name="/geneFinder.htm"
+ * @spring.bean id="geneFinderController" name="/geneFinder.html"
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="geneService" ref="geneService"
