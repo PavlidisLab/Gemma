@@ -166,7 +166,7 @@
             <value>
                 CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON PATTERN_TYPE_APACHE_ANT 
                 /signup.html=ROLE_ANONYMOUS,admin,user 
-                /passwordhint.html*=ROLE_ANONYMOUS,admin,user
+                /passwordHint.html*=ROLE_ANONYMOUS,admin,user
                 /**/*.html*=admin,user 
                 /**/*.htm*=admin,user 
                 /clickstreams.jsp=admin
