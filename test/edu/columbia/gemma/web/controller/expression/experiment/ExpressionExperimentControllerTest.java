@@ -88,43 +88,43 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
         ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
                 .getBean( "expressionExperimentController" );
 
-        MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/expressionExperiments.htm" );
-        req.setRequestURI( "/Gemma/expressionExperiments.htm" );
+        MockHttpServletRequest req = new MockHttpServletRequest( "GET", "/expressionExperiment/showAllExpressionExperiments.html" );
+        req.setRequestURI( "/expressionExperiment/showAllExpressionExperiments.html" );
 
         ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
 
         Map m = mav.getModel();
 
         assertNotNull( m.get( "expressionExperiments" ) );
-        assertEquals( mav.getViewName(), "expressionExperiment.GetAll.results.view" );
+        assertEquals( mav.getViewName(), "expressionExperiments" );
     }
 
     /**
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
-    public void testGetExperimentalDesigns() throws Exception {
-
-        ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
-                .getBean( "expressionExperimentController" );
-
-        MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/experimentalDesigns.htm" );
-        req.setRequestURI( "/Gemma/experimentalDesigns.htm" );
-        // cannot set parameter (setParmeter does not exist) so I had to set the attribute. On the server side,
-        // I have used a getAttribute as opposed to a getParameter - difference?
-        req.setAttribute( "name", "Expression Experiment" );
-
-        ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
-
-        /*
-         * In this case, the map contains 1 element of type Collection. That is, a collection of experimental designs.
-         */
-        Map<String, Object> m = mav.getModel();
-
-        Collection<ExperimentalDesign> col = ( Collection<ExperimentalDesign> ) m.get( "experimentalDesigns" );
-        log.debug( new Integer( col.size() ) );
-
-        assertNotNull( m.get( "experimentalDesigns" ) );
-        assertEquals( mav.getViewName(), "experimentalDesign.GetAll.results.view" );
-    }
+//    @SuppressWarnings("unchecked")
+//    public void testGetExperimentalDesigns() throws Exception {
+//
+//        ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
+//                .getBean( "expressionExperimentController" );
+//
+//        MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/experimentalDesigns.htm" );
+//        req.setRequestURI( "/Gemma/experimentalDesigns.htm" );
+//        // cannot set parameter (setParmeter does not exist) so I had to set the attribute. On the server side,
+//        // I have used a getAttribute as opposed to a getParameter - difference?
+//        req.setAttribute( "name", "Expression Experiment" );
+//
+//        ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
+//
+//        /*
+//         * In this case, the map contains 1 element of type Collection. That is, a collection of experimental designs.
+//         */
+//        Map<String, Object> m = mav.getModel();
+//
+//        Collection<ExperimentalDesign> col = ( Collection<ExperimentalDesign> ) m.get( "experimentalDesigns" );
+//        log.debug( new Integer( col.size() ) );
+//
+//        assertNotNull( m.get( "experimentalDesigns" ) );
+//        assertEquals( mav.getViewName(), "experimentalDesign.GetAll.results.view" );
+//    }
 }
