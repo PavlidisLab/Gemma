@@ -18,120 +18,125 @@
  */
 package edu.columbia.gemma.web.controller.expression.experiment;
 
-import java.util.Locale;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
 
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
-import edu.columbia.gemma.web.controller.common.description.BibliographicReferenceController;
+import edu.columbia.gemma.web.controller.BaseMultiActionController;
+import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author keshav
- * @author daq2101
- * @version $Id$
- * @spring.bean id="expressionExperimentController" name="/expressionExperiments.html /experimentalDesigns.html
- *              /expressionExperimentDetails.html"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "messageSource" ref="messageSource"
+ * @version $Id:
+ * @spring.bean id="expressionExperimentController"
+ *              name="/expressionExperiment/*"
+ * @spring.property name = "expressionExperimentService"
+ *                  ref="expressionExperimentService"
+ * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  */
-public class ExpressionExperimentController implements Controller {
+public class ExpressionExperimentController extends BaseMultiActionController {
 
-    private static Log log = LogFactory.getLog( BibliographicReferenceController.class.getName() );
+	private static Log log = LogFactory
+			.getLog(ExpressionExperimentController.class.getName());
 
-    private ExpressionExperimentService expressionExperimentService = null;
+	private ExpressionExperimentService expressionExperimentService = null;
 
-    private ResourceBundleMessageSource messageSource = null;
+	/**
+	 * @param arrayDesignService
+	 *            The arrayDesignService to set.
+	 */
+	public void setExpressionExperimentService(
+			ExpressionExperimentService expressionExperimentService) {
+		this.expressionExperimentService = expressionExperimentService;
+	}
 
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView - view, name of object in model, the object itself.
-     * @throws Exception
-     */
-    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        if ( log.isDebugEnabled() )
-            log.debug( "entered 'handleRequest'" + " HttpServletRequest: " + request + " HttpServletResponse: "
-                    + response );
+	/**
+	 * @param request
+	 * @param response
+	 * @param errors
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	public ModelAndView show(HttpServletRequest request,
+			HttpServletResponse response) {
+		String name = request.getParameter("name");
 
-        Locale locale = request.getLocale();
+		if (name == null) {
+			// should be a validation error, on 'submit'.
+			throw new EntityNotFoundException(
+					"Must provide an Array Design name");
+		}
 
-        String uri = request.getRequestURI();
+		ExpressionExperiment expressionExperiment = expressionExperimentService
+				.findByName(name);
+		if (expressionExperiment == null) {
+			throw new EntityNotFoundException(name + " not found");
+		}
 
-        log.info( uri );
+		this.addMessage(request, "expressionExperiment.found",
+				new Object[] { name });
+		request.setAttribute("name", name);
+		return new ModelAndView("expressionExperiment.detail").addObject(
+				"expressionExperiment", expressionExperiment);
+	}
 
-        /* handle "get all" case. */
-        if ( uri.equals( "/Gemma/expressionExperiments.html" ) ) {
-            return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
-                    expressionExperimentService.loadAll() );
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	public ModelAndView showAll(HttpServletRequest request,
+			HttpServletResponse response) {
+		return new ModelAndView("expressionExperiments").addObject(
+				"expressionExperiments", expressionExperimentService.loadAll());
+	}
 
-            /* handle details or delete, depending on whether _eventId=delete. */
-        } else if ( uri.equals( "/Gemma/expressionExperimentDetails.html" ) ) {
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	public ModelAndView delete(HttpServletRequest request,
+			HttpServletResponse response) {
+		String name = request.getParameter("name");
 
-            /* passed from jsp, and must be packed again to view in the next jsp. */
-            request.setAttribute( "id", request.getParameter( "id" ) );
+		if (name == null) {
+			// should be a validation error.
+			throw new EntityNotFoundException("Must provide a name");
+		}
 
-            log.debug( "request parameter: " + request.getAttribute( "id" ) );
+		ExpressionExperiment expressionExperiment = expressionExperimentService
+				.findByName(name);
+		if (expressionExperiment == null) {
+			throw new EntityNotFoundException(expressionExperiment
+					+ " not found");
+		}
 
-            ExpressionExperiment ee = expressionExperimentService.read( new Long( Long.parseLong( request
-                    .getParameter( "id" ) ) ) );
+		return doDelete(request, expressionExperiment);
+	}
 
-            String event = request.getParameter( "_eventId" );
-            if ( event != null && event.equals( "delete" ) ) {
-                expressionExperimentService.delete( ee );
-                log.info( "Expression experiment with name: " + ee.getName() + " deleted" );
-                request.getSession().setAttribute(
-                        "messages",
-                        messageSource
-                                .getMessage( "expressionExperiment.deleted", new Object[] { ee.getName() }, locale ) );
-                /* delete */
-                return new ModelAndView( "expressionExperiment.GetAll.results.view", "expressionExperiments",
-                        expressionExperimentService.loadAll() );
-            }
-
-            /* details */
-            return new ModelAndView( "expressionExperiment.Detail.view", "expressionExperiment", ee );
-        }
-
-        /*
-         * handle the event of clicking on the experimental designs (expressed as the number of experimental designs in
-         * the collection) link for this expression experiment.
-         */
-        else if ( uri.equals( "/Gemma/experimentalDesigns.html" ) ) {
-            /*
-             * What is the difference between getParameter vs. getAttribute? I have used getAttribute because the
-             * MockHttpServletRequest does not have a setParameter method. getAttribute does not work when you fire up
-             * the webapp, but getParameter does. This could be remedied if the MockHttpServletRequest provided a method
-             * getParameter.
-             */
-            return new ModelAndView(
-                    "experimentalDesign.GetAll.results.view",
-                    "experimentalDesigns",
-                    ( expressionExperimentService.findByName( request.getParameter( "name" ) ).getExperimentalDesigns() ) );
-        } else {
-            throw new RuntimeException( "There is no view to match the url" );
-        }
-    }
-
-    /**
-     * @param expressionExperimentService The expressionExperimentService to set.
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param messageSource The messageSource to set.
-     */
-    public void setMessageSource( ResourceBundleMessageSource messageSource ) {
-        this.messageSource = messageSource;
-    }
+	/**
+	 * @param request
+	 * @param locale
+	 * @param bibRef
+	 * @return
+	 */
+	private ModelAndView doDelete(HttpServletRequest request,
+			ExpressionExperiment expressionExperiment) {
+		expressionExperimentService.delete(expressionExperiment);
+		log.info("Expression Experiment with name: "
+				+ expressionExperiment.getName() + " deleted");
+		addMessage(request, "expressionExperiment.deleted",
+				new Object[] { expressionExperiment.getName() });
+		return new ModelAndView("expressionExperiments",
+				"expressionExperiment", expressionExperiment);
+	}
 
 }
