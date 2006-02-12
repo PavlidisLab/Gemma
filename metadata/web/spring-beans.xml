@@ -54,6 +54,16 @@
     </property>
 </bean>
 
+<bean id="expressionExperimentActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/expressionExperiment/showAllExpressionExperiments.html">showAll</prop>
+            <prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop>
+            <prop key="/expressionExperiment/showExpressionExperiment.html">show</prop>
+        </props>
+    </property>
+</bean>
+
 <!-- ==================================================== -->
 <!-- EXTERNAL DATABASE SESSION FACTORY -->
 <!-- ==================================================== -->
@@ -246,7 +256,7 @@
     _flowId to the client view (ie. jsp).  If this is not specified, you must specify
     a ServletFlowExecutionManager.  I have added the _flowId to the jsp's, but have also specified the ServletFlowExecutionManager.
 -->
-<bean id="frontController" name="/flowController.htm" class="org.springframework.webflow.mvc.FlowController">
+<bean id="frontController" name="/flowController.html" class="org.springframework.webflow.mvc.FlowController">
     <property name="cacheSeconds" value="5" />
     <property name="flowExecutionManager" ref="flowExecutionManager" />
 </bean>
