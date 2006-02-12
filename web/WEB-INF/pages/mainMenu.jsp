@@ -17,13 +17,13 @@
 		<a href="<c:url value="/flowController.html?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
 -->
         <a href="<c:url value="/arrayDesign/showAllArrayDesigns.html"/>">
-            <fmt:message key="menu.flow.ArrayDesignSearch" />
+            <fmt:message key="menu.ArrayDesignSearch" />
         </a>
     </li>
     <li>
         <!-- <a href="<c:url value="/ExperimentList.html"/>">Show Expression Experiments</a>-->
-        <a href="<c:url value="/expressionExperiments.html"/>">
-            Show Expression Experiments
+        <a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>">
+            <fmt:message key="menu.ExpressionExperimentSearch"/>
         </a>
     </li>
     <li>
@@ -32,12 +32,12 @@
     </li>
     <li>
         <a href="<c:url value="/flowController.html?_flowId=pubMed.Search"/>">
-            <fmt:message key="menu.flow.PubMedSearch" />
+            <fmt:message key="menu.PubMedSearch" />
         </a>
     </li>
     <li>
         <a href="<c:url value="/bibRef/searchBibRef.html"/>">
-            Search Gemma for PubMed Id
+        	<fmt:message key="menu.PubMedGemmaSearch" />
         </a>
     </li>
     <li>
