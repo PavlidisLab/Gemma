@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="javascript/x-javascript" %>
-<%@ taglib uri="http://www.springframework.org/tags/commons-validator" prefix="html" %>
+<%@ page language="java" contentType="text/javascript" %>
+<%@ taglib uri="http://struts.apache.org/tags-html" prefix="html" %>
 
 <html:javascript dynamicJavascript="false" staticJavascript="true"/>

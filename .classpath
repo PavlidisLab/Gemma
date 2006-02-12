@@ -33,12 +33,12 @@
 	<classpathentry kind="var" path="MAVEN_REPO/velocity/jars/velocity-1.4.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/commons-lang/commons-lang-2.1-src.zip" kind="var" path="MAVEN_REPO/commons-lang/jars/commons-lang-2.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/aopalliance/jars/aopalliance.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/displaytag/jars/displaytag-1.0.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/displaytag/displaytag-1.0/src/java" kind="var" path="MAVEN_REPO/displaytag/jars/displaytag-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/javamail/jars/activation.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/javamail/jars/mail.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jstl/jars/jstl.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jstl/jars/standard.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/mysql/jars/mysql-connector-java-3.1.6-bin.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/mysql/jars/mysql-connector-java-3.1.12-bin.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/easymock/easymock2.0_Pre-Release/src.zip" kind="var" path="MAVEN_REPO/easymock/jars/easymock-2.0_Pre-release.jar">
 		<attributes>
 			<attribute value="file:/C:/java/.maven/repository/easymock/easymock2.0_Pre-Release/javadoc/" name="javadoc_location"/>
@@ -52,12 +52,12 @@
 			<attribute value="file:/C:/java/.maven/repository/dom4j/dom4j-1.6.1/docs/apidocs/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="MAVEN_REPO/ehcache/jars/ehcache-0.9.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/ehcache/jars/ehcache-1.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jta/jars/jta.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/log4j/jars/log4j-1.2.8.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/odmg/jars/odmg-3.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.2.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/sitemesh-2.2.1.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/opensymphony/sitemesh-2.2.1/src" kind="var" path="MAVEN_REPO/opensymphony/jars/sitemesh-2.2.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/oscache/jars/oscache-gemma-2.0.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/struts-menu/jars/struts-menu-2.3.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/taglibs/jars/request-1.0.1.jar"/>
@@ -70,11 +70,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/MAVEN_REPO/ognl/src/java" kind="var" path="MAVEN_REPO/ognl/jars/ognl-2.6.7.jar"/>
-	<classpathentry sourcepath="/MAVEN_REPO/hibernate/hibernate-3.1/src" kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-3.1.jar">
-		<attributes>
-			<attribute value="file:/C:/java/.maven/repository/hibernate/hibernate-3.1/doc/api/" name="javadoc_location"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry sourcepath="/MAVEN_REPO/hibernate/hibernate-3.1/src" kind="var" path="MAVEN_REPO/hibernate/jars/hibernate-3.1.2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/antlr/jars/antlr-2.7.2.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/mage/JavaGenerator" kind="var" path="MAVEN_REPO/mage/jars/mage.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/acegisecurity/acegi-security-1.0.0-RC1/src" kind="var" path="MAVEN_REPO/acegisecurity/jars/acegi-security-1.0.0-RC1.jar">
@@ -101,9 +97,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/commons-pool/jars/commons-pool-1.2.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xerces-2.4.0.jar"/>
 	<classpathentry sourcepath="/WORKSPACE/baseCode/src" kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/andromda-breadcrumbs-taglib.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/andromda-collections-taglib.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/andromda-formatting-taglib.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/struts/jars/struts-1.2.7.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>

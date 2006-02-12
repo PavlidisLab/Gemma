@@ -338,17 +338,18 @@ function highlightTableRows(tableId) {
 
 function highlightFormElements() {
     // add input box highlighting 
-    //addFocusHandlers(document.getElementsByTagName("input"));
-    //addFocusHandlers(document.getElementsByTagName("textarea"));
+    addFocusHandlers(document.getElementsByTagName("input"));
+    addFocusHandlers(document.getElementsByTagName("textarea"));
 }
 
 function addFocusHandlers(elements) {
     for (i=0; i < elements.length; i++) {
         if (elements[i].type != "button" && elements[i].type != "submit" &&
-            elements[i].type != "reset" && elements[i].type != "checkbox") {
-            elements[i].onfocus=function() {this.className='focus';this.select()};
-            elements[i].onclick=function() {this.select()};
-            elements[i].onblur=function() {this.className=''};
+            elements[i].type != "reset" && elements[i].type != "checkbox" && elements[i].type != "radio") {
+            if (elements[i].getAttribute('readonly') != "readonly" && elements[i].getAttribute('readonly') != "disabled") {
+                elements[i].onfocus=function() {this.className='focus';this.select()};
+                elements[i].onblur=function() {this.className=''};
+            }
         }
     }
 }
@@ -372,7 +373,17 @@ function radio(clicked){
     clicked.parentNode.parentNode.className="over";
 }
 
-window.onload = highlightFormElements;
+window.onload = function() {
+    highlightFormElements();
+    if ($('successMessages')) {
+        new Effect.Highlight('successMessages');
+        // causes webtest exception on OS X : http://lists.canoo.com/pipermail/webtest/2006q1/005214.html
+        // window.setTimeout("Effect.DropOut('successMessages')", 3000);
+    }
+    if ($('errorMessages')) {
+        new Effect.Highlight('errorMessages');
+    }
+}
 
 // Show the document's title on the status bar
 window.defaultStatus=document.title;

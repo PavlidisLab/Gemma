@@ -3,54 +3,54 @@
         
 <%-- Include common set of tag library declarations for each layout --%>
 <%@ include file="/common/taglibs.jsp"%>
-
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     <head>
         <%-- Include common set of meta tags for each layout --%>
         <%@ include file="/common/meta.jsp" %>
-        <title><fmt:message key="webapp.prefix"/><decorator:title/></title>
-        <script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
+        <title><decorator:title/> | <fmt:message key="webapp.name"/></title>
+        
         <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/default.css'/>" /> 
         <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/helptip.css'/>" />
-        <link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/print.css'/>" />     
+        <link rel="stylesheet" type="text/css" media="print" href="<c:url value='/styles/print.css'/>" />    
+
+        <script type="text/javascript" src="<c:url value='/scripts/prototype.js'/>"></script> 
+        <script type="text/javascript" src="<c:url value='/scripts/scriptaculous.js'/>"></script>
+        <script type="text/javascript" src="<c:url value='/scripts/helptip.js'/>"></script>
         <script type="text/javascript" src="<c:url value='/scripts/global.js'/>"></script>
-        <script type="text/javascript" src="<c:url value='/scripts/fade.js'/>"></script> 
-      <c:if test="${sessionScope.currentUserForm != null}">
-        <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/menuExpandable.css'/>" /> 
-        <script type="text/javascript" src="<c:url value='/scripts/menuExpandable.js'/>"></script>
+
+      <c:if test="${pageContext.request.remoteUser != null}">
+        <link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/coolmenu.css'/>" /> 
+        <script type="text/javascript" src="<c:url value='/scripts/coolmenu4.js'/>"></script>
+        <script type="text/javascript" src="<c:url value='/scripts/cm_addins.js'/>"></script>
       </c:if>
         <decorator:head/>
-        <style type="text/css" media="all">
-            div.standardsNote {background: #FFFFCC; border: 1px solid blue; margin-bottom: 10px; padding: 5px}
-        </style>
     </head>
 <body<decorator:getProperty property="body.id" writeEntireProperty="true"/>>
+
+    <%-- Must come after body to work in IE --%>    
+    <script type="text/javascript" src="<c:url value='/scripts/coolmenu4-config.js'/>"></script>
+  <div id="screen">
+<table border="1"><tr><td align="left"><a href="<%=request.getContextPath()%>"><img src="<%=request.getContextPath()%>/images/logo/gemOnlyTiny.gif" /></a> </td>
+</tr><tr><td>
+
   
-    <div class="standardsNote">
-        <fmt:message key="errors.browser.warning"/>
-    </div>
-<%-- Gemma logo --%>
-         
-    <div id="screen">
 
         <div id="header">
-       
+           
             <% if (request.getRequestURL().indexOf("login.jsp") == -1) { %>
-            <c:if test="${sessionScope.currentUserForm != null}">
+            <c:if test="${pageContext.request.remoteUser != null}">
                 <div id="userStatus">
                     <fmt:message key="user.status"/>
-                        <strong><c:out value="${currentUserForm.userName}"/></strong> 
+                    <strong><authz:authentication operation="username"/></strong><br />
                     <a href="<c:url value="/logout.jsp"/>"><fmt:message key="user.logout"/></a>
                 </div>
             </c:if>
             <% } %>
-            <c:import url="/common/header.jsp"/>
+            <jsp:include page="/common/header.jsp"/>
         </div>
-        
-       <a href="<%=request.getContextPath()%>"><img src="<%=request.getContextPath()%>/images/logo/gemOnlySmall.gif" /></a> 
-		
-        <c:if test="${sessionScope.currentUserForm != null}">
-            <c:import url="/WEB-INF/pages/menu.jsp"/>
+
+        <c:if test="${pageContext.request.remoteUser != null}">
+            <jsp:include page="/WEB-INF/pages/menu.jsp"/>
         </c:if>
 
         <div id="content">
@@ -60,10 +60,10 @@
         </div>
         
         <div id="footer">
-            <c:import url="/common/footer.jsp"/>
+            <jsp:include page="/common/footer.jsp"/>
         </div>
-        
-    </div>
-
+   
+    </td>
+    </tr></table> </div>
 </body>
 </html>

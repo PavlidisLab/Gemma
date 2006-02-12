@@ -1,18 +1,18 @@
 @import url(messages.css);
 @import url(displaytag.css);
 
-a {
-    color: green;
+a, .cmMenu, .cmItem {
+    color: #555555;
     font-weight: bold;
 }
 
-a:visited, body#login div#menu a:visited  {
-    color: #006401;
+a:visited, body#login div#menu a:visited {
+    color: #444444;
 }
 
-a:hover {
+a:hover, .cmMenuOver, .cmItemOver {
     background-color: transparent;
-    color: #0000ff !important; 
+    color: green !important; 
     text-decoration: underline overline;
 }
 
@@ -20,7 +20,7 @@ a img { border: 0 }
 
 /* 0 means zero regardless of measurement */
 body {
-    background: #FFFFFF;
+    background: #ffffff;
     color: #000000;
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-size: 12px;
@@ -34,10 +34,11 @@ div#activeUsers {
     font-size: .9em;
     background: transparent;
     color: #000;
+    margin-top: -5px;
 }
 
 div#content {
-    margin: 0px 100px 50px 10px;
+    margin: 0px 210px 50px 10px;
     padding: 10px;
     text-align: left;
 }
@@ -93,13 +94,19 @@ the CSS box model right and understand the CSS2 parent-child selector. ALWAYS in
 a "be nice to Opera 5" rule every time you use the Tantek Celik hack (above). */
 body>#header {height: 14px;}
 
+body#login #content, body#signup #content {
+    width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 div#loginTable {
     background: #EEEEEE;
     border: 1px solid #C0C0C0;
     color: inherit;
     margin: 10px 0px;
-    padding: 5px;
-    width: 400px;
+    padding: 10px 5px 5px 5px;
+    width: 425px;
 }
 
 div#loginTable th {
@@ -128,21 +135,6 @@ div#menu a:visited {
     color: black;
 }
 
-div#readme {
-    background: #ffd;
-    border: 1px solid silver;
-    color: #008000;
-    height: 300px;
-    margin-top: 10px;
-    overflow: auto;
-    padding: 5px;
-    width: 600px;
-}
-
-div#readme pre {
-    border: 0;
-}
-
 div#flags {
     position: absolute;
     left: 20px;
@@ -159,13 +151,20 @@ div#userStatus {
     text-align: right;
 }
 
+div#switchLocale {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: .9em;
+    line-height: 1.2;
+}
 
 div#validators {
     float: right;
 }
 
 div.separator {
-    border-bottom: 1px solid green;
+    border-bottom: 1px solid orange; 
     margin: 10px 0px; 
     width: 300px;
 }
@@ -187,6 +186,17 @@ form input, form textarea, form select {
 
 input.button {
     color: #000;
+    padding-left: 1px;
+}
+
+input.button {
+    /* fix button size in IE */
+    line-height: 17px;
+}
+
+/* make buttons looks the same in Mozilla */
+td>input.button {
+    padding: 1px 3px !important;
 }
 
 form input.focus, form textarea.focus {
@@ -250,7 +260,7 @@ table.detail {
 }
 
 table.detail th {
-	text-align: right;
+    text-align: right;
     padding: 0px 3px 0px 0px;
 }
 
@@ -308,6 +318,15 @@ table.pickList th.pickLabel {
 
 table.pickList td {
     text-align: center;
+    vertical-align: middle;
+}
+
+table.pickList td label {
+    vertical-align: middle;
+}
+
+table.pickList td input {
+    vertical-align: middle;
 }
 
 table.pickList td select {

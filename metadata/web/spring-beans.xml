@@ -146,6 +146,15 @@
     <property name="ignoreResourceNotFound" value="true" />
 </bean>
 
+<!-- ==================================================== -->
+<!--           Used to configure menus on pages           -->
+<!-- ==================================================== -->
+<bean id="menu" class="net.sf.navigator.menu.MenuLoader">
+  <property name="menuConfig">
+    <value>/WEB-INF/menu-config.xml</value>
+  </property>
+</bean>
+
 
 <!-- ==================================================== -->
 <!--  Mapping urls to services. --><!--  FIXME This is never used ? -->
