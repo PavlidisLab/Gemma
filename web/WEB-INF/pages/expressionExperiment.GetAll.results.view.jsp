@@ -15,7 +15,7 @@
             export="true" decorator="edu.columbia.gemma.web.taglib.displaytag.ExpressionExperimentWrapper">
 
             <display:column property="accession.externalDatabase.name" sort="true"
-                title="expressionExperiment.databaseName" />
+                titleKey="expressionExperiment.databaseName" />
 
             <display:column property="detailsLink" sort="true" titleKey="expressionExperiment.id" />
 
