@@ -69,7 +69,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 		if (name == null) {
 			// should be a validation error, on 'submit'.
 			throw new EntityNotFoundException(
-					"Must provide an Array Design name");
+					"Must provide an Expression Experiment name");
 		}
 
 		ExpressionExperiment expressionExperiment = expressionExperimentService
