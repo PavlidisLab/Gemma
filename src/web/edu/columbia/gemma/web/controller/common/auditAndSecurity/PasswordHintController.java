@@ -82,6 +82,7 @@ public class PasswordHintController implements Controller {
             saveMessage( request, text.getMessage( "login.passwordHint.sent",
                     new Object[] { username, user.getEmail() } ) );
         } catch ( Exception e ) {
+            log.error( e, e );
             saveError( request, text.getMessage( "login.passwordHint.error", new Object[] { username } ) );
         }
 

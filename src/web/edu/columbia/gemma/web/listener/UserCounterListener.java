@@ -32,7 +32,8 @@ import org.acegisecurity.context.SecurityContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.common.auditAndSecurity.User;
+// import edu.columbia.gemma.common.auditAndSecurity.User;
+import org.acegisecurity.userdetails.User;
 
 /**
  * UserCounterListener class used to count the current number of active users for the applications. Does this by
@@ -131,7 +132,12 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         log.debug( "event.name: " + event.getName() );
         if ( event.getName().equals( EVENT_KEY ) ) {
             SecurityContext securityContext = ( SecurityContext ) event.getValue();
-            User user = ( User ) securityContext.getAuthentication().getPrincipal();
+            /*
+             * The user returned here is not a Gemma User, but a acegi userdetails object. In Appfuse it is supposedly a Appfuse
+             * user.
+             */
+            Object user = securityContext.getAuthentication().getPrincipal();
+            
             addUsername( user );
         }
     }

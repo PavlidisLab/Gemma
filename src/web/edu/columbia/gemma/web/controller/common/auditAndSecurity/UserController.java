@@ -31,9 +31,6 @@ import edu.columbia.gemma.web.Constants;
 
 /**
  * Simple class to retrieve a list of users from the database. From appfuse.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
