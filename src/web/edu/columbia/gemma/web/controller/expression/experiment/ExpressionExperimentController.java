@@ -47,8 +47,8 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 	private ExpressionExperimentService expressionExperimentService = null;
 
 	/**
-	 * @param arrayDesignService
-	 *            The arrayDesignService to set.
+	 * 
+	 * @param expressionExperimentService
 	 */
 	public void setExpressionExperimentService(
 			ExpressionExperimentService expressionExperimentService) {
@@ -123,9 +123,9 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 	}
 
 	/**
+	 * 
 	 * @param request
-	 * @param locale
-	 * @param bibRef
+	 * @param expressionExperiment
 	 * @return
 	 */
 	private ModelAndView doDelete(HttpServletRequest request,
