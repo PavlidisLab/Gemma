@@ -19,7 +19,7 @@
 
             <display:column property="detailsLink" sort="true" titleKey="expressionExperiment.id" />
 
-            <display:column property="name" sort="true" titleKey="expressionExperiment.name" />
+            <display:column property="nameLink" sort="true" titleKey="expressionExperiment.name" />
 
             <display:column property="designsLink" sort="true" titleKey="expressionExperiment.designs" />
 
