@@ -21,14 +21,12 @@ package edu.columbia.gemma.web.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
 /**
  * Extend this to create a MultiActionController.
  * 
- *
- * <hr>
- * <p>Copyright (c) 2004 - 2006 University of British Columbia
  * @author keshav
  * @version $Id$
  */
@@ -36,11 +34,15 @@ public abstract class BaseMultiActionController extends MultiActionController {
 
     /**
      * @param request
-     * @param messageName
+     * @param messageCode - if no message is found, this is used to form the message (instead of throwing an exception).
+     * @param parameters
      */
-    @SuppressWarnings("unused")
     protected void addMessage( HttpServletRequest request, String messageCode, Object[] parameters ) {
-        request.getSession()
-                .setAttribute( "messages", getMessageSourceAccessor().getMessage( messageCode, parameters ) );
+        try {
+            request.getSession().setAttribute( "messages",
+                    getMessageSourceAccessor().getMessage( messageCode, parameters ) );
+        } catch ( NoSuchMessageException e ) {
+            request.getSession().setAttribute( "messages", "??" + messageCode + "??" );
+        }
     }
 }
