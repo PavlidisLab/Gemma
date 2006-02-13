@@ -94,6 +94,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         }
     }
 
+    @SuppressWarnings("unchecked")
     synchronized void addUsername( Object user ) {
         users = ( Set ) servletContext.getAttribute( USERS_KEY );
 
@@ -133,11 +134,11 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         if ( event.getName().equals( EVENT_KEY ) ) {
             SecurityContext securityContext = ( SecurityContext ) event.getValue();
             /*
-             * The user returned here is not a Gemma User, but a acegi userdetails object. In Appfuse it is supposedly a Appfuse
-             * user.
+             * The user returned here is not a Gemma User, but a acegi userdetails object. In Appfuse it is supposedly a
+             * Appfuse user.
              */
             Object user = securityContext.getAuthentication().getPrincipal();
-            
+
             addUsername( user );
         }
     }

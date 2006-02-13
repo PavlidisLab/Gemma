@@ -319,7 +319,7 @@
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.findByName=user,admin
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.findByFullName=user,admin 
                 edu.columbia.gemma.common.auditAndSecurity.PersonService.findOrCreate=user,admin
-                edu.columbia.gemma.common.auditAndSecurity.UserService.getUser=user,admin 
+                edu.columbia.gemma.common.auditAndSecurity.UserService.getUser=user,admin,ROLE_ANONYMOUS
                 edu.columbia.gemma.common.auditAndSecurity.UserService.getUsers=user,admin
                 edu.columbia.gemma.common.auditAndSecurity.UserService.saveUser=user,admin,ROLE_ANONYMOUS
                 edu.columbia.gemma.common.auditAndSecurity.UserService.removeUser=user,admin 

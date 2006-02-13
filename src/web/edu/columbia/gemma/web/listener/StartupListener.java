@@ -17,13 +17,11 @@
  *
  */
 package edu.columbia.gemma.web.listener;
-
-import java.util.ArrayList;
+ 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,7 +42,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import edu.columbia.gemma.common.auditAndSecurity.UserRole;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleDao;
-import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.util.LabelValue;
 import edu.columbia.gemma.web.Constants;
 
