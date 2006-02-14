@@ -37,7 +37,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * <p>
  * 
  * @author keshav
- * @version $Id:
+ * @version $Id$
  * @spring.bean id="expressionExperimentFormController"
  *              name="/expressionExperiment/editExpressionExperiment.html"
  * @spring.property name = "commandName" value="expressionExperiment"
