@@ -32,7 +32,7 @@ import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author keshav
- * @version $Id:
+ * @version $Id$
  * @spring.bean id="expressionExperimentController"
  *              name="/expressionExperiment/*"
  * @spring.property name = "expressionExperimentService"
