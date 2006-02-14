@@ -32,7 +32,7 @@
     </li>
     <li>
         <a href="<c:url value="/flowController.html?_flowId=pubMed.Search"/>">
-            <fmt:message key="menu.PubMedSearch" />
+            <fmt:message key="menu.flow.PubMedSearch" />
         </a>
     </li>
     <li>

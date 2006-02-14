@@ -24,7 +24,7 @@
     <TR>
         <td>PubMed ID</td>
         <td>
-        <form name="searchForm" action="flowController.htm"><spring:bind
+        <form name="searchForm" action="flowController.html"><spring:bind
             path="bibliographicReference.pubAccession.accession">
             <input type="text" name="${status.expression}"
                 value="${status.value}">

@@ -27,7 +27,7 @@ know how to look for the 'accession' parameter as well as deal with a bound bibl
 
 <%-- This link takes the user to the NCBI search flow page (pubMed.Search.criteria.view.jsp). --%>
 
-<a href="<c:url value="/flowController.htm?_flowId=pubMed.Search"/>"><fmt:message
+<a href="<c:url value="/flowController.html?_flowId=pubMed.Search"/>"><fmt:message
     key="menu.flow.PubMedSearch" /></a>
 </body>
 </html>
