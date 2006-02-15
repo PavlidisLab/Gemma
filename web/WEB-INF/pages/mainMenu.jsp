@@ -26,6 +26,11 @@
             <fmt:message key="menu.ExpressionExperimentSearch"/>
         </a>
     </li>
+     <li>
+        <a href="<c:url value="/loadExpressionExperiment.html"/>">
+            <fmt:message key="menu.loadExpressionExperiment" />
+        </a>
+    </li>
     <li>
         <a href="<c:url value="/candidateGeneList.html"/>">
             <fmt:message key="menu.CandidateGeneList" />

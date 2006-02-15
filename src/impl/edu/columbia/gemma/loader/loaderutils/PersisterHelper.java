@@ -21,8 +21,12 @@ package edu.columbia.gemma.loader.loaderutils;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
@@ -190,6 +194,8 @@ public class PersisterHelper implements Persister {
     private SoftwareService softwareService;
 
     private TaxonService taxonService;
+
+    private int persistedDesignElements;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -661,7 +667,6 @@ public class PersisterHelper implements Persister {
      * 
      * @param arrayDesign
      */
-
     private ArrayDesign persistArrayDesign( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) return null;
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
@@ -671,15 +676,27 @@ public class PersisterHelper implements Persister {
 
         if ( existing != null ) {
             assert existing.getId() != null;
-            log.info( "Array design " + existing.getName() + " already exists." );
-            Collection<DesignElement> existingDesignElements = arrayDesign.getDesignElements();
+            log.info( "Array design \"" + existing.getName() + "\" already exists." );
+            Collection<DesignElement> existingDesignElements = existing.getDesignElements(); // TODO performance of
+            // size()
             if ( existingDesignElements.size() == arrayDesign.getDesignElements().size() ) {
                 log.warn( "Number of design elements in existing version of " + arrayDesign + " is the same ("
                         + existingDesignElements.size() + "). No further processing will be done." );
+                log.warn( "Nulling out reference." );
+                arrayDesign = null;
+                return existing;
+            } else if ( existingDesignElements.size() > arrayDesign.getDesignElements().size() ) {
+                log.warn( "Number of design elements in existing version of " + arrayDesign + " ("
+                        + existingDesignElements.size() + ") is  greater than in the new one ("
+                        + arrayDesign.getDesignElements().size() + "). No further processing will be done." );
+                log.warn( "Nulling out reference." );
+                arrayDesign = null;
                 return existing;
             } else if ( arrayDesign.getDesignElements().size() == 0 ) {
                 log.warn( arrayDesign + ": No design elements in newly supplied version of " + arrayDesign
                         + ", no further processing of design elements will be done." );
+                log.warn( "Nulling out reference." );
+                arrayDesign = null;
                 return existing;
             } else {
                 log.info( "Array Design " + arrayDesign + " exists but design elements are to be updated." );
@@ -689,8 +706,44 @@ public class PersisterHelper implements Persister {
             log.info( "Array Design " + arrayDesign + " is new, processing..." );
         }
 
-        int i = 0;
+        persistArrayDesignDesignElements( arrayDesign );
+
+        return arrayDesignService.findOrCreate( arrayDesign );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void persistArrayDesignDesignElements( ArrayDesign arrayDesign ) {
         log.info( "Filling in or updating sequences in design elements for " + arrayDesign );
+        final ArrayDesign arrayDesignToPersist = arrayDesign;
+        // FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+        // @SuppressWarnings("synthetic-access")
+        // public Boolean call() {
+        doPersistDesignElements( arrayDesignToPersist );
+        // }
+        // } );
+        //
+        // Executors.newSingleThreadExecutor().execute( future );
+        //
+        // while ( !future.isDone() ) {
+        // try {
+        // Thread.sleep( 1000 );
+        // } catch ( InterruptedException ie ) {
+        // ;
+        // }
+        // if ( persistedDesignElements > 0 ) {
+        // log.info( persistedDesignElements + " design elements persisted." );
+        // }
+        // }
+        log.debug( "Done parsing." );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private Boolean doPersistDesignElements( ArrayDesign arrayDesign ) {
+        persistedDesignElements = 0;
         for ( DesignElement designElement : arrayDesign.getDesignElements() ) {
             designElement.setArrayDesign( arrayDesign );
             if ( designElement instanceof CompositeSequence ) {
@@ -700,20 +753,12 @@ public class PersisterHelper implements Persister {
                 Reporter reporter = ( Reporter ) designElement;
                 reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
             }
-            i++;
-            if ( i % 100 == 0 ) {
-                try {
-                    Thread.sleep( 10 );
-                } catch ( InterruptedException e ) {
-                    ;
-                }
-            }
-            if ( i % 1000 == 0 ) {
-                log.info( i + " design element sequences examined for " + arrayDesign );
+            persistedDesignElements++;
+            if ( persistedDesignElements > 0 && persistedDesignElements % 1000 == 0 ) {
+                log.info( persistedDesignElements + " design element sequences examined for " + arrayDesign );
             }
         }
-
-        return arrayDesignService.findOrCreate( arrayDesign );
+        return Boolean.TRUE;
     }
 
     /**
@@ -833,9 +878,9 @@ public class PersisterHelper implements Persister {
      */
     private BioSequence persistBioSequence( BioSequence bioSequence ) {
         if ( bioSequence == null ) return null;
+        if ( !isTransient( bioSequence ) ) return bioSequence;
         fillInBioSequenceTaxon( bioSequence );
-        if ( isTransient( bioSequence ) ) return bioSequenceService.findOrCreate( bioSequence );
-        return bioSequence;
+        return bioSequenceService.findOrCreate( bioSequence );
     }
 
     /**
@@ -910,6 +955,7 @@ public class PersisterHelper implements Persister {
         }
 
         vector.setQuantitationType( persistQuantitationType( vector.getQuantitationType() ) );
+        log.debug( vector.getData().length + " bytes in datavector to persist" );
         return designElementDataVectorService.findOrCreate( vector );
     }
 
@@ -971,33 +1017,85 @@ public class PersisterHelper implements Persister {
             }
         }
 
+        Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
+        Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
+
+        Collection<String> cacheIsSetUp = new HashSet<String>();
+        Map<String, DesignElement> designElementCache = new HashMap<String, DesignElement>();
+
+        int count = 0;
         for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
 
             DesignElement persistentDesignElement = null;
             DesignElement maybeExistingDesignElement = vect.getDesignElement();
-            if ( maybeExistingDesignElement instanceof CompositeSequence ) {
-                persistentDesignElement = compositeSequenceService
-                        .find( ( CompositeSequence ) maybeExistingDesignElement );
-            } else if ( maybeExistingDesignElement instanceof Reporter ) {
-                persistentDesignElement = reporterService.find( ( Reporter ) maybeExistingDesignElement );
-            }
+            if ( designElementCache.containsKey( maybeExistingDesignElement.getName() + " "
+                    + maybeExistingDesignElement.getArrayDesign().getName() ) ) { // clean this up
+                persistentDesignElement = designElementCache.get( maybeExistingDesignElement.getName() + " "
+                        + maybeExistingDesignElement.getArrayDesign().getName() );
+            } else {
+                if ( maybeExistingDesignElement instanceof CompositeSequence ) {
+                    persistentDesignElement = compositeSequenceService
+                            .find( ( CompositeSequence ) maybeExistingDesignElement );
+                } else if ( maybeExistingDesignElement instanceof Reporter ) {
+                    persistentDesignElement = reporterService.find( ( Reporter ) maybeExistingDesignElement );
+                }
 
-            if ( persistentDesignElement == null ) {
-                throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
+                if ( persistentDesignElement == null ) {
+                    throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
+                }
             }
-
+            assert persistentDesignElement != null;
             ArrayDesign ad = persistentDesignElement.getArrayDesign();
-            ad.setId( this.persistArrayDesign( ad ).getId() );
 
-            BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
-            vect.setBioAssayDimension( bAd );
+            // TODO possibly move cache
+            if ( arrayDesignCache.containsKey( ad.getName() ) ) {
+                ad.setId( arrayDesignCache.get( ad.getName() ).getId() );
+            } else {
+                ad.setId( this.persistArrayDesign( ad ).getId() );
+                arrayDesignCache.put( ad.getName(), ad );
+            }
+
+            if ( !cacheIsSetUp.contains( ad.getName() ) ) {
+                setupCache( designElementCache, ad );
+                cacheIsSetUp.add( ad.getName() );
+            }
+
+            // TODO possibly move cache
+            if ( bioAssayDimensionCache.containsKey( vect.getBioAssayDimension().getName() ) ) {
+                vect.setBioAssayDimension( bioAssayDimensionCache.get( vect.getBioAssayDimension().getName() ) );
+            } else {
+                BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
+                bioAssayDimensionCache.put( vect.getBioAssayDimension().getName(), bAd );
+                vect.setBioAssayDimension( bAd );
+            }
+
             vect.setDesignElement( persistentDesignElement );
 
             assert vect.getQuantitationType() != null;
             vect.getQuantitationType().setId( persistQuantitationType( vect.getQuantitationType() ).getId() );
+
+            if ( count > 0 && count % 2000 == 0 ) {
+                log.info( "Filled in " + count + " DesignElementDataVectors" );
+            }
+            count++;
         }
 
+        log.info( "Filled in references, persisting ExpressionExperiment " + entity );
         return expressionExperimentService.findOrCreate( entity );
+    }
+
+    /**
+     * @param designElementCache
+     * @param arrayDesign
+     */
+    private void setupCache( Map<String, DesignElement> designElementCache, ArrayDesign arrayDesign ) {
+        log.info( "Loading array design elements" );
+        Collection<DesignElement> designElements = arrayDesign.getDesignElements();
+        log.info( "Filling cache with " + designElements.size() + " design elements" );
+        String adName = " " + arrayDesign.getName();
+        for ( DesignElement element : designElements ) {
+            designElementCache.put( element.getName() + adName, element );
+        }
     }
 
     /**

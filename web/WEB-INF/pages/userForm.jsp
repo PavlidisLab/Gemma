@@ -54,21 +54,17 @@
 </c:set>
     <tr>
         <th>
-            <%--<Gemma:label key="user.username"/>--%>
             <Gemma:label key="user.userName"/>
         </th>
         <td>
-        <%--<spring:bind path="user.username">--%>
         <spring:bind path="user.userName">
         <c:choose>
             <c:when test="${empty user.userName}">
-                <%--<input type="text" name="username" value="<c:out value="${status.value}"/>" id="username"/>--%>
                 <input type="text" name="userName" value="<c:out value="${status.value}"/>" id="userName"/>
                 <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
             </c:when>
             <c:otherwise>
                 <c:out value="${user.userName}"/>
-                <%--<input type="hidden" name="username" value="<c:out value="${status.value}"/>" id="username"/>--%>
                 <input type="hidden" name="userName" value="<c:out value="${status.value}"/>" id="userName"/>
             </c:otherwise>
         </c:choose>

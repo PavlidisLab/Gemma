@@ -207,7 +207,7 @@ public class DatasetCombiner {
      */
     public static GeoSampleCorrespondence findGSECorrespondence( Collection<GeoDataset> dataSets ) {
 
-        if ( dataSets == null || dataSets.size() < 2 ) return null;
+        if ( dataSets == null ) return null;
 
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
         LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
@@ -282,9 +282,12 @@ public class DatasetCombiner {
                 }
             }
 
+            assert targetAcc != null;
             result.addCorrespondence( targetAcc, bestMatchAcc );
 
-            log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch + "\n" );
+            if ( dataSets.size() > 1 ) {
+                log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch + "\n" );
+            }
         }
 
         return result;

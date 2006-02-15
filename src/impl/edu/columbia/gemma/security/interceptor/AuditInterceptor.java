@@ -22,6 +22,8 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -57,6 +59,11 @@ public class AuditInterceptor implements MethodInterceptor {
     private boolean AUDIT_CREATE = true;
     private boolean AUDIT_DELETE = true;
     private boolean AUDIT_UPDATE = true;
+
+    /**
+     * Cache of users. FIXME this is too primitive.
+     */
+    private Map<String, User> currentUsers = new HashMap<String, User>();
 
     /**
      * 
@@ -141,9 +148,14 @@ public class AuditInterceptor implements MethodInterceptor {
      * @return
      */
     private User getCurrentUser() {
+        // FIXME make this independent of the ACL
+        // interceptor.
+
         String userName = AddOrRemoveFromACLInterceptor.getUsername();
-        User user = userDao.findByUserName( userName );
-        return user;
+        if ( currentUsers.get( userName ) == null ) {
+            currentUsers.put( userName, userDao.findByUserName( userName ) );
+        }
+        return currentUsers.get( userName );
     }
 
     /**
@@ -157,7 +169,7 @@ public class AuditInterceptor implements MethodInterceptor {
         } else {
             User user = getCurrentUser();
             at.update( "Updated" + d, user );
-            log.debug( "Update event on " + d + " by " + user.getUserName() );
+            log.trace( "Update event on " + d + " by " + user.getUserName() );
         }
 
     }
@@ -177,7 +189,7 @@ public class AuditInterceptor implements MethodInterceptor {
         if ( at.getEvents().size() == 0 ) {
             User user = getCurrentUser();
             at.start( "create " + d, user );
-            log.debug( "Create event on " + d + " by " + user.getUserName() );
+            log.trace( "Create event on " + d + " by " + user.getUserName() );
         }
     }
 
@@ -209,10 +221,10 @@ public class AuditInterceptor implements MethodInterceptor {
      */
     private void addLoadOrCreateAuditEvent( Auditable auditable ) {
         if ( AUDIT_READ && auditable.getAuditTrail() != null && auditable.getAuditTrail().getCreationEvent() != null ) {
-            log.debug( "FindOrCreate..just load" );
+            log.trace( "FindOrCreate..just load" );
             addLoadAuditEvent( auditable );
         } else if ( AUDIT_CREATE ) {
-            log.debug( "FindOrCreate..create on " + auditable );
+            log.trace( "FindOrCreate..create on " + auditable );
             addCreateAuditEvent( auditable );
         }
     }
@@ -228,7 +240,7 @@ public class AuditInterceptor implements MethodInterceptor {
         } else {
             User user = getCurrentUser();
             at.read( "Loaded", user );
-            log.debug( "Read event on " + Auditable + " by " + user.getUserName() );
+            log.trace( "Read event on " + Auditable + " by " + user.getUserName() );
         }
     }
 

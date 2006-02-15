@@ -123,17 +123,17 @@ public class SpringContextUtil {
     public static String[] getConfigLocations( boolean testing ) {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
+  //      String servletContext = db.getString( "servlet.name.0" );
         // TODO: these files need to be found automatically, not hard-coded.
 
         if ( testing ) {
             log.info( "************** Using test configuration ***************" );
             return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                    "applicationContext-security.xml", servletContext + "-servlet.xml",
+                    "applicationContext-security.xml", /*servletContext + "-servlet.xml",*/
                     "applicationContext-validation.xml" };
         }
         return new String[] { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
+                "applicationContext-security.xml", /*servletContext + "-servlet.xml", */ "applicationContext-validation.xml" };
 
     }
 

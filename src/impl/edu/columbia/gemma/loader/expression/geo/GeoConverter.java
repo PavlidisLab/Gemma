@@ -312,10 +312,18 @@ public class GeoConverter implements Converter {
                 // sample ids.
             }
         }
-        result.setName( buf.toString().substring( 0, 100 ) + "..." );
+        result.setName( formatName( buf ) );
         result.setDescription( buf.toString() );
         // expExp.getBioAssayDimensions().add( result );
         return result;
+    }
+
+    /**
+     * @param buf
+     * @return
+     */
+    private String formatName( StringBuilder buf ) {
+        return buf.length() > 100 ? buf.toString().substring( 0, 100 ) : buf.toString() + "...";
     }
 
     /**
@@ -538,12 +546,17 @@ public class GeoConverter implements Converter {
         if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
             qType = StandardQuantitationType.DERIVEDSIGNAL;
             sType = ScaleType.LINEAR;
-        } else if ( name.equals( "DET_P" ) ) {
+        } else if ( name.equals( "DET_P" ) || name.equals( "DETECTION P-VALUE" ) || name.equals( "Detection_p-value" ) ) {
             qType = StandardQuantitationType.CONFIDENCEINDICATOR;
         } else if ( name.equals( "VALUE" ) ) {
             if ( description.toLowerCase().contains( "signal" ) || description.contains( "RMA" ) ) {
                 qType = StandardQuantitationType.DERIVEDSIGNAL;
             }
+        } else if ( name.matches( "ABS_CALL" ) ) {
+            qType = StandardQuantitationType.PRESENTABSENT;
+            sType = ScaleType.OTHER;
+            pType = PrimitiveType.STRING;
+            gType = GeneralType.CATEGORICAL;
         }
 
         if ( description.toLowerCase().contains( "background" ) ) {
@@ -571,8 +584,8 @@ public class GeoConverter implements Converter {
         qt.setType( qType );
         qt.setIsBackground( isBackground );
 
-        log.info( "Inferred that quantitation type " + name + " (" + description + ") corresponds to: " + qType + ",  "
-                + sType );
+        log.info( "Inferred that quantitation type \"" + name + "\" (" + description + ") corresponds to: " + qType
+                + ",  " + sType );
 
     }
 
@@ -870,8 +883,9 @@ public class GeoConverter implements Converter {
         BioAssay bioAssay = BioAssay.Factory.newInstance();
         String title = sample.getTitle();
         if ( StringUtils.isBlank( title ) ) {
-            throw new IllegalArgumentException( "Title cannot be blank for sample " + sample );
-            // log.warn( "Blank title for sample " + sample );
+            // throw new IllegalArgumentException( "Title cannot be blank for sample " + sample );
+            log.warn( "Blank title for sample " + sample + ", using accession number instead." );
+            sample.setTitle( sample.getGeoAccession() );
         }
         bioAssay.setName( sample.getTitle() );
         bioAssay.setDescription( sample.getDescription() );
@@ -1300,28 +1314,34 @@ public class GeoConverter implements Converter {
                     toConvert.add( Double.parseDouble( string ) );
                     count++;
                 }
-                log.debug( count + " doubles found" );
+                log.trace( count + " doubles found" );
             } else if ( pt.equals( PrimitiveType.INT ) ) {
                 int count = 0;
                 for ( String string : vector ) {
                     toConvert.add( Integer.parseInt( string ) );
                     count++;
                 }
-                log.debug( count + " integers found" );
+                log.trace( count + " integers found" );
             } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
                 int count = 0;
                 for ( String string : vector ) {
                     toConvert.add( Boolean.parseBoolean( string ) );
                     count++;
                 }
-                log.debug( count + " booleans found" );
-
+                log.trace( count + " booleans found" );
+            } else if ( pt.equals( PrimitiveType.STRING ) ) {
+                int count = 0;
+                for ( String string : vector ) {
+                    toConvert.add( string );
+                    count++;
+                }
+                log.trace( count + " strings found" );
             } else {
                 throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
             }
 
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( e );
+            throw new RuntimeException( "Error parsing value for " + qt, e );
         }
 
         return byteArrayConverter.toBytes( toConvert.toArray() );

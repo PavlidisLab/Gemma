@@ -19,6 +19,9 @@
 
 package edu.columbia.gemma.expression.designElement;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -34,6 +37,9 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
 
     private static Log log = LogFactory.getLog( CompositeSequenceDaoImpl.class.getName() );
 
+    // TODO use ehcache that lets old references die.
+    private Map<String, CompositeSequence> cache = new HashMap<String, CompositeSequence>();
+
     /*
      * (non-Javadoc)
      * 
@@ -43,7 +49,14 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
     public CompositeSequence find( CompositeSequence compositeSequence ) {
 
         if ( compositeSequence.getName() == null ) return null;
+
+        String key = getCacheKey( compositeSequence );
+        if ( cache.containsKey( key ) ) {
+            return cache.get( key );
+        }
+
         try {
+
             Criteria queryObject = super.getSession( false ).createCriteria( CompositeSequence.class );
 
             queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
@@ -65,6 +78,7 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
                     result = ( CompositeSequence ) results.iterator().next();
                 }
             }
+            cache.put( getCacheKey( ( CompositeSequence ) result ), ( CompositeSequence ) result );
             return ( CompositeSequence ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -83,14 +97,29 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
             if ( log.isDebugEnabled() ) log.debug( "compositeSequence must name and arrayDesign." );
             return null;
         }
+
+        String key = getCacheKey( compositeSequence );
+        if ( cache.containsKey( key ) ) {
+            return cache.get( key );
+        }
+
         CompositeSequence newcompositeSequence = this.find( compositeSequence );
         if ( newcompositeSequence != null ) {
             if ( log.isDebugEnabled() ) log.debug( "Found existing compositeSequence: " + newcompositeSequence );
             BeanPropertyCompleter.complete( newcompositeSequence, compositeSequence );
+            cache.put( getCacheKey( newcompositeSequence ), newcompositeSequence );
             return newcompositeSequence;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence );
         return ( CompositeSequence ) create( compositeSequence );
+    }
+
+    /**
+     * @param compositeSequence
+     * @return
+     */
+    private String getCacheKey( CompositeSequence compositeSequence ) {
+        return compositeSequence.getName() + " " + compositeSequence.getArrayDesign().getName();
     }
 
 }

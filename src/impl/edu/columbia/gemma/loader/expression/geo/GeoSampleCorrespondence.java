@@ -59,9 +59,12 @@ public class GeoSampleCorrespondence {
 
     /**
      * @param gsmNumberA
-     * @param gsmNumberB
+     * @param gsmNumberB If null, interpreted as meaning there is no correspondence to worry about
      */
     public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
+        
+        assert gsmNumberA != null : "Must pass at least one GSM accession";
+        
         // if ( !map.containsKey( gsmNumberA ) ) map.put( gsmNumberA, new HashSet<String>() );
         // if ( !map.containsKey( gsmNumberB ) ) map.put( gsmNumberB, new HashSet<String>() );
         // map.get( gsmNumberA ).add( gsmNumberB );
@@ -74,7 +77,8 @@ public class GeoSampleCorrespondence {
                 set.add( gsmNumberB );
                 found = true;
                 break;
-            } else if ( set.contains( gsmNumberB ) ) {
+                // gsmNumberB will be null if there is just one data set - that is, no correspondence.
+            } else if ( gsmNumberB != null && set.contains( gsmNumberB ) ) {
                 set.add( gsmNumberA );
                 found = true;
                 break;
@@ -84,7 +88,7 @@ public class GeoSampleCorrespondence {
         if ( !found ) {
             Set<String> newSet = new HashSet<String>();
             newSet.add( gsmNumberA );
-            newSet.add( gsmNumberB );
+            if ( gsmNumberB != null ) newSet.add( gsmNumberB );
             sets.add( newSet );
         }
 

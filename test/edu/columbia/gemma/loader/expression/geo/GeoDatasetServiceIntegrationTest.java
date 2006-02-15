@@ -29,6 +29,7 @@ import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationTypeService;
 import edu.columbia.gemma.common.quantitationtype.StandardQuantitationType;
+import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
 import edu.columbia.gemma.expression.bioAssayData.ExpressionDataMatrixService;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
@@ -80,6 +81,20 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
     // // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
     // }
 
+    // /**
+    // * This test uses just one dataset, one series
+    // */
+    // public void testFetchAndLoadOneDataset() throws Exception {
+    // gds.fetchAndLoad( "GDS599" );
+    // }
+    //
+    // /**
+    // * This test uses all three MG-U74 arrays.
+    // */
+    // public void testFetchAndLoadThreePlatforms() throws Exception {
+    // gds.fetchAndLoad( "GDS243" );
+    // }
+
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         assert config != null;
@@ -88,18 +103,19 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
             throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
         }
         gds.setGenerator( new GeoDomainObjectGeneratorLocal( path + "/test/data/geo/shortTest" ) );
-        gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
+      //  gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
 
         // get the data back out.
-
         ExpressionExperimentService ees = ( ExpressionExperimentService ) BaseDAOTestCase.ctx
                 .getBean( "expressionExperimentService" );
         QuantitationTypeService qts = ( QuantitationTypeService ) BaseDAOTestCase.ctx
                 .getBean( "quantitationTypeService" );
 
-        ExpressionDataMatrixService edms = ( ExpressionDataMatrixService ) BaseDAOTestCase.ctx
-                .getBean( "expressionDataMatrixService" );
+        ExpressionDataMatrixService edms = new ExpressionDataMatrixService();
+
+        edms.setDesignElementDataVectorService( ( DesignElementDataVectorService ) BaseDAOTestCase.ctx
+                .getBean( "designElementDataVectorService" ) );
 
         ExpressionExperiment ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
         QuantitationType qtf = QuantitationType.Factory.newInstance();
@@ -112,8 +128,6 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         DoubleMatrixNamed matrix = edms.getMatrix( ee, qt );
 
         printMatrix( matrix );
-        
-        
 
         assertEquals( 31, matrix.rows() );
 
@@ -126,6 +140,30 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         assertEquals( 1558.0, k, 0.00001 );
 
     }
+
+    // public void testFetchAndLoadWithRawData() throws Exception {
+    // gds.fetchAndLoad( "GDS562" );
+    // }
+    //
+    // public void testFetchAndLoadB() throws Exception {
+    // gds.fetchAndLoad( "GDS942" );
+    // }
+    //
+    // public void testFetchAndLoadC() throws Exception {
+    // gds.fetchAndLoad( "GDS100" );
+    // }
+    //
+    // public void testFetchAndLoadD() throws Exception {
+    // gds.fetchAndLoad( "GDS1033" );
+    // }
+    //
+    // public void testFetchAndLoadE() throws Exception {
+    // gds.fetchAndLoad( "GDS835" );
+    // }
+    //
+    // public void testFetchAndLoadF() throws Exception {
+    // gds.fetchAndLoad( "GDS58" );
+    // }
 
     /**
      * @param matrix
@@ -148,11 +186,4 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         }
     }
 
-    /*
-     * public void testFetchAndLoadWithRawData() throws Exception { gds.fetchAndLoad( "GDS562" ); } public void
-     * testFetchAndLoadB() throws Exception { gds.fetchAndLoad( "GDS942" ); } public void testFetchAndLoadC() throws
-     * Exception { gds.fetchAndLoad( "GDS100" ); } public void testFetchAndLoadD() throws Exception { gds.fetchAndLoad(
-     * "GDS1033" ); } public void testFetchAndLoadE() throws Exception { gds.fetchAndLoad( "GDS835" ); } public void
-     * testFetchAndLoadF() throws Exception { gds.fetchAndLoad( "GDS58" ); }
-     */
 }

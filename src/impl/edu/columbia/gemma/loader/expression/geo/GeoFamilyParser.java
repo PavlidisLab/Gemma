@@ -79,7 +79,7 @@ public class GeoFamilyParser implements Parser {
     private String currentSeriesAccession;
     private String currentSubsetAccession;
     private int dataSetDataLines = 0;
-    private boolean haveReadDatasetDataHeader = false;
+ //   private boolean haveReadDatasetDataHeader = false;
     private boolean haveReadPlatformHeader = false;
 
     private boolean haveReadSampleDataHeader = false;
@@ -109,7 +109,7 @@ public class GeoFamilyParser implements Parser {
 
     private int seriesDataLines = 0;
 
-    private String currentDatasetPlatformAccession;
+ //   private String currentDatasetPlatformAccession;
 
     public GeoFamilyParser() {
         results = new GeoParseResult();
@@ -492,7 +492,7 @@ public class GeoFamilyParser implements Parser {
                 results.getPlatformMap().get( value ).setGeoAccession( value );
             }
             results.getDatasetMap().get( currentDatasetAccession ).setPlatform( results.getPlatformMap().get( value ) );
-            currentDatasetPlatformAccession = value;
+      //      currentDatasetPlatformAccession = value;
         } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) { // obsolete
             datasetSet( currentDatasetAccession, "platformType", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_platform_technology_type" ) ) {
@@ -529,7 +529,7 @@ public class GeoFamilyParser implements Parser {
             datasetSet( currentDatasetAccession, "pubmedId", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_table_begin" ) ) {
             this.inDatasetTable = true;
-            haveReadDatasetDataHeader = false;
+       //     haveReadDatasetDataHeader = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_table_end" ) ) {
             this.inDatasetTable = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_channel_count" ) ) {
@@ -835,7 +835,7 @@ public class GeoFamilyParser implements Parser {
             if ( StringUtils.isBlank( currentSample().getTitle() ) ) {
                 sampleSet( currentSampleAccession, "title", value );
             } else {
-                log.debug( "Sample " + currentSample() + " already has title " + currentSample().getTitle() );
+                log.info( "Sample " + currentSample() + " already has title " + currentSample().getTitle() );
             }
         } else if ( startsWithIgnoreCase( line, "!Sample_geo_accession" ) ) {
             currentSampleAccession = value;
@@ -1039,6 +1039,8 @@ public class GeoFamilyParser implements Parser {
                     GeoReplication.convertStringToRepeatType( value ) );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
             parseSeriesVariableRepeatsSampleListLine( line, value );
+        } else if (startsWithIgnoreCase(line, "!Series_web_link")) {
+           // seriesSet( currentSeriesAccession, "platformId", value );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
             Integer variableId = new Integer( extractVariableNumber( line ) );
             GeoVariable v = new GeoVariable();

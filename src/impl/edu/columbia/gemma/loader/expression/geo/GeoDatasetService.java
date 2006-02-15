@@ -38,7 +38,7 @@ public class GeoDatasetService {
 
     private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
     private SourceDomainObjectGenerator generator;
-    private Persister expLoader;
+    private Persister persisterHelper;
     private Converter converter;
 
     /**
@@ -53,7 +53,7 @@ public class GeoDatasetService {
      * @param geoDataSetAccession
      */
     @SuppressWarnings("unchecked")
-    public void fetchAndLoad( String geoDataSetAccession ) {
+    public ExpressionExperiment fetchAndLoad( String geoDataSetAccession ) {
 
         if ( generator == null ) generator = new GeoDomainObjectGenerator();
 
@@ -64,11 +64,9 @@ public class GeoDatasetService {
         ExpressionExperiment result = ( ExpressionExperiment ) converter.convert( series );
 
         log.info( "Converted " + series.getGeoAccession() );
-
-        assert expLoader != null;
-        expLoader.persist( result );
-
-        log.info( "Persisted " + series.getGeoAccession() );
+        series = null; // try to help GC.
+        assert persisterHelper != null;
+        return ( ExpressionExperiment ) persisterHelper.persist( result );
     }
 
     /**
@@ -84,7 +82,7 @@ public class GeoDatasetService {
      * @param expressionLoader
      */
     public void setPersister( PersisterHelper expressionLoader ) {
-        this.expLoader = expressionLoader;
+        this.persisterHelper = expressionLoader;
     }
 
     /**
