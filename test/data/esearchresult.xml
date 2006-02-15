@@ -1,0 +1,88 @@
+<!DOCTYPE eSearchResult PUBLIC "-//NLM//DTD eSearchResult, 11 May 2002//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSearch_020511.dtd">
+<eSearchResult>
+    <Count>4</Count>
+    <RetMax>4</RetMax>
+    <RetStart>0</RetStart>
+    <IdList>
+        <Id>15963425</Id>
+        <Id>11584150</Id>
+        <Id>3594207</Id>
+        <Id>3942896</Id>
+    </IdList>
+    <TranslationSet>
+        <Translation>
+            <From>glucose</From>
+            <To>(&quot;glucose&quot;[MeSH Terms] OR glucose[Text Word])</To>
+        </Translation>
+        <Translation>
+            <From>habenula</From>
+            <To>(&quot;habenula&quot;[MeSH Terms] OR habenula[Text Word])</To>
+        </Translation>
+        <Translation>
+            <From>hippocampus brain</From>
+            <To>((&quot;hippocampus&quot;[TIAB] NOT Medline[SB]) OR &quot;hippocampus&quot;[MeSH Terms] OR hippocampus brain[Text Word])</To>
+        </Translation>
+    </TranslationSet>
+    <TranslationStack>
+        <TermSet>
+            <Term>&quot;glucose&quot;[MeSH Terms]</Term>
+            <Field>MeSH Terms</Field>
+            <Count>174236</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <TermSet>
+            <Term>glucose[Text Word]</Term>
+            <Field>Text Word</Field>
+            <Count>281782</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <OP>OR</OP>
+        <OP>GROUP</OP>
+        <TermSet>
+            <Term>&quot;habenula&quot;[MeSH Terms]</Term>
+            <Field>MeSH Terms</Field>
+            <Count>142</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <TermSet>
+            <Term>habenula[Text Word]</Term>
+            <Field>Text Word</Field>
+            <Count>1063</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <OP>OR</OP>
+        <OP>GROUP</OP>
+        <OP>AND</OP>
+        <TermSet>
+            <Term>&quot;hippocampus&quot;[TIAB]</Term>
+            <Field>TIAB</Field>
+            <Count>43644</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <TermSet>
+            <Term>Medline[SB]</Term>
+            <Field>SB</Field>
+            <Count>13697569</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <OP>NOT</OP>
+        <OP>GROUP</OP>
+        <TermSet>
+            <Term>&quot;hippocampus&quot;[MeSH Terms]</Term>
+            <Field>MeSH Terms</Field>
+            <Count>56178</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <OP>OR</OP>
+        <TermSet>
+            <Term>hippocampus brain[Text Word]</Term>
+            <Field>Text Word</Field>
+            <Count>15</Count>
+            <Explode>Y</Explode>
+        </TermSet>
+        <OP>OR</OP>
+        <OP>GROUP</OP>
+        <OP>AND</OP>
+        <OP>GROUP</OP>
+    </TranslationStack>
+</eSearchResult>
