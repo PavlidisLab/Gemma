@@ -39,7 +39,7 @@ public class DesignElementDataVectorDaoImpl extends
      * (non-Javadoc)
      */
     @Override
-    public DesignElementDataVector findOrCreate( DesignElementDataVector designElementDataVector ) {
+    public DesignElementDataVector find( DesignElementDataVector designElementDataVector ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( DesignElementDataVector.class );
 
@@ -78,10 +78,10 @@ public class DesignElementDataVectorDaoImpl extends
      * (non-Javadoc)
      */
     @Override
-    public DesignElementDataVector find( DesignElementDataVector designElementDataVector ) {
+    public DesignElementDataVector findOrCreate( DesignElementDataVector designElementDataVector ) {
         if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
                 || designElementDataVector.getExpressionExperiment() == null ) {
-            log.warn( "DesignElementDataVector did not have comparable fields " + designElementDataVector );
+            log.warn( "DesignElementDataVector did not have complete business key " + designElementDataVector );
             return null;
         }
         DesignElementDataVector newDesignElementDataVector = find( designElementDataVector );

@@ -18,9 +18,6 @@
  */
 package edu.columbia.gemma.expression.designElement;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -36,8 +33,6 @@ import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement.ReporterDaoBase {
 
     private static Log log = LogFactory.getLog( ReporterDaoImpl.class.getName() );
-
-    private Map<String, Reporter> cache = new HashMap<String, Reporter>();
 
     /*
      * (non-Javadoc)
@@ -92,11 +87,6 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
             return null;
         }
 
-        String key = getCacheKey( reporter );
-        if ( cache.containsKey( key ) ) {
-            return cache.get( key );
-        }
-
         Reporter newReporter = this.find( reporter );
         if ( newReporter != null ) {
             if ( log.isDebugEnabled() ) log.debug( "Found existing reporter: " + newReporter );
@@ -106,14 +96,6 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
         if ( log.isDebugEnabled() ) log.debug( "Creating new reporter: " + reporter.getName() );
         Reporter result = ( Reporter ) create( reporter );
         return result;
-    }
-
-    /**
-     * @param reporter
-     * @return
-     */
-    private String getCacheKey( Reporter reporter ) {
-        return reporter.getName() + " " + reporter.getArrayDesign().getName();
     }
 
 }
