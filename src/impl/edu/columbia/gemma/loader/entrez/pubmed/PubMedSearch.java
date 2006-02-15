@@ -45,6 +45,8 @@ public class PubMedSearch {
     protected static final Log log = LogFactory.getLog( PubMedSearch.class );
     private String uri;
 
+    private static final int CHUNK_SIZE = 10; // don't retrive too many at once, it isn't nice.
+
     /**
      * 
      */
@@ -85,10 +87,29 @@ public class PubMedSearch {
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         ESearchXMLParser parser = new ESearchXMLParser();
         Collection<String> ids = parser.parse( toBeGotten.openStream() );
+
+        Collection<BibliographicReference> results = new HashSet<BibliographicReference>();
+
         Collection<Integer> ints = new HashSet<Integer>();
+        int count = 0;
         for ( String str : ids ) {
             ints.add( Integer.parseInt( str ) );
+            count++;
+
+            if ( count >= CHUNK_SIZE ) {
+                results.addAll( fetcher.retrieveByHTTP( ints ) );
+                ints = new HashSet<Integer>();
+                count = 0;
+            }
+
         }
-        return fetcher.retrieveByHTTP( ints );
+
+        if ( count > 0 ) {
+            results.addAll( fetcher.retrieveByHTTP( ints ) );
+        }
+
+        log.info( "Fetched " + results.size() + " references" );
+
+        return results;
     }
 }

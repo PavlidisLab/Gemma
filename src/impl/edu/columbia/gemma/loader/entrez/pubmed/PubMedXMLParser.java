@@ -134,7 +134,7 @@ public class PubMedXMLParser {
 
         NodeList articles = document.getElementsByTagName( "PubmedArticle" );
 
-        log.info( articles.getLength() + " articles found in document" );
+        log.debug( articles.getLength() + " articles found in document" );
 
         try {
             for ( int i = 0; i < articles.getLength(); i++ ) {
