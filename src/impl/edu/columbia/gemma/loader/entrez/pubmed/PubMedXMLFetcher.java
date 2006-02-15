@@ -21,7 +21,6 @@ package edu.columbia.gemma.loader.entrez.pubmed;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.HashSet;
 
 import javax.xml.parsers.ParserConfigurationException;
 

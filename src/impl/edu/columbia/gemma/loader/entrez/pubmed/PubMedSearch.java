@@ -18,13 +18,7 @@
  */
 package edu.columbia.gemma.loader.entrez.pubmed;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,7 +31,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.tools.ant.util.FileUtils;
 import org.xml.sax.SAXException;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
