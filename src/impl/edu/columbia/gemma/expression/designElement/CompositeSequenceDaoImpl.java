@@ -82,7 +82,7 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
     @Override
     public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
         if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "compositeSequence must name and arrayDesign." );
+            if ( log.isDebugEnabled() ) log.debug( "compositeSequence must have name and arrayDesign." );
             return null;
         }
        

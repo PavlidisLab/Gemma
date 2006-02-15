@@ -21,19 +21,24 @@ package edu.columbia.gemma.loader.entrez.pubmed;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+
+import com.sun.org.apache.xpath.internal.XPathAPI;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.DatabaseEntry;
@@ -51,6 +56,8 @@ import edu.columbia.gemma.common.description.ExternalDatabase;
  * @version $Id$
  */
 public class PubMedXMLParser {
+
+    protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
 
     /**
      * Used to define the ExternalDatabase object linked to the result.
@@ -72,6 +79,8 @@ public class PubMedXMLParser {
     private static final String MEDLINE_PAGINATION_ELEMENT = "MedlinePgn";
     private static final String PMID_ELEMENT = "PMID";
 
+    DocumentBuilder builder;
+
     /**
      * @param is
      * @return
@@ -79,8 +88,8 @@ public class PubMedXMLParser {
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    public BibliographicReference parse( InputStream is ) throws IOException, SAXException,
-            ParserConfigurationException {
+    public Collection<BibliographicReference> parse( InputStream is ) throws IOException, ParserConfigurationException,
+            SAXException {
 
         if ( is.available() == 0 ) {
             throw new IOException( "XML stream contains no data." );
@@ -90,23 +99,24 @@ public class PubMedXMLParser {
         factory.setIgnoringComments( true );
         // factory.setValidating( true );
 
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setErrorHandler( new ErrorHandler() {
-            public void warning( SAXParseException exception ) throws SAXException {
-                throw exception;
-            }
-
-            public void error( SAXParseException exception ) throws SAXException {
-                throw exception;
-            }
-
-            public void fatalError( SAXParseException exception ) throws SAXException {
-                throw exception;
-            }
-        } );
+        builder = factory.newDocumentBuilder();
+        // builder.setErrorHandler( new ErrorHandler() {
+        // public void warning( SAXParseException exception ) throws SAXException {
+        // throw exception;
+        // }
+        //
+        // public void error( SAXParseException exception ) throws SAXException {
+        // throw exception;
+        // }
+        //
+        // public void fatalError( SAXParseException exception ) throws SAXException {
+        // throw exception;
+        // }
+        // } );
 
         Document document = builder.parse( is );
-        return setUpBibRef( document );
+
+        return extractBibRefs( document );
     }
 
     /**
@@ -114,52 +124,63 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private BibliographicReference setUpBibRef( Document doc ) throws IOException {
+    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException {
 
         // Was there an error? (not found)
-        if ( doc.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
+        if ( document.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
             return null;
         }
+        Collection<BibliographicReference> result = new HashSet<BibliographicReference>();
 
-        BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+        NodeList articles = document.getElementsByTagName( "PubmedArticle" );
 
-        // inserted null checks so that documents with older formats would still load
-        if ( doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT ).getLength() > 0 )
-            bibRef.setAbstractText( getTextValue( ( Element ) doc.getElementsByTagName( ABSTRACT_TEXT_ELEMENT )
-                    .item( 0 ) ) );
+        log.info( articles.getLength() + " articles found in document" );
 
-        if ( doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT ).getLength() > 0 )
-            bibRef
-                    .setPages( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_PAGINATION_ELEMENT )
-                            .item( 0 ) ) );
+        try {
+            for ( int i = 0; i < articles.getLength(); i++ ) {
 
-        if ( doc.getElementsByTagName( TITLE_ELEMENT ).getLength() > 0 )
-            bibRef.setTitle( getTextValue( ( Element ) doc.getElementsByTagName( TITLE_ELEMENT ).item( 0 ) ) );
+                Node article = articles.item( i );
 
-        if ( doc.getElementsByTagName( "Volume" ).getLength() > 0 )
-            bibRef.setVolume( getTextValue( ( Element ) doc.getElementsByTagName( "Volume" ).item( 0 ) ) );
+                BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
 
-        if ( doc.getElementsByTagName( "Issue" ).getLength() > 0 )
-            bibRef.setIssue( getTextValue( ( Element ) doc.getElementsByTagName( "Issue" ).item( 0 ) ) );
+                bibRef.setAbstractText( XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT ).getTextContent() );
 
-        if ( doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT ).getLength() > 0 )
-            bibRef.setPublication( getTextValue( ( Element ) doc.getElementsByTagName( MEDLINE_JOURNAL_TITLE_ELEMENT )
-                    .item( 0 ) ) );
+                bibRef.setPages( XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + MEDLINE_PAGINATION_ELEMENT ).getTextContent() );
 
-        bibRef.setAuthorList( extractAuthorList( doc ) );
-        // bibRef.setYear( extractPublicationYear( doc ) );
-        bibRef.setPublicationDate( extractPublicationDate( doc ) );
+                bibRef.setTitle( XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + TITLE_ELEMENT ).getTextContent() );
 
-        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-        dbEntry.setAccession( getTextValue( ( Element ) doc.getElementsByTagName( PMID_ELEMENT ).item( 0 ) ) );
+                bibRef.setVolume( XPathAPI.selectSingleNode( article, "child::MedlineCitation/descendant::Volume" )
+                        .getTextContent() );
 
-        ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
-        exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
-        dbEntry.setExternalDatabase( exDb );
+                bibRef.setIssue( XPathAPI.selectSingleNode( article, "child::MedlineCitation/descendant::Issue" )
+                        .getTextContent() );
 
-        bibRef.setPubAccession( dbEntry );
+                bibRef.setPublication( XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + MEDLINE_JOURNAL_TITLE_ELEMENT ).getTextContent() );
 
-        return bibRef;
+                bibRef.setAuthorList( extractAuthorList( article ) );
+
+                bibRef.setPublicationDate( extractPublicationDate( article ) );
+
+                DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+                dbEntry.setAccession( XPathAPI.selectSingleNode( article, "/descendant::" + PMID_ELEMENT )
+                        .getTextContent() );
+
+                ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
+                exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
+                dbEntry.setExternalDatabase( exDb );
+
+                bibRef.setPubAccession( dbEntry );
+
+                result.add( bibRef );
+            }
+        } catch ( TransformerException e ) {
+            throw new RuntimeException( e );
+        }
+        return result;
     }
 
     /**
@@ -167,13 +188,10 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private String extractAuthorList( Document doc ) throws IOException {
+    private String extractAuthorList( Node article ) throws IOException, TransformerException {
 
-        if ( doc.getElementsByTagName( "AuthorList" ).item( 0 ) == null ) {
-            return "(No authors listed)";
-        }
+        NodeList authorList = XPathAPI.selectNodeList( article, "child::MedlineCitation/descendant::AuthorList/Author" );
 
-        NodeList authorList = doc.getElementsByTagName( "AuthorList" ).item( 0 ).getChildNodes();
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
 
@@ -189,10 +207,10 @@ public class PubMedXMLParser {
 
                         Element f = ( Element ) m;
                         if ( f.getNodeName().equals( "LastName" ) ) {
-                            al.append( getTextValue( f ) );
+                            al.append( XMLUtils.getTextValue( f ) );
                             al.append( ", " );
                         } else if ( f.getNodeName().equals( "ForeName" ) ) {
-                            al.append( getTextValue( f ) );
+                            al.append( XMLUtils.getTextValue( f ) );
 
                             al.append( "; " );
 
@@ -215,10 +233,9 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private Date extractPublicationDate( Document doc ) throws IOException {
+    private Date extractPublicationDate( Node article ) throws IOException, TransformerException {
 
-        NodeList dateList = doc.getElementsByTagName( PUBMED_PUB_DATE_ELEMENT );
-
+        NodeList dateList = XPathAPI.selectNodeList( article, "/descendant::" + PUBMED_PUB_DATE_ELEMENT );
         int year = 0;
         int month = 0;
         int day = 0;
@@ -240,7 +257,7 @@ public class PubMedXMLParser {
                         if ( dateitem instanceof Element ) {
                             Element elem = ( Element ) dateitem;
 
-                            int num = Integer.parseInt( getTextValue( elem ) );
+                            int num = Integer.parseInt( XMLUtils.getTextValue( elem ) );
 
                             if ( elem.getTagName().equals( "Year" ) ) {
                                 year = num;
@@ -265,31 +282,6 @@ public class PubMedXMLParser {
         c.set( year, month, day, hour, minute );
 
         return c.getTime();
-    }
-
-    /**
-     * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
-     * <p>
-     * Borrowed from the Spring API.
-     * 
-     * @throws IOException
-     */
-    protected String getTextValue( Element ele ) throws IOException {
-        if ( ele == null ) return null;
-        StringBuilder value = new StringBuilder();
-        NodeList nl = ele.getChildNodes();
-        for ( int i = 0; i < nl.getLength(); i++ ) {
-            Node item = nl.item( i );
-            if ( item instanceof org.w3c.dom.CharacterData ) {
-                if ( !( item instanceof org.w3c.dom.Comment ) ) {
-                    value.append( item.getNodeValue() );
-                }
-            } else {
-                throw new IOException( "element is just allowed to have text and comment nodes, not: "
-                        + item.getClass().getName() );
-            }
-        }
-        return value.toString();
     }
 
 }

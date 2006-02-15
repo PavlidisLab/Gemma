@@ -20,15 +20,12 @@ package edu.columbia.gemma.loader.entrez.pubmed;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 
 import junit.framework.TestCase;
 import edu.columbia.gemma.common.description.BibliographicReference;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -51,8 +48,8 @@ public class PubMedXMLParserTest extends TestCase {
     }
 
     public void testParse() throws Exception {
-        BibliographicReference br = testParser.parse( testStream );
-
+        Collection<BibliographicReference> brl = testParser.parse( testStream );
+        BibliographicReference br = brl.iterator().next();
         assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
         assertEquals( "Genome Res", br.getPublication() );
         assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
@@ -60,5 +57,4 @@ public class PubMedXMLParserTest extends TestCase {
         SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
         assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
     }
-
 }

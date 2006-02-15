@@ -1301,7 +1301,14 @@ public class GeoConverter implements Converter {
 
         String sample = vector.iterator().next();
 
-        if ( sample == null ) throw new IllegalStateException( "Vector contained null string as first element" );
+        if ( sample == null ) {
+            StringBuilder buf = new StringBuilder();
+            for ( String string : vector ) {
+                buf.append( string + "," );
+            }
+            throw new IllegalStateException( "Vector contained null string as first element, full vector was "
+                    + buf.toString() );
+        }
 
         List<Object> toConvert = new ArrayList<Object>();
         PrimitiveType pt = qt.getRepresentation();

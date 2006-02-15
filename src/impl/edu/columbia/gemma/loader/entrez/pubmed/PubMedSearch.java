@@ -18,7 +18,13 @@
  */
 package edu.columbia.gemma.loader.entrez.pubmed;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,33 +37,33 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tools.ant.util.FileUtils;
 import org.xml.sax.SAXException;
 
 import edu.columbia.gemma.common.description.BibliographicReference;
 
 /**
- * Class that can retrieve pubmed records (in XML format) via HTTP. The url used is configured via a resource.
- * <hr>
- * <p>
+ * Search PubMed for terms, retrieve document records.
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="pubMedXmlFetcher"
  */
-public class PubMedXMLFetcher {
-
-    protected static final Log log = LogFactory.getLog( PubMedXMLFetcher.class );
+public class PubMedSearch {
+    protected static final Log log = LogFactory.getLog( PubMedSearch.class );
     private String uri;
 
-    public PubMedXMLFetcher() {
+    /**
+     * 
+     */
+    public PubMedSearch() {
         try {
             Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-            String baseURL = ( String ) config.getProperty( "entrez.efetch.baseurl" );
+            String baseURL = ( String ) config.getProperty( "entrez.esearch.baseurl" );
             String db = ( String ) config.getProperty( "entrez.efetch.pubmed.db" );
-            String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
+            // String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
             String retmode = ( String ) config.getProperty( "entrez.efetch.pubmed.retmode" );
             String rettype = ( String ) config.getProperty( "entrez.efetch.pubmed.rettype" );
-            uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
+            uri = baseURL + "&" + db + "&" + retmode + "&" + rettype;
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( e );
         }
@@ -67,38 +73,29 @@ public class PubMedXMLFetcher {
      * For an integer pubmed id
      * 
      * @param pubMedId
-     * @return BibliographicReference for the id given.
+     * @return BibliographicReference representing the publication
      * @throws IOException
      */
-    public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException, SAXException,
-            ParserConfigurationException {
-        URL toBeGotten = new URL( uri + pubMedId );
-        log.info( "Fetching " + toBeGotten );
-        PubMedXMLParser pmxp = new PubMedXMLParser();
-        Collection<BibliographicReference> results = pmxp.parse( toBeGotten.openStream() );
-        if ( results == null || results.size() == 0 ) {
-            return null;
-        }
-        assert results.size() == 1;
-        return results.iterator().next();
-    }
+    public Collection<BibliographicReference> searchAndRetriveByHTTP( Collection<String> searchTerms )
+            throws IOException, SAXException, ParserConfigurationException {
 
-    /**
-     * For collection of integer pubmed ids.
-     * 
-     * @param pubMedIds
-     * @return Collection<BibliographicReference>
-     * @throws IOException
-     */
-    public Collection<BibliographicReference> retrieveByHTTP( Collection<Integer> pubMedIds ) throws IOException,
-            SAXException, ParserConfigurationException {
-        StringBuilder buf = new StringBuilder();
-        for ( Integer integer : pubMedIds ) {
-            buf.append( integer + "," );
+        StringBuilder builder = new StringBuilder();
+        builder.append( uri );
+        builder.append( "&term=" );
+        for ( String string : searchTerms ) {
+            builder.append( string );
+            builder.append( "+" );
         }
-        URL toBeGotten = new URL( uri + StringUtils.chomp( buf.toString() ) );
+        URL toBeGotten = new URL( StringUtils.chomp( builder.toString() ) );
         log.info( "Fetching " + toBeGotten );
-        PubMedXMLParser pmxp = new PubMedXMLParser();
-        return pmxp.parse( toBeGotten.openStream() );
+
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        ESearchXMLParser parser = new ESearchXMLParser();
+        Collection<String> ids = parser.parse( toBeGotten.openStream() );
+        Collection<Integer> ints = new HashSet<Integer>();
+        for ( String str : ids ) {
+            ints.add( Integer.parseInt( str ) );
+        }
+        return fetcher.retrieveByHTTP( ints );
     }
 }

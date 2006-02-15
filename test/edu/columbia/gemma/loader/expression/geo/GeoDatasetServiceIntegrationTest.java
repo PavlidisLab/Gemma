@@ -76,21 +76,21 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         super.tearDown();
     }
 
-    // public void testFetchAndLoadMultiChipPerSeries() throws Exception {
-    // gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
-    // // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
-    // }
+//     public void testFetchAndLoadMultiChipPerSeries() throws Exception {
+//        gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
+//        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+//    }
 
-    // /**
-    // * This test uses just one dataset, one series
-    // */
+     /**
+     * This test uses just one dataset, one series
+     */
     // public void testFetchAndLoadOneDataset() throws Exception {
     // gds.fetchAndLoad( "GDS599" );
-    // }
-    //
-    // /**
-    // * This test uses all three MG-U74 arrays.
-    // */
+    //    }
+    
+     /**
+         * This test uses all three MG-U74 arrays.
+         */
     // public void testFetchAndLoadThreePlatforms() throws Exception {
     // gds.fetchAndLoad( "GDS243" );
     // }
@@ -103,7 +103,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
             throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
         }
         gds.setGenerator( new GeoDomainObjectGeneratorLocal( path + "/test/data/geo/shortTest" ) );
-      //  gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
+        gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
 
         // get the data back out.
@@ -127,7 +127,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
 
         DoubleMatrixNamed matrix = edms.getMatrix( ee, qt );
 
-        printMatrix( matrix );
+        //printMatrix( matrix );
 
         assertEquals( 31, matrix.rows() );
 

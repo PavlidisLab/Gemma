@@ -1028,24 +1028,9 @@ public class PersisterHelper implements Persister {
 
             DesignElement persistentDesignElement = null;
             DesignElement maybeExistingDesignElement = vect.getDesignElement();
-            if ( designElementCache.containsKey( maybeExistingDesignElement.getName() + " "
-                    + maybeExistingDesignElement.getArrayDesign().getName() ) ) { // clean this up
-                persistentDesignElement = designElementCache.get( maybeExistingDesignElement.getName() + " "
-                        + maybeExistingDesignElement.getArrayDesign().getName() );
-            } else {
-                if ( maybeExistingDesignElement instanceof CompositeSequence ) {
-                    persistentDesignElement = compositeSequenceService
-                            .find( ( CompositeSequence ) maybeExistingDesignElement );
-                } else if ( maybeExistingDesignElement instanceof Reporter ) {
-                    persistentDesignElement = reporterService.find( ( Reporter ) maybeExistingDesignElement );
-                }
 
-                if ( persistentDesignElement == null ) {
-                    throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
-                }
-            }
-            assert persistentDesignElement != null;
-            ArrayDesign ad = persistentDesignElement.getArrayDesign();
+            assert maybeExistingDesignElement != null;
+            ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
 
             // TODO possibly move cache
             if ( arrayDesignCache.containsKey( ad.getName() ) ) {
@@ -1059,6 +1044,24 @@ public class PersisterHelper implements Persister {
                 setupCache( designElementCache, ad );
                 cacheIsSetUp.add( ad.getName() );
             }
+
+            if ( designElementCache.containsKey( maybeExistingDesignElement.getName() + " "
+                    + maybeExistingDesignElement.getArrayDesign().getName() ) ) { // clean this up
+                persistentDesignElement = designElementCache.get( maybeExistingDesignElement.getName() + " "
+                        + maybeExistingDesignElement.getArrayDesign().getName() );
+            } else {
+                if ( maybeExistingDesignElement instanceof CompositeSequence ) {
+                    persistentDesignElement = compositeSequenceService
+                            .findOrCreate( ( CompositeSequence ) maybeExistingDesignElement );
+                } else if ( maybeExistingDesignElement instanceof Reporter ) {
+                    persistentDesignElement = reporterService.findOrCreate( ( Reporter ) maybeExistingDesignElement );
+                }
+
+                if ( persistentDesignElement == null ) {
+                    throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
+                }
+            }
+            assert persistentDesignElement != null;
 
             // TODO possibly move cache
             if ( bioAssayDimensionCache.containsKey( vect.getBioAssayDimension().getName() ) ) {
