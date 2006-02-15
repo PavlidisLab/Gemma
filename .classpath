@@ -56,7 +56,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/jta/jars/jta.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/log4j/jars/log4j-1.2.8.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/odmg/jars/odmg-3.0.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.2.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/opensymphony/sitemesh-2.2.1/src" kind="var" path="MAVEN_REPO/opensymphony/jars/sitemesh-2.2.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/oscache/jars/oscache-gemma-2.0.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/struts-menu/jars/struts-menu-2.3.jar"/>
@@ -98,5 +97,8 @@
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xerces-2.4.0.jar"/>
 	<classpathentry sourcepath="/WORKSPACE/baseCode/src" kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/struts/jars/struts-1.2.7.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/clickstream-1.0.3.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/ehcache-1.1.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
