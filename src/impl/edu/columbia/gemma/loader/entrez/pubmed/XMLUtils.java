@@ -20,10 +20,6 @@ package edu.columbia.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 /**
  * Handy methods for dealing with XML.
  * 
@@ -39,12 +35,12 @@ public class XMLUtils {
      * 
      * @throws IOException
      */
-    public static String getTextValue( Element ele ) throws IOException {
+    public static String getTextValue( org.w3c.dom.Element ele ) throws IOException {
         if ( ele == null ) return null;
         StringBuilder value = new StringBuilder();
-        NodeList nl = ele.getChildNodes();
+        org.w3c.dom.NodeList nl = ele.getChildNodes();
         for ( int i = 0; i < nl.getLength(); i++ ) {
-            Node item = nl.item( i );
+            org.w3c.dom.Node item = nl.item( i );
             if ( item instanceof org.w3c.dom.CharacterData ) {
                 if ( !( item instanceof org.w3c.dom.Comment ) ) {
                     value.append( item.getNodeValue() );

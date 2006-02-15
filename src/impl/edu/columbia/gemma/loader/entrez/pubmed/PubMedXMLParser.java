@@ -38,8 +38,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.sun.org.apache.xpath.internal.XPathAPI;
-
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
@@ -57,27 +55,27 @@ import edu.columbia.gemma.common.description.ExternalDatabase;
  */
 public class PubMedXMLParser {
 
-    protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
+    // private static final String MEDLINE_ELEMENT = "MedlineCitation";
+    private static final String ABSTRACT_TEXT_ELEMENT = "AbstractText";
 
+    private static final String ERROR_TAG = "Error";
+
+    // private static final String ARTICLE_ELEMENT = "Article";
+    // private static final String MEDLINE_JOURNAL_INFO_ELEMENT = "MedlineJournalInfo";
+    private static final String MEDLINE_JOURNAL_TITLE_ELEMENT = "MedlineTA";
+
+    // private static final String PAGINATION_ELEMENT = "Pagination";
+    private static final String MEDLINE_PAGINATION_ELEMENT = "MedlinePgn";
+    private static final String PMID_ELEMENT = "PMID";
     /**
      * Used to define the ExternalDatabase object linked to the result.
      */
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
-
-    private static final String ERROR_TAG = "Error";
-
     private static final String PUB_STATUS_ELEMENT = "PubStatus";
     private static final String PUBMED_PUB_DATE_ELEMENT = "PubMedPubDate";
-    // private static final String ARTICLE_ELEMENT = "Article";
-    // private static final String MEDLINE_JOURNAL_INFO_ELEMENT = "MedlineJournalInfo";
-    private static final String MEDLINE_JOURNAL_TITLE_ELEMENT = "MedlineTA";
-    // private static final String MEDLINE_ELEMENT = "MedlineCitation";
-    private static final String ABSTRACT_TEXT_ELEMENT = "AbstractText";
     // private static final String ABSTRACT_ELEMENT = "Abstract";
     private static final String TITLE_ELEMENT = "ArticleTitle";
-    // private static final String PAGINATION_ELEMENT = "Pagination";
-    private static final String MEDLINE_PAGINATION_ELEMENT = "MedlinePgn";
-    private static final String PMID_ELEMENT = "PMID";
+    protected static final Log log = LogFactory.getLog( PubMedXMLParser.class );
 
     DocumentBuilder builder;
 
@@ -100,19 +98,6 @@ public class PubMedXMLParser {
         // factory.setValidating( true );
 
         builder = factory.newDocumentBuilder();
-        // builder.setErrorHandler( new ErrorHandler() {
-        // public void warning( SAXParseException exception ) throws SAXException {
-        // throw exception;
-        // }
-        //
-        // public void error( SAXParseException exception ) throws SAXException {
-        // throw exception;
-        // }
-        //
-        // public void fatalError( SAXParseException exception ) throws SAXException {
-        // throw exception;
-        // }
-        // } );
 
         Document document = builder.parse( is );
 
@@ -124,73 +109,10 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException {
-
-        // Was there an error? (not found)
-        if ( document.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
-            return null;
-        }
-        Collection<BibliographicReference> result = new HashSet<BibliographicReference>();
-
-        NodeList articles = document.getElementsByTagName( "PubmedArticle" );
-
-        log.debug( articles.getLength() + " articles found in document" );
-
-        try {
-            for ( int i = 0; i < articles.getLength(); i++ ) {
-
-                Node article = articles.item( i );
-
-                BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
-
-                bibRef.setAbstractText( XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT ).getTextContent() );
-
-                bibRef.setPages( XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + MEDLINE_PAGINATION_ELEMENT ).getTextContent() );
-
-                bibRef.setTitle( XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + TITLE_ELEMENT ).getTextContent() );
-
-                bibRef.setVolume( XPathAPI.selectSingleNode( article, "child::MedlineCitation/descendant::Volume" )
-                        .getTextContent() );
-
-                bibRef.setIssue( XPathAPI.selectSingleNode( article, "child::MedlineCitation/descendant::Issue" )
-                        .getTextContent() );
-
-                bibRef.setPublication( XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + MEDLINE_JOURNAL_TITLE_ELEMENT ).getTextContent() );
-
-                bibRef.setAuthorList( extractAuthorList( article ) );
-
-                bibRef.setPublicationDate( extractPublicationDate( article ) );
-
-                DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-                dbEntry.setAccession( XPathAPI.selectSingleNode( article, "/descendant::" + PMID_ELEMENT )
-                        .getTextContent() );
-
-                ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
-                exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
-                dbEntry.setExternalDatabase( exDb );
-
-                bibRef.setPubAccession( dbEntry );
-
-                result.add( bibRef );
-            }
-        } catch ( TransformerException e ) {
-            throw new RuntimeException( e );
-        }
-        return result;
-    }
-
-    /**
-     * @param doc
-     * @return
-     * @throws IOException
-     */
     private String extractAuthorList( Node article ) throws IOException, TransformerException {
 
-        NodeList authorList = XPathAPI.selectNodeList( article, "child::MedlineCitation/descendant::AuthorList/Author" );
+        NodeList authorList = org.apache.xpath.XPathAPI.selectNodeList( article,
+                "child::MedlineCitation/descendant::AuthorList/Author" );
 
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
@@ -227,6 +149,70 @@ public class PubMedXMLParser {
     }
 
     /**
+     * @param doc
+     * @return
+     * @throws IOException
+     */
+    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException {
+
+        // Was there an error? (not found)
+        if ( document.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
+            return null;
+        }
+        Collection<BibliographicReference> result = new HashSet<BibliographicReference>();
+
+        NodeList articles = document.getElementsByTagName( "PubmedArticle" );
+
+        log.debug( articles.getLength() + " articles found in document" );
+
+        try {
+            for ( int i = 0; i < articles.getLength(); i++ ) {
+
+                Node article = articles.item( i );
+
+                BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+
+                bibRef.setAbstractText( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT ).getTextContent() );
+
+                bibRef.setPages( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + MEDLINE_PAGINATION_ELEMENT ).getTextContent() );
+
+                bibRef.setTitle( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + TITLE_ELEMENT ).getTextContent() );
+
+                bibRef.setVolume( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::Volume" ).getTextContent() );
+
+                bibRef.setIssue( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::Issue" ).getTextContent() );
+
+                bibRef.setPublication( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + MEDLINE_JOURNAL_TITLE_ELEMENT ).getTextContent() );
+
+                bibRef.setAuthorList( extractAuthorList( article ) );
+
+                bibRef.setPublicationDate( extractPublicationDate( article ) );
+
+                DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+                dbEntry.setAccession( org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "/descendant::" + PMID_ELEMENT ).getTextContent() );
+
+                ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
+                exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
+                dbEntry.setExternalDatabase( exDb );
+
+                bibRef.setPubAccession( dbEntry );
+
+                result.add( bibRef );
+            }
+        } catch ( TransformerException e ) {
+            throw new RuntimeException( e );
+        }
+        return result;
+    }
+
+    /**
      * Get the date this was put in pubmed.
      * 
      * @param doc
@@ -235,7 +221,8 @@ public class PubMedXMLParser {
      */
     private Date extractPublicationDate( Node article ) throws IOException, TransformerException {
 
-        NodeList dateList = XPathAPI.selectNodeList( article, "/descendant::" + PUBMED_PUB_DATE_ELEMENT );
+        NodeList dateList = org.apache.xpath.XPathAPI.selectNodeList( article, "/descendant::"
+                + PUBMED_PUB_DATE_ELEMENT );
         int year = 0;
         int month = 0;
         int day = 0;

@@ -29,12 +29,13 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+// import org.w3c.dom.Document;
+// import org.w3c.dom.Node;
+// import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * @author pavlidis
@@ -51,7 +52,7 @@ public class ESearchXMLParser {
      * @throws SAXException
      * @throws ParserConfigurationException
      */
-    public Collection<String> parse( InputStream is ) throws IOException, SAXException, ParserConfigurationException {
+    public Collection<String> parse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
 
         if ( is.available() == 0 ) {
             throw new IOException( "XML stream contains no data." );
@@ -62,20 +63,6 @@ public class ESearchXMLParser {
         // factory.setValidating( true );
 
         DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setErrorHandler( new ErrorHandler() {
-            public void warning( SAXParseException exception ) throws SAXException {
-                throw exception;
-            }
-
-            public void error( SAXParseException exception ) throws SAXException {
-                throw exception;
-            }
-
-            public void fatalError( SAXParseException exception ) throws SAXException {
-                throw exception;
-            }
-        } );
-
         Document document = builder.parse( is );
         return extractIds( document );
     }
