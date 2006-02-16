@@ -167,7 +167,7 @@
 
 
 <!-- ==================================================== -->
-<!--  Mapping urls to services. --><!--  FIXME This is never used ? -->
+<!--  Mapping urls to views. -->
 <!-- ==================================================== -->
 <bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/mainMenu.html /activeUsers.html /flushCache.html" />
 
