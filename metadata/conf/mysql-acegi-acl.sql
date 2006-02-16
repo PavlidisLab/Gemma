@@ -1,5 +1,9 @@
-DROP TABLE IF EXISTS ACL_OBJECT_IDENTITY;
-CREATE TABLE ACL_OBJECT_IDENTITY (
+-- Note: The table names used here (including lack of capitalization) 
+-- are those defined by default in org.acegisecurity.acl.basic.jdbc.JdbcExtendedDaoImpl
+-- Don't change them!
+
+DROP TABLE IF EXISTS acl_object_identity;
+CREATE TABLE acl_object_identity (
   id int(11) NOT NULL auto_increment,
   object_identity varchar(255) NOT NULL,
   parent_object int(11) default NULL,
@@ -8,8 +12,8 @@ CREATE TABLE ACL_OBJECT_IDENTITY (
   UNIQUE KEY object_identity (object_identity)
 ) TYPE=InnoDB;
 
-DROP TABLE IF EXISTS ACL_PERMISSION;
-CREATE TABLE ACL_PERMISSION (
+DROP TABLE IF EXISTS acl_permission;
+CREATE TABLE acl_permission (
   id int(11) NOT NULL auto_increment,
   acl_object_identity int(11) NOT NULL,
   recipient varchar(100) NOT NULL,
@@ -18,10 +22,10 @@ CREATE TABLE ACL_PERMISSION (
 ) TYPE=InnoDB;
 
 --- (id, object identity (of form class:getId()), parent object, acl class)
-INSERT INTO ACL_OBJECT_IDENTITY VALUES (1, 'globalDummyParent:1', null, 'org.acegisecurity.acl.basic.SimpleAclEntry');
+INSERT INTO acl_object_identity VALUES (1, 'globalDummyParent:1', null, 'org.acegisecurity.acl.basic.SimpleAclEntry');
 
 --- (id, acl object identity, recepient (principal username), mask)
-INSERT INTO ACL_PERMISSION VALUES (null, 1, 'administrator', 1);
+INSERT INTO acl_permission VALUES (null, 1, 'administrator', 1);
 
 
 --- Mask integer 0  = no permissions
