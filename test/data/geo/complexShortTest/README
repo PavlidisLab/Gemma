@@ -1,0 +1,10 @@
+# put some data in a junk file...
+
+cut -f 1 junk | xargs -i echo \"{}\" "=> 1,"
+# paste that into the script.
+
+./chopSoft.pl < orig/GDS817.soft | gzip -c > GDS817.soft.gz
+./chopSoft.pl < orig/GDS820.soft | gzip -c > GDS820.soft.gz
+./chopSoft.pl < orig/GDS823.soft | gzip -c > GDS823.soft.gz
+./chopSoft.pl < orig/GDS825.soft | gzip -c > GDS825.soft.gz
+./chopSoft.pl < orig/GSE1299_family.soft | gzip -c > GSE1299_family.soft.gz
