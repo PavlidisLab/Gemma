@@ -76,25 +76,38 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
         super.tearDown();
     }
 
-//     public void testFetchAndLoadMultiChipPerSeries() throws Exception {
-//        gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
-//        // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
-//    }
+    /**
+     * This test uses 4 data sets, 4 platforms, and samples that aren't run on all platforms.
+     * @throws Exception
+     */
+    public void testFetchAndLoadGDS825() throws Exception {
+        assert config != null;
+        String path = config.getString( "gemma.home" );
+        if ( path == null ) {
+            throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
+        }
+        gds.setGenerator( new GeoDomainObjectGeneratorLocal( path + "/test/data/geo/complexShortTest" ) );
+        gds.fetchAndLoad( "GDS825" );
+    }
 
-     /**
+    // public void testFetchAndLoadMultiChipPerSeries() throws Exception {
+    // gds.fetchAndLoad( "GDS472" ); // HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
+    // // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
+    // }
+
+    /**
      * This test uses just one dataset, one series
      */
-    // public void testFetchAndLoadOneDataset() throws Exception {
-    // gds.fetchAndLoad( "GDS599" );
-    //    }
-    
-     /**
-         * This test uses all three MG-U74 arrays.
-         */
+    public void testFetchAndLoadOneDataset() throws Exception {
+        gds.fetchAndLoad( "GDS599" );
+    }
+
+    /**
+     * This test uses all three MG-U74 arrays.
+     */
     // public void testFetchAndLoadThreePlatforms() throws Exception {
     // gds.fetchAndLoad( "GDS243" );
     // }
-
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         assert config != null;
@@ -127,7 +140,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
 
         DoubleMatrixNamed matrix = edms.getMatrix( ee, qt );
 
-        //printMatrix( matrix );
+        // printMatrix( matrix );
 
         assertEquals( 31, matrix.rows() );
 

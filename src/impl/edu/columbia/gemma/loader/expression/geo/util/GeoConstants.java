@@ -57,6 +57,7 @@ public class GeoConstants {
         descriptionNames.add( "description" );
         descriptionNames.add( "DESCRIPTION" );
         descriptionNames.add( "Symbol" );
+        descriptionNames.add( "PRIMARY_NAME" ); // agilent
     }
 
     /**

@@ -513,17 +513,28 @@ public class GeoConverter implements Converter {
 
             Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationType );
 
+            int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
                 List<String> dataVector = dataVectors.get( designElementName );
                 assert dataVector != null && dataVector.size() != 0;
                 DesignElementDataVector vector = convertDesignElementDataVector( geoDataset, expExp, bioAssayDimension,
                         designElementName, dataVector, qt );
 
-                if ( log.isDebugEnabled() ) {
-                    log.debug( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " "
+                if ( vector == null ) {
+                    continue;
+                }
+
+                if ( log.isTraceEnabled() ) {
+                    log.trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " "
                             + dataVector.size() + " elements in vector" );
                 }
+
                 expExp.getDesignElementDataVectors().add( vector );
+
+                if ( log.isInfoEnabled() && count > 0 && count % 2000 == 0 ) {
+                    log.info( count + " Data vectors added" );
+                }
+                count++;
             }
         }
     }
@@ -543,10 +554,17 @@ public class GeoConverter implements Converter {
         StandardQuantitationType qType = StandardQuantitationType.MEASUREDSIGNAL;
         Boolean isBackground = Boolean.FALSE;
 
-        if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
+        if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
+            /*
+             * FIXME special case...not a quantitation type.
+             */
+            qType = StandardQuantitationType.OTHER;
+            pType = PrimitiveType.STRING;
+            sType = ScaleType.UNSCALED;
+        } else if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
             qType = StandardQuantitationType.DERIVEDSIGNAL;
             sType = ScaleType.LINEAR;
-        } else if ( name.equals( "DET_P" ) || name.equals( "DETECTION P-VALUE" ) || name.equals( "Detection_p-value" ) ) {
+        } else if ( name.equals( "DET_P" ) || name.equals( "DETECTION P-VALUE" ) || name.equalsIgnoreCase( "Detection_p-value" ) ) {
             qType = StandardQuantitationType.CONFIDENCEINDICATOR;
         } else if ( name.equals( "VALUE" ) ) {
             if ( description.toLowerCase().contains( "signal" ) || description.contains( "RMA" ) ) {
@@ -574,7 +592,7 @@ public class GeoConverter implements Converter {
             qType = StandardQuantitationType.COORDINATE;
         } else if ( name.matches( "^RAT[12]N?_(MEAN|MEDIAN)" ) ) {
             qType = StandardQuantitationType.RATIO;
-        } else if ( name.matches( "fold_change" ) ) {
+        } else if ( name.matches( "fold_change" ) || description.contains( "log ratio" ) ) {
             qType = StandardQuantitationType.RATIO;
         }
 
@@ -584,8 +602,8 @@ public class GeoConverter implements Converter {
         qt.setType( qType );
         qt.setIsBackground( isBackground );
 
-        log.info( "Inferred that quantitation type \"" + name + "\" (" + description + ") corresponds to: " + qType
-                + ",  " + sType );
+        log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
+                + "\") corresponds to: " + qType + ",  " + sType );
 
     }
 
@@ -616,6 +634,9 @@ public class GeoConverter implements Converter {
     private DesignElementDataVector convertDesignElementDataVector( GeoDataset geoDataset, ExpressionExperiment expExp,
             BioAssayDimension bioAssayDimension, String designElementName, List<String> dataVector, QuantitationType qt ) {
         byte[] blob = convertData( dataVector, qt );
+        if ( blob == null ) {
+            return null;
+        }
         log.debug( blob.length + " bytes for " + dataVector.size() + " raw elements" );
         CompositeSequence compositeSequence = platformDesignElementMap.get(
                 convertPlatform( geoDataset.getPlatform() ).getName() ).get( designElementName );
@@ -656,9 +677,9 @@ public class GeoConverter implements Converter {
                     dataVectors.put( designElementName, new ArrayList<String>() );
                 }
                 String datum = sample.getDatum( designElementName, quantitationType );
-                // assert datum != null; // this can happen if the platform has probes that aren't in the data
-                if ( datum == null ) {
-                    log.warn( "Data for sample " + sample.getGeoAccession() + " was missing for element "
+                // this can happen if the platform has probes that aren't in the data
+                if ( datum == null && log.isDebugEnabled() ) {
+                    log.debug( "Data for sample " + sample.getGeoAccession() + " was missing for element "
                             + designElementName );
                 }
                 dataVectors.get( designElementName ).add( datum );
@@ -678,7 +699,8 @@ public class GeoConverter implements Converter {
         Collection<GeoSample> datasetSamples = new ArrayList<GeoSample>();
         for ( GeoSample sample : seriesSamples ) {
             if ( geoDataset.getColumnNames().contains( sample.getGeoAccession() ) ) {
-                log.info( "Dataset " + geoDataset + " includes sample " + sample );
+                log.info( "Dataset " + geoDataset + " includes sample " + sample + " on platform "
+                        + sample.getPlatforms().iterator().next() );
                 datasetSamples.add( sample );
             }
         }
@@ -723,11 +745,19 @@ public class GeoConverter implements Converter {
                 + platform.getGeoAccession() );
 
         Iterator<String> refIter = externalRefs.iterator();
-        Iterator<String> descIter = descriptions.iterator();
+        Iterator<String> descIter = null;
+
+        if ( descriptions != null ) {
+            descIter = descriptions.iterator();
+        }
+
         Collection compositeSequences = new HashSet();
         for ( String id : identifiers ) {
             String externalRef = refIter.next();
-            String description = descIter.next();
+            String description = "";
+
+            if ( descIter != null ) description = descIter.next();
+
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( id );
             cs.setDescription( description );
@@ -1022,7 +1052,9 @@ public class GeoConverter implements Converter {
                     }
 
                 }
-                if ( !found ) log.error( "No sample found for " + cSample );
+                if ( !found ) {
+                    log.error( "No sample found for " + cSample );
+                }
             }
 
             // bioMaterials.add( bioMaterial );
@@ -1200,7 +1232,7 @@ public class GeoConverter implements Converter {
             }
             index++;
         }
-        log.warn( "No platform element description column found" );
+        log.warn( "No platform element description column found for " + platform );
         return null;
     }
 
@@ -1299,15 +1331,19 @@ public class GeoConverter implements Converter {
 
         if ( vector == null || vector.size() == 0 ) return null;
 
-        String sample = vector.iterator().next();
-
-        if ( sample == null ) {
-            StringBuilder buf = new StringBuilder();
-            for ( String string : vector ) {
-                buf.append( string + "," );
+        boolean containsAtLeastOneNonNull = false;
+        for ( String string : vector ) {
+            if ( string != null ) {
+                containsAtLeastOneNonNull = true;
+                break;
             }
-            throw new IllegalStateException( "Vector contained null string as first element, full vector was "
-                    + buf.toString() );
+        }
+
+        if ( !containsAtLeastOneNonNull ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug( "No data for " + qt + " in vector of length " + vector.size() );
+            }
+            return null;
         }
 
         List<Object> toConvert = new ArrayList<Object>();

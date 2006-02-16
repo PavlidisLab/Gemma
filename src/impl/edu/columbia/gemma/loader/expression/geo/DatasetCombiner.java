@@ -74,6 +74,13 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
  */
 public class DatasetCombiner {
 
+    /**
+     * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
+     * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
+     * as a maximum distance (the pair of descriptors must be at least this close).
+     */
+    private static final double SIMILARITY_THRESHOLD = 0.2;
+
     private DatasetCombiner() {
         // nobody can instantiate this class.
     }
@@ -274,8 +281,11 @@ public class DatasetCombiner {
                     distance = matrix[i][j];
                 }
 
+                double normalizedDistance = ( double ) distance / Math.max( iTitle.length(), jTitle.length() );
+
                 // make sure match is to sample in another data set, as well as being a good match.
-                if ( distance <= mindistance && accToDataset.get( targetAcc ) != accToDataset.get( testAcc ) ) {
+                if ( normalizedDistance < SIMILARITY_THRESHOLD && distance <= mindistance
+                        && accToDataset.get( targetAcc ) != accToDataset.get( testAcc ) ) {
                     mindistance = distance;
                     bestMatch = jTitle;
                     bestMatchAcc = testAcc;
@@ -286,7 +296,12 @@ public class DatasetCombiner {
             result.addCorrespondence( targetAcc, bestMatchAcc );
 
             if ( dataSets.size() > 1 ) {
-                log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch + "\n" );
+                if ( bestMatchAcc == null ) {
+                    log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + "\n" );
+                } else {
+                    log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch
+                            + " (Distance: " + mindistance + ")\n" );
+                }
             }
         }
 

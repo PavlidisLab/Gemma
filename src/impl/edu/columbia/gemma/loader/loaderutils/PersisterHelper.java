@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
@@ -67,6 +64,7 @@ import edu.columbia.gemma.expression.bioAssay.BioAssayService;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
 import edu.columbia.gemma.expression.bioAssayData.BioAssayDimensionService;
 import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimension;
+import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorService;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDimensionService;
@@ -92,7 +90,6 @@ import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonService;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.biosequence.BioSequenceService;
-import edu.columbia.gemma.expression.bioAssayData.BioMaterialDimensionService;
 import edu.columbia.gemma.genome.gene.GeneService;
 
 /**
@@ -130,7 +127,7 @@ import edu.columbia.gemma.genome.gene.GeneService;
  * @spring.property name="designElementDimensionService" ref="designElementDimensionService"
  * @spring.property name="auditTrailService" ref="auditTrailService"
  * @spring.property name="measurementService" ref="measurementService"
- * @spring property name="bioMaterialDimensionService" ref="bioMaterialDimensionService"
+ * @spring.property name="bioMaterialDimensionService" ref="bioMaterialDimensionService"
  */
 public class PersisterHelper implements Persister {
     private static Log log = LogFactory.getLog( PersisterHelper.class.getName() );
@@ -181,6 +178,8 @@ public class PersisterHelper implements Persister {
 
     private OntologyEntryService ontologyEntryService;
 
+    private int persistedDesignElements;
+
     private PersonService personService;
 
     private ProtocolService protocolService;
@@ -194,8 +193,6 @@ public class PersisterHelper implements Persister {
     private SoftwareService softwareService;
 
     private TaxonService taxonService;
-
-    private int persistedDesignElements;
 
     /*
      * @see edu.columbia.gemma.loader.loaderutils.Loader#create(java.util.Collection)
@@ -496,6 +493,85 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param bioAssayDimensionCache
+     * @param vect
+     */
+    private void checkBioAssayDimensionCache( Map<String, BioAssayDimension> bioAssayDimensionCache,
+            DesignElementDataVector vect ) {
+        if ( bioAssayDimensionCache.containsKey( vect.getBioAssayDimension().getName() ) ) {
+            vect.setBioAssayDimension( bioAssayDimensionCache.get( vect.getBioAssayDimension().getName() ) );
+        } else {
+            BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
+            bioAssayDimensionCache.put( vect.getBioAssayDimension().getName(), bAd );
+            vect.setBioAssayDimension( bAd );
+        }
+    }
+
+    /**
+     * @param arrayDesignCache
+     * @param cacheIsSetUp
+     * @param designElementCache
+     * @param ad
+     */
+    protected void checkCacheIsSetup( Collection<String> arrayDesignCache,
+            Map<String, DesignElement> designElementCache, ArrayDesign ad ) {
+        if ( arrayDesignCache.contains( ad.getName() ) ) {
+            return;
+        }
+
+        ad = arrayDesignService.find( ad );
+        if ( ad == null ) {
+            throw new IllegalStateException( "Can't put unpersisted ArrayDesign in the cache" );
+        }
+        addToDesignElementCache( designElementCache, ad );
+        arrayDesignCache.add( ad.getName() );
+
+    }
+
+    //
+    // /**
+    // * @param entity
+    // */
+    // @SuppressWarnings("unchecked")
+    // public void remove( Object entity ) {
+    // if ( entity instanceof Collection ) {
+    // for ( Object object : ( Collection ) entity ) {
+    // remove( object );
+    // }
+    // } else {
+    // String rawServiceName = entity.getClass().getSimpleName() + "Service";
+    // String serviceName = rawServiceName.substring( 0, 1 ).toLowerCase() + rawServiceName.substring( 1 );
+    // log.info( serviceName );
+    // }
+    //
+    // }
+
+    /**
+     * @param arrayDesign
+     */
+    private Boolean doPersistDesignElementAssociations( ArrayDesign arrayDesign ) {
+        persistedDesignElements = 0;
+        for ( DesignElement designElement : arrayDesign.getDesignElements() ) {
+            // designElement = persistDesignElement( designElement ); // don't need to do this as composition takes care
+            // of it.
+            designElement.setArrayDesign( arrayDesign );
+            if ( designElement instanceof CompositeSequence ) {
+                CompositeSequence cs = ( CompositeSequence ) designElement;
+                cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
+            } else if ( designElement instanceof Reporter ) {
+                Reporter reporter = ( Reporter ) designElement;
+                reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
+            }
+            persistedDesignElements++;
+            if ( persistedDesignElements > 0 && persistedDesignElements % 1000 == 0 ) {
+                log.info( persistedDesignElements + " design element sequences examined for " + arrayDesign );
+            }
+        }
+        log.info( persistedDesignElements + " design element sequences examined for " + arrayDesign );
+        return Boolean.TRUE;
+    }
+
+    /**
      * @param bioSequence
      */
     private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
@@ -535,24 +611,6 @@ public class PersisterHelper implements Persister {
             persistOntologyEntry( Characteristic.getValueTerm() );
         }
     }
-
-    //
-    // /**
-    // * @param entity
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void remove( Object entity ) {
-    // if ( entity instanceof Collection ) {
-    // for ( Object object : ( Collection ) entity ) {
-    // remove( object );
-    // }
-    // } else {
-    // String rawServiceName = entity.getClass().getSimpleName() + "Service";
-    // String serviceName = rawServiceName.substring( 0, 1 ).toLowerCase() + rawServiceName.substring( 1 );
-    // log.info( serviceName );
-    // }
-    //
-    // }
 
     /**
      * @param protocol
@@ -626,6 +684,28 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * @param designElementCache
+     * @param persistentDesignElement
+     * @param maybeExistingDesignElement
+     * @param key
+     * @return
+     */
+    private DesignElement getPersistentDesignElement( Map<String, DesignElement> designElementCache,
+            DesignElement persistentDesignElement, DesignElement maybeExistingDesignElement, String key ) {
+        if ( maybeExistingDesignElement instanceof CompositeSequence ) {
+            persistentDesignElement = persistDesignElement( maybeExistingDesignElement );
+        } else if ( maybeExistingDesignElement instanceof Reporter ) {
+            persistentDesignElement = persistDesignElement( maybeExistingDesignElement );
+        }
+        if ( persistentDesignElement == null ) {
+            throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
+        }
+
+        designElementCache.put( key, persistentDesignElement );
+        return persistentDesignElement;
+    }
+
+    /**
      * Fetch the fallback owner to use for newly-imported data.
      */
     @SuppressWarnings("unchecked")
@@ -642,10 +722,12 @@ public class PersisterHelper implements Persister {
     /**
      * Determine if a entity transient (not persistent).
      * 
-     * @param ontologyEntry
-     * @return
+     * @param entity
+     * @return If the entity is null, return false. If the entity is non-null and has a null "id" property, return true;
+     *         Otherwise return false.
      */
     private boolean isTransient( Object entity ) {
+        if ( entity == null ) return false;
         try {
             return BeanUtils.getSimpleProperty( entity, "id" ) == null;
         } catch ( IllegalAccessException e ) {
@@ -677,25 +759,25 @@ public class PersisterHelper implements Persister {
         if ( existing != null ) {
             assert existing.getId() != null;
             log.info( "Array design \"" + existing.getName() + "\" already exists." );
-            Collection<DesignElement> existingDesignElements = existing.getDesignElements(); // TODO performance of
+            Collection<DesignElement> existingDesignElements = existing.getDesignElements(); // performance of
             // size()
             if ( existingDesignElements.size() == arrayDesign.getDesignElements().size() ) {
                 log.warn( "Number of design elements in existing version of " + arrayDesign + " is the same ("
                         + existingDesignElements.size() + "). No further processing will be done." );
-                log.warn( "Nulling out reference." );
+                log.warn( "Nulling out reference to transient object." );
                 arrayDesign = null;
                 return existing;
             } else if ( existingDesignElements.size() > arrayDesign.getDesignElements().size() ) {
                 log.warn( "Number of design elements in existing version of " + arrayDesign + " ("
                         + existingDesignElements.size() + ") is  greater than in the new one ("
                         + arrayDesign.getDesignElements().size() + "). No further processing will be done." );
-                log.warn( "Nulling out reference." );
+                log.warn( "Nulling out reference to transient object." );
                 arrayDesign = null;
                 return existing;
             } else if ( arrayDesign.getDesignElements().size() == 0 ) {
                 log.warn( arrayDesign + ": No design elements in newly supplied version of " + arrayDesign
                         + ", no further processing of design elements will be done." );
-                log.warn( "Nulling out reference." );
+                log.warn( "Nulling out reference to transient object." );
                 arrayDesign = null;
                 return existing;
             } else {
@@ -706,7 +788,7 @@ public class PersisterHelper implements Persister {
             log.info( "Array Design " + arrayDesign + " is new, processing..." );
         }
 
-        persistArrayDesignDesignElements( arrayDesign );
+        persistArrayDesignDesignElementAssociations( arrayDesign );
 
         return arrayDesignService.findOrCreate( arrayDesign );
     }
@@ -714,51 +796,11 @@ public class PersisterHelper implements Persister {
     /**
      * @param arrayDesign
      */
-    private void persistArrayDesignDesignElements( ArrayDesign arrayDesign ) {
+    private void persistArrayDesignDesignElementAssociations( ArrayDesign arrayDesign ) {
         log.info( "Filling in or updating sequences in design elements for " + arrayDesign );
         final ArrayDesign arrayDesignToPersist = arrayDesign;
-        // FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
-        // @SuppressWarnings("synthetic-access")
-        // public Boolean call() {
-        doPersistDesignElements( arrayDesignToPersist );
-        // }
-        // } );
-        //
-        // Executors.newSingleThreadExecutor().execute( future );
-        //
-        // while ( !future.isDone() ) {
-        // try {
-        // Thread.sleep( 1000 );
-        // } catch ( InterruptedException ie ) {
-        // ;
-        // }
-        // if ( persistedDesignElements > 0 ) {
-        // log.info( persistedDesignElements + " design elements persisted." );
-        // }
-        // }
-        log.debug( "Done parsing." );
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private Boolean doPersistDesignElements( ArrayDesign arrayDesign ) {
-        persistedDesignElements = 0;
-        for ( DesignElement designElement : arrayDesign.getDesignElements() ) {
-            designElement.setArrayDesign( arrayDesign );
-            if ( designElement instanceof CompositeSequence ) {
-                CompositeSequence cs = ( CompositeSequence ) designElement;
-                cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
-            } else if ( designElement instanceof Reporter ) {
-                Reporter reporter = ( Reporter ) designElement;
-                reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
-            }
-            persistedDesignElements++;
-            if ( persistedDesignElements > 0 && persistedDesignElements % 1000 == 0 ) {
-                log.info( persistedDesignElements + " design element sequences examined for " + arrayDesign );
-            }
-        }
-        return Boolean.TRUE;
+        doPersistDesignElementAssociations( arrayDesignToPersist );
+        log.debug( "Done persisting." );
     }
 
     /**
@@ -870,6 +912,7 @@ public class PersisterHelper implements Persister {
      * @return
      */
     private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
+        assert bioMaterialDimensionService != null;
         return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
     }
 
@@ -923,8 +966,18 @@ public class PersisterHelper implements Persister {
         designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
         if ( !isTransient( designElement ) ) return designElement;
         if ( designElement instanceof CompositeSequence ) {
+            if ( isTransient( ( ( CompositeSequence ) designElement ).getBiologicalCharacteristic() ) ) {
+                ( ( CompositeSequence ) designElement )
+                        .setBiologicalCharacteristic( persistBioSequence( ( ( CompositeSequence ) designElement )
+                                .getBiologicalCharacteristic() ) );
+            }
             return compositeSequenceService.findOrCreate( ( CompositeSequence ) designElement );
         } else if ( designElement instanceof Reporter ) {
+            if ( isTransient( ( ( Reporter ) designElement ).getImmobilizedCharacteristic() ) ) {
+                ( ( Reporter ) designElement )
+                        .setImmobilizedCharacteristic( persistBioSequence( ( ( Reporter ) designElement )
+                                .getImmobilizedCharacteristic() ) );
+            }
             return reporterService.findOrCreate( ( Reporter ) designElement );
         } else {
             throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
@@ -1017,10 +1070,18 @@ public class PersisterHelper implements Persister {
             }
         }
 
-        Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
-        Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
+        fillInExpressionExperimentDataVectorAssociations( entity );
 
-        Collection<String> cacheIsSetUp = new HashSet<String>();
+        log.info( "Filled in references, persisting ExpressionExperiment " + entity );
+        return expressionExperimentService.findOrCreate( entity );
+    }
+
+    /**
+     * @param entity
+     */
+    private void fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
+        Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
+        Collection<String> arrayDesignCache = new HashSet<String>();
         Map<String, DesignElement> designElementCache = new HashMap<String, DesignElement>();
 
         int count = 0;
@@ -1032,47 +1093,23 @@ public class PersisterHelper implements Persister {
             assert maybeExistingDesignElement != null;
             ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
 
-            // TODO possibly move cache
-            if ( arrayDesignCache.containsKey( ad.getName() ) ) {
-                ad.setId( arrayDesignCache.get( ad.getName() ).getId() );
+            checkCacheIsSetup( arrayDesignCache, designElementCache, ad );
+
+            String key = maybeExistingDesignElement.getName() + " "
+                    + maybeExistingDesignElement.getArrayDesign().getName();
+
+            if ( designElementCache.containsKey( key ) ) {
+                persistentDesignElement = designElementCache.get( key );
             } else {
-                ad.setId( this.persistArrayDesign( ad ).getId() );
-                arrayDesignCache.put( ad.getName(), ad );
-            }
-
-            if ( !cacheIsSetUp.contains( ad.getName() ) ) {
-                setupCache( designElementCache, ad );
-                cacheIsSetUp.add( ad.getName() );
-            }
-
-            if ( designElementCache.containsKey( maybeExistingDesignElement.getName() + " "
-                    + maybeExistingDesignElement.getArrayDesign().getName() ) ) { // clean this up
-                persistentDesignElement = designElementCache.get( maybeExistingDesignElement.getName() + " "
-                        + maybeExistingDesignElement.getArrayDesign().getName() );
-            } else {
-                if ( maybeExistingDesignElement instanceof CompositeSequence ) {
-                    persistentDesignElement = compositeSequenceService
-                            .findOrCreate( ( CompositeSequence ) maybeExistingDesignElement );
-                } else if ( maybeExistingDesignElement instanceof Reporter ) {
-                    persistentDesignElement = reporterService.findOrCreate( ( Reporter ) maybeExistingDesignElement );
-                }
-
-                if ( persistentDesignElement == null ) {
-                    throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
-                }
+                persistentDesignElement = getPersistentDesignElement( designElementCache, persistentDesignElement,
+                        maybeExistingDesignElement, key );
             }
             assert persistentDesignElement != null;
-
-            // TODO possibly move cache
-            if ( bioAssayDimensionCache.containsKey( vect.getBioAssayDimension().getName() ) ) {
-                vect.setBioAssayDimension( bioAssayDimensionCache.get( vect.getBioAssayDimension().getName() ) );
-            } else {
-                BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
-                bioAssayDimensionCache.put( vect.getBioAssayDimension().getName(), bAd );
-                vect.setBioAssayDimension( bAd );
-            }
+            assert persistentDesignElement.getId() != null;
 
             vect.setDesignElement( persistentDesignElement );
+
+            checkBioAssayDimensionCache( bioAssayDimensionCache, vect );
 
             assert vect.getQuantitationType() != null;
             vect.getQuantitationType().setId( persistQuantitationType( vect.getQuantitationType() ).getId() );
@@ -1082,23 +1119,6 @@ public class PersisterHelper implements Persister {
             }
             count++;
         }
-
-        log.info( "Filled in references, persisting ExpressionExperiment " + entity );
-        return expressionExperimentService.findOrCreate( entity );
-    }
-
-    /**
-     * @param designElementCache
-     * @param arrayDesign
-     */
-    private void setupCache( Map<String, DesignElement> designElementCache, ArrayDesign arrayDesign ) {
-        log.info( "Loading array design elements" );
-        Collection<DesignElement> designElements = arrayDesign.getDesignElements();
-        log.info( "Filling cache with " + designElements.size() + " design elements" );
-        String adName = " " + arrayDesign.getName();
-        for ( DesignElement element : designElements ) {
-            designElementCache.put( element.getName() + adName, element );
-        }
     }
 
     /**
@@ -1107,8 +1127,6 @@ public class PersisterHelper implements Persister {
     private ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
         if ( database == null ) return null;
         if ( !isTransient( database ) ) return database;
-        log.debug( "Persisting " + database );
-
         return externalDatabaseService.findOrCreate( database );
     }
 
@@ -1270,5 +1288,21 @@ public class PersisterHelper implements Persister {
      */
     private Object persistTaxon( Taxon taxon ) {
         return taxonService.findOrCreate( taxon );
+    }
+
+    /**
+     * @param designElementCache
+     * @param arrayDesign To add to the cache.
+     */
+    private void addToDesignElementCache( Map<String, DesignElement> designElementCache, ArrayDesign arrayDesign ) {
+        ArrayDesign pArrayDesign = arrayDesignService.find( arrayDesign );
+        log.info( "Loading array design elements for " + arrayDesign );
+        Collection<DesignElement> designElements = pArrayDesign.getDesignElements();
+        log.info( "Filling cache with " + designElements.size() + " design elements" );
+        String adName = " " + arrayDesign.getName();
+        for ( DesignElement element : designElements ) {
+            assert element.getId() != null;
+            designElementCache.put( element.getName() + adName, element );
+        }
     }
 }
