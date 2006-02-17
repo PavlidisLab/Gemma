@@ -3,34 +3,6 @@
     class="edu.columbia.gemma.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-    <head>
-        <SCRIPT LANGUAGE="JavaScript">
-	function selectButton(target){
-		if(target == 0){
-			document.detailsForm._eventId.value="back"
-			document.detailsForm.action="expressionExperiments.htm"
-		}
-		if(target == 1){
-		<%-- confirm deletion of item --%>
-			if (confirm("Are you sure you want to delete this?")){
-				document.detailsForm._eventId.value="delete"
-				document.detailsForm.action="expressionExperimentDetails.htm"
-				<%--
-				Not yet implemented for webflows
-				document.backForm._flowId.value="pubMed.Delete" 
-				document.backForm.action="flowController.htm"
-				--%>
-				}
-		}
-		if(target == 2){
-			document.detailsForm._eventId.value="edit"
-			document.detailsForm._flowId.value="expressionExperiment.Edit"
-			document.detailsForm.action="flowController.htm"
-		}
-		document.detailsForm.submit();
-	}
-	</SCRIPT>
-    </head>
     <body>
         <h2>
             <fmt:message key="expressionExperiment.details" />
@@ -160,31 +132,31 @@
         <br />
 
         <hr />
-        <table>
-            <tr>
-                <TD>
-                    <DIV align="right">
-                        <INPUT type="button" onclick="javascript:selectButton(0)" value="Back">
-                    </DIV>
-                </td>
-
-                <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
-                    <TD>
-                        <DIV align="right">
-                            <INPUT type="button" onclick="javascript:selectButton(1)" value="Delete">
-                        </DIV>
-                    </td>
-                </authz:acl>
-
-                <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
-                    <TD>
-                        <DIV align="right">
-                            <INPUT type="button" onclick="javascript:selectButton(2)" value="Edit">
-                        </DIV>
-                    </td>
-                </authz:acl>
-            </tr>
-        </table>
-
+        
+	<TR>
+        <TD COLSPAN="2">
+        <HR>
+        </TD>
+    </TR>
+    <table>
+    <TR>
+    <TD COLSPAN="2">    
+            <DIV align="left"><input type="button"
+            onclick="location.href='showAllExpressionExperiments.html'"
+            value="Back"></DIV>
+            </TD>
+        <%--<r:isUserInRole role="admin">--%>
+        <%--<authz:authorize ifAnyGranted="admin">--%>
+        <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+            <TD COLSPAN="2">    
+            <DIV align="left"><input type="button"
+            onclick="location.href='editExpressionExperiment.html?name=<%=request.getAttribute("name")%>'"
+            value="Edit"></DIV>
+            </TD>
+        </authz:acl>
+        <%--</authz:authorize>--%>
+        <%--</r:isUserInRole> --%>
+    </TR>
+    </table>
     </body>
 </html>
