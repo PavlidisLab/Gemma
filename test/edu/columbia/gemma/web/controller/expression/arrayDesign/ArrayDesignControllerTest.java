@@ -38,11 +38,11 @@ public class ArrayDesignControllerTest extends BaseControllerTestCase {
         request = new MockHttpServletRequest();
         // response = new MockHttpServletResponse();
 
-       // arrayDesignController = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
+        // arrayDesignController = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
 
         testArrayDesign = ArrayDesign.Factory.newInstance();
 
-        //arrayDesignService = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+        // arrayDesignService = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
 
     }
 
