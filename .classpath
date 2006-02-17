@@ -100,5 +100,11 @@
 	<classpathentry kind="lib" path="web/WEB-INF/lib/clickstream-1.0.3.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/lib/ehcache-1.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/JRclient-RE817.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-validator-1.2.0.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/jsf-api-1_1_01.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/jsf-impl-1_1_01.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/progressbar-1.0.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/xalan-2.7.0.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
