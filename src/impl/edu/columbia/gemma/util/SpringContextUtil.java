@@ -36,6 +36,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
+import uk.ltd.getahead.dwr.create.SpringCreator;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -52,10 +54,11 @@ public class SpringContextUtil {
         if ( ctx == null ) {
             String[] paths = getConfigLocations( testing );
             ctx = new ClassPathXmlApplicationContext( paths );
-            if ( ctx != null )
+            if ( ctx != null ) {
                 log.info( "Got context" );
-            else
+            } else {
                 log.error( "Failed to load context" );
+            }
         }
         return ctx;
     }
@@ -94,6 +97,13 @@ public class SpringContextUtil {
         if ( ctx == null ) {
             String[] paths = getConfigLocations( testing );
             ctx = new XmlWebApplicationContext();
+
+            /*
+             * Needed for DWR support only. When running in a web container this is taken care of by
+             * org.springframework.web.context.ContextLoaderListener
+             */
+            SpringCreator.setOverrideBeanFactory( ctx );
+
             ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( paths );
             ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );
             ( ( XmlWebApplicationContext ) ctx ).refresh();
@@ -123,16 +133,17 @@ public class SpringContextUtil {
     public static String[] getConfigLocations( boolean testing ) {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
-        // String servletContext = db.getString( "servlet.name.0" );
+        String servletContext = db.getString( "servlet.name.0" );
         // TODO: these files need to be found automatically, not hard-coded.
 
         if ( testing ) {
             log.info( "************** Using test configuration ***************" );
             return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                    "applicationContext-security.xml", "action-servlet.xml", "applicationContext-validation.xml" };
+                    "applicationContext-security.xml", servletContext + "-servlet.xml",
+                    "applicationContext-validation.xml" };
         }
         return new String[] { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", "action-servlet.xml", "applicationContext-validation.xml" };
+                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
 
     }
 
