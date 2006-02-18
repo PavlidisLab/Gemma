@@ -6,7 +6,7 @@
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/gen"/>
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/impl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="var" path="MAVEN_REPO/servlet/jars/servlet.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/servlet/apache-tomcat-5.5.15-src/servletapi/jsr152/src/share" kind="var" path="MAVEN_REPO/servlet/jars/servlet.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-webflow-pr5/dist/spring-webflow-src-pr5.zip" kind="var" path="MAVEN_REPO/spring/jars/spring-webflow-pr5.jar">
 		<attributes>
 			<attribute value="file:/C:/java/.maven/repository/spring/spring-webflow-pr5/doc/api/" name="javadoc_location"/>
@@ -27,7 +27,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-collections/jars/commons-collections-3.1.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-validator/jars/commons-validator-1.1.4.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/commons-validator/commons-validator-1.1.4/src/share" kind="var" path="MAVEN_REPO/commons-validator/jars/commons-validator-1.1.4.jar">
+		<attributes>
+			<attribute value="file:/C:/java/.maven/repository/commons-validator/commons-validator-1.1.4/docs/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-framework-1.2.6/src" kind="var" path="MAVEN_REPO/spring/jars/spring.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/spring/jars/spring-mock.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/velocity/jars/velocity-1.4.jar"/>
@@ -97,14 +101,8 @@
 	<classpathentry kind="var" path="MAVEN_REPO/xerces/jars/xerces-2.4.0.jar"/>
 	<classpathentry sourcepath="/WORKSPACE/baseCode/src" kind="var" path="MAVEN_REPO/baseCode/jars/baseCode-SNAPSHOT.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/struts/jars/struts-1.2.7.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/clickstream-1.0.3.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/ehcache-1.1.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/dwr/dwr-1.0-src/java" kind="var" path="MAVEN_REPO/dwr/jars/dwr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/JRclient-RE817.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-validator-1.2.0.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/jsf-api-1_1_01.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/jsf-impl-1_1_01.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/progressbar-1.0.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/xalan-2.7.0.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/xalan/jars/xalan-2.7.0.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
