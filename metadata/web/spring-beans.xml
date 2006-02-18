@@ -257,29 +257,20 @@
 </bean>
 
 <!-- ==================================================== -->
-<!--  Validation settings. -->
+<!--  Validation settings. The validator factory is defined in applicationContext-validation.xml -->
 <!-- ==================================================== -->
-<bean id="validatorFactory" class="org.springmodules.commons.validator.DefaultValidatorFactory">
-    <property name="validationConfigLocations">
-        <list>
-            <value>/WEB-INF/validator-rules.xml</value><!--  the standard struts-validation rules -->
-            <value>/WEB-INF/validation.xml</value>
-            <value>/WEB-INF/validator-rules-custom.xml</value>
-        </list>
-    </property>
-</bean>
 
 <!--  Use this if the command class is not _actually_ an "Impl" -->
 <bean id="genericBeanValidator" class="org.springmodules.commons.validator.DefaultBeanValidator">
     <property name="validatorFactory">
-        <ref local="validatorFactory" />
+        <ref bean="validatorFactory" />
     </property>
 </bean>
 
 <!-- Use this type of validator if you use a data model object as the command object -->
 <bean id="userValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
     <property name="validatorFactory">
-        <ref local="validatorFactory" />
+        <ref bean="validatorFactory" />
     </property>
     <property name="formName">
         <value>user</value>
@@ -288,7 +279,7 @@
 
 <bean id="bibliographicReferenceValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
     <property name="validatorFactory">
-        <ref local="validatorFactory" />
+         <ref bean="validatorFactory" />
     </property>
     <property name="formName">
         <value>bibliographicReference</value>
@@ -297,7 +288,7 @@
 
 <bean id="databaseEntryValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
     <property name="validatorFactory">
-        <ref local="validatorFactory" />
+         <ref bean="validatorFactory" />
     </property>
     <property name="formName">
         <value>databaseEntry</value>
