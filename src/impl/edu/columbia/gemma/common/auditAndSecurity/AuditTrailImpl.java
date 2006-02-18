@@ -47,7 +47,9 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     @Override
     public AuditEvent getCreationEvent() {
         assert this.getEvents() != null;
-        if ( this.getEvents().size() == 0 ) return null;
+        if ( this.getEvents().size() == 0 ) {
+            return null;
+        }
         return ( ( List<AuditEvent> ) this.getEvents() ).get( 0 );
     }
 
@@ -57,6 +59,9 @@ public class AuditTrailImpl extends edu.columbia.gemma.common.auditAndSecurity.A
     @Override
     public AuditEvent getLast() {
         assert this.getEvents() != null;
+        if ( this.getEvents().size() == 0 ) {
+            return null;
+        }
         return ( ( List<AuditEvent> ) this.getEvents() ).get( this.getEvents().size() - 1 );
     }
 
