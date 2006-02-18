@@ -35,7 +35,7 @@ import edu.columbia.gemma.web.Constants;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="userController" name="/users.html"
+ * @spring.bean id="userController" name="/users.html /activeUsers.html"
  * @spring.property name="userService" ref="userService"
  */
 public class UserController implements Controller {

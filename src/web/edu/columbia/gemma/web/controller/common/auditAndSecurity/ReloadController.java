@@ -12,17 +12,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
+import edu.columbia.gemma.web.listener.StartupListener;
+
 /**
- * This class is used to reload the drop-downs initialized in the StartupListener.
- * <p>
- * <a href="ReloadController.java.html"><i>View Source</i></a>
- * </p>
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * This class is used to reload the drop-downs initialized in the StartupListener. (from Appfuse)
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  * @spring.bean id="reloadController" name="/reload.html"
  */
@@ -34,13 +31,13 @@ public class ReloadController implements Controller {
             log.debug( "Entering 'execute' method" );
         }
 
-        // StartupListener.setupContext(request.getSession().getServletContext());
+        StartupListener.setupContext( request.getSession().getServletContext() );
 
         String referer = request.getHeader( "Referer" );
 
         if ( referer != null ) {
             log.info( "reload complete, reloading user back to: " + referer );
-            List<String> messages = new ArrayList<String>();
+            List<Object> messages = new ArrayList<Object>();
             messages.add( "Reloading options completed successfully." );
             request.getSession().setAttribute( "messages", messages );
             response.sendRedirect( response.encodeRedirectURL( referer ) );

@@ -22,7 +22,7 @@
 <form method="post" action="">
 <table class="detail">
 	<tr>
-		<th><fusedWebApp:label key="person.firstName" /></th>
+		<th><Gemma:label key="person.firstName" /></th>
 
 		<td alignment="right" width="31%"><strong>First Name</strong></td>
 		<td><spring:bind path="person.firstName">
@@ -44,7 +44,7 @@
 --%>
 
 	<tr>
-		<th><fusedWebApp:label key="person.middleName" /></th>
+		<th><Gemma:label key="person.middleName" /></th>
 
 		<td alignment="right" width="31%"><strong>Middle Name:</strong></td>
 		<td><spring:bind path="person.middleName">
@@ -62,9 +62,9 @@
 
 	<tr>
 
-		<th><fusedWebApp:label key="person.lastName" /></th>
+		<th><Gemma:label key="person.lastName" /></th>
 
-		<td alignment="right" width="31%"><strong>Last Name:</strong></td>
+		<td align="right" width="31%"><strong>Last Name:</strong></td>
 		<td><spring:bind path="person.lastName">
 			<%--
                 <input type="text" name="<c:out value="${status.expression}"/>" id="<c:out value="${status.expression}"/>" 
@@ -81,7 +81,7 @@
 
 	<tr>
 		<td></td>
-		<td alignment="right"</td>
+		<td align="right"></td>
 		<td class="buttonBar"><input type="submit" class="button" name="save"
 			onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
 		<input type="submit" class="button" name="delete"
@@ -94,7 +94,7 @@
 </form>
 
 
-<html:javascript formName="person" cdata="false"
+<validate:javascript formName="person" cdata="false"
 	dynamicJavascript="true" staticJavascript="false" />
 <script type="text/javascript"
 	src="<c:url value="/scripts/validator.jsp"/>"></script>

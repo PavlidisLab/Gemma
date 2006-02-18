@@ -42,13 +42,6 @@ public class ExpressionDataMatrixService {
     DesignElementDataVectorService designElementDataVectorService;
 
     /**
-     * @param designElementDataVectorService The designElementDataVectorService to set.
-     */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    /**
      * @param expExp
      * @param assayDimension
      * @return
@@ -57,6 +50,13 @@ public class ExpressionDataMatrixService {
     public DoubleMatrixNamed getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
         Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
         return vectorsToDoubleMatrix( vectors );
+    }
+
+    /**
+     * @param designElementDataVectorService The designElementDataVectorService to set.
+     */
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
     }
 
     /**

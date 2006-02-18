@@ -138,12 +138,12 @@
   
 </table>
 </form>
-
-<html:javascript formName="person" cdata="false"
+--%>
+<validate:javascript formName="person" cdata="false"
     dynamicJavascript="true" staticJavascript="false"/>  
 <script type="text/javascript" 
     src="<c:url value="/scripts/validator.jsp"/>"></script> 
 <script type="text/javascript">
     document.forms["person"].elements["firstName"].focus();
 </script>    
---%>
+

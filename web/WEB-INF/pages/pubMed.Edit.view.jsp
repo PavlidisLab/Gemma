@@ -134,7 +134,7 @@ function onFormSubmit(theForm) {
 // -->
 </script>
 
-<html:javascript formName="bibliographicReferenceForm"
+<validate:javascript formName="bibliographicReferenceForm"
     staticJavascript="false" />
 </body>
 </html>

@@ -160,16 +160,17 @@
             <ref local="authenticationManager" />
         </property>
         <property name="accessDecisionManager">
-            <ref local="accessDecisionManager" />
+            <ref local="roleAccessDecisionManager" />
         </property>
         <property name="objectDefinitionSource">
             <value>
-                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON PATTERN_TYPE_APACHE_ANT 
-                /signup.html=ROLE_ANONYMOUS,admin,user 
+                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON 
+                PATTERN_TYPE_APACHE_ANT 
+                /signup.html=ROLE_ANONYMOUS,admin,user
                 /passwordHint.html*=ROLE_ANONYMOUS,admin,user
+                /clickstreams.jsp=admin
                 /**/*.html*=admin,user 
                 /**/*.htm*=admin,user 
-                /clickstreams.jsp=admin
             </value>
         </property>
     </bean>
@@ -219,7 +220,7 @@
             <ref bean="authenticationManager" />
         </property>
         <property name="accessDecisionManager">
-            <ref bean="businessAccessDecisionManager" />
+            <ref bean="httpRequestAccessDecisionManager" />
         </property>
         <property name="afterInvocationManager">
             <ref bean="afterInvocationManager" />
@@ -387,8 +388,8 @@
         </property>
     </bean>
 
-    <!-- An access decision manager used by the serviceSecurityInterceptor -->
-    <bean id="businessAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
+    <!-- An access decision manager used by the serviceSecurityInterceptor, which uses method interception (as well as the role voter). -->
+    <bean id="httpRequestAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
         <property name="allowIfAllAbstainDecisions">
             <value>false</value>
         </property>
@@ -400,9 +401,9 @@
             </list>
         </property>
     </bean>
-
-    <!-- An access decision manager used by filterInvocationInterceptor -->
-    <bean id="accessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
+  
+     <!--  An access decision manager used by filterInvocationInterceptor, which is incompatible with BasicAclVoter (inherits from AbstractAclVoter) -->
+    <bean id="roleAccessDecisionManager" class="org.acegisecurity.vote.AffirmativeBased">
         <property name="allowIfAllAbstainDecisions">
             <value>false</value>
         </property>
@@ -412,6 +413,7 @@
             </list>
         </property>
     </bean>
+ 
 
     <!-- ===================== VOTING ==================== -->
 

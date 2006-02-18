@@ -8,14 +8,10 @@
 
 <%-- programmatically enforces SSL security --%>
 <%--<Gemma:secure mode="secured"/>--%>
-
 <c:import url="/loginMenu.jsp"/>
-
 <p><fmt:message key="welcome.message"/></p>
-
 <%-- Include the login form --%>
 <c:import url="/WEB-INF/pages/loginForm.jsp"/>
-
 <p><fmt:message key="login.passwordHint"/></p>
 </body>
 

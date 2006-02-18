@@ -79,8 +79,6 @@
 highlightFormElements();
 // -->
 </script>
-<%--
-<html:javascript formName="fileUpload" staticJavascript="false" />
+<validate:javascript formName="fileUpload" staticJavascript="false" />
 <script type="text/javascript"
     src="<c:url value="/scripts/validator.jsp"/>"></script>
---%>

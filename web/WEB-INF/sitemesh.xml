@@ -1,6 +1,9 @@
 <sitemesh>
     <property name="decorators-file" value="/WEB-INF/decorators.xml"/>
-    <excludes file="${decorators-file}"/> 
+       <excludes>
+        <file>"${decorators-file}"</file>
+        <pattern>/dwr/*</pattern>
+    </excludes>
     <page-parsers>
         <parser default="true" class="com.opensymphony.module.sitemesh.parser.HTMLPageParser"/>
         <parser content-type="text/html" class="com.opensymphony.module.sitemesh.parser.HTMLPageParser"/>

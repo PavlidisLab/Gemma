@@ -39,13 +39,6 @@
     </init-param>
 </filter>
 <filter>
-    <filter-name>hibernateFilter</filter-name>
-    <filter-class>
-        <!-- 		org.springframework.orm.hibernate3.support.OpenSessionInViewFilter -->
-        org.andromda.spring.presentation.AndroMDAOpenSessionInViewFilter
-    </filter-class>
-</filter>
-<filter>
     <filter-name>rewriteFilter</filter-name>
     <filter-class>org.tuckey.web.filters.urlrewrite.UrlRewriteFilter</filter-class>
 </filter>

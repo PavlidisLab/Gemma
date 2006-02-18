@@ -12,7 +12,7 @@
         setCookie("username",theForm.j_username.value,expires,"<c:url value="/"/>");
     }
     
-    function validateForm(form) {                                                               
+    function validateForm(form) { 
         return validateRequired(form); 
     } 
     
@@ -29,4 +29,28 @@
         this.aa = new Array("j_username", "<fmt:message key="errors.required"><fmt:param><fmt:message key="label.username"/></fmt:param></fmt:message>", new Function ("varName", " return this[varName];"));
         this.ab = new Array("j_password", "<fmt:message key="errors.required"><fmt:param><fmt:message key="label.username"/></fmt:param></fmt:message>", new Function ("varName", " return this[varName];"));
     } 
+    
+    
+    /*
+    DWREngine.setErrorHandler(doNothing);
+    var nickname = "";
+    
+function doNothing() {
+  return false;
+}
+function getNickname() {
+  if (nickname == "") { 
+      userService.getUser(popUser,document.loginForm.j_username.value);
+   }    
+}
+
+var popUser = function(user) {
+  if (user == undefined) {
+    return false;
+  } else {    
+    DWRUtil.setValue("nick", "Hello, " + user.name);
+    nickname = user.name;
+  }    
+} 
+ */
 </script>

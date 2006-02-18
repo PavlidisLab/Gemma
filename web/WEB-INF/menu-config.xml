@@ -9,7 +9,7 @@
         <Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" />
         <Menu name="FileUpload" title="menu.selectFile" description="File Upload" page="/selectFile.html" />
         <Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin" width="120">
-            <Item name="ViewUsers" title="menu.admin.users" page="/users.html" />
+            <Item name="ViewUsers" title="menu.admin.users" page="/activeUsers.html" />
             <Item name="ReloadContext" title="menu.admin.reload" page="/reload.html" />
             <Item name="FlushCache" title="menu.flushCache" page="/flushCache.html" roles="admin" />
             <Item name="Clickstream" title="menu.clickstream" page="/clickstreams.jsp" roles="admin" />
