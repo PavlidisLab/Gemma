@@ -54,8 +54,8 @@ public class UserFormController extends BaseFormController {
     private UserRoleService userRoleService;
 
     public UserFormController() {
-     //   setCommandName( "user" );
-     //   setCommandClass( User.class );
+        // setCommandName( "user" );
+        // setCommandClass( User.class );
     }
 
     @Override
@@ -195,21 +195,27 @@ public class UserFormController extends BaseFormController {
             }
         }
 
-//      We use UserImpl so we expose the roleList() method.
-        UserImpl user = null; 
+        // We use UserImpl so we expose the roleList() method.
+        UserImpl user = null;
 
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
             user = ( UserImpl ) this.getUserService().getUser( request.getRemoteUser() );
         } else if ( !StringUtils.isBlank( username ) && !"".equals( request.getParameter( "version" ) ) ) {
             user = ( UserImpl ) this.getUserService().getUser( username );
-        } else {
-            UserRole role = this.userRoleService.getRole( Constants.USER_ROLE );
+        } 
+
+        if (user == null ) {
+            log.info("User " + username + " does not exist, creating anew");
+            // Creating new user.
+            user = ( UserImpl ) User.Factory.newInstance();
+            UserRole role = UserRole.Factory.newInstance();
+            role.setName( Constants.USER_ROLE );
             role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
             user.getRoles().add( role );
         }
 
+        assert user != null;
         user.setConfirmPassword( user.getPassword() );
-
         return user;
 
         //        
