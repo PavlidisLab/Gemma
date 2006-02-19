@@ -1,5 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-
 <head>
     <title><fmt:message key="userProfile.title"/></title>
     <content tag="heading"><fmt:message key="userProfile.heading"/></content>
@@ -17,5 +16,4 @@
 </c:choose>
 
 <div class="separator"></div>
-
 <jsp:include page="/WEB-INF/pages/userForm.jsp"/>

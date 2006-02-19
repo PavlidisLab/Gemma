@@ -23,7 +23,7 @@ Back</a></p>
     <p><%=((Exception)request.getAttribute("exception")).getLocalizedMessage() %></p>
     <h3>Stack Trace:</h3>
     <pre><% ((Exception)request.getAttribute("exception")).printStackTrace(new java.io.PrintWriter(out)); %></pre>
- <% } else if (exception != null) { %> <%-- fixme: this is always null --%>
+ <% } else if (exception != null) { %>
     <pre><% exception.printStackTrace(new java.io.PrintWriter(out)); %></pre>
  <% } else if ((Exception)request.getAttribute("javax.servlet.error.exception") != null) { %>
     <pre><% ((Exception)request.getAttribute("javax.servlet.error.exception"))

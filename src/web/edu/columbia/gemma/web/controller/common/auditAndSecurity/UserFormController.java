@@ -18,6 +18,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserExistsException;
+import edu.columbia.gemma.common.auditAndSecurity.UserImpl;
 import edu.columbia.gemma.common.auditAndSecurity.UserRole;
 import edu.columbia.gemma.common.auditAndSecurity.UserRoleService;
 import edu.columbia.gemma.util.RequestUtil;
@@ -26,8 +27,8 @@ import edu.columbia.gemma.web.Constants;
 import edu.columbia.gemma.web.controller.BaseFormController;
 
 /**
- * Implementation of <strong>SimpleFormController</strong> that interacts with the {@link UserManager} to
- * retrieve/persist values to the database.
+ * Implementation of <strong>SimpleFormController</strong> that interacts with the {@link UserService} adn
+ * {@link UserRoleService} to retrieve/persist values to the database.
  * <p>
  * Based on Appfuse code.
  * <hr>
@@ -38,7 +39,7 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @version $Id$
  * @spring.bean id="userFormController" name="/editProfile.html /editUser.html"
  * @spring.property name="commandName" value="user"
- * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.User"
+ * @spring.property name="commandClass" value="edu.columbia.gemma.common.auditAndSecurity.UserImpl"
  * @spring.property name="validator" ref="userValidator"
  * @spring.property name="formView" value="userProfile"
  * @spring.property name="successView" value="redirect:users.html"
@@ -49,11 +50,12 @@ import edu.columbia.gemma.web.controller.BaseFormController;
  * @spring.property name="templateName" value="accountCreated.vm"
  */
 public class UserFormController extends BaseFormController {
+
     private UserRoleService userRoleService;
 
     public UserFormController() {
-        setCommandName( "user" );
-        setCommandClass( User.class );
+     //   setCommandName( "user" );
+     //   setCommandClass( User.class );
     }
 
     @Override
@@ -70,7 +72,6 @@ public class UserFormController extends BaseFormController {
         if ( request.getParameter( "delete" ) != null ) {
             this.getUserService().removeUser( user.getUserName() );
             saveMessage( request, getText( "user.deleted", user.getFullName(), locale ) );
-
             return new ModelAndView( getSuccessView() );
         }
         Boolean encrypt = ( Boolean ) getConfiguration().get( Constants.ENCRYPT_PASSWORD );
@@ -81,30 +82,15 @@ public class UserFormController extends BaseFormController {
             String algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
 
             if ( algorithm == null ) { // should only happen for test case
-
                 if ( log.isDebugEnabled() ) {
-                    log.debug( "assuming testcase, setting algorithm to 'SHA'" );
+                    log.debug( "Assuming testcase, setting algorithm to 'SHA'" );
                 }
-
                 algorithm = "SHA";
             }
-
             user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
         }
 
-        String[] userRoles = request.getParameterValues( "userRoles" );
-
-        if ( userRoles != null ) {
-            // for some reason, Spring seems to hang on to the roles in
-            // the User object, even though isSessionForm() == false
-            user.getRoles().clear();
-            for ( int i = 0; i < userRoles.length; i++ ) {
-                String roleName = userRoles[i];
-                UserRole role = this.userRoleService.getRole( roleName );
-                role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
-                user.getRoles().add( role );
-            }
-        }
+        updateRoles( request, user );
 
         try {
             this.getUserService().saveUser( user );
@@ -151,7 +137,7 @@ public class UserFormController extends BaseFormController {
         if ( request.getParameter( "cancel" ) != null ) {
             if ( !StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
                 return new ModelAndView( new RedirectView( "mainMenu.html" ) ); // FIXME this should be a cancel
-                                                                                // message.
+                // message.
             }
             return new ModelAndView( getSuccessView() );
         }
@@ -166,6 +152,29 @@ public class UserFormController extends BaseFormController {
         this.userRoleService = userRoleService;
     }
 
+    /**
+     * Update the user's roles, if requested.
+     * 
+     * @param request
+     * @param user
+     */
+    private void updateRoles( HttpServletRequest request, User user ) {
+        String[] userRoles = request.getParameterValues( "userRoles" );
+
+        if ( userRoles != null ) {
+            // for some reason, Spring seems to hang on to the roles in
+            // the User object, even though isSessionForm() == false
+            user.getRoles().clear();
+            for ( int i = 0; i < userRoles.length; i++ ) {
+                String roleName = userRoles[i];
+                UserRole role = this.userRoleService.getRole( roleName );
+                role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+                user.getRoles().add( role );
+            }
+        }
+    }
+
+    @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         String username = request.getParameter( "userName" );
 
@@ -186,12 +195,13 @@ public class UserFormController extends BaseFormController {
             }
         }
 
-        User user = null;
+//      We use UserImpl so we expose the roleList() method.
+        UserImpl user = null; 
 
         if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
-            user = this.getUserService().getUser( request.getRemoteUser() );
+            user = ( UserImpl ) this.getUserService().getUser( request.getRemoteUser() );
         } else if ( !StringUtils.isBlank( username ) && !"".equals( request.getParameter( "version" ) ) ) {
-            user = this.getUserService().getUser( username );
+            user = ( UserImpl ) this.getUserService().getUser( username );
         } else {
             UserRole role = this.userRoleService.getRole( Constants.USER_ROLE );
             role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.

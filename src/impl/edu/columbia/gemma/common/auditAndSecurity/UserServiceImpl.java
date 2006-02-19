@@ -33,10 +33,6 @@ import edu.columbia.gemma.util.RandomGUID;
 import edu.columbia.gemma.util.StringUtil;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @see edu.columbia.gemma.common.auditAndSecurity.UserService
  * @author pavlidis
  * @version $Id$
@@ -157,8 +153,10 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
         if ( user.getRoles() == null ) user.setRoles( new HashSet() );
         Collection<UserRole> roles = user.getRoles();
         roles.add( newRole );
+        user.setRoles(roles);
     }
-
+    
+    
     /**
      * Convenience method to set a unique cookie id and save to database
      * 

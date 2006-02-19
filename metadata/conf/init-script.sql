@@ -17,22 +17,24 @@ insert into AUDIT_TRAIL VALUES ();
 
 --administrator
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "nobody", "nobody", "nobody", "nobody", "administrator", "cec6877e42b179b133c2a6c1285488755aefc071", "cec6877e42b179b133c2a6c1285488755aefc071", 1, 1);
+insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("admin", "administrator", 1 );
+
 insert into CONTACT (CLASS, NAME, EMAIL, AUDIT_TRAIL_FK) values ("edu.columbia.gemma.common.auditAndSecurity.ContactImpl", "admin", "admin@gemma.org", 4);
-insert into USER_ROLE (NAME, USER_NAME ) values ("admin", "administrator" );
+
 
 --Users
 
 --pavlab
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "pavlab", "lastname", "firstname", "pavlab_middlename", "pavlab", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1, 2);
-insert into USER_ROLE (NAME, USER_NAME ) values ("user", "pavlab" );
+insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("user", "pavlab", 3);
 
 --Paul Pavlidis
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "pavlidis", "Pavlidis", "Paul", "<middlename>", "pavlidis", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1, 3);
-insert into USER_ROLE (NAME, USER_NAME ) values ("user", "pavlidis" );
+insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("user", "pavlidis", 4 );
 
 --Keshav
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "keshav", "Keshav", "Kiran", "Dattatri", "keshav", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", "7478822cc546bb339c7cd198ca96df2b7a50cf5c", 1, 11);
-insert into USER_ROLE (NAME, USER_NAME ) values ("user", "keshav" );
+insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("user", "keshav", 5 );
 
 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Homo sapiens","human","9606");

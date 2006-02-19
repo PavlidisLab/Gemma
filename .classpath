@@ -104,5 +104,10 @@
 	<classpathentry sourcepath="/MAVEN_REPO/dwr/dwr-1.0-src/java" kind="var" path="MAVEN_REPO/dwr/jars/dwr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/xalan/jars/xalan-2.7.0.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/servlet/apache-tomcat-5.5.15-src/jasper/jasper2/src/share" kind="var" path="TOMCAT_HOME/common/lib/jasper-runtime.jar">
+		<attributes>
+			<attribute value="http://tomcat.apache.org/tomcat-5.5-doc/jasper/docs/api" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
