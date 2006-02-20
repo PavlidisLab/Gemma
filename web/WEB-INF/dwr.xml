@@ -10,5 +10,9 @@
             <include method="getUser" />
             <include method="getUsers" />
         </create>
+       <create creator="new" javascript="UploadMonitor">
+            <param name="class" value="edu.columbia.gemma.web.util.upload.UploadMonitor"/>
+        </create>
+               
     </allow>
 </dwr>

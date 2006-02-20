@@ -18,7 +18,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-dbutils/jars/commons-dbutils-1.0.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-logging/jars/commons-logging-1.0.4.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/commons-logging/commons-logging-1.0.4-src/src/java" kind="var" path="MAVEN_REPO/commons-logging/jars/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-net/jars/commons-net-1.1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-configuration/jars/commons-configuration-1.1.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/commons-beanutils/commons-beanutils-1.7.0-src/src/java" kind="var" path="MAVEN_REPO/commons-beanutils/jars/commons-beanutils-1.7.0.jar">
@@ -94,7 +94,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-codec/jars/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-dbcp/jars/commons-dbcp-1.2.1.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-fileupload/jars/commons-fileupload-1.0.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/commons-fileupload/commons-fileupload-1.1/src/java" kind="var" path="MAVEN_REPO/commons-fileupload/jars/commons-fileupload-1.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/junit/jars/junit-3.8.1.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jaxen/jars/jaxen-1.1-beta-5.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-pool/jars/commons-pool-1.2.jar"/>
@@ -109,5 +109,9 @@
 			<attribute value="http://tomcat.apache.org/tomcat-5.5-doc/jasper/docs/api" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-fileupload-1.1.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/xalan-2.7.0.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/commons-io/jars/commons-io-1.1.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-io-1.1.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>

@@ -30,21 +30,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import edu.columbia.gemma.web.Constants;
 import edu.columbia.gemma.web.controller.BaseFormController;
+import edu.columbia.gemma.web.util.upload.CommonsMultipartFile;
 
 /**
- * Controller class to upload Files. This demonstrates the technique, but isn't generally useful.
- * <p>
- * <a href="FileUploadFormController.java.html"><i>View Source</i></a>
- * </p>
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * Controller class to upload Files. This demonstrates the technique, but isn't all that useful as is.
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
@@ -116,7 +110,7 @@ public class FileUploadController extends BaseFormController {
 
         request.setAttribute( "link", link + file.getOriginalFilename() );
 
-        log.warn( "Uploaded file!" );
+        log.info( "Uploaded file!" );
 
         return new ModelAndView( getSuccessView() );
     }
