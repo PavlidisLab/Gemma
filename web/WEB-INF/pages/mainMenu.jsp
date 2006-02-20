@@ -51,7 +51,7 @@
         </a>
     </li>
     <li>
-        <a href="<c:url value="/flowController.htm?_flowId=fileUploader"/>">
+        <a href="<c:url value="/uploadFile.html"/>">
             <fmt:message key="menu.selectFile" />
         </a>
     </li>
