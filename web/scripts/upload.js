@@ -1,3 +1,10 @@
+/*
+*
+*   Original code from  Pierre-Alexandre Losson -- http://www.telio.be/blog
+*   email : plosson@users.sourceforge.net
+* 
+* $Id$
+*/
 
 function refreshProgress() {
     UploadMonitor.getUploadInfo(updateProgress);
