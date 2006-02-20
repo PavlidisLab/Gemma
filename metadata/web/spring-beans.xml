@@ -232,7 +232,7 @@
 <!-- ==================================================== -->
 <!-- 	Used by the fileUploadController 				  -->
 <!-- ==================================================== -->
-<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+<bean id="multipartResolver" class="edu.columbia.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
     <property name="maxUploadSize">
         <value>2097152</value>
     </property>
@@ -279,7 +279,7 @@
 
 <bean id="bibliographicReferenceValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
     <property name="validatorFactory">
-         <ref bean="validatorFactory" />
+        <ref bean="validatorFactory" />
     </property>
     <property name="formName">
         <value>bibliographicReference</value>
@@ -288,7 +288,7 @@
 
 <bean id="databaseEntryValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
     <property name="validatorFactory">
-         <ref bean="validatorFactory" />
+        <ref bean="validatorFactory" />
     </property>
     <property name="formName">
         <value>databaseEntry</value>
