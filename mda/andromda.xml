@@ -115,6 +115,8 @@
                 <property name="associationEndCollectionIndexName">orderedCollectionIndex</property>
                 <property name="configuration">${maven.andromda.core.generated.dir}</property>
                 <property name="hibernateEnableCache">true</property>
+                <property name="cache">${maven.andromda.core.generated.dir}</property>
+                <property name="hibernateEnableAssociationsCache">true</property>
                 <property name="hibernateTransactionFactoryClass">org.hibernate.transaction.JTATransactionFactory</property>
             </properties>
         </namespace>
