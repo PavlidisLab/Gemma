@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
@@ -30,7 +31,11 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.common.description.OntologyEntry;
+import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
+import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
+import edu.columbia.gemma.expression.experiment.ExperimentalFactorDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
@@ -46,6 +51,8 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
     private static Log log = LogFactory.getLog( ExpressionExperimentControllerTest.class.getName() );
 
+    private ExperimentalFactorDao efDao = null;
+
     /**
      * Add a expressionExperiment to the database for testing purposes. Includes associations.
      */
@@ -60,19 +67,52 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
         // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         // ee.setAccession( de );
         /* Expression experiment contains a collection of experimental designs. */
-        Collection<ExperimentalDesign> eeCol = new HashSet();
+
         int testNum = 3;
+
+        Collection<ExperimentalFactor> efCol = new HashSet();
+        for ( int i = 0; i < testNum; i++ ) {
+            ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+            OntologyEntry oe = OntologyEntry.Factory.newInstance();
+            oe.setAccession( "oe:" + i );
+            oe.setDescription( "Ontology Entry " + i );
+
+            log.debug( "ontolgy entry  => experimental factor." );
+            ef.setCategory( oe );
+            // ef.setAnnotations(oeCol);
+            // ef.setFactorValues(fvCol);
+
+        }
+
+        Collection<ExperimentalDesign> edCol = new HashSet();
         for ( int i = 0; i < testNum; i++ ) {
             ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
             ed.setName( "Experimental Design " + i );
             ed.setDescription( i + ": A test experimental design." );
-            eeCol.add( ed );
+
+            log.debug( "experimental factors => experimental design." );
+            ed.setExperimentalFactors( efCol ); // set test experimental factors
+
+            edCol.add( ed ); // add experimental designs
         }
 
-        ee.setExperimentalDesigns( eeCol );
+        log.debug( "experimental designs => expression experiment" );
+        ee.setExperimentalDesigns( edCol );
+
+        Collection<BioAssay> baCol = new HashSet();
+        for ( int i = 0; i < testNum; i++ ) {
+            BioAssay ba = BioAssay.Factory.newInstance();
+            ba.setName( "Experimental Design " + i );
+            ba.setDescription( i + ": A test experimental design." );
+            baCol.add( ba );
+        }
+
+        log.debug( "bioassays => expression experiment." );
+        ee.setBioAssays( baCol );
 
         /* Yes, we have access to the ctx in the setup. */
         ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
+        log.debug( "Loading test expression experiment." );
         if ( ees.findByName( ee.getName() ) == null ) ees.findOrCreate( ee );
     }
 
@@ -88,7 +128,8 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
         ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
                 .getBean( "expressionExperimentController" );
 
-        MockHttpServletRequest req = new MockHttpServletRequest( "GET", "/expressionExperiment/showAllExpressionExperiments.html" );
+        MockHttpServletRequest req = new MockHttpServletRequest( "GET",
+                "/expressionExperiment/showAllExpressionExperiments.html" );
         req.setRequestURI( "/expressionExperiment/showAllExpressionExperiments.html" );
 
         ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
@@ -102,29 +143,29 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
     /**
      * @throws Exception
      */
-//    @SuppressWarnings("unchecked")
-//    public void testGetExperimentalDesigns() throws Exception {
-//
-//        ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
-//                .getBean( "expressionExperimentController" );
-//
-//        MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/experimentalDesigns.htm" );
-//        req.setRequestURI( "/Gemma/experimentalDesigns.htm" );
-//        // cannot set parameter (setParmeter does not exist) so I had to set the attribute. On the server side,
-//        // I have used a getAttribute as opposed to a getParameter - difference?
-//        req.setAttribute( "name", "Expression Experiment" );
-//
-//        ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
-//
-//        /*
-//         * In this case, the map contains 1 element of type Collection. That is, a collection of experimental designs.
-//         */
-//        Map<String, Object> m = mav.getModel();
-//
-//        Collection<ExperimentalDesign> col = ( Collection<ExperimentalDesign> ) m.get( "experimentalDesigns" );
-//        log.debug( new Integer( col.size() ) );
-//
-//        assertNotNull( m.get( "experimentalDesigns" ) );
-//        assertEquals( mav.getViewName(), "experimentalDesign.GetAll.results.view" );
-//    }
+    // @SuppressWarnings("unchecked")
+    // public void testGetExperimentalDesigns() throws Exception {
+    //
+    // ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
+    // .getBean( "expressionExperimentController" );
+    //
+    // MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/experimentalDesigns.htm" );
+    // req.setRequestURI( "/Gemma/experimentalDesigns.htm" );
+    // // cannot set parameter (setParmeter does not exist) so I had to set the attribute. On the server side,
+    // // I have used a getAttribute as opposed to a getParameter - difference?
+    // req.setAttribute( "name", "Expression Experiment" );
+    //
+    // ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
+    //
+    // /*
+    // * In this case, the map contains 1 element of type Collection. That is, a collection of experimental designs.
+    // */
+    // Map<String, Object> m = mav.getModel();
+    //
+    // Collection<ExperimentalDesign> col = ( Collection<ExperimentalDesign> ) m.get( "experimentalDesigns" );
+    // log.debug( new Integer( col.size() ) );
+    //
+    // assertNotNull( m.get( "experimentalDesigns" ) );
+    // assertEquals( mav.getViewName(), "experimentalDesign.GetAll.results.view" );
+    // }
 }
