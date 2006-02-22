@@ -21,7 +21,7 @@ package edu.columbia.gemma.security.interceptor;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.protocol.Hardware;
 import edu.columbia.gemma.common.protocol.HardwareService;
@@ -39,7 +39,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author keshav
  * @version $Id$
  */
-public class PersistAclInterceptorTest extends BaseServiceTestCase {
+public class PersistAclInterceptorTest extends BaseDAOTestCase {
     private BasicAclExtendedDao basicAclExtendedDao;
 
     protected void setUp() throws Exception {

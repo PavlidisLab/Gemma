@@ -18,7 +18,7 @@
  */
 package edu.columbia.gemma.security.interceptor;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
@@ -26,7 +26,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author pavlidis
  * @version $Id$
  */
-public class AuditInterceptorTest extends BaseServiceTestCase {
+public class AuditInterceptorTest extends BaseDAOTestCase {
 
     public void testSimpleAuditAddition() throws Exception {
         ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );

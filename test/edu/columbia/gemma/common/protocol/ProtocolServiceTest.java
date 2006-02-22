@@ -18,7 +18,7 @@
  */
 package edu.columbia.gemma.common.protocol;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
  * <hr>
@@ -28,7 +28,7 @@ import edu.columbia.gemma.BaseServiceTestCase;
  * @author keshav
  * @version $Id$
  */
-public class ProtocolServiceTest extends BaseServiceTestCase {
+public class ProtocolServiceTest extends BaseDAOTestCase {
     ProtocolDao protocolDao = null;
 
     protected void setUp() throws Exception {

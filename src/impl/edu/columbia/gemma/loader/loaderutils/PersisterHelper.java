@@ -178,8 +178,6 @@ public class PersisterHelper implements Persister {
 
     private OntologyEntryService ontologyEntryService;
 
-    private int persistedDesignElements;
-
     private PersonService personService;
 
     private ProtocolService protocolService;
@@ -547,31 +545,6 @@ public class PersisterHelper implements Persister {
     // }
 
     /**
-     * @param arrayDesign
-     */
-    private Boolean doPersistDesignElementAssociations( ArrayDesign arrayDesign ) {
-        persistedDesignElements = 0;
-        for ( DesignElement designElement : arrayDesign.getDesignElements() ) {
-            // designElement = persistDesignElement( designElement ); // don't need to do this as composition takes care
-            // of it.
-            designElement.setArrayDesign( arrayDesign );
-            if ( designElement instanceof CompositeSequence ) {
-                CompositeSequence cs = ( CompositeSequence ) designElement;
-                cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
-            } else if ( designElement instanceof Reporter ) {
-                Reporter reporter = ( Reporter ) designElement;
-                reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
-            }
-            persistedDesignElements++;
-            if ( persistedDesignElements > 0 && persistedDesignElements % 1000 == 0 ) {
-                log.info( persistedDesignElements + " design element sequences examined for " + arrayDesign );
-            }
-        }
-        log.info( persistedDesignElements + " design element sequences examined for " + arrayDesign );
-        return Boolean.TRUE;
-    }
-
-    /**
      * @param bioSequence
      */
     private void fillInBioSequenceTaxon( BioSequence bioSequence ) {
@@ -758,49 +731,124 @@ public class PersisterHelper implements Persister {
 
         if ( existing != null ) {
             assert existing.getId() != null;
-            log.info( "Array design \"" + existing.getName() + "\" already exists." );
-            Collection<DesignElement> existingDesignElements = existing.getDesignElements(); // performance of
-            // size()
-            if ( existingDesignElements.size() == arrayDesign.getDesignElements().size() ) {
-                log.warn( "Number of design elements in existing version of " + arrayDesign + " is the same ("
-                        + existingDesignElements.size() + "). No further processing will be done." );
-                log.warn( "Nulling out reference to transient object." );
+            log.info( "Array design \"" + existing.getName()
+                    + "\" already exists in database, checking if update is needed." );
+
+            int numExistingCompositeSequences = arrayDesignService.getCompositeSequenceCount( existing );
+            int numCompositeSequencesInNew = arrayDesign.getCompositeSequences().size(); // in memory.
+
+            int numExistingReporters = arrayDesignService.getReporterCount( existing );
+            int numReportersInNew = arrayDesign.getReporters().size(); // in memory.
+
+            if ( numExistingCompositeSequences >= numCompositeSequencesInNew
+                    && numExistingReporters >= numReportersInNew ) {
+                log.warn( "Number of design elements in existing version of " + arrayDesign
+                        + " is the same or greater (" + numExistingCompositeSequences
+                        + " composite sequences in existing design, updated one has " + numCompositeSequencesInNew
+                        + ", " + numExistingReporters + " reporters in existing design, updated one has "
+                        + numReportersInNew + ")  No further processing of it will be done." );
                 arrayDesign = null;
                 return existing;
-            } else if ( existingDesignElements.size() > arrayDesign.getDesignElements().size() ) {
-                log.warn( "Number of design elements in existing version of " + arrayDesign + " ("
-                        + existingDesignElements.size() + ") is  greater than in the new one ("
-                        + arrayDesign.getDesignElements().size() + "). No further processing will be done." );
-                log.warn( "Nulling out reference to transient object." );
-                arrayDesign = null;
-                return existing;
-            } else if ( arrayDesign.getDesignElements().size() == 0 ) {
-                log.warn( arrayDesign + ": No design elements in newly supplied version of " + arrayDesign
-                        + ", no further processing of design elements will be done." );
-                log.warn( "Nulling out reference to transient object." );
-                arrayDesign = null;
-                return existing;
-            } else {
-                log.info( "Array Design " + arrayDesign + " exists but design elements are to be updated." );
-                arrayDesign = existing;
             }
-        } else {
-            log.info( "Array Design " + arrayDesign + " is new, processing..." );
+
+            if ( numExistingCompositeSequences < numCompositeSequencesInNew ) {
+                log.warn( "Array Design " + arrayDesign + " exists but compositeSequences are to be updated ("
+                        + numExistingCompositeSequences + " composite sequences in existing design, updated one has "
+                        + numCompositeSequencesInNew + ")" );
+
+                assert existing.getId() != null;
+                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                    cs.setArrayDesign( existing );
+                    cs = ( CompositeSequence ) persistDesignElement( cs );
+                }
+
+                persistArrayCompositeSequenceAssociations( arrayDesign );
+                existing.setCompositeSequences( arrayDesign.getCompositeSequences() );
+                arrayDesignService.update( existing );
+
+            }
+
+            if ( numExistingReporters < numReportersInNew ) {
+                log.warn( "Array Design " + arrayDesign + " exists but reporters are to be updated ("
+                        + numExistingReporters + " reporters in existing design, updated one has " + numReportersInNew
+                        + ")" );
+
+                assert existing.getId() != null;
+                for ( Reporter rep : arrayDesign.getReporters() ) {
+                    rep.setArrayDesign( existing );
+                    rep = ( Reporter ) persistDesignElement( rep );
+                }
+
+                persistArrayDesignReporterAssociations( arrayDesign );
+                existing.setReporters( arrayDesign.getReporters() );
+                arrayDesignService.update( existing );
+
+            }
+            return existing;
+        }
+        log.info( "Array Design " + arrayDesign + " is new, processing..." );
+        return persistNewArrayDesign( arrayDesign );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param existing
+     * @return
+     */
+    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
+        assert isTransient( arrayDesign );
+        persistArrayCompositeSequenceAssociations( arrayDesign );
+        persistArrayDesignReporterAssociations( arrayDesign );
+
+        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
+        Collection<Reporter> reporters = arrayDesign.getReporters();
+
+        for ( CompositeSequence cs : compositeSequences ) {
+            cs.setArrayDesign( arrayDesign );
+            // cs = ( CompositeSequence ) persistDesignElement( cs );
         }
 
-        persistArrayDesignDesignElementAssociations( arrayDesign );
+        for ( Reporter rep : reporters ) {
+            rep.setArrayDesign( arrayDesign );
+            // rep = ( Reporter ) persistDesignElement( rep );
+        }
 
-        return arrayDesignService.findOrCreate( arrayDesign );
+        arrayDesign = arrayDesignService.create( arrayDesign );
+        return arrayDesign;
     }
 
     /**
      * @param arrayDesign
      */
-    private void persistArrayDesignDesignElementAssociations( ArrayDesign arrayDesign ) {
-        log.info( "Filling in or updating sequences in design elements for " + arrayDesign );
-        final ArrayDesign arrayDesignToPersist = arrayDesign;
-        doPersistDesignElementAssociations( arrayDesignToPersist );
-        log.debug( "Done persisting." );
+    private void persistArrayCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
+        log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
+        int persistedCompositeSequences = 0;
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
+
+            persistedCompositeSequences++;
+            if ( persistedCompositeSequences > 0 && persistedCompositeSequences % 1000 == 0 ) {
+                log.info( persistedCompositeSequences + " composite sequences examined for " + arrayDesign );
+            }
+        }
+
+        log.info( persistedCompositeSequences + " composite sequences sequences examined for " + arrayDesign );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void persistArrayDesignReporterAssociations( ArrayDesign arrayDesign ) {
+        log.info( "Filling in or updating sequences in reporters for " + arrayDesign );
+        int persistedReporters = 0;
+        for ( Reporter reporter : arrayDesign.getReporters() ) {
+            reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
+            persistedReporters++;
+            if ( persistedReporters > 0 && persistedReporters % 5000 == 0 ) {
+                log.info( persistedReporters + " reporter sequences examined for " + arrayDesign );
+            }
+        }
+        log.info( persistedReporters + " reporter sequences examined for " + arrayDesign );
     }
 
     /**
@@ -963,8 +1011,12 @@ public class PersisterHelper implements Persister {
      */
     private DesignElement persistDesignElement( DesignElement designElement ) {
         if ( designElement == null ) return null;
-        designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
+
         if ( !isTransient( designElement ) ) return designElement;
+
+        assert designElement.getArrayDesign() != null;
+        designElement.setArrayDesign( persistArrayDesign( designElement.getArrayDesign() ) );
+
         if ( designElement instanceof CompositeSequence ) {
             if ( isTransient( ( ( CompositeSequence ) designElement ).getBiologicalCharacteristic() ) ) {
                 ( ( CompositeSequence ) designElement )
@@ -1095,8 +1147,7 @@ public class PersisterHelper implements Persister {
 
             checkCacheIsSetup( arrayDesignCache, designElementCache, ad );
 
-            String key = maybeExistingDesignElement.getName() + " "
-                    + maybeExistingDesignElement.getArrayDesign().getName();
+            String key = maybeExistingDesignElement.getName() + " " + ad.getName();
 
             if ( designElementCache.containsKey( key ) ) {
                 persistentDesignElement = designElementCache.get( key );
@@ -1294,13 +1345,27 @@ public class PersisterHelper implements Persister {
      * @param designElementCache
      * @param arrayDesign To add to the cache.
      */
+    @SuppressWarnings("unchecked")
     private void addToDesignElementCache( Map<String, DesignElement> designElementCache, ArrayDesign arrayDesign ) {
+
         ArrayDesign pArrayDesign = arrayDesignService.find( arrayDesign );
         log.info( "Loading array design elements for " + arrayDesign );
-        Collection<DesignElement> designElements = pArrayDesign.getDesignElements();
-        log.info( "Filling cache with " + designElements.size() + " design elements" );
+
+        Collection<DesignElement> compositeSequences = arrayDesignService.loadCompositeSequences( pArrayDesign );
+        int csNum = arrayDesignService.getCompositeSequenceCount( pArrayDesign );
+        if ( compositeSequences != null && csNum > 0 )
+            log.info( "Filling cache with " + csNum + " compositeSequences" );
         String adName = " " + arrayDesign.getName();
-        for ( DesignElement element : designElements ) {
+        for ( DesignElement element : compositeSequences ) {
+            assert element.getId() != null;
+            designElementCache.put( element.getName() + adName, element );
+        }
+
+        Collection<DesignElement> reporters = arrayDesignService.loadReporters( pArrayDesign );
+        int repNum = arrayDesignService.getReporterCount( pArrayDesign );
+        if ( reporters != null && repNum > 0 ) log.info( "Filling cache with " + repNum + " reporters " );
+        adName = " " + arrayDesign.getName();
+        for ( DesignElement element : reporters ) {
             assert element.getId() != null;
             designElementCache.put( element.getName() + adName, element );
         }

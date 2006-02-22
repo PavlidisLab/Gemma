@@ -20,12 +20,10 @@ package edu.columbia.gemma.security;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.ResourceBundle;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
@@ -33,8 +31,8 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.CompositeSequenceService;
-import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
+import edu.columbia.gemma.util.SpringContextUtil;
 
 /**
  * Use this to test the acegi functionality.
@@ -43,13 +41,19 @@ import edu.columbia.gemma.security.ui.ManualAuthenticationProcessing;
  * @author keshav
  * @version $Id$
  */
-public class SecurityIntegrationTest extends BaseServiceTestCase {
+public class SecurityIntegrationTest extends BaseDAOTestCase {
+
+    private static String testUser = "administrator";
+    private static String testPassword = "admintoast";
+    private BeanFactory ctxLocal;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
-        super.setUp();
+        // super.setUp(); // Don't do this or you get the security settings for tests.
+
+        ctxLocal = SpringContextUtil.getXmlWebApplicationContext( true, true );
     }
 
     /*
@@ -61,30 +65,19 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
 
     /**
      * Test removing an arrayDesign without having the correct authorization privileges. You should get an
-     * unsuccessfulAuthentication. Does not use mock objects because I need the data from the database. This test does
-     * not use SpringContextUtil because I wanted to test the acegi implementation and SpringContextUtil grants
-     * authorization for all users.
+     * unsuccessfulAuthentication. Does not use mock objects because I need the data from the database
      * 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
     public void testRemoveArrayDesignWithoutAuthorizationWithoutMock() throws Exception {
-
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
-
-        BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
-
         /* Manual Authentication */
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) cpCtx
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctxLocal
                 .getBean( "manualAuthenticationProcessing" );
 
-        manAuthentication.validateRequest( "keshav", "pavlab" );
+        manAuthentication.validateRequest( testUser, testPassword );
 
-        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+        ArrayDesignService ads = ( ArrayDesignService ) ctxLocal.getBean( "arrayDesignService" );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "deleteme" );
@@ -96,33 +89,20 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
     /**
      * Test removing an arrayDesign with correct authorization. The security interceptor should be called on this
      * method, as should the AddOrRemoveFromACLInterceptor. Does not use mock objects because I need to remove an
-     * element from a live database. This test does not use SpringContextUtil because I wanted to test the acegi
-     * implementation and SpringContextUtil grants authorization for all users.
+     * element from a live database.
      * 
      * @throws Exception
      */
     public void testRemoveArrayDesignWithoutMock() throws Exception {
-        /*
-         * Use this or your ManualAuthenticationProcessing solution. The authentication from a non-http client here
-         * comes from Fish du jour - See SpringContextUtil BeanFactory ctx = SpringContextUtil.getApplicationContext(
-         * false );
-         */
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
-
-        BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
 
         /* Manual Authentication */
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) cpCtx
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctxLocal
                 .getBean( "manualAuthenticationProcessing" );
 
-        manAuthentication.validateRequest( "keshav", "pavlab" );
+        manAuthentication.validateRequest( testUser, testPassword );
 
         /* get bean and invoke methods. */
-        ArrayDesignService ads = ( ArrayDesignService ) cpCtx.getBean( "arrayDesignService" );
+        ArrayDesignService ads = ( ArrayDesignService ) ctxLocal.getBean( "arrayDesignService" );
 
         ArrayDesign ad = ads.findArrayDesignByName( "AD Foo" );
         if ( ad == null )
@@ -134,30 +114,20 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
     }
 
     /**
-     * Save an array design This test does not use SpringContextUtil because I wanted to test the acegi implementation
-     * and SpringContextUtil grants authorization for all users.
+     * Save an array design.
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void testSaveArrayDesignWithoutMock() throws Exception {
 
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
-
-        BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
-
         /* Manual Authentication */
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) cpCtx
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctxLocal
                 .getBean( "manualAuthenticationProcessing" );
 
-        manAuthentication.validateRequest( "keshav", "pavlab" );
+        manAuthentication.validateRequest( testUser, testPassword );
 
-        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
-        AuditTrailService ats = ( AuditTrailService ) cpCtx.getBean( "auditTrailService" );
+        ArrayDesignService ads = ( ArrayDesignService ) ctxLocal.getBean( "arrayDesignService" );
+        AuditTrailService ats = ( AuditTrailService ) ctxLocal.getBean( "auditTrailService" );
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "AD Foo" );
         arrayDesign.setDescription( "a test ArrayDesign" );
@@ -180,7 +150,7 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
         cs2.setName( "DE Bar2" );
 
-        Collection<DesignElement> col = new HashSet();
+        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
         col.add( cs1 );
         col.add( cs2 );
 
@@ -190,7 +160,7 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
          */
         cs1.setArrayDesign( arrayDesign );
         cs2.setArrayDesign( arrayDesign );
-        arrayDesign.setDesignElements( col );
+        arrayDesign.setCompositeSequences( col );
 
         ads.findOrCreate( arrayDesign );
 
@@ -199,29 +169,20 @@ public class SecurityIntegrationTest extends BaseServiceTestCase {
     /**
      * Tests getting all design elements given authorization on an array design (ie. tests getting the 'owned objects'
      * given the authorization on the owner). This test was used to test the Acegi Security functionality. Mock objects
-     * not used because I need the objects from the database. This test does not use SpringContextUtil because I wanted
-     * to test the acegi implementation and SpringContextUtil grants authorization for all users.
+     * not used because I need the objects from the database.
      * 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
     public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
 
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
-        String[] paths = { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
-
-        BeanFactory cpCtx = new ClassPathXmlApplicationContext( paths );
-
         /* Manual Authentication */
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) cpCtx
+        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctxLocal
                 .getBean( "manualAuthenticationProcessing" );
 
-        manAuthentication.validateRequest( "keshav", "pavlab" );
+        manAuthentication.validateRequest( testUser, testPassword );
 
-        CompositeSequenceService css = ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" );
+        CompositeSequenceService css = ( CompositeSequenceService ) ctxLocal.getBean( "compositeSequenceService" );
 
         Collection<CompositeSequence> col = css.getAllCompositeSequences();
         for ( CompositeSequence cs : col ) {

@@ -20,11 +20,9 @@
  */
 package edu.columbia.gemma.expression.arrayDesign;
 
+import java.util.Collection;
+
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService
@@ -45,7 +43,7 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
             throws java.lang.Exception {
         this.getArrayDesignDao().remove( this.getArrayDesignDao().findByName( arrayDesign.getName() ) );
     }
-    
+
     /**
      * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#findArrayDesignByName(java.lang.String)
      */
@@ -54,21 +52,20 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
             throws Exception {
         return this.getArrayDesignDao().findByName( name );
     }
-    
+
     /**
      * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#updateArrayDesign(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
      */
-    protected void handleUpdate( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws Exception {
+    protected void handleUpdate( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign ) throws Exception {
         this.getArrayDesignDao().update( arrayDesign );
     }
-    
+
     /**
      * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignService#find(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
      */
     @Override
     protected ArrayDesign handleFind( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().find(arrayDesign);
+        return this.getArrayDesignDao().find( arrayDesign );
     }
 
     @Override
@@ -76,5 +73,54 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
         return this.getArrayDesignDao().findOrCreate( arrayDesign );
     }
 
-    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceBase#handleGetCompositeSequenceCount(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Integer handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().numCompositeSequences( arrayDesign.getId() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceBase#handleGetReporterCount(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Integer handleGetReporterCount( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().numReporters( arrayDesign.getId() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceBase#handleCreate(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected ArrayDesign handleCreate( ArrayDesign arrayDesign ) throws Exception {
+        return ( ArrayDesign ) this.getArrayDesignDao().create( arrayDesign );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceBase#handleLoadReporters(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Collection handleLoadReporters( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().loadReporters( arrayDesign.getId() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceBase#handleLoadCompositeSequences(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    protected Collection handleLoadCompositeSequences( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
+    }
+
 }

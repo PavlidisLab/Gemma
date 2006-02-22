@@ -128,7 +128,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         }
 
         chromosomeDao.remove( chrom );
-        taxonDao.remove( tx );
+ //       taxonDao.remove( tx ); // FIXME put this back when possible.
     }
 
     /**

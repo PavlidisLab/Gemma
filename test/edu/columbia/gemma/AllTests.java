@@ -34,6 +34,8 @@ import edu.columbia.gemma.common.description.DatabaseEntryDaoImplTest;
 import edu.columbia.gemma.common.description.ExternalDatabaseServiceImplTest;
 import edu.columbia.gemma.common.description.LocalFileServiceImplTest;
 import edu.columbia.gemma.common.protocol.ProtocolServiceTest;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoImplTest;
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.genome.gene.CandidateGeneImplTest;
@@ -72,7 +74,6 @@ import edu.columbia.gemma.tools.MArrayRawTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import edu.columbia.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
-import edu.columbia.gemma.web.flow.bibref.SearchPubMedFlowTests;
 
 /**
  * Combines all the tests. Tests that require resources that might not be available during a test (e.g., a network
@@ -115,7 +116,11 @@ public class AllTests {
 
         // expression.experiment
         suite.addTestSuite( ExpressionExperimentServiceImplTest.class );
-
+        
+//      expression.arraydesign
+        suite.addTestSuite( ArrayDesignDaoImplTest.class );
+        suite.addTestSuite( ArrayDesignServiceImplTest.class );
+        
         // externalDb -- test is in wrong place
         suite.addTestSuite( ExternalDatabaseTest.class );
 
@@ -187,7 +192,6 @@ public class AllTests {
         suite.addTestSuite( ArrayDesignControllerTest.class );
 
         // web.controller.flow.entrez.pubmed
-        suite.addTestSuite( SearchPubMedFlowTests.class );
         // suite.addTestSuite( DetailBibRefFlowTests.class ); // no tests.
 
         // analysis (last because these are slow)

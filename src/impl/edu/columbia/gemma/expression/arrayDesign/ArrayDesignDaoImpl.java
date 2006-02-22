@@ -18,10 +18,14 @@
  */
 package edu.columbia.gemma.expression.arrayDesign;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+
+import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
  * <hr>
@@ -36,6 +40,11 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
 
     private static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao#find(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
     @Override
     public ArrayDesign find( ArrayDesign arrayDesign ) {
         try {
@@ -60,6 +69,11 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignDao#findOrCreate(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
     @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getName() == null ) {
@@ -68,9 +82,61 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
         }
         ArrayDesign newArrayDesign = this.find( arrayDesign );
         if ( newArrayDesign != null ) {
+            BeanPropertyCompleter.complete( newArrayDesign, arrayDesign );
             return newArrayDesign;
         }
         log.debug( "Creating new arrayDesign: " + arrayDesign.getName() );
         return ( ArrayDesign ) create( arrayDesign );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoBase#numCompositeSequences(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public Integer numCompositeSequences( Long id ) {
+        return super.numCompositeSequences(
+                "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id",
+                id );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoBase#numReporters(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public Integer numReporters( Long id ) {
+        return super.numReporters(
+                "select count (*) from  ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id", id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoBase#loadCompositeSequences(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public Collection loadCompositeSequences( Long id ) {
+        return super
+                .loadCompositeSequences(
+                        "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id",
+                        id );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoBase#loadReporters(edu.columbia.gemma.expression.arrayDesign.ArrayDesign)
+     */
+    @Override
+    public Collection loadReporters( Long id ) {
+        return super.loadReporters(
+                "select rep from ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id", id );
+
+    }
+
 }

@@ -3095,13 +3095,30 @@ public class MageMLConverterHelper {
      * @param gemmaObj
      * @return
      */
-    private Collection initializeDesignElementCollection( edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
-        Collection designObjs;
-        if ( gemmaObj.getDesignElements() == null ) {
-            designObjs = new HashSet();
-            gemmaObj.setDesignElements( designObjs );
+    private Collection<Reporter> initializeReporterCollection(
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
+        Collection<Reporter> designObjs;
+        if ( gemmaObj.getReporters() == null ) {
+            designObjs = new HashSet<Reporter>();
+            gemmaObj.setReporters( designObjs );
         } else {
-            designObjs = gemmaObj.getDesignElements();
+            designObjs = gemmaObj.getReporters();
+        }
+        return designObjs;
+    }
+
+    /**
+     * @param gemmaObj
+     * @return
+     */
+    private Collection<CompositeSequence> initializeCompositeSequenceCollection(
+            edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
+        Collection<CompositeSequence> designObjs;
+        if ( gemmaObj.getCompositeSequences() == null ) {
+            designObjs = new HashSet<CompositeSequence>();
+            gemmaObj.setCompositeSequences( designObjs );
+        } else {
+            designObjs = gemmaObj.getCompositeSequences();
         }
         return designObjs;
     }
@@ -3331,7 +3348,7 @@ public class MageMLConverterHelper {
     private void specialConvertCompositeGroups( List<CompositeGroup> compositeGroups,
             edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
 
-        Collection<CompositeSequence> designObjs = initializeDesignElementCollection( gemmaObj );
+        Collection<CompositeSequence> designObjs = initializeCompositeSequenceCollection( gemmaObj );
 
         for ( CompositeGroup rg : compositeGroups ) {
             List<org.biomage.DesignElement.CompositeSequence> reps = rg.getCompositeSequences();
@@ -3390,8 +3407,8 @@ public class MageMLConverterHelper {
     private void specialConvertReporterGroups( List reporterGroups,
             edu.columbia.gemma.expression.arrayDesign.ArrayDesign gemmaObj ) {
 
-        Collection designObjs;
-        designObjs = initializeDesignElementCollection( gemmaObj );
+        Collection<Reporter> designObjs;
+        designObjs = initializeReporterCollection( gemmaObj );
 
         for ( Iterator iter = reporterGroups.iterator(); iter.hasNext(); ) {
             ReporterGroup rg = ( ReporterGroup ) iter.next();

@@ -27,7 +27,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
@@ -39,7 +39,7 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * @author keshav
  * @version $Id$
  */
-public class OntologyEntryLoaderIntegrationTest extends BaseServiceTestCase {
+public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderIntegrationTest.class );
     String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
     OntologyEntryPersister ontologyEntryPersister = null;

@@ -779,7 +779,7 @@ public class GeoConverter implements Converter {
 
             platformDesignElementMap.get( arrayDesign.getName() ).put( id, cs );
         }
-        arrayDesign.setDesignElements( compositeSequences );
+        arrayDesign.setCompositeSequences( compositeSequences );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
 
         Contact manufacturer = Contact.Factory.newInstance();

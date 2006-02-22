@@ -26,18 +26,15 @@ import static org.easymock.EasyMock.verify;
 import java.util.Collection;
 import java.util.HashSet;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
  * Unit testing of the ArrayDesignService.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
+public class ArrayDesignServiceImplTest extends BaseDAOTestCase {
 
     private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
     private ArrayDesignDao arrayDesignDaoMock = null;
@@ -85,13 +82,13 @@ public class ArrayDesignServiceImplTest extends BaseServiceTestCase {
         /*
          * Playback mode.
          */
-        replay( arrayDesignDaoMock ); 
+        replay( arrayDesignDaoMock );
         arrayDesignService.getAllArrayDesigns();
 
         /*
          * Verification.
          */
-        verify( arrayDesignDaoMock ); 
+        verify( arrayDesignDaoMock );
     }
 
     /**

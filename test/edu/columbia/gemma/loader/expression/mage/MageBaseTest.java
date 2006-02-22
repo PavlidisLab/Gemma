@@ -24,13 +24,13 @@ import java.util.zip.ZipInputStream;
 
 import javax.xml.transform.TransformerException;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class MageBaseTest extends BaseServiceTestCase {
+public class MageBaseTest extends BaseDAOTestCase {
 
     /**
      * XSL-transform the mage document. This is only needed for testing. In production, this is done as part of the

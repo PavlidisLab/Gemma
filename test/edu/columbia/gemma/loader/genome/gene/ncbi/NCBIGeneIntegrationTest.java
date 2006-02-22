@@ -20,7 +20,7 @@ package edu.columbia.gemma.loader.genome.gene.ncbi;
 
 import java.util.Collection;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.common.auditAndSecurity.ContactService;
 import edu.columbia.gemma.common.auditAndSecurity.PersonService;
 import edu.columbia.gemma.common.description.DatabaseEntryService;
@@ -51,7 +51,7 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIGeneIntegrationTest extends BaseServiceTestCase {
+public class NCBIGeneIntegrationTest extends BaseDAOTestCase {
     PersisterHelper persisterHelper;
 
     /*

@@ -23,7 +23,7 @@ import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 
 /**
  * Loads the database with ArrayDesigns. This test is more representative of integration testing than unit testing as it
@@ -32,7 +32,7 @@ import edu.columbia.gemma.BaseServiceTestCase;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignParserIntegrationTest extends BaseServiceTestCase {
+public class ArrayDesignParserIntegrationTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 
     private ArrayDesignParser arrayDesignParser = null;

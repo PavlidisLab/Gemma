@@ -28,13 +28,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 
-import edu.columbia.gemma.util.StringUtil;
-
 /**
- * Process non-http requests
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * Process authentication requests that come from outside a web context. This is used for command line interfaces, for
+ * example.
  * 
  * @author keshav
  * @version $Id$
@@ -44,7 +40,6 @@ public class ManualAuthenticationProcessing {
 
     private AuthenticationManager authenticationManager;
     private ApplicationContext context;
-    private static String algorithm = "SHA";
 
     /**
      * @param username
@@ -89,16 +84,14 @@ public class ManualAuthenticationProcessing {
      */
     public void validateRequest( String username, String password ) {
 
-        String encryptedPassword = StringUtil.encodePassword( password, algorithm );
-
         Authentication authResult;
 
         try {
-            authResult = attemptAuthentication( username, encryptedPassword );
+            authResult = attemptAuthentication( username, password );
         } catch ( AuthenticationException failed ) {
             // Authentication failed
+            logger.error( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **" );
             unsuccessfulAuthentication( failed );
-
             return;
         }
 
@@ -120,20 +113,12 @@ public class ManualAuthenticationProcessing {
 
         SecurityContextHolder.getContext().setAuthentication( authResult );
 
-        if ( logger.isDebugEnabled() ) {
-            logger
-                    .debug( "Updated SecurityContextHolder to contain the following Authentication: '" + authResult
-                            + "'" );
-        }
-
-        // rememberMeServices.loginSuccess( request, response, authResult );
+        logger.debug( "Updated SecurityContextHolder to contain the following Authentication: '" + authResult + "'" );
 
         // Fire event
         if ( this.context != null ) {
             context.publishEvent( new InteractiveAuthenticationSuccessEvent( authResult, this.getClass() ) );
         }
-
-        // response.sendRedirect( response.encodeRedirectURL( targetUrl ) );
     }
 
     /**
@@ -144,19 +129,8 @@ public class ManualAuthenticationProcessing {
      */
     protected void unsuccessfulAuthentication( AuthenticationException failed ) {
         SecurityContextHolder.getContext().setAuthentication( null );
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Updated SecurityContextHolder to contain null Authentication" );
-        }
-
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Authentication request failed: " + failed.toString() );
-        }
-
-        //
-        // rememberMeServices.loginFail( request, response );
-        //
-        // response.sendRedirect( response.encodeRedirectURL( request.getContextPath() + failureUrl ) );
+        logger.debug( "Updated SecurityContextHolder to contain null Authentication" );
+        logger.debug( "Authentication request failed: " + failed.toString() );
     }
 
 }

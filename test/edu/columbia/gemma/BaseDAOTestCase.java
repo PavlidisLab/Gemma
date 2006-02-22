@@ -72,9 +72,20 @@ import edu.columbia.gemma.util.SpringContextUtil;
  */
 public class BaseDAOTestCase extends TestCase {
     protected final Log log = LogFactory.getLog( getClass() );
-    protected final static BeanFactory ctx = SpringContextUtil.getApplicationContext( true );
+    protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext( true );
     protected ResourceBundle rb;
     protected CompositeConfiguration config;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see junit.framework.TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        SpringContextUtil.grantAuthorityForTests();
+    }
 
     public BaseDAOTestCase() {
         // Since a ResourceBundle is not required for each class, just

@@ -23,7 +23,6 @@ import java.util.Collection;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import edu.columbia.gemma.BaseDAOTestCase;
-import edu.columbia.gemma.BaseServiceTestCase;
 import edu.columbia.gemma.common.quantitationtype.GeneralType;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
@@ -40,7 +39,7 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
+public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
     GeoDatasetService gds;
 
     /**
@@ -78,6 +77,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
 
     /**
      * This test uses 4 data sets, 4 platforms, and samples that aren't run on all platforms.
+     * 
      * @throws Exception
      */
     public void testFetchAndLoadGDS825() throws Exception {
@@ -108,6 +108,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseServiceTestCase {
     // public void testFetchAndLoadThreePlatforms() throws Exception {
     // gds.fetchAndLoad( "GDS243" );
     // }
+
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         assert config != null;

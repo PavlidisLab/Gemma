@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javax.servlet.ServletContext;
+
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.GrantedAuthorityImpl;
 import org.acegisecurity.context.SecurityContextHolder;
@@ -46,10 +48,10 @@ public class SpringContextUtil {
     private static Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
     private static BeanFactory ctx = null;
 
-    /**
-     * @param testing If true, it will get a test configured-BeanFactory
-     * @return BeanFactory
-     */
+     /**
+         * @param testing If true, it will get a test configured-BeanFactory
+         * @return BeanFactory
+         */
     public static BeanFactory getApplicationContext( boolean testing ) {
         if ( ctx == null ) {
             String[] paths = getConfigLocations( testing );
@@ -60,6 +62,37 @@ public class SpringContextUtil {
                 log.error( "Failed to load context" );
             }
         }
+        return ctx;
+    }
+
+    /**
+     * @param testing If true, it will get a test configured-BeanFactory
+     * @param fresh If true, returns a completely new BeanFactory. Otherwise, we try to reuse one.
+     * @return BeanFactory
+     */
+    public static BeanFactory getXmlWebApplicationContext( boolean testing, boolean fresh ) {
+        if ( !fresh ) {
+            return getXmlWebApplicationContext( testing );
+        }
+        String[] paths = getConfigLocations( testing );
+        ctx = new XmlWebApplicationContext();
+
+        /*
+         * Needed for DWR support only. When running in a web container this is taken care of by
+         * org.springframework.web.context.ContextLoaderListener
+         */
+        SpringCreator.setOverrideBeanFactory( ctx );
+
+        ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( paths );
+        ServletContext sc = new MockServletContext( "" );
+        ( ( XmlWebApplicationContext ) ctx ).setServletContext( sc );
+        ( ( XmlWebApplicationContext ) ctx ).refresh();
+        if ( ctx != null ) {
+            log.info( "Got context" );
+        } else {
+            log.fatal( "Failed to load context" );
+        }
+
         return ctx;
     }
 
@@ -105,12 +138,14 @@ public class SpringContextUtil {
             SpringCreator.setOverrideBeanFactory( ctx );
 
             ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( paths );
-            ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );
+            ServletContext sc = new MockServletContext( "" );
+            ( ( XmlWebApplicationContext ) ctx ).setServletContext( sc );
             ( ( XmlWebApplicationContext ) ctx ).refresh();
-            if ( ctx != null )
+            if ( ctx != null ) {
                 log.info( "Got context" );
-            else
-                log.error( "Failed to load context" );
+            } else {
+                log.fatal( "Failed to load context" );
+            }
         }
         return ctx;
     }
@@ -134,10 +169,8 @@ public class SpringContextUtil {
         ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         String daoType = db.getString( "dao.type" );
         String servletContext = db.getString( "servlet.name.0" );
-        // TODO: these files need to be found automatically, not hard-coded.
-
         if ( testing ) {
-            log.info( "************** Using test configuration ***************" );
+            log.warn( "************** Using test configuration ***************" );
             return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
                     "applicationContext-security.xml", servletContext + "-servlet.xml",
                     "applicationContext-validation.xml" };

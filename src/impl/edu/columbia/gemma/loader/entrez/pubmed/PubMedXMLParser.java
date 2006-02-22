@@ -172,8 +172,11 @@ public class PubMedXMLParser {
 
                 BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
 
-                bibRef.setAbstractText( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT ).getTextContent() );
+                Node abstractNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT );
+                if ( abstractNode != null ) {
+                    bibRef.setAbstractText( abstractNode.getTextContent() );
+                }
 
                 bibRef.setPages( org.apache.xpath.XPathAPI.selectSingleNode( article,
                         "child::MedlineCitation/descendant::" + MEDLINE_PAGINATION_ELEMENT ).getTextContent() );

@@ -118,7 +118,7 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-           <dependency>
+        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>1.1</version>
@@ -242,7 +242,7 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-        <dependency>
+    <!--     <dependency>
             <groupId>struts</groupId>
             <artifactId>struts</artifactId>
             <version>1.2.7</version>
@@ -250,7 +250,7 @@
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>struts-menu</groupId>
             <artifactId>struts-menu</artifactId>
@@ -375,14 +375,14 @@
             </properties>
         </dependency>
         <!--    <dependency>
-        <groupId>spring</groupId>
-        <artifactId>spring-sandbox</artifactId>
-        <jar>spring-sandbox.jar</jar>
-        <type>jar</type>
-        <properties>
-        <war.bundle>true</war.bundle>
-        </properties>
-        </dependency>
+            <groupId>spring</groupId>
+            <artifactId>spring-sandbox</artifactId>
+            <jar>spring-sandbox.jar</jar>
+            <type>jar</type>
+            <properties>
+            <war.bundle>true</war.bundle>
+            </properties>
+            </dependency>
         -->
         <dependency>
             <groupId>spring</groupId>
@@ -533,7 +533,7 @@
         <dependency>
             <groupId>xalan</groupId>
             <artifactId>xalan</artifactId>
-            <version>2.7.0</version>
+            <version>2.6.0</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -567,6 +567,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>4.5.2-jdk15</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -626,8 +632,8 @@
                 <include>**/*Tests.java</include>
             </includes>
             <excludes>
-                  <exclude>**/MageBaseTest.java</exclude>
-                 <exclude>**/*IntegrationTest.java</exclude>
+                <exclude>**/MageBaseTest.java</exclude>
+                <exclude>**/*IntegrationTest.java</exclude>
                 <exclude>**/org/springframework/test/**</exclude>
                 <exclude>**/AllTests.java</exclude>
             </excludes>
@@ -637,8 +643,8 @@
                     <includes>
                         <include>**/*.xml</include>
                         <include>**/*.txt</include>
-                         <include>**/*.gz</include>
-                         <include>**/*.zip</include>
+                        <include>**/*.gz</include>
+                        <include>**/*.zip</include>
                         <include>**/*.probes</include>
                     </includes>
                     <filtering>false</filtering>
@@ -650,10 +656,10 @@
                     </includes>
                     <filtering>false</filtering>
                 </resource>
-                <resource>
-                    <directory>${basedir}/web/WEB-INF</directory>
+                 <resource>
+                    <directory>${basedir}/web</directory>
                     <includes>
-                        <include>**/*.xml</include>
+                        <include>WEB-INF/*.xml</include>
                     </includes>
                     <filtering>false</filtering>
                 </resource>
@@ -661,6 +667,7 @@
                     <directory>${basedir}/metadata/webproperties</directory>
                     <includes>
                         <include>**/*.properties</include>
+                        <include>**/*.xml</include>
                     </includes>
                     <filtering>false</filtering>
                 </resource>
@@ -671,14 +678,17 @@
                 <directory>${basedir}/metadata/webproperties</directory>
                 <includes>
                     <include>**/*.properties</include>
+                    <include>**/*.xml</include>
                 </includes>
                 <filtering>false</filtering>
             </resource>
-	    <resource>  
-	     <directory>${basedir}/src/web</directory>
-	     <includes><include>**/*-flow.xml</include></includes>
-	     <filtering>false</filtering>
-	     </resource>
+            <resource>
+                <directory>${basedir}/src/web</directory>
+                <includes>
+                    <include>**/*-flow.xml</include>
+                </includes>
+                <filtering>false</filtering>
+            </resource>
             <resource>
                 <directory>${basedir}/src/gen</directory>
                 <includes>
@@ -688,7 +698,7 @@
                 </includes>
                 <filtering>false</filtering>
             </resource>
-             <resource>
+            <resource>
                 <directory>${basedir}/src/impl</directory>
                 <includes>
                     <include>**/*.xsl</include>
@@ -697,9 +707,9 @@
                 <filtering>false</filtering>
             </resource>
             <resource>
-                <directory>${basedir}/web/</directory>
+                <directory>${basedir}/web/WEB-INF</directory>
                 <includes>
-                    <include>WEB-INF/*.xml</include>
+                    <include>*.xml</include>
                 </includes>
                 <filtering>false</filtering>
             </resource>

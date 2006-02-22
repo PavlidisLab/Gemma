@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
 
-import edu.columbia.gemma.BaseServiceTestCase;
+import edu.columbia.gemma.BaseDAOTestCase;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 
 /**
@@ -39,7 +39,7 @@ import edu.columbia.gemma.expression.bioAssay.BioAssay;
  * @author keshav
  * @version $Id$
  */
-public class MageMLPreprocessorIntegrationTest extends BaseServiceTestCase {
+public class MageMLPreprocessorIntegrationTest extends BaseDAOTestCase {
     protected static final Log log = LogFactory.getLog( MageMLPreprocessorIntegrationTest.class );
 
     private MageMLParser mageMLParser = null;

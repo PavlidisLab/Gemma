@@ -134,15 +134,26 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             if ( log.isDebugEnabled() ) {
                 log.debug( "Added permission " + getAuthority() + " for recipient " + getUsername() + " on " + object );
             }
-        } catch ( DataIntegrityViolationException e ) {
-            if ( method.getName().equals( "findOrCreate" ) ) {
+        } catch ( DataIntegrityViolationException ignored ) {
+            
+
+            // This happens in two situations:
+            // 1. When a 'findOrCreate' resulted in just a 'find'.
+            // 2. When a create was called, but some associated object was already in the system.
+            //              
+            // Either way, we can ignore it.
+            //              
+            
+            
+          //  if ( method.getName().equals( "findOrCreate" ) ) {
                 // do nothing. This happens when the object already exists and has permissions assigned (for example,
                 // findOrCreate resulted in a 'find')
                 // FIXME this is an unpleasant hack.
-            } else {
-                // something else must be wrong.
-                throw e;
-            }
+          //  } else {
+                // something else must be wrong
+          //      log.fatal( method.getName() + " on " + getAuthority() + " for recipient " + getUsername() + " on " + object, ignored );
+              //  throw ( ignored );
+          //  }
         }
 
     }
@@ -237,17 +248,16 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
             if ( Securable.class.isAssignableFrom( propertyType ) ) {
                 Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
-                // if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs
-                // );
+                 if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
                 processObject( m, associatedObject );
             } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                 Collection associatedObjects = ( Collection ) ReflectionUtil.getProperty( object, descriptor );
                 for ( Object object2 : associatedObjects ) {
                     if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
-                        // if ( log.isDebugEnabled() ) {
-                        // log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
-                        // + ", Cascade=" + cs );
-                        // }
+                         if ( log.isDebugEnabled() ) {
+                            log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
+                                    + ", Cascade=" + cs );
+                        }
                         processObject( m, object2 );
                     }
                 }

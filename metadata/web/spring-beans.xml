@@ -68,6 +68,19 @@
     </property>
 </bean>
 
+<!-- ==================================================== -->
+<!--          AJAX (DWR)                                  -->
+<!-- ==================================================== -->
+<bean id="dwrController" class="org.springframework.web.servlet.mvc.ServletWrappingController">
+    <property name="servletClass">
+        <value>uk.ltd.getahead.dwr.DWRServlet</value>
+    </property>
+    <property name="initParameters">
+        <props>
+            <prop key="debug">true</prop>
+        </props>
+    </property>
+</bean>
 
 <!-- ==================================================== -->
 <!-- Action resolvers for MultiActionControllers -->
@@ -211,20 +224,6 @@
 <bean id="menu" class="net.sf.navigator.menu.MenuLoader">
     <property name="menuConfig">
         <value>/WEB-INF/menu-config.xml</value>
-    </property>
-</bean>
-
-<!-- ==================================================== -->
-<!--          AJAX (DWR)                                  -->
-<!-- ==================================================== -->
-<bean id="dwrController" class="org.springframework.web.servlet.mvc.ServletWrappingController">
-    <property name="servletClass">
-        <value>uk.ltd.getahead.dwr.DWRServlet</value>
-    </property>
-    <property name="initParameters">
-        <props>
-            <prop key="debug">true</prop>
-        </props>
     </property>
 </bean>
 

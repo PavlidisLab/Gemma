@@ -29,6 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
+import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.web.controller.BaseMultiActionController;
 
@@ -78,7 +79,7 @@ public class DesignElementController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings({"unused"})
+    @SuppressWarnings( { "unused" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( "entered showAll from " + request.getRequestURI() );
@@ -86,8 +87,8 @@ public class DesignElementController extends BaseMultiActionController {
         String name = request.getParameter( "name" );
 
         ArrayDesign ad = arrayDesignService.findArrayDesignByName( name );
-        Collection<DesignElement> ads = ad.getDesignElements();
-
+        Collection<CompositeSequence> ads = ad.getCompositeSequences();
+        // FIXME this only works on composite sequences.
         return new ModelAndView( "designElements" ).addObject( "designElements", ads );
     }
 

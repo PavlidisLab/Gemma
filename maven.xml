@@ -26,7 +26,8 @@
 		</ant:delete>
 		<attainGoal name="set-source-dirs" />
 	</preGoal>
-
+	
+	
 	<postGoal name="java:compile">
 		<ant:copy toDir="${maven.build.dest}">
 			<fileset dir="${basedir}/metadata/webproperties"
@@ -286,21 +287,13 @@
 	<goal name="remove-work-dir">
 		<ant:delete dir="${basedir}/work" quiet="false" failonerror="false"/> 
 	</goal>
-	<!--TODO verify that the war file is generated correctly -->
-	<goal name="create-war">
-		<ant:delete dir="${basedir}/target" quiet="false" failonerror="false"/>
-		<maven:maven basedir="${basedir}/web" descriptor="${basedir}/project.xml" goals="war:init, war:war-resources, war:webapp"/>
-		<ant:echo message = "==========================================="/>
-		<ant:echo message = " CLEANING UP WEBAPP DIRECTORY BEFORE CREATING WAR          "/>
-		<ant:echo message = "==========================================="/> 
-		<ant:delete dir="${basedir}/target/Gemma/WEB-INF/classes/WEB-INF" quiet="false" failonerror="false"/>
-		<ant:delete dir="${basedir}/web/WEB-INF/classes/WEB-INF" quiet="false" failonerror="false"/>
-		<ant:echo message = "==========================================="/>
-		<ant:echo message = "               CREATING WAR          "/> 
-		<ant:echo message = "==========================================="/>
-		<ant:zip destfile="${basedir}/target/Gemma.zip" basedir="${basedir}/target/Gemma"/>
-		<ant:move file="${basedir}/target/Gemma.zip" tofile="${basedir}/target/Gemma.war"/>
-	</goal>
+	
+	
+	<preGoal name="war">
+		<attainGoal name="clean" />
+	</preGoal>
+	
+
 	<!--TODO can I set up a tunnel without putty? -->
 	<!-- set ${user}, ${server}, ${remotedir}, ${sshdir}, ${passphrase} in build.properties -->
 	<goal name="deploy-war">
