@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * MultipartFile implementation for Jakarta Commons FileUpload, adaped directly from Spring implementation.
  * <p>
- * Implementation note: This is a port to commons Fileutils 1.1, which has features needed by our MonitoredResolver.
+ * Implementation note: This is a port to Commons Fileutils 1.1, which has features needed by our MonitoredResolver.
  * 
  * @author Paul Pavlidis
  * @author Trevor D. Cook
