@@ -63,7 +63,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     private File uploadTempDir;
 
-    private long sizeMax = 2097152L;
+    private long sizeMax = 4194304L;
 
     /**
      * Return the underlying org.apache.commons.fileupload.FileUpload instance. There is hardly any need to access this.
