@@ -69,7 +69,7 @@ public class Start {
     public static void main( String[] args ) {
         Server jettyServer = null;
         try {
-            URL jettyConfig = new URL( "file:src/web/edu/columbia/gemma/web/jetty/jetty-config.xml" );
+            URL jettyConfig = new URL( "file:src/jetty/etc/jetty-config.xml" );
             if ( jettyConfig == null ) {
                 log.fatal( "Unable to locate jetty-test-config.xml on the classpath" );
             }
