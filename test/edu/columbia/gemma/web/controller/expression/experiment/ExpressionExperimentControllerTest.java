@@ -102,8 +102,8 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
         Collection<BioAssay> baCol = new HashSet();
         for ( int i = 0; i < testNum; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance();
-            ba.setName( "Experimental Design " + i );
-            ba.setDescription( i + ": A test experimental design." );
+            ba.setName( "Bioassay " + i );
+            ba.setDescription( i + ": A test bioassay." );
             baCol.add( ba );
         }
 
