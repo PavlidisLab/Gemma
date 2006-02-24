@@ -104,8 +104,6 @@
 	<classpathentry sourcepath="/MAVEN_REPO/dwr/dwr-1.0-src/java" kind="var" path="MAVEN_REPO/dwr/jars/dwr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-fileupload-1.1.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-io/jars/commons-io-1.1.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-io-1.1.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/lib/org.mortbay.jetty-4.2.22.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/lib/xalan-2.6.0.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
