@@ -455,6 +455,9 @@ public class GeoDataset extends GeoData {
         } else if ( string.equals( "dual channel" ) ) { // legacy term.
             log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
             return ExperimentType.geneExpressionArraybased;
+        } else if (string.equals("single channel")) { // legacy term
+            log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
+            return ExperimentType.geneExpressionArraybased;
         } else {
             throw new IllegalArgumentException( "Unknown experiment type " + string );
         }
