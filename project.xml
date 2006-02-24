@@ -548,19 +548,13 @@
             </properties>
         </dependency>
         <dependency>
-            <groupId>jetty</groupId>
-            <artifactId>org.mortbay.jetty</artifactId>
-            <version>5.1.10</version>
+            <groupId>rserve</groupId>
+            <artifactId>JRclient</artifactId>
+            <version>RE817</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
-        </dependency>
-        <dependency>
-            <groupId>servlet</groupId>
-            <artifactId>servlet</artifactId>
-            <jar>servlet.jar</jar>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -593,6 +587,51 @@
             <type>jar</type>
         </dependency>
         <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>org.mortbay.jetty</artifactId>
+            <version>5.1.10</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>jasper-compiler</artifactId>
+            <jar>jasper-compiler.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>jasper-runtime</artifactId>
+            <jar>jasper-runtime.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>javax.servlet</artifactId>
+            <jar>javax.servlet.jar</jar>
+            <type>jar</type>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>commons-el</artifactId>
+            <jar>commons-el.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <jar>xercesImpl.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>jetty</groupId>
+            <artifactId>tools</artifactId>
+            <jar>tools.jar</jar>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>jsch</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.17</version>
@@ -611,15 +650,7 @@
                 <classloader>root</classloader>
             </properties>
         </dependency>
-        <dependency>
-            <groupId>rserve</groupId>
-            <artifactId>JRclient</artifactId>
-            <version>RE817</version>
-            <type>jar</type>
-            <properties>
-                <war.bundle>true</war.bundle>
-            </properties>
-        </dependency>
+        
     </dependencies>
     <build>
         <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>

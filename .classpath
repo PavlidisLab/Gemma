@@ -6,7 +6,6 @@
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/gen"/>
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/impl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry sourcepath="/MAVEN_REPO/servlet/apache-tomcat-5.5.15-src/servletapi/jsr152/src/share" kind="var" path="MAVEN_REPO/servlet/jars/servlet.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-webflow-pr5/dist/spring-webflow-src-pr5.zip" kind="var" path="MAVEN_REPO/spring/jars/spring-webflow-pr5.jar">
 		<attributes>
 			<attribute value="file:/C:/java/.maven/repository/spring/spring-webflow-pr5/doc/api/" name="javadoc_location"/>
@@ -104,7 +103,14 @@
 	<classpathentry sourcepath="/MAVEN_REPO/dwr/dwr-1.0-src/java" kind="var" path="MAVEN_REPO/dwr/jars/dwr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-fileupload-1.1.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/org.mortbay.jetty-4.2.22.jar"/>
 	<classpathentry kind="lib" path="web/WEB-INF/lib/xalan-2.6.0.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-net-1.3.0.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/org.mortbay.jetty-5.1.10.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/javax.servlet.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/commons-el.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/jasper-compiler.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/jasper-runtime.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/tools.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/xercesImpl.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>
