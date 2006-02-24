@@ -64,7 +64,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
             final String seekFile = formRemoteFilePath( identifier );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, outputFileName, identifier, newDir, ".mageml.tgz" );
+            return this.doTask( future, seekFile, outputFileName, identifier, newDir, ".mageml.tgz" );
 
         } catch ( IOException e ) {
             throw new RuntimeException( "Couldn't fetch file for " + identifier, e );

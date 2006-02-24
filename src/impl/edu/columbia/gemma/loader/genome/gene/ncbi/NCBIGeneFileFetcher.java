@@ -21,30 +21,26 @@ package edu.columbia.gemma.loader.genome.gene.ncbi;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.concurrent.FutureTask;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
-import baseCode.util.NetUtils;
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.loader.loaderutils.FtpFetcher;
+import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
 
 /**
  * Class to download files for NCBI gene. Pass the name of the file (without the .gz) to the fetch method: for example,
  * gene_info.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIGeneFileFetcher extends FtpFetcher {
+public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
-    public NCBIGeneFileFetcher() {
+    public void initConfig() {
         Configuration config;
         try {
             config = new PropertiesConfiguration( "Gemma.properties" );
@@ -58,6 +54,11 @@ public class NCBIGeneFileFetcher extends FtpFetcher {
         }
     }
 
+    public NCBIGeneFileFetcher() {
+        initConfig();
+        initArchiveHandler( "gzip" );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -69,29 +70,34 @@ public class NCBIGeneFileFetcher extends FtpFetcher {
         try {
             if ( this.f == null || !this.f.isConnected() ) f = NCBIUtil.connect( FTP.BINARY_FILE_TYPE );
 
-            String seekFile = baseDir + "/" + identifier + ".gz";
-            File outputDir = new File( this.localBasePath );
-            String outputFileName = null;
-            if ( !outputDir.canWrite() ) {
-                outputFileName = File.createTempFile( identifier, "gz" ).getAbsolutePath();
-            } else {
-                outputFileName = outputDir + File.separator + identifier + ".gz";
-            }
-            success = NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
+            File newDir = mkdir( identifier );
+            final String outputFileName = formLocalFilePath( identifier, newDir );
+            final String seekFile = formRemoteFilePath( identifier );
 
-            if ( success ) {
-                // get meta-data about the file.
-                LocalFile file = fetchedFile( seekFile, outputFileName );
-                log.info( "Retrieved " + seekFile + ", output file is " + outputFileName );
-                Collection<LocalFile> result = new HashSet<LocalFile>();
-                result.add( file );
-                return result;
-            }
-            throw new IOException( "Failed to get the file" );
+            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
+            return this.doTask( future, seekFile, outputFileName, identifier, newDir, ".gz" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
 
- 
+    /**
+     * @param identifier
+     * @param newDir
+     * @return
+     */
+    private String formLocalFilePath( String identifier, File newDir ) {
+        String outputFileName = newDir + File.separator + identifier + ".gz";
+        return outputFileName;
+    }
+
+    /**
+     * @param identifier
+     * @return
+     */
+    protected String formRemoteFilePath( String identifier ) {
+        String seekFile = baseDir + identifier + ".gz";
+        return seekFile;
+    }
+
 }
