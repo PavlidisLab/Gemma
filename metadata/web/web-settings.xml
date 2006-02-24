@@ -40,7 +40,6 @@
         classpath:/applicationContext-localDataSource.xml,
         classpath:/applicationContext-validation.xml,
         classpath:/applicationContext-resources.xml,
-        classpath:/applicationContext-ajax.xml,
         classpath:/beanRefFactory.xml
     </param-value>
 </context-param>
