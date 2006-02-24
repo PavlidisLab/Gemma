@@ -18,9 +18,18 @@
  */
 package edu.columbia.gemma.loader.description;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
@@ -31,6 +40,7 @@ import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
+import edu.columbia.gemma.loader.loaderutils.HttpFetcher;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
@@ -73,20 +83,45 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
         dependencies[1] = lf;
         dependencies[2] = lf2;
 
-        InputStream is = new GZIPInputStream( ParserAndLoaderTools.retrieveByHTTP( url ) );
-        ontologyEntryParser.parse( is );
-        Collection<Object> ontologyEntries = ontologyEntryParser.getResults();
+        HttpFetcher hf = new HttpFetcher();
+        Collection<LocalFile> files = hf.fetch( url );
+        final LocalFile localfile = files.iterator().next();
 
-        // throw out most of the results so this test is faster
-        Collection<Object> testSet = new HashSet<Object>();
-        int count = 0;
-        for ( Object object : ontologyEntries ) {
-            testSet.add( object );
-            count++;
-            if ( count >= 10 ) break;
+        // this is fancy for a test.
+        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+            public Boolean call() throws FileNotFoundException, IOException {
+                File file = localfile.asFile();
+                InputStream is = new BufferedInputStream( new GZIPInputStream( new FileInputStream( file ) ) );
+                ontologyEntryParser.parse( is );
+                return Boolean.TRUE;
+            }
+        } );
+        Executors.newSingleThreadExecutor().execute( future );
+        while ( !future.isDone() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException ie ) {
+                ;
+            }
+            log.info( "parsing..." );
         }
 
-        createdObjects = ontologyEntryPersister.persist( testSet );
+        if ( future.get().booleanValue() ) {
+            Collection<Object> ontologyEntries = ontologyEntryParser.getResults();
+
+            // throw out most of the results so this test is faster
+            Collection<Object> testSet = new HashSet<Object>();
+            int count = 0;
+            for ( Object object : ontologyEntries ) {
+                testSet.add( object );
+                count++;
+                if ( count >= 10 ) break;
+            }
+
+            createdObjects = ontologyEntryPersister.persist( testSet );
+        }
+
+        localfile.asFile().delete();
 
     }
 
