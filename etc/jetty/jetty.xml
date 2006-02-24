@@ -198,7 +198,7 @@
     <Set name="extractWAR">false</Set> 
     <Set name="defaultsDescriptor">org/mortbay/jetty/servlet/webdefault.xml</Set>
     <Set name="classLoaderJava2Compliant">true</Set> 
-
+<!-- K
     <Set name="virtualHosts">
       <Array type="java.lang.String">
         <Item></Item>
@@ -207,6 +207,7 @@
         <Item>www.acme.com</Item>
       </Array>
     </Set>
+-->    
   </Call>
 
   <!-- =============================================================== -->
@@ -227,7 +228,7 @@
   <!-- Configure the Other Server Options                              -->
   <!-- =============================================================== -->
   <Set name="requestsPerGC">2000</Set>
-  <Set name="statsOn">false</Set>
+  <Set name="statsOn">true</Set>
   <Set class="org.mortbay.util.FileResource" name="checkAliases" type="boolean">true</Set>
 
   <!-- System classes cannot be overriden by a HttpContext or webapp 
