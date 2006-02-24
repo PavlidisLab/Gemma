@@ -30,7 +30,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @author keshav
  * @author raible
  * @version $Id$
- * @deprecated Use BaseDependencyInjectionSpringContextTest instead. 
+ * @deprecated Use BaseDependencyInjectionSpringContextTest instead.
  */
 public class BaseControllerTestCase extends TestCase {
     protected final static BeanFactory ctx = SpringContextUtil.getXmlWebApplicationContext( true );
