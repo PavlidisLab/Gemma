@@ -37,6 +37,7 @@ import edu.columbia.gemma.common.protocol.ProtocolServiceTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoImplTest;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignServiceImplTest;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentServiceImplTest;
+import edu.columbia.gemma.expression.experiment.FactorValueDaoImplTest;
 import edu.columbia.gemma.externalDb.ExternalDatabaseTest;
 import edu.columbia.gemma.genome.gene.CandidateGeneImplTest;
 import edu.columbia.gemma.genome.gene.CandidateGeneListDAOImplTest;
@@ -46,19 +47,25 @@ import edu.columbia.gemma.genome.gene.GeneServiceImplTest;
 import edu.columbia.gemma.genome.sequenceAnalysis.BlatResultImplTest;
 import edu.columbia.gemma.loader.association.Gene2GOAssociationParserTest;
 import edu.columbia.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
+import edu.columbia.gemma.loader.entrez.pubmed.ESearchXMLParserTest;
+import edu.columbia.gemma.loader.entrez.pubmed.PubMedSearchTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcherTest;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParserTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.AffyProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.ArrayDesignParserIntegrationTest;
 import edu.columbia.gemma.loader.expression.arrayDesign.IlluminaProbeReaderTest;
 import edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
+import edu.columbia.gemma.loader.expression.geo.DatsetCombinerTest;
 import edu.columbia.gemma.loader.expression.geo.GeoConverterTest;
 import edu.columbia.gemma.loader.expression.geo.GeoDatasetServiceIntegrationTest;
 import edu.columbia.gemma.loader.expression.geo.GeoFamilyParserTest;
 import edu.columbia.gemma.loader.expression.geo.RawDataFetcherTest;
 import edu.columbia.gemma.loader.expression.mage.MageLoadTest;
 import edu.columbia.gemma.loader.expression.mage.MageMLParserTest;
+import edu.columbia.gemma.loader.expression.mage.MageMLPreprocessorIntegrationTest;
 import edu.columbia.gemma.loader.expression.smd.SMDManagerImplTest;
+import edu.columbia.gemma.loader.genome.BlatResultParserTest;
+import edu.columbia.gemma.loader.genome.gene.ncbi.NCBIGeneIntegrationTest;
 import edu.columbia.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleterTest;
 import edu.columbia.gemma.loader.smd.model.ExptMetaTest;
@@ -73,7 +80,9 @@ import edu.columbia.gemma.tools.GoldenPathTest;
 import edu.columbia.gemma.tools.MArrayRawTest;
 import edu.columbia.gemma.tools.SequenceManipulationTest;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
+import edu.columbia.gemma.web.controller.common.description.BibRefControllerTest;
 import edu.columbia.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
+import edu.columbia.gemma.web.controller.expression.experiment.ExpressionExperimentController;
 
 /**
  * Combines all the tests. Tests that require resources that might not be available during a test (e.g., a network
@@ -116,11 +125,12 @@ public class AllTests {
 
         // expression.experiment
         suite.addTestSuite( ExpressionExperimentServiceImplTest.class );
-        
-//      expression.arraydesign
+        suite.addTestSuite( FactorValueDaoImplTest.class );
+
+        // expression.arraydesign
         suite.addTestSuite( ArrayDesignDaoImplTest.class );
         suite.addTestSuite( ArrayDesignServiceImplTest.class );
-        
+
         // externalDb -- test is in wrong place
         suite.addTestSuite( ExternalDatabaseTest.class );
 
@@ -143,6 +153,8 @@ public class AllTests {
         // loader.entrez.pubmed
         suite.addTestSuite( PubMedXMLFetcherTest.class );
         suite.addTestSuite( PubMedXMLParserTest.class );
+        suite.addTestSuite( ESearchXMLParserTest.class );
+        suite.addTestSuite( PubMedSearchTest.class );
 
         // loader.expression.arrayDesign
         suite.addTestSuite( AffyProbeReaderTest.class );
@@ -157,10 +169,12 @@ public class AllTests {
         suite.addTestSuite( GeoFamilyParserTest.class );
         suite.addTestSuite( RawDataFetcherTest.class );
         suite.addTestSuite( GeoConverterTest.class );
+        suite.addTestSuite( DatsetCombinerTest.class );
 
         // loader.expression.mage
         suite.addTestSuite( MageMLParserTest.class );
         suite.addTestSuite( MageLoadTest.class );
+        suite.addTestSuite( MageMLPreprocessorIntegrationTest.class );
 
         // loader.expression.smd
         suite.addTestSuite( SMDManagerImplTest.class );
@@ -169,8 +183,12 @@ public class AllTests {
         suite.addTestSuite( ExptMetaTest.class );
         suite.addTestSuite( PublicationMetaTest.class );
 
+        // loader.genome
+        suite.addTestSuite( BlatResultParserTest.class );
+
         // loader.genome.gene
         suite.addTestSuite( NCBIGeneParserTest.class );
+        suite.addTestSuite( NCBIGeneIntegrationTest.class );
 
         // loader.loaderutils
         suite.addTestSuite( BeanPropertyCompleterTest.class );
@@ -188,8 +206,10 @@ public class AllTests {
         // web.controller.common.auditAndSecurity
         suite.addTestSuite( SignupControllerTest.class );
 
-        // web.controller.entrez.pubmed
+        // web.controller.entrez.pubmed, array design...
         suite.addTestSuite( ArrayDesignControllerTest.class );
+        suite.addTestSuite( BibRefControllerTest.class );
+        suite.addTestSuite( ExpressionExperimentController.class );
 
         // web.controller.flow.entrez.pubmed
         // suite.addTestSuite( DetailBibRefFlowTests.class ); // no tests.
