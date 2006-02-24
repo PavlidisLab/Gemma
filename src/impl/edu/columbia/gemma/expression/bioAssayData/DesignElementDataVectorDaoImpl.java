@@ -51,8 +51,8 @@ public class DesignElementDataVectorDaoImpl extends
             queryObject.createCriteria( "quantitationType" ).add(
                     Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
 
-            queryObject.add( Restrictions
-                    .eq( "expressionExperiment", designElementDataVector.getExpressionExperiment() ) );
+            queryObject.createCriteria( "expressionExperiment" ).add(
+                    Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
 
             // FIXME - finish filling in criteria so we never use 'equals' on a domain object.
 
@@ -81,8 +81,8 @@ public class DesignElementDataVectorDaoImpl extends
     public DesignElementDataVector findOrCreate( DesignElementDataVector designElementDataVector ) {
         if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
                 || designElementDataVector.getExpressionExperiment() == null ) {
-            log.warn( "DesignElementDataVector did not have complete business key " + designElementDataVector );
-            return null;
+            throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
+                    + designElementDataVector );
         }
         DesignElementDataVector newDesignElementDataVector = find( designElementDataVector );
         if ( newDesignElementDataVector != null ) {

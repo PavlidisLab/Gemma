@@ -62,7 +62,7 @@ public class MArrayRawTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-        r.cleanup();
+        if ( connected ) r.cleanup();
     }
 
     public void testMakeMArrayRaw() throws Exception {

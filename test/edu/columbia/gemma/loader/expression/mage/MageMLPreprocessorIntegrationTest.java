@@ -32,6 +32,7 @@ import org.dom4j.Document;
 
 import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 
 /**
  * Integration test of MageML: Parser, Converter and Preprocessor
@@ -63,6 +64,7 @@ public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringCo
     @Override
     public void onSetUpBeforeTransaction() throws Exception {
         this.mageMLPreprocessor = new MageMLPreprocessor( "testPreprocess" );
+        mageMLPreprocessor.setPersisterHelper( this.persisterHelper );
     }
 
     /**
@@ -118,13 +120,22 @@ public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringCo
          */
         mageMLConverter.setSimplifiedXml( simplifiedXml );
 
+        ExpressionExperiment expressionExperiment = null;
         Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
         log.debug( "number of GDOs: " + gemmaObjects.size() );
-        if ( log.isDebugEnabled() ) {
-            for ( Object obj : gemmaObjects ) {
+
+        int numExpExp = 0;
+        for ( Object obj : gemmaObjects ) {
+            if ( obj instanceof ExpressionExperiment ) {
+                expressionExperiment = ( ExpressionExperiment ) obj;
+                numExpExp++;
+            }
+            if ( log.isDebugEnabled() ) {
                 log.debug( obj.getClass() + ": " + obj );
             }
         }
+
+        assert expressionExperiment != null && numExpExp == 1;
 
         /* CONVERTING */
         log.info( "***** PREPROCESSING ***** " );
@@ -176,8 +187,10 @@ public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringCo
                     "/data/mage/E-AFMX-13/031205_jm 48 d3 72hrdes_031205_JM 48 D3 72hrDES_CEL_externaldata.txt.short" );
 
             try {
-                mageMLPreprocessor.preprocessStreams( Arrays.asList( is ), bioAssays, mageMLConverter
-                        .getBioAssayDimensions() );
+                mageMLPreprocessor.preprocessStreams( Arrays.asList( is ), expressionExperiment, bioAssays,
+                        mageMLConverter.getBioAssayDimensions() );
+            } catch ( edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceException e ) {
+                fail();
             } catch ( Exception e ) {
                 log.info( "All done!" );
                 break;

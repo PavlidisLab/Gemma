@@ -29,10 +29,6 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import baseCode.io.reader.DoubleMatrixReader;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -60,7 +56,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-        normalizer.cleanup();
+        if ( connected ) normalizer.cleanup();
     }
 
     /*
@@ -74,31 +70,38 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrixNamed maGb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maGb.sample.txt.gz" ) ) );
+                .getResourceAsStream( "/data/swirldata/maGb.small.sample.txt.gz" ) ) );
         DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maGf.sample.txt.gz" ) ) );
+                .getResourceAsStream( "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
         DoubleMatrixNamed maRb = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maRb.sample.txt.gz" ) ) );
+                .getResourceAsStream( "/data/swirldata/maRb.small.sample.txt.gz" ) ) );
         DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maRf.sample.txt.gz" ) ) );
-
+                .getResourceAsStream( "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
+        assert maRf != null && maGf != null && maRb != null && maGb != null;
         DoubleMatrixNamed result = normalizer.normalize( maRf, maGf, maRb, maGb, null );
 
-        assertEquals( 8448, result.rows() );
+        assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
         // assertEquals( -0.2841363, result.get( 99, 2 ), 0.0001 ); // loess normaliation isn't deterministic in marray.
 
     }
 
     public void testNormalizeNoBg() throws Exception {
+        if ( !connected ) {
+            log.warn( "Could not connect to RServe, skipping test." );
+            return;
+        }
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrixNamed maRf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maRf.sample.txt.gz" ) ) );
+                .getResourceAsStream( "/data/swirldata/maRf.small.sample.txt.gz" ) ) );
         DoubleMatrixNamed maGf = ( DoubleMatrixNamed ) reader.read( new GZIPInputStream( this.getClass()
-                .getResourceAsStream( "/data/swirldata/maGf.sample.txt.gz" ) ) );
+                .getResourceAsStream( "/data/swirldata/maGf.small.sample.txt.gz" ) ) );
+
+        assert maRf != null && maGf != null;
+
         DoubleMatrixNamed result = normalizer.normalize( maRf, maGf );
 
-        assertEquals( 8448, result.rows() );
+        assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
     }
 

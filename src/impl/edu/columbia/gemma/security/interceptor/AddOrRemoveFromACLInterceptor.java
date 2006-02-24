@@ -146,7 +146,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             // if ( method.getName().equals( "findOrCreate" ) ) {
             // do nothing. This happens when the object already exists and has permissions assigned (for example,
             // findOrCreate resulted in a 'find')
-            // FIXME this is an unpleasant hack.
             // } else {
             // something else must be wrong
             // log.fatal( method.getName() + " on " + getAuthority() + " for recipient " + getUsername() + " on " +
@@ -169,6 +168,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         assert args != null;
         assert args.length == 1;
         Object persistentObject = getPersistentObject( retValue, m, args );
+        if ( persistentObject == null ) return;
         if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
             for ( Object o : ( Collection<Object> ) persistentObject ) {
                 if ( !Securable.class.isAssignableFrom( persistentObject.getClass() ) ) {
@@ -217,10 +217,10 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @return
      */
     private Object getPersistentObject( Object retValue, Method m, Object[] args ) {
-        if ( CrudInterceptorUtils.methodIsDelete( m ) ) {
+        if ( CrudInterceptorUtils.methodIsDelete( m ) || CrudInterceptorUtils.methodIsUpdate( m ) ) {
             return args[0];
         }
-        assert retValue != null;
+        // assert retValue != null : "Null return value from method " + m.getName();
         return retValue;
     }
 

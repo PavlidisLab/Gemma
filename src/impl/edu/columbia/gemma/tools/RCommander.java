@@ -60,6 +60,7 @@ public abstract class RCommander {
      * badness can occur.
      */
     public void cleanup() {
+        assert ( rc != null );
         rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.
         rc.disconnect();
     }

@@ -77,7 +77,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-        aa.cleanup();
+        if ( connected ) aa.cleanup();
     }
 
     /*

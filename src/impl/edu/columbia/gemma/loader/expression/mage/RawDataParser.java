@@ -46,6 +46,7 @@ import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.loaderutils.FileCombiningParser;
 
 /**
@@ -76,6 +77,8 @@ public class RawDataParser implements FileCombiningParser {
     private QuantitationTypeData qtData = new QuantitationTypeData();
 
     private Collection<Object> results = new LinkedHashSet<Object>();
+
+    private ExpressionExperiment expressionExperiment;
 
     private int selector = -1;
 
@@ -299,6 +302,8 @@ public class RawDataParser implements FileCombiningParser {
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
         assert currentBioAssay != null;
+        assert this.expressionExperiment != null;
+
         boolean hasDesignElements = dimensions.getDesignElementDimension( currentBioAssay ) != null
                 && dimensions.getDesignElementDimension( currentBioAssay ).size() > 0;
 
@@ -324,13 +329,13 @@ public class RawDataParser implements FileCombiningParser {
                 String field = fields[selector];
                 if ( StringUtils.isBlank( field ) ) field = NAN_STRING;
                 QuantitationType qt = quantitationTypes.get( selector );
-                qtData.addData( qt, de, field );
+                qtData.addData( qt, de, this.expressionExperiment, field );
             } else {
                 for ( int i = 0; i < fields.length; i++ ) {
                     String field = fields[i];
                     if ( StringUtils.isBlank( field ) ) field = NAN_STRING;
                     QuantitationType qt = quantitationTypes.get( i );
-                    qtData.addData( qt, de, field );
+                    qtData.addData( qt, de, this.expressionExperiment, field );
                 }
             }
 
@@ -371,7 +376,7 @@ public class RawDataParser implements FileCombiningParser {
          * @param de
          * @param data
          */
-        public void addData( QuantitationType qt, DesignElement de, String data ) {
+        public void addData( QuantitationType qt, DesignElement de, ExpressionExperiment exp, String data ) {
 
             String qtName = qt.getName();
 
@@ -381,24 +386,24 @@ public class RawDataParser implements FileCombiningParser {
             try {
                 if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        matrixToAddTo.addDataToRow( de, qt, Boolean.FALSE );
+                        matrixToAddTo.addDataToRow( de, qt, exp, Boolean.FALSE );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, new Boolean( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, new Boolean( data ) );
                 } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        matrixToAddTo.addDataToRow( de, qt, new Double( Double.NaN ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, new Double( Double.NaN ) );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, new Double( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, new Double( data ) );
                 } else if ( pt.equals( PrimitiveType.INT ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        matrixToAddTo.addDataToRow( de, qt, new Integer( 0 ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, new Integer( 0 ) );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, new Integer( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, new Integer( data ) );
                 } else {
                     if ( data.equals( NAN_STRING ) )
-                        matrixToAddTo.addDataToRow( de, qt, "" );
+                        matrixToAddTo.addDataToRow( de, qt, exp, "" );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, data );
+                        matrixToAddTo.addDataToRow( de, qt, exp, data );
                 }
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( e );
@@ -473,6 +478,13 @@ public class RawDataParser implements FileCombiningParser {
 
     }
 
+    /**
+     * @param expressionExperiment The expressionExperiment to set.
+     */
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
 }
 
 class NoMoreQuantitationTypesException extends RuntimeException {
@@ -505,10 +517,10 @@ class RawDataMatrix {
      * @param de
      * @param data
      */
-    public void addDataToRow( DesignElement de, QuantitationType qt, Object data ) {
+    public void addDataToRow( DesignElement de, QuantitationType qt, ExpressionExperiment exp, Object data ) {
         if ( de == null || data == null ) throw new IllegalArgumentException( "Null" );
 
-        addRow( de, qt );
+        addRow( de, qt, exp );
 
         if ( !rowTemp.containsKey( de.getName() ) ) {
             rowTemp.put( de.getName(), new ByteArrayList() );
@@ -527,9 +539,10 @@ class RawDataMatrix {
      * @param de
      * @param qt
      */
-    public void addRow( DesignElement de, QuantitationType qt ) {
+    public void addRow( DesignElement de, QuantitationType qt, ExpressionExperiment expressionExperiment ) {
         if ( rows.containsKey( de.getName() ) ) return;
         DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
+        tobeAdded.setExpressionExperiment( expressionExperiment );
         tobeAdded.setDesignElement( de );
         tobeAdded.setQuantitationType( qt );
         addRow( tobeAdded );
@@ -542,10 +555,12 @@ class RawDataMatrix {
      * @param qt
      * @param data
      */
-    public void addRow( DesignElement de, QuantitationType qt, List<Object> data ) {
+    public void addRow( DesignElement de, QuantitationType qt, ExpressionExperiment expressionExperiment,
+            List<Object> data ) {
         DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
         tobeAdded.setDesignElement( de );
         tobeAdded.setQuantitationType( qt );
+        tobeAdded.setExpressionExperiment( expressionExperiment );
         byte[] bytes = converter.toBytes( data.toArray() );
         byteSize += bytes.length;
         tobeAdded.setData( bytes );

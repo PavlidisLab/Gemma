@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.web.flow.bibref;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.webflow.Event;
@@ -161,6 +163,13 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
                 context.getFlowScope().setAttribute( "bibliographicReference", bibRef );
             } catch ( NumberFormatException e ) {
                 return error( e );
+            } catch ( IOException e ) {
+                if ( e.getStackTrace()[1].getFileName().startsWith( "HttpURLConnection" )
+                        || e.getMessage().startsWith( "Server returned HTTP response code 502" ) ) {
+                    this.getFormErrors( context ).reject( "http.502", new Object[] { accession },
+                            "There was a problem connecting to NCBI's servers." );
+                    return error();
+                }
             }
         }
         return success();

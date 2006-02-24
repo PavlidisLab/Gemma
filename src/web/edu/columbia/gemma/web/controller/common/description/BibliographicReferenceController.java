@@ -55,7 +55,6 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     /**
      * @param request
      * @param response
-     * @param errors
      * @return
      */
     @SuppressWarnings("unused")

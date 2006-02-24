@@ -18,10 +18,8 @@
  */
 package edu.columbia.gemma.web.controller.common.description;
 
-import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,9 +30,8 @@ import org.springframework.web.servlet.ModelAndView;
 import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
-import edu.columbia.gemma.common.description.DatabaseEntry;
-import edu.columbia.gemma.common.description.ExternalDatabase;
-import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLParser;
+import edu.columbia.gemma.web.util.EntityNotFoundException;
 
 /**
  * Tests the BibliographicReferenceController
@@ -45,49 +42,27 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
     private static Log log = LogFactory.getLog( BibRefControllerTest.class.getName() );
 
-    private BibliographicReferenceController c = null;
     private BibliographicReference br = null;
     private MockHttpServletRequest req = null;
-    private ModelAndView mav = null;
-    private boolean skip = false;
 
     /**
      * Add a bibliographic reference to the database for testing purposes.
      */
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        int pubMedId = 15699352;
 
-        c = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
-
-        /* add a test bibliographicReference to the database. */
         BibliographicReferenceService brs = ( BibliographicReferenceService ) getBean( "bibliographicReferenceService" );
 
-        PubMedXMLFetcher pmf = ( PubMedXMLFetcher ) getBean( "pubMedXmlFetcher" );
+        PubMedXMLParser pmp = new PubMedXMLParser();
+        Collection<BibliographicReference> brl = pmp.parse( getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
+        br = brl.iterator().next();
 
-        /* get bibref over http. if connection cannot be made, set the skip flag. */
-        try {
-            br = pmf.retrieveByHTTP( pubMedId );
+        /* set the bib ref's pubmed accession number to the database entry. */
+        br.setPubAccession( this.getTestPersistentDatabaseEntry() );
 
-            /* create database entry. */
-            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+        /* bibref is now set. Call service to persist to database. */
+        br = brs.findOrCreate( br );
 
-            /* set the accession of database entry to the pubmed id. */
-            de.setAccession( ( new Integer( pubMedId ) ).toString() );
-
-            ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setName( "PubMed" );
-            de.setExternalDatabase( ed );
-
-            /* set the bib ref's pubmed accession number to the database entry. */
-            br.setPubAccession( de );
-
-            /* bibref is now set. Call service to persist to database. */
-            brs.findOrCreate( br );
-
-        } catch ( UnknownHostException e ) {
-            skip = true;
-        }
     }
 
     /**
@@ -96,19 +71,15 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
      * @throws Exception
      */
     public void testDelete() throws Exception {
-        if ( !skip ) {
-            log.debug( "testing delete" );
+        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
+        log.debug( "testing delete" );
 
-            req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
-            req.addParameter( "_eventId", "delete" );
-            req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
-            mav = c.handleRequest( req, new MockHttpServletResponse() );
-            assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
-            assertNotNull( req.getSession().getAttribute( "messages" ) );
-        } else {
-            log.info( "skipped test " + this.getName() );
-        }
-
+        req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
+        req.addParameter( "_eventId", "delete" );
+        req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
+        ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
+        assertTrue( mav != null );
+        assertEquals( "bibRefSearch", mav.getViewName() );
     }
 
     /**
@@ -116,29 +87,24 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
      * 
      * @throws Exception
      */
-    // public void testDeleteOfNonExistingEntry(){
-    // if ( !skip ) {
-    // log.debug( "testing delete" );
-    //            
-    // /* set pubMedId to a non-existent id in gemdtest. */
-    // br.getPubAccession().setAccession("00000000");
-    //            
-    // req = new MockHttpServletRequest( "POST", "Gemma/editBibRef.htm" );
-    // req.addParameter( "_eventId", "delete" );
-    // req.addParameter( "pubMedId", br.getPubAccession().getAccession() );
-    // try{
-    // mav = c.handleRequest( req, new MockHttpServletResponse() );
-    // }
-    // catch(Exception e){
-    // e.printStackTrace();
-    // }
-    //            
-    // assertEquals( "pubMed.GetAll.results.view", mav.getViewName() );
-    // assertNotNull(req.getSession().getAttribute("message"));
-    // } else {
-    // log.info( "skipped test " + this.getName() );
-    // }
-    // }
+    @SuppressWarnings("unchecked")
+    public void testDeleteOfNonExistingEntry() throws Exception {
+        /* set pubMedId to a non-existent id in gemdtest. */
+        req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
+        req.addParameter( "_eventId", "delete" );
+        req.addParameter( "accession", "00000000" );
+        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
+
+        ModelAndView b = brc.handleRequest( req, new MockHttpServletResponse() );
+        assert b != null; // ?
+        assertEquals( "bibRefSearch", b.getViewName() );
+        // in addition there should be a message "0000000 not found".
+        Collection<String> errors = ( Collection<String> ) req.getAttribute( "errors" );
+        assertTrue( errors.size() > 0 );
+        assertTrue( errors.iterator().next().startsWith( "00000000" ) );
+
+    }
+
     /**
      * Tests getting all the bibrefs, which is implemented in
      * {@link edu.columbia.gemma.web.controller.entrez.pubmed.BibliographicReferenceController} in method
@@ -149,10 +115,10 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
     public void testGetAllBibliographicReferences() throws Exception {
         BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
-        req = new MockHttpServletRequest( "GET", "Gemma/bibRefs.htm" );
+        req = new MockHttpServletRequest( "GET", "/bibRef/showAllBibRef.html" );
 
-        mav = brc.handleRequest( req, ( HttpServletResponse ) null );
-
+        ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
+        assertTrue( mav != null );
         Map m = mav.getModel();
 
         assertNotNull( m.get( "bibliographicReferences" ) );

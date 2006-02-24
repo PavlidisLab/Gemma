@@ -6,6 +6,7 @@
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/gen"/>
 	<classpathentry output="web/WEB-INF/classes" kind="src" path="src/impl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry sourcepath="/MAVEN_REPO/servlet/apache-tomcat-5.5.15-src/servletapi/jsr152/src/share" kind="var" path="MAVEN_REPO/servlet/jars/servlet.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-webflow-pr5/dist/spring-webflow-src-pr5.zip" kind="var" path="MAVEN_REPO/spring/jars/spring-webflow-pr5.jar">
 		<attributes>
 			<attribute value="file:/C:/java/.maven/repository/spring/spring-webflow-pr5/doc/api/" name="javadoc_location"/>
@@ -18,7 +19,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-dbutils/jars/commons-dbutils-1.0.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/commons-logging/commons-logging-1.0.4-src/src/java" kind="var" path="MAVEN_REPO/commons-logging/jars/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-net/jars/commons-net-1.1.0.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/commons-net/jars/commons-net-1.3.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/commons-configuration/jars/commons-configuration-1.1.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/commons-beanutils/commons-beanutils-1.7.0-src/src/java" kind="var" path="MAVEN_REPO/commons-beanutils/jars/commons-beanutils-1.7.0.jar">
 		<attributes>
@@ -85,7 +86,11 @@
 			<attribute value="file:/C:/java/.maven/repository/ant/apache-ant-1.6.5/docs/manual/api/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="MAVEN_REPO/rserve/jars/JRclient-RE817.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/rserve/src" kind="var" path="MAVEN_REPO/rserve/jars/JRclient-RE817.jar">
+		<attributes>
+			<attribute value="http://stats.math.uni-augsburg.de/Rserve/dist/JRclient/X/JavaDoc/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/MAVEN_REPO/spring/springmodules-0.2/src/java" kind="var" path="MAVEN_REPO/spring/jars/springmodules-validator-0.2.jar">
 		<attributes>
 			<attribute value="file:/C:/java/.maven/repository/spring/springmodules-0.2/docs/api/" name="javadoc_location"/>
@@ -102,15 +107,21 @@
 	<classpathentry kind="var" path="MAVEN_REPO/struts/jars/struts-1.2.7.jar"/>
 	<classpathentry sourcepath="/MAVEN_REPO/dwr/dwr-1.0-src/java" kind="var" path="MAVEN_REPO/dwr/jars/dwr-1.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/opensymphony/jars/clickstream-1.0.3.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-fileupload-1.1.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/xalan-2.6.0.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/commons-net-1.3.0.jar"/>
+	<classpathentry kind="var" path="MAVEN_REPO/xalan/jars/xalan-2.6.0.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/servlet/apache-tomcat-5.5.15-src/jasper/jasper2/src/share" kind="var" path="TOMCAT_HOME/common/lib/jasper-runtime.jar">
+		<attributes>
+			<attribute value="http://tomcat.apache.org/tomcat-5.5-doc/jasper/docs/api" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="MAVEN_REPO/commons-io/jars/commons-io-1.1.jar"/>
+	<classpathentry sourcepath="/MAVEN_REPO/testng/testng/src/main" kind="var" path="MAVEN_REPO/testng/jars/testng-4.5.2-jdk15.jar"/>
+	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/org.mortbay.jetty-5.1.10.jar"/>
-	<classpathentry kind="lib" path="web/WEB-INF/lib/javax.servlet.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/commons-el.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/jasper-compiler.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/jasper-runtime.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/tools.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/jetty/jars/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="web/WEB-INF/lib/javax.servlet.jar"/>
 	<classpathentry kind="output" path="web/WEB-INF/classes"/>
 </classpath>

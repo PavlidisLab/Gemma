@@ -36,6 +36,7 @@ import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.designElement.DesignElement;
+import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.expression.Preprocessor;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 import edu.columbia.gemma.util.ConfigUtils;
@@ -112,8 +113,10 @@ public class MageMLPreprocessor implements Preprocessor {
      * @param dimensions
      * @throws IOException
      */
-    public void preprocessStreams( List<InputStream> streams, List<BioAssay> bioAssays, BioAssayDimensions dimensions )
-            throws IOException {
+    public void preprocessStreams( List<InputStream> streams, ExpressionExperiment expressionExperiment,
+            List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
+        assert expressionExperiment != null;
+        rdp.setExpressionExperiment( expressionExperiment );
         rdp.setDimensions( dimensions );
         rdp.setBioAssays( bioAssays );
         rdp.setSeparator( ' ' );

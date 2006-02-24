@@ -60,7 +60,7 @@ public class QuantileNormalizerTest extends TestCase {
     public void tearDown() throws Exception {
         super.tearDown();
         tester = null;
-        qn.cleanup();
+        if ( connected ) qn.cleanup();
     }
 
     /*

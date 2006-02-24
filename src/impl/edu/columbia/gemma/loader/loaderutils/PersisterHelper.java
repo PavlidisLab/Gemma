@@ -731,7 +731,7 @@ public class PersisterHelper implements Persister {
 
         if ( existing != null ) {
             assert existing.getId() != null;
-            log.info( "Array design \"" + existing.getName()
+            log.debug( "Array design \"" + existing.getName()
                     + "\" already exists in database, checking if update is needed." );
 
             int numExistingCompositeSequences = arrayDesignService.getCompositeSequenceCount( existing );
@@ -742,7 +742,7 @@ public class PersisterHelper implements Persister {
 
             if ( numExistingCompositeSequences >= numCompositeSequencesInNew
                     && numExistingReporters >= numReportersInNew ) {
-                log.warn( "Number of design elements in existing version of " + arrayDesign
+                log.debug( "Number of design elements in existing version of " + arrayDesign
                         + " is the same or greater (" + numExistingCompositeSequences
                         + " composite sequences in existing design, updated one has " + numCompositeSequencesInNew
                         + ", " + numExistingReporters + " reporters in existing design, updated one has "
@@ -769,7 +769,7 @@ public class PersisterHelper implements Persister {
             }
 
             if ( numExistingReporters < numReportersInNew ) {
-                log.warn( "Array Design " + arrayDesign + " exists but reporters are to be updated ("
+                log.debug( "Array Design " + arrayDesign + " exists but reporters are to be updated ("
                         + numExistingReporters + " reporters in existing design, updated one has " + numReportersInNew
                         + ")" );
 
@@ -786,7 +786,7 @@ public class PersisterHelper implements Persister {
             }
             return existing;
         }
-        log.info( "Array Design " + arrayDesign + " is new, processing..." );
+        log.debug( "Array Design " + arrayDesign + " is new, processing..." );
         return persistNewArrayDesign( arrayDesign );
     }
 
@@ -1045,6 +1045,8 @@ public class PersisterHelper implements Persister {
         if ( vector == null ) return null;
         DesignElement designElement = vector.getDesignElement();
 
+        vector.setExpressionExperiment( persistExpressionExperiment( vector.getExpressionExperiment() ) );
+
         if ( designElement instanceof CompositeSequence ) {
             CompositeSequence cs = compositeSequenceService.find( ( ( CompositeSequence ) designElement ) );
             if ( cs == null )
@@ -1074,6 +1076,8 @@ public class PersisterHelper implements Persister {
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
         if ( entity == null ) return null;
+
+        if ( !isTransient( entity ) ) return entity;
 
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );

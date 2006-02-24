@@ -100,6 +100,12 @@ public class AllTests {
         TestSuite suite = new TestSuite( "Test for edu.columbia.gemma" );
         // $JUnit-BEGIN$
 
+        // analysis
+        suite.addTestSuite( QuantileNormalizerTest.class );
+        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
+        suite.addTestSuite( RMATest.class );
+        suite.addTestSuite( RMABackgroundAdjusterTest.class );
+
         // common.auditAndSecurity
         suite.addTestSuite( AuditTrailDaoTest.class );
         suite.addTestSuite( UserRoleServiceImplTest.class );
@@ -213,12 +219,6 @@ public class AllTests {
 
         // web.controller.flow.entrez.pubmed
         // suite.addTestSuite( DetailBibRefFlowTests.class ); // no tests.
-
-        // analysis (last because these are slow)
-        suite.addTestSuite( QuantileNormalizerTest.class );
-        suite.addTestSuite( RMATest.class );
-        suite.addTestSuite( RMABackgroundAdjusterTest.class );
-        suite.addTestSuite( TwoColorArrayLoessNormalizerTest.class );
 
         // $JUnit-END$
 

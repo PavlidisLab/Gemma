@@ -32,6 +32,8 @@ import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -41,6 +43,8 @@ import org.springframework.test.AbstractTransactionalSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
 import uk.ltd.getahead.dwr.create.SpringCreator;
+import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
@@ -67,6 +71,24 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected PersisterHelper persisterHelper;
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
+
+    /**
+     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     * The accession and ExternalDatabase name are set to random strings.
+     * 
+     * @return
+     */
+    public DatabaseEntry getTestPersistentDatabaseEntry() {
+        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
+
+        /* set the accession of database entry to the pubmed id. */
+        result.setAccession( RandomStringUtils.random( 10 ) + "_test" );
+
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setName( RandomStringUtils.random( 10 ) + "_testdb" );
+        result.setExternalDatabase( ed );
+        return ( DatabaseEntry ) persisterHelper.persist( result );
+    }
 
     public BaseTransactionalSpringContextTest() {
         super();
