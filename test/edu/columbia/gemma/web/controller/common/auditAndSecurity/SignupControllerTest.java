@@ -24,7 +24,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 
-import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserRole;
@@ -37,7 +37,7 @@ import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
  * @author keshav
  * @version $Id$
  */
-public class SignupControllerTest extends BaseControllerTestCase {
+public class SignupControllerTest extends BaseTransactionalSpringContextTest {
 
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
@@ -52,24 +52,17 @@ public class SignupControllerTest extends BaseControllerTestCase {
     /**
      * @throws Exception
      */
-    public void setUp() throws Exception {
-
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
 
-        signupController = ( SignupController ) ctx.getBean( "signupController" );
-        persisterHelper = ( PersisterHelper ) ctx.getBean( "persisterHelper" );
+        signupController = ( SignupController ) getBean( "signupController" );
+        persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" );
         testUser = User.Factory.newInstance();
         userRole = UserRole.Factory.newInstance();
-        userService = ( UserService ) ctx.getBean( "userService" );
+        userService = ( UserService ) getBean( "userService" );
 
-    }
-
-    /**
-     * Tear down objects.
-     */
-    public void tearDown() {
-        signupController = null;
     }
 
     /**

@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
@@ -30,35 +29,29 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.description.OntologyEntry;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExperimentalFactor;
-import edu.columbia.gemma.expression.experiment.ExperimentalFactorDao;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
 /**
  * Tests the ExpressionExperimentController.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
+public class ExpressionExperimentControllerTest extends BaseTransactionalSpringContextTest {
     private static Log log = LogFactory.getLog( ExpressionExperimentControllerTest.class.getName() );
-
-    private ExperimentalFactorDao efDao = null;
 
     /**
      * Add a expressionExperiment to the database for testing purposes. Includes associations.
      */
     @SuppressWarnings("unchecked")
-    public void setUp() throws Exception {
-
+    public void onSetUpInTranasaction() throws Exception {
+        super.onSetUpInTransaction();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( "Expression Experiment" );
         /* Database entry is mandatory for expression experiments. */
@@ -110,8 +103,7 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
         log.debug( "bioassays => expression experiment." );
         ee.setBioAssays( baCol );
 
-        /* Yes, we have access to the ctx in the setup. */
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         log.debug( "Loading test expression experiment." );
         if ( ees.findByName( ee.getName() ) == null ) ees.findOrCreate( ee );
     }
@@ -125,8 +117,7 @@ public class ExpressionExperimentControllerTest extends BaseControllerTestCase {
      */
     public void testGetExpressionExperiments() throws Exception {
 
-        ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
-                .getBean( "expressionExperimentController" );
+        ExpressionExperimentController c = ( ExpressionExperimentController ) getBean( "expressionExperimentController" );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
                 "/expressionExperiment/showAllExpressionExperiments.html" );

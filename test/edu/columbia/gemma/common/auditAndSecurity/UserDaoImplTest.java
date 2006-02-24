@@ -23,7 +23,7 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 
 /**
  * Tests the Contact, Person, User interitance hierarchy and the association between User and UserRole.
@@ -31,22 +31,22 @@ import edu.columbia.gemma.BaseDAOTestCase;
  * @author keshav
  * @version $Id$
  */
-public class UserDaoImplTest extends BaseDAOTestCase {
+public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
 
-    private UserDao dao = null;
+    private UserDao userDao;
     private final Log log = LogFactory.getLog( UserDaoImplTest.class );
-    private User testUser = null;
-    private UserRole ur = null;
+    private User testUser;
+    private UserRole ur;
 
     public final void testCreateUser() throws Exception {
-        dao.create( testUser );
+        assert testUser != null;
+        userDao.create( testUser );
     }
 
     @SuppressWarnings("unchecked")
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        dao = ( UserDao ) ctx.getBean( "userDao" );
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
 
         // User Object
         testUser = User.Factory.newInstance();
@@ -57,7 +57,7 @@ public class UserDaoImplTest extends BaseDAOTestCase {
 
         String adminName = "admin";
         String userName = "user";
-        User checkUser = dao.findByUserName( adminName );
+        User checkUser = userDao.findByUserName( adminName );
 
         if ( ( checkUser == null ) ) {
             // User Object
@@ -76,16 +76,18 @@ public class UserDaoImplTest extends BaseDAOTestCase {
         testUser.setConfirmPassword( "root" );
         testUser.setPasswordHint( "test hint" );
         AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         testUser.setAuditTrail( ad );
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         testUser.getRoles().add( ur );
 
         // dao.create( testUser );
     }
 
-    protected void tearDown() throws Exception {
-        // dao.remove( testUser );
-        dao = null;
+    /**
+     * @param useDao The useDao to set.
+     */
+    public void setUserDao( UserDao useDao ) {
+        this.userDao = useDao;
     }
 }

@@ -48,10 +48,10 @@ public class SpringContextUtil {
     private static Log log = LogFactory.getLog( SpringContextUtil.class.getName() );
     private static BeanFactory ctx = null;
 
-     /**
-         * @param testing If true, it will get a test configured-BeanFactory
-         * @return BeanFactory
-         */
+    /**
+     * @param testing If true, it will get a test configured-BeanFactory
+     * @return BeanFactory
+     */
     public static BeanFactory getApplicationContext( boolean testing ) {
         if ( ctx == null ) {
             String[] paths = getConfigLocations( testing );
@@ -69,6 +69,7 @@ public class SpringContextUtil {
      * @param testing If true, it will get a test configured-BeanFactory
      * @param fresh If true, returns a completely new BeanFactory. Otherwise, we try to reuse one.
      * @return BeanFactory
+     * @deprecated
      */
     public static BeanFactory getXmlWebApplicationContext( boolean testing, boolean fresh ) {
         if ( !fresh ) {
@@ -100,17 +101,19 @@ public class SpringContextUtil {
      * For use in tests only.
      * <p>
      * see http://fishdujour.typepad.com/blog/2005/02/junit_testing_w.html
+     * 
+     * @deprecated You should override BaseDependencyInjectionSpringContextTest and call its grantAuthority method instead.
      */
     public static void grantAuthorityForTests() {
-
-        assert ctx != null;
 
         // Grant all roles to test user.
         TestingAuthenticationToken token = new TestingAuthenticationToken( "pavlab", "pavlab", new GrantedAuthority[] {
                 new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );
 
         // Override the regular spring configuration
+        assert ctx != null;
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
+
         List<TestingAuthenticationProvider> list = new ArrayList<TestingAuthenticationProvider>();
         list.add( new TestingAuthenticationProvider() );
         providerManager.setProviders( list );
@@ -125,6 +128,7 @@ public class SpringContextUtil {
      * Xml
      * 
      * @return XmlWebApplicationContext
+     * @deprecated
      */
     public static BeanFactory getXmlWebApplicationContext( boolean testing ) {
         if ( ctx == null ) {

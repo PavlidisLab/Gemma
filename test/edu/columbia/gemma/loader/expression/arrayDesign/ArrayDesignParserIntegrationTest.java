@@ -23,7 +23,7 @@ import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 
 /**
  * Loads the database with ArrayDesigns. This test is more representative of integration testing than unit testing as it
@@ -32,7 +32,7 @@ import edu.columbia.gemma.BaseDAOTestCase;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignParserIntegrationTest extends BaseDAOTestCase {
+public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 
     private ArrayDesignParser arrayDesignParser = null;
@@ -41,18 +41,12 @@ public class ArrayDesignParserIntegrationTest extends BaseDAOTestCase {
     /**
      * set up
      */
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         arrayDesignParser = new ArrayDesignParser();
         arrayDesignLoader = new ArrayDesignPersister();
-        arrayDesignLoader.setPersisterHelper( this.getPersisterHelper() );
-    }
-
-    /**
-     * tear down
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
+        arrayDesignLoader.setPersisterHelper( this.persisterHelper );
     }
 
     /**
@@ -64,7 +58,7 @@ public class ArrayDesignParserIntegrationTest extends BaseDAOTestCase {
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/array.txt" );
         arrayDesignParser.parse( is );
-        this.getPersisterHelper().persist( arrayDesignParser.getResults() );
+        persisterHelper.persist( arrayDesignParser.getResults() );
     }
 
 }

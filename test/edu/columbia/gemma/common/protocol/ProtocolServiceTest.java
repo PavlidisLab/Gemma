@@ -18,31 +18,27 @@
  */
 package edu.columbia.gemma.common.protocol;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  */
-public class ProtocolServiceTest extends BaseDAOTestCase {
+public class ProtocolServiceTest extends BaseTransactionalSpringContextTest {
     ProtocolDao protocolDao = null;
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        protocolDao = ( ProtocolDao ) ctx.getBean( "protocolDao" );
-
+    /**
+     * @param protocolDao The protocolDao to set.
+     */
+    public void setProtocolDao( ProtocolDao protocolDao ) {
+        this.protocolDao = protocolDao;
     }
 
     /**
      * TODO add test implementation details.
      */
     public void testfindOrCreate() {
- //       protocolDao.findOrCreate( Protocol.Factory.newInstance() );
+        // protocolDao.findOrCreate( Protocol.Factory.newInstance() );
 
     }
 
@@ -50,7 +46,7 @@ public class ProtocolServiceTest extends BaseDAOTestCase {
      * TODO add test implementation details.
      */
     public void testFind() {
-   //     protocolDao.find( Protocol.Factory.newInstance() );
+        // protocolDao.find( Protocol.Factory.newInstance() );
     }
 
 }

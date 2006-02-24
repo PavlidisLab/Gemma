@@ -122,7 +122,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @param recipient
      * @param permission
      */
-    public void addPermission( Method method, Object object ) {
+    public void addPermission( Object object ) {
 
         AbstractBasicAclEntry simpleAclEntry = getAclEntry( object );
 
@@ -135,7 +135,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
                 log.debug( "Added permission " + getAuthority() + " for recipient " + getUsername() + " on " + object );
             }
         } catch ( DataIntegrityViolationException ignored ) {
-            
 
             // This happens in two situations:
             // 1. When a 'findOrCreate' resulted in just a 'find'.
@@ -143,17 +142,17 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             //              
             // Either way, we can ignore it.
             //              
-            
-            
-          //  if ( method.getName().equals( "findOrCreate" ) ) {
-                // do nothing. This happens when the object already exists and has permissions assigned (for example,
-                // findOrCreate resulted in a 'find')
-                // FIXME this is an unpleasant hack.
-          //  } else {
-                // something else must be wrong
-          //      log.fatal( method.getName() + " on " + getAuthority() + " for recipient " + getUsername() + " on " + object, ignored );
-              //  throw ( ignored );
-          //  }
+
+            // if ( method.getName().equals( "findOrCreate" ) ) {
+            // do nothing. This happens when the object already exists and has permissions assigned (for example,
+            // findOrCreate resulted in a 'find')
+            // FIXME this is an unpleasant hack.
+            // } else {
+            // something else must be wrong
+            // log.fatal( method.getName() + " on " + getAuthority() + " for recipient " + getUsername() + " on " +
+            // object, ignored );
+            // throw ( ignored );
+            // }
         }
 
     }
@@ -248,13 +247,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
             if ( Securable.class.isAssignableFrom( propertyType ) ) {
                 Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
-                 if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
+                if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
                 processObject( m, associatedObject );
             } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
                 Collection associatedObjects = ( Collection ) ReflectionUtil.getProperty( object, descriptor );
                 for ( Object object2 : associatedObjects ) {
                     if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
-                         if ( log.isDebugEnabled() ) {
+                        if ( log.isDebugEnabled() ) {
                             log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
                                     + ", Cascade=" + cs );
                         }
@@ -288,7 +287,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         // log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         // }
         if ( CrudInterceptorUtils.methodIsCreate( m ) ) {
-            addPermission( m, object );
+            addPermission( object );
             processAssociations( m, object );
         } else if ( CrudInterceptorUtils.methodIsDelete( m ) ) {
             deletePermission( object );

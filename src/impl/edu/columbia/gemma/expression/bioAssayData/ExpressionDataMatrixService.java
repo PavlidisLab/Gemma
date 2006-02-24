@@ -90,6 +90,8 @@ public class ExpressionDataMatrixService {
             matrix.addRowName( name );
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
+            assert vals.length == bioAssays.size() : "Number of values in vector (" + vals.length
+                    + ") don't match number of Bioassays (" + bioAssays.size() + ")";
             for ( int i = 0; i < vals.length; i++ ) {
                 matrix.setQuick( rowNum, i, vals[i] );
             }

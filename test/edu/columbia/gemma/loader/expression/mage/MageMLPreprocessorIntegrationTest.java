@@ -30,7 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
 
 /**
@@ -39,25 +39,30 @@ import edu.columbia.gemma.expression.bioAssay.BioAssay;
  * @author keshav
  * @version $Id$
  */
-public class MageMLPreprocessorIntegrationTest extends BaseDAOTestCase {
+public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( MageMLPreprocessorIntegrationTest.class );
 
     private MageMLParser mageMLParser = null;
     private MageMLConverter mageMLConverter = null;
     private MageMLPreprocessor mageMLPreprocessor = null;
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        this.mageMLPreprocessor = new MageMLPreprocessor( "testPreprocess" );
-        this.mageMLParser = ( MageMLParser ) ctx.getBean( "mageMLParser" );
-        this.mageMLConverter = ( MageMLConverter ) ctx.getBean( "mageMLConverter" );
-        mageMLPreprocessor.setPersisterHelper( this.getPersisterHelper() );
+    /**
+     * @param mageMLConverter The mageMLConverter to set.
+     */
+    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
+        this.mageMLConverter = mageMLConverter;
+    }
+
+    /**
+     * @param mageMLParser The mageMLParser to set.
+     */
+    public void setMageMLParser( MageMLParser mageMLParser ) {
+        this.mageMLParser = mageMLParser;
     }
 
     @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
+    public void onSetUpBeforeTransaction() throws Exception {
+        this.mageMLPreprocessor = new MageMLPreprocessor( "testPreprocess" );
     }
 
     /**

@@ -82,7 +82,7 @@ public class ManualAuthenticationProcessing {
      * @param username
      * @param password
      */
-    public void validateRequest( String username, String password ) {
+    public boolean validateRequest( String username, String password ) {
 
         Authentication authResult;
 
@@ -90,14 +90,14 @@ public class ManualAuthenticationProcessing {
             authResult = attemptAuthentication( username, password );
         } catch ( AuthenticationException failed ) {
             // Authentication failed
-            logger.error( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **" );
+            logger.error( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **",
+                    failed );
             unsuccessfulAuthentication( failed );
-            return;
+            return false;
         }
 
         successfulAuthentication( authResult );
-
-        return;
+        return true;
     }
 
     /**
@@ -128,6 +128,8 @@ public class ManualAuthenticationProcessing {
      * @throws IOException
      */
     protected void unsuccessfulAuthentication( AuthenticationException failed ) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         SecurityContextHolder.getContext().setAuthentication( null );
         logger.debug( "Updated SecurityContextHolder to contain null Authentication" );
         logger.debug( "Authentication request failed: " + failed.toString() );

@@ -20,36 +20,22 @@ package edu.columbia.gemma.loader.expression.arrayExpress;
 
 import java.io.File;
 
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
 
 import edu.columbia.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
-import edu.columbia.gemma.loader.expression.mage.MageBaseTest;
 import edu.columbia.gemma.loader.loaderutils.FtpArchiveFetcher;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcherTest extends MageBaseTest {
+public class DataFileFetcherTest extends TestCase {
 
-    PersisterHelper ml;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        // check the configuration.
-    }
+    private static Log log = LogFactory.getLog( DataFileFetcherTest.class.getName() );
 
     /*
      * Test method for 'edu.columbia.gemma.loader.expression.arrayExpress.DataFileFetcher.fetch(String)'
@@ -69,6 +55,7 @@ public class DataFileFetcherTest extends MageBaseTest {
             return;
         }
         f.fetch( "SMDB-14" );
+        // FIMXE no good fail condition!
 
     }
 }

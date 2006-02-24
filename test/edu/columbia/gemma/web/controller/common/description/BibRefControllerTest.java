@@ -29,7 +29,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
-import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.DatabaseEntry;
@@ -37,14 +37,11 @@ import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 
 /**
  * Tests the BibliographicReferenceController
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
  */
-public class BibRefControllerTest extends BaseControllerTestCase {
+public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
     private static Log log = LogFactory.getLog( BibRefControllerTest.class.getName() );
 
     private BibliographicReferenceController c = null;
@@ -56,16 +53,16 @@ public class BibRefControllerTest extends BaseControllerTestCase {
     /**
      * Add a bibliographic reference to the database for testing purposes.
      */
-    public void setUp() throws Exception {
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         int pubMedId = 15699352;
 
-        c = ( BibliographicReferenceController ) ctx.getBean( "bibliographicReferenceController" );
+        c = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
         /* add a test bibliographicReference to the database. */
-        BibliographicReferenceService brs = ( BibliographicReferenceService ) ctx
-                .getBean( "bibliographicReferenceService" );
+        BibliographicReferenceService brs = ( BibliographicReferenceService ) getBean( "bibliographicReferenceService" );
 
-        PubMedXMLFetcher pmf = ( PubMedXMLFetcher ) ctx.getBean( "pubMedXmlFetcher" );
+        PubMedXMLFetcher pmf = ( PubMedXMLFetcher ) getBean( "pubMedXmlFetcher" );
 
         /* get bibref over http. if connection cannot be made, set the skip flag. */
         try {
@@ -86,11 +83,6 @@ public class BibRefControllerTest extends BaseControllerTestCase {
         } catch ( UnknownHostException e ) {
             skip = true;
         }
-    }
-
-    public void tearDown() {
-        c = null;
-        br = null;
     }
 
     /**
@@ -150,8 +142,7 @@ public class BibRefControllerTest extends BaseControllerTestCase {
      * @throws Exception
      */
     public void testGetAllBibliographicReferences() throws Exception {
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) ctx
-                .getBean( "bibliographicReferenceController" );
+        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
         req = new MockHttpServletRequest( "GET", "Gemma/bibRefs.htm" );
 

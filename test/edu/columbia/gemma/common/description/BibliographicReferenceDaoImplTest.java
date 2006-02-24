@@ -25,8 +25,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
@@ -37,24 +38,23 @@ import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
  * @author pavlidis
  * @version $Id$
  */
-public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
+public class BibliographicReferenceDaoImplTest extends BaseTransactionalSpringContextTest {
 
-    private BibliographicReferenceDao dao = null;
-    private ExternalDatabaseDao exdbdao = null;
-    private SessionFactory sf = null;
-    private BibliographicReference testBibRef = null;
+    private BibliographicReferenceDao bibliographicReferenceDao = null;
     private DatabaseEntry de = null;
+    private ExternalDatabaseDao externalDatabaseDao = null;
+    private SessionFactory sessionFactory = null;
+    private BibliographicReference testBibRef = null;
+
     ExternalDatabase ed = null;
 
     /*
      * Call to create should persist the BibliographicReference and DatabaseEntry (cascade=all).
      */
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Override
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         testBibRef = BibliographicReference.Factory.newInstance();
-        dao = ( BibliographicReferenceDao ) ctx.getBean( "bibliographicReferenceDao" );
-        exdbdao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
-        sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
 
         /*
          * BibliographicReference has composition relationship with DatabaseEntry.
@@ -72,31 +72,54 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
         ed.setLocalInstallDbName( "testDatabase" );
         ed.setName( "database" );
         AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         ed.setAuditTrail( ad );
-        ed = ( ExternalDatabase ) exdbdao.create( ed );
+        ed = ( ExternalDatabase ) externalDatabaseDao.create( ed );
 
         de.setExternalDatabase( ed );
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );
         ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
 
         testBibRef.setAuditTrail( ad );
 
-        dao.create( testBibRef );
+        bibliographicReferenceDao.create( testBibRef );
+    }
+
+    /**
+     * @param dao The dao to set.
+     */
+    public void setBibliographicReferenceDao( BibliographicReferenceDao dao ) {
+        this.bibliographicReferenceDao = dao;
+    }
+
+    /**
+     * @param exdbdao The exdbdao to set.
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao exdbdao ) {
+        this.externalDatabaseDao = exdbdao;
+    }
+
+    /**
+     * @param persisterHelper The persisterHelper to set.
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    public final void testfind() throws Exception {
+        BibliographicReference result = this.bibliographicReferenceDao.find( testBibRef );
+        assertTrue( result != null );
     }
 
     /*
-     * Call to remove should delete both BibliographicReference and DatabaseEntry (composition and cascade=all).
+     * Class under test for Object findByExternalId(int, java.lang.String)
      */
-    protected void tearDown() throws Exception {
-
-        dao.remove( testBibRef );
-        exdbdao.remove( ed );
-        dao = null;
-        exdbdao = null;
+    public final void testFindByExternalIdentString() {
+        testBibRef = bibliographicReferenceDao.findByExternalId( de );
+        assertTrue( testBibRef != null );
     }
 
     /*
@@ -105,7 +128,8 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
     public final void testFindByExternalIdentStringHQL() throws Exception {
         String query = "from BibliographicReferenceImpl b where b.pubAccession=:externalId";
 
-        Session sess = sf.openSession();
+        sessionFactory = ( SessionFactory ) getContext( super.getConfigLocations() ).getBean( "sessionFactory" );
+        Session sess = sessionFactory.openSession();
         Transaction trans = sess.beginTransaction();
 
         Query q = sess.createQuery( query );
@@ -122,16 +146,4 @@ public class BibliographicReferenceDaoImplTest extends BaseDAOTestCase {
 
     }
 
-    /*
-     * Class under test for Object findByExternalId(int, java.lang.String)
-     */
-    public final void testFindByExternalIdentString() {
-        testBibRef = dao.findByExternalId( de );
-        assertTrue( testBibRef != null );
-    }
-
-    public final void testfind() throws Exception {
-        BibliographicReference result = this.dao.find( testBibRef );
-        assertTrue( result != null );
-    }
 }

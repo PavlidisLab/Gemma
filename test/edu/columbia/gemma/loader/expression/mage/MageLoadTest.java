@@ -38,15 +38,10 @@ public class MageLoadTest extends MageBaseTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
 
-        this.setMageMLConverter( ( MageMLConverter ) ctx.getBean( "mageMLConverter" ) );
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+        this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
     }
 
     // /*
@@ -98,7 +93,7 @@ public class MageLoadTest extends MageBaseTest {
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
-        this.getPersisterHelper().persist( result );
+        persisterHelper.persist( result );
     }
 
     /**
@@ -123,7 +118,7 @@ public class MageLoadTest extends MageBaseTest {
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
-        this.getPersisterHelper().persist( result );
+        persisterHelper.persist( result );
     }
 
     /**

@@ -21,7 +21,7 @@ package edu.columbia.gemma.security.interceptor;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.protocol.Hardware;
 import edu.columbia.gemma.common.protocol.HardwareService;
@@ -32,6 +32,7 @@ import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * Tests of ACL management.
@@ -39,20 +40,13 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author keshav
  * @version $Id$
  */
-public class PersistAclInterceptorTest extends BaseDAOTestCase {
+public class PersistAclInterceptorTest extends BaseTransactionalSpringContextTest {
     private BasicAclExtendedDao basicAclExtendedDao;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        basicAclExtendedDao = ( BasicAclExtendedDao ) ctx.getBean( "basicAclExtendedDao" );
-
-    } /*
-         * @see TestCase#tearDown()
-         */
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
+    private PersisterHelper persisterHelper;
+    ArrayDesignService arrayDesignService;
+    ExpressionExperimentService expressionExperimentService;
+    ProtocolService protocolService;
+    HardwareService hardwareService;
 
     /**
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
@@ -64,16 +58,15 @@ public class PersistAclInterceptorTest extends BaseDAOTestCase {
     public void testAddPermissionsInterceptor() throws Exception {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "fooblyDoobly" );
-        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
 
-        ad = ( ArrayDesign ) this.getPersisterHelper().persist( ad );
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) == null ) {
-            ads.remove( ad );
+            arrayDesignService.remove( ad );
             fail( "Failed to create ACL for " + ad );
         }
 
-        ads.remove( ad );
+        arrayDesignService.remove( ad );
         // make sure it got deleted.
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) != null ) {
             fail( "Failed to  delete ACL for " + ad );
@@ -85,7 +78,6 @@ public class PersistAclInterceptorTest extends BaseDAOTestCase {
      * @throws Exception
      */
     public void testCascadeCreateAndDelete() throws Exception {
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );
@@ -93,7 +85,7 @@ public class PersistAclInterceptorTest extends BaseDAOTestCase {
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         ed.setName( "foo" );
         ee.getExperimentalDesigns().add( ed );
-        ee = ( ExpressionExperiment ) this.getPersisterHelper().persist( ee );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );
@@ -105,7 +97,7 @@ public class PersistAclInterceptorTest extends BaseDAOTestCase {
             fail( "Failed to cascade create ACL for " + ed );
         }
 
-        ees.delete( ee );
+        expressionExperimentService.delete( ee );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) != null ) {
             fail( "Failed to  delete ACL for " + ee );
@@ -118,41 +110,81 @@ public class PersistAclInterceptorTest extends BaseDAOTestCase {
     }
 
     public void testNoCascadeDelete() throws Exception {
-        ProtocolService ps = ( ProtocolService ) ctx.getBean( "protocolService" );
         Protocol p = Protocol.Factory.newInstance();
         p.setName( "protocol" );
 
         Hardware h = Hardware.Factory.newInstance();
         h.setName( "hardware" );
 
-        HardwareService hs = ( HardwareService ) ctx.getBean( "hardwareService" );
-        h = ( Hardware ) this.getPersisterHelper().persist( h );
+        h = ( Hardware ) persisterHelper.persist( h );
         assert h != null;
         AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         p.setAuditTrail( ad );
 
         p.getHardwares().add( h );
-        p = ps.findOrCreate( p );
+        p = protocolService.findOrCreate( p );
 
         // make sure the ACL for h is there in the first place.
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( h ) ) == null ) {
             fail( "No ACL created or exists for " + h );
         }
 
-        ps.remove( p );
+        protocolService.remove( p );
 
         // make sure the ACL for h is still there
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( h ) ) == null ) {
             fail( "Inappropriate cascade delete of ACL for " + h );
         }
 
-        hs.remove( h );
+        hardwareService.remove( h );
 
         // now it should be gone.
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( h ) ) != null ) {
             fail( "Failed to  delete ACL for " + h );
         }
 
+    }
+
+    /**
+     * @param basicAclExtendedDao The basicAclExtendedDao to set.
+     */
+    public void setBasicAclExtendedDao( BasicAclExtendedDao basicAclExtendedDao ) {
+        this.basicAclExtendedDao = basicAclExtendedDao;
+    }
+
+    /**
+     * @param persisterHelper The persisterHelper to set.
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param arrayDesignService The arrayDesignService to set.
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param expressionExperimentService The expressionExperimentService to set.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param hardwareService The hardwareService to set.
+     */
+    public void setHardwareService( HardwareService hardwareService ) {
+        this.hardwareService = hardwareService;
+    }
+
+    /**
+     * @param protocolService The protocolService to set.
+     */
+    public void setProtocolService( ProtocolService protocolService ) {
+        this.protocolService = protocolService;
     }
 }

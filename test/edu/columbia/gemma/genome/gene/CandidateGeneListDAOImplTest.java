@@ -23,50 +23,45 @@ import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.Person;
 import edu.columbia.gemma.genome.Gene;
 import edu.columbia.gemma.genome.GeneDao;
 import edu.columbia.gemma.genome.Taxon;
 import edu.columbia.gemma.genome.TaxonDao;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004, 2006 University of British Columbia
- * 
  * @author daq2101
  * @version $Id$
  */
-public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
+public class CandidateGeneListDAOImplTest extends BaseTransactionalSpringContextTest {
     private final Log log = LogFactory.getLog( CandidateGeneListDAOImplTest.class );
 
-    private CandidateGeneListDao daoCGL = null;
-    private TaxonDao daoTaxon = null;
-    private GeneDao daoGene = null;
-    private Gene g = null;
-    private Gene g2 = null;
-    private Taxon t = null;
-    private CandidateGeneList cgl = null;
+    private CandidateGeneListDao candidateGeneListDao;
+    private TaxonDao taxonDao;
+    private GeneDao geneDao;
+    private PersisterHelper persisterHelper;
+    private Gene g;
+    private Gene g2;
+    private Taxon t;
+    private CandidateGeneList candidateGeneList;
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        daoCGL = ( CandidateGeneListDao ) ctx.getBean( "candidateGeneListDao" );
-        daoGene = ( GeneDao ) ctx.getBean( "geneDao" );
-        daoTaxon = ( TaxonDao ) ctx.getBean( "taxonDao" );
-
-        cgl = CandidateGeneList.Factory.newInstance();
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+        candidateGeneList = CandidateGeneList.Factory.newInstance();
         AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
-        cgl.setAuditTrail( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
+        candidateGeneList.setAuditTrail( ad );
 
         t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "Mus musculus" );
-        t = daoTaxon.findOrCreate( t );
+        t = taxonDao.findOrCreate( t );
         ad = AuditTrail.Factory.newInstance();
         g = Gene.Factory.newInstance();
         g.setName( "testmygene" );
@@ -74,9 +69,9 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         g.setOfficialName( "testmygene" );
         g.setTaxon( t );
         ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         g.setAuditTrail( ad );
-        g = daoGene.findOrCreate( g );
+        g = geneDao.findOrCreate( g );
 
         g2 = Gene.Factory.newInstance();
         g2.setName( "testmygene2" );
@@ -84,49 +79,53 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         g2.setOfficialName( "testmygene2" );
         g2.setTaxon( t );
         ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
         g2.setAuditTrail( ad );
-        g2 = daoGene.findOrCreate( g2 );
+        g2 = geneDao.findOrCreate( g2 );
 
         ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) this.getPersisterHelper().persist( ad );
+        ad = ( AuditTrail ) persisterHelper.persist( ad );
 
-        cgl.setAuditTrail( ad );
+        candidateGeneList.setAuditTrail( ad );
 
         Person u = Person.Factory.newInstance();
         u.setName( "Joe Blow" );
-        u = ( Person ) this.getPersisterHelper().persist( u );
+        u = ( Person ) persisterHelper.persist( u );
         assert u != null;
 
-        cgl.setOwner( u );
+        candidateGeneList.setOwner( u );
 
-        daoCGL.create( cgl );
+        candidateGeneList = ( CandidateGeneList ) candidateGeneListDao.create( candidateGeneList );
+
     }
 
     public final void testAddGeneToList() throws Exception {
         log.info( "testing adding gene to list" );
-        CandidateGene cg = cgl.addCandidate( g );
-        assertEquals( cgl.getCandidates().size(), 1 );
+        assert candidateGeneList != null;
+        CandidateGene cg = candidateGeneList.addCandidate( g );
+        assertEquals( candidateGeneList.getCandidates().size(), 1 );
         assertEquals( cg.getGene().getName(), "testmygene" );
     }
 
     public final void testRemoveGeneFromList() throws Exception {
         log.info( "testing removing gene from list" );
-        CandidateGene cg = cgl.addCandidate( g2 );
-        log.info( cgl.getCandidates().size() + " candidates to start" );
-        cg = cgl.getCandidates().iterator().next(); // get the persistent object.
-        log.info( cgl.getCandidates().size() + " candidates just before deleting" );
-        cgl.removeCandidate( cg );
-        log.info( cgl.getCandidates().size() + " candidates left" );
-        assert ( cgl.getCandidates().size() == 0 );
+        assert candidateGeneList != null;
+        CandidateGene cg = candidateGeneList.addCandidate( g2 );
+        log.info( candidateGeneList.getCandidates().size() + " candidates to start" );
+        cg = candidateGeneList.getCandidates().iterator().next(); // get the persistent object.
+        log.info( candidateGeneList.getCandidates().size() + " candidates just before deleting" );
+        candidateGeneList.removeCandidate( cg );
+        log.info( candidateGeneList.getCandidates().size() + " candidates left" );
+        assert ( candidateGeneList.getCandidates().size() == 0 );
     }
 
     public final void testRankingChanges() throws Exception {
         log.info( "testing ranking changes" );
-        CandidateGene cg1 = cgl.addCandidate( g );
-        CandidateGene cg2 = cgl.addCandidate( g2 );
-        cgl.increaseRanking( cg2 );
-        Collection c = cgl.getCandidates();
+        assert candidateGeneList != null;
+        CandidateGene cg1 = candidateGeneList.addCandidate( g );
+        CandidateGene cg2 = candidateGeneList.addCandidate( g2 );
+        candidateGeneList.increaseRanking( cg2 );
+        Collection c = candidateGeneList.getCandidates();
         for ( Iterator iter = c.iterator(); iter.hasNext(); ) {
             cg1 = ( CandidateGene ) iter.next();
             if ( cg1.getGene().getName().matches( "testmygene2" ) )
@@ -136,11 +135,31 @@ public class CandidateGeneListDAOImplTest extends BaseDAOTestCase {
         }
     }
 
-    protected void tearDown() throws Exception {
-        daoCGL.remove( cgl );
-        daoCGL = null;
-        if ( g != null ) daoGene.remove( g );
-        daoGene = null;
-        daoTaxon = null;
+    /**
+     * @param candidateGeneListDao The candidateGeneListDao to set.
+     */
+    public void setCandidateGeneListDao( CandidateGeneListDao candidateGeneListDao ) {
+        this.candidateGeneListDao = candidateGeneListDao;
+    }
+
+    /**
+     * @param geneDao The geneDao to set.
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
+    }
+
+    /**
+     * @param persisterHelper The persisterHelper to set.
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
     }
 }

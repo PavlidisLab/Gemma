@@ -18,7 +18,7 @@
  */
 package edu.columbia.gemma.security.interceptor;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
 
@@ -26,15 +26,22 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author pavlidis
  * @version $Id$
  */
-public class AuditInterceptorTest extends BaseDAOTestCase {
+public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
+    ExpressionExperimentService expressionExperimentService;
 
     public void testSimpleAuditAddition() throws Exception {
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) ctx.getBean( "expressionExperimentService" );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );
-        ee = ees.findOrCreate( ee );
-        ees.delete( ee );
+        ee = expressionExperimentService.findOrCreate( ee );
+        expressionExperimentService.delete( ee );
+    }
+
+    /**
+     * @param expressionExperimentService The expressionExperimentService to set.
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
     // FIXME add tests on collections and of update, create, remove...

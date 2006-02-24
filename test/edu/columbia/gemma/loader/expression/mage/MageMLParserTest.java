@@ -61,15 +61,9 @@ public class MageMLParserTest extends MageBaseTest {
 
     ZipInputStream istAffyGiantBioSequencePackage;
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         mlp = new MageMLParser();
-
-    }
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        mlp = null;
     }
 
     // public void testMageExamplesTest() throws Exception {

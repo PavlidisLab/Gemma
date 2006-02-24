@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import baseCode.dataStructure.matrix.DoubleMatrixNamed;
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.quantitationtype.GeneralType;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
@@ -39,15 +39,8 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperimentService;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
+public class GeoDatasetServiceIntegrationTest extends BaseTransactionalSpringContextTest {
     GeoDatasetService gds;
-
-    /**
-     * 
-     */
-    public GeoDatasetServiceIntegrationTest() {
-        super();
-    }
 
     /*
      * (non-Javadoc)
@@ -55,24 +48,14 @@ public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         gds = new GeoDatasetService();
 
         GeoConverter geoConv = new GeoConverter();
 
-        gds.setPersister( getPersisterHelper() );
+        gds.setPersister( persisterHelper );
         gds.setConverter( geoConv );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
     /**
@@ -108,7 +91,6 @@ public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
     // public void testFetchAndLoadThreePlatforms() throws Exception {
     // gds.fetchAndLoad( "GDS243" );
     // }
-
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         assert config != null;
@@ -121,15 +103,13 @@ public class GeoDatasetServiceIntegrationTest extends BaseDAOTestCase {
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
 
         // get the data back out.
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) BaseDAOTestCase.ctx
-                .getBean( "expressionExperimentService" );
-        QuantitationTypeService qts = ( QuantitationTypeService ) BaseDAOTestCase.ctx
-                .getBean( "quantitationTypeService" );
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
+        QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
         ExpressionDataMatrixService edms = new ExpressionDataMatrixService();
 
-        edms.setDesignElementDataVectorService( ( DesignElementDataVectorService ) BaseDAOTestCase.ctx
-                .getBean( "designElementDataVectorService" ) );
+        edms
+                .setDesignElementDataVectorService( ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" ) );
 
         ExpressionExperiment ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
         QuantitationType qtf = QuantitationType.Factory.newInstance();

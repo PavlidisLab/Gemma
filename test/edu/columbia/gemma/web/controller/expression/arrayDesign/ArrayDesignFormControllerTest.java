@@ -26,20 +26,16 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import edu.columbia.gemma.BaseControllerTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.arrayDesign.ArrayDesignService;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
+public class ArrayDesignFormControllerTest extends BaseTransactionalSpringContextTest {
     private static Log log = LogFactory.getLog( ArrayDesignFormControllerTest.class.getName() );
 
     ArrayDesign ad = null;
@@ -50,8 +46,9 @@ public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
      * setUp
      */
     @SuppressWarnings("unchecked")
-    public void setUp() throws Exception {
-
+    @Override
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( "AD Bot" );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
@@ -79,8 +76,7 @@ public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
         //
         // ee.setExperimentalDesigns( eeCol );
         // ***********
-        /* Yes, we have access to the ctx in the setup. */
-        ArrayDesignService ads = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
+        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
         if ( ads.findArrayDesignByName( ad.getName() ) == null ) ads.findOrCreate( ad );
     }
 
@@ -90,7 +86,7 @@ public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
     public void testSave() throws Exception {
         log.debug( "testing save" );
 
-        ArrayDesignFormController c = ( ArrayDesignFormController ) ctx.getBean( "arrayDesignFormController" );
+        ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "POST", "/arrayDesign/editArrayDesign.html" );
         request.addParameter( "name", ad.getName() );
@@ -113,7 +109,7 @@ public class ArrayDesignFormControllerTest extends BaseControllerTestCase {
     public void testEdit() throws Exception {
         log.debug( "testing edit" );
 
-        ArrayDesignFormController c = ( ArrayDesignFormController ) ctx.getBean( "arrayDesignFormController" );
+        ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
         request = new MockHttpServletRequest( "GET", "/arrayDesign/editArrayDesign.html" );
         request.addParameter( "name", ad.getName() );

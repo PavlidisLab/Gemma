@@ -23,24 +23,19 @@ import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.SessionFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 
 /**
  * This test is actually used to test sorting on collections. I am testing the Andromda AssociationEnd
  * andromda.hibernate.orderByColumns tagged value. This value is part of the sterotype EntityAssociation.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
  */
-public class AuditTrailDaoTest extends BaseDAOTestCase {
+public class AuditTrailDaoTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( AuditTrailDaoTest.class );
 
-    SessionFactory sf;
     AuditTrailDao auditTrailDao;
 
     AuditTrail auditTrail;
@@ -53,12 +48,8 @@ public class AuditTrailDaoTest extends BaseDAOTestCase {
     /**
      * @exception Exception
      */
-    protected void setUp() throws Exception {
-
-        super.setUp();
-
-        sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
-        setAuditTrailDao( ( AuditTrailDao ) ctx.getBean( "auditTrailDao" ) );
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
 
         auditTrail = AuditTrail.Factory.newInstance();
 
@@ -89,18 +80,9 @@ public class AuditTrailDaoTest extends BaseDAOTestCase {
 
     }
 
-    /**
-     * @exception Exception
-     */
-    protected void tearDown() throws Exception {
-        // getAuditTrailDao().remove( auditTrail );
-        auditTrailDao = null;
-    }
-
     public void testCreate() {
-
         log.info( "Creating audit trail" );
-
+        assert auditTrail != null;
         getAuditTrailDao().create( auditTrail );
     }
 

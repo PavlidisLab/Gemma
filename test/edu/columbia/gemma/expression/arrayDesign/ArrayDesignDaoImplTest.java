@@ -20,25 +20,26 @@ package edu.columbia.gemma.expression.arrayDesign;
 
 import java.util.Collection;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.expression.designElement.CompositeSequence;
 import edu.columbia.gemma.expression.designElement.Reporter;
+import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignDaoImplTest extends BaseDAOTestCase {
+public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     ArrayDesign ad;
-    ArrayDesignDao dao;
+    ArrayDesignDao arrayDesignDao;
+    PersisterHelper persisterHelper;
 
     /*
      * @see TestCase#setUp()
      */
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
 
-        dao = ( ArrayDesignDao ) ctx.getBean( "arrayDesignDao" );
         ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "foobly" );
@@ -60,23 +61,22 @@ public class ArrayDesignDaoImplTest extends BaseDAOTestCase {
         ad.getCompositeSequences().add( c1 );
         ad.getCompositeSequences().add( c2 );
 
-        ad = ( ArrayDesign ) this.getPersisterHelper().persist( ad );
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
     }
 
-    /*
-     * @see TestCase#tearDown()
+    /**
+     * @param persisterHelper The persisterHelper to set.
      */
-    protected void tearDown() throws Exception {
-        dao.remove( ad );
-        super.tearDown();
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     /*
      * Test method for 'edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoImpl.numCompositeSequences(ArrayDesign)'
      */
     public void testNumCompositeSequencesArrayDesign() {
-        Integer actualValue = dao.numCompositeSequences( ad.getId() );
+        Integer actualValue = arrayDesignDao.numCompositeSequences( ad.getId() );
         Integer expectedValue = 2;
         assertEquals( expectedValue, actualValue );
     }
@@ -85,21 +85,28 @@ public class ArrayDesignDaoImplTest extends BaseDAOTestCase {
      * Test method for 'edu.columbia.gemma.expression.arrayDesign.ArrayDesignDaoImpl.numReporters(ArrayDesign)'
      */
     public void testNumReportersArrayDesign() {
-        Integer actualValue = dao.numReporters( ad.getId() );
+        Integer actualValue = arrayDesignDao.numReporters( ad.getId() );
         Integer expectedValue = 3;
         assertEquals( expectedValue, actualValue );
     }
 
     public void testLoadCompositeSequences() {
-        Collection actualValue = dao.loadCompositeSequences( ad.getId() );
+        Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
         assertEquals( 2, actualValue.size() );
         assertTrue( actualValue.iterator().next() instanceof CompositeSequence );
     }
 
     public void testLoadReporters() {
-        Collection actualValue = dao.loadReporters( ad.getId() );
+        Collection actualValue = arrayDesignDao.loadReporters( ad.getId() );
         assertEquals( 3, actualValue.size() );
         assertTrue( actualValue.iterator().next() instanceof Reporter );
+    }
+
+    /**
+     * @param arrayDesignDao The arrayDesignDao to set.
+     */
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
     }
 
 }

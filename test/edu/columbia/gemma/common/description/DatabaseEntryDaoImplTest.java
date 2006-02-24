@@ -18,51 +18,38 @@
  */
 package edu.columbia.gemma.common.description;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class DatabaseEntryDaoImplTest extends BaseDAOTestCase {
-    DatabaseEntryDao deDao;
-    DatabaseEntry de;
+public class DatabaseEntryDaoImplTest extends BaseTransactionalSpringContextTest {
 
-    ExternalDatabaseDao exdbDao;
+    DatabaseEntryDao databaseEntryDao;
+    DatabaseEntry de;
+    ExternalDatabaseDao externalDatabaseDao;
 
     /*
      * @see TestCase#setUp()
      */
-    protected void setUp() throws Exception {
-        super.setUp();
-        deDao = ( DatabaseEntryDao ) ctx.getBean( "databaseEntryDao" );
-        exdbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" );
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         de = DatabaseEntry.Factory.newInstance();
         de.setAccession( "bar" );
-        ExternalDatabase ed = exdbDao.findByName( "PubMed" );
+        ExternalDatabase ed = externalDatabaseDao.findByName( "PubMed" );
         assert ed != null;
         de.setExternalDatabase( ed );
-        de = deDao.create( de );
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        deDao.remove( de );
+        de = databaseEntryDao.create( de );
     }
 
     /*
      * Class under test for DatabaseEntry findOrCreate(DatabaseEntry)
      */
     public void testFindOrCreateDatabaseEntry() {
-        deDao.remove( de );
-        DatabaseEntry actualReturn = deDao.findOrCreate( de );
+        databaseEntryDao.remove( de );
+        DatabaseEntry actualReturn = databaseEntryDao.findOrCreate( de );
         assertEquals( de.getAccession(), actualReturn.getAccession() );
     }
 
@@ -71,8 +58,22 @@ public class DatabaseEntryDaoImplTest extends BaseDAOTestCase {
      * find(edu.columbia.gemma.common.description.DatabaseEntry)
      */
     public void testFindDatabaseEntry() {
-        DatabaseEntry actualReturn = deDao.find( de );
+        DatabaseEntry actualReturn = databaseEntryDao.find( de );
         assertEquals( de, actualReturn );
+    }
+
+    /**
+     * @param databaseEntryDao The databaseEntryDao to set.
+     */
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
+    }
+
+    /**
+     * @param externalDatabaseDao The externalDatabaseDao to set.
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
     }
 
 }

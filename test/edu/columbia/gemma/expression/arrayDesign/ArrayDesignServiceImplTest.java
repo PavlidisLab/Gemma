@@ -26,7 +26,7 @@ import static org.easymock.EasyMock.verify;
 import java.util.Collection;
 import java.util.HashSet;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import junit.framework.TestCase;
 
 /**
  * Unit testing of the ArrayDesignService.
@@ -34,7 +34,7 @@ import edu.columbia.gemma.BaseDAOTestCase;
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignServiceImplTest extends BaseDAOTestCase {
+public class ArrayDesignServiceImplTest extends TestCase {
 
     private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
     private ArrayDesignDao arrayDesignDaoMock = null;
@@ -42,17 +42,11 @@ public class ArrayDesignServiceImplTest extends BaseDAOTestCase {
     /*
      * @see TestCase#setUp()
      */
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         arrayDesignDaoMock = createMock( ArrayDesignDao.class );
         arrayDesignService.setArrayDesignDao( arrayDesignDaoMock );
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
     /**

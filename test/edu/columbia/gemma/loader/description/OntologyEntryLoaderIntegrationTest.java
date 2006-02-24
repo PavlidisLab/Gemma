@@ -18,7 +18,6 @@
  */
 package edu.columbia.gemma.loader.description;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,35 +26,28 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
+public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderIntegrationTest.class );
     String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
     OntologyEntryPersister ontologyEntryPersister = null;
-
     GeneOntologyEntryParser ontologyEntryParser = null;
     Collection<Object> createdObjects = null;
-    PersisterHelper ph;
 
     /**
      * Tests both the parser and the loader.
-     * 
-     * @throws SAXException
-     * @throws IOException
      */
-    // @SuppressWarnings("unchecked")
-    public void testParseAndLoad() throws IOException {
+    public void testParseAndLoad() throws Exception {
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GO" );
@@ -101,25 +93,11 @@ public class OntologyEntryLoaderIntegrationTest extends BaseDAOTestCase {
     /**
      * 
      */
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         ontologyEntryParser = new GeneOntologyEntryParser();
-
         ontologyEntryPersister = new OntologyEntryPersister();
-        ph = ( PersisterHelper ) ctx.getBean( "persisterHelper" );
-
-        ontologyEntryPersister.setPersisterHelper( ph );
-    }
-
-    /**
-     * 
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        // ph.remove( createdObjects ); // FIXME, put this back when we can.
-        // ph = null;
-        ontologyEntryPersister = null;
+        ontologyEntryPersister.setPersisterHelper( persisterHelper );
     }
 
 }

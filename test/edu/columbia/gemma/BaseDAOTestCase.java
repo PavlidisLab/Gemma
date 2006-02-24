@@ -69,6 +69,7 @@ import edu.columbia.gemma.util.SpringContextUtil;
  * @author mraible
  * @author pavlidis
  * @version $Id$
+ * @deprecated Use BaseDependencyInjectionSpringContextTest instead.
  */
 public class BaseDAOTestCase extends TestCase {
     protected final Log log = LogFactory.getLog( getClass() );

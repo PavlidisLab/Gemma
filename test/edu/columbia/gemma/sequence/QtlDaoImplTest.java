@@ -18,14 +18,14 @@
  */
 package edu.columbia.gemma.sequence;
 
-import java.util.Iterator;
+import java.util.Collection;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.genome.Chromosome;
 import edu.columbia.gemma.genome.ChromosomeDao;
@@ -43,11 +43,11 @@ import edu.columbia.gemma.genome.TaxonDao;
  * @author daq?
  * @version $Id$
  */
-public class QtlDaoImplTest extends BaseDAOTestCase {
+public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
 
     QtlDao qtlDao = null;
-    PhysicalLocationDao plDao = null;
-    PhysicalMarkerDao pmDao = null;
+    PhysicalLocationDao physicalLocationDao = null;
+    PhysicalMarkerDao physicalMarkerDao = null;
     ChromosomeDao chromosomeDao = null;
     TaxonDao taxonDao = null;
     SessionFactory sf = null;
@@ -66,15 +66,11 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
     Taxon tx;
     Chromosome chrom;
 
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
 
-        qtlDao = ( QtlDao ) ctx.getBean( "qtlDao" );
-        chromosomeDao = ( ChromosomeDao ) ctx.getBean( "chromosomeDao" );
-        taxonDao = ( TaxonDao ) ctx.getBean( "taxonDao" );
-        pmDao = ( PhysicalMarkerDao ) ctx.getBean( "physicalMarkerDao" );
-        plDao = ( PhysicalLocationDao ) ctx.getBean( "physicalLocationDao" );
-        sf = ( SessionFactory ) ctx.getBean( "sessionFactory" );
+        sf = ( SessionFactory ) getBean( "sessionFactory" );
 
         tx = taxonDao.findByCommonName( TAXON );
         if ( tx == null ) {
@@ -96,13 +92,13 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
             pls[i].setChromosome( chrom );
             pls[i].setNucleotide( new Long( LOC_SPACING * i ) );
 
-            pls[i] = ( PhysicalLocation ) plDao.create( pls[i] );
+            pls[i] = ( PhysicalLocation ) physicalLocationDao.create( pls[i] );
 
             pms[i] = PhysicalMarker.Factory.newInstance();
             pms[i].setPhysicalLocation( pls[i] );
             AuditTrail ad = AuditTrail.Factory.newInstance();
-            pms[i].setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
-            pms[i] = ( PhysicalMarker ) pmDao.create( pms[i] );
+            pms[i].setAuditTrail( ( AuditTrail ) persisterHelper.persist( ad ) );
+            pms[i] = ( PhysicalMarker ) physicalMarkerDao.create( pms[i] );
         }
 
         // create qtls - one for every two locations, so they might be 2000-4000, 4000-6000 etc.
@@ -112,23 +108,10 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
             q.setStartMarker( pms[j] );
             q.setEndMarker( pms[j + 1] );
             AuditTrail ad = AuditTrail.Factory.newInstance();
-            q.setAuditTrail( ( AuditTrail ) this.getPersisterHelper().persist( ad ) );
+            q.setAuditTrail( ( AuditTrail ) persisterHelper.persist( ad ) );
             qtls[i] = ( Qtl ) qtlDao.create( q );
         }
 
-    }
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        for ( int i = 0, j = 0; j < NUM_LOCS - 1; i++, j += 2 ) {
-            qtlDao.remove( qtls[i] );
-        }
-        for ( int i = 0; i < NUM_LOCS; i++ ) {
-            pmDao.remove( pms[i] ); // cascade will delete physical location.
-        }
-
-        chromosomeDao.remove( chrom );
- //       taxonDao.remove( tx ); // FIXME put this back when possible.
     }
 
     /**
@@ -136,6 +119,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public final void testFindByPhysicalLocationNucleotideQuery() throws Exception {
 
         String query = "from QtlImpl qtl where qtl.startMarker.physicalLocation.chromosome ="
@@ -151,8 +135,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         q.setParameter( "start", pms[LEFT_TEST_MARKER].getPhysicalLocation().getNucleotide() );
         q.setParameter( "end", pms[RIGHT_TEST_MARKER].getPhysicalLocation().getNucleotide() );
 
-        for ( Iterator it = q.iterate(); it.hasNext(); ) {
-            Qtl qtl = ( Qtl ) it.next();
+        for ( Qtl qtl : ( Collection<Qtl> ) q.list() ) {
             log.debug( "Qtl found by nucleotide: " + qtl.getName() + " with start location "
                     + qtl.getStartMarker().getPhysicalLocation().getNucleotide() );
         }
@@ -166,6 +149,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public final void testFindByPhysicalLocationQuery() throws Exception {
 
         String query = "from QtlImpl qtl where qtl.startMarker.physicalLocation.chromosome ="
@@ -181,8 +165,7 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         q.setParameter( "start", pms[LEFT_TEST_MARKER].getPhysicalLocation() );
         q.setParameter( "end", pms[RIGHT_TEST_MARKER].getPhysicalLocation() );
 
-        for ( Iterator it = q.iterate(); it.hasNext(); ) {
-            Qtl qtl = ( Qtl ) it.next();
+        for ( Qtl qtl : ( Collection<Qtl> ) q.list() ) {
             log.debug( "Qtl found: " + qtl.getName() + " with start location "
                     + qtl.getStartMarker().getPhysicalLocation().getNucleotide() );
         }
@@ -190,5 +173,40 @@ public class QtlDaoImplTest extends BaseDAOTestCase {
         trans.commit();
         sess.close();
 
+    }
+
+    /**
+     * @param chromosomeDao The chromosomeDao to set.
+     */
+    public void setChromosomeDao( ChromosomeDao chromosomeDao ) {
+        this.chromosomeDao = chromosomeDao;
+    }
+
+    /**
+     * @param physicalLocationDao The physicalLocationDao to set.
+     */
+    public void setPhysicalLocationDao( PhysicalLocationDao physicalLocationDao ) {
+        this.physicalLocationDao = physicalLocationDao;
+    }
+
+    /**
+     * @param physicalMarkerDao The physicalMarkerDao to set.
+     */
+    public void setPhysicalMarkerDao( PhysicalMarkerDao physicalMarkerDao ) {
+        this.physicalMarkerDao = physicalMarkerDao;
+    }
+
+    /**
+     * @param qtlDao The qtlDao to set.
+     */
+    public void setQtlDao( QtlDao qtlDao ) {
+        this.qtlDao = qtlDao;
+    }
+
+    /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
     }
 }

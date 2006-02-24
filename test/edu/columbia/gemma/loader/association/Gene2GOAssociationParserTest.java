@@ -25,18 +25,17 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import edu.columbia.gemma.BaseDAOTestCase;
+import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.association.Gene2GOAssociationDao;
 import edu.columbia.gemma.genome.TaxonDao;
-import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
 
 /**
- * This test is more representative of integration testing than unit testing as it tests multiple both parsing and
+ * Tests multiple both parsing and loading.
  * 
  * @author keshav
  * @version $Id$
  */
-public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
+public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserTest.class );
 
     Gene2GOAssociationParserImpl gene2GOAssParser = null;
@@ -70,23 +69,15 @@ public class Gene2GOAssociationParserTest extends BaseDAOTestCase {
      * Configure parser and loader. Provide "tomcat-esque" functionality by injecting the parser and loader with their
      * dependencies.
      */
-    protected void setUp() throws Exception {
-        super.setUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
 
         gene2GOAssParser = new Gene2GOAssociationParserImpl();
 
         gene2GOAssLoader = new Gene2GOAssociationLoaderImpl();
 
-        gene2GOAssLoader.setGene2GOAssociationDao( ( Gene2GOAssociationDao ) ctx.getBean( "gene2GOAssociationDao" ) );
-        gene2GOAssLoader.setPersisterHelper( ( PersisterHelper ) ctx.getBean( "persisterHelper" ) );
-    }
-
-    /**
-     * 
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-
+        gene2GOAssLoader.setGene2GOAssociationDao( ( Gene2GOAssociationDao ) getBean( "gene2GOAssociationDao" ) );
+        gene2GOAssLoader.setPersisterHelper( persisterHelper );
     }
 
 }

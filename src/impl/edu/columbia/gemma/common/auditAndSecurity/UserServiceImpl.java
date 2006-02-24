@@ -31,6 +31,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import edu.columbia.gemma.util.RandomGUID;
 import edu.columbia.gemma.util.StringUtil;
+import edu.columbia.gemma.web.Constants;
 
 /**
  * @see edu.columbia.gemma.common.auditAndSecurity.UserService
@@ -43,6 +44,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#getUser(java.lang.String)
      */
+    @Override
     protected edu.columbia.gemma.common.auditAndSecurity.User handleGetUser( java.lang.String userName )
             throws java.lang.Exception {
         return this.getUserDao().findByUserName( userName );
@@ -51,6 +53,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#getUsers(edu.columbia.gemma.common.auditAndSecurity.User)
      */
+    @Override
     protected java.util.Collection handleGetUsers() throws java.lang.Exception {
         return this.getUserDao().loadAll();
     }
@@ -58,6 +61,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#FindById(long)
      */
+    @Override
     protected User handleFindById( Long id ) throws java.lang.Exception {
         return ( User ) this.getUserDao().load( id );
     }
@@ -65,13 +69,14 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#saveUser(edu.columbia.gemma.common.auditAndSecurity.User)
      */
+    @Override
     protected User handleSaveUser( edu.columbia.gemma.common.auditAndSecurity.User user ) throws UserExistsException {
 
         // defensive programming...
         for ( UserRole role : user.getRoles() ) {
-            role.setUserName(user.getUserName());
+            role.setUserName( user.getUserName() );
         }
-        
+
         try {
             user.setConfirmPassword( user.getPassword() );
             return ( User ) this.getUserDao().create( user );
@@ -84,6 +89,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#removeUser(java.lang.String)
      */
+    @Override
     protected void handleRemoveUser( java.lang.String userName ) throws java.lang.Exception {
 
         this.getUserDao().remove( this.getUserDao().findByUserName( userName ) );
@@ -92,6 +98,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#checkLoginCookie(java.lang.String)
      */
+    @Override
     protected String handleCheckLoginCookie( java.lang.String value ) throws java.lang.Exception {
         value = StringUtil.decodeString( value );
 
@@ -123,6 +130,7 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
     /**
      * @see edu.columbia.gemma.common.auditAndSecurity.UserService#createLoginCookie(java.lang.String)
      */
+    @Override
     protected String handleCreateLoginCookie( java.lang.String userName ) throws java.lang.Exception {
         UserSession cookie = UserSession.Factory.newInstance();
 
@@ -136,32 +144,34 @@ public class UserServiceImpl extends edu.columbia.gemma.common.auditAndSecurity.
      * 
      * @see edu.columbia.gemma.common.auditAndSecurity.UserServiceBase#handleRemoveLoginCookies(java.lang.String)
      */
+    @Override
     protected void handleRemoveLoginCookies( String userName ) throws Exception {
         User user = this.getUserDao().findByUserName( userName );
         user.setUserSessions( null );
         this.getUserDao().update( user );
     }
 
-    /**
-     * FIXME - this should just take the role name, not the role, because we have to make a new instance anyway.
-     * 
-     * @see edu.columbia.gemma.common.auditAndSecurity.UserServiceBase#handleAddRole(edu.columbia.gemma.common.auditAndSecurity.Role)
-     */
     @SuppressWarnings("unchecked")
-    protected void handleAddRole( User user, UserRole role ) throws Exception {
+    @Override
+    protected void handleAddRole( User user, String role ) throws Exception {
         if ( role == null ) throw new IllegalArgumentException( "Got passed null role!" );
         if ( user == null ) throw new IllegalArgumentException( "Got passed null user" );
+
+        if ( !role.equals( Constants.ADMIN_ROLE ) && !role.equals( Constants.USER_ROLE ) ) {
+            throw new IllegalArgumentException( role + " is not a recognized role" );
+        }
+
         UserRole newRole = UserRole.Factory.newInstance();
-        newRole.setName( role.getName() );
+        newRole.setName( role );
         newRole.setUserName( user.getUserName() );
         newRole = this.getUserRoleService().saveRole( newRole );
         if ( user.getRoles() == null ) user.setRoles( new HashSet() );
         Collection<UserRole> roles = user.getRoles();
         roles.add( newRole );
-        user.setRoles(roles);
+        user.setRoles( roles );
+        this.getUserDao().update( user );
     }
-    
-    
+
     /**
      * Convenience method to set a unique cookie id and save to database
      * 
