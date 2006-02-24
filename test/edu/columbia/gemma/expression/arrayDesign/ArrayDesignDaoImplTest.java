@@ -39,7 +39,7 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
-
+        super.onSetUpInTransaction();
         ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "foobly" );

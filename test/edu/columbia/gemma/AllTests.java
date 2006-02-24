@@ -82,7 +82,7 @@ import edu.columbia.gemma.tools.SequenceManipulationTest;
 import edu.columbia.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import edu.columbia.gemma.web.controller.common.description.BibRefControllerTest;
 import edu.columbia.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
-import edu.columbia.gemma.web.controller.expression.experiment.ExpressionExperimentController;
+import edu.columbia.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
 
 /**
  * Combines all the tests. Tests that require resources that might not be available during a test (e.g., a network
@@ -209,7 +209,7 @@ public class AllTests {
         // web.controller.entrez.pubmed, array design...
         suite.addTestSuite( ArrayDesignControllerTest.class );
         suite.addTestSuite( BibRefControllerTest.class );
-        suite.addTestSuite( ExpressionExperimentController.class );
+        suite.addTestSuite( ExpressionExperimentControllerTest.class );
 
         // web.controller.flow.entrez.pubmed
         // suite.addTestSuite( DetailBibRefFlowTests.class ); // no tests.

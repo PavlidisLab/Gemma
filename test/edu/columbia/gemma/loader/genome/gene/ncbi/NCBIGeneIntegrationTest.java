@@ -19,6 +19,7 @@
 package edu.columbia.gemma.loader.genome.gene.ncbi;
 
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 
 import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
@@ -39,9 +40,18 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
 
     public void testFetchAndLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
-        Collection<Object> results = sdog.generate( null );
-        NcbiGeneConverter ngc = new NcbiGeneConverter();
-        Collection<Object> gemmaObj = ngc.convert( results );
-        persisterHelper.persist( gemmaObj );
+        try {
+            Collection<Object> results = sdog.generate( null );
+            NcbiGeneConverter ngc = new NcbiGeneConverter();
+            Collection<Object> gemmaObj = ngc.convert( results );
+            persisterHelper.persist( gemmaObj );
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof ExecutionException ) {
+                log.warn( "Failed to get file -- skipping rest of test" );
+                return;
+            }
+            throw ( e );
+        }
+
     }
 }

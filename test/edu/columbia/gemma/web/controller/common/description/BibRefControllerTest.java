@@ -33,6 +33,7 @@ import edu.columbia.gemma.BaseTransactionalSpringContextTest;
 import edu.columbia.gemma.common.description.BibliographicReference;
 import edu.columbia.gemma.common.description.BibliographicReferenceService;
 import edu.columbia.gemma.common.description.DatabaseEntry;
+import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 
 /**
@@ -74,11 +75,15 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
             /* set the accession of database entry to the pubmed id. */
             de.setAccession( ( new Integer( pubMedId ) ).toString() );
 
+            ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+            ed.setName( "PubMed" );
+            de.setExternalDatabase( ed );
+
             /* set the bib ref's pubmed accession number to the database entry. */
             br.setPubAccession( de );
 
             /* bibref is now set. Call service to persist to database. */
-            if ( brs.find( br ) == null ) brs.findOrCreate( br );
+            brs.findOrCreate( br );
 
         } catch ( UnknownHostException e ) {
             skip = true;
