@@ -48,10 +48,11 @@
   <!-- Add and configure a HTTP listener to port 8080                       -->
   <!-- The default port can be changed using: java -Djetty.port=80     -->
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+  
   <Call name="addListener">
     <Arg>
       <New class="org.mortbay.http.SocketListener">
-        <Set name="Port"><SystemProperty name="jetty.port" default="8080"/></Set>
+        <Set name="Port"><SystemProperty name="jetty.port" default="8081"/></Set>
 	<Set name="PoolName">P1</Set>
         <Set name="MinThreads">20</Set>
         <Set name="MaxThreads">200</Set>
@@ -126,6 +127,7 @@
   <!-- The jsr77 configuration requires additional jars on the         -->
   <!-- on the classpath and it needs jmx enabled.                      -->
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
   <Set name="WebApplicationConfigurationClassNames">
     <Array type="java.lang.String">
       <Item>org.mortbay.jetty.servlet.XMLConfiguration</Item>
@@ -135,6 +137,7 @@
       <Item>org.mortbay.jetty.servlet.TagLibConfiguration</Item>
       <Item>org.mortbay.jetty.servlet.jsr77.Configuration</Item>
       -->
+     
     </Array>
   </Set>
 
@@ -151,8 +154,8 @@
   <!-- + Use the webdefault.xml resource for the defaults descriptor   -->
   <!-- + Upack the war file                                            -->
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-  <Set name="rootWebApp">root</Set>
 <!--   
+  <Set name="rootWebApp">root</Set>   
   <Call name="addWebApplications">
     <Arg></Arg>
     <Arg><SystemProperty name="jetty.home" default="."/>/webapps/</Arg>
@@ -188,7 +191,6 @@
     </Set>
   </Call>
   -->
-  
   <Call name="addWebApplication">
     <Arg>/Gemma</Arg>
     <Arg>./web</Arg>
