@@ -70,13 +70,14 @@ public class Start {
         Server jettyServer = null;
         try {
             URL jettyConfig = new URL( "file:etc/jetty/jetty.xml" );
-            
-            log.debug("jetty config:" + jettyConfig);
-            
+
+            log.debug( "jetty config:" + jettyConfig );
+
             if ( jettyConfig == null ) {
                 log.fatal( "Unable to locate jetty-test-config.xml on the classpath" );
+                System.exit( 0 );
             }
-            jettyServer = new Server(jettyConfig);
+            jettyServer = new Server( jettyConfig );
             jettyServer.start();
         } catch ( Exception e ) {
             log.fatal( "Could not start the Jetty server: " + e );
@@ -87,6 +88,7 @@ public class Start {
                     log.fatal( "Unable to stop the jetty server: " + e1 );
                 }
             }
+            System.exit( 0 );
         }
     }
 }
