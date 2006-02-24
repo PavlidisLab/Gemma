@@ -32,19 +32,9 @@
         <developer>
             <name>Paul Pavlidis</name>
             <id>pavlidis</id>
-            <email>pavlidis@dbmi.columbia.edu</email>
-            <organization>Columbia University</organization>
-            <url>http://microarray.cu-genome.org/pavlidis</url>
-        </developer>
-        <developer>
-            <name>David Quigley</name>
-            <id>daq7001</id>
-            <email>david.quigley@dbmi.columbia.edu</email>
-        </developer>
-        <developer>
-            <name>Anshu Sinha</name>
-            <id>anshu</id>
-            <email>anshu.sinha@dbmi.columbia.edu</email>
+            <email>paul@bioinformatics.ubc.ca</email>
+            <organization>University of British Columbia</organization>
+            <url>http://bioinformatics.ubc.ca/pavlidis/</url>
         </developer>
     </developers>
     <licenses>
@@ -158,7 +148,7 @@
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <version>1.1.0</version>
+            <version>1.3.0</version>
             <type>jar</type>
             <properties>
                 <war.bundle>true</war.bundle>
@@ -242,7 +232,7 @@
                 <war.bundle>true</war.bundle>
             </properties>
         </dependency>
-       <dependency>
+        <dependency>
             <groupId>struts</groupId>
             <artifactId>struts</artifactId>
             <version>1.2.7</version>
@@ -250,7 +240,7 @@
             <properties>
                 <war.bundle>true</war.bundle>
             </properties>
-        </dependency> 
+        </dependency>
         <dependency>
             <groupId>struts-menu</groupId>
             <artifactId>struts-menu</artifactId>
@@ -641,9 +631,9 @@
                 <include>**/*Tests.java</include>
             </includes>
             <excludes>
+                <exclude>**/BaseTransactionalSpringContextTest</exclude><!-- not a test...-->
                 <exclude>**/MageBaseTest.java</exclude>
                 <exclude>**/*IntegrationTest.java</exclude>
-                <exclude>**/org/springframework/test/**</exclude>
                 <exclude>**/AllTests.java</exclude>
             </excludes>
             <resources>
@@ -665,7 +655,7 @@
                     </includes>
                     <filtering>false</filtering>
                 </resource>
-                 <resource>
+                <resource>
                     <directory>${basedir}/web</directory>
                     <includes>
                         <include>WEB-INF/*.xml</include>
