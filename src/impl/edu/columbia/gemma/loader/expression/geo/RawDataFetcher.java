@@ -74,7 +74,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 return null;
             }
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = doTask( future, outputFileName, identifier, newDir, ".tar" );
+            Collection<LocalFile> result = doTask( future, seekFile, outputFileName, identifier, newDir, ".tar" );
             f.disconnect();
             return result;
         } catch ( SocketException e ) {

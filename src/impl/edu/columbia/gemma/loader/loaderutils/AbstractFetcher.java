@@ -62,17 +62,24 @@ public abstract class AbstractFetcher implements Fetcher {
      * @throws IOException
      */
     protected File mkdir( String accession ) throws IOException {
-        assert localBasePath != null;
+        File newDir = null;
+        File targetPath = null;
 
-        File targetPath = new File( localBasePath );
-        File newDir = new File( targetPath + File.separator + accession );
+        if ( localBasePath != null ) {
+            targetPath = new File( localBasePath );
+            newDir = new File( targetPath + File.separator + accession );
+        }
 
-        if ( !targetPath.canRead() ) {
+        if ( localBasePath == null || !targetPath.canRead() ) {
             File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + accession );
             log.warn( "Could not create output directory " + newDir );
             log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
 
             newDir = tmpDir;
+        }
+
+        if ( newDir == null ) {
+            throw new IOException( "Could not create target directory, was null" );
         }
         if ( !newDir.exists() && !newDir.mkdir() ) {
             throw new IOException( "Could not create target directory " + newDir.getAbsolutePath() );

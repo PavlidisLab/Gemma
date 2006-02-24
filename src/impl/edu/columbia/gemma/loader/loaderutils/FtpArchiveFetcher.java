@@ -106,18 +106,27 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * @param excludePattern
      * @return
      */
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String outputFileName, String identifier,
-            File newDir, String excludePattern ) {
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, String outputFileName,
+            String identifier, File newDir, String excludePattern ) {
         assert f != null;
         Executors.newSingleThreadExecutor().execute( future );
         try {
+            long expectedSize = 0;
+
+            try {
+                expectedSize = NetUtils.ftpFileSize( f, seekFile );
+            } catch ( FileNotFoundException e ) {
+                log.warn( "Didn't get remote file size" );
+            }
+
             while ( !future.isDone() ) {
                 try {
                     Thread.sleep( INFO_UPDATE_INTERVAL );
                 } catch ( InterruptedException ie ) {
                     ;
                 }
-                log.info( ( new File( outputFileName ).length() + " bytes read" ) );
+                log
+                        .info( ( new File( outputFileName ).length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
             }
             if ( future.get().booleanValue() ) {
                 log.info( "Unpacking " + outputFileName );
