@@ -78,12 +78,12 @@ public class GeoDatasetServiceIntegrationTest extends BaseTransactionalSpringCon
     // // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
     // }
 
-    /**
-     * This test uses just one dataset, one series
-     */
-    public void testFetchAndLoadOneDataset() throws Exception {
-        gds.fetchAndLoad( "GDS599" );
-    }
+    // /**
+    // * This test uses just one dataset, one series
+    // */
+    // public void testFetchAndLoadOneDataset() throws Exception {
+    // gds.fetchAndLoad( "GDS599" );
+    // }
 
     /**
      * This test uses all three MG-U74 arrays.
@@ -164,20 +164,22 @@ public class GeoDatasetServiceIntegrationTest extends BaseTransactionalSpringCon
      */
     @SuppressWarnings( { "unchecked", "unused" })
     private void printMatrix( DoubleMatrixNamed matrix ) {
-        System.err.print( "probe" );
+        StringBuilder buf = new StringBuilder();
+        buf.append( "probe" );
         for ( String columnName : ( Collection<String> ) matrix.getColNames() ) {
-            System.err.print( "\t" + columnName );
+            buf.append( "\t" + columnName );
         }
         System.err.print( "\n" );
         for ( String rowName : ( Collection<String> ) matrix.getRowNames() ) {
-            System.err.print( rowName );
+            buf.append( rowName );
             double[] array = matrix.getRowByName( rowName );
             for ( int i = 0; i < array.length; i++ ) {
                 double array_element = array[i];
-                System.err.print( "\t" + array_element );
+                buf.append( "\t" + array_element );
             }
-            System.err.print( "\n" );
+            buf.append( "\n" );
         }
+        log.info( buf.toString() );
     }
 
 }

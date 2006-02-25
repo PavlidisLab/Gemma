@@ -82,10 +82,9 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
     @Override
     public CompositeSequence findOrCreate( CompositeSequence compositeSequence ) {
         if ( compositeSequence.getName() == null || compositeSequence.getArrayDesign() == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "compositeSequence must have name and arrayDesign." );
-            return null;
+            throw new IllegalArgumentException( "compositeSequence must have name and arrayDesign." );
         }
-       
+
         CompositeSequence newcompositeSequence = this.find( compositeSequence );
         if ( newcompositeSequence != null ) {
             if ( log.isDebugEnabled() ) log.debug( "Found existing compositeSequence: " + newcompositeSequence );
@@ -95,7 +94,5 @@ public class CompositeSequenceDaoImpl extends edu.columbia.gemma.expression.desi
         if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence );
         return ( CompositeSequence ) create( compositeSequence );
     }
-
-   
 
 }

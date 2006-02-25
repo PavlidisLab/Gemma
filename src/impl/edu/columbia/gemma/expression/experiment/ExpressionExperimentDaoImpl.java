@@ -76,8 +76,7 @@ public class ExpressionExperimentDaoImpl extends edu.columbia.gemma.expression.e
     @Override
     public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment.getName() == null && expressionExperiment.getAccession() == null ) {
-            log.debug( "ExpressionExperiment must have name or external accession." );
-            return null;
+            throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
         }
         ExpressionExperiment newExpressionExperiment = this.find( expressionExperiment );
         if ( newExpressionExperiment != null ) {

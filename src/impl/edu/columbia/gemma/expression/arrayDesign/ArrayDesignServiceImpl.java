@@ -41,7 +41,7 @@ public class ArrayDesignServiceImpl extends edu.columbia.gemma.expression.arrayD
      */
     protected void handleRemove( edu.columbia.gemma.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception {
-        this.getArrayDesignDao().remove( this.getArrayDesignDao().findByName( arrayDesign.getName() ) );
+        this.getArrayDesignDao().remove( arrayDesign );
     }
 
     /**

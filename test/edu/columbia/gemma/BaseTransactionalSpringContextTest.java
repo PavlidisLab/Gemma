@@ -33,9 +33,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.web.MockServletContext;
@@ -43,6 +43,9 @@ import org.springframework.test.AbstractTransactionalSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
 import uk.ltd.getahead.dwr.create.SpringCreator;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
+import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
+import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
@@ -90,6 +93,30 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         return ( DatabaseEntry ) persisterHelper.persist( result );
     }
 
+    /**
+     * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
+     * 
+     * @return
+     */
+    public Contact getTestPersistentContact() {
+        Contact c = Contact.Factory.newInstance();
+        c.setName( RandomStringUtils.random( 10 ) + "_test" );
+        c = ( Contact ) persisterHelper.persist( c );
+        flushSession();
+        return c;
+    }
+
+    /**
+     * Force the hibernate session to flush.
+     */
+    public void flushSession() {
+        ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().flush();
+    }
+
+    /**
+     * 
+     *
+     */
     public BaseTransactionalSpringContextTest() {
         super();
 

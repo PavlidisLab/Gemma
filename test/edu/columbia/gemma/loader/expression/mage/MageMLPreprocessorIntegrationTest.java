@@ -192,7 +192,8 @@ public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringCo
             } catch ( edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceException e ) {
                 fail();
             } catch ( Exception e ) {
-                log.info( "All done!" );
+                log.error( e );
+                log.info( "All done! (" + i + ")" );
                 break;
             }
             i++;

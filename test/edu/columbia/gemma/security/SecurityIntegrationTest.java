@@ -24,9 +24,7 @@ import java.util.HashSet;
 import org.acegisecurity.AccessDeniedException;
 
 import edu.columbia.gemma.BaseTransactionalSpringContextTest;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
-import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserDao;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
@@ -56,6 +54,7 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     private CompositeSequenceService compositeSequenceService;
     private UserDao userDao;
     private UserService userService;
+    ArrayDesign notYourArrayDesign;
 
     /**
      * @param userService The userService to set.
@@ -86,6 +85,10 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
         testUser = ( User ) userDao.create( testUser );
         userService.addRole( testUser, Constants.USER_ROLE );
 
+        notYourArrayDesign = ArrayDesign.Factory.newInstance();
+        notYourArrayDesign.setName( "deleteme" );
+        notYourArrayDesign = ( ArrayDesign ) persisterHelper.persist( notYourArrayDesign );
+
         if ( !manualAuthenticationProcessing.validateRequest( testUserName, testPassword ) ) {
             throw new RuntimeException( "Failed to authenticate" );
         }
@@ -99,11 +102,10 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testRemoveArrayDesignWithoutAuthorizationWithoutMock() throws Exception {
+    public void testRemoveArrayDesign() throws Exception {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "deleteme" );
+        ad.setName( "YoucanDeleteME" );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-
         arrayDesignService.remove( ad );
     }
 
@@ -113,19 +115,13 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      * 
      * @throws Exception
      */
-    public void testRemoveArrayDesignWithoutMock() throws Exception {
+    public void testRemoveArrayDesignNotAuthorized() throws Exception {
 
-        ArrayDesign ad = arrayDesignService.findArrayDesignByName( "AD Foo" );
-        if ( ad == null )
-            log.info( "ArrayDesign does not exist, skipping test" ); // FIXME, should add it!
-
-        else {
-            try {
-                arrayDesignService.remove( ad );
-                fail( "Should have gotten an AccessDeniedException" );
-            } catch ( AccessDeniedException okay ) {
-                // 
-            }
+        try {
+            arrayDesignService.remove( notYourArrayDesign );
+            fail( "Should have gotten an AccessDeniedException" );
+        } catch ( AccessDeniedException okay ) {
+            // 
         }
     }
 
@@ -134,23 +130,11 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      * 
      * @throws Exception
      */
-    public void testSaveArrayDesignWithoutMock() throws Exception {
+    public void testSaveArrayDesign() throws Exception {
 
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( "AD Foo" );
         arrayDesign.setDescription( "a test ArrayDesign" );
-
-        AuditTrail at = AuditTrail.Factory.newInstance();
-        at = auditTrailService.create( at );
-        arrayDesign.setAuditTrail( at );
-
-        Contact c = Contact.Factory.newInstance();
-        c.setName( "\' Design Provider Name\'" );
-        at = AuditTrail.Factory.newInstance();
-        at = auditTrailService.create( at );
-        c.setAuditTrail( at );
-
-        arrayDesign.setDesignProvider( c );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
         cs1.setName( "DE Bar1" );
@@ -181,16 +165,36 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testGetAllDesignElementsFromArrayDesignsWithoutMock() throws Exception {
+    public void testGetAllDesignElementsFromArrayDesigns() throws Exception {
 
-        Collection<CompositeSequence> col = compositeSequenceService.getAllCompositeSequences();
-        for ( CompositeSequence cs : col ) {
-            log.debug( cs );
-        }
+        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+        arrayDesign.setName( "AD Foo" );
+        arrayDesign.setDescription( "a test ArrayDesign" );
 
+        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
+        cs1.setName( "DE Bar1" );
+
+        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
+        cs2.setName( "DE Bar2" );
+
+        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
+        col.add( cs1 );
+        col.add( cs2 );
+
+        /*
+         * Note this sequence. Remember, inverse="true" if using this. If you do not make an explicit call to
+         * cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
+         */
+        cs1.setArrayDesign( arrayDesign );
+        cs2.setArrayDesign( arrayDesign );
+        arrayDesign.setCompositeSequences( col );
+        persisterHelper.persist( arrayDesign );
+
+        col = compositeSequenceService.getAllCompositeSequences();
         if ( col.size() == 0 ) {
             fail( "User not authorized for to access at least one of the objects in the graph" );
         }
+
     }
 
     /**
