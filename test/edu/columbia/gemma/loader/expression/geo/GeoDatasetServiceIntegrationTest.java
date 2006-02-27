@@ -70,6 +70,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseTransactionalSpringCon
             throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
         }
         gds.setGenerator( new GeoDomainObjectGeneratorLocal( path + "/test/data/geo/complexShortTest" ) );
+        this.setFlushModeCommit();
         gds.fetchAndLoad( "GDS825" );
     }
 
@@ -93,6 +94,7 @@ public class GeoDatasetServiceIntegrationTest extends BaseTransactionalSpringCon
     // }
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
+        this.setFlushModeCommit();
         assert config != null;
         String path = config.getString( "gemma.home" );
         if ( path == null ) {

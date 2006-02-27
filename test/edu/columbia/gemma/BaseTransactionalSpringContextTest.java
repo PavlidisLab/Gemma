@@ -35,6 +35,8 @@ import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -43,8 +45,6 @@ import org.springframework.test.AbstractTransactionalSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
 import uk.ltd.getahead.dwr.create.SpringCreator;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.Contact;
 import edu.columbia.gemma.common.description.DatabaseEntry;
 import edu.columbia.gemma.common.description.ExternalDatabase;
@@ -90,7 +90,9 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( RandomStringUtils.random( 10 ) + "_testdb" );
         result.setExternalDatabase( ed );
-        return ( DatabaseEntry ) persisterHelper.persist( result );
+        DatabaseEntry db = ( DatabaseEntry ) persisterHelper.persist( result );
+        flushSession();
+        return db;
     }
 
     /**
@@ -110,7 +112,23 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * Force the hibernate session to flush.
      */
     public void flushSession() {
-        ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().flush();
+        try {
+            ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().flush();
+        } catch ( HibernateException e ) {
+            throw new RuntimeException( "While trying to flush the session", e );
+        }
+    }
+
+    /**
+     * Force the hibernate session to flush.
+     */
+    public void flushAndClearSession() {
+        try {
+            flushSession();
+            ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().clear();
+        } catch ( HibernateException e ) {
+            throw new RuntimeException( "While trying to flush the session", e );
+        }
     }
 
     /**
@@ -220,5 +238,24 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         grantAuthority();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onTearDownInTransaction()
+     */
+    @Override
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
+        // flushSession();
+    }
+
+    /**
+     * Call this method near the start of your test to avoid "Stale data" errors ("Cannot synchronize session with
+     * persistent store...")
+     */
+    protected void setFlushModeCommit() {
+        ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().setFlushMode( FlushMode.COMMIT );
     }
 }

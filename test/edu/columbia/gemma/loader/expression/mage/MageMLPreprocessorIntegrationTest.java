@@ -77,6 +77,9 @@ public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringCo
     @SuppressWarnings("unchecked")
     public void testPreprocess() throws IOException, TransformerException {
 
+        // to keep us from getting stale data errors during tests.
+        this.setFlushModeCommit();
+
         /* PARSING */
         log.info( "***** PARSING *****  " );
 
@@ -189,14 +192,17 @@ public class MageMLPreprocessorIntegrationTest extends BaseTransactionalSpringCo
             try {
                 mageMLPreprocessor.preprocessStreams( Arrays.asList( is ), expressionExperiment, bioAssays,
                         mageMLConverter.getBioAssayDimensions() );
-            } catch ( edu.columbia.gemma.expression.bioAssayData.DesignElementDataVectorServiceException e ) {
-                fail();
-            } catch ( Exception e ) {
-                log.error( e );
+            } catch ( NoMoreQuantitationTypesException e ) {
                 log.info( "All done! (" + i + ")" );
                 break;
+            } catch ( RuntimeException e ) {
+                fail();
+                throw ( e );
             }
             i++;
+            
         }
+        
+        // FIXME - check the data is in the database as expected.
     }
 }

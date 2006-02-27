@@ -24,7 +24,6 @@ import java.util.HashSet;
 import org.acegisecurity.AccessDeniedException;
 
 import edu.columbia.gemma.BaseTransactionalSpringContextTest;
-import edu.columbia.gemma.common.auditAndSecurity.AuditTrailService;
 import edu.columbia.gemma.common.auditAndSecurity.User;
 import edu.columbia.gemma.common.auditAndSecurity.UserDao;
 import edu.columbia.gemma.common.auditAndSecurity.UserService;
@@ -50,7 +49,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
 
     private ManualAuthenticationProcessing manualAuthenticationProcessing;
     private ArrayDesignService arrayDesignService;
-    private AuditTrailService auditTrailService;
     private CompositeSequenceService compositeSequenceService;
     private UserDao userDao;
     private UserService userService;
@@ -84,7 +82,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
         testUser.setPasswordHint( "I am an idiot" );
         testUser = ( User ) userDao.create( testUser );
         userService.addRole( testUser, Constants.USER_ROLE );
-
         notYourArrayDesign = ArrayDesign.Factory.newInstance();
         notYourArrayDesign.setName( "deleteme" );
         notYourArrayDesign = ( ArrayDesign ) persisterHelper.persist( notYourArrayDesign );
@@ -130,17 +127,20 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testSaveArrayDesign() throws Exception {
 
+        this.setFlushModeCommit();
+
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( "AD Foo" );
+        arrayDesign.setName( "AD Foo1" );
         arrayDesign.setDescription( "a test ArrayDesign" );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs1.setName( "DE Bar1" );
+        cs1.setName( "DE Bar10" );
 
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs2.setName( "DE Bar2" );
+        cs2.setName( "DE Bar20" );
 
         Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
         col.add( cs1 );
@@ -154,47 +154,12 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
         cs2.setArrayDesign( arrayDesign );
         arrayDesign.setCompositeSequences( col );
 
-        arrayDesignService.findOrCreate( arrayDesign );
-
-    }
-
-    /**
-     * Tests getting all design elements given authorization on an array design (ie. tests getting the 'owned objects'
-     * given the authorization on the owner). This test was used to test the Acegi Security functionality.
-     * 
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    public void testGetAllDesignElementsFromArrayDesigns() throws Exception {
-
-        ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-        arrayDesign.setName( "AD Foo" );
-        arrayDesign.setDescription( "a test ArrayDesign" );
-
-        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs1.setName( "DE Bar1" );
-
-        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs2.setName( "DE Bar2" );
-
-        Collection<CompositeSequence> col = new HashSet<CompositeSequence>();
-        col.add( cs1 );
-        col.add( cs2 );
-
-        /*
-         * Note this sequence. Remember, inverse="true" if using this. If you do not make an explicit call to
-         * cs1(2).setArrayDesign(arrayDesign), then inverse="false" must be set.
-         */
-        cs1.setArrayDesign( arrayDesign );
-        cs2.setArrayDesign( arrayDesign );
-        arrayDesign.setCompositeSequences( col );
-        persisterHelper.persist( arrayDesign );
+        arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
 
         col = compositeSequenceService.getAllCompositeSequences();
         if ( col.size() == 0 ) {
             fail( "User not authorized for to access at least one of the objects in the graph" );
         }
-
     }
 
     /**
@@ -202,13 +167,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param auditTrailService The auditTrailService to set.
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
     }
 
     /**
