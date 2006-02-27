@@ -653,7 +653,7 @@
         
     </dependencies>
     <build>
-        <nagEmailAddress>pavlidis@dbmi.columbia.edu</nagEmailAddress>
+        <nagEmailAddress>paul@bioinformatics.ubc.ca</nagEmailAddress>
         <sourceDirectory>src/gen</sourceDirectory>
         <unitTestSourceDirectory>test</unitTestSourceDirectory>
         <unitTest>
@@ -662,10 +662,11 @@
                 <include>**/*Tests.java</include>
             </includes>
             <excludes>
-                <exclude>**/BaseTransactionalSpringContextTest</exclude><!-- not a test...-->
+                <exclude>**/Base*</exclude><!-- not tests...-->
                 <exclude>**/MageBaseTest.java</exclude>
                 <exclude>**/*IntegrationTest.java</exclude>
                 <exclude>**/AllTests.java</exclude>
+                <exclude>**/flow/*</exclude><!--  don't care about these for now  -->
             </excludes>
             <resources>
                 <resource>
