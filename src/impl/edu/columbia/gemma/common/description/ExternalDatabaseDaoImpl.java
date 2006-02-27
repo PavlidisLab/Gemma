@@ -62,7 +62,9 @@ public class ExternalDatabaseDaoImpl extends edu.columbia.gemma.common.descripti
 
     @Override
     public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase ) {
-        if ( externalDatabase == null || externalDatabase.getName() == null ) return null;
+        if ( externalDatabase == null || externalDatabase.getName() == null ) {
+            throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
+        }
         ExternalDatabase newExternalDatabase = find( externalDatabase );
         if ( newExternalDatabase != null ) {
             BeanPropertyCompleter.complete( newExternalDatabase, externalDatabase );

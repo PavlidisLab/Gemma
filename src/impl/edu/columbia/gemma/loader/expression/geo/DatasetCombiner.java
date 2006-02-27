@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -75,6 +76,18 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSubset;
 public class DatasetCombiner {
 
     /**
+     * 
+     */
+    private static final String GSE_RECORD_REGEXP = "(GSE\\d+)\\srecord";
+    /**
+     * 
+     */
+    private static final String ENTREZ_GEO_QUERY_URL_SUFFIX = "[Accession]&cmd=search";
+    /**
+     * 
+     */
+    private static final String ENTREZ_GEO_QUERY_URL_BASE = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=";
+    /**
      * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
      * is the ratio between the unnormalized edit distance and the length of the longer of the two strings. This is used
      * as a maximum distance (the pair of descriptors must be at least this close).
@@ -101,13 +114,12 @@ public class DatasetCombiner {
         // grep on "GDS[[digits]] record"
         URL url;
 
-        Pattern pat = Pattern.compile( "(GSE\\d+)\\srecord" );
+        Pattern pat = Pattern.compile( GSE_RECORD_REGEXP );
 
         Collection<String> associatedSeriesAccession = new HashSet<String>();
 
         try {
-            url = new URL( "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=" + datasetAccession
-                    + "[Accession]&cmd=search" );
+            url = new URL( ENTREZ_GEO_QUERY_URL_BASE + datasetAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
 
             URLConnection conn = url.openConnection();
             conn.connect();
@@ -170,8 +182,7 @@ public class DatasetCombiner {
         Collection<String> associatedDatasetAccessions = new HashSet<String>();
 
         try {
-            url = new URL( "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=" + seriesAccession
-                    + "[Accession]&cmd=search" );
+            url = new URL( ENTREZ_GEO_QUERY_URL_BASE + seriesAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
 
             URLConnection conn = url.openConnection();
             conn.connect();
@@ -189,6 +200,9 @@ public class DatasetCombiner {
             is.close();
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( e );
+        } catch ( UnknownHostException e ) {
+            log.error( e, e );
+            throw new RuntimeException( "Could not connect to remote server" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

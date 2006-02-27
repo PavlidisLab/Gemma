@@ -38,9 +38,7 @@ public class MageLoadTest extends MageBaseTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
+    protected void onSetUpBeforeTransaction() throws Exception {
         this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
     }
 
@@ -93,6 +91,8 @@ public class MageLoadTest extends MageBaseTest {
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
+        // if we don't do this, we get stale data errors.
+        setFlushModeCommit();
         persisterHelper.persist( result );
     }
 
@@ -105,7 +105,6 @@ public class MageLoadTest extends MageBaseTest {
         log.info( "Parsing MAGE from ArrayExpress (WMIT)" );
 
         MageMLParser mlp = new MageMLParser();
-
         xslSetup( mlp, "/data/mage/E-WMIT-4.xml" );
 
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( "/data/mage/E-WMIT-4.xml" );
@@ -118,6 +117,8 @@ public class MageLoadTest extends MageBaseTest {
         log.info( result.size() + " Objects parsed from the MAGE file." );
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
+        // if we don't do this, we get stale data errors.
+        setFlushModeCommit();
         persisterHelper.persist( result );
     }
 

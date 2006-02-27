@@ -19,15 +19,12 @@
 package edu.columbia.gemma.loader.description;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.zip.GZIPInputStream;
@@ -40,8 +37,6 @@ import edu.columbia.gemma.common.auditAndSecurity.AuditTrail;
 import edu.columbia.gemma.common.description.DatabaseType;
 import edu.columbia.gemma.common.description.ExternalDatabase;
 import edu.columbia.gemma.common.description.LocalFile;
-import edu.columbia.gemma.loader.loaderutils.HttpFetcher;
-import edu.columbia.gemma.loader.loaderutils.ParserAndLoaderTools;
 
 /**
  * @author keshav
@@ -83,15 +78,16 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
         dependencies[1] = lf;
         dependencies[2] = lf2;
 
-        HttpFetcher hf = new HttpFetcher();
-        Collection<LocalFile> files = hf.fetch( url );
-        final LocalFile localfile = files.iterator().next();
+        // HttpFetcher hf = new HttpFetcher();
+        // Collection<LocalFile> files = hf.fetch( url );
+        // final LocalFile localfile = files.iterator().next();
+        // final File file = localfile.asFile();
 
         // this is fancy for a test.
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             public Boolean call() throws FileNotFoundException, IOException {
-                File file = localfile.asFile();
-                InputStream is = new BufferedInputStream( new GZIPInputStream( new FileInputStream( file ) ) );
+                InputStream is = new BufferedInputStream( new GZIPInputStream( getClass().getResourceAsStream(
+                        "/data/loader/go_daily-termdb.small_test.rdf-xml.gz" ) ) );
                 ontologyEntryParser.parse( is );
                 return Boolean.TRUE;
             }
@@ -121,7 +117,7 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
             createdObjects = ontologyEntryPersister.persist( testSet );
         }
 
-        localfile.asFile().delete();
+        // localfile.asFile().delete();
 
     }
 

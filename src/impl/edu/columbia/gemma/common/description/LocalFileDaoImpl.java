@@ -36,8 +36,7 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
     private static Log log = LogFactory.getLog( LocalFileDaoImpl.class.getName() );
 
     /**
-     * @see edu.columbia.gemma.common.description.LocalFile#findOrCreate(int, java.lang.String,
-     *      edu.columbia.gemma.common.description.LocalFile)
+     * 
      */
     @Override
     public LocalFile find( edu.columbia.gemma.common.description.LocalFile localFile ) {
@@ -72,15 +71,14 @@ public class LocalFileDaoImpl extends edu.columbia.gemma.common.description.Loca
     }
 
     /**
-     * @see edu.columbia.gemma.common.description.LocalFile#find(edu.columbia.gemma.common.description.LocalFile)
+     * 
      */
     @Override
     public edu.columbia.gemma.common.description.LocalFile findOrCreate(
             edu.columbia.gemma.common.description.LocalFile localFile ) {
         if ( localFile == null || localFile.getLocalURI() == null
                 || ( localFile.getRemoteURI() == null && localFile.getSize() == 0 ) ) {
-            log.error( "localFile was null or had no valid business keys" );
-            return null;
+            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
         }
         LocalFile newlocalFile = find( localFile );
         if ( newlocalFile != null ) {

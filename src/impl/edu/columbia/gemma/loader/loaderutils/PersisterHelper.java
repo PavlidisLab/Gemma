@@ -197,6 +197,7 @@ public class PersisterHelper implements Persister {
      */
     public Collection<Object> persist( Collection<Object> col ) {
         if ( defaultOwner == null ) initializeDefaultOwner();
+
         try {
             log.debug( "Entering + " + this.getClass().getName() + ".create() with " + col.size() + " objects." );
             for ( Object entity : col ) {
@@ -219,7 +220,7 @@ public class PersisterHelper implements Persister {
 
         if ( entity == null ) return null;
 
-        log.debug( "Persisting " + entity.getClass().getName() + " " + entity );
+        log.debug( "Persisting: " + entity );
 
         if ( entity instanceof ExpressionExperiment ) {
             return persistExpressionExperiment( ( ExpressionExperiment ) entity );
@@ -494,8 +495,8 @@ public class PersisterHelper implements Persister {
      * @param bioAssayDimensionCache
      * @param vect
      */
-    private void checkBioAssayDimensionCache( Map<String, BioAssayDimension> bioAssayDimensionCache,
-            DesignElementDataVector vect ) {
+    private void checkBioAssayDimensionCache( DesignElementDataVector vect ) {
+        if ( !isTransient( vect.getBioAssayDimension() ) ) return;
         if ( bioAssayDimensionCache.containsKey( vect.getBioAssayDimension().getName() ) ) {
             vect.setBioAssayDimension( bioAssayDimensionCache.get( vect.getBioAssayDimension().getName() ) );
         } else {
@@ -511,8 +512,7 @@ public class PersisterHelper implements Persister {
      * @param designElementCache
      * @param ad
      */
-    protected void checkCacheIsSetup( Collection<String> arrayDesignCache,
-            Map<String, DesignElement> designElementCache, ArrayDesign ad ) {
+    protected void checkCacheIsSetup( ArrayDesign ad ) {
         if ( arrayDesignCache.contains( ad.getName() ) ) {
             return;
         }
@@ -521,7 +521,7 @@ public class PersisterHelper implements Persister {
         if ( ad == null ) {
             throw new IllegalStateException( "Can't put unpersisted ArrayDesign in the cache" );
         }
-        addToDesignElementCache( designElementCache, ad );
+        addToDesignElementCache( ad );
         arrayDesignCache.add( ad.getName() );
 
     }
@@ -599,11 +599,11 @@ public class PersisterHelper implements Persister {
         protocol.setType( type );
 
         for ( Software software : protocol.getSoftwareUsed() ) {
-            software.setId( persistSoftware( software ).getId() );
+            software = persistSoftware( software );
         }
 
         for ( Hardware hardware : protocol.getHardwares() ) {
-            hardware.setId( persistHardware( hardware ).getId() );
+            hardware = persistHardware( hardware );
         }
     }
 
@@ -627,7 +627,7 @@ public class PersisterHelper implements Persister {
 
         for ( Person performer : protocolApplication.getPerformers() ) {
             log.debug( "Filling in performer" );
-            performer.setId( personService.findOrCreate( performer ).getId() );
+            performer = personService.findOrCreate( performer );
         }
 
         for ( SoftwareApplication softwareApplication : protocolApplication.getSoftwareApplications() ) {
@@ -657,14 +657,13 @@ public class PersisterHelper implements Persister {
     }
 
     /**
-     * @param designElementCache
      * @param persistentDesignElement
      * @param maybeExistingDesignElement
      * @param key
      * @return
      */
-    private DesignElement getPersistentDesignElement( Map<String, DesignElement> designElementCache,
-            DesignElement persistentDesignElement, DesignElement maybeExistingDesignElement, String key ) {
+    private DesignElement getPersistentDesignElement( DesignElement persistentDesignElement,
+            DesignElement maybeExistingDesignElement, String key ) {
         if ( maybeExistingDesignElement instanceof CompositeSequence ) {
             persistentDesignElement = persistDesignElement( maybeExistingDesignElement );
         } else if ( maybeExistingDesignElement instanceof Reporter ) {
@@ -747,8 +746,8 @@ public class PersisterHelper implements Persister {
                         + " composite sequences in existing design, updated one has " + numCompositeSequencesInNew
                         + ", " + numExistingReporters + " reporters in existing design, updated one has "
                         + numReportersInNew + ")  No further processing of it will be done." );
-                arrayDesign = null;
-                return existing;
+                arrayDesign = existing;
+                return arrayDesign;
             }
 
             if ( numExistingCompositeSequences < numCompositeSequencesInNew ) {
@@ -756,7 +755,6 @@ public class PersisterHelper implements Persister {
                         + numExistingCompositeSequences + " composite sequences in existing design, updated one has "
                         + numCompositeSequencesInNew + ")" );
 
-                assert existing.getId() != null;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                     cs.setArrayDesign( existing );
                     cs = ( CompositeSequence ) persistDesignElement( cs );
@@ -764,7 +762,8 @@ public class PersisterHelper implements Persister {
 
                 persistArrayCompositeSequenceAssociations( arrayDesign );
                 existing.setCompositeSequences( arrayDesign.getCompositeSequences() );
-                arrayDesignService.update( existing );
+                arrayDesign = existing;
+                arrayDesignService.update( arrayDesign );
 
             }
 
@@ -773,7 +772,6 @@ public class PersisterHelper implements Persister {
                         + numExistingReporters + " reporters in existing design, updated one has " + numReportersInNew
                         + ")" );
 
-                assert existing.getId() != null;
                 for ( Reporter rep : arrayDesign.getReporters() ) {
                     rep.setArrayDesign( existing );
                     rep = ( Reporter ) persistDesignElement( rep );
@@ -781,10 +779,10 @@ public class PersisterHelper implements Persister {
 
                 persistArrayDesignReporterAssociations( arrayDesign );
                 existing.setReporters( arrayDesign.getReporters() );
-                arrayDesignService.update( existing );
-
+                arrayDesign = existing;
+                arrayDesignService.update( arrayDesign );
             }
-            return existing;
+            return arrayDesign;
         }
         log.debug( "Array Design " + arrayDesign + " is new, processing..." );
         return persistNewArrayDesign( arrayDesign );
@@ -821,7 +819,7 @@ public class PersisterHelper implements Persister {
      * @param arrayDesign
      */
     private void persistArrayCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
-        log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
+        log.debug( "Filling in or updating sequences in composite seqences for " + arrayDesign );
         int persistedCompositeSequences = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
@@ -832,14 +830,15 @@ public class PersisterHelper implements Persister {
             }
         }
 
-        log.info( persistedCompositeSequences + " composite sequences sequences examined for " + arrayDesign );
+        if ( persistedCompositeSequences > 0 )
+            log.info( persistedCompositeSequences + " composite sequences sequences examined for " + arrayDesign );
     }
 
     /**
      * @param arrayDesign
      */
     private void persistArrayDesignReporterAssociations( ArrayDesign arrayDesign ) {
-        log.info( "Filling in or updating sequences in reporters for " + arrayDesign );
+        log.debug( "Filling in or updating sequences in reporters for " + arrayDesign );
         int persistedReporters = 0;
         for ( Reporter reporter : arrayDesign.getReporters() ) {
             reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
@@ -848,7 +847,8 @@ public class PersisterHelper implements Persister {
                 log.info( persistedReporters + " reporter sequences examined for " + arrayDesign );
             }
         }
-        log.info( persistedReporters + " reporter sequences examined for " + arrayDesign );
+        if ( persistedReporters > 0 )
+            log.info( persistedReporters + " reporter sequences examined for " + arrayDesign );
     }
 
     /**
@@ -873,33 +873,28 @@ public class PersisterHelper implements Persister {
 
         for ( FactorValue factorValue : assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
-            factorValue.setId( persistFactorValue( factorValue ).getId() );
+            factorValue = persistFactorValue( factorValue );
         }
 
         assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
 
         for ( Iterator iter = assay.getArrayDesignsUsed().iterator(); iter.hasNext(); ) {
             ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
-            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
-        }
-
-        for ( LocalFile file : assay.getDerivedDataFiles() ) {
-            file.setId( persistLocalFile( file ).getId() );
+            arrayDesign = persistArrayDesign( arrayDesign );
+            assert arrayDesign.getId() != null;
         }
 
         for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
-            bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
+            bioMaterial = persistBioMaterial( bioMaterial );
+            assert bioMaterial.getId() != null;
         }
 
         LocalFile f = assay.getRawDataFile();
-        if ( f != null ) {
-            LocalFile persistentLocalFile = persistLocalFile( f );
-            if ( persistentLocalFile != null ) {
-                f.setId( persistentLocalFile.getId() );
-            } else {
-                log.error( "Null local file for " + f.getLocalURI() );
-                throw new RuntimeException( "Null local file for" + f.getLocalURI() );
-            }
+        f = persistLocalFile( f );
+
+        for ( LocalFile file : assay.getDerivedDataFiles() ) {
+            file = persistLocalFile( file );
+            assert file.getId() != null;
         }
 
         return bioAssayService.findOrCreate( assay );
@@ -915,11 +910,11 @@ public class PersisterHelper implements Persister {
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
 
         for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
-            bioAssay.setId( persistBioAssay( bioAssay ).getId() );
+            bioAssay = persistBioAssay( bioAssay );
         }
 
         for ( BioMaterialDimension bad : bioAssayDimension.getBioMaterialDimensions() ) {
-            bad.setId( persistBioMaterialDimension( bad ).getId() );
+            bad = persistBioMaterialDimension( bad );
         }
 
         return bioAssayDimensionService.findOrCreate( bioAssayDimension );
@@ -943,7 +938,8 @@ public class PersisterHelper implements Persister {
         for ( Treatment treatment : entity.getTreatments() ) {
 
             OntologyEntry action = treatment.getAction();
-            action.setId( persistOntologyEntry( action ).getId() );
+            treatment.setAction( persistOntologyEntry( action ) );
+            log.debug( treatment + " action: " + action );
 
             for ( ProtocolApplication protocolApplication : treatment.getProtocolApplications() ) {
                 fillInProtocolApplication( protocolApplication );
@@ -1038,31 +1034,17 @@ public class PersisterHelper implements Persister {
     }
 
     /**
+     * This is used when creating vectors "one by one" rather than by composition with an ExpressionExperiment.
+     * 
      * @param vector
      * @return
+     * 
+     * FIXME we may not want to use this, and always do it with an update of the ExpressionExperiment instead.
      */
     private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
         if ( vector == null ) return null;
-        DesignElement designElement = vector.getDesignElement();
-
+        this.fillInDesignElementDataVectorAssociations( vector );
         vector.setExpressionExperiment( persistExpressionExperiment( vector.getExpressionExperiment() ) );
-
-        if ( designElement instanceof CompositeSequence ) {
-            CompositeSequence cs = compositeSequenceService.find( ( ( CompositeSequence ) designElement ) );
-            if ( cs == null )
-                throw new IllegalStateException(
-                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
-            vector.setDesignElement( cs );
-        } else if ( designElement instanceof Reporter ) {
-            Reporter reporter = reporterService.find( ( Reporter ) designElement );
-            if ( reporter == null )
-                throw new IllegalStateException(
-                        "Cannot persist DesignElementDataVector until DesignElements are stored" );
-            vector.setDesignElement( reporter );
-        }
-
-        vector.setQuantitationType( persistQuantitationType( vector.getQuantitationType() ) );
-        log.debug( vector.getData().length + " bytes in datavector to persist" );
         return designElementDataVectorService.findOrCreate( vector );
     }
 
@@ -1093,13 +1075,13 @@ public class PersisterHelper implements Persister {
 
             // type
             for ( OntologyEntry type : experimentalDesign.getTypes() ) {
-                type.setId( persistOntologyEntry( type ).getId() );
+                type = persistOntologyEntry( type );
             }
 
             for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
 
                 for ( OntologyEntry annotation : experimentalFactor.getAnnotations() ) {
-                    annotation.setId( persistOntologyEntry( annotation ).getId() );
+                    annotation = persistOntologyEntry( annotation );
                 }
 
                 OntologyEntry category = experimentalFactor.getCategory();
@@ -1111,18 +1093,18 @@ public class PersisterHelper implements Persister {
                 }
 
                 for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
-                    factorValue.setId( persistFactorValue( factorValue ).getId() );
+                    factorValue = persistFactorValue( factorValue );
                 }
             }
         }
 
         for ( BioAssay bA : entity.getBioAssays() ) {
-            bA.setId( persistBioAssay( bA ).getId() );
+            bA = persistBioAssay( bA );
         }
 
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
             for ( BioAssay bA : subset.getBioAssays() ) {
-                bA.setId( persistBioAssay( bA ).getId() );
+                bA = persistBioAssay( bA );
             }
         }
 
@@ -1132,48 +1114,67 @@ public class PersisterHelper implements Persister {
         return expressionExperimentService.findOrCreate( entity );
     }
 
+    Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
+    Collection<String> arrayDesignCache = new HashSet<String>();
+    Map<String, DesignElement> designElementCache = new HashMap<String, DesignElement>();
+
     /**
      * @param entity
      */
     private void fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
-        Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
-        Collection<String> arrayDesignCache = new HashSet<String>();
-        Map<String, DesignElement> designElementCache = new HashMap<String, DesignElement>();
+
+        clearCaches();
 
         int count = 0;
         for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
 
-            DesignElement persistentDesignElement = null;
-            DesignElement maybeExistingDesignElement = vect.getDesignElement();
-
-            assert maybeExistingDesignElement != null;
-            ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
-
-            checkCacheIsSetup( arrayDesignCache, designElementCache, ad );
-
-            String key = maybeExistingDesignElement.getName() + " " + ad.getName();
-
-            if ( designElementCache.containsKey( key ) ) {
-                persistentDesignElement = designElementCache.get( key );
-            } else {
-                persistentDesignElement = getPersistentDesignElement( designElementCache, persistentDesignElement,
-                        maybeExistingDesignElement, key );
-            }
-            assert persistentDesignElement != null;
-            assert persistentDesignElement.getId() != null;
-
-            vect.setDesignElement( persistentDesignElement );
-
-            checkBioAssayDimensionCache( bioAssayDimensionCache, vect );
-
-            assert vect.getQuantitationType() != null;
-            vect.getQuantitationType().setId( persistQuantitationType( vect.getQuantitationType() ).getId() );
+            fillInDesignElementDataVectorAssociations( vect );
 
             if ( count > 0 && count % 2000 == 0 ) {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
             }
             count++;
         }
+    }
+
+    /**
+     * 
+     */
+    private void clearCaches() {
+        bioAssayDimensionCache.clear();
+        arrayDesignCache.clear();
+        designElementCache.clear();
+    }
+
+    /**
+     * @param vect
+     */
+    private void fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
+        DesignElement persistentDesignElement = null;
+        DesignElement maybeExistingDesignElement = vect.getDesignElement();
+
+        assert maybeExistingDesignElement != null;
+        ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
+
+        checkCacheIsSetup( ad );
+
+        String key = maybeExistingDesignElement.getName() + " " + ad.getName();
+
+        if ( designElementCache.containsKey( key ) ) {
+            persistentDesignElement = designElementCache.get( key );
+        } else {
+            persistentDesignElement = getPersistentDesignElement( persistentDesignElement, maybeExistingDesignElement,
+                    key );
+        }
+        assert persistentDesignElement != null;
+        assert persistentDesignElement.getId() != null;
+
+        vect.setDesignElement( persistentDesignElement );
+
+        checkBioAssayDimensionCache( vect );
+
+        assert vect.getQuantitationType() != null;
+        vect.setQuantitationType( persistQuantitationType( vect.getQuantitationType() ) );
     }
 
     /**
@@ -1199,7 +1200,7 @@ public class PersisterHelper implements Persister {
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
             OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
-            ontologyEntry.setId( persistOntologyEntry( ontologyEntry ).getId() );
+            ontologyEntry = persistOntologyEntry( ontologyEntry );
         } else if ( factorValue.getValue() != null ) {
             if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
                 throw new IllegalStateException(
@@ -1207,7 +1208,7 @@ public class PersisterHelper implements Persister {
             }
         } else {
             Measurement measurement = factorValue.getMeasurement();
-            measurement.setId( persistMeasurement( measurement ).getId() );
+            measurement = persistMeasurement( measurement );
         }
 
         return factorValueService.findOrCreate( factorValue );
@@ -1237,7 +1238,7 @@ public class PersisterHelper implements Persister {
 
         if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
             for ( Software software : hardware.getSoftwares() ) {
-                software.setId( persistSoftware( software ).getId() );
+                software = persistSoftware( software );
             }
         }
 
@@ -1245,7 +1246,7 @@ public class PersisterHelper implements Persister {
 
         if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
             for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
-                manufacturer.setId( persistContact( manufacturer ).getId() );
+                manufacturer = persistContact( manufacturer );
             }
         }
 
@@ -1256,6 +1257,7 @@ public class PersisterHelper implements Persister {
      * @param file
      */
     private LocalFile persistLocalFile( LocalFile file ) {
+        if ( file == null ) return null;
         return localFileService.findOrCreate( file );
     }
 
@@ -1296,7 +1298,7 @@ public class PersisterHelper implements Persister {
             persistOntologyEntry( associatedOntologyEntry );
         }
 
-        ontologyEntry.setId( ontologyEntryService.findOrCreate( ontologyEntry ).getId() );
+        ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
         return ontologyEntry;
     }
 
@@ -1321,13 +1323,13 @@ public class PersisterHelper implements Persister {
 
         if ( components != null && components.size() > 0 ) {
             for ( Software component : components ) {
-                component.setId( persistSoftware( component ).getId() );
+                component = persistSoftware( component );
             }
         }
 
         if ( software.getSoftwareManufacturers() != null && software.getSoftwareManufacturers().size() > 0 ) {
             for ( Contact manufacturer : software.getSoftwareManufacturers() ) {
-                manufacturer.setId( persistContact( manufacturer ).getId() );
+                manufacturer = persistContact( manufacturer );
             }
         }
 
@@ -1350,7 +1352,7 @@ public class PersisterHelper implements Persister {
      * @param arrayDesign To add to the cache.
      */
     @SuppressWarnings("unchecked")
-    private void addToDesignElementCache( Map<String, DesignElement> designElementCache, ArrayDesign arrayDesign ) {
+    private void addToDesignElementCache( ArrayDesign arrayDesign ) {
 
         ArrayDesign pArrayDesign = arrayDesignService.find( arrayDesign );
         log.info( "Loading array design elements for " + arrayDesign );
@@ -1374,4 +1376,5 @@ public class PersisterHelper implements Persister {
             designElementCache.put( element.getName() + adName, element );
         }
     }
+
 }

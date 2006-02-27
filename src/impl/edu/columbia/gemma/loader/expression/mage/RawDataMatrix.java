@@ -25,11 +25,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import baseCode.io.ByteArrayConverter;
 import cern.colt.list.ByteArrayList;
 import edu.columbia.gemma.common.quantitationtype.PrimitiveType;
 import edu.columbia.gemma.common.quantitationtype.QuantitationType;
 import edu.columbia.gemma.expression.bioAssay.BioAssay;
+import edu.columbia.gemma.expression.bioAssayData.BioAssayDimension;
 import edu.columbia.gemma.expression.bioAssayData.DesignElementDataVector;
 import edu.columbia.gemma.expression.designElement.DesignElement;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
@@ -42,20 +46,33 @@ import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
  */
 class RawDataMatrix {
 
+    private static Log log = LogFactory.getLog( RawDataMatrix.class.getName() );
+
     private long byteSize = 0;
     List<BioAssay> assays;
     ByteArrayConverter converter = new ByteArrayConverter();
     QuantitationType quantitationType;
     Map<String, DesignElementDataVector> rows = new HashMap<String, DesignElementDataVector>();
     Map<String, ByteArrayList> rowTemp = new HashMap<String, ByteArrayList>();
+    BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
 
     /**
      * @param type
      */
     public RawDataMatrix( List<BioAssay> bioAssays, QuantitationType type ) {
-        super();
         this.assays = bioAssays;
         this.quantitationType = type;
+
+        // The following is a little silly and also ad hoc. Still need to fill in the BioMaterialDimension as well.
+        log.info( "Setting up BioAssayDimension" );
+        StringBuilder buf = new StringBuilder();
+        for ( BioAssay assay : bioAssays ) {
+            bioAssayDimension.getDimensionBioAssays().add( assay );
+            String name = assay.getName();
+            buf.append( name + "," );
+        }
+        bioAssayDimension.setName( buf.length() > 100 ? buf.toString().substring( 0, 100 ) : buf.toString() + "..." );
+        bioAssayDimension.setDescription( buf.toString() );
     }
 
     /**
@@ -90,6 +107,8 @@ class RawDataMatrix {
         if ( rows.containsKey( de.getName() ) ) return;
         DesignElementDataVector tobeAdded = DesignElementDataVector.Factory.newInstance();
         tobeAdded.setExpressionExperiment( expressionExperiment );
+        assert this.bioAssayDimension != null;
+        tobeAdded.setBioAssayDimension( this.bioAssayDimension );
         tobeAdded.setDesignElement( de );
         tobeAdded.setQuantitationType( qt );
         addRow( tobeAdded );
@@ -108,7 +127,8 @@ class RawDataMatrix {
         tobeAdded.setDesignElement( de );
         tobeAdded.setQuantitationType( qt );
         tobeAdded.setExpressionExperiment( expressionExperiment );
-        // FIXME tobeAdded.setBioAssayDimension( ?? );
+        assert this.bioAssayDimension != null;
+        tobeAdded.setBioAssayDimension( this.bioAssayDimension );
         byte[] bytes = converter.toBytes( data.toArray() );
         byteSize += bytes.length;
         tobeAdded.setData( bytes );
@@ -154,7 +174,12 @@ class RawDataMatrix {
         ByteArrayList bytes = this.rowTemp.get( name );
         this.rows.get( name ).setData( bytes.elements() );
         this.rowTemp.remove( name );
-        return this.rows.get( name );
+        DesignElementDataVector result = this.rows.get( name );
+        assert result.getBioAssayDimension() != null;
+        assert result.getQuantitationType() != null;
+        assert result.getDesignElement() != null;
+        assert result.getExpressionExperiment() != null;
+        return result;
     }
 
     /**
@@ -210,13 +235,6 @@ class RawDataMatrix {
             }
             o.write( line + "\n" );
         }
-    }
-
-    /**
-     * @param assays The assays to set.
-     */
-    public void setAssays( List<BioAssay> assays ) {
-        this.assays = assays;
     }
 
 }

@@ -55,6 +55,11 @@ import edu.columbia.gemma.common.description.ExternalDatabase;
  */
 public class PubMedXMLParser {
 
+    /**
+     * 
+     */
+    private static final String MEDLINE_RECORD_AUTHOR_XPATH = "child::MedlineCitation/descendant::AuthorList/Author";
+
     // private static final String MEDLINE_ELEMENT = "MedlineCitation";
     private static final String ABSTRACT_TEXT_ELEMENT = "AbstractText";
 
@@ -112,7 +117,7 @@ public class PubMedXMLParser {
     private String extractAuthorList( Node article ) throws IOException, TransformerException {
 
         NodeList authorList = org.apache.xpath.XPathAPI.selectNodeList( article,
-                "child::MedlineCitation/descendant::AuthorList/Author" );
+                MEDLINE_RECORD_AUTHOR_XPATH );
 
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {

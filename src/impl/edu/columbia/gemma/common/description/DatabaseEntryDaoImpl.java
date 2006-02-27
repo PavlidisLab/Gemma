@@ -62,7 +62,9 @@ public class DatabaseEntryDaoImpl extends edu.columbia.gemma.common.description.
     @Override
     public DatabaseEntry findOrCreate( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null || databaseEntry.getAccession() == null
-                || databaseEntry.getExternalDatabase() == null ) return null;
+                || databaseEntry.getExternalDatabase() == null ) {
+            throw new IllegalArgumentException( "No valis business key for " + databaseEntry );
+        }
         DatabaseEntry newDatabaseEntry = find( databaseEntry );
         if ( newDatabaseEntry != null ) {
             BeanPropertyCompleter.complete( newDatabaseEntry, databaseEntry );

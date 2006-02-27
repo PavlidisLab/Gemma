@@ -28,10 +28,6 @@ import org.hibernate.criterion.Restrictions;
 import edu.columbia.gemma.loader.loaderutils.BeanPropertyCompleter;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see edu.columbia.gemma.common.description.BibliographicReference
@@ -88,7 +84,7 @@ public class BibliographicReferenceDaoImpl extends edu.columbia.gemma.common.des
     public BibliographicReference findOrCreate( BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
                 || bibliographicReference.getPubAccession().getAccession() == null ) {
-            throw new NullPointerException( "BibliographicReference was null or had no accession : "
+            throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
                     + bibliographicReference );
         }
         BibliographicReference newBibliographicReference = find( bibliographicReference );

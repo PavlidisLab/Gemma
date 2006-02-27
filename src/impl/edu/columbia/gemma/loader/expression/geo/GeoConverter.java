@@ -217,7 +217,7 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private BioMaterial convertChannel( GeoSample sample, GeoChannel channel, BioMaterial bioMaterial ) {
         if ( bioMaterial == null ) return null;
-        log.info( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
+        log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
         // BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
 
         // bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) );
@@ -908,7 +908,7 @@ public class GeoConverter implements Converter {
             return null;
         }
 
-        log.info( "Converting sample: " + sample.getGeoAccession() );
+        log.debug( "Converting sample: " + sample.getGeoAccession() );
 
         BioAssay bioAssay = BioAssay.Factory.newInstance();
         String title = sample.getTitle();
@@ -1045,7 +1045,7 @@ public class GeoConverter implements Converter {
                     if ( accession.equals( cSample ) ) {
                         BioAssay ba = convertSample( sample, bioMaterial );
                         ba.getSamplesUsed().add( bioMaterial );
-                        log.info( "Adding " + ba + " and associating with  " + bioMaterial );
+                        log.debug( "Adding " + ba + " and associating with  " + bioMaterial );
                         expExp.getBioAssays().add( ba );
                         found = true;
                         break;

@@ -110,7 +110,7 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
     @Override
     public Integer numReporters( Long id ) {
         return super.numReporters(
-                "select count (*) from  ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id", id );
+                "select count (*) from  ReporterImpl as rep inner join rep.reporterArrayDesign as ar where ar.id = :id", id );
     }
 
     /*
@@ -135,7 +135,7 @@ public class ArrayDesignDaoImpl extends edu.columbia.gemma.expression.arrayDesig
     @Override
     public Collection loadReporters( Long id ) {
         return super.loadReporters(
-                "select rep from ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id", id );
+                "select rep from ReporterImpl as rep inner join rep.reporterArrayDesign as ar where ar.id = :id", id );
 
     }
 

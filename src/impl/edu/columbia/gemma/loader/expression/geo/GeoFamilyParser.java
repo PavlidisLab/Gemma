@@ -193,7 +193,7 @@ public class GeoFamilyParser implements Parser {
             sample.setGeoAccession( value );
             results.getSampleMap().put( value, sample );
         }
-        log.info( "Adding sample: " + value + " to series " + currentSeriesAccession );
+        log.debug( "Adding sample: " + value + " to series " + currentSeriesAccession );
         results.getSeriesMap().get( currentSeriesAccession ).addSample( results.getSampleMap().get( value ) );
     }
 

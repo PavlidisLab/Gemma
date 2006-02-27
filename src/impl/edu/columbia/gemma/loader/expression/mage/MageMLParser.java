@@ -272,7 +272,7 @@ public class MageMLParser implements Parser {
                     // Collection<Object> d = getConvertedData( c );
                     Collection<Object> d = getDomainObjectsForClass( c );
                     if ( d != null && d.size() > 0 ) {
-                        log.info( "Adding " + d.size() + " converted " + name + "." + mageClasses[j] + "s" );
+                        log.debug( "Adding " + d.size() + " " + name + "." + mageClasses[j] + "s" );
                         mageDomainObjects.addAll( d );
                     }
                 } catch ( ClassNotFoundException e ) {

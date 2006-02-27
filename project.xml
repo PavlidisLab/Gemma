@@ -7,8 +7,8 @@
     <groupId>Gemma</groupId>
     <currentVersion>0.1</currentVersion>
     <organization>
-        <name>Columbia University</name>
-        <url>http://www.columbia.edu</url>
+        <name>University of British Columbia Bioinformatics Centre</name>
+        <url>http://bioinformatics.ubc.ca/</url>
     </organization>
     <inceptionYear>2005</inceptionYear>
     <logo>web/images/logo/gemOnlySmall.gif</logo>
@@ -39,7 +39,7 @@
     </developers>
     <licenses>
         <license>
-            <name>GPL</name>
+            <name>Apache 2.0</name>
         </license>
     </licenses>
     <dependencies>
