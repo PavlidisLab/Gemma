@@ -30,7 +30,7 @@ import edu.columbia.gemma.BaseTransactionalSpringContextTest;
  * @author pavlidis
  * @version $Id$
  */
-public class MageBaseTest extends BaseTransactionalSpringContextTest {
+public abstract class MageBaseTest extends BaseTransactionalSpringContextTest {
 
     /**
      * XSL-transform the mage document. This is only needed for testing. In production, this is done as part of the

@@ -36,7 +36,7 @@ import edu.columbia.gemma.genome.gene.CandidateGeneListDao;
  * @author pavlidis
  * @version $Id$
  */
-public class BaseMockTest extends TestCase {
+public abstract class BaseMockTest extends TestCase {
 
     private CandidateGeneDao candidateGeneDao;
     private CandidateGeneListDao candidateGeneListDao;
