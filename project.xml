@@ -664,7 +664,7 @@
             <excludes>
                 <exclude>**/Base*</exclude><!-- not tests...-->
                 <exclude>**/MageBaseTest.java</exclude>
-                <exclude>**/*IntegrationTest.java</exclude>
+<!--                 <exclude>**/*IntegrationTest.java</exclude> -->
                 <exclude>**/AllTests.java</exclude>
                 <exclude>**/flow/*</exclude><!--  don't care about these for now  -->
             </excludes>
