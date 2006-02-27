@@ -53,7 +53,7 @@ public class ReporterDaoImpl extends edu.columbia.gemma.expression.designElement
 
             // This allows finding without having a persistent arrayDesign. TODO make this use the full arraydesign
             // business key.
-            queryObject.createCriteria( "arrayDesign" ).add(
+            queryObject.createCriteria( "reporterArrayDesign" ).add(
                     Restrictions.eq( "name", reporter.getArrayDesign().getName() ) );
 
             java.util.List results = queryObject.list();
