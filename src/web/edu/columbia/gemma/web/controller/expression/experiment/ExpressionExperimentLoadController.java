@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.web.controller.expression.experiment;
 
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -29,6 +31,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import edu.columbia.gemma.expression.arrayDesign.ArrayDesign;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 import edu.columbia.gemma.loader.expression.geo.GeoConverter;
 import edu.columbia.gemma.loader.expression.geo.GeoDatasetService;
@@ -59,14 +62,14 @@ public class ExpressionExperimentLoadController extends BaseFormController {
     @Override
     public ModelAndView onSubmit( final HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-       
+
         final ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
         final HttpSession session = request.getSession();
-        
-//        final double startAt = Double.parseDouble(request.getParameter("startAt"));
-//        final double endAt = Double.parseDouble(request.getParameter("endAt"));
-//        final long sleepTime = Long.parseLong(request.getParameter("sleepTime"));
-        
+
+        // final double startAt = Double.parseDouble(request.getParameter("startAt"));
+        // final double endAt = Double.parseDouble(request.getParameter("endAt"));
+        // final long sleepTime = Long.parseLong(request.getParameter("sleepTime"));
+
         // TODO make this generic instead of GEO-specific.
 
         // validate an accession was entered
@@ -75,31 +78,41 @@ public class ExpressionExperimentLoadController extends BaseFormController {
             errors.rejectValue( "accession", "errors.required", args, "Accession" );
             return showForm( request, response, errors );
         }
-        
-//        Thread t = new Thread( new Runnable() {
-//            public void run() { // Do your real processing here
-//                // once validated.. TODO put this in its own thread and update use with progress.
-//               
-                log.info( "Loading " + eeLoadCommand.getAccession() );
-                GeoDatasetService gds = new GeoDatasetService();
-                GeoConverter geoConv = new GeoConverter();
-                gds.setPersister( persisterHelper );
-                gds.setConverter( geoConv );
-                ExpressionExperiment     result  = gds.fetchAndLoad( eeLoadCommand.getAccession() );
-                // place the data into the request for retrieval on next page
-                request.setAttribute( "expressionExperiment", result );
-                session.setAttribute("stillProcessing", Boolean.FALSE);
-//            }
-//        } );
-//        t.start();
-//        response.sendRedirect(response.encodeRedirectURL("processing.html"));
+
+        // Thread t = new Thread( new Runnable() {
+        // public void run() { // Do your real processing here
+        // // once validated.. TODO put this in its own thread and update use with progress.
+        //               
+        log.info( "Loading " + eeLoadCommand.getAccession() );
+        if ( eeLoadCommand.isLoadPlatformOnly() ) {
+            log.info( "Only loading platform" );
+        }
+        GeoDatasetService gds = new GeoDatasetService();
+        GeoConverter geoConv = new GeoConverter();
+        gds.setPersister( persisterHelper );
+        gds.setConverter( geoConv );
+        gds.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
+        if ( eeLoadCommand.isLoadPlatformOnly() ) {
+            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) gds.fetchAndLoad( eeLoadCommand.getAccession() );
+            request.setAttribute( "arrayDesigns", arrayDesigns );
+        } else {
+            ExpressionExperiment result = ( ExpressionExperiment ) gds.fetchAndLoad( eeLoadCommand.getAccession() );
+            request.setAttribute( "expressionExperiment", result );
+        }
+        // place the data into the request for retrieval on next page
+
+        session.setAttribute( "stillProcessing", Boolean.FALSE );
+        // }
+        // } );
+        // t.start();
+        // response.sendRedirect(response.encodeRedirectURL("processing.html"));
 
         return new ModelAndView( getSuccessView() );
     }
 
     /**
      * 
-     */ 
+     */
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {

@@ -26,9 +26,11 @@ import java.io.Serializable;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentLoadCommand  implements Serializable  {
+public class ExpressionExperimentLoadCommand implements Serializable {
 
     private String datasourceName;
+
+    private boolean loadPlatformOnly;
 
     private String accession;
 
@@ -41,7 +43,7 @@ public class ExpressionExperimentLoadCommand  implements Serializable  {
 
     /**
      * @param accession The accession to set.
-     *     @spring.validator type="required"
+     * @spring.validator type="required"
      * @spring.validator-args arg0resource="expressionExperiment.accession"
      */
     public void setAccession( String accession ) {
@@ -60,6 +62,20 @@ public class ExpressionExperimentLoadCommand  implements Serializable  {
      */
     public void setDatasourceName( String datasourceName ) {
         this.datasourceName = datasourceName;
+    }
+
+    /**
+     * @return Returns the loadPlatformOnly.
+     */
+    public boolean isLoadPlatformOnly() {
+        return this.loadPlatformOnly;
+    }
+
+    /**
+     * @param loadPlatformOnly The loadPlatformOnly to set.
+     */
+    public void setLoadPlatformOnly( boolean loadPlatformOnly ) {
+        this.loadPlatformOnly = loadPlatformOnly;
     }
 
 }
