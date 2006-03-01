@@ -52,11 +52,11 @@ import org.springmodules.commons.validator.ValidatorFactory;
  * It is designed to be used as follows:
  * 
  * <pre>
- *  
- *   
- *    &lt;tag:label key=&quot;userForm.username&quot; /&gt;
- *    
- *   
+ *         
+ *          
+ *           &lt;tag:label key=&quot;userForm.username&quot; /&gt;
+ *           
+ *          
  * </pre>
  * 
  * </p>
@@ -90,15 +90,24 @@ public class LabelTag extends TagSupport {
 
         ValidatorResources resources = getValidatorResources();
 
-        Locale locale = pageContext.getRequest().getLocale();
+        Locale locale = requestContext.getLocale();
 
         if ( locale == null ) {
             locale = Locale.getDefault();
         }
 
         // get the name of the bean from the key
-        String formName = key.substring( 0, key.indexOf( '.' ) );
-        String fieldName = key.substring( formName.length() + 1 );
+        assert key != null;
+        String formName = null;
+        String fieldName = null;
+        if ( key.indexOf( '.' ) < 0 ) {
+            log.warn( "Label key " + key + " should be in format <formName>.<fieldName>" );
+            formName = key;
+            fieldName = key;
+        } else {
+            formName = key.substring( 0, key.indexOf( '.' ) );
+            fieldName = key.substring( formName.length() + 1 );
+        }
 
         if ( resources != null ) {
             Form form = resources.getForm( locale, formName );
