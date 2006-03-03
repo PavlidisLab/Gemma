@@ -32,6 +32,9 @@ public class XMLUtils {
      * Make the horrible DOM API slightly more bearable: get the text value we know this element contains.
      * <p>
      * Borrowed from the Spring API.
+     * <p>
+     * Note that we can't really use the alternative Node.getTextContent() because it isn't supported by older Xerces
+     * implementations (1.x), which tend to leak into the classloader. Causes recurring problems with tests.
      * 
      * @throws IOException
      */

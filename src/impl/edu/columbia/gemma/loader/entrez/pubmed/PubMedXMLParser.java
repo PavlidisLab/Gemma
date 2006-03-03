@@ -116,8 +116,7 @@ public class PubMedXMLParser {
      */
     private String extractAuthorList( Node article ) throws IOException, TransformerException {
 
-        NodeList authorList = org.apache.xpath.XPathAPI.selectNodeList( article,
-                MEDLINE_RECORD_AUTHOR_XPATH );
+        NodeList authorList = org.apache.xpath.XPathAPI.selectNodeList( article, MEDLINE_RECORD_AUTHOR_XPATH );
 
         StringBuilder al = new StringBuilder();
         for ( int i = 0; i < authorList.getLength(); i++ ) {
@@ -170,6 +169,7 @@ public class PubMedXMLParser {
 
         log.debug( articles.getLength() + " articles found in document" );
 
+     
         try {
             for ( int i = 0; i < articles.getLength(); i++ ) {
 
@@ -180,31 +180,36 @@ public class PubMedXMLParser {
                 Node abstractNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
                         "child::MedlineCitation/descendant::" + ABSTRACT_TEXT_ELEMENT );
                 if ( abstractNode != null ) {
-                    bibRef.setAbstractText( abstractNode.getTextContent() );
+                    bibRef.setAbstractText( XMLUtils.getTextValue( ( Element ) abstractNode ) );
                 }
 
-                bibRef.setPages( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + MEDLINE_PAGINATION_ELEMENT ).getTextContent() );
+                Node pagesNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + MEDLINE_PAGINATION_ELEMENT );
+                bibRef.setPages( XMLUtils.getTextValue( ( Element ) pagesNode ) );
 
-                bibRef.setTitle( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + TITLE_ELEMENT ).getTextContent() );
+                Node titleNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + TITLE_ELEMENT );
+                bibRef.setTitle( XMLUtils.getTextValue( ( Element ) titleNode ) );
 
-                bibRef.setVolume( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::Volume" ).getTextContent() );
+                Node volumeNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::Volume" );
+                bibRef.setVolume( XMLUtils.getTextValue( ( Element ) volumeNode ) );
 
-                bibRef.setIssue( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::Issue" ).getTextContent() );
+                Node issueNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::Issue" );
+                bibRef.setIssue( XMLUtils.getTextValue( ( Element ) issueNode ) );
 
-                bibRef.setPublication( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "child::MedlineCitation/descendant::" + MEDLINE_JOURNAL_TITLE_ELEMENT ).getTextContent() );
+                Node publicationNode = org.apache.xpath.XPathAPI.selectSingleNode( article,
+                        "child::MedlineCitation/descendant::" + MEDLINE_JOURNAL_TITLE_ELEMENT );
+                bibRef.setPublication( XMLUtils.getTextValue( ( Element ) publicationNode ) );
 
                 bibRef.setAuthorList( extractAuthorList( article ) );
 
                 bibRef.setPublicationDate( extractPublicationDate( article ) );
 
+                Node dbEntryNode = org.apache.xpath.XPathAPI.selectSingleNode( article, "/descendant::" + PMID_ELEMENT );
                 DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-                dbEntry.setAccession( org.apache.xpath.XPathAPI.selectSingleNode( article,
-                        "/descendant::" + PMID_ELEMENT ).getTextContent() );
+                dbEntry.setAccession( XMLUtils.getTextValue( ( Element ) dbEntryNode ) );
 
                 ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
                 exDb.setName( PUB_MED_EXTERNAL_DB_NAME );

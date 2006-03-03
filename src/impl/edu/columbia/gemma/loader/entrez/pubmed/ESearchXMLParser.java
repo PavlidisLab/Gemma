@@ -29,12 +29,10 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-// import org.w3c.dom.Document;
-// import org.w3c.dom.Node;
-// import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
@@ -78,11 +76,15 @@ public class ESearchXMLParser {
         log.debug( "Got " + idList.getLength() );
         // NodeList idNodes = idList.item( 0 ).getChildNodes();
         // Node ids = idList.item( 0 );
-        for ( int i = 0; i < idList.getLength(); i++ ) {
-            Node item = idList.item( i );
-            String value = item.getTextContent();
-            log.debug( "Got " + value );
-            result.add( value );
+        try {
+            for ( int i = 0; i < idList.getLength(); i++ ) {
+                Node item = idList.item( i );
+                String value = XMLUtils.getTextValue( ( Element ) item );
+                log.debug( "Got " + value );
+                result.add( value );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
 
         return result;
