@@ -1,3 +1,5 @@
+package edu.columbia.gemma.web.taglib.displaytag;
+
 /*
  * The Gemma project
  * 
@@ -16,75 +18,82 @@
  * limitations under the License.
  *
  */
-package edu.columbia.gemma.web.taglib.displaytag;
 
 import org.displaytag.decorator.TableDecorator;
 
+import edu.columbia.gemma.expression.experiment.ExperimentalDesign;
 import edu.columbia.gemma.expression.experiment.ExpressionExperiment;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
  * <p>
- * See http://displaytag.sourceforge.net/10/tut_decorators.html and
- * http://displaytag.sourceforge.net/10/tut_links.html for explanation of how
- * this works.
+ * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
+ * for explanation of how this works.
  * 
  * @author pavlidis
- * @version $Id: ExpressionExperimentWrapper.java,v 1.3 2006/02/12 00:01:12
- *          pavlidis Exp $
+ * @version $Id$
  */
 public class ExpressionExperimentWrapper extends TableDecorator {
 
-	/**
-	 * @return String
-	 */
-	public String getDetailsLink() {
-		ExpressionExperiment object = (ExpressionExperiment) getCurrentRowObject();
-		if (object.getAccession() != null) {
-			return "<a href=\"showExpressionExperiment.html?name="
-					+ object.getName() + "\">"
-					+ object.getAccession().getAccession() + "</a>";
-		}
-		return "No accession";
-	}
+    /**
+     * @return String
+     */
+    public String getDetailsLink() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if ( object.getAccession() != null ) {
+            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
+                    + object.getAccession().getAccession() + "</a>";
+        }
+        return "No accession";
+    }
 
-	/**
-	 * @return String
-	 */
-	public String getAssaysLink() {
-		ExpressionExperiment object = (ExpressionExperiment) getCurrentRowObject();
-		if (object.getBioAssays() != null) {
-			return "<a href=\"showExpressionExperiment.html?name="
-					+ object.getName() + "\">" + object.getBioAssays().size()
-					+ "</a>";
-		}
-		return "No bioassays";
-	}
+    /**
+     * @return String
+     */
+    public String getAssaysLink() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if ( object.getBioAssays() != null ) {
+            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
+                    + object.getBioAssays().size() + "</a>";
+        }
+        return "No bioassays";
+    }
 
-	/**
-	 * @return String
-	 */
-	public String getDesignsLink() {
-		ExpressionExperiment object = (ExpressionExperiment) getCurrentRowObject();
-		if (object.getExperimentalDesigns() != null) {
-			return "<a href=\"showExpressionExperiment.html?name="
-					+ object.getName() + "\">"
-					+ object.getExperimentalDesigns().size() + "</a>";
-		}
-		return "No design";
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public String getNameLink() {
-		ExpressionExperiment object = (ExpressionExperiment) getCurrentRowObject();
-		if (object.getExperimentalDesigns() != null) {
-			return "<a href=\"showExpressionExperiment.html?name="
-					+ object.getName() + "\">" + object.getName() + "</a>";
-		}
-		return "No design";
-	}
+    /**
+     * @return String
+     */
+    public String getExperimentalFactorsLink() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if ( object.getExperimentalDesigns() != null ) {
+            for ( ExperimentalDesign ed : object.getExperimentalDesigns() )
+                return "<a href=\"showExperimentalDesign.html?name=" + ed.getName() + "\">"
+                        + ed.getExperimentalFactors().size() + "</a>";
+        }
+        return "No bioassays";
+    }
+
+    /**
+     * @return String
+     */
+    public String getDesignsLink() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if ( object.getExperimentalDesigns() != null ) {
+            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
+                    + object.getExperimentalDesigns().size() + "</a>";
+        }
+        return "No design";
+    }
+
+    /**
+     * @return
+     */
+    public String getNameLink() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if ( object.getExperimentalDesigns() != null ) {
+            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">" + object.getName()
+                    + "</a>";
+        }
+        return "No design";
+    }
 
 }
