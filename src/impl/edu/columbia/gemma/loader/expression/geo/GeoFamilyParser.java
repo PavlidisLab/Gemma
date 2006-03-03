@@ -79,7 +79,7 @@ public class GeoFamilyParser implements Parser {
     private String currentSeriesAccession;
     private String currentSubsetAccession;
     private int dataSetDataLines = 0;
- //   private boolean haveReadDatasetDataHeader = false;
+    // private boolean haveReadDatasetDataHeader = false;
     private boolean haveReadPlatformHeader = false;
 
     private boolean haveReadSampleDataHeader = false;
@@ -109,7 +109,9 @@ public class GeoFamilyParser implements Parser {
 
     private int seriesDataLines = 0;
 
- //   private String currentDatasetPlatformAccession;
+    private boolean processPlatformsOnly;
+
+    // private String currentDatasetPlatformAccession;
 
     public GeoFamilyParser() {
         results = new GeoParseResult();
@@ -411,12 +413,14 @@ public class GeoFamilyParser implements Parser {
         if ( inPlatform ) {
             extractColumnIdentifier( line, currentPlatform() );
         } else if ( inSample ) {
-            extractColumnIdentifier( line, currentSample() );
+            if ( !processPlatformsOnly ) extractColumnIdentifier( line, currentSample() );
         } else if ( inSeries ) {
-            extractColumnIdentifier( line, currentSeries() );
+            if ( !processPlatformsOnly ) extractColumnIdentifier( line, currentSeries() );
         } else if ( inSubset ) {
             // nothing.
         } else if ( inDataset ) {
+            if ( processPlatformsOnly ) return;
+            
             extractColumnIdentifier( line, currentDataset() );
             Map<String, String> res = extractKeyValue( line );
             String key = res.keySet().iterator().next();
@@ -465,6 +469,7 @@ public class GeoFamilyParser implements Parser {
      * @param value
      */
     private void parseDatasetLine( String line, String value ) {
+        if ( this.processPlatformsOnly ) return;
         /***************************************************************************************************************
          * DATASET
          **************************************************************************************************************/
@@ -492,7 +497,7 @@ public class GeoFamilyParser implements Parser {
                 results.getPlatformMap().get( value ).setGeoAccession( value );
             }
             results.getDatasetMap().get( currentDatasetAccession ).setPlatform( results.getPlatformMap().get( value ) );
-      //      currentDatasetPlatformAccession = value;
+            // currentDatasetPlatformAccession = value;
         } else if ( startsWithIgnoreCase( line, "!dataset_probe_type" ) ) { // obsolete
             datasetSet( currentDatasetAccession, "platformType", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_platform_technology_type" ) ) {
@@ -529,7 +534,7 @@ public class GeoFamilyParser implements Parser {
             datasetSet( currentDatasetAccession, "pubmedId", value );
         } else if ( startsWithIgnoreCase( line, "!dataset_table_begin" ) ) {
             this.inDatasetTable = true;
-       //     haveReadDatasetDataHeader = false;
+            // haveReadDatasetDataHeader = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_table_end" ) ) {
             this.inDatasetTable = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_channel_count" ) ) {
@@ -553,12 +558,14 @@ public class GeoFamilyParser implements Parser {
                 inPlatform = false;
                 inSeries = false;
             } else if ( startsWithIgnoreCase( line, "^SAMPLE" ) ) {
+
                 inSample = true;
                 inSubset = false;
                 inDataset = false;
                 inDatabase = false;
                 inPlatform = false;
                 inSeries = false;
+                if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentSampleAccession = value;
                 if ( results.getSampleMap().containsKey( value ) ) return;
@@ -581,12 +588,14 @@ public class GeoFamilyParser implements Parser {
                 results.getPlatformMap().put( value, platform );
                 log.debug( "In platform " + platform );
             } else if ( startsWithIgnoreCase( line, "^SERIES" ) ) {
+
                 inSubset = false;
                 inDataset = false;
                 inSeries = true;
                 inPlatform = false;
                 inSample = false;
                 inDatabase = false;
+                if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentSeriesAccession = value;
                 if ( results.getSeriesMap().containsKey( value ) ) return;
@@ -602,6 +611,7 @@ public class GeoFamilyParser implements Parser {
                 inPlatform = false;
                 inSample = false;
                 inDatabase = false;
+                if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentDatasetAccession = value;
                 if ( results.getDatasetMap().containsKey( value ) ) return;
@@ -611,12 +621,14 @@ public class GeoFamilyParser implements Parser {
                 results.getDatasetMap().put( value, ds );
                 log.debug( "In dataset " + ds );
             } else if ( startsWithIgnoreCase( line, "^SUBSET" ) ) {
+
                 inSubset = true;
                 inDataset = false;
                 inSeries = false;
                 inPlatform = false;
                 inSample = false;
                 inDatabase = false;
+                if ( this.processPlatformsOnly ) return;
                 String value = extractValue( line );
                 currentSubsetAccession = value;
                 if ( results.getSubsetMap().containsKey( value ) ) return;
@@ -778,7 +790,7 @@ public class GeoFamilyParser implements Parser {
             } else if ( inSubset ) {
                 // do nothing.
             } else {
-                throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
+       //         throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
             }
         }
 
@@ -823,6 +835,8 @@ public class GeoFamilyParser implements Parser {
      * @param value
      */
     private void parseSampleLine( String line, String value ) {
+        if ( this.processPlatformsOnly ) return;
+
         /***************************************************************************************************************
          * SAMPLE
          **************************************************************************************************************/
@@ -966,6 +980,7 @@ public class GeoFamilyParser implements Parser {
      * @param value
      */
     private void parseSeriesLine( String line, String value ) {
+        if ( this.processPlatformsOnly ) return;
         /***************************************************************************************************************
          * SERIES
          **************************************************************************************************************/
@@ -1039,8 +1054,8 @@ public class GeoFamilyParser implements Parser {
                     GeoReplication.convertStringToRepeatType( value ) );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
             parseSeriesVariableRepeatsSampleListLine( line, value );
-        } else if (startsWithIgnoreCase(line, "!Series_web_link")) {
-           // seriesSet( currentSeriesAccession, "platformId", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_web_link" ) ) {
+            // seriesSet( currentSeriesAccession, "platformId", value );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
             Integer variableId = new Integer( extractVariableNumber( line ) );
             GeoVariable v = new GeoVariable();
@@ -1316,6 +1331,13 @@ public class GeoFamilyParser implements Parser {
             log.error( e, e );
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param b
+     */
+    public void setProcessPlatformsOnly( boolean b ) {
+        this.processPlatformsOnly = b;
     }
 }
 

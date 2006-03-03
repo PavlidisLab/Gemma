@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.columbia.gemma.common.description.LocalFile;
 import edu.columbia.gemma.loader.expression.geo.model.GeoDataset;
+import edu.columbia.gemma.loader.expression.geo.model.GeoPlatform;
 import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.loaderutils.Fetcher;
 import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
@@ -56,6 +57,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     protected Fetcher seriesFetcher;
     protected GeoFamilyParser gfp = new GeoFamilyParser();
 
+    private boolean processPlatformsOnly;
+
     /**
      * 
      *
@@ -79,8 +82,8 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     /**
      * @param geoDataSetAccession
-     * @param addOn - Don't start a new generation, add it to the existing results.
-     * @return
+     * @return If processPlatformsOnly is true, a collection of GeoPlatforms. Otherwise a Collection of series (just
+     *         one).
      */
     public Collection<Object> generate( String geoDataSetAccession ) {
 
@@ -90,6 +93,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         String seriesAccession = DatasetCombiner.findGSEforGDS( geoDataSetAccession );
 
         log.info( geoDataSetAccession + " corresponds to " + seriesAccession );
+
+        if ( processPlatformsOnly ) {
+            return processSeriesPlatforms( seriesAccession );
+        }
+        
         GeoSeries series = processSeries( seriesAccession );
 
         // FIXME put this back.
@@ -117,6 +125,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         Collection<Object> result = new HashSet<Object>();
         result.add( series );
         return result;
+
     }
 
     /**
@@ -136,6 +145,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         } catch ( URISyntaxException e ) {
             throw new IllegalStateException( e );
         }
+        gfp.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {
             gfp.parse( seriesPath );
         } catch ( IOException e1 ) {
@@ -143,6 +153,34 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
 
         return ( ( GeoParseResult ) gfp.getResults().iterator().next() ).getSeriesMap().get( seriesAccession );
+
+    }
+
+    /**
+     * Download and parse a GEO platform using a series accession.
+     * 
+     * @param seriesAccession
+     */
+    private Collection processSeriesPlatforms( String seriesAccession ) {
+        Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
+        if ( fullSeries == null ) {
+            throw new RuntimeException( "No series file found for " + seriesAccession );
+        }
+        LocalFile seriesFile = ( fullSeries.iterator() ).next();
+        String seriesPath;
+        try {
+            seriesPath = ( new URI( seriesFile.getLocalURI() ) ).getPath();
+        } catch ( URISyntaxException e ) {
+            throw new IllegalStateException( e );
+        }
+        gfp.setProcessPlatformsOnly( this.processPlatformsOnly );
+        try {
+            gfp.parse( seriesPath );
+        } catch ( IOException e1 ) {
+            throw new RuntimeException( e1 );
+        }
+
+        return ( ( GeoParseResult ) gfp.getResults().iterator().next() ).getPlatformMap().values();
 
     }
 
@@ -221,6 +259,13 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     public void setSeriesFetcher( Fetcher seriesFetcher ) {
         this.seriesFetcher = seriesFetcher;
+    }
+
+    /**
+     * @param b
+     */
+    public void setProcessPlatformsOnly( boolean b ) {
+        this.processPlatformsOnly = b;
     }
 
 }

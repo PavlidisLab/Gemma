@@ -18,6 +18,8 @@
  */
 package edu.columbia.gemma.loader.expression.geo;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,7 +28,6 @@ import edu.columbia.gemma.loader.expression.geo.model.GeoSeries;
 import edu.columbia.gemma.loader.loaderutils.Converter;
 import edu.columbia.gemma.loader.loaderutils.Persister;
 import edu.columbia.gemma.loader.loaderutils.PersisterHelper;
-import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
@@ -37,25 +38,34 @@ import edu.columbia.gemma.loader.loaderutils.SourceDomainObjectGenerator;
 public class GeoDatasetService {
 
     private static Log log = LogFactory.getLog( GeoDatasetService.class.getName() );
-    private SourceDomainObjectGenerator generator;
+    private GeoDomainObjectGenerator generator;
     private Persister persisterHelper;
     private Converter converter;
+    private boolean loadPlatformOnly;
 
     /**
      * Given a GEO data set id:
      * <ol>
      * <li>Download and parse GDS file</li>
      * <li>Download and parse GSE family file(s).</li>
-     * <li>Convert the GDS and GSE into a ExpressionExperiment.
-     * <li>Load the resulting ExpressionExperiment into Gemma</li>
+     * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
+     * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
      * </ol>
      * 
      * @param geoDataSetAccession
      */
     @SuppressWarnings("unchecked")
-    public ExpressionExperiment fetchAndLoad( String geoDataSetAccession ) {
+    public Object fetchAndLoad( String geoDataSetAccession ) {
 
+        generator.setProcessPlatformsOnly( false );
         if ( generator == null ) generator = new GeoDomainObjectGenerator();
+        generator.setProcessPlatformsOnly( this.loadPlatformOnly );
+
+        if ( this.loadPlatformOnly ) {
+            Collection<Object> platforms = generator.generate( geoDataSetAccession );
+            Collection<Object> arrayDesigns = converter.convert( platforms );
+            return persisterHelper.persist( arrayDesigns );
+        }
 
         GeoSeries series = ( GeoSeries ) generator.generate( geoDataSetAccession ).iterator().next();
 
@@ -67,6 +77,7 @@ public class GeoDatasetService {
         series = null; // try to help GC.
         assert persisterHelper != null;
         return ( ExpressionExperiment ) persisterHelper.persist( result );
+
     }
 
     /**
@@ -74,7 +85,7 @@ public class GeoDatasetService {
      * 
      * @param generator
      */
-    public void setGenerator( SourceDomainObjectGenerator generator ) {
+    public void setGenerator( GeoDomainObjectGenerator generator ) {
         this.generator = generator;
     }
 
@@ -90,6 +101,13 @@ public class GeoDatasetService {
      */
     public void setConverter( Converter geoConv ) {
         this.converter = geoConv;
+    }
+
+    /**
+     * @param b
+     */
+    public void setLoadPlatformOnly( boolean b ) {
+        this.loadPlatformOnly = b;
     }
 
 }
