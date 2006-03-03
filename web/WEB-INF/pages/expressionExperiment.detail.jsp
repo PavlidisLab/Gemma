@@ -79,22 +79,9 @@
 
             <display:column property="name" sort="true" maxWords="20" href="showExperimentalDesign.html" paramId="name" paramProperty="name"/>
             <display:column property="description" sort="true" maxWords="100"  />
-            <%-- <display:column property="experimentalFactors" sort="true" maxWords="100"  />--%>
-            <display:column title="Experimental Factors" sort="true"
-                            href="../expressionExperiment/showAllExperimentalFactors.html" paramId="name" paramProperty="name">
-                            <c:out value="${fn:length(expressionExperiment.experimentalDesigns)}" />
-            </display:column>
+            <display:column property="experimentalFactors" sort="true" maxWords="100"  />
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
-        
-        <h3>
-            Experimental factors
-        </h3>
-        <c:forEach items="${expressionExperiment.experimentalDesigns}" var="experimentalDesign">
-          <display:table name="experimentalDesign.experimentalFactors" class="list">
-        	<display:column property="category" sort="true" />                      
-          </display:table>
-	    </c:forEach>
 		
         <h3>
             Investigators
