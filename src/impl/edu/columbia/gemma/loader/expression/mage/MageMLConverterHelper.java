@@ -28,12 +28,14 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -72,6 +74,7 @@ import org.biomage.BioAssayData.MeasuredBioAssayData;
 import org.biomage.BioAssayData.QuantitationTypeDimension;
 import org.biomage.BioAssayData.ReporterDimension;
 import org.biomage.BioAssayData.Transformation;
+import org.biomage.BioMaterial.BioMaterialMeasurement;
 import org.biomage.BioMaterial.BioSample;
 import org.biomage.BioMaterial.BioSource;
 import org.biomage.BioMaterial.CompoundMeasurement;
@@ -133,6 +136,7 @@ import edu.columbia.gemma.expression.experiment.FactorValue;
 import edu.columbia.gemma.genome.biosequence.BioSequence;
 import edu.columbia.gemma.genome.biosequence.PolymerType;
 import edu.columbia.gemma.genome.biosequence.SequenceType;
+import edu.columbia.gemma.loader.expression.geo.model.GeoSample;
 import edu.columbia.gemma.loader.loaderutils.MgedOntologyHelper;
 import edu.columbia.gemma.util.ReflectionUtil;
 
@@ -453,9 +457,9 @@ public class MageMLConverterHelper {
      */
     public edu.columbia.gemma.expression.bioAssay.BioAssay convertBioAssay( BioAssay mageObj ) {
         if ( mageObj == null ) return null;
-        edu.columbia.gemma.expression.bioAssay.BioAssay result = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory
-                .newInstance();
-
+        edu.columbia.gemma.expression.bioAssay.BioAssay result = edu.columbia.gemma.expression.bioAssay.BioAssay.Factory.
+        newInstance();
+        
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;
@@ -479,7 +483,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Channels" ) ) {
             ; // we don't support this.
         } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
+            log.info( "Unsupported or unknown association: " + associationName );
         }
     }
 
@@ -640,8 +644,33 @@ public class MageMLConverterHelper {
     }
 
     @SuppressWarnings("unused")
-    public void convertBioAssayDimension( BioAssay ba ) {
-        // noop
+    public edu.columbia.gemma.expression.bioAssayData.BioAssayDimension convertBioAssayDimension( BioAssayDimension bad ) {
+
+        edu.columbia.gemma.expression.bioAssayData.BioAssayDimension resultBioAssayDimension = 
+            edu.columbia.gemma.expression.bioAssayData.BioAssayDimension.Factory.newInstance();
+
+        convertIdentifiable( bad, resultBioAssayDimension );
+
+        Collection<BioAssay> bioAssayList = bad.getBioAssays();
+
+        for ( BioAssay sample : bioAssayList )
+        {
+            edu.columbia.gemma.expression.bioAssay.BioAssay resultBioAssay;
+            
+            if (sample instanceof MeasuredBioAssay)
+                resultBioAssay = convertMeasuredBioAssay((MeasuredBioAssay)sample);
+            
+            else if (sample instanceof DerivedBioAssay)
+                resultBioAssay = convertDerivedBioAssay((DerivedBioAssay)sample);
+            
+            else //physical
+                resultBioAssay = convertBioAssay(sample);
+            
+            resultBioAssayDimension.getDimensionBioAssays().add(resultBioAssay);
+        }
+        
+        return resultBioAssayDimension;
+
     }
 
     /**
@@ -1332,7 +1361,7 @@ public class MageMLConverterHelper {
                 BioAssay bioAssay = ( BioAssay ) iter.next();
                 if ( bioAssay instanceof MeasuredBioAssay ) {
 
-                    specialGetArrayDesignForPhysicalBioAssay( ( ( MeasuredBioAssay ) bioAssay ).getFeatureExtraction()
+                    specialConvertBioAssayCreation( ( ( MeasuredBioAssay ) bioAssay ).getFeatureExtraction()
                             .getPhysicalBioAssaySource(), result );
                 } else {
                     log.error( "What kind of bioassay is associated?: " + bioAssay.getClass().getName() );
@@ -1843,7 +1872,7 @@ public class MageMLConverterHelper {
             specialConvertBioAssayBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
         } else {
             log.debug( "Unsupported or unknown association, or belongs to superclass: " + associationName );
-        }
+        }       
     }
 
     /**
@@ -2094,13 +2123,14 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * We don't use this. A No-op.
+     * We don't use this. A No-op. PhysicalBioAssays are converted via the
+     * MeasuredBioAssay->FeatureExtraction->PhyscialBioAssay associations.
      * 
      * @param mageObj
      * @return
+     * @see convertMeasuredBioAssay
      */
     public edu.columbia.gemma.expression.bioAssay.BioAssay convertPhysicalBioAssay( PhysicalBioAssay mageObj ) {
-        if ( mageObj == null ) return null;
         return null;
     }
 
@@ -2118,8 +2148,9 @@ public class MageMLConverterHelper {
 
         if ( associatedObject == null ) return;
 
-        if ( associationName.equals( "BioAssayCreation" ) ) { // we only use this to get the array designs.
-            specialGetArrayDesignForPhysicalBioAssay( mageObj, gemmaObj );
+        if ( associationName.equals( "BioAssayCreation" ) ) {
+            specialConvertBioAssayCreation( mageObj, gemmaObj );
+
         } else if ( associationName.equals( "BioAssayTreatments" ) ) {
             assert associatedObject instanceof List;
             // this is not supported in our data model currently.
@@ -3368,7 +3399,7 @@ public class MageMLConverterHelper {
     private void specialConvertFeatureExtraction( FeatureExtraction mageObj,
             edu.columbia.gemma.expression.bioAssay.BioAssay gemmaObj ) {
         PhysicalBioAssay pba = mageObj.getPhysicalBioAssaySource();
-        specialGetArrayDesignForPhysicalBioAssay( pba, gemmaObj );
+        specialConvertBioAssayCreation( pba, gemmaObj );
         convertAssociations( pba, gemmaObj );
     }
 
@@ -3464,9 +3495,9 @@ public class MageMLConverterHelper {
      * @param mageObj
      * @param result
      */
-    private void specialGetArrayDesignForPhysicalBioAssay( PhysicalBioAssay mageObj,
+    private void specialConvertBioAssayCreation( PhysicalBioAssay mageObj,
             edu.columbia.gemma.expression.bioAssay.BioAssay result ) {
-
+        
         BioAssayCreation bac = mageObj.getBioAssayCreation();
         if ( bac == null ) return;
 
@@ -3488,7 +3519,18 @@ public class MageMLConverterHelper {
 
         log.debug( "Adding array design used " + ad.getName() + " to " + result.getName() );
         result.getArrayDesignsUsed().add( conv );
+        
 
+        //add biomaterials to the resulting bioassay
+        Collection<BioMaterialMeasurement> measurements = ( Collection<BioMaterialMeasurement> ) bac
+                .getSourceBioMaterialMeasurements();
+        
+        Vector<BioMaterial> biomaterials = new Vector<BioMaterial>();
+        
+        for (BioMaterialMeasurement bmm : measurements)
+            biomaterials.add(convertBioMaterial(bmm.getBioMaterial()));
+        
+        result.setSamplesUsed(biomaterials);
     }
 
     /**
