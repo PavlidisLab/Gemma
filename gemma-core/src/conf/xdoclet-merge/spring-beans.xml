@@ -1,0 +1,104 @@
+<!-- ==================================================== -->
+<!--    Email configuration   -->
+<!-- ==================================================== -->
+<bean id="mailEngine" class="ubic.gemma.util.MailEngine">
+    <property name="mailSender">
+        <ref bean="mailSender" />
+    </property>
+    <property name="velocityEngine">
+        <ref bean="velocityEngine" />
+    </property>
+</bean>
+<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+    <property name="host">
+        <value>${mail.host}</value>
+    </property>
+    <property name="username">
+        <value>${mail.username}</value>
+    </property>
+    <property name="password">
+        <value>${mail.password}</value>
+    </property>
+</bean>
+
+<!-- Configure Velocity for sending e-mail -->
+<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+    <property name="velocityProperties">
+        <props>
+            <prop key="resource.loader">class</prop>
+            <prop key="class.resource.loader.class">org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</prop>
+        </props>
+    </property>
+</bean>
+<bean id="mailMessage" class="org.springframework.mail.SimpleMailMessage" singleton="false">
+    <property name="from">
+        <value>pavlidis@dbmi.columbia.edu</value>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!--    RESOURCES, namely the propertyConfigurer          -->
+<!--    propertyConfigurer allows you to read variables   -->
+<!--    stored in a .properties file from an xml file.    -->
+<!--    Looks like:  ${mail.host}                         -->
+<!-- ==================================================== -->
+<!-- For mail settings and future properties files -->
+<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="locations">
+        <list>
+            <value>classpath:mail.properties</value>
+        </list>
+    </property>
+    <property name="ignoreUnresolvablePlaceholders" value="true" />
+    <property name="ignoreResourceNotFound" value="true" />
+</bean>
+
+<!-- ==================================================== -->
+<!-- EXTERNAL DATABASE SESSION FACTORY -->
+<!-- ==================================================== -->
+<bean id="sessionFactoryGoldenPathHuman" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+    <property name="dataSource">
+        <ref bean="dataSourceGoldenPathHuman" />
+    </property>
+    <property name="mappingResources">
+        <list></list>
+    </property>
+    <property name="hibernateProperties">
+        <props>
+            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+            <prop key="hibernate.cache.use_query_cache">false</prop>
+            <prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+            <prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
+            <prop key="hibernate.show_sql">true</prop>
+        </props>
+    </property>
+</bean>
+
+<!-- DATASOURCE USED BY SESSION FACTORY ABOVE -->
+<bean id="dataSourceGoldenPathHuman" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    <property name="driverClassName">
+        <value>com.mysql.jdbc.Driver</value>
+    </property>
+    <property name="username">
+        <value>pavlidis</value>
+    </property>
+    <property name="password">
+        <value>toast</value>
+    </property>
+    <property name="url">
+        <value>jdbc:mysql://localhost:3306/hg17</value>
+    </property>
+</bean>
+
+
+
+<!--  ============================================== -->
+<!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
+<bean id="conversion.service" class="org.springframework.binding.convert.support.DefaultConversionService" autowire="byType" />
+
+<!-- A formatter registry, a thread-safe cache for Formatters: a thread-safe, lighter weight alt. to PropertyEditors! -->
+<bean id="formatter.locator" class="org.springframework.binding.format.support.ThreadLocalFormatterLocator" autowire="byType" />
+
+<!-- A broadcaster that will notify the formatter registry to cleanup all thread locals on app shutdown -->
+<bean id="thread.cleanupBroadcaster" class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
+
