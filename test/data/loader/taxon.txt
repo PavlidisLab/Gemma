@@ -1,5 +1,0 @@
-Identifier	Name	SCIENTIFIC_NAME	COMMON_NAME	ABBREVIATION	NCBIid
-Mouse	Mouse	Mus musculus	Mouse	mm	10090
-Human	Human	Homo sapiens	Human	hs	9606
-Rat	Rat	Rattus	Rat	rn	10116
-Yeast	Yeast	Saccharomyces cerevisiae	Yeast	sc	4932

@@ -1,4 +1,0 @@
-for i in 031*
-do
-head -n 100 "$i" > "${i}".short
-done
