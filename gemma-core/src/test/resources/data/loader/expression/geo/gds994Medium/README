@@ -1,0 +1,1 @@
+../../../../../../script/chopSoft.pl -n 3000 -s GSE1611_family.soft.gz GDS994.soft.gz 

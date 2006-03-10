@@ -1,0 +1,12 @@
+UPSTREAM NAME	UPSTREAM LLID	UPSTREAM DB	DOWNSTREAM NAME	DOWNSTREAM LLID	DOWNSTREAM DB	ACTION	COUNT	DB
+a1a	5265	locuslink	a1b	1	locuslink	contain	1	geneways
+abg	1	locuslink	ps	5543	locuslink	hydrolyse	1	geneways
+abg	1	locuslink	gc	2638	locuslink	degrade	1	geneways
+nat2	81539	locuslink	nat2	10	locuslink	determine	1	geneways
+nat1	9	locuslink	nat2	10	locuslink	associate	1	geneways
+nat1	9	locuslink	nat2	10	locuslink	determine	1	geneways
+nat2	10	locuslink	tmd	7273	locuslink	contain	1	geneways
+nat2	10	locuslink	nat2	81539	locuslink	determine	1	geneways
+aac2	10	locuslink	atp	51761	locuslink	carry	1	geneways
+aac2	10	locuslink	ant	291	locuslink	encode	1	geneways
+aac2	10	locuslink	ant1	291	locuslink	homolog	2	geneways
