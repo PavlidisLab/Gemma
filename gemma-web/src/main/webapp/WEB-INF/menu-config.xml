@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+    Configuration for menus appearing on all web pages.
+
+    $Id$
+-->
+<MenuConfig>
+    <Displayers>
+        <Displayer name="CoolMenu" type="net.sf.navigator.displayer.CoolMenuDisplayer4" />
+        <Displayer name="ListMenu" type="net.sf.navigator.displayer.ListMenuDisplayer" />
+    </Displayers>
+    <Menus>
+        <Menu name="MainMenu" title="mainMenu.title" page="/mainMenu.html" width="90" />
+        <Menu name="UserMenu" title="menu.user" description="User Menu" page="/editProfile.html" />
+        <Menu name="FileUpload" title="menu.selectFile" description="File Upload" page="/selectFile.html" />
+        <Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin" width="120">
+            <Item name="ViewUsers" title="menu.admin.users" page="/activeUsers.html" />
+            <Item name="ReloadContext" title="menu.admin.reload" page="/reload.html" />
+            <Item name="FlushCache" title="menu.flushCache" page="/flushCache.html" roles="admin" />
+            <Item name="Clickstream" title="menu.clickstream" page="/clickstreams.jsp" roles="admin" />
+        </Menu>
+    </Menus>
+</MenuConfig>

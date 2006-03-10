@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE webflow PUBLIC "-//SPRING//DTD WEBFLOW//EN"
+    "http://www.springframework.org/dtd/spring-webflow.dtd">
+
+<webflow id="fileUploader" start-state="selectFile">
+
+    <view-state id="selectFile" view="uploadForm">
+        <transition on="submit" to="uploadFile"/>
+        <transition on="cancel" to="finish"/>
+    </view-state>
+
+    <action-state id="uploadFile">
+        <action bean="uploadFileAction" method="bindAndValidate"/>
+        <transition on="success" to="displayConfirmation"/>
+        <transition on="error" to="selectFile"/>
+    </action-state>
+    
+    <view-state id="displayConfirmation" view="uploadDisplay">
+        <transition on="finish" to="selectFile"/>
+    </view-state>
+    
+    <end-state id="finish" view="redirect:/mainMenu.html"/>
+    
+</webflow>

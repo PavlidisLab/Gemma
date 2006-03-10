@@ -1,0 +1,53 @@
+<!--  Requests/responses with url pattern /login.jsp
+    are preprocessed/postprocessed through the loginFilter.  -->
+
+<!-- Acegi -->
+<filter-mapping>
+    <filter-name>securityFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+
+<!-- All requests are decorated with sitemesh -->
+<filter-mapping>
+    <filter-name>sitemesh</filter-name>
+    <url-pattern>/*</url-pattern>
+    <!-- These are needed by Tomcat 5 for forwards -->
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+</filter-mapping>
+
+<!-- Commented out for 2 reasons: 1) it's a pain when developing JSPs, and
+    2) it causes the Signup webtest to fail -->
+<!--filter-mapping>
+    <filter-name>cacheFilter</filter-name>
+    <url-pattern>*.jsp</url-pattern>
+    </filter-mapping-->
+
+
+<filter-mapping>
+    <filter-name>clickstreamFilter</filter-name>
+    <url-pattern>*.html</url-pattern>
+</filter-mapping>
+<filter-mapping>
+    <filter-name>encodingFilter</filter-name>
+    <url-pattern>*.html</url-pattern>
+</filter-mapping>
+<filter-mapping>
+    <filter-name>encodingFilter</filter-name>
+    <url-pattern>*.jsp</url-pattern>
+</filter-mapping>
+<filter-mapping>
+    <filter-name>exportFilter</filter-name>
+    <url-pattern>*.html</url-pattern>
+</filter-mapping>
+<!--{ <filter-mapping>
+    <filter-name>compressionFilter</filter-name>
+    <url-pattern>*.html</url-pattern>
+    </filter-mapping>} -->
+<!-- <filter-mapping>
+    <filter-name>rewriteFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+    </filter-mapping>-->
+

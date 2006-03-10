@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" 
+    "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<!--  
+    
+    See http://issues.sourcebeat.com/browse/SPL-158:
+    
+    "As part of this upgrade, the "validatorFactory" bean definition needs to be 
+    moved to applicationContext.xml - so it's loaded by the ContextLoaderListener. 
+    For the <html:javascript> tag to work, it must be w/in a DispatcherServlet request, 
+    or the ValidatorFactory must be in the root WebApplicationContext. When the /scripts/validator.jsp 
+    is called with the validatorFactory in action-servlet.xml, the following error occurs:
+    
+    org.apache.jasper.JasperException: No unique bean of type 
+    [org.springmodules.commons.validator.ValidatorFactory] is defined: Expected single bean but found 0
+    at org.apache.jasper.servlet.JspServletWrapper.service(JspServletWrapper.java:372)"
+    
+    $Id$
+    
+-->
+<beans>
+    <bean id="validatorFactory"
+        class="org.springmodules.commons.validator.DefaultValidatorFactory">
+        <property name="validationConfigLocations">
+            <list>
+                <value>/WEB-INF/validator-rules.xml</value><!--  the standard struts-validation rules -->
+                <value>/WEB-INF/validation.xml</value>
+                <value>/WEB-INF/validator-rules-custom.xml</value>
+            </list>
+        </property>
+    </bean>
+</beans>

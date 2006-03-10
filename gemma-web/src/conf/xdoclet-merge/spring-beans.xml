@@ -1,0 +1,259 @@
+<!--
+    This document is a "merge file" used by XDoclet to automagically generate a web-context
+    for the application.  The generated web-context will have the name xxx-servlet.xml and is
+    located in web/WEB-INF/.
+    
+    Beans defined in this file are used only for web client interaction.
+    
+    author: keshav
+    author: pavlidis
+    version: $Id$
+-->
+
+<!-- ==================================================== -->
+<!--         Mapping URLS                                 -->
+<!-- ==================================================== -->
+<bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
+    <property name="order" value="1" />
+    <property name="interceptors">
+        <list>
+            <ref bean="openSessionInViewInterceptor" />
+        </list>
+    </property>
+</bean>
+
+<bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    <property name="order" value="2" />
+    <property name="alwaysUseFullPath" value="true" />
+    <property name="interceptors">
+        <list>
+            <ref bean="openSessionInViewInterceptor" />
+        </list>
+    </property>
+    <property name="mappings">
+        <props>
+            <prop key="/dwr/**/*">dwrController</prop>
+        </props>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!-- 
+    Interceptor to keep Hibernate sessions available in views. 
+    Use this instead of the Filter configured in web.xml. Note that we don't 
+    need a special AndroMDA interceptor, this takes advantage 
+    of the sessionFactory that is already set up in the Spring context.
+-->
+<!-- ==================================================== -->
+<bean name="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
+    <property name="sessionFactory">
+        <ref bean="sessionFactory" />
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!--  
+    Mapping urls to views. List views here that are just jsps and that don't need a controller.
+-->
+<!-- ==================================================== -->
+<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/mainMenu.html /flushCache.html" />
+
+
+<!-- ==================================================== -->
+<!-- Exception handler. -->
+<!-- ==================================================== -->
+<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+    <property name="exceptionMappings">
+        <props>
+            <prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
+            <prop key="java.lang.Exception">error</prop>
+        </props>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!--          AJAX (DWR)                                  -->
+<!-- ==================================================== -->
+<bean id="dwrController" class="org.springframework.web.servlet.mvc.ServletWrappingController">
+    <property name="servletClass">
+        <value>uk.ltd.getahead.dwr.DWRServlet</value>
+    </property>
+    <property name="initParameters">
+        <props>
+            <prop key="debug">true</prop>
+        </props>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!-- Action resolvers for MultiActionControllers -->
+<!-- ==================================================== -->
+<bean id="bibRefActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/bibRef/showAllBibRef.html">showAll</prop>
+            <prop key="/bibRef/deleteBibRef.html">delete</prop>
+            <prop key="/bibRef/showBibRef.html">show</prop>
+            <prop key="/bibRef/searchBibRef.html">show</prop>
+        </props>
+    </property>
+</bean>
+
+<bean id="arrayDesignActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/arrayDesign/showAllArrayDesigns.html">showAll</prop>
+            <prop key="/arrayDesign/deleteArrayDesign.html">delete</prop>
+            <prop key="/arrayDesign/showArrayDesign.html">show</prop>
+        </props>
+    </property>
+</bean>
+
+<bean id="designElementActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/designElement/showAllDesignElements.html">showAll</prop>
+            <prop key="/designElement/deleteDesignElement.html">delete</prop>
+            <prop key="/designElement/showDesignElement.html">show</prop>
+        </props>
+    </property>
+</bean>
+
+<bean id="expressionExperimentActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/expressionExperiment/showAllExpressionExperiments.html">showAll</prop>
+            <prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop>
+            <prop key="/expressionExperiment/showExpressionExperiment.html">show</prop>
+        </props>
+    </property>
+</bean>
+
+
+<!-- ==================================================== -->
+<!--           Used to configure menus on pages           -->
+<!-- ==================================================== -->
+<bean id="menu" class="net.sf.navigator.menu.MenuLoader">
+    <property name="menuConfig">
+        <value>/WEB-INF/menu-config.xml</value>
+    </property>
+</bean>
+
+
+<!-- ==================================================== -->
+<!-- 	Used by the fileUploadController 				  -->
+<!-- ==================================================== -->
+<bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
+    <property name="maxUploadSize">
+        <value>2097152</value>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!-- View Resolver for JSPs -->
+<!-- ==================================================== -->
+<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="requestContextAttribute">
+        <value>rc</value>
+    </property>
+    <property name="viewClass">
+        <value>org.springframework.web.servlet.view.JstlView</value>
+    </property>
+    <property name="prefix">
+        <value>/WEB-INF/pages/</value>
+    </property>
+    <property name="suffix">
+        <value>.jsp</value>
+    </property>
+</bean>
+
+<!-- ==================================================== -->
+<!--  Validation settings. The validator factory is defined in applicationContext-validation.xml -->
+<!-- ==================================================== -->
+
+<!--  Use this if the command class is not _actually_ an "Impl" -->
+<bean id="genericBeanValidator" class="org.springmodules.commons.validator.DefaultBeanValidator">
+    <property name="validatorFactory">
+        <ref bean="validatorFactory" />
+    </property>
+</bean>
+
+<!-- Use this type of validator if you use a data model object as the command object -->
+<bean id="userValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+    <property name="validatorFactory">
+        <ref bean="validatorFactory" />
+    </property>
+    <property name="formName">
+        <value>user</value>
+    </property>
+</bean>
+
+<bean id="bibliographicReferenceValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+    <property name="validatorFactory">
+        <ref bean="validatorFactory" />
+    </property>
+    <property name="formName">
+        <value>bibliographicReference</value>
+    </property>
+</bean>
+
+<bean id="databaseEntryValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+    <property name="validatorFactory">
+        <ref bean="validatorFactory" />
+    </property>
+    <property name="formName">
+        <value>databaseEntry</value>
+    </property>
+</bean>
+
+
+<!--  add more NamedBeanValidators here -->
+
+
+<!--  ============================================================= -->
+<!--  ===========         SPRING WEBFLOWS       =================== -->
+<!--  ============================================================= -->
+
+<!-- Controller used by all webflows in this application.  This can be parameterized by adding the  
+    _flowId to the client view (ie. jsp).  If this is not specified, you must specify
+    a ServletFlowExecutionManager.  I have added the _flowId to the jsp's, but have also specified the ServletFlowExecutionManager.
+-->
+<bean id="frontController" name="/flowController.html" class="org.springframework.webflow.mvc.FlowController">
+    <property name="cacheSeconds" value="5" />
+    <property name="flowExecutionManager" ref="flowExecutionManager" />
+</bean>
+
+<!--
+    Custom configuration of the HTTP request flow execution manager.
+-->
+<bean name="flowExecutionManager" id="flowExecutionManager" class="org.springframework.webflow.execution.servlet.ServletFlowExecutionManager">
+    <property name="storage">
+        <bean class="org.springframework.webflow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
+    </property>
+    <property name="listener">
+        <bean class="ubic.gemma.web.flow.FlowExecutionListenerImpl" />
+    </property>
+</bean>
+
+<!-- 
+    Add one bean here for each flow. The actions are defined using XDoclet tags in the Action classes.   
+-->
+
+<bean id="pubMed.Search" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:ubic/gemma/web/flow/bibref/pubMedSearch-flow.xml" />
+</bean>
+
+<bean id="pubMed.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:ubic/gemma/web/flow/bibref/pubMedEdit-flow.xml" />
+</bean>
+
+<bean id="expressionExperiment.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:ubic/gemma/web/flow/expression/experiment/expressionExperimentEdit-flow.xml" />
+</bean>
+
+<bean id="fileUploader" class="org.springframework.webflow.config.XmlFlowFactoryBean">
+    <property name="location" value="classpath:ubic/gemma/web/flow/fileUpload-flow.xml" />
+</bean>
+
+
+
