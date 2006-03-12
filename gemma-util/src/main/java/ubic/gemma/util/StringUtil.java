@@ -92,7 +92,7 @@ public class StringUtil {
      * 
      * @param str
      * @return String
-     * @deprecated
+     * @deprecated because it ties us to the sun jvm
      */
     public static String encodeString( String str ) {
         sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
@@ -104,7 +104,7 @@ public class StringUtil {
      * 
      * @param str
      * @return String
-     * @deprecated
+     * @deprecated because it ties us to the sun jvm
      */
 
     public static String decodeString( String str ) {

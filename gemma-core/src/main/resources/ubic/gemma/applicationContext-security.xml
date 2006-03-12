@@ -271,7 +271,6 @@
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.loadAll=user,admin
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.create=user,admin
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.findOrCreate=user,admin
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.getAllCompositeSequences=user,admin,AFTER_ACL_ARRAYDESIGN_COLLECTION_READ
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.remove=user,admin
                 ubic.gemma.model.expression.designElement.CompositeSequenceService.find=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.findOrCreate=user,admin 

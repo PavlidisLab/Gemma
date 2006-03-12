@@ -29,14 +29,15 @@ import ubic.gemma.model.genome.Taxon;
 public class CandidateGeneListImplTest extends TestCase {
 
     private Taxon t = null;
-    private CandidateGeneList cgl = null;
+    private CandidateGeneList candidateList = null;
 
-    private Gene makeGene( String officialName ) {
+    private Gene makeGene( String officialName, String description ) {
 
         Gene g = Gene.Factory.newInstance();
         g.setName( officialName );
         g.setOfficialSymbol( officialName );
         g.setOfficialName( officialName );
+        g.setDescription( description );
         g.setTaxon( t );
         return g;
     }
@@ -50,31 +51,31 @@ public class CandidateGeneListImplTest extends TestCase {
 
     public void testUseCandidateGeneList() {
 
-        Gene gene1 = makeGene( "foo1" );
-        Gene gene2 = makeGene( "foo2" );
-        Gene gene3 = makeGene( "foo3" );
+        Gene gene1 = makeGene( "foo1", "arg1" );
+        Gene gene2 = makeGene( "foo2", "arg2" );
+        Gene gene3 = makeGene( "foo3", "arg3" );
 
-        cgl = CandidateGeneList.Factory.newInstance();
-        cgl.setDescription( "Test my candidate list" );
-        cgl.setName( "Test more Candidates" );
+        candidateList = CandidateGeneList.Factory.newInstance();
+        candidateList.setDescription( "Test my candidate list" );
+        candidateList.setName( "Test more Candidates" );
 
-        CandidateGene cg1 = cgl.addCandidate( gene1 );
+        CandidateGene cg1 = candidateList.addCandidate( gene1 );
         cg1.setName( "Candidate one" );
         cg1.setDescription( "Candidate One Described" );
 
-        CandidateGene cg2 = cgl.addCandidate( gene2 );
+        CandidateGene cg2 = candidateList.addCandidate( gene2 );
         cg2.setName( "Candidate two" );
         cg2.setDescription( "Candidate Two Described" );
 
-        CandidateGene cg3 = cgl.addCandidate( gene3 );
+        CandidateGene cg3 = candidateList.addCandidate( gene3 );
         cg3.setName( "Candidate three" );
         cg3.setDescription( "Candidate Three Described" );
 
-        assertTrue( cgl.getCandidates().size() == 3 );
+        assertTrue( candidateList.getCandidates().size() == 3 );
 
         // original ranking is cg1, cg2, cg3
-        cgl.decreaseRanking( cg1 );
-        cgl.increaseRanking( cg3 );
+        candidateList.decreaseRanking( cg1 );
+        candidateList.increaseRanking( cg3 );
         // now ranking should be cg2, cg3, cg1
         assertTrue( cg1.getRank().intValue() > cg2.getRank().intValue()
                 && cg1.getRank().intValue() > cg3.getRank().intValue() );
@@ -82,17 +83,17 @@ public class CandidateGeneListImplTest extends TestCase {
                 && cg2.getRank().intValue() < cg3.getRank().intValue() );
 
         // these should have no effect, since the cgs are at the top/bottom
-        cgl.increaseRanking( cg2 );
-        cgl.decreaseRanking( cg1 );
+        candidateList.increaseRanking( cg2 );
+        candidateList.decreaseRanking( cg1 );
         assertTrue( cg1.getRank().intValue() > cg2.getRank().intValue()
                 && cg1.getRank().intValue() > cg3.getRank().intValue() );
         assertTrue( cg2.getRank().intValue() < cg1.getRank().intValue()
                 && cg2.getRank().intValue() < cg3.getRank().intValue() );
 
-        cgl.removeCandidate( cg1 );
-        cgl.removeCandidate( cg2 );
-        cgl.removeCandidate( cg3 );
+        candidateList.removeCandidate( cg1 );
+        candidateList.removeCandidate( cg2 );
+        candidateList.removeCandidate( cg3 );
 
-        assertTrue( cgl.getCandidates().size() == 0 );
+        assertTrue( candidateList.getCandidates().size() == 0 );
     }
 }

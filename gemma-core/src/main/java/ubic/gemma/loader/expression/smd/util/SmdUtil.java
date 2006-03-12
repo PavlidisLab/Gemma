@@ -1,0 +1,97 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.loader.expression.smd.util;
+
+import java.io.IOException;
+import java.net.SocketException;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.net.ftp.FTPClient;
+
+import baseCode.util.NetUtils;
+
+/**
+ * <hr>
+ * <p>
+ * 
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class SmdUtil {
+
+    protected static final Log log = LogFactory.getLog( SmdUtil.class );
+    private static String host;
+    private static String login;
+    private static String password;
+    public static final String SMD_DELIM = "\n";
+
+    static {
+        Configuration config = null;
+        try {
+            config = new PropertiesConfiguration( "Gemma.properties" );
+        } catch ( ConfigurationException e ) {
+            log.error( e );
+        }
+        host = ( String ) config.getProperty( "smd.host" );
+        login = ( String ) config.getProperty( "smd.login" );
+        password = ( String ) config.getProperty( "smd.password" );
+    }
+
+    /**
+     * Split a SMD-formatted key-value string. These are preceded by 0 or more white-space, a "!", and then a
+     * "="-delimited key-value pair.
+     * 
+     * @param k
+     * @return String array containing the key and value, or null if the input was not a valid SMD-formatted key-value.
+     */
+    public static String[] smdSplit( String k ) {
+        String f = k.trim();
+
+        if ( !f.startsWith( "!" ) ) return null;
+        f = f.replaceFirst( "^!", "" );
+        String[] vals = f.split( "=" ); // could be nothing after the equals.
+        if ( vals.length < 1 ) throw new IllegalStateException( "Could not parse " + k );
+        return vals;
+    }
+
+    /**
+     * Convenient method to get a FTP connection.
+     * 
+     * @param mode
+     * @return
+     * @throws SocketException
+     * @throws IOException
+     */
+    public static FTPClient connect( int mode ) throws SocketException, IOException {
+        return NetUtils.connect( mode, host, login, password );
+    }
+
+    /**
+     * @return
+     */
+    public static String getHostName() {
+        return host;
+    }
+
+}
