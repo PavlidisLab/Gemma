@@ -18,16 +18,18 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.expression.designElement;
 
 /**
  * @see ubic.gemma.model.expression.designElement.DesignElement
+ * @author pavlidis
+ * @version $Id$
  */
-public abstract class DesignElementImpl
-    extends ubic.gemma.model.expression.designElement.DesignElement
-{
+public abstract class DesignElementImpl extends ubic.gemma.model.expression.designElement.DesignElement {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -3705432443805719171L;
+
 }

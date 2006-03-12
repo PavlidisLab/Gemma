@@ -16,18 +16,15 @@
  * limitations under the License.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.expression.arrayDesign;
 
 /**
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
+ * @author pavlidis
+ * @version $Id$
  */
-public class ArrayDesignImpl
-    extends ubic.gemma.model.expression.arrayDesign.ArrayDesign
-{
+public class ArrayDesignImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesign {
+
     /**
      * The serial version UID of this class. Needed for serialization.
      */

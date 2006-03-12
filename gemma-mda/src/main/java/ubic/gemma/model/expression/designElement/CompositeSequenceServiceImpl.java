@@ -20,11 +20,7 @@
  */
 package ubic.gemma.model.expression.designElement;
 
-import java.util.Collection;
-
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
@@ -37,17 +33,8 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#saveCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
      */
     protected void handleSaveCompositeSequence(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence )
-            throws java.lang.Exception {
+            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) throws java.lang.Exception {
         this.getCompositeSequenceDao().create( compositeSequence );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetAllCompositeSequences()
-     */
-    @Override
-    protected Collection handleGetAllCompositeSequences() throws Exception {
-        return this.getCompositeSequenceDao().loadAll();
     }
 
     @Override
@@ -65,6 +52,16 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected CompositeSequence handleFind( CompositeSequence compositeSequence ) throws Exception {
         return this.getCompositeSequenceDao().find( compositeSequence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(ubic.gemma.model.expression.designElement.CompositeSequence)
+     */
+    @Override
+    protected CompositeSequence handleCreate( CompositeSequence compositeSequence ) throws Exception {
+        return ( CompositeSequence ) this.getCompositeSequenceDao().create( compositeSequence );
     }
 
 }

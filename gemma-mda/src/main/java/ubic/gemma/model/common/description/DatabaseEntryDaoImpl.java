@@ -63,7 +63,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
     public DatabaseEntry findOrCreate( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null || databaseEntry.getAccession() == null
                 || databaseEntry.getExternalDatabase() == null ) {
-            throw new IllegalArgumentException( "No valis business key for " + databaseEntry );
+            throw new IllegalArgumentException( "No valid business key for " + databaseEntry );
         }
         DatabaseEntry newDatabaseEntry = find( databaseEntry );
         if ( newDatabaseEntry != null ) {

@@ -18,16 +18,17 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-/**
- * This is only generated once! It will never be overwritten.
- * You can (and have to!) safely modify it by hand.
- */
 package ubic.gemma.model.genome.biosequence;
 
 /**
  * @see ubic.gemma.model.genome.biosequence.BioSequence
+ * @author pavlidis
+ * @version $Id$
  */
 public class BioSequenceImpl
     extends ubic.gemma.model.genome.biosequence.BioSequence
 {
+    
+    
+    
 }

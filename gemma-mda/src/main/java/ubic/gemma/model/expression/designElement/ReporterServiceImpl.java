@@ -56,4 +56,14 @@ public class ReporterServiceImpl extends ubic.gemma.model.expression.designEleme
         return this.getReporterDao().find( reporter );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.ReporterServiceBase#handleCreate(ubic.gemma.model.expression.designElement.Reporter)
+     */
+    @Override
+    protected Reporter handleCreate( Reporter reporter ) throws Exception {
+        return ( Reporter ) this.getReporterDao().create( reporter );
+    }
+
 }

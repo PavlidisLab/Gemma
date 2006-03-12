@@ -27,10 +27,6 @@ import java.util.Iterator;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004, 2006 University of British Columbia
- * 
  * @author daq2101
  * @version $Id$
  */
@@ -82,8 +78,9 @@ public class CandidateGeneListImpl extends ubic.gemma.model.genome.gene.Candidat
      */
     public void decreaseRanking( ubic.gemma.model.genome.gene.CandidateGene candidateGene ) {
         if ( candidateGene == null ) throw new IllegalArgumentException( "Parameter candidate cannot be null" );
-        if ( !this.getCandidates().contains( candidateGene ) )
+        if ( !this.getCandidates().contains( candidateGene ) ) {
             throw new IllegalArgumentException( "This candidate not found on this list." );
+        }
 
         CandidateGene cg = null;
         CandidateGene cgR = null;
