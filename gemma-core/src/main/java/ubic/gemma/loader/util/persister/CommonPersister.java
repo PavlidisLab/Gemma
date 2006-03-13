@@ -433,13 +433,23 @@ abstract public class CommonPersister extends AbstractPersister {
         return ontologyEntry;
     }
 
+    Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
+
     /**
      * @param entity
      */
     protected QuantitationType persistQuantitationType( QuantitationType entity ) {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
-        return quantitationTypeService.findOrCreate( entity );
+
+        String key = entity.getName() + " " + entity.getDescription();
+        if ( quantitationTypeCache.containsKey( key ) ) {
+            return quantitationTypeCache.get( key );
+        }
+
+        QuantitationType qt = quantitationTypeService.findOrCreate( entity );
+        quantitationTypeCache.put( key, qt );
+        return qt;
     }
 
     /**

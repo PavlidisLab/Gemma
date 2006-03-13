@@ -58,13 +58,8 @@ abstract public class GenomePersister extends CommonPersister {
         if ( entity instanceof Gene ) {
             return persistGene( ( Gene ) entity );
         } else if ( entity instanceof BioSequence ) {
-            if ( firstBioSequence )
-                log.warn( "*** Attempt to directly persist a BioSequence "
-                        + "*** BioSequence are only persisted by association to other objects." );
-            firstBioSequence = false;
-            return null;
-            // deal with in cascade from array design? Do nothing, probably.
-        } else if ( entity instanceof Taxon ) { // AS
+            return persistBioSequence( ( BioSequence ) entity );
+        } else if ( entity instanceof Taxon ) {
             return persistTaxon( ( Taxon ) entity );
         }
         return super.persist( entity );

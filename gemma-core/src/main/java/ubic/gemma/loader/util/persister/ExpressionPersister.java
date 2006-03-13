@@ -18,8 +18,12 @@
  */
 package ubic.gemma.loader.util.persister;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.common.description.LocalFile;
@@ -116,28 +120,25 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param vect
      */
     private void fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
-        // DesignElement persistentDesignElement = null;
-        // DesignElement maybeExistingDesignElement = vect.getDesignElement();
-        //
-        // assert maybeExistingDesignElement != null;
-        // ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
-        //
-        // checkCacheIsSetup( ad );
-        //
-        // String key = maybeExistingDesignElement.getName() + " " + ad.getName();
-        //
-        // if ( designElementCache.containsKey( key ) ) {
-        // persistentDesignElement = designElementCache.get( key );
-        // } else {
-        // persistentDesignElement = getPersistentDesignElement( persistentDesignElement, maybeExistingDesignElement,
-        // key );
-        // }
-        // assert persistentDesignElement != null;
-        // assert persistentDesignElement.getId() != null;
+        DesignElement persistentDesignElement = null;
+        DesignElement maybeExistingDesignElement = vect.getDesignElement();
 
-        // vect.setDesignElement( persistentDesignElement );
+        assert maybeExistingDesignElement != null;
+        ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
 
-        vect.setDesignElement( persistDesignElement( vect.getDesignElement() ) );
+        cacheArrayDesign( ad );
+
+        String key = maybeExistingDesignElement.getName() + " " + ad.getName();
+
+        if ( designElementCache.containsKey( key ) ) {
+            persistentDesignElement = designElementCache.get( key );
+        } else {
+            persistentDesignElement = getPersistentDesignElement( persistentDesignElement, maybeExistingDesignElement,
+                    key );
+        }
+        assert persistentDesignElement != null;
+        assert persistentDesignElement.getId() != null;
+        vect.setDesignElement( persistentDesignElement );
 
         checkBioAssayDimensionCache( vect );
 
@@ -151,6 +152,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private void fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
 
         // clearCaches();
+        log.info( "Filling in DesignElementDataVectors" );
 
         int count = 0;
         for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
@@ -179,28 +181,34 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( assay ) ) return assay;
 
         for ( FactorValue factorValue : assay.getFactorValues() ) {
-            // factors are not compositioned in any more, but by assciation with the ExperimentalFactor.
+            // factors are not compositioned in any more, but by association with the ExperimentalFactor.
             factorValue = persistFactorValue( factorValue );
         }
-
         assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
 
+        Collection<BioMaterial> bm = new HashSet<BioMaterial>();
         for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
-            bioMaterial = persistBioMaterial( bioMaterial );
-            assert bioMaterial.getId() != null;
+            bm.add( persistBioMaterial( bioMaterial ) );
         }
+        assay.setSamplesUsed( bm );
 
         LocalFile f = assay.getRawDataFile();
         f = persistLocalFile( f );
 
+        Collection<LocalFile> persistedLocalFiles = new HashSet<LocalFile>();
         for ( LocalFile file : assay.getDerivedDataFiles() ) {
-            file = persistLocalFile( file );
-            assert file.getId() != null;
+            persistedLocalFiles.add( persistLocalFile( file ) );
         }
+        assay.setDerivedDataFiles( persistedLocalFiles );
 
-        for ( Iterator iter = assay.getArrayDesignsUsed().iterator(); iter.hasNext(); ) {
-            ArrayDesign arrayDesign = ( ArrayDesign ) iter.next();
-            arrayDesign = persistArrayDesign( arrayDesign );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
+            arrayDesign = ( persistArrayDesign( arrayDesign ) );
+            ads.add( arrayDesign );
+        }
+        assay.setArrayDesignsUsed( ads );
+
+        for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
             assert arrayDesign.getId() != null;
         }
 
@@ -216,13 +224,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
 
+        List<BioAssay> persistedBioAssays = new ArrayList<BioAssay>();
         for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
-            bioAssay = persistBioAssay( bioAssay );
+            persistedBioAssays.add( persistBioAssay( bioAssay ) );
         }
+        bioAssayDimension.setDimensionBioAssays( persistedBioAssays );
 
+        Collection<BioMaterialDimension> persistedBioMaterialDimensions = new HashSet<BioMaterialDimension>();
         for ( BioMaterialDimension bad : bioAssayDimension.getBioMaterialDimensions() ) {
-            bad = persistBioMaterialDimension( bad );
+            persistedBioMaterialDimensions.add( persistBioMaterialDimension( bad ) );
         }
+        bioAssayDimension.setBioMaterialDimensions( persistedBioMaterialDimensions );
 
         return bioAssayDimensionService.findOrCreate( bioAssayDimension );
     }
@@ -265,6 +277,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
         assert bioMaterialDimensionService != null;
+        List<BioMaterial> persistentBioMaterials = new ArrayList<BioMaterial>();
+        for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
+            persistentBioMaterials.add( persistBioMaterial( bioMaterial ) );
+        }
+        bioMaterialDimension.setBioMaterials( persistentBioMaterials );
         return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
     }
 
@@ -465,10 +482,4 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.factorValueService = factorValueService;
     }
 
-    /**
-     * @param bioAssayDimensionCache The bioAssayDimensionCache to set.
-     */
-    public void setBioAssayDimensionCache( Map<String, BioAssayDimension> bioAssayDimensionCache ) {
-        this.bioAssayDimensionCache = bioAssayDimensionCache;
-    }
 }

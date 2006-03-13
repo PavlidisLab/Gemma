@@ -71,8 +71,11 @@ public abstract class AbstractPersister implements Persister {
             log.debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
             for ( Object entity : col ) {
                 persist( entity );
-                if ( ++count % 20 == 0 ) {
-                    this.flushAndClearSession();
+                // if ( ++count % 20 == 0 ) {
+                // this.flushAndClearSession();
+                // }
+                if ( ++count % 1000 == 0 ) {
+                    log.info( "Persisted " + count + " objects in collection" );
                 }
             }
         } catch ( Exception e ) {
@@ -90,15 +93,12 @@ public abstract class AbstractPersister implements Persister {
         crudUtils.initMetaData( sessionFactory );
     }
 
-    private int flushed = 0;
-
     /**
      * Flush and clear the hibernate cache. Call during persistence of large collections.
      */
     protected void flushAndClearSession() {
         // this.getCurrentSession().flush();
         // this.getCurrentSession().clear();
-        // log.info( "Flushed " + ++flushed + " times" );
     }
 
     /**
