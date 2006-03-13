@@ -46,7 +46,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
 
             if ( bioSequence.getSequenceDatabaseEntry() != null )
-                queryObject.add( Restrictions.eq( "sequenceDatabaseEntry", bioSequence.getSequenceDatabaseEntry() ) );
+                queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
+                        Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
 
             if ( bioSequence.getSequence() != null )
                 queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
