@@ -31,13 +31,10 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
  */
 public class GeoDatasetService extends AbstractGeoService {
 
-    private boolean loadPlatformOnly = false;
-
     /**
-     * Given a GEO data set id:
+     * Given a GEO GSE or GDS:
      * <ol>
-     * <li>Download and parse GDS file</li>
-     * <li>Download and parse GSE family file(s).</li>
+     * <li>Download and parse GDS files and GSE file needed</li>
      * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
      * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
      * </ol>
@@ -46,22 +43,22 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Object fetchAndLoad( String geoDataSetAccession ) {
+    public Object fetchAndLoad( String geoAccession ) {
 
         generator.setProcessPlatformsOnly( this.loadPlatformOnly );
 
         if ( this.loadPlatformOnly ) {
-            Collection<?> platforms = generator.generate( geoDataSetAccession );
+            Collection<?> platforms = generator.generate( geoAccession );
             Collection<Object> arrayDesigns = ( Collection<Object> ) converter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
 
-        Collection<?> results = generator.generate( geoDataSetAccession );
+        Collection<?> results = generator.generate( geoAccession );
         assert results.iterator().next() instanceof GeoSeries : "Got a "
                 + results.iterator().next().getClass().getName() + " instead of a " + GeoSeries.class.getName();
         GeoSeries series = ( GeoSeries ) results.iterator().next();
 
-        log.info( "Generated GEO domain objects for " + geoDataSetAccession );
+        log.info( "Generated GEO domain objects for " + geoAccession );
 
         ExpressionExperiment result = ( ExpressionExperiment ) converter.convert( series );
 
@@ -70,13 +67,6 @@ public class GeoDatasetService extends AbstractGeoService {
         assert persisterHelper != null;
         return ( ExpressionExperiment ) persisterHelper.persist( result );
 
-    }
-
-    /**
-     * @param b
-     */
-    public void setLoadPlatformOnly( boolean b ) {
-        this.loadPlatformOnly = b;
     }
 
 }

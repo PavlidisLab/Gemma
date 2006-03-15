@@ -42,12 +42,13 @@
         </tr>
         <tr>
             <th>
-                <Gemma:label key="loadPlatformOnly" />
+                <Gemma:label key="expressionExperiment.loadPlatformOnly" />
             </th>
             <td align="left">
                 <spring:bind path="command.loadPlatformOnly">
-                    <input align="left" type="checkbox" name="loadPlatformOnly" id="loadPlatformOnly"
-                        value="<c:out value="${status.value}"/>" />
+                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
+                    <input align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+                        <c:if test="${status.value}">checked</c:if> />
                     <span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
                 </spring:bind>
             </td>

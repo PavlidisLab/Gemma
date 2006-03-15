@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.util.persister;
 
+import ubic.gemma.model.common.Auditable;
+
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
  * Where appropriate, objects are only created anew if they don't already exist in the database, according to rules
@@ -37,17 +39,12 @@ public class PersisterHelper extends ExpressionPersister {
      */
     @SuppressWarnings("unchecked")
     public Object persist( Object entity ) {
+        if ( entity instanceof Auditable ) {
+            Auditable a = ( Auditable ) entity;
+            a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
+            return super.persist( a );
+        }
         return super.persist( entity );
     }
-
-    //
-    // /**
-    // *
-    // */
-    // private void clearCaches() {
-    // bioAssayDimensionCache.clear();
-    // arrayDesignCache.clear();
-    // designElementCache.clear();
-    // }
 
 }

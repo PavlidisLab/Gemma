@@ -96,6 +96,7 @@ public class ExpressionExperimentLoadController extends BaseFormController {
         gds.setGenerator( new GeoDomainObjectGenerator() );
         gds.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
         if ( eeLoadCommand.isLoadPlatformOnly() ) {
+            gds.setLoadPlatformOnly( true );
             Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) gds.fetchAndLoad( eeLoadCommand
                     .getAccession() );
             request.setAttribute( "arrayDesigns", arrayDesigns );

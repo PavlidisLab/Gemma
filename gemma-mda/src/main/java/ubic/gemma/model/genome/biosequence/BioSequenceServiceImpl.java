@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * <hr>
  * 
@@ -55,6 +58,42 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     @Override
     protected BioSequence handleFindOrCreate( BioSequence bioSequence ) throws Exception {
         return this.getBioSequenceDao().findOrCreate( bioSequence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected BioSequence handleCreate( BioSequence bioSequence ) throws Exception {
+        return ( BioSequence ) this.getBioSequenceDao().create( bioSequence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleCreate( Collection bioSequences ) throws Exception {
+        return ( Collection<BioSequence> ) this.getBioSequenceDao().create( bioSequences );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleFindOrCreate(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleFindOrCreate( Collection bioSequences ) throws Exception {
+        Collection<BioSequence> result = new HashSet<BioSequence>();
+        for ( BioSequence bioSequence : ( Collection<BioSequence> ) bioSequences ) {
+            result.add( this.getBioSequenceDao().findOrCreate( bioSequence ) );
+        }
+        return result;
     }
 
 }

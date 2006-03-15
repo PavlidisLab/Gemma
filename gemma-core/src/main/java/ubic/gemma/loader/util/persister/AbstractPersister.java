@@ -30,6 +30,8 @@ import java.util.Set;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.HibernateException;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
@@ -37,6 +39,7 @@ import org.hibernate.engine.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.security.interceptor.CrudInterceptorUtils;
 
 /**
@@ -94,11 +97,20 @@ public abstract class AbstractPersister implements Persister {
     }
 
     /**
-     * Flush and clear the hibernate cache. Call during persistence of large collections.
+     * Flush and clear the hibernate cache if a session is active. Call during persistence of large collections.
      */
     protected void flushAndClearSession() {
-        // this.getCurrentSession().flush();
-        // this.getCurrentSession().clear();
+        Session session = this.getCurrentSession();
+        if ( session != null ) {
+            session.flush();
+            session.clear();
+        }
+    }
+
+    private Collection<Object> seen = new HashSet<Object>();
+
+    protected void resetCollectionSeen() {
+        seen = new HashSet<Object>();
     }
 
     /**
@@ -109,33 +121,28 @@ public abstract class AbstractPersister implements Persister {
     @SuppressWarnings("unchecked")
     protected void refreshCollections( Object entity ) {
 
+        if ( seen.contains( entity ) ) {
+            log.info( "Already saw " + entity );
+            return;
+        }
+
         this.crudUtils.initMetaData( this.sessionFactory );
 
         EntityPersister persister = crudUtils.getEntityPersister( entity );
 
-        String[] propertyNames;
-        CascadeStyle[] cascadeStyles = null;
-
-        if ( persister == null ) { // it's not a domain object
+        // it's either null, not a domain object or not persistent.
+        if ( persister == null || isTransient( entity ) ) {
             return;
         }
-        cascadeStyles = persister.getPropertyCascadeStyles();
-        propertyNames = persister.getPropertyNames();
 
-        log.debug( "Refreshing collections for " + entity );
+        String[] propertyNames = persister.getPropertyNames();
 
         for ( int j = 0; j < propertyNames.length; j++ ) {
-
-            if ( cascadeStyles != null ) {
-                CascadeStyle cs = cascadeStyles[j];
-
-                if ( !crudUtils.needCascade( cs ) && !cs.doCascade( CascadingAction.DELETE ) ) {
-                    continue;
-                }
-
-            }
-
             PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( entity.getClass(), propertyNames[j] );
+
+            if ( descriptor == null ) {
+                continue;
+            }
 
             Method setter = descriptor.getWriteMethod();
             if ( setter == null ) continue;
@@ -143,17 +150,37 @@ public abstract class AbstractPersister implements Persister {
 
             try {
                 Object value = getter.invoke( entity, new Object[] {} );
-                if ( value == null ) continue;
-                if ( !( value instanceof Collection ) ) continue;
 
-                if ( value instanceof List ) {
-                    setter.invoke( entity, new Object[] { new ArrayList( ( List ) value ) } );
-                } else if ( value instanceof Set ) {
-                    setter.invoke( entity, new Object[] { new HashSet( ( Set ) value ) } );
+                if ( value == null ) continue;
+
+                seen.add( value );
+
+                if ( !( value instanceof Collection ) ) {
+                    refreshCollections( value );
+                    continue;
                 }
 
-                // recurse
-                refreshCollections( value );
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "Refreshing collection: " + propertyNames[j] + " of "
+                            + entity.getClass().getSimpleName() );
+                }
+
+                try {
+                    if ( value instanceof List ) {
+                        setter.invoke( entity, new Object[] { new ArrayList( ( List ) value ) } );
+                    } else if ( value instanceof Set ) {
+                        setter.invoke( entity, new Object[] { new HashSet( ( Set ) value ) } );
+                    }
+
+                    // recurse
+                    assert value instanceof Collection;
+                    for ( Object obj : ( Collection ) value ) {
+                        refreshCollections( obj );
+                    }
+                } catch ( LazyInitializationException ignored ) {
+                    log.info( "LazyInitializationException" );
+                    // ignore
+                }
 
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
@@ -164,24 +191,30 @@ public abstract class AbstractPersister implements Persister {
             }
 
         }
+
     }
 
     /**
      * @return Current Hibernate Session.
      */
     protected Session getCurrentSession() {
-        return this.sessionFactory.getCurrentSession();
+        try {
+            return this.sessionFactory.getCurrentSession();
+        } catch ( HibernateException e ) {
+            // that's okay, we don't have a session.
+            return null;
+        }
     }
 
     /**
      * Determine if a entity is transient (not persistent).
      * 
      * @param entity
-     * @return If the entity is null, return false. If the entity is non-null and has a null "id" property, return true;
+     * @return If the entity is null, return true. If the entity is non-null and has a null "id" property, return true;
      *         Otherwise return false.
      */
     protected boolean isTransient( Object entity ) {
-        if ( entity == null ) return false;
+        if ( entity == null ) return true;
         try {
             return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;
         } catch ( IllegalAccessException e ) {

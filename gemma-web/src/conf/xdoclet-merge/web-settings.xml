@@ -38,7 +38,8 @@
 <context-param>
     <param-name>contextConfigLocation</param-name>
     <param-value>
-        classpath*:/ubic/gemma/applicationContext-*.xml, classpath*:/ubic/gemma/beanRefFactory.xml
+        classpath*:/ubic/gemma/applicationContext-*.xml, classpath*:/ubic/gemma/beanRefFactory.xml,
+        classpath*:/ubic/gemma/localDataSource.xml
     </param-value>
 </context-param>
 

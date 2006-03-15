@@ -64,6 +64,7 @@ import ubic.gemma.model.common.description.ExternalDatabaseDao;
  * Any changes you make to the database will be undone at the end of the test, so no cleanup code is needed. If you
  * don't want this behavior, call setComplete() in your test.
  * <p>
+ * Be careful! Running long tasks in transactions can trigger odd behavior. Use this for tests that run quickly.
  * 
  * @see org.springframework.test.AbstractTransactionalSpringContextTests
  * @author pavlidis
@@ -196,8 +197,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         SecurityContextHolder.setContext( secureContext );
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Returns config locations needed for test environment.
      * 
      * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#getConfigLocations()
      */
@@ -253,8 +254,12 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     /**
      * Call this method near the start of your test to avoid "Stale data" errors ("Cannot synchronize session with
-     * persistent store..."). FlushMode.COMMIT means that the cache will never be flush before queries, only at the end
-     * of the transaction. If you are getting errors when "find" methods are used, this could help.
+     * persistent store..."). FlushMode.COMMIT means that the cache will never be flushed before queries, only at the
+     * end of the transaction. If you are getting errors when "find" methods are used, this could help.
+     * <p>
+     * It can also improve performance during tests, at the possible cost of a big hit at the end.
+     * <p>
+     * Use this carefully -- if your test is going to 'find' data that hasn't been flushed yet, you'll have problems.
      */
     protected void setFlushModeCommit() {
         ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().setFlushMode( FlushMode.COMMIT );

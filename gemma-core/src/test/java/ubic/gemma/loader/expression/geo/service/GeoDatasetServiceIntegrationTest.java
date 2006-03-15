@@ -40,9 +40,11 @@ import baseCode.dataStructure.matrix.DoubleMatrixNamed;
  */
 public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Override
+    protected void onSetUp() throws Exception {
+        super.onSetUp();
         geoService = new GeoDatasetService();
+        geoService.setLoadPlatformOnly( false );
         super.init();
     }
 
@@ -50,11 +52,25 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // Full tests - only run if you have lots of time to kill
     // ////////////////////////////////////////////////////////////
 
+    /**
+     * This test uses just one dataset, one series (only about 900 probes), just the platform.
+     */
+    public void testFetchAndLoadOneSeriesPlatform() throws Exception {
+        geoService.setLoadPlatformOnly( true );
+        geoService.fetchAndLoad( "GSE2" );
+    }
+
+    /**
+     * This test uses just one dataset, one series (only about 900 probes)
+     */
+    public void testFetchAndLoadOneSeries() throws Exception {
+        geoService.fetchAndLoad( "GSE2" );
+    }
+
     // /**
     // * One platform but many quantitation types.
     // */
     // public void testFetchAndLoadB() throws Exception {
-    // this.setFlushModeCommit();
     // geoService.fetchAndLoad( "GDS942" );
     // }
     //
@@ -62,12 +78,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // * two platforms.
     // */
     // public void testFetchAndLoadC() throws Exception {
-    // this.setFlushModeCommit();
     // geoService.fetchAndLoad( "GDS100" );
     // }
     //
     // public void testFetchAndLoadD() throws Exception {
-    // this.setFlushModeCommit();
     // geoService.fetchAndLoad( "GDS1033" );
     // }
     //
@@ -76,7 +90,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // * @throws Exception
     // */
     // public void testFetchAndLoadE() throws Exception {
-    // this.setFlushModeCommit();
     // geoService.fetchAndLoad( "GDS835" );
     // }
 
@@ -85,14 +98,16 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search)
      */
     // public void testFetchAndLoadMultiChipPerSeries() throws Exception {
-    // gds.fetchAndLoad( "GDS472" );
+    // geoService.fetchAndLoad( "GDS472" );
     // }
     /**
      * This test uses just one dataset, one series
      */
-    // public void testFetchAndLoadOneDataset() throws Exception {
-    // gds.fetchAndLoad( "GDS599" );
-    // }
+    public void testFetchAndLoadOneDataset() throws Exception {
+        geoService.fetchAndLoad( "GDS599" );
+        log.info( "**** done ****" );
+    }
+
     /**
      * Another basic one, but we also use cut-down versions for testing below.
      */
@@ -116,11 +131,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * Problem: yields audit trail errors.
      */
     public void testFetchAndLoadGDS775() throws Exception {
-        assert config != null;
-        String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds775short" ) );
-        this.setFlushModeCommit();
+        // assert config != null;
+        // String path = getTestFileBasePath();
+        // geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds775short" ) );
+        // this.setFlushModeCommit();
         geoService.fetchAndLoad( "GDS775" );
+        log.info( "**** done ****" );
     }
 
     /**
@@ -130,8 +146,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds22Short" ) );
-        this.setFlushModeCommit();
+        // this.setFlushModeCommit();
         geoService.fetchAndLoad( "GDS22" );
+        log.info( "**** done ****" );
     }
 
     /*
@@ -142,8 +159,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds994Short" ) );
-        this.setFlushModeCommit();
+        // this.setFlushModeCommit();
         geoService.fetchAndLoad( "GDS994" );
+        log.info( "**** done ****" );
     }
 
     /**
@@ -155,8 +173,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "complexShortTest" ) );
-        this.setFlushModeCommit();
+        // this.setFlushModeCommit();
         geoService.fetchAndLoad( "GDS825" );
+        log.info( "**** done ****" );
     }
 
     //
@@ -167,11 +186,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // public void testFetchAndLoadThreePlatforms() throws Exception {
     // gds.fetchAndLoad( "GDS243" );
     // }
-
     @SuppressWarnings("unchecked")
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         // this.setFlushModeCommit();
-      //  this.setComplete();
+        // this.setComplete();
         assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "shortTest" ) );
@@ -180,7 +198,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
          * http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
          */
-        geoService.fetchAndLoad( "GDS472" );
+        ExpressionExperiment newee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS472" );
 
         // get the data back out.
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
@@ -200,10 +218,14 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         QuantitationType qt = qts.find( qtf );
 
         assertTrue( qt != null );
-
-        DoubleMatrixNamed matrix = edms.getMatrix( ee, qt );
+        assertTrue( ee != null );
+        assertTrue( newee.equals( ee ) );
+        
+        DoubleMatrixNamed matrix = edms.getMatrix( newee, qt );
 
         // printMatrix( matrix );
+
+        assertTrue( matrix != null );
 
         assertEquals( 31, matrix.rows() );
 

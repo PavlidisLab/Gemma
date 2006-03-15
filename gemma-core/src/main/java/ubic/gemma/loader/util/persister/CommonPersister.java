@@ -22,12 +22,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.auditAndSecurity.Organization;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryService;
@@ -59,6 +63,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
  * @spring.property name="hardwareService" ref="hardwareService"
  * @spring.property name="ontologyEntryService" ref="ontologyEntryService"
  * @spring.property name="personService" ref="personService"
+ * @spring.property name="userService" ref="userService"
  * @spring.property name="localFileService" ref="localFileService"
  * @spring.property name="databaseEntryService" ref="databaseEntryService"
  * @spring.property name="contactService" ref="contactService"
@@ -91,6 +96,8 @@ abstract public class CommonPersister extends AbstractPersister {
 
     protected PersonService personService;
 
+    protected UserService userService;
+
     protected ProtocolService protocolService;
 
     protected QuantitationTypeService quantitationTypeService;
@@ -107,8 +114,12 @@ abstract public class CommonPersister extends AbstractPersister {
     @SuppressWarnings("unchecked")
     public Object persist( Object entity ) {
         if ( entity instanceof AuditTrail ) {
-            return persistAuditTrail( entity );
-        } else if ( Contact.class.isAssignableFrom( entity.getClass() ) ) {
+            return persistAuditTrail( ( AuditTrail ) entity );
+        } else if ( entity instanceof User ) {
+            return persistUser( ( User ) entity );
+        } else if ( entity instanceof Person ) {
+            return persistPerson( ( Person ) entity );
+        } else if ( entity instanceof Contact ) {
             return persistContact( ( Contact ) entity );
         } else if ( entity instanceof Hardware ) {
             return persistHardware( ( Hardware ) entity );
@@ -324,10 +335,16 @@ abstract public class CommonPersister extends AbstractPersister {
      * @param entity
      * @return
      */
-    protected Object persistAuditTrail( Object entity ) {
-        if ( this.isTransient( entity ) ) return auditTrailService.create( ( AuditTrail ) entity );
+    protected AuditTrail persistAuditTrail( AuditTrail entity ) {
+        if ( entity == null ) return null;
+        if ( !this.isTransient( entity ) ) return entity;
 
-        return entity;
+        for ( AuditEvent event : entity.getEvents() ) {
+            event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
+        }
+
+        // events are persisted by composition.
+        return auditTrailService.create( entity );
     }
 
     /**
@@ -335,8 +352,49 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Contact persistContact( Contact contact ) {
         if ( contact == null ) return null;
-
         return this.contactService.findOrCreate( contact );
+    }
+
+    /**
+     * @param
+     */
+    protected Person persistPerson( Person person ) {
+        if ( person == null ) return null;
+        for ( Organization affiliation : person.getAffiliations() ) {
+            affiliation = persistOrganization( affiliation );
+        }
+        return this.personService.findOrCreate( person );
+    }
+
+    /**
+     * @param user
+     * @return
+     */
+    protected User persistUser( User user ) {
+        if ( user == null ) return null;
+
+        // never create users from scratch this way -- only find them.
+        User existingUser = this.userService.findByUserName( user.getUserName() );
+
+        if ( existingUser == null ) {
+            log.warn( "No such user '" + user.getUserName() + "' exists" );
+            return null;
+        }
+
+        for ( Organization affiliation : existingUser.getAffiliations() ) {
+            affiliation = persistOrganization( affiliation );
+        }
+        return existingUser;
+    }
+
+    /**
+     * @param affiliation
+     * @return
+     */
+    private Organization persistOrganization( Organization affiliation ) {
+        // FIXME This is just to get us back in the saddle.
+        log.warn( "Not persisting organization!!" );
+        return null;
     }
 
     /**
@@ -347,6 +405,7 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( databaseEntry == null ) return null;
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
         assert !isTransient( databaseEntry.getExternalDatabase() );
+
         return databaseEntryService.findOrCreate( databaseEntry );
     }
 
@@ -363,6 +422,8 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( seenDatabases.containsKey( name ) ) {
             return seenDatabases.get( name );
         }
+
+        log.info( "Loading or creating " + name );
         database = externalDatabaseService.findOrCreate( database );
         seenDatabases.put( database.getName(), database );
         return database;
@@ -478,6 +539,13 @@ abstract public class CommonPersister extends AbstractPersister {
 
         return softwareService.findOrCreate( software );
 
+    }
+
+    /**
+     * @param userService The userService to set.
+     */
+    public void setUserService( UserService userService ) {
+        this.userService = userService;
     }
 
 }

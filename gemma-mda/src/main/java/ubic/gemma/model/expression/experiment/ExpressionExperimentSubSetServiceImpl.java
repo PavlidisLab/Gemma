@@ -43,7 +43,8 @@ public class ExpressionExperimentSubSetServiceImpl extends
     protected ExpressionExperimentSubSet handleCreate(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
             throws java.lang.Exception {
-        return this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
+        return ( ExpressionExperimentSubSet ) this.getExpressionExperimentSubSetDao().create(
+                expressionExperimentSubSet );
     }
 
 }

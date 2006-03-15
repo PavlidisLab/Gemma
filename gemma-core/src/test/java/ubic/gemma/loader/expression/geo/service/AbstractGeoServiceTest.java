@@ -23,17 +23,18 @@ import java.io.IOException;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.util.persister.PersisterHelper;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public abstract class AbstractGeoServiceTest extends BaseTransactionalSpringContextTest {
+public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
 
     AbstractGeoService geoService;
 
     protected static final String GEO_TEST_DATA_ROOT = "/gemma-core/src/test/resources/data/loader/expression/geo/";
+
     /**
      * 
      *

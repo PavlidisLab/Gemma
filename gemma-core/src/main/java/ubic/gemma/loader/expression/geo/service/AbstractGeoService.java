@@ -36,6 +36,7 @@ public abstract class AbstractGeoService {
     protected GeoDomainObjectGenerator generator;
     protected Persister persisterHelper;
     protected Converter converter;
+    protected boolean loadPlatformOnly = false;
 
     /**
      * This is supplied to allow plugging in non-standard generators for testing (e.g., using local files only)
@@ -65,4 +66,8 @@ public abstract class AbstractGeoService {
      * @return
      */
     public abstract Object fetchAndLoad( String geoAccession );
+
+    public void setLoadPlatformOnly( boolean b ) {
+        this.loadPlatformOnly = b;
+    }
 }

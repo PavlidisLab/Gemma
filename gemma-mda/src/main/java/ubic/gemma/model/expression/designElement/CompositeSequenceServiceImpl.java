@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+
 /**
  * @author keshav
  * @author pavlidis
@@ -62,6 +64,17 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected CompositeSequence handleCreate( CompositeSequence compositeSequence ) throws Exception {
         return ( CompositeSequence ) this.getCompositeSequenceDao().create( compositeSequence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleCreate( Collection compositeSequences ) throws Exception {
+        return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
     }
 
 }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
  * @spring.property name="factorValueService" ref="factorValueService"
@@ -151,7 +151,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private void fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
 
-        // clearCaches();
         log.info( "Filling in DesignElementDataVectors" );
 
         int count = 0;
@@ -159,15 +158,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             fillInDesignElementDataVectorAssociations( vect );
 
-            if ( count > 0 && count % 2000 == 0 ) {
+            if ( ++count % 2000 == 0 ) {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
             }
-
-            if ( ++count % SESSION_BATCH_SIZE == 0 ) {
-                this.flushAndClearSession();
-            }
         }
-        log.info( "Filled in " + count + " DesignElementDataVectors" );
+        log.info( "Done, filled in " + count + " DesignElementDataVectors" );
     }
 
     /**
@@ -180,46 +175,43 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( !isTransient( assay ) ) return assay;
 
-        for ( FactorValue factorValue : assay.getFactorValues() ) {
-            // factors are not compositioned in any more, but by association with the ExperimentalFactor.
-            factorValue = persistFactorValue( factorValue );
-        }
-        assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
+        log.info( "Persisting " + assay );
 
-        Collection<BioMaterial> bm = new HashSet<BioMaterial>();
-        for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
-            bm.add( persistBioMaterial( bioMaterial ) );
-        }
-        assay.setSamplesUsed( bm );
-
-        LocalFile f = assay.getRawDataFile();
-        f = persistLocalFile( f );
-
-        Collection<LocalFile> persistedLocalFiles = new HashSet<LocalFile>();
-        for ( LocalFile file : assay.getDerivedDataFiles() ) {
-            persistedLocalFiles.add( persistLocalFile( file ) );
-        }
-        assay.setDerivedDataFiles( persistedLocalFiles );
-
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
-        for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
-            arrayDesign = ( persistArrayDesign( arrayDesign ) );
-            ads.add( arrayDesign );
-        }
-        assay.setArrayDesignsUsed( ads );
-
-        for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
-            assert arrayDesign.getId() != null;
-        }
+        fillInBioAssayAssociations( assay );
 
         return bioAssayService.findOrCreate( assay );
+    }
+
+    /**
+     * @param assay
+     */
+    private void fillInBioAssayAssociations( BioAssay assay ) {
+        for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
+            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
+        }
+
+        for ( FactorValue factorValue : assay.getFactorValues() ) {
+            // factors are not compositioned in any more, but by association with the ExperimentalFactor.
+            factorValue.setId( persistFactorValue( factorValue ).getId() );
+        }
+
+        assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
+
+        for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
+            bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
+        }
+
+        assay.setRawDataFile( persistLocalFile( assay.getRawDataFile() ) );
+
+        for ( LocalFile file : assay.getDerivedDataFiles() ) {
+            file.setId( persistLocalFile( file ).getId() );
+        }
     }
 
     /**
      * @param bioAssayDimension
      * @return
      */
-
     private BioAssayDimension persistBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null ) return null;
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
@@ -285,6 +277,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
     }
 
+    /**
+     * @param entity
+     * @return
+     */
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
         if ( entity == null ) return null;
@@ -305,7 +301,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
 
-            // type
             for ( OntologyEntry type : experimentalDesign.getTypes() ) {
                 type = persistOntologyEntry( type );
             }
@@ -330,29 +325,31 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         }
 
-        int count = 0;
-        for ( BioAssay bA : entity.getBioAssays() ) {
-            bA = persistBioAssay( bA );
-            if ( ++count % SESSION_BATCH_SIZE == 0 ) {
-                refreshCollections( bA );
-                flushAndClearSession();
+        Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
+        for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
+            for ( BioAssay bA : subset.getBioAssays() ) {
+                fillInBioAssayAssociations( bA );
+                alreadyFilled.add( bA );
             }
         }
 
-        for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
-            for ( BioAssay bA : subset.getBioAssays() ) {
-                bA = persistBioAssay( bA );
-                if ( ++count % SESSION_BATCH_SIZE == 0 ) {
-                    refreshCollections( bA );
-                    flushAndClearSession();
-                }
-            }
+        for ( BioAssay bA : entity.getBioAssays() ) {
+            if ( alreadyFilled.contains( bA ) ) continue;
+            fillInBioAssayAssociations( bA );
         }
 
         fillInExpressionExperimentDataVectorAssociations( entity );
 
         log.info( "Filled in references, persisting ExpressionExperiment " + entity );
-        refreshCollections( entity );
+
+        ExpressionExperiment ee = expressionExperimentService.find( entity );
+
+        // FIXME make sure this works...this would allow update.
+        if ( ee != null ) {
+            BeanPropertyCompleter.complete(ee, entity);
+            expressionExperimentService.update( ee );
+        }
+
         return expressionExperimentService.findOrCreate( entity );
     }
 
@@ -409,9 +406,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension() );
             bioAssayDimensionCache.put( vect.getBioAssayDimension().getName(), bAd );
             vect.setBioAssayDimension( bAd );
-            this.getCurrentSession().evict( bAd ); // otherwise we tend to get errors when testing.
         }
-
     }
 
     /**

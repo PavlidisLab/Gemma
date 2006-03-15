@@ -84,6 +84,11 @@ abstract public class GenomePersister extends CommonPersister {
         if ( bioSequence == null ) return null;
         if ( !isTransient( bioSequence ) ) return bioSequence;
         fillInBioSequenceTaxon( bioSequence );
+        if ( bioSequence.getSequenceDatabaseEntry() != null
+                && bioSequence.getSequenceDatabaseEntry().getExternalDatabase() != null ) {
+            bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
+                    persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() ) );
+        }
         return bioSequenceService.findOrCreate( bioSequence );
     }
 

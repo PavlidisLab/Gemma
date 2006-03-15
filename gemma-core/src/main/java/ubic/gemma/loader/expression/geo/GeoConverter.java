@@ -549,7 +549,10 @@ public class GeoConverter implements Converter {
                     log.info( count + " Data vectors added" );
                 }
             }
-            expExp.setDesignElementDataVectors( new HashSet( vectors ) );
+            if ( log.isInfoEnabled() ) {
+                log.info( count + " Data vectors added for '" + quantitationType + "'" );
+            }
+            expExp.getDesignElementDataVectors().addAll( new HashSet( vectors ) );
         }
     }
 
@@ -575,6 +578,7 @@ public class GeoConverter implements Converter {
             qType = StandardQuantitationType.OTHER;
             pType = PrimitiveType.STRING;
             sType = ScaleType.UNSCALED;
+            gType = GeneralType.CATEGORICAL;
         } else if ( name.matches( "CH[12][ABD]_(MEAN|MEDIAN)" ) ) {
             qType = StandardQuantitationType.DERIVEDSIGNAL;
             sType = ScaleType.LINEAR;
@@ -815,6 +819,9 @@ public class GeoConverter implements Converter {
         }
         arrayDesign.setCompositeSequences( new HashSet( compositeSequences ) );
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
+
+        // We don't get reporters from GEO SOFT files.
+        arrayDesign.setReporters( new HashSet() );
 
         Contact manufacturer = Contact.Factory.newInstance();
         if ( platform.getManufacturer() != null ) {
@@ -1114,6 +1121,9 @@ public class GeoConverter implements Converter {
 
         ExpressionExperimentSubSet subSet = ExpressionExperimentSubSet.Factory.newInstance();
 
+        // FIXME turn the geo subset information into factors if possible.
+        subSet.setName( geoSubSet.getDescription() );
+        subSet.setDescription( geoSubSet.getType().toString() );
         subSet.setSourceExperiment( expExp );
         subSet.setBioAssays( new HashSet() );
 

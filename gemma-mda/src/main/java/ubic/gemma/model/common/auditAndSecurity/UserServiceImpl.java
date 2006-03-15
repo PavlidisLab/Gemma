@@ -186,4 +186,14 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         return StringUtil.encodeString( cookie.getUser().getUserName() + "|" + cookie.getCookie() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByUserName(java.lang.String)
+     */
+    @Override
+    protected User handleFindByUserName( String userName ) throws Exception {
+        return this.getUserDao().findByUserName( userName );
+    }
+
 }

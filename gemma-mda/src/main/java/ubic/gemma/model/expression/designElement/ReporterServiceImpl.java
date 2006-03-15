@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -64,6 +66,17 @@ public class ReporterServiceImpl extends ubic.gemma.model.expression.designEleme
     @Override
     protected Reporter handleCreate( Reporter reporter ) throws Exception {
         return ( Reporter ) this.getReporterDao().create( reporter );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.ReporterServiceBase#handleCreate(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleCreate( Collection reporters ) throws Exception {
+        return ( Collection<Reporter> ) this.getReporterDao().create( reporters );
     }
 
 }

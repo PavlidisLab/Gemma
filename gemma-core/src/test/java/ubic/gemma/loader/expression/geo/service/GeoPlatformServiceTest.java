@@ -28,8 +28,9 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
  */
 public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
 
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Override
+    protected void onSetUp() throws Exception {
+        super.onSetUp();
         geoService = new GeoPlatformService();
         super.init();
     }
@@ -40,7 +41,6 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadGPL101Short() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "platform" ) );
-        this.setFlushModeCommit();
         geoService.fetchAndLoad( "GPL101" );
     }
 
