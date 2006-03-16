@@ -73,7 +73,7 @@ public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
         Taxon tx = Taxon.Factory.newInstance();
         tx.setCommonName( TAXON );
         tx.setNcbiId( 4994949 );
-        tx = taxonDao.create( tx );
+        tx = taxonDao.findOrCreate( tx );
 
         // need a chromosome
         Chromosome chrom = Chromosome.Factory.newInstance();

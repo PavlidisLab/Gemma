@@ -195,7 +195,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             factorValue.setId( persistFactorValue( factorValue ).getId() );
         }
 
-        assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
+        // assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
+        
+        // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
+//        assay.getAccession()
+//                .setExternalDatabase( persistExternalDatabase( assay.getAccession().getExternalDatabase() ) );
 
         for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
             bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
@@ -241,11 +245,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( entity ) ) return entity;
 
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
-
-        OntologyEntry materialType = entity.getMaterialType();
-        if ( materialType != null ) {
-            entity.setMaterialType( persistOntologyEntry( materialType ) );
-        }
+        entity.setMaterialType( persistOntologyEntry( entity.getMaterialType() ) );
 
         for ( Treatment treatment : entity.getTreatments() ) {
 
@@ -346,7 +346,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         // FIXME make sure this works...this would allow update.
         if ( ee != null ) {
-            BeanPropertyCompleter.complete(ee, entity);
+            BeanPropertyCompleter.complete( ee, entity );
             expressionExperimentService.update( ee );
         }
 

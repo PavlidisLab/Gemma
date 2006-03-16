@@ -24,6 +24,8 @@ import java.security.MessageDigest;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.codec.*;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * String Utility Class This is used to encode passwords programmatically
@@ -92,11 +94,9 @@ public class StringUtil {
      * 
      * @param str
      * @return String
-     * @deprecated because it ties us to the sun jvm
      */
     public static String encodeString( String str ) {
-        sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
-        return encoder.encodeBuffer( str.getBytes() ).trim();
+        return String.valueOf( Base64.encodeBase64( str.getBytes() ) );
     }
 
     /**
@@ -104,16 +104,10 @@ public class StringUtil {
      * 
      * @param str
      * @return String
-     * @deprecated because it ties us to the sun jvm
      */
 
     public static String decodeString( String str ) {
-        sun.misc.BASE64Decoder dec = new sun.misc.BASE64Decoder();
-        try {
-            return new String( dec.decodeBuffer( str ) );
-        } catch ( IOException io ) {
-            throw new RuntimeException( io.getMessage(), io.getCause() );
-        }
+        return String.valueOf( Base64.decodeBase64( str.getBytes() ) );
     }
 
     /**

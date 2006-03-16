@@ -230,7 +230,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         if ( numExistingCompositeSequences >= numCompositeSequencesInNew && numExistingReporters >= numReportersInNew ) {
             if ( log.isInfoEnabled() ) {
-                log.info( "No action needed: Number of design elements in existing version of " + arrayDesign
+                log.debug( "No action needed: Number of design elements in existing version of " + arrayDesign
                         + " is the same or greater (" + numExistingCompositeSequences
                         + " composite sequences in existing design, updated one has " + numCompositeSequencesInNew
                         + ", " + numExistingReporters + " reporters in existing design, updated one has "
@@ -241,7 +241,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         if ( numExistingCompositeSequences < numCompositeSequencesInNew ) {
-            log.warn( "Update to array design needed: " + arrayDesign + " exists but compositeSequences are to be updated ("
+            log.info( "Update to array design needed: " + arrayDesign + " exists but compositeSequences are to be updated ("
                     + numExistingCompositeSequences + " composite sequences in existing design, updated one has "
                     + numCompositeSequencesInNew + ")" );
 

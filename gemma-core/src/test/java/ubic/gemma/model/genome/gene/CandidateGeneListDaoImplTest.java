@@ -28,9 +28,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 
 /**
@@ -41,8 +39,6 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
     private final Log log = LogFactory.getLog( CandidateGeneListDaoImplTest.class );
 
     private CandidateGeneListDao candidateGeneListDao;
-    private TaxonDao taxonDao;
-    private GeneDao geneDao;
     private PersisterHelper persisterHelper;
     private Gene g;
     private Gene g2;
@@ -52,16 +48,20 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+
         candidateGeneList = CandidateGeneList.Factory.newInstance();
+
         AuditTrail ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         candidateGeneList.setAuditTrail( ad );
 
         t = Taxon.Factory.newInstance();
-        t.setCommonName( "mouse" );
-        t.setScientificName( "Mus musculus" );
-        t = taxonDao.findOrCreate( t );
+        t.setCommonName( "imatest" );
+        t.setScientificName( "Mus mickeyus" );
+        t = ( Taxon ) persisterHelper.persist( t );
+
         ad = AuditTrail.Factory.newInstance();
         g = Gene.Factory.newInstance();
         g.setName( "testmygene" );
@@ -71,7 +71,7 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
         ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         g.setAuditTrail( ad );
-        g = geneDao.findOrCreate( g );
+        g = ( Gene ) persisterHelper.persist( g );
 
         g2 = Gene.Factory.newInstance();
         g2.setName( "testmygene2" );
@@ -81,7 +81,7 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
         ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         g2.setAuditTrail( ad );
-        g2 = geneDao.findOrCreate( g2 );
+        g2 = ( Gene ) persisterHelper.persist( g2 );
 
         ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
@@ -91,7 +91,6 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
         Person u = Person.Factory.newInstance();
         u.setName( "Joe Blow" );
         u = ( Person ) persisterHelper.persist( u );
-        assert u != null;
 
         candidateGeneList.setOwner( u );
 
@@ -142,24 +141,4 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
         this.candidateGeneListDao = candidateGeneListDao;
     }
 
-    /**
-     * @param geneDao The geneDao to set.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
-
-    /**
-     * @param persisterHelper The persisterHelper to set.
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * @param taxonDao The taxonDao to set.
-     */
-    public void setTaxonDao( TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
-    }
 }

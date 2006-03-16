@@ -406,7 +406,9 @@ abstract public class CommonPersister extends AbstractPersister {
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
         assert !isTransient( databaseEntry.getExternalDatabase() );
 
-        return databaseEntryService.findOrCreate( databaseEntry );
+        DatabaseEntry nde = databaseEntryService.findOrCreate( databaseEntry );
+        log.info( "Persisted " + nde );
+        return nde;
     }
 
     /**
@@ -424,7 +426,7 @@ abstract public class CommonPersister extends AbstractPersister {
         }
 
         log.info( "Loading or creating " + name );
-        database = externalDatabaseService.findOrCreate( database );
+        database.setId( externalDatabaseService.findOrCreate( database ).getId() );
         seenDatabases.put( database.getName(), database );
         return database;
     }
@@ -487,7 +489,7 @@ abstract public class CommonPersister extends AbstractPersister {
         ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
 
         for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
-            persistOntologyEntry( associatedOntologyEntry );
+            associatedOntologyEntry.setId( persistOntologyEntry( associatedOntologyEntry ).getId() );
         }
 
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );

@@ -82,7 +82,7 @@ public abstract class AbstractPersister implements Persister {
                 }
             }
         } catch ( Exception e ) {
-            log.fatal( "Error while persisting collection " + col, e );
+            log.fatal( "Error while persisting collection: ", e );
             throw new RuntimeException( e );
         }
         return col;

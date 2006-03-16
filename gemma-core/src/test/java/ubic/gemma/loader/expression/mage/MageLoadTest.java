@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
@@ -73,7 +74,11 @@ public class MageLoadTest extends AbstractMageTest {
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
 
-        persisterHelper.persist( result );
+        for ( Object object : result ) {
+            if ( object instanceof ExpressionExperiment ) {
+                persisterHelper.persist( object );
+            }
+        }
     }
 
     /**
@@ -101,7 +106,12 @@ public class MageLoadTest extends AbstractMageTest {
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
 
-        persisterHelper.persist( result );
+        for ( Object object : result ) {
+            if ( object instanceof ExpressionExperiment ) {
+                persisterHelper.persist( object );
+            }
+        }
+
     }
 
     /**

@@ -141,6 +141,9 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
 
         assert expressionExperiment != null && numExpExp == 1;
 
+        expressionExperiment = ( ExpressionExperiment ) ( ( PersisterHelper ) this.getBean( "persisterHelper" ) )
+                .persist( expressionExperiment );
+
         /* CONVERTING */
         log.info( "***** PREPROCESSING ***** " );
 

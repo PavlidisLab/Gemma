@@ -51,6 +51,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonDao;
 
 /**
  * Override this test class for tests that need the container and use the database.
@@ -77,11 +79,13 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
 
-    private ExternalDatabaseDao externalDatabaseDao;
+    protected ExternalDatabaseDao externalDatabaseDao;
 
-    private DatabaseEntryDao databaseEntryDao;
+    protected DatabaseEntryDao databaseEntryDao;
 
-    private ContactDao contactDao;
+    protected ContactDao contactDao;
+
+    protected TaxonDao taxonDao;
 
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
@@ -284,5 +288,12 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public void setContactDao( ContactDao contactDao ) {
         this.contactDao = contactDao;
+    }
+
+    /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
     }
 }
