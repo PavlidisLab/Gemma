@@ -71,8 +71,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         if ( contact == null
                 || ( contact.getName() == null && contact.getAddress() == null && contact.getEmail() == null && contact
                         .getPhone() == null ) ) {
-            log.error( "User must have at least some information filled in!" );
-            return null;
+            throw new IllegalArgumentException( "User must have at least some information filled in!" );
         }
         Contact newContact = find( contact );
         if ( newContact != null ) {

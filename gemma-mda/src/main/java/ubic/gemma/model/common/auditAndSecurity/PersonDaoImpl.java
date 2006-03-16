@@ -26,10 +26,6 @@ import org.hibernate.criterion.Restrictions;
 import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.auditAndSecurity.Person
@@ -50,6 +46,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
             if ( person.getEmail() != null ) queryObject.add( Restrictions.eq( "email", person.getEmail() ) );
             if ( person.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", person.getPhone() ) );
             if ( person.getAddress() != null ) queryObject.add( Restrictions.eq( "address", person.getAddress() ) );
+            if ( person.getName() != null ) queryObject.add( Restrictions.eq( "name", person.getName() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -73,8 +70,10 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
     @Override
     public Person findOrCreate( Person person ) {
         if ( person == null
-                || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null && person
-                        .getPhone() == null ) ) return null;
+                || ( person.getLastName() == null && person.getAddress() == null && person.getEmail() == null
+                        && person.getPhone() == null && person.getName() == null ) ) {
+            throw new IllegalArgumentException( "Person did not have sufficient information for business key." );
+        }
         Person newPerson = find( person );
         if ( newPerson != null ) {
             BeanPropertyCompleter.complete( newPerson, person );
