@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.mage;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -29,6 +30,7 @@ import javax.xml.transform.TransformerException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
+import org.hibernate.Hibernate;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -62,8 +64,8 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
     }
 
     @Override
-    public void onSetUpBeforeTransaction() throws Exception {
-        super.onSetUpBeforeTransaction();
+    public void onSetUp() throws Exception {
+        super.onSetUp();
         this.mageMLPreprocessor = new MageMLPreprocessor( "testPreprocess" );
         mageMLPreprocessor.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
     }
@@ -77,9 +79,6 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
      */
     @SuppressWarnings("unchecked")
     public void testPreprocess() throws IOException, TransformerException {
-
-        // to keep us from getting stale data errors during tests.
-        this.setFlushModeCommit();
 
         /* PARSING */
         log.info( "***** PARSING *****  " );
@@ -141,89 +140,48 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
 
         assert expressionExperiment != null && numExpExp == 1;
 
-        expressionExperiment = ( ExpressionExperiment ) ( ( PersisterHelper ) this.getBean( "persisterHelper" ) )
-                .persist( expressionExperiment );
+        // PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+
+        // persisterHelper.persist( expressionExperiment );
 
         /* CONVERTING */
         log.info( "***** PREPROCESSING ***** " );
 
-        /* get all the gemma bioassays from the converter */
-        List<BioAssay> bioAssays = mageMLConverter.getConvertedBioAssays();
+        // get them in some specific order but we don't care what the order is.
+        List<BioAssay> bioAssays = new ArrayList( expressionExperiment.getBioAssays() );
 
-        int i = 0;
-        while ( true ) {
+        /*
+         * This strange loop is just an artifact of testing - we have to iterate over the quantitation types, and feed
+         * the converter the raw data files for each bioassay in a given order (the array that is built). Each stream is
+         * read multiple times to extract the necessary quantitation type information. In 'real life' this wouldn't be
+         * needed.
+         */
+
+        // for this test we just have to know how many there are.
+        int numQuantitationTypes = 7;
+
+        for ( int i = 0; i < numQuantitationTypes; i++ ) {
 
             log.info( " Quantitation type #" + ( i + 1 ) );
 
-            InputStream[] is = new InputStream[bioAssays.size()];
             mageMLPreprocessor.setSelector( i );
-            is[0] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031128_jm 29 c1 72hrao_031128_JM 29 C1 72hrAO_CEL_externaldata.txt.short" );
-
-            is[1] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031128_jm 30 g1 72hrgen_031128_JM 30 G1 72hrGEN_CEL_externaldata.txt.short" );
-
-            is[2] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031128_jm 31 e1 72hre2_031128_JM 31 E1 72hrE2_CEL_externaldata.txt.short" );
-
-            is[3] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031128_jm 32 d1 72hrdes_031128_JM 32 D1 72hrDES_CEL_externaldata.txt.short" );
-
-            is[4] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031201_jm 37 c2 72hrao_031201_JM 37 C2 72hrAO_CEL_externaldata.txt.short" );
-
-            is[5] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031201_jm 38 g2 72hrgen_031201_JM 38 G2 72hrGEN_CEL_externaldata.txt.short" );
-
-            is[6] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031201_jm 39 e2 72hre2_031201_JM 39 E2 72hrE2_CEL_externaldata.txt.short" );
-
-            is[7] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031201_jm 40 d2 72hrdes_031201_JM 40 D2 72hrDES_CEL_externaldata.txt.short" );
-
-            is[8] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031205_jm 45 c3 72hrao_031205_JM 45 C3 72hrAO_CEL_externaldata.txt.short" );
-
-            is[9] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031205_jm 46 g3 72hrgen_031205_JM 46 G3 72hrGEN_CEL_externaldata.txt.short" );
-
-            is[10] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031205_jm 47 e3 72hre2_031205_JM 47 E3 72hrE2_CEL_externaldata.txt.short" );
-
-            is[11] = this.getClass().getResourceAsStream(
-                    MAGE_DATA_RESOURCE_PATH
-                            + "E-AFMX-13/031205_jm 48 d3 72hrdes_031205_JM 48 D3 72hrDES_CEL_externaldata.txt.short" );
-
-            for ( InputStream stream : is ) {
-                assert stream != null;
+            InputStream[] is = new InputStream[bioAssays.size()];
+            for ( int j = 0; j < bioAssays.size(); j++ ) {
+                // of course we can't count on the file names matching anything we already know...
+                String assayNameForFile = bioAssays.get( j ).getName().toLowerCase() + "_"
+                        + bioAssays.get( j ).getName().toUpperCase();
+                String fileName = "E-AFMX-13/" + assayNameForFile + "_CEL_externaldata.txt.short";
+                is[j] = this.getClass().getResourceAsStream( MAGE_DATA_RESOURCE_PATH + fileName );
+                assert is[j] != null : "Failed to open stream for " + fileName;
             }
-
-            try {
-                mageMLPreprocessor.preprocessStreams( Arrays.asList( is ), expressionExperiment, bioAssays,
-                        mageMLConverter.getBioAssayDimensions() );
-            } catch ( NoMoreQuantitationTypesException e ) {
-                log.info( "All done! (" + i + ")" );
-                break;
-            } catch ( RuntimeException e ) {
-                log.fatal( e, e );
-                // fail();
-                throw ( e );
-            }
-            i++;
-
+            mageMLPreprocessor.preprocessStreams( Arrays.asList( is ), expressionExperiment, bioAssays, mageMLConverter
+                    .getBioAssayDimensions() );
         }
 
-        // FIXME - check the data is in the database as expected.
+        // this has to be outside that loop...
+        mageMLPreprocessor.makePersistent();
+
     }
+
+    // FIXME - check the data is in the database as expected.
 }

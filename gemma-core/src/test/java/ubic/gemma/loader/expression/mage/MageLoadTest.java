@@ -43,7 +43,7 @@ public class MageLoadTest extends AbstractMageTest {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    protected void onSetUpBeforeTransaction() throws Exception {
+    protected void onSetUp() throws Exception {
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
     }
@@ -55,9 +55,6 @@ public class MageLoadTest extends AbstractMageTest {
      */
     public void testCreateCollectionRealA() throws Exception {
         log.info( "Parsing MAGE from ArrayExpress (AFMX)" );
-
-        // if we don't do this, we get stale data errors.
-        this.setFlushModeCommit();
 
         MageMLParser mlp = new MageMLParser();
 
@@ -88,8 +85,6 @@ public class MageLoadTest extends AbstractMageTest {
      */
     public void testCreateCollectionRealB() throws Exception {
         log.info( "Parsing MAGE from ArrayExpress (WMIT)" );
-
-        this.setFlushModeCommit();
 
         MageMLParser mlp = new MageMLParser();
         xslSetup( mlp, MAGE_DATA_RESOURCE_PATH + "E-WMIT-4.xml" );

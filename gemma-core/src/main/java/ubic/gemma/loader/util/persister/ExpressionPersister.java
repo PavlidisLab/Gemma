@@ -124,6 +124,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         DesignElement maybeExistingDesignElement = vect.getDesignElement();
 
         assert maybeExistingDesignElement != null;
+
         ArrayDesign ad = maybeExistingDesignElement.getArrayDesign();
 
         cacheArrayDesign( ad );
@@ -186,6 +187,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param assay
      */
     private void fillInBioAssayAssociations( BioAssay assay ) {
+
         for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
             arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
         }
@@ -195,11 +197,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             factorValue.setId( persistFactorValue( factorValue ).getId() );
         }
 
-        // assay.setAccession( persistDatabaseEntry( assay.getAccession() ) );
-        
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
-//        assay.getAccession()
-//                .setExternalDatabase( persistExternalDatabase( assay.getAccession().getExternalDatabase() ) );
+        if ( assay.getAccession() != null ) {
+            assay.getAccession().setExternalDatabase(
+                    persistExternalDatabase( assay.getAccession().getExternalDatabase() ) );
+        }
 
         for ( BioMaterial bioMaterial : assay.getSamplesUsed() ) {
             bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
@@ -210,6 +212,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         for ( LocalFile file : assay.getDerivedDataFiles() ) {
             file.setId( persistLocalFile( file ).getId() );
         }
+
     }
 
     /**
@@ -283,44 +286,37 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
-        if ( entity == null ) return null;
+        log.info( "Persisting " + entity );
 
-        if ( !isTransient( entity ) ) {
-            return entity;
-        }
+        if ( entity == null ) return null;
 
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
         }
 
-        if ( entity.getAccession() != null && entity.getAccession().getExternalDatabase() != null ) {
+        if ( entity.getAccession() != null ) {
             entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
-        } else {
-            log.warn( "Null accession for expressionExperiment" );
         }
 
         for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
 
             for ( OntologyEntry type : experimentalDesign.getTypes() ) {
-                type = persistOntologyEntry( type );
+                type.setId( persistOntologyEntry( type ).getId() );
             }
 
             for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
 
                 for ( OntologyEntry annotation : experimentalFactor.getAnnotations() ) {
-                    annotation = persistOntologyEntry( annotation );
+                    annotation.setId( persistOntologyEntry( annotation ).getId() );
                 }
 
                 OntologyEntry category = experimentalFactor.getCategory();
-                if ( category == null ) {
-                    log.debug( "No 'category' for ExperimentalDesign" );
-                } else {
-                    persistOntologyEntry( category );
-                    log.debug( "ExperimentalDesign.category=" + category.getId() );
+                if ( category != null ) {
+                    category.setId( persistOntologyEntry( category ).getId() );
                 }
 
                 for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
-                    factorValue = persistFactorValue( factorValue );
+                    factorValue.setId( persistFactorValue( factorValue ).getId() );
                 }
             }
         }
@@ -338,9 +334,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             fillInBioAssayAssociations( bA );
         }
 
-        fillInExpressionExperimentDataVectorAssociations( entity );
-
-        log.info( "Filled in references, persisting ExpressionExperiment " + entity );
+        if ( entity.getDesignElementDataVectors().size() > 0 ) {
+            fillInExpressionExperimentDataVectorAssociations( entity );
+        }
 
         ExpressionExperiment ee = expressionExperimentService.find( entity );
 
@@ -367,7 +363,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
             OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
-            ontologyEntry = persistOntologyEntry( ontologyEntry );
+            factorValue.setOntologyEntry( persistOntologyEntry( ontologyEntry ) );
         } else if ( factorValue.getValue() != null ) {
             if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
                 throw new IllegalStateException(
@@ -375,7 +371,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         } else {
             Measurement measurement = factorValue.getMeasurement();
-            measurement = persistMeasurement( measurement );
+            factorValue.setMeasurement( persistMeasurement( measurement ) );
         }
 
         return factorValueService.findOrCreate( factorValue );

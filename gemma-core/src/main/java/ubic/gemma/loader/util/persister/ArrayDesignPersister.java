@@ -68,13 +68,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * @param arrayDesignCache The arrayDesignCache to set.
-     */
-    public void setArrayDesignCache( Collection<String> arrayDesignCache ) {
-        this.arrayDesignCache = arrayDesignCache;
-    }
-
-    /**
      * @param arrayDesignService The arrayDesignService to set.
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
@@ -241,9 +234,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         if ( numExistingCompositeSequences < numCompositeSequencesInNew ) {
-            log.info( "Update to array design needed: " + arrayDesign + " exists but compositeSequences are to be updated ("
-                    + numExistingCompositeSequences + " composite sequences in existing design, updated one has "
-                    + numCompositeSequencesInNew + ")" );
+            log.info( "Update to array design needed: " + arrayDesign
+                    + " exists but compositeSequences are to be updated (" + numExistingCompositeSequences
+                    + " composite sequences in existing design, updated one has " + numCompositeSequencesInNew + ")" );
 
             existing.setCompositeSequences( arrayDesign.getCompositeSequences() );
             arrayDesign = existing;
@@ -432,7 +425,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign.setId( persistArrayDesignCompositeSequenceAssociations( arrayDesign ).getId() );
 
-//        arrayDesignService.update( arrayDesign );
+        // arrayDesignService.update( arrayDesign );
 
         arrayDesign.setId( arrayDesign.getId() );
 

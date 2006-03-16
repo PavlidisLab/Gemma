@@ -24,13 +24,13 @@ import java.util.zip.ZipInputStream;
 
 import javax.xml.transform.TransformerException;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public abstract class AbstractMageTest extends BaseTransactionalSpringContextTest {
+public abstract class AbstractMageTest extends BaseSpringContextTest {
 
     protected static final String MAGE_DATA_RESOURCE_PATH = "/data/loader/expression/mage/";
 

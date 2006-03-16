@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,7 +35,9 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.loader.expression.Preprocessor;
@@ -96,7 +99,7 @@ public class MageMLPreprocessor implements Preprocessor {
                 for ( BioAssay assay : bioAssays ) {
                     sourceFiles.add( assay.getRawDataFile() );
                 }
-                processResults( sourceFiles );
+                // processResults( sourceFiles );
             }
             i++;
         }
@@ -108,17 +111,18 @@ public class MageMLPreprocessor implements Preprocessor {
     /**
      * This method is provided primarily for testing.
      * 
-     * @param streams
-     * @param bioAssays
+     * @param streams - InputStreams for the raw data files
+     * @param expressionExperiment
+     * @param bioAssays - bioAssays in the same order as the streams
      * @param dimensions
      * @throws IOException
      */
     public void preprocessStreams( List<InputStream> streams, ExpressionExperiment expressionExperiment,
-            List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
+            List<BioAssay> orderedBioAssays, BioAssayDimensions dimensions ) throws IOException {
         assert expressionExperiment != null;
         rdp.setExpressionExperiment( expressionExperiment );
         rdp.setDimensions( dimensions );
-        rdp.setBioAssays( bioAssays );
+        rdp.setBioAssays( orderedBioAssays );
         rdp.setSeparator( ' ' );
         log.info( "Preprocessing the data ..." );
 
@@ -126,7 +130,8 @@ public class MageMLPreprocessor implements Preprocessor {
         for ( InputStream is : streams ) {
             is.close();
         }
-        processResults( null );
+        // processResults( null );
+        makeTabbedFiles( null );
     }
 
     /**
@@ -153,57 +158,70 @@ public class MageMLPreprocessor implements Preprocessor {
     }
 
     /**
-     * `
+     * Make the DesignElementDataVectors persistent.
      */
-    private void makePersistent( ) {
+    public void makePersistent() {
         Collection<Object> matrices = rdp.getResults();
-        int i = 0;
-        for ( Object object : matrices ) {
+        // int i = 0;
+        // for ( Object object : matrices ) {
+        //
+        // assert object instanceof RawDataMatrix;
+        //
+        // QuantitationType qType = ( ( RawDataMatrix ) object ).getQuantitationType();
+        // if ( whichQuantitationType >= 0 ) {
+        // QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( whichQuantitationType );
+        // if ( !qt.getName().equals( qType.getName() ) ) {
+        // i++;
+        // continue;
+        // }
+        // }
+        //
+        // // persistDesignElements( qType );
+        //
+        // // log.info( "Persisting matrix " + i + ", quantitation type " + qType.getName() );
+        // // persisterHelper.persist( ( ( RawDataMatrix ) object ).getRows() );
+        //
+        // i++;
+        // }
 
-            assert object instanceof RawDataMatrix;
-
-            QuantitationType qType = ( ( RawDataMatrix ) object ).getQuantitationType();
-            if ( whichQuantitationType >= 0 ) {
-                QuantitationType qt = rdp.getQtData().getQuantitationTypes().get( whichQuantitationType );
-                if ( !qt.getName().equals( qType.getName() ) ) {
-                    i++;
-                    continue;
-                }
-            }
-
-            persistDesignElements( qType );
-
-            log.info( "Persisting matrix " + i + ", quantitation type " + qType.getName() );
-            persisterHelper.persist( ( ( RawDataMatrix ) object ).getRows() );
-
-            i++;
+        if ( matrices == null || matrices.size() == 0
+                || ( ( RawDataMatrix ) matrices.iterator().next() ).getRows() == null
+                || ( ( RawDataMatrix ) matrices.iterator().next() ).getRows().size() == 0 ) {
+            throw new IllegalStateException( "No matrices or no rows to persist!" );
         }
+
+        DesignElementDataVector v = ( ( RawDataMatrix ) matrices.iterator().next() ).getRows().iterator().next();
+
+        // This will bring in all the DesignElementDataVectors by composition.
+        persisterHelper.persist( v.getExpressionExperiment() );
+
     }
 
-    /**
-     * @param i
-     * @param object
-     */
-    @SuppressWarnings("unchecked")
-    private void persistDesignElements( QuantitationType qType ) {
-        log.info( "Persisting design elements " );
-        Collection<DesignElement> designElements = this.rdp.getQtData().getDesignElementsForQuantitationType( qType );
-        Collection<DesignElement> persistentDesignElements = ( Collection<DesignElement> ) persisterHelper
-                .persist( designElements );
-        log.info( "Copying IDs..." );
-        Iterator<DesignElement> it = designElements.iterator();
-        for ( DesignElement persistentElement : persistentDesignElements ) {
-            DesignElement element = it.next();
-            assert persistentElement != null && element != null;
-            element.setId( persistentElement.getId() );
-        }
-    }
+    // /**
+    // * @param qType
+    // * @param object
+    // */
+    // @SuppressWarnings("unchecked")
+    // private void persistDesignElements( QuantitationType qType ) {
+    // log.info( "Persisting design elements " );
+    // Collection<DesignElement> designElements = this.rdp.getQtData().getDesignElementsForQuantitationType( qType );
+    //
+    // Collection<DesignElement> persistentDesignElements = ( Collection<DesignElement> ) persisterHelper
+    // .persist( designElements );
+    //
+    // Iterator<DesignElement> it = designElements.iterator();
+    // for ( DesignElement persistentElement : persistentDesignElements ) {
+    // DesignElement element = it.next();
+    // assert persistentElement != null && element != null;
+    // element.setId( persistentElement.getId() );
+    // }
+    // }
 
     /**
      * @param sourceFiles
      * @throws IOException
      */
-    private void makeTabbedFiles( Collection<LocalFile> sourceFiles ) throws IOException {
+    public void makeTabbedFiles( Collection<LocalFile> sourceFiles ) throws IOException {
         Collection<Object> matrices = rdp.getResults();
         Collection<LocalFile> localFiles = new HashSet<LocalFile>();
 
@@ -251,15 +269,14 @@ public class MageMLPreprocessor implements Preprocessor {
     }
 
     /**
-     * After parsing: Create text files, persist their information, and persist the data vectors.
+     * After parsing all the files, Create text files, persist their information, and persist the data vectors.
      * 
      * @param sourceFiles
      * @throws IOException
      */
-    private void processResults( Collection<LocalFile> sourceFiles )
-            throws IOException {
+    private void processResults( Collection<LocalFile> sourceFiles ) throws IOException {
         makeTabbedFiles( sourceFiles );
-        makePersistent( );
+        makePersistent();
     }
 
     /*

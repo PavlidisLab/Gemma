@@ -39,6 +39,7 @@ public class PersisterHelper extends ExpressionPersister {
      */
     @SuppressWarnings("unchecked")
     public Object persist( Object entity ) {
+
         if ( entity instanceof Auditable ) {
             Auditable a = ( Auditable ) entity;
             a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
