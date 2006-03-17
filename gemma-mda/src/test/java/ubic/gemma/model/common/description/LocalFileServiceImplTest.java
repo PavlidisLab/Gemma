@@ -106,7 +106,7 @@ public class LocalFileServiceImplTest extends TestCase {
         srcf.delete();
     }
 
-    // FIXME
+    // FIXME - fix this test.
     // public void testFindByPath() throws Exception {
     // LocalFile lf = LocalFile.Factory.newInstance();
     // File f = File.createTempFile( "deleteMe", ".txt" );

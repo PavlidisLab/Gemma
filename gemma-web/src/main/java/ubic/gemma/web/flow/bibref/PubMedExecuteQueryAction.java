@@ -229,7 +229,7 @@ public class PubMedExecuteQueryAction extends AbstractFlowFormAction {
             context.getRequestScope().setAttribute( "existsInSystem", Boolean.TRUE );
             addMessage( context, "bibliographicReference.alreadyInSystem", new Object[] { accession } );
 
-            // fixme: do we need both of these?
+            // FIXME: do we need both of these?
             context.getRequestScope().setAttribute( "bibliographicReference", bibRefFound );
             context.getFlowScope().setAttribute( "bibliographicReference", bibRefFound );
         } else { // it's new.

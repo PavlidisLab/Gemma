@@ -82,7 +82,7 @@ public class UserRoleServiceImplTest extends TestCase {
     }
 
     public void testHandleRemoveRole() {
-        // FIXME
+        // FIXME implement test for RemoveRole.
     }
 
 }

@@ -190,7 +190,7 @@ public class DataFileFetcher extends FtpFetcher {
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
     public Collection<LocalFile> fetch( String identifier ) {
-        // TODO Auto-generated method stub FIXME
+        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
 }

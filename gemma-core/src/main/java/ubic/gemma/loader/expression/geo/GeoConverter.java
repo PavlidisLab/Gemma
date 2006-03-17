@@ -1209,7 +1209,7 @@ public class GeoConverter implements Converter {
         if ( varType.equals( VariableType.age ) ) {
             categoryTerm.setValue( "Age" );
         } else if ( varType.equals( VariableType.agent ) ) {
-            categoryTerm.setValue( "----" ); // FIXME
+            categoryTerm.setValue( "----" ); // FIXME - how to convert VariableType.agent.
         } else if ( varType.equals( VariableType.cellLine ) ) {
             categoryTerm.setValue( "CellLine" );
         } else if ( varType.equals( VariableType.cellType ) ) {

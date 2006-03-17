@@ -251,7 +251,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     + numExistingReporters + " reporters in existing design, updated one has " + numReportersInNew
                     + ")" );
 
-            // FIXME
+            // FIXME - make this the same (more or less) as the composite sequence code.
             int count = 0;
             existing.setReporters( arrayDesign.getReporters() );
             arrayDesign = existing;
