@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
+
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -51,7 +53,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
  * @spring.property name="factorValueService" ref="factorValueService"
@@ -290,6 +291,14 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( entity == null ) return null;
 
+        ExpressionExperiment existing = expressionExperimentService.find( entity );
+
+        if ( existing != null ) {
+            // FIXME how do we implement updates?
+            throw new UnsupportedOperationException( "Can't update an existing expression experiment (" + existing
+                    + ")" );
+        }
+
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
         }
@@ -337,15 +346,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( entity.getDesignElementDataVectors().size() > 0 ) {
             fillInExpressionExperimentDataVectorAssociations( entity );
         }
-
-        ExpressionExperiment ee = expressionExperimentService.find( entity );
-
-        // FIXME make sure this works...this would allow update.
-        if ( ee != null ) {
-            BeanPropertyCompleter.complete( ee, entity );
-            expressionExperimentService.update( ee );
-        }
-
         return expressionExperimentService.findOrCreate( entity );
     }
 
