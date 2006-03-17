@@ -290,14 +290,14 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         log.info( "Persisting " + entity );
 
         if ( entity == null ) return null;
-
-        ExpressionExperiment existing = expressionExperimentService.find( entity );
-
-        if ( existing != null ) {
-            // FIXME how do we implement updates?
-            throw new UnsupportedOperationException( "Can't update an existing expression experiment (" + existing
-                    + ")" );
-        }
+        //
+        // ExpressionExperiment existing = expressionExperimentService.find( entity );
+        //
+        // if ( existing != null ) {
+        //           
+        // throw new UnsupportedOperationException( "Can't update an existing expression experiment (" + existing
+        // + ")" );
+        // }
 
         if ( entity.getOwner() == null ) {
             entity.setOwner( defaultOwner );
@@ -346,6 +346,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( entity.getDesignElementDataVectors().size() > 0 ) {
             fillInExpressionExperimentDataVectorAssociations( entity );
         }
+
+        // FIXME how do we implement updates?
         return expressionExperimentService.findOrCreate( entity );
     }
 
