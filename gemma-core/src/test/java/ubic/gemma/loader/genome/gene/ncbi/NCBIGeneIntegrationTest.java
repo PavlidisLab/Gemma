@@ -21,8 +21,8 @@ package ubic.gemma.loader.genome.gene.ncbi;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * @author pavlidis

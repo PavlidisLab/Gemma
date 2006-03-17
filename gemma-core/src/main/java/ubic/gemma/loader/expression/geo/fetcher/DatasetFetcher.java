@@ -28,9 +28,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
-import baseCode.util.NetUtils;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.loader.expression.geo.util.GeoUtil;
+import ubic.gemma.model.common.description.LocalFile;
+import baseCode.util.NetUtils;
 
 /**
  * Retrieve GEO GDS files from the NCBI FTP server.

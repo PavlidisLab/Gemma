@@ -30,11 +30,10 @@ import javax.xml.transform.TransformerException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
-import org.hibernate.Hibernate;
 
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 
 /**
  * Integration test of MageML: Parser, Converter and Preprocessor

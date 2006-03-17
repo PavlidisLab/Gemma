@@ -24,12 +24,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
-import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * Tests the SignupController.

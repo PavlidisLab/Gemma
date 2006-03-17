@@ -38,9 +38,9 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 
+import ubic.gemma.model.common.description.LocalFile;
 import baseCode.util.FileTools;
 import baseCode.util.NetUtils;
-import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis

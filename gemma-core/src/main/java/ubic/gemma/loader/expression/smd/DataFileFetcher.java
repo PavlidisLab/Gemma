@@ -38,13 +38,13 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
-import baseCode.util.NetUtils;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.loader.expression.smd.model.SMDBioAssay;
 import ubic.gemma.loader.expression.smd.model.SMDExperiment;
 import ubic.gemma.loader.expression.smd.model.SMDFile;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.model.common.description.LocalFile;
+import baseCode.util.NetUtils;
 
 /**
  * Download (but do not parse) data files for a given ExperimentSet.

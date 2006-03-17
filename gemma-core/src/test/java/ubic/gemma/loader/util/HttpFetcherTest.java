@@ -20,10 +20,9 @@ package ubic.gemma.loader.util;
 
 import java.util.Collection;
 
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.loader.util.fetcher.HttpFetcher;
-
 import junit.framework.TestCase;
+import ubic.gemma.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis

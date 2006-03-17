@@ -32,6 +32,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
+import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
+import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
+import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
 import ubic.gemma.model.common.description.DatabaseEntryService;
@@ -55,10 +59,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
-import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
-import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.util.SpringContextUtil;
 

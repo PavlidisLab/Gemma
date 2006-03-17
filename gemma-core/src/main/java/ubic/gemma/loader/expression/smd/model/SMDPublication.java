@@ -32,11 +32,11 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceImpl;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
-import ubic.gemma.loader.expression.smd.util.SmdUtil;
 
 /**
  * A publication in SMD has a special role: it refers to SMD experiment sets (MAGE::Experiment's). Otherwise it has much

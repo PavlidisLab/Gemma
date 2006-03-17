@@ -18,13 +18,13 @@
  */
 package ubic.gemma;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import ubic.gemma.web.controller.common.description.BibRefControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Tests for gemma-web.

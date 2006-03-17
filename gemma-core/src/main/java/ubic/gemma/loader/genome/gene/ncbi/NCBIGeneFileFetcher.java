@@ -28,8 +28,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Class to download files for NCBI gene. Pass the name of the file (without the .gz) to the fetch method: for example,

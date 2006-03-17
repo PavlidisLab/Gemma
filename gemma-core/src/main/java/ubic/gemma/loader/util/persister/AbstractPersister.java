@@ -27,19 +27,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.CascadingAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.security.interceptor.CrudInterceptorUtils;
 
 /**

@@ -18,10 +18,10 @@
  */
 package ubic.gemma.loader.expression.smd;
 
-import ubic.gemma.loader.expression.smd.model.ExptMetaTest;
-import ubic.gemma.loader.expression.smd.model.PublicationMetaTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.loader.expression.smd.model.ExptMetaTest;
+import ubic.gemma.loader.expression.smd.model.PublicationMetaTest;
 
 /**
  * Test for ubic.gemma.loader.smd.model

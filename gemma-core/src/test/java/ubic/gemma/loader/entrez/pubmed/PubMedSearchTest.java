@@ -21,9 +21,8 @@ package ubic.gemma.loader.entrez.pubmed;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.common.description.BibliographicReference;
-
 import junit.framework.TestCase;
+import ubic.gemma.model.common.description.BibliographicReference;
 
 /**
  * @author pavlidis

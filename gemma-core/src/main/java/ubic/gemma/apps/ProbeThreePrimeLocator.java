@@ -38,10 +38,10 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPath;
 import ubic.gemma.externalDb.GoldenPath.ThreePrimeData;
+import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
-import ubic.gemma.loader.genome.BlatResultParser;
 
 /**
  * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.

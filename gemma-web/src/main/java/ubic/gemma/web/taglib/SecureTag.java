@@ -29,8 +29,8 @@ import javax.servlet.jsp.tagext.BodyTagSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.SslUtil;
 import ubic.gemma.Constants;
+import ubic.gemma.util.SslUtil;
 
 /**
  * This tag library is designed to be used on a JSP to switch HTTP -> HTTPS protocols and vise versa. If you want to

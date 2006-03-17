@@ -32,7 +32,21 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.io.ByteArrayConverter;
+import ubic.gemma.loader.expression.geo.model.GeoChannel;
+import ubic.gemma.loader.expression.geo.model.GeoContact;
+import ubic.gemma.loader.expression.geo.model.GeoData;
+import ubic.gemma.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.loader.expression.geo.model.GeoReplication;
+import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.loader.expression.geo.model.GeoVariable;
+import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
+import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
+import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
+import ubic.gemma.loader.expression.geo.util.GeoConstants;
+import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.description.Characteristic;
@@ -61,21 +75,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.loader.expression.geo.model.GeoChannel;
-import ubic.gemma.loader.expression.geo.model.GeoContact;
-import ubic.gemma.loader.expression.geo.model.GeoData;
-import ubic.gemma.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.loader.expression.geo.model.GeoReplication;
-import ubic.gemma.loader.expression.geo.model.GeoSample;
-import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.expression.geo.model.GeoSubset;
-import ubic.gemma.loader.expression.geo.model.GeoVariable;
-import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
-import ubic.gemma.loader.expression.geo.model.GeoReplication.ReplicationType;
-import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
-import ubic.gemma.loader.expression.geo.util.GeoConstants;
-import ubic.gemma.loader.util.converter.Converter;
+import baseCode.io.ByteArrayConverter;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.

@@ -34,14 +34,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.util.StringUtil;
+import ubic.gemma.loader.util.parser.FileCombiningParser;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.loader.util.parser.FileCombiningParser;
+import baseCode.util.StringUtil;
 
 /**
  * Parse the raw files from ArrayExpress (MAGE-ML). The format for the raw files is to have no column or row labels.

@@ -20,10 +20,10 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
-import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * @author pavlidis

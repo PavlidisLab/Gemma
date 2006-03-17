@@ -44,15 +44,14 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.AbstractTransactionalSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
-import uk.ltd.getahead.dwr.create.SpringCreator;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonDao;
+import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
  * Override this test class for tests that need the container and use the database.

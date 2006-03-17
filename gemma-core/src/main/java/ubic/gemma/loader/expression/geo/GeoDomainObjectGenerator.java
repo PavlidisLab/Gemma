@@ -29,7 +29,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.loader.expression.geo.fetcher.DatasetFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.PlatformFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
@@ -39,6 +38,7 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.util.fetcher.Fetcher;
 import ubic.gemma.loader.util.sdo.SourceDomainObjectGenerator;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Handle fetching,

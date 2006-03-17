@@ -32,12 +32,12 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * @author keshav

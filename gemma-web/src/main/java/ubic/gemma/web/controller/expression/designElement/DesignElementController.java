@@ -30,7 +30,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**

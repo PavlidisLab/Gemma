@@ -26,8 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.Constants;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 
 /**
  * Simple class to retrieve a list of users from the database. From appfuse.

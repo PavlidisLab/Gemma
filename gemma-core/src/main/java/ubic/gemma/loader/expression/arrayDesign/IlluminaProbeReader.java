@@ -21,9 +21,9 @@ package ubic.gemma.loader.expression.arrayDesign;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.loader.util.parser.BasicLineMapParser;
 
 /**
  * Parse an Illumina "manifest.txt" file (tab-delimited). A one-line header is permitted.

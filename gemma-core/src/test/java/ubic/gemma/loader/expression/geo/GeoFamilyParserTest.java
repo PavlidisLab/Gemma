@@ -21,9 +21,8 @@ package ubic.gemma.loader.expression.geo;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import ubic.gemma.loader.expression.geo.model.GeoPlatform;
-
 import junit.framework.TestCase;
+import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 
 /**
  * @author pavlidis

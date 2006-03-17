@@ -20,8 +20,8 @@ package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.

@@ -29,11 +29,9 @@ import javax.servlet.http.HttpSessionBindingEvent;
 
 import org.acegisecurity.context.HttpSessionContextIntegrationFilter;
 import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.userdetails.User;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-// import ubic.gemma.model.common.auditAndSecurity.User;
-import org.acegisecurity.userdetails.User;
 
 /**
  * UserCounterListener class used to count the current number of active users for the applications. Does this by

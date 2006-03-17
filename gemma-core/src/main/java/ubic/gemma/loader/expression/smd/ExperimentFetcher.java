@@ -33,12 +33,12 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
 
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.loader.expression.smd.model.SMDBioAssay;
 import ubic.gemma.loader.expression.smd.model.SMDExperiment;
 import ubic.gemma.loader.expression.smd.model.SMDPublication;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Given a set of Publications from SMD, get all the meta-data for the experiments (bioassays) for the experiment_sets

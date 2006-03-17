@@ -16,6 +16,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
@@ -23,7 +24,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
 import ubic.gemma.util.RequestUtil;
 import ubic.gemma.util.StringUtil;
-import ubic.gemma.Constants;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**

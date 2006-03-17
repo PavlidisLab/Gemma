@@ -25,10 +25,10 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.genome.TaxonDao;
-import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * Tests multiple both parsing and loading.

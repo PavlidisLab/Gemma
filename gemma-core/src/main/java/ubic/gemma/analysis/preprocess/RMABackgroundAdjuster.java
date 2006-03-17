@@ -18,10 +18,10 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import baseCode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Class to perform background adjustment for Affymetrix arrays, RMA-style.

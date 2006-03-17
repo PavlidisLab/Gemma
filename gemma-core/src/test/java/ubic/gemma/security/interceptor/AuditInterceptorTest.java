@@ -18,9 +18,9 @@
  */
 package ubic.gemma.security.interceptor;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * @author pavlidis

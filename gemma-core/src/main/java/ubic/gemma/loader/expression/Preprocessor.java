@@ -21,8 +21,8 @@ package ubic.gemma.loader.expression;
 import java.io.IOException;
 import java.util.List;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.loader.expression.mage.BioAssayDimensions;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * Put data in a form that can be used in analysis.

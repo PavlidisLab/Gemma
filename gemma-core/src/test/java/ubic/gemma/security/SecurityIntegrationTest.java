@@ -23,7 +23,8 @@ import java.util.HashSet;
 
 import org.acegisecurity.AccessDeniedException;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.Constants;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
@@ -32,9 +33,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.util.StringUtil;
-import ubic.gemma.Constants;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 
 /**
  * Use this to test acegi functionality.

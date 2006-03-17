@@ -23,13 +23,13 @@
  */
 package ubic.gemma.web.util.upload;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.File;
-import java.io.OutputStream;
-import java.io.IOException;
 
 /**
  * Commons FileItem that uses a MonitoredOutputStream

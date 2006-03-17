@@ -29,9 +29,9 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import ubic.gemma.analysis.util.SequenceManipulation;
+import ubic.gemma.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.loader.expression.arrayDesign.AffyProbeReader;
 
 /**
  * Given an Affymetrix array design, "collapse" the probes into sequences that include all probe sequence.

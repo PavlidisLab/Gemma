@@ -23,21 +23,10 @@ import java.util.Collection;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeDao;
-import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.PhysicalLocationDao;
-import ubic.gemma.model.genome.PhysicalMarker;
-import ubic.gemma.model.genome.PhysicalMarkerDao;
-import ubic.gemma.model.genome.Qtl;
-import ubic.gemma.model.genome.QtlDao;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * @author pavlidis

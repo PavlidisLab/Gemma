@@ -24,10 +24,10 @@ import java.util.HashSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.loader.util.persister.Persister;
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * @author keshav

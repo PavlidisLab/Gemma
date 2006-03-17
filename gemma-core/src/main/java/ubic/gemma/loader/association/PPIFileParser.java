@@ -20,14 +20,14 @@ package ubic.gemma.loader.association;
 
 import java.util.Collection;
 
-import baseCode.util.StringUtil;
+import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.ProteinProteinInteractionDao;
 import ubic.gemma.model.association.ProteinProteinInteractionImpl;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
-import ubic.gemma.loader.util.parser.BasicLineParser;
+import baseCode.util.StringUtil;
 
 /**
  * Class to parse a file of protein-protein interactions (retrieved from BIND). Format: (read whole row)

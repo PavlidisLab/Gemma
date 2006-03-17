@@ -17,8 +17,8 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
-import ubic.gemma.util.RequestUtil;
 import ubic.gemma.util.MailEngine;
+import ubic.gemma.util.RequestUtil;
 
 /**
  * Simple class to retrieve and send a password hint to users by email.

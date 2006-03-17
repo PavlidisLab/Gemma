@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleServiceImplTest;
 import ubic.gemma.model.common.auditAndSecurity.UserServiceImplTest;
 import ubic.gemma.model.common.description.BibliographicReferenceServiceImplTest;
@@ -30,8 +32,6 @@ import ubic.gemma.model.genome.gene.CandidateGeneListImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListServiceImplTest;
 import ubic.gemma.model.genome.gene.GeneServiceImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImplTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Tests for gemma.model-mda

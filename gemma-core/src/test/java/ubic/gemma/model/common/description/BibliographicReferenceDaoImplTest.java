@@ -25,9 +25,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate

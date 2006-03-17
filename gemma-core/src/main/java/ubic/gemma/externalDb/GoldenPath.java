@@ -33,12 +33,12 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.util.SQLUtils;
 import ubic.gemma.analysis.util.SequenceManipulation;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import baseCode.util.SQLUtils;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.

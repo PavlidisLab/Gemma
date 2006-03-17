@@ -21,10 +21,10 @@ package ubic.gemma.loader.genome.gene.ncbi;
 import java.io.IOException;
 import java.util.Collection;
 
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.util.sdo.SourceDomainObjectGenerator;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Combines information from the gene2accession and gene_info files from NCBI Gene.

@@ -26,9 +26,9 @@ import java.util.Map;
 
 import org.dom4j.Document;
 
+import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.loader.util.converter.Converter;
 
 /**
  * Class to parse MAGE-ML files and convert them into Gemma domain objects SDO.

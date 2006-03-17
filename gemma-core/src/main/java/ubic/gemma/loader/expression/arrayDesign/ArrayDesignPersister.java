@@ -23,9 +23,9 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.loader.util.persister.Persister;
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * A service to load ArrayDesigns (from any user interface).

@@ -25,8 +25,6 @@ import junit.framework.TestCase;
 
 import org.xml.sax.SAXException;
 
-import ubic.gemma.loader.expression.smd.model.SMDExperiment;
-
 /**
  * @author pavlidis
  * @version $Id$

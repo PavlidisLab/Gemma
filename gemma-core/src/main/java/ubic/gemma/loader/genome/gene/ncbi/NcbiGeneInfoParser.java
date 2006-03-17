@@ -20,10 +20,10 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import org.apache.commons.lang.StringUtils;
 
-import baseCode.util.StringUtil;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
+import baseCode.util.StringUtil;
 
 /**
  * Class to parse the gene_info file from NCBI Gene. See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README for details of the

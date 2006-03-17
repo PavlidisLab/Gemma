@@ -40,10 +40,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleDao;
 import ubic.gemma.util.LabelValue;
-import ubic.gemma.Constants;
 
 /**
  * StartupListener class used to initialize and database settings and populate any application-wide drop-downs.

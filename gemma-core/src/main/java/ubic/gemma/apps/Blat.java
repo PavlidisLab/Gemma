@@ -45,9 +45,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.loader.genome.BlatResultParser;
 
 /**
  * Class to manage the gfServer and run BLAT searches.

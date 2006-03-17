@@ -34,13 +34,13 @@ import org.springframework.webflow.RequestContext;
 import org.springframework.webflow.ScopeType;
 import org.springframework.webflow.execution.servlet.ServletEvent;
 
+import ubic.gemma.Constants;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceImpl;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.LocalFileService;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.Constants;
 import ubic.gemma.web.flow.AbstractFlowFormAction;
 
 /**

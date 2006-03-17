@@ -29,9 +29,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import ubic.gemma.Constants;
 import ubic.gemma.util.RandomGUID;
 import ubic.gemma.util.StringUtil;
-import ubic.gemma.Constants;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserService

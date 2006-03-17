@@ -21,12 +21,12 @@ package ubic.gemma.loader.genome.gene.ncbi;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.util.converter.Converter;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneAlias;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects.

@@ -23,8 +23,8 @@
  */
 package ubic.gemma.web.util.upload;
 
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * OutputStream that puts information on how many bytes have been read into a OutputStreamListener.

@@ -14,9 +14,9 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
-import ubic.gemma.loader.expression.smd.util.SmdUtil;
 
 /**
  * <p>

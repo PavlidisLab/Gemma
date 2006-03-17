@@ -26,9 +26,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.loader.util.ParserAndLoaderTools;
 import ubic.gemma.loader.util.parser.BasicLineParser;
+import ubic.gemma.model.association.Gene2GOAssociation;
 
 /**
  * @author keshav

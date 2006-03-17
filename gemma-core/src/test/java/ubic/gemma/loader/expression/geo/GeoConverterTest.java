@@ -21,10 +21,9 @@ package ubic.gemma.loader.expression.geo;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-
-import junit.framework.TestCase;
 import baseCode.io.ByteArrayConverter;
 
 /**

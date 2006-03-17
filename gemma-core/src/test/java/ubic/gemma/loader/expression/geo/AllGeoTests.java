@@ -18,10 +18,10 @@
  */
 package ubic.gemma.loader.expression.geo;
 
-import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcherTest;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetServiceIntegrationTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcherTest;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetServiceIntegrationTest;
 
 /**
  * Test for ubic.gemma.loader.expression.geo

@@ -26,11 +26,11 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 
-import baseCode.util.FileTools;
 import ubic.gemma.loader.expression.smd.model.SMDBioAssay;
 import ubic.gemma.loader.expression.smd.model.SMDPerson;
 import ubic.gemma.loader.expression.smd.model.SMDQuantitationType;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
+import baseCode.util.FileTools;
 
 /**
  * Parse a SMD data file (for one microarray assay) to get out information about the BioAssay, and optionally get the

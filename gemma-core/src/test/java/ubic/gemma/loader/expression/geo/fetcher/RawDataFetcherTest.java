@@ -21,11 +21,11 @@ package ubic.gemma.loader.expression.geo.fetcher;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
-import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
