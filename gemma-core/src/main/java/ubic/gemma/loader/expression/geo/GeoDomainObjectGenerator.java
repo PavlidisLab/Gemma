@@ -194,6 +194,13 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private GeoSeries processSeries( String seriesAccession ) {
 
+        Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
+
+        if ( datasetsToProcess == null || datasetsToProcess.size() == 0 ) {
+            throw new NoDatasetForSeriesException( "No data set found for " + seriesAccession
+                    + ", processing will be halted" );
+        }
+
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
             throw new RuntimeException( "No series file found for " + seriesAccession );
@@ -218,7 +225,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         // FIXME put this back...or something.
         // processRawData( series )
 
-        Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
         for ( String dataSetAccession : datasetsToProcess ) {
             log.info( "Processing " + dataSetAccession );
             processDataSet( series, dataSetAccession );
@@ -346,6 +352,39 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     public void setPlatformFetcher( Fetcher platformFetcher ) {
         this.platformFetcher = platformFetcher;
+    }
+
+}
+
+class NoDatasetForSeriesException extends RuntimeException {
+
+    /**
+     * 
+     */
+    public NoDatasetForSeriesException() {
+        super();
+    }
+
+    /**
+     * @param message
+     * @param cause
+     */
+    public NoDatasetForSeriesException( String message, Throwable cause ) {
+        super( message, cause );
+    }
+
+    /**
+     * @param message
+     */
+    public NoDatasetForSeriesException( String message ) {
+        super( message );
+    }
+
+    /**
+     * @param cause
+     */
+    public NoDatasetForSeriesException( Throwable cause ) {
+        super( cause );
     }
 
 }

@@ -828,6 +828,10 @@ public class GeoFamilyParser implements Parser {
      * <p>
      * Important implementation note: In the sample table sections of GSEXXX_family files, the first column is always
      * ID_REF, according to the kind folks at NCBI. If this changes, this code will BREAK.
+     * <p>
+     * Similarly, the column names between the different samples are not necessarily the same, but we trust that they
+     * all refer to the same quantitation types in the same order. That is, the nth column for this sample 'means' the
+     * same thing as the nth column for another sample in this series. If that isn't true, this will be BROKEN.
      * 
      * @param line
      */
@@ -844,7 +848,7 @@ public class GeoFamilyParser implements Parser {
 
         assert tokens != null;
 
-        /**
+        /*
          * This can happen in some files -- we have to ignore it.
          */
         if ( tokens.length <= 1 ) {
@@ -1030,6 +1034,8 @@ public class GeoFamilyParser implements Parser {
             seriesSet( currentSeriesAccession, "submissionDate", value );
         } else if ( startsWithIgnoreCase( line, "!Series_pubmed_id" ) ) {
             seriesAddTo( currentSeriesAccession, "pubmedIds", value );
+        } else if ( startsWithIgnoreCase( line, "!Series_overall_design" ) ) {
+            // FIXME add support for this description.
         } else if ( startsWithIgnoreCase( line, "!Series_summary" ) ) {
             if ( value.toLowerCase().contains( "keyword" ) ) {
                 String keyword = extractValue( value );

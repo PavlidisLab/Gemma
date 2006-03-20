@@ -54,8 +54,10 @@ public class GeoDatasetService extends AbstractGeoService {
         }
 
         Collection<?> results = generator.generate( geoAccession );
+        
         assert results.iterator().next() instanceof GeoSeries : "Got a "
                 + results.iterator().next().getClass().getName() + " instead of a " + GeoSeries.class.getName();
+        
         GeoSeries series = ( GeoSeries ) results.iterator().next();
 
         log.info( "Generated GEO domain objects for " + geoAccession );

@@ -46,21 +46,51 @@ public class GeoSample extends GeoData implements Comparable {
     Collection<GeoReplication> replicates;
     Collection<GeoVariable> variables;
 
-    /*
+    /**
+     * The column names in the SOFT file for this sample, IN THE ORDER THEY APPEAR.
+     */
+    private List<String> columnNames = new ArrayList<String>();
+
+    /**
      * quantitationType -> designelement -> value
      */
     Map<String, Map<String, String>> data = new HashMap<String, Map<String, String>>();
 
     /**
-     * @param designElement
-     * @param quantitationType
-     * @param value
+     * @param designElement The probe name
+     * @param quantitationType The column name used in the SOFT file.
+     * @param value The data point to be stored.
      */
     public void addDatum( String designElement, String quantitationType, String value ) {
         if ( !data.containsKey( quantitationType ) ) {
             data.put( quantitationType, new HashMap<String, String>() );
+            columnNames.add( quantitationType ); // we assume we're going in order...
         }
         data.get( quantitationType ).put( designElement, value );
+    }
+
+    /**
+     * Add a name that refers to a column in the data for this sample in the SOFT file; this must be done in the order
+     * they appear in the data.
+     * 
+     * @param columnName
+     */
+    public void addColumnName( String columnName ) {
+        this.columnNames.add( columnName );
+    }
+
+    /**
+     * Given a column number (count starts from zero) get the name of the corresponding quantitation type for this
+     * sample.
+     * 
+     * @param n
+     * @return column name.
+     */
+    public String getNthQuantitationType( int n ) {
+        if ( n < 0 || n > columnNames.size() - 1 ) {
+            throw new IllegalArgumentException( "Only " + columnNames.size() + " columns, requested index " + n );
+        }
+        return columnNames.get( n );
     }
 
     /**
@@ -73,6 +103,16 @@ public class GeoSample extends GeoData implements Comparable {
             throw new IllegalArgumentException( "No such quantitation type \"" + quantitationType + "\"" );
         }
         return data.get( quantitationType ).get( designElement );
+    }
+
+    /**
+     * @param designElement
+     * @param columnNumber
+     * @return
+     */
+    public String getDatum( String designElement, int columnNumber ) {
+        String quantitationType = getNthQuantitationType( columnNumber );
+        return this.getDatum( designElement, quantitationType );
     }
 
     // SAGE items.

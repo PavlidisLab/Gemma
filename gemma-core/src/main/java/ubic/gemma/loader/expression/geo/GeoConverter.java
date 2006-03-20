@@ -504,7 +504,7 @@ public class GeoConverter implements Converter {
          * data is 'counts'). For others we just have free text in the column descriptions
          */
 
-        int i = 0;
+        int quantitationTypeIndex = 0;
         for ( String quantitationType : quantitationTypes ) {
 
             // skip the first quantitationType, it's the ID or ID_REF.
@@ -513,8 +513,7 @@ public class GeoConverter implements Converter {
                 continue;
             }
 
-            String description = quantitationTypeDescriptions.get( i );
-            i++;
+            String description = quantitationTypeDescriptions.get( quantitationTypeIndex );
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
@@ -522,7 +521,12 @@ public class GeoConverter implements Converter {
 
             guessQuantitationTypeParameters( qt, quantitationType, description );
 
-            Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationType );
+            /*
+             * We get the data by index, not quantitation type name, because the column names often do not match up
+             * among the samples. The first quantitation type is in column 1 (the zeroth column is the ID_REF), but
+             * that's is the zeroth quantitation type.
+             */
+            Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex );
 
             // use a List for performance.
             Collection<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
@@ -553,6 +557,7 @@ public class GeoConverter implements Converter {
                 log.info( count + " Data vectors added for '" + quantitationType + "'" );
             }
             expExp.getDesignElementDataVectors().addAll( new HashSet( vectors ) );
+            quantitationTypeIndex++;
         }
     }
 
@@ -640,9 +645,19 @@ public class GeoConverter implements Converter {
         List<String> reference = datasetSamples.iterator().next().getColumnNames();
         for ( GeoSample sample : datasetSamples ) {
             List<String> columnNames = sample.getColumnNames();
-            if ( !reference.equals( columnNames ) ) {
-                throw new IllegalStateException( "Two samples don't have the same data columns in sample "
-                        + sample.getGeoAccession() );
+            if ( !reference.equals( columnNames ) && log.isWarnEnabled() ) {
+
+                StringBuilder buf = new StringBuilder();
+                buf.append( "\nSample    " + sample.getGeoAccession() + ":" );
+                for ( String string : columnNames ) {
+                    buf.append( " " + string );
+                }
+                buf.append( "\nReference " + datasetSamples.iterator().next().getGeoAccession() + ":" );
+                for ( String string : reference ) {
+                    buf.append( " " + string );
+                }
+
+                log.warn( "*** Sample quantitation type names do not match: " + buf.toString() );
             }
         }
     }
@@ -681,12 +696,18 @@ public class GeoConverter implements Converter {
     /**
      * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
      * 
-     * @param datasetSamples
-     * @param quantitationType
-     * @return
+     * @param datasetSamples The samples we want to get data for.
+     * @param quantitationTypeIndex The index of the quantitation t ype we want to examine. We used to do this by
+     *        quantitationType name but too often these don't match up between samples. The value entered should zero to
+     *        access the first quantitation type column.
+     * @return A map of Strings (design element names) to Lists of Strings containing the data.
+     * @throws IllegalArgumentException if the columnNumber is not valid
      */
     @SuppressWarnings("unchecked")
-    private Map<String, List<String>> makeDataVectors( List<GeoSample> datasetSamples, String quantitationType ) {
+    private Map<String, List<String>> makeDataVectors( List<GeoSample> datasetSamples, int quantitationTypeIndex ) {
+        if ( quantitationTypeIndex < 0 ) {
+            throw new IllegalArgumentException();
+        }
         Map<String, List<String>> dataVectors = new HashMap<String, List<String>>( INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         for ( GeoSample sample : datasetSamples ) {
@@ -703,7 +724,7 @@ public class GeoConverter implements Converter {
                 if ( !dataVectors.containsKey( designElementName ) ) {
                     dataVectors.put( designElementName, new ArrayList<String>() );
                 }
-                String datum = sample.getDatum( designElementName, quantitationType );
+                String datum = sample.getDatum( designElementName, quantitationTypeIndex );
                 // this can happen if the platform has probes that aren't in the data
                 if ( datum == null && log.isDebugEnabled() ) {
                     log.debug( "Data for sample " + sample.getGeoAccession() + " was missing for element "

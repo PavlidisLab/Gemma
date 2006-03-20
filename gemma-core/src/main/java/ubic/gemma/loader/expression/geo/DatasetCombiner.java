@@ -168,7 +168,7 @@ public class DatasetCombiner {
      * Given a GEO series id, find all associated data sets.
      * 
      * @param seriesAccession
-     * @return a collection of associated GDS accessions.
+     * @return a collection of associated GDS accessions. If no GDS is found, the collection will be empty.
      */
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
         /*
