@@ -510,6 +510,7 @@ public class GeoConverter implements Converter {
             // skip the first quantitationType, it's the ID or ID_REF.
             if ( first ) {
                 first = false;
+                quantitationTypeIndex++;
                 continue;
             }
 
@@ -526,7 +527,7 @@ public class GeoConverter implements Converter {
              * among the samples. The first quantitation type is in column 1 (the zeroth column is the ID_REF), but
              * that's is the zeroth quantitation type.
              */
-            Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex );
+            Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex - 1 );
 
             // use a List for performance.
             Collection<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
@@ -617,7 +618,7 @@ public class GeoConverter implements Converter {
         } else if ( name.matches( "^RAT[12]N?_(MEAN|MEDIAN)" ) ) {
             qType = StandardQuantitationType.RATIO;
         } else if ( name.matches( "fold_change" ) || description.contains( "log ratio" )
-                || name.toLowerCase().contains( "ratio" ) ) {
+                || name.toLowerCase().contains( "ratio" ) || description.contains( "ratio" ) ) {
             qType = StandardQuantitationType.RATIO;
         }
 
@@ -628,10 +629,9 @@ public class GeoConverter implements Converter {
         qt.setIsBackground( isBackground );
 
         if ( log.isInfoEnabled() ) {
-            log
-                    .info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
-                            + "\") corresponds to: " + qType + ",  " + sType
-                            + ( qt.getIsBackground() ? " (Background) " : "" ) );
+            log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
+                    + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
+                    + " Encoding=" + pType );
         }
 
     }
@@ -697,7 +697,7 @@ public class GeoConverter implements Converter {
      * Convert the by-sample data for a given quantitation type to by-designElement data vectors.
      * 
      * @param datasetSamples The samples we want to get data for.
-     * @param quantitationTypeIndex The index of the quantitation t ype we want to examine. We used to do this by
+     * @param quantitationTypeIndex The index of the quantitation type we want to examine. We used to do this by
      *        quantitationType name but too often these don't match up between samples. The value entered should zero to
      *        access the first quantitation type column.
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
