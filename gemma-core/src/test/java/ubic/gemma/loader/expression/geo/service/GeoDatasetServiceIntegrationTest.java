@@ -342,7 +342,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             }
             buf.append( "\n" );
         }
-        log.info( buf.toString() );
+        log.debug( buf.toString() );
     }
 
 }
