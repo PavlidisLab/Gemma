@@ -314,6 +314,7 @@
 
 
             <!--  alternative way of generating the ddl file -->
+<!--             
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>hibernate3-maven-plugin</artifactId>
@@ -334,8 +335,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
-
-
+-->
         </plugins>
 
     </build>
