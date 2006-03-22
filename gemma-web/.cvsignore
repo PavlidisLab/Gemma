@@ -1,1 +1,4 @@
 target
+surefire.properties
+surefire-classloader.properties
+
