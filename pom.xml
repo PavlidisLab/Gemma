@@ -21,14 +21,15 @@
     </modules>
     <packaging>pom</packaging>
     <scm>
+        <connection>scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma</connection>
         <developerConnection>
-            scm:cvs:ext:${maven.username}@adgate.cu-genome.org:/fsnode/projects/cvs/pavlab:Gemma
+            scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
         </developerConnection>
     </scm>
     <issueManagement>
         <system>Bugzilla</system>
         <url>
-            http://microarray.cu-genome.org/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma
+            http://benzer.ubic.ca/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma
         </url>
     </issueManagement>
     <ciManagement>
