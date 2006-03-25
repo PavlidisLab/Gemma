@@ -31,7 +31,7 @@
         <url>http://benzer.ubic.ca/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma</url>
     </issueManagement>
     <ciManagement>
-        <system>Continuum</system>
+        <system>continuum</system>
         <url>http://benzer.ubic.ca:8081/continuum/</url>
         <notifiers>
             <notifier>
