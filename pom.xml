@@ -28,14 +28,23 @@
     </scm>
     <issueManagement>
         <system>Bugzilla</system>
-        <url>
-            http://benzer.ubic.ca/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma
-        </url>
+        <url>http://benzer.ubic.ca/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma</url>
     </issueManagement>
     <ciManagement>
         <system>Continuum</system>
-        <url />
-        <notifiers />
+        <url>http://benzer.ubic.ca:8081/continuum/</url>
+        <notifiers>
+            <notifier>
+                <type>mail</type>
+                <sendOnError>true</sendOnError>
+                <sendOnFailure>true</sendOnFailure>
+                <sendOnSuccess>true</sendOnSuccess>
+                <sendOnWarning>true</sendOnWarning>
+                <configuration>
+                    <address>paul@bioinformatics.ubc.ca</address>
+                </configuration>
+            </notifier>
+        </notifiers>
     </ciManagement>
     <licenses>
         <license>
