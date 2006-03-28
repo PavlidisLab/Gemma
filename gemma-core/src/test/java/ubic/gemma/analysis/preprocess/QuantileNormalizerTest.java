@@ -23,14 +23,10 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
-import baseCode.io.reader.DoubleMatrixReader;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */

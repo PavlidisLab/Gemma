@@ -21,10 +21,10 @@ package ubic.gemma.loader.expression.arrayDesign;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import baseCode.util.StringUtil;
 
 /**
  * Parse ArrayDesigns from a flat file. This is used to seed the system from our legacy data.

@@ -21,7 +21,7 @@ package ubic.gemma.analysis.preprocess;
 import ubic.gemma.analysis.util.AffyBatch;
 import ubic.gemma.analysis.util.RCommander;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Perform Robust Multiarray Average probe-level summarization of Affymetrix microarray data.

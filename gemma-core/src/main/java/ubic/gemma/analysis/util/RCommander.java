@@ -21,7 +21,8 @@ package ubic.gemma.analysis.util;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import baseCode.util.RCommand;
+import ubic.basecode.util.RCommand;
+
 
 /**
  * Encapsulates a connection to the RServer.

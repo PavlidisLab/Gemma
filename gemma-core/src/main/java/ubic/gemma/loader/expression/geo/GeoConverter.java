@@ -75,7 +75,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import baseCode.io.ByteArrayConverter;
+import ubic.basecode.io.ByteArrayConverter;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.

@@ -20,6 +20,7 @@ package ubic.gemma.loader.association;
 
 import java.util.Collection;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.LiteratureAssociationDao;
 import ubic.gemma.model.association.LiteratureAssociationImpl;
@@ -27,7 +28,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
-import baseCode.util.StringUtil;
 
 /**
  * Class to parse a file of literature associations. Format: (read whole row)

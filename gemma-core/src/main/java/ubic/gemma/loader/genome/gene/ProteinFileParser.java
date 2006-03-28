@@ -23,13 +23,13 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.gene.GeneProductType;
-import baseCode.util.StringUtil;
 
 /**
  * Class to parse a file of literature associations. Format: (read whole row)

@@ -30,10 +30,10 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
+import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
-import baseCode.util.NetUtils;
 
 /**
  * Retrieve and unpack the raw data files for GEO series. These are the CEL and other files (RPT, EXP and maybe DAT) for

@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import baseCode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Implements simplest background subtraction, with the option to set small values to a preset value.

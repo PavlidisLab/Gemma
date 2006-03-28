@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Represents probe-level summary methods for Affymetrix microarrays.

@@ -45,6 +45,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.CancellationException;
+import ubic.basecode.util.FileTools;
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;
@@ -56,9 +59,6 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.parser.Parser;
-import baseCode.util.CancellationException;
-import baseCode.util.FileTools;
-import baseCode.util.StringUtil;
 
 /**
  * Class for parsing GSE and GDS files from NCBI GEO. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html for

@@ -18,7 +18,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 
 /**
  * Interface representing a mechanism for normalizing two-color arrays.

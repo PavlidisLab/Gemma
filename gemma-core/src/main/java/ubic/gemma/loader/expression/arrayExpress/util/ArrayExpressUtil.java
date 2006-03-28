@@ -10,8 +10,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
 
+import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
-import baseCode.util.NetUtils;
 
 /**
  * @author pavlidis

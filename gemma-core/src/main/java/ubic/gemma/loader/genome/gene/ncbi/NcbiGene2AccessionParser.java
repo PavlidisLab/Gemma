@@ -18,9 +18,9 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.util.parser.BasicLineParser;
-import baseCode.util.StringUtil;
 
 /**
  * Class to parse the NCBI gene2accession files. Results are stored in a "Source domain object", not a Gemma Gene.

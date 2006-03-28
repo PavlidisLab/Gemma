@@ -25,10 +25,11 @@
         <developerConnection>
             scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
         </developerConnection>
+        <url>http://luria.cmmt.ubc.ca:8080/viewrep/Pavlidis/Gemma</url>
     </scm>
     <issueManagement>
         <system>Bugzilla</system>
-        <url>http://benzer.ubic.ca/bugzilla/buglist.cgi?cmdtype=runnamed&amp;namedcmd=Gemma</url>
+        <url>http://benzer.ubic.ca/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__</url>
     </issueManagement>
     <ciManagement>
         <system>continuum</system>
@@ -48,7 +49,9 @@
     </ciManagement>
     <licenses>
         <license>
-            <name>Apache 2.0</name>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <developers>
@@ -93,14 +96,14 @@
                 <licenseFile>${project.basedir}/etc/licenses/clover.license</licenseFile>
                 </configuration> 
                 </plugin>-->
-            <plugin>
+            <!--             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>changes-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
+                </plugin>
+                <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>changelog-maven-plugin</artifactId>
-            </plugin>
+                </plugin>-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jxr-maven-plugin</artifactId>

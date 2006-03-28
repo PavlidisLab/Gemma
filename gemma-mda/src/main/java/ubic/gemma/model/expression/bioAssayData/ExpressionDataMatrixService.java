@@ -25,9 +25,9 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import baseCode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import baseCode.dataStructure.matrix.DoubleMatrixNamed;
-import baseCode.io.ByteArrayConverter;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.io.ByteArrayConverter;
 
 /**
  * Produces DoubleMatrix objects for ExpressionExperiments.

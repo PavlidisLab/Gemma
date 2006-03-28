@@ -35,7 +35,7 @@ import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.OntologyEntry;
-import baseCode.bio.geneset.GONames;
+import ubic.basecode.bio.geneset.GONames;
 
 /**
  * Parses GO entries from GO XML.

@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import baseCode.io.ByteArrayConverter;
+import ubic.basecode.io.ByteArrayConverter;
 import cern.colt.list.ByteArrayList;
 
 /**

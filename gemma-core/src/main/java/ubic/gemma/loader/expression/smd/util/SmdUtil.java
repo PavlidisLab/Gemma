@@ -28,7 +28,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
 
-import baseCode.util.NetUtils;
+import ubic.basecode.util.NetUtils;
+
 
 /**
  * <hr>

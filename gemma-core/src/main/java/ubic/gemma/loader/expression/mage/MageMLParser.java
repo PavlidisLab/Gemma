@@ -52,8 +52,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.util.parser.Parser;
-import baseCode.util.FileTools;
 
 /**
  * Class to parse MAGE-ML files and convert them into Source domain objects SDO.

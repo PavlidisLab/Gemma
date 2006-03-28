@@ -24,7 +24,7 @@ import java.util.List;
 import junit.framework.TestCase;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import baseCode.io.ByteArrayConverter;
+import ubic.basecode.io.ByteArrayConverter;
 
 /**
  * Unit test for GeoConversion. Not for integration tests.
