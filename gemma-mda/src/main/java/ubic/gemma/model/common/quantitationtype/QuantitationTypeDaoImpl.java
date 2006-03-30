@@ -40,12 +40,15 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
     public QuantitationType find( QuantitationType quantitationType ) {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( QuantitationType.class );
-            
+
             queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
 
             queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
 
             queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
+
+            if ( quantitationType.getIsBackground() != null )
+                queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
 
             if ( quantitationType.getRepresentation() != null )
                 queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );

@@ -21,6 +21,9 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -39,6 +42,8 @@ import ubic.basecode.io.ByteArrayConverter;
  */
 public class ExpressionDataMatrixService {
 
+    private static Log log = LogFactory.getLog( ExpressionDataMatrixService.class.getName() );
+
     DesignElementDataVectorService designElementDataVectorService;
 
     /**
@@ -49,6 +54,10 @@ public class ExpressionDataMatrixService {
     @SuppressWarnings("unchecked")
     public DoubleMatrixNamed getMatrix( ExpressionExperiment expExp, QuantitationType qt ) {
         Collection<DesignElementDataVector> vectors = this.designElementDataVectorService.findAllForMatrix( expExp, qt );
+        if ( vectors == null || vectors.size() == 0 ) {
+            log.warn( "No vectors for " + expExp + " and " + qt );
+            return null;
+        }
         return vectorsToDoubleMatrix( vectors );
     }
 
@@ -64,7 +73,9 @@ public class ExpressionDataMatrixService {
      * @return
      */
     private DoubleMatrixNamed vectorsToDoubleMatrix( Collection<DesignElementDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 ) return null;
+        if ( vectors == null || vectors.size() == 0 ) {
+            return null;
+        }
 
         ByteArrayConverter bac = new ByteArrayConverter();
 

@@ -203,11 +203,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 .setDesignElementDataVectorService( ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" ) );
 
         ExpressionExperiment ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
+
+        // Recovering a quantitation type.
         QuantitationType qtf = QuantitationType.Factory.newInstance();
+        qtf.setIsBackground( false );
         qtf.setName( "VALUE" );
         qtf.setRepresentation( PrimitiveType.DOUBLE );
         qtf.setGeneralType( GeneralType.QUANTITATIVE );
-        qtf.setType( StandardQuantitationType.MEASUREDSIGNAL );
+        qtf.setType( StandardQuantitationType.DERIVEDSIGNAL );
+        qtf.setScale( ScaleType.UNSCALED );
         QuantitationType qt = qts.find( qtf );
 
         assertTrue( qt != null );
@@ -258,7 +262,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExpressionExperiment ee = ees.findByName( "Breast Cancer Cell Line Experiment" );
         QuantitationType qtf = QuantitationType.Factory.newInstance();
 
-        // For the agilent array
+        // Affymetrix platform.
         qtf.setName( "VALUE" );
         qtf.setScale( ScaleType.UNSCALED );
         qtf.setRepresentation( PrimitiveType.DOUBLE );
@@ -290,7 +294,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertEquals( 7.88, k, 0.00001 );
 
         // ///////////////////////////////////
-        // / now for the other platform
+        // / now for the other platform // For the agilent array
         qtf.setName( "VALUE" );
         qtf.setScale( ScaleType.LOG2 );
         qtf.setRepresentation( PrimitiveType.DOUBLE );
