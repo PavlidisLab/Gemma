@@ -28,9 +28,6 @@ import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Combines information from the gene2accession and gene_info files from NCBI Gene.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

@@ -30,9 +30,6 @@ import ubic.gemma.model.genome.gene.GeneAlias;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

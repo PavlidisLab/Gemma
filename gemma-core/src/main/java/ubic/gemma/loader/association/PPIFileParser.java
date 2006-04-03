@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.gene.GeneProductDao;
  * Class to parse a file of protein-protein interactions (retrieved from BIND). Format: (read whole row)
  * 
  * <pre>
- *        pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
+ *          pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
  * </pre>
  * 
  * @author anshu
@@ -42,18 +42,12 @@ import ubic.gemma.model.genome.gene.GeneProductDao;
 public class PPIFileParser extends BasicLineParser /* implements Persister */{
 
     public static final int PPI_FIELDS_PER_ROW = 6;
-    public static final int PERSIST_CONCURRENTLY = 1;
-    public static final int DO_NOT_PERSIST_CONCURRENTLY = 0;
-    public static final int PERSIST_DEFAULT = 0;
 
-    private int mPersist = PERSIST_DEFAULT;
     private GeneProductDao gpDao;
     private ProteinProteinInteractionDao ppiDao;
     private ExternalDatabaseDao dbDao;
 
-    public PPIFileParser( int persistType, GeneProductDao gdao, ProteinProteinInteractionDao ldao,
-            ExternalDatabaseDao dDao ) {
-        this.mPersist = persistType;
+    public PPIFileParser( GeneProductDao gdao, ProteinProteinInteractionDao ldao, ExternalDatabaseDao dDao ) {
         this.gpDao = gdao;
         this.ppiDao = ldao;
         this.dbDao = dDao;
@@ -99,13 +93,8 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
             assoc.setSecondProduct( g2 );
             db = ExternalDatabase.Factory.newInstance();
             db.setName( fields[3] );
-            db = dbDao.findOrCreate( db );
-            // db=dbDao.findByName(fields[8]); //calls fior external db to be pre-loaded
             assoc.setSource( db );
 
-            // if ( mPersist == PERSIST_CONCURRENTLY ) {
-            // ppiDao.create( assoc ); // FIXME parser should not persist
-            // }
         } catch ( Exception e ) {
             log.error( e.toString() );
         }

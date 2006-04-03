@@ -26,11 +26,8 @@ import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 
 /**
- * Class to parse the gene_info file from NCBI Gene. See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README for details of the
- * format.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
+ * Class to parse the gene_info file from NCBI Gene. See {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details
+ * of the format.
  * 
  * @author pavlidis
  * @version $Id$

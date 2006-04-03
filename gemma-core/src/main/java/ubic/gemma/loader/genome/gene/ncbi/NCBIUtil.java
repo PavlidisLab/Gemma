@@ -30,12 +30,7 @@ import org.apache.commons.net.ftp.FTPClient;
 
 import ubic.basecode.util.NetUtils;
 
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
