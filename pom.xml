@@ -87,6 +87,7 @@
                         <link>http://logging.apache.org/log4j/docs/api/</link>
                         <link>http://jakarta.apache.org/regexp/apidocs/</link>
                         <link>http://jakarta.apache.org/velocity/api/</link>
+                        <link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
                     </links>
                 </configuration>
             </plugin>
@@ -96,14 +97,14 @@
                 <licenseFile>${project.basedir}/etc/licenses/clover.license</licenseFile>
                 </configuration> 
                 </plugin>-->
-            <!--             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>changes-maven-plugin</artifactId>
-                </plugin>
-                <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>changelog-maven-plugin</artifactId>
-                </plugin>-->
+            <!--     <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-changes-plugin</artifactId>
+                </plugin> -->
+            <!--  <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-changelog-plugin</artifactId>
+                </plugin> -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jxr-maven-plugin</artifactId>
@@ -114,4 +115,10 @@
             </plugin>
         </plugins>
     </reporting>
+    <distributionManagement>
+        <site>
+            <id>website</id>
+            <url>scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/</url>
+        </site>
+    </distributionManagement>
 </project>
