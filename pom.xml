@@ -61,6 +61,12 @@
             <email>paul@bioinformatics.ubc.ca</email>
             <organization>University of British Columbia</organization>
         </developer>
+        <developer>
+            <name>Kiran Keshav</name>
+            <id>keshav</id>
+            <email>keshav@cu-genome.org</email>
+            <organization>University of British Columbia</organization>
+        </developer>
     </developers>
     <reporting>
         <outputDirectory>target/site</outputDirectory>
