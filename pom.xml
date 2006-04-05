@@ -118,7 +118,7 @@
     <distributionManagement>
         <site>
             <id>website</id>
-            <url>scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/</url>
+            <url>scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/Gemma</url>
         </site>
     </distributionManagement>
 </project>
