@@ -354,6 +354,7 @@
             <testResource>
                 <directory>src/test/resources</directory>
                 <includes>
+                    <include>**/*.properties</include> 
                     <include>**/*.xml</include>
                     <include>**/*.txt</include>
                     <include>**/*.gz</include>
