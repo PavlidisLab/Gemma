@@ -33,6 +33,7 @@ import ubic.gemma.loader.expression.smd.AllSmdTests;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
 import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
+import ubic.gemma.model.expression.experiment.biomaterial.BioMaterialDaoImplTest;
 import ubic.gemma.model.genome.QtlDaoImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
 import ubic.gemma.security.SecurityIntegrationTest;
@@ -64,6 +65,7 @@ public class AllCoreTests {
         suite.addTestSuite( SecurityIntegrationTest.class );
 
         suite.addTestSuite( ArrayDesignDaoImplTest.class );
+        suite.addTestSuite( BioMaterialDaoImplTest.class );
         suite.addTestSuite( ExternalDatabaseTest.class );
         suite.addTestSuite( CandidateGeneListDaoImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );

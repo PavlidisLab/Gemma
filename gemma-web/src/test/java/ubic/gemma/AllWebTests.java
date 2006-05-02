@@ -24,7 +24,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.SignupControllerTest;
 import ubic.gemma.web.controller.common.description.BibRefControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormControllerTest;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerIntegrationTest;
 
 /**
  * Tests for gemma-web.
@@ -39,7 +39,7 @@ public class AllWebTests extends TestSuite {
         suite.addTestSuite( BibRefControllerTest.class );
         suite.addTestSuite( ArrayDesignControllerTest.class );
         suite.addTestSuite( ArrayDesignFormControllerTest.class );
-        suite.addTestSuite( ExpressionExperimentControllerTest.class );
+        suite.addTestSuite( ExpressionExperimentControllerIntegrationTest.class );
         return suite;
     }
 }

@@ -42,6 +42,7 @@ public class ArrayDesignController extends BaseMultiActionController {
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
 
     private ArrayDesignService arrayDesignService = null;
+    private final String messageName = "Array design with name";
 
     /**
      * @param arrayDesignService The arrayDesignService to set.
@@ -70,7 +71,7 @@ public class ArrayDesignController extends BaseMultiActionController {
             throw new EntityNotFoundException( name + " not found" );
         }
 
-        this.addMessage( request, "arrayDesign.found", new Object[] { name } );
+        this.addMessage( request, "object.found", new Object[] { messageName, name } );
         request.setAttribute( "name", name );
         return new ModelAndView( "arrayDesign.detail" ).addObject( "arrayDesign", arrayDesign );
     }
@@ -116,7 +117,7 @@ public class ArrayDesignController extends BaseMultiActionController {
     private ModelAndView doDelete( HttpServletRequest request, ArrayDesign arrayDesign ) {
         arrayDesignService.remove( arrayDesign );
         log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
-        addMessage( request, "arrayDesign.deleted", new Object[] { arrayDesign.getName() } );
+        addMessage( request, "object.deleted", new Object[] { messageName, arrayDesign.getName() } );
         return new ModelAndView( "arrayDesigns", "arrayDesign", arrayDesign );
     }
 

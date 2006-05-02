@@ -2,6 +2,7 @@
 <jsp:useBean id="expressionExperiment" scope="request"
     class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
 <html>
     <body>
         <h2>
@@ -11,153 +12,156 @@
             <tr>
                 <td valign="top">
                     <b>
-                        <fmt:message key="name" />
+                        <fmt:message key="expressionExperiment.name" />
                     </b>
                 </td>
                 <td>
-                    <jsp:getProperty name="expressionExperiment" property="name" />
+                	<%if (expressionExperiment.getName() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="name"/>
+                    <%}else{
+                    	out.print("No name available");
+                    }%>
                 </td>
             </tr>
         
             <tr>
                 <td valign="top">
                     <b>
-                        <fmt:message key="description" />
+                        <fmt:message key="expressionExperiment.description" />
                     </b>
                 </td>
                 <td>
-                    <jsp:getProperty name="expressionExperiment" property="description" />
+                	<%if (expressionExperiment.getDescription() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="description" />
+                    <%}else{
+                    	out.print("Description unavailable");
+                    }%>
                 </td>
             </tr>
             <tr>
                 <td valign="top">
                     <b>
-                        <fmt:message key="source" />
+                        <fmt:message key="expressionExperiment.source" />
                     </b>
                 </td>
                 <td>
-                    <jsp:getProperty name="expressionExperiment" property="source" />
+                	<%if (expressionExperiment.getSource() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="source" />
+                    <%}else{
+                    	out.print("Source unavailable");
+                    }%>
                 </td>
             </tr>    
-       
-            <tr>
-                <td valign="top">
-                    <b>
-                        <fmt:message key="expressionExperiment.accession" />
-                    </b>
-                </td>
-                <td>
-                <% if (expressionExperiment.getAccession() != null) { %>
-                    <%= expressionExperiment.getAccession().getExternalDatabase().getName() %>
-                    :&nbsp;
-                      <%= expressionExperiment.getAccession().getAccession() %>
-                       <% } %>
-                </td>
-            </tr>
 
         </table>
-
-        <h3>
-            Owner
-        </h3>
-        <%=expressionExperiment.getOwner() %>
+        
         <br />
 
         <h3>
-            Bio Assays (arrays)
+            <fmt:message key="bioAssays.title" />
         </h3>
-        <display:table name="expressionExperiment.bioAssays" class="list" pagesize="50" >
-         <display:column property="id" sort="true" href="showBioAssay.html" paramId="name" paramProperty="name"/>
+        <display:table name="expressionExperiment.bioAssays" class="list" requestURI="" id="bioAssayList" export="true" pagesize="10">
+         	<display:column property="id" sortable="true" href="/Gemma/bioAssay/showBioAssay.html" paramId="id" paramProperty="id"/>
             <display:column property="name" maxWords="20" />
             <display:column property="description" maxWords="100" />
+            <display:setProperty name="export.pdf" value="true" />
         </display:table>
 
         <h3>
-            Experimental designs
+            <fmt:message key="experimentalDesigns.title" />
         </h3>
-        <display:table name="expressionExperiment.experimentalDesigns" class="list">
-
-            <display:column property="name" sort="true" maxWords="20" href="showExperimentalDesign.html" paramId="name" paramProperty="name"/>
-            <display:column property="description" sort="true" maxWords="100"  />
-            <display:column property="experimentalFactors" sort="true" maxWords="100"  />
+        <display:table name="expressionExperiment.experimentalDesigns" class="list" requestURI="" id="experimentalDesignList"
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
+            <display:column property="description" sortable="true" maxWords="100"  />
+            <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="expressionExperiment.factors"  />
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
 		
-        <h3>
-            Investigators
+		<h3>
+            <fmt:message key="investigators.title" />
         </h3>
-        <%=expressionExperiment.getInvestigators() %>
-        <br />
-
+        <display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList"
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
+            <display:column property="phone" sortable="true" maxWords="100"  />
+            <display:column property="fax" sortable="true" maxWords="100"  />
+            <display:column property="email" sortable="true" maxWords="100"  />
+            <display:setProperty name="basic.empty.showtable" value="false" />
+        </display:table>
+        
         <h3>
-            Publication
+            <fmt:message key="analyses.title" />
         </h3>
-        <%if ( expressionExperiment.getPrimaryPublication() != null ) {
-
-                %>
-        <Gemma:bibref bibliographicReference="   <%=expressionExperiment.getPrimaryPublication() %>" />
-        <br />
-        <%} else {
-
-            %>
-        <p>
-            (No publication listed)
-        </p>
-        <%}
-
-            %>
-
+        <display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList"
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
+            <display:column property="description" sortable="true" maxWords="100"  />
+            <display:setProperty name="basic.empty.showtable" value="false" />
+        </display:table>
+        
         <h3>
-            Subset
+            <fmt:message key="expressionExperimentSubsets.title" />
         </h3>
-        <%=expressionExperiment.getSubsets() %>
-        <br />
-
+        <display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            <display:setProperty name="basic.empty.showtable" value="false" />
+        </display:table>
+        
         <h3>
-            Audit trail
+            <fmt:message key="designElementDataVectors.title" />
+        </h3>
+        <display:table name="expressionExperiment.designElementDataVectors" class="list" requestURI="" id="dataVectorList"
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            <display:setProperty name="basic.empty.showtable" value="false" />
+        </display:table>
+        
+	
+		<h3>
+            <fmt:message key="expressionExperiment.owner" />
+        </h3>
+        <Gemma:contact
+            contact="<%=expressionExperiment.getOwner()%>" />
+        <br/>
+        
+        <h3>
+            <fmt:message key="databaseEntry.title" />
+        </h3>
+        <Gemma:databaseEntry
+            databaseEntry="<%=expressionExperiment.getAccession()%>" />
+        <br/>
+        
+        <h3>
+            <fmt:message key="pubMed.publication" />
+        </h3>
+        <Gemma:bibref bibliographicReference="<%=expressionExperiment.getPrimaryPublication() %>" />
+        <br />
+		
+        <h3>
+            <fmt:message key="auditTrail.title" />
         </h3>
         <Gemma:auditTrail
             auditTrail="<%=expressionExperiment.getAuditTrail()%>" />
         <br />
 
-        <h3>
-            Analyses
-        </h3>
-        <%=expressionExperiment.getAnalyses() %>
-        <br />
-
-        <h3>
-            Number of design element data vectors
-        </h3>
-        <%=expressionExperiment.getDesignElementDataVectors().size() %>
-        <br />
-
+        <hr />
         <hr />
         
-	<TR>
-        <TD COLSPAN="2">
-        <HR>
-        </TD>
-    </TR>
     <table>
-    <TR>
-    <TD COLSPAN="2">    
-            <DIV align="left"><input type="button"
+    <tr>
+    <td COLSPAN="2">    
+            <div align="left"><input type="button"
             onclick="location.href='showAllExpressionExperiments.html'"
-            value="Back"></DIV>
-            </TD>
-        <%--<r:isUserInRole role="admin">--%>
-        <%--<authz:authorize ifAnyGranted="admin">--%>
+            value="Back"></div>
+            </td>
         <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
-            <TD COLSPAN="2">    
-            <DIV align="left"><input type="button"
+            <td COLSPAN="2">    
+            <div align="left"><input type="button"
             onclick="location.href='editExpressionExperiment.html?name=<%=request.getAttribute("name")%>'"
-            value="Edit"></DIV>
-            </TD>
+            value="Edit"></div>
+            </td>
         </authz:acl>
-        <%--</authz:authorize>--%>
-        <%--</r:isUserInRole> --%>
-    </TR>
+    </tr>
     </table>
     </body>
 </html>

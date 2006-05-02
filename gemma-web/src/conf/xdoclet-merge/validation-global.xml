@@ -20,6 +20,27 @@
         </field>
     </form>
     
+    <form name="bioAssay">
+        <field property="name" depends="required">
+            <arg0 key="bioAssay.name" />
+        </field>
+        <field property="description" depends="required">
+            <arg0 key="bioAssay.description" />
+        </field>
+    </form>
+    
+    <form name="expressionExperiment">
+        <field property="name" depends="required">
+            <arg0 key="expressionExperiment.name" />
+        </field>
+        <field property="description" depends="required">
+            <arg0 key="expressionExperiment.description" />
+        </field>
+        <field property="source" depends="required">
+            <arg0 key="expressionExperiment.source" />
+        </field>
+    </form>
+    
     <form name="user">
         <field property="userName" depends="required,minlength">
 

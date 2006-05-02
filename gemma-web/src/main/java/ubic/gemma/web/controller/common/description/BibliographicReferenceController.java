@@ -52,6 +52,8 @@ public class BibliographicReferenceController extends BaseMultiActionController 
 
     private BibliographicReferenceService bibliographicReferenceService = null;
 
+    private final String messagePrefix = "Reference with PubMed Id";
+
     /**
      * @param request
      * @param response
@@ -71,7 +73,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
             throw new EntityNotFoundException( pubMedId + " not found" );
         }
 
-        addMessage( request, "bibliographicReference.found", new Object[] { pubMedId } );
+        addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         request.setAttribute( "accession", pubMedId );
         return new ModelAndView( "pubMed.Detail.view" ).addObject( "bibliographicReference", bibRef );
     }
@@ -138,7 +140,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-        addMessage( request, "bibliographicReference.deleted", new Object[] { bibRef.getPubAccession().getAccession() } );
+        addMessage( request, "object.deleted", new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
         return new ModelAndView( "bibRefSearch", "bibliographicReference", bibRef );
     }
 

@@ -74,9 +74,9 @@ import uk.ltd.getahead.dwr.create.SpringCreator;
 abstract public class BaseTransactionalSpringContextTest extends AbstractTransactionalSpringContextTests {
 
     protected CompositeConfiguration config;
-
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
+    protected final int testNumCollectionElements = 20;
 
     protected ExternalDatabaseDao externalDatabaseDao;
 
@@ -85,6 +85,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected ContactDao contactDao;
 
     protected TaxonDao taxonDao;
+
+    private boolean testEnvDisabled = false;
 
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
@@ -147,7 +149,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     /**
      * 
-     *
+     * 
      */
     public BaseTransactionalSpringContextTest() {
         super();
@@ -178,7 +180,10 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected Object getBean( String name ) {
-        return getContext( getConfigLocations() ).getBean( name );
+        if ( isTestEnvDisabled() )
+            return getContext( getStandardLocations() ).getBean( name );
+        else
+            return getContext( getConfigLocations() ).getBean( name );
     }
 
     /**
@@ -208,6 +213,19 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected String[] getConfigLocations() {
         return new String[] { "classpath:/localTestDataSource.xml", "classpath*:/ubic/gemma/applicationContext-*.xml",
+                "*-servlet.xml" };
+    }
+
+    /**
+     * Use these locations when overriding the test config locations.
+     * 
+     * @return
+     */
+    private Object getStandardLocations() {
+        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
+        String daoType = db.getString( "dao.type" );
+        String servletContext = db.getString( "servlet.name.0" );
+        return new String[] { "classpath:/ubic/gemma/localDataSource.xml", "classpath*:/ubic/gemma/applicationContext-*.xml",
                 "*-servlet.xml" };
     }
 
@@ -269,6 +287,15 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
+     * Option to override use of the test environment.
+     * 
+     * @param disableTestEnv
+     */
+    public void setDisableTestEnv( boolean testEnvDisabled ) {
+        this.testEnvDisabled = testEnvDisabled;
+    }
+
+    /**
      * @param databaseEntryDao The databaseEntryDao to set.
      */
     public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
@@ -294,5 +321,12 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public void setTaxonDao( TaxonDao taxonDao ) {
         this.taxonDao = taxonDao;
+    }
+
+    /**
+     * @return
+     */
+    public boolean isTestEnvDisabled() {
+        return testEnvDisabled;
     }
 }

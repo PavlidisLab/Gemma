@@ -20,6 +20,10 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import java.util.Collection;
+
+import org.apache.commons.lang.NotImplementedException;
+
 /**
  * @author pavlidis
  * @author keshav
@@ -29,7 +33,7 @@ package ubic.gemma.model.expression.bioAssay;
 public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.BioAssayServiceBase {
 
     /**
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#saveBioAssay(edu.columbia.gemma.expression.bioAssay.BioAssay)
      */
     protected void handleSaveBioAssay( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay )
             throws java.lang.Exception {
@@ -43,15 +47,37 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         return this.getBioAssayDao().loadAll();
     }
 
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findOrCreate(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     */
     @Override
     protected BioAssay handleFindOrCreate( BioAssay bioAssay ) throws Exception {
         return this.getBioAssayDao().findOrCreate( bioAssay );
     }
 
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#remove(edu.columbia.gemma.expression.bioAssay.BioAssay)
+     */
     @Override
     protected void handleRemove( BioAssay bioAssay ) throws Exception {
         this.getBioAssayDao().remove( bioAssay );
 
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#findById(Long)
+     */
+    @Override
+    protected BioAssay handleFindById( Long id ) throws Exception {
+        return this.getBioAssayDao().findById( id );
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
+     */
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        throw new NotImplementedException( "This method has not been implemented" );
     }
 
 }

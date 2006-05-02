@@ -57,52 +57,58 @@ public class BibliographicReferenceTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        buf.append( "<table><tr><td valign=\"top\"><b>Pubmed</B></td><td>&nbsp;</td><td valign=\"top\">" );
-        buf.append( "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?"
-                + "cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids="
-                + bibliographicReference.getPubAccession().getAccession() + "&query_hl=3\">"
-                + bibliographicReference.getPubAccession().getAccession() + "</a>" );
-
-        buf.append( "</td> </tr> <tr><td valign=\"top\"><b>Authors</B></td><td>&nbsp;</td><td valign=\"top\">" );
-        buf.append( bibliographicReference.getAuthorList() );
-
-        buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Year</B></td><td>&nbsp;</td><td valign=\"top\">" );
-        SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
-        buf.append( sdf.format( bibliographicReference.getPublicationDate() ) );
-
-        buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Title</B></td><td>&nbsp;</td><td valign=\"top\">" );
-        buf.append( bibliographicReference.getTitle() );
-
-        buf.append( "</td></tr><tr><td valign=\"top\"><b>Citation</B></td><td>&nbsp;</td><td valign=\"top\">" );
-        buf.append( bibliographicReference.getPublication() + " " );
-
-        if ( bibliographicReference.getVolume() != null ) {
-            buf.append( "<em>" + bibliographicReference.getVolume() + "</em>: " );
-        }
-        buf.append( bibliographicReference.getPages() );
-
-        buf.append( "</td></tr><tr><td valign=\"top\"><b>Abstract</B></td><td>&nbsp;</td><td valign=\"top\">" );
-        if ( bibliographicReference.getAbstractText() != null ) {
-            buf.append( bibliographicReference.getAbstractText() );
-        } else {
-            buf.append( "(No abstract available)" );
+        if ( this.bibliographicReference == null ) {
+            buf.append( "No publication" );
         }
 
-        if ( bibliographicReference.getFullTextPDF() != null ) {
+        else {
 
-            String baseUrl = ConfigUtils.getProperty( "local.userfile.baseurl" );
-            String basePath = ConfigUtils.getProperty( "local.userfile.basepath" );
-            String localUriPath = bibliographicReference.getFullTextPDF().getLocalURI();
-            String relativeUrl = StringUtils.remove( localUriPath, "file:/" + basePath );
-            String absoluteUrl = baseUrl + relativeUrl;
+            buf.append( "<table><tr><td valign=\"top\"><b>Pubmed</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            buf.append( "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?"
+                    + "cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids="
+                    + bibliographicReference.getPubAccession().getAccession() + "&query_hl=3\">"
+                    + bibliographicReference.getPubAccession().getAccession() + "</a>" );
 
-            buf.append( "</td></tr><tr><td valign=\"top\"><b>PDF</B></td><td>&nbsp;</td><td valign=\"top\">" );
-            buf.append( "<a href=\"" + absoluteUrl + "\">" + absoluteUrl + "</a>" );
-            buf.append( "&nbsp;(" + bibliographicReference.getFullTextPDF().getSize() + " bytes)" );
+            buf.append( "</td> </tr> <tr><td valign=\"top\"><b>Authors</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            buf.append( bibliographicReference.getAuthorList() );
+
+            buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Year</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            SimpleDateFormat sdf = new SimpleDateFormat( "yyyy" );
+            buf.append( sdf.format( bibliographicReference.getPublicationDate() ) );
+
+            buf.append( "</td> </tr> <tr> <td valign=\"top\"><b>Title</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            buf.append( bibliographicReference.getTitle() );
+
+            buf.append( "</td></tr><tr><td valign=\"top\"><b>Citation</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            buf.append( bibliographicReference.getPublication() + " " );
+
+            if ( bibliographicReference.getVolume() != null ) {
+                buf.append( "<em>" + bibliographicReference.getVolume() + "</em>: " );
+            }
+            buf.append( bibliographicReference.getPages() );
+
+            buf.append( "</td></tr><tr><td valign=\"top\"><b>Abstract</B></td><td>&nbsp;</td><td valign=\"top\">" );
+            if ( bibliographicReference.getAbstractText() != null ) {
+                buf.append( bibliographicReference.getAbstractText() );
+            } else {
+                buf.append( "(No abstract available)" );
+            }
+
+            if ( bibliographicReference.getFullTextPDF() != null ) {
+
+                String baseUrl = ConfigUtils.getProperty( "local.userfile.baseurl" );
+                String basePath = ConfigUtils.getProperty( "local.userfile.basepath" );
+                String localUriPath = bibliographicReference.getFullTextPDF().getLocalURI();
+                String relativeUrl = StringUtils.remove( localUriPath, "file:/" + basePath );
+                String absoluteUrl = baseUrl + relativeUrl;
+
+                buf.append( "</td></tr><tr><td valign=\"top\"><b>PDF</B></td><td>&nbsp;</td><td valign=\"top\">" );
+                buf.append( "<a href=\"" + absoluteUrl + "\">" + absoluteUrl + "</a>" );
+                buf.append( "&nbsp;(" + bibliographicReference.getFullTextPDF().getSize() + " bytes)" );
+            }
+
+            buf.append( "</td></tr></table>" );
         }
-
-        buf.append( "</td></tr></table>" );
-
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {

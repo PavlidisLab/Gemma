@@ -33,110 +33,93 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentController"
- *              name="/expressionExperiment/*"
- * @spring.property name = "expressionExperimentService"
- *                  ref="expressionExperimentService"
+ * @spring.bean id="expressionExperimentController" name="/expressionExperiment/*"
+ * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  */
 public class ExpressionExperimentController extends BaseMultiActionController {
 
-	private static Log log = LogFactory
-			.getLog(ExpressionExperimentController.class.getName());
+    private static Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
 
-	private ExpressionExperimentService expressionExperimentService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
 
-	/**
-	 * 
-	 * @param expressionExperimentService
-	 */
-	public void setExpressionExperimentService(
-			ExpressionExperimentService expressionExperimentService) {
-		this.expressionExperimentService = expressionExperimentService;
-	}
+    private final String messagePrefix = "Expression experiment with name";
 
-	/**
-	 * @param request
-	 * @param response
-	 * @param errors
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	public ModelAndView show(HttpServletRequest request,
-			HttpServletResponse response) {
-		String name = request.getParameter("name");
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
 
-		if (name == null) {
-			// should be a validation error, on 'submit'.
-			throw new EntityNotFoundException(
-					"Must provide an Expression Experiment name");
-		}
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        String name = request.getParameter( "name" );
 
-		ExpressionExperiment expressionExperiment = expressionExperimentService
-				.findByName(name);
-		if (expressionExperiment == null) {
-			throw new EntityNotFoundException(name + " not found");
-		}
+        if ( name == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( "Must provide an Expression Experiment name" );
+        }
 
-		this.addMessage(request, "expressionExperiment.found",
-				new Object[] { name });
-		request.setAttribute("name", name);
-		return new ModelAndView("expressionExperiment.detail").addObject(
-				"expressionExperiment", expressionExperiment);
-	}
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findByName( name );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( name + " not found" );
+        }
 
-	/**
-	 * @param request
-	 * @param response
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	public ModelAndView showAll(HttpServletRequest request,
-			HttpServletResponse response) {
-		return new ModelAndView("expressionExperiments").addObject(
-				"expressionExperiments", expressionExperimentService.loadAll());
-	}
+        this.addMessage( request, "object.found", new Object[] { messagePrefix, name } );
+        request.setAttribute( "name", name );
+        return new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
+                expressionExperiment );
+    }
 
-	/**
-	 * @param request
-	 * @param response
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	public ModelAndView delete(HttpServletRequest request,
-			HttpServletResponse response) {
-		String name = request.getParameter("name");
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments",
+                expressionExperimentService.loadAll() );
+    }
 
-		if (name == null) {
-			// should be a validation error.
-			throw new EntityNotFoundException("Must provide a name");
-		}
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
+        String name = request.getParameter( "name" );
 
-		ExpressionExperiment expressionExperiment = expressionExperimentService
-				.findByName(name);
-		if (expressionExperiment == null) {
-			throw new EntityNotFoundException(expressionExperiment
-					+ " not found");
-		}
+        if ( name == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( "Must provide a name" );
+        }
 
-		return doDelete(request, expressionExperiment);
-	}
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findByName( name );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( expressionExperiment + " not found" );
+        }
 
-	/**
-	 * 
-	 * @param request
-	 * @param expressionExperiment
-	 * @return
-	 */
-	private ModelAndView doDelete(HttpServletRequest request,
-			ExpressionExperiment expressionExperiment) {
-		expressionExperimentService.delete(expressionExperiment);
-		log.info("Expression Experiment with name: "
-				+ expressionExperiment.getName() + " deleted");
-		addMessage(request, "expressionExperiment.deleted",
-				new Object[] { expressionExperiment.getName() });
-		return new ModelAndView("expressionExperiments",
-				"expressionExperiment", expressionExperiment);
-	}
+        return doDelete( request, expressionExperiment );
+    }
 
+    /**
+     * @param request
+     * @param expressionExperiment
+     * @return
+     */
+    private ModelAndView doDelete( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
+        expressionExperimentService.delete( expressionExperiment );
+        log.info( "Expression Experiment with name: " + expressionExperiment.getName() + " deleted" );
+        addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getName() } );
+        return new ModelAndView( "expressionExperiments", "expressionExperiment", expressionExperiment );
+    }
 }

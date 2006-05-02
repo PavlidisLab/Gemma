@@ -18,6 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,6 +32,9 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -37,106 +45,143 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentFormController"
- *              name="/expressionExperiment/editExpressionExperiment.html"
+ * @spring.bean id="expressionExperimentFormController" name="/expressionExperiment/editExpressionExperiment.html"
  * @spring.property name = "commandName" value="expressionExperiment"
  * @spring.property name = "formView" value="expressionExperiment.edit"
- * @spring.property name = "successView"
- *                  value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
- * @spring.property name = "expressionExperimentService"
- *                  ref="expressionExperimentService"
+ * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
+ * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name = "contactService" ref="contactService"
+ * @spring.property name = "externalDatabaseDao" ref="externalDatabaseDao"
+ * @spring.property name = "validator" ref="expressionExperimentValidator"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
-	private static Log log = LogFactory
-			.getLog(ExpressionExperimentFormController.class.getName());
+    private static Log log = LogFactory.getLog( ExpressionExperimentFormController.class.getName() );
 
-	ExpressionExperimentService expressionExperimentService = null;
+    ExpressionExperimentService expressionExperimentService = null;
+    ContactService contactService = null;
 
-	public ExpressionExperimentFormController() {
-		/*
-		 * if true, reuses the same command object across the
-		 * edit-submit-process (get-post-process).
-		 */
-		setSessionForm(true);
-		setCommandClass(ExpressionExperiment.class);
-	}
+    private final String messagePrefix = "Expression experiment with name";
 
-	/**
-	 * Case = GET: Step 1 - return instance of command class (from database).
-	 * This is not called in the POST case because the sessionForm is set to
-	 * 'true' in the constructor. This means the command object was already
-	 * bound to the session in the GET case.
-	 * 
-	 * @param request
-	 * @return Object
-	 * @throws ServletException
-	 */
-	protected Object formBackingObject(HttpServletRequest request) {
+    private ExternalDatabaseDao externalDatabaseDao = null; // FIXME use service
 
-		String name = RequestUtils.getStringParameter(request, "name", "");
+    public ExpressionExperimentFormController() {
+        /*
+         * if true, reuses the same command object across the edit-submit-process (get-post-process).
+         */
+        setSessionForm( true );
+        setCommandClass( ExpressionExperiment.class );
+    }
 
-		log.debug(name);
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     */
+    protected Object formBackingObject( HttpServletRequest request ) {
 
-		if (!"".equals(name))
-			return expressionExperimentService.findByName(name);
+        String name = RequestUtils.getStringParameter( request, "name", "" );
 
-		return ExpressionExperiment.Factory.newInstance();
-	}
+        ExpressionExperiment ee = null;
 
-	/**
-	 * Case = POST: Step 5 - Used to process the form action (ie. clicking on
-	 * the 'save' button or the 'cancel' button.
-	 * 
-	 * @param request
-	 * @param response
-	 * @param command
-	 * @param errors
-	 * @return ModelAndView
-	 * @throws Exception
-	 */
-	public ModelAndView processFormSubmission(HttpServletRequest request,
-			HttpServletResponse response, Object command, BindException errors)
-			throws Exception {
+        log.debug( name );
 
-		log.debug("entering processFormSubmission");
+        if ( !"".equals( name ) )
+            ee = expressionExperimentService.findByName( name );
 
-		return super.processFormSubmission(request, response, command, errors);
-	}
+        else
+            ee = ExpressionExperiment.Factory.newInstance();
 
-	/**
-	 * Case = POST: Step 5 - Custom logic is here. For instance, this is where
-	 * you would actually save or delete the object.
-	 * 
-	 * @param request
-	 * @param response
-	 * @param command
-	 * @param errors
-	 * @return ModelAndView
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unused")
-	public ModelAndView onSubmit(HttpServletRequest request,
-			HttpServletResponse response, Object command, BindException errors)
-			throws Exception {
+        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ee.getName() }, request
+                .getLocale() ) );
 
-		log.debug("entering onSubmit");
+        return ee;
+    }
 
-		ExpressionExperiment ee = (ExpressionExperiment) command;
-		expressionExperimentService.update(ee);
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
 
-		saveMessage(request, getText("expressionExperiment.saved",
-				new Object[] { ee.getName() }, request.getLocale()));
+        log.debug( "entering processFormSubmission" );
 
-		return new ModelAndView(getSuccessView());
-	}
+        String accession = request.getParameter( "expressionExperiment.accession.accession" );
 
-	/**
-	 * 
-	 * @param expressionExperimentService
-	 */
-	public void setExpressionExperimentService(
-			ExpressionExperimentService expressionExperimentService) {
-		this.expressionExperimentService = expressionExperimentService;
-	}
+        if ( accession == null ) {
+            // do nothing
+        } else {
+            /* database entry */
+            ( ( ExpressionExperiment ) command ).getAccession().setAccession( accession );
+
+            /* external database */
+            ExternalDatabase ed = ( ( ( ExpressionExperiment ) command ).getAccession().getExternalDatabase() );
+            ed = externalDatabaseDao.findOrCreate( ed );
+            ( ( ExpressionExperiment ) command ).getAccession().setExternalDatabase( ed );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
+
+        log.debug( "entering onSubmit" );
+
+        ExpressionExperiment ee = ( ExpressionExperiment ) command;
+
+        expressionExperimentService.update( ee );
+
+        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ee.getName() }, request
+                .getLocale() ) );
+
+        return new ModelAndView( getSuccessView() );
+    }
+
+    /**
+     * @param request
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    protected Map referenceData( HttpServletRequest request ) {
+        Collection<ExternalDatabase> edCol = externalDatabaseDao.loadAll();
+        Map edMap = new HashMap();
+        edMap.put( "externalDatabases", edCol );// FIXME - parameterize the map
+        return edMap;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param contactService
+     */
+    public void setContactService( ContactService contactService ) {
+        this.contactService = contactService;
+    }
+
+    /**
+     * @param externalDatabaseDao
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
+    }
 
 }

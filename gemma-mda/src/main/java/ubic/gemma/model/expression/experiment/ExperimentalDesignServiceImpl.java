@@ -22,11 +22,11 @@ package ubic.gemma.model.expression.experiment;
 
 /**
  * @author pavlidis
+ * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService
  */
-public class ExperimentalDesignServiceImpl extends
-        ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase {
+public class ExperimentalDesignServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase {
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalDesignService#getExperimentalDesigns()
@@ -44,5 +44,15 @@ public class ExperimentalDesignServiceImpl extends
     @Override
     protected ExperimentalDesign handleCreate( ExperimentalDesign experimentalDesign ) throws Exception {
         return ( ExperimentalDesign ) this.getExperimentalDesignDao().create( experimentalDesign );
+    }
+
+    @Override
+    protected ExperimentalDesign handleFindByName( String name ) throws Exception {
+        return this.getExperimentalDesignDao().findByName( name );
+    }
+
+    @Override
+    protected ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign ) throws Exception {
+        return this.getExperimentalDesignDao().findOrCreate( experimentalDesign );
     }
 }
