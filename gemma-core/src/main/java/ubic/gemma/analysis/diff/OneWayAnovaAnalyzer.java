@@ -53,6 +53,7 @@ public class OneWayAnovaAnalyzer extends RCommander{
      * @return Hashtable<String, Double> table of the probe ids of the genes with p values
      */
     protected Hashtable<String, Double> getSignificantGenes(String fileName){
+        log.info("Calculating  p values of the genes. (It takes long time.)");
         Hashtable<String, Double> pValuesTable = getPValuesOfGenes(fileName);   
         log.info(pValuesTable.size() + " p values have been calculated.");
         DoubleArrayList list = new DoubleArrayList();
