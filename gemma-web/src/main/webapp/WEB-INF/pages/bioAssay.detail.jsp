@@ -42,7 +42,7 @@
             <fmt:message key="bioAssay.bioMaterials" />
         </h3>
         <display:table name="bioAssay.samplesUsed" class="list" requestURI="" id="bioMaterialList"
-        export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.bioassay.BioAssayWrapper">
+        export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.bioAssay.BioAssayWrapper">
             <display:column property="name" maxWords="20" />
             <display:column property="description" maxWords="100" />
             <display:column property="id" sortable="true" href="/Gemma/bioMaterial/showBioMaterial.html" paramId="id" paramProperty="id"/>
