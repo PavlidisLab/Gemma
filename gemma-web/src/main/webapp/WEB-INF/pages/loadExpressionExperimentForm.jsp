@@ -2,7 +2,7 @@
 
 <title><fmt:message key="expressionExperimentLoad.title" /></title>
 <content tag="heading">
-<fmt:message key="expressionExperimentLoad.title" />
+<fmt:message key="expressionExperiment.load.title" />
 </content>
 
 <jsp:useBean id="command" scope="request"
@@ -30,7 +30,7 @@
     <table class="detail">
         <tr>
             <th>
-                <Gemma:label key="expressionExperiment.accession" />
+                <Gemma:label key="databaseEntry.accession.title" />
             </th>
             <td>
                 <spring:bind path="command.accession">
@@ -42,7 +42,7 @@
         </tr>
         <tr>
             <th>
-                <Gemma:label key="expressionExperiment.loadPlatformOnly" />
+                <Gemma:label key="expressionExperiment.load.platformOnly" />
             </th>
             <td align="left">
                 <spring:bind path="command.loadPlatformOnly">

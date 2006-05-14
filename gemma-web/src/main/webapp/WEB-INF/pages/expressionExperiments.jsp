@@ -14,9 +14,9 @@
         <display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList"
             export="true" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			
-			<display:column property="id" title="Internal Id" sortable="true" maxWords="20" />
+			<display:column property="idLink" title="Internal Id" sortable="true" maxWords="20" />
 			
-			<display:column property="nameLink" sortable="true" titleKey="expressionExperiment.name" />
+			<display:column property="name" sortable="true" titleKey="expressionExperiment.name" />
 			  
 			<display:column property="createDate" sortable="true" titleKey="auditTrail.date" />
 			            

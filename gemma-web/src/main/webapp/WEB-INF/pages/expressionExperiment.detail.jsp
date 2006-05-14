@@ -72,7 +72,8 @@
         </h3>
         <display:table name="expressionExperiment.experimentalDesigns" class="list" requestURI="" id="experimentalDesignList"
             export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
+            <display:column property="id" sortable="true" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="id" paramProperty="id"/>
+            <display:column property="name" sortable="true" maxWords="20" />
             <display:column property="description" sortable="true" maxWords="100"  />
             <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="expressionExperiment.factors"  />
             <display:setProperty name="basic.empty.showtable" value="false" />
