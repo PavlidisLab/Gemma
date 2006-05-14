@@ -60,20 +60,20 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        String name = request.getParameter( "name" );
+        Long id = Long.parseLong(request.getParameter( "id" ));
 
-        if ( name == null ) {
+        if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Expression Experiment name" );
+            throw new EntityNotFoundException( "Must provide an Expression Experiment id" );
         }
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findByName( name );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
         if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( name + " not found" );
+            throw new EntityNotFoundException( id + " not found" );
         }
 
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, name } );
-        request.setAttribute( "name", name );
+        this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
+        request.setAttribute( "name", id );
         return new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
     }

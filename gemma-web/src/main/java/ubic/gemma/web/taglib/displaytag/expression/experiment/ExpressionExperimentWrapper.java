@@ -113,10 +113,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     /**
      * @return
      */
-    public String getNameLink() {
+    public String getIdLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getExperimentalDesigns() != null ) {
-            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">" + object.getName()
+            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getId()
                     + "</a>";
         }
         return "No design";

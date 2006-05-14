@@ -54,6 +54,11 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
+    protected ExpressionExperiment handleFindById( Long id ) throws Exception {
+        return this.getExpressionExperimentDao().findById( id );
+    }
+
+    @Override
     protected ExpressionExperiment handleFindOrCreate( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().findOrCreate( expressionExperiment );
     }
