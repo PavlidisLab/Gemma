@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -42,6 +44,11 @@ public class ExternalDatabaseServiceImpl extends ubic.gemma.model.common.descrip
     protected void handleRemove( ExternalDatabase externalDatabase ) throws Exception {
         this.getExternalDatabaseDao().remove( externalDatabase );
 
+    }
+
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getExternalDatabaseDao().loadAll();
     }
 
 }
