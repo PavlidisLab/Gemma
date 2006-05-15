@@ -46,6 +46,9 @@
 -->
 <!-- ==================================================== -->
 <bean name="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
+	<property name="flushMode">
+		<value>2</value>
+    </property>
     <property name="sessionFactory">
         <ref bean="sessionFactory" />
     </property>
