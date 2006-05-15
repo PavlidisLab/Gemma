@@ -35,7 +35,6 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -51,7 +50,7 @@ import ubic.gemma.web.validation.expression.bioAssay.BioAssayValidator;
  * @spring.property name = "commandName" value="bioAssayImpl"
  * @spring.property name = "formView" value="bioAssay.edit"
  * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
- * @spring.property name = "bioAssayDao" ref="bioAssayDao"
+ * @spring.property name = "bioAssayService" ref="bioAssayService"
  * @spring.property name = "externalDatabaseDao" ref="externalDatabaseDao"
  * @spring.property name = "validator" ref="bioAssayValidator"
  */
@@ -62,9 +61,14 @@ public class BioAssayFormController extends BaseFormController {
 
     BioAssayService bioAssayService = null;
 
-    BioAssayDao bioAssayDao = null;
+    ExternalDatabaseDao externalDatabaseDao = null; // FIXME Use Service. Methods have been put in model for
 
-    ExternalDatabaseDao externalDatabaseDao = null; // FIXME use service
+    // service
+    // but when I use them I get NonUniqueObjectException. This seems to be documented here:
+    // http://saloon.javaranch.com/cgi-bin/ubb/ultimatebb.cgi?ubb=get_topic&f=78&t=000475.
+    // It works if you call the dao layer directly from your controller (I know we are not supposed to do this, but it
+    // works).
+    // Will fix this later.
 
     BioAssayValidator bioAssayValidator = null;
 
@@ -94,7 +98,7 @@ public class BioAssayFormController extends BaseFormController {
         Long id = Long.parseLong( id_param );
 
         if ( !id.equals( null ) )
-            ba = bioAssayDao.findById( id ); // FIXME - use service (again, limiting model edits at this time)
+            ba = bioAssayService.findById( id ); 
         else
             ba = BioAssay.Factory.newInstance();
 
@@ -162,20 +166,11 @@ public class BioAssayFormController extends BaseFormController {
         log.debug( "entering onSubmit" );
 
         BioAssay ba = ( BioAssay ) command;
-        bioAssayDao.update( ba ); // FIXME - Use the service. I have used the dao here because I am limiting changes
-        // to the model. Don't forget to change it in the xdoclet tags. Once you do this, you will not have not
-        // have to set FLUSH_MODE=2 in OpenSessionInViewInterceptor(in action-servlet.xml).
+        bioAssayService.update( ba ); 
 
         saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ba.getId() }, request.getLocale() ) );
 
         return new ModelAndView( getSuccessView() );
-    }
-
-    /**
-     * @param bioAssayDao
-     */
-    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
-        this.bioAssayDao = bioAssayDao;
     }
 
     /**
@@ -192,6 +187,9 @@ public class BioAssayFormController extends BaseFormController {
         this.bioAssayValidator = bioAssayValidator;
     }
 
+    /**
+     * @param externalDatabaseDao
+     */
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
     }
