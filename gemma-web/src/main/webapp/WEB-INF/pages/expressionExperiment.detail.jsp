@@ -75,7 +75,7 @@
             <display:column property="id" sortable="true" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="id" paramProperty="id"/>
             <display:column property="name" sortable="true" maxWords="20" />
             <display:column property="description" sortable="true" maxWords="100"  />
-            <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="expressionExperiment.factors"  />
+            <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="experimentalFactors.title"  />
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
 		
@@ -158,7 +158,7 @@
         <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
             <td COLSPAN="2">    
             <div align="left"><input type="button"
-            onclick="location.href='editExpressionExperiment.html?name=<%=request.getAttribute("name")%>'"
+            onclick="location.href='editExpressionExperiment.html?id=<%=request.getAttribute("id")%>'"
             value="Edit"></div>
             </td>
         </authz:acl>

@@ -86,7 +86,7 @@
         </table>
 
         <h3>
-            Experimental Factors (factors)
+            <fmt:message key="experimentalFactors.title" />
         </h3>
         <display:table name="experimentalDesign.experimentalFactors" class="list" requestURI="" id="experimentalFactorList"
         export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExperimentalDesignWrapper">
@@ -115,7 +115,7 @@
         <authz:acl domainObject="${experimentalDesign}" hasPermission="1,6">
             <td COLSPAN="2">    
             <div align="left"><input type="button"
-            onclick="location.href='editExpressionExperiment.html?name=<%=request.getAttribute("name")%>'"
+            onclick="location.href='editExperimentalDesign.html?id=<%=request.getAttribute("id")%>'"
             value="Edit"></div>
             </td>
         </authz:acl>
