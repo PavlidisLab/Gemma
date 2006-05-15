@@ -35,9 +35,12 @@ import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -65,6 +68,41 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
+    }
+
+    /**
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection getCompositeSequences() {
+        Collection<CompositeSequence> csCol = new HashSet();
+        for ( int i = 0; i < testNumCollectionElements; i++ ) {
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( "Composite Sequence " + i );
+            csCol.add( cs );
+        }
+        return csCol;
+    }
+
+    /**
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection getArrayDesignsUsed() {
+        Collection<ArrayDesign> adCol = new HashSet();
+        ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        for ( int i = 0; i < testNumCollectionElements; i++ ) {
+            ArrayDesign ad = ArrayDesign.Factory.newInstance();
+            ad.setName( "Array Design " + i );
+            ad.setDescription( i + ": A test array design." );
+            ad.setAdvertisedNumberOfDesignElements( i + 100 );
+            ad.setCompositeSequences( getCompositeSequences() );
+            
+            ad = adService.findOrCreate(ad);
+            
+            adCol.add( ad );
+        }
+        return adCol;
     }
 
     /**
@@ -118,6 +156,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
             ba.setName( "Bioassay " + i );
             ba.setDescription( i + ": A test bioassay." );
             ba.setSamplesUsed( getBioMaterials() );
+            ba.setArrayDesignsUsed( getArrayDesignsUsed() );
 
             if ( i < ( testNumCollectionElements - 5 ) ) {
                 ExternalDatabaseService eds = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
@@ -259,7 +298,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
         setFlushModeCommit();
 
         /* uncomment to use prod environment instead of test environment */
-        //this.setDisableTestEnv( true );
+        // this.setDisableTestEnv( true );
         onSetUpInTransaction();
 
         setExpressionExperimentDependencies();
