@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
-import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
@@ -60,9 +59,16 @@ public class ExpressionExperimentFormController extends BaseFormController {
     ExpressionExperimentService expressionExperimentService = null;
     ContactService contactService = null;
 
-    private final String messagePrefix = "Expression experiment with name";
+    private final String messagePrefix = "Expression experiment with id";
 
-    private ExternalDatabaseDao externalDatabaseDao = null; // FIXME use service
+    private ExternalDatabaseDao externalDatabaseDao = null; // FIXME Use Service. Methods have been put in model for
+
+    // service
+    // but when I use them I get NonUniqueObjectException. This seems to be documented here:
+    // http://saloon.javaranch.com/cgi-bin/ubb/ultimatebb.cgi?ubb=get_topic&f=78&t=000475.
+    // It works if you call the dao layer directly from your controller (I know we are not supposed to do this, but it
+    // works).
+    // Will fix this later.
 
     public ExpressionExperimentFormController() {
         /*
@@ -79,19 +85,19 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        String name = RequestUtils.getStringParameter( request, "name", "" );
+        Long id = Long.parseLong( request.getParameter( "id" ) );
 
         ExpressionExperiment ee = null;
 
-        log.debug( name );
+        log.debug( id );
 
-        if ( !"".equals( name ) )
-            ee = expressionExperimentService.findByName( name );
+        if ( !"".equals( id ) )
+            ee = expressionExperimentService.findById( id );
 
         else
             ee = ExpressionExperiment.Factory.newInstance();
 
-        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ee.getName() }, request
+        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ee.getId() }, request
                 .getLocale() ) );
 
         return ee;
@@ -145,8 +151,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         expressionExperimentService.update( ee );
 
-        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ee.getName() }, request
-                .getLocale() ) );
+        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ee.getId() }, request.getLocale() ) );
 
         return new ModelAndView( getSuccessView() );
     }
@@ -183,5 +188,4 @@ public class ExpressionExperimentFormController extends BaseFormController {
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;
     }
-
 }

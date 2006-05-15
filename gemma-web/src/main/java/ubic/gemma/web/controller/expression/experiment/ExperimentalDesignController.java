@@ -46,7 +46,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
 	private ExperimentalDesignService experimentalDesignService = null;
     
-    private final String messagePrefix = "ExperimenalDesign with name ";
+    private final String messagePrefix = "ExperimenalDesign with id ";
 
 	/**
      * 
@@ -65,20 +65,20 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 	 */
 	@SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        String name = request.getParameter( "name" );
+        Long id = Long.parseLong(request.getParameter( "id" ));
 
-        if ( name == null ) {
+        if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Experimental Design name" );
+            throw new EntityNotFoundException( "Must provide a valid Experimental Design id" );
         }
 
-        ExperimentalDesign experimentalDesign = experimentalDesignService.findByName( name );
+        ExperimentalDesign experimentalDesign = experimentalDesignService.findById( id );
         if ( experimentalDesign == null ) {
-            throw new EntityNotFoundException( name + " not found" );
+            throw new EntityNotFoundException( id + " not found" );
         }
 
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, name } );
-        request.setAttribute( "name", name );
+        this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
+        request.setAttribute( "id", id );
         return new ModelAndView( "experimentalDesign.detail" ).addObject( "experimentalDesign", experimentalDesign );
     }
 	/**

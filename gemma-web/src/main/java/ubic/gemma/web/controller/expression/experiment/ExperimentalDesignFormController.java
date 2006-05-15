@@ -18,6 +18,14 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.validation.BindException;
+import org.springframework.web.servlet.ModelAndView;
+
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -27,15 +35,92 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="experimentalDesignFormController" name="/expressionExperiment/editExperimentalDesign.html"
+ * @spring.bean id="experimentalDesignFormController" name="/experimentalDesign/editExperimentalDesign.html"
  * @spring.property name = "commandName" value="experimentalDesign"
  * @spring.property name = "formView" value="experimentalDesign.edit"
- * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExperimentalDesigns.html"
+ * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
  * @spring.property name = "experimentalDesignService" ref="experimentalDesignService"
  */
 public class ExperimentalDesignFormController extends BaseFormController {
     private ExperimentalDesignService experimentalDesignService = null;
+    private final String messagePrefix = "ExperimentalDesign with id";
+    
+    /**
+     * 
+     *
+     */
+    public ExperimentalDesignFormController() {
+        /*
+         * if true, reuses the same command object across the edit-submit-process (get-post-process).
+         */
+        setSessionForm( true );
+        setCommandClass( ExperimentalDesign.class );
+    }
+    
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     */
+    protected Object formBackingObject( HttpServletRequest request ) {
 
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+
+        ExperimentalDesign ed = null;
+
+        log.debug( id );
+
+        if ( !"".equals( id ) )
+            ed = experimentalDesignService.findById( id );
+
+        else
+            ed = ExperimentalDesign.Factory.newInstance();
+
+        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ed.getId() }, request
+                .getLocale() ) );
+
+        return ed;
+    }
+    
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        log.debug( "entering processFormSubmission" );
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+    
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
+
+        log.debug( "entering onSubmit" );
+
+        ExperimentalDesign ed = ( ExperimentalDesign ) command;
+
+        experimentalDesignService.update( ed );
+
+        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ed.getId() }, request.getLocale() ) );
+
+        return new ModelAndView( getSuccessView() );
+    }
+    
     /**
      * @return
      */
@@ -49,5 +134,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
     public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
         this.experimentalDesignService = experimentalDesignService;
     }
+
+    
 
 }

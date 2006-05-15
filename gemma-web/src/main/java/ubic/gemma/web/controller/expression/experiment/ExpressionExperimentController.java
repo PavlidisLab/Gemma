@@ -43,7 +43,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 
     private ExpressionExperimentService expressionExperimentService = null;
 
-    private final String messagePrefix = "Expression experiment with name";
+    private final String messagePrefix = "Expression experiment with id";
 
     /**
      * @param expressionExperimentService
@@ -73,7 +73,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
         }
 
         this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
-        request.setAttribute( "name", id );
+        request.setAttribute( "id", id );
         return new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
     }
