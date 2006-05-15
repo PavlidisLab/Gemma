@@ -38,10 +38,10 @@
                 </td>
                 <td>
                     <%
-if ( arrayDesign.getdesignProvider() != null ) {
+						if ( arrayDesign.getDesignProvider() != null ) {
 
-                %>
-                    <%=arrayDesign.getdesignProvider().getName()%>
+                	%>
+                    <%=arrayDesign.getDesignProvider().getName()%>
                     <%} else {%>
                     (Not listed)
                     <%}%>
@@ -61,9 +61,9 @@ if ( arrayDesign.getdesignProvider() != null ) {
                 </td>
                 <td>
                     <%
-if ( arrayDesign.getdescription() != null && arrayDesign.getdescription().length() > 0 ) {
+						if ( arrayDesign.getDescription() != null && arrayDesign.getDescription().length() > 0 ) {
 
-            %>
+            		%>
                     <jsp:getProperty name="arrayDesign" property="description" />
                     <%} else {%>
                     (None provided)
