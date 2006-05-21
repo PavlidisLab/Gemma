@@ -37,15 +37,15 @@ public class BioMaterialWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-    /**
-     * @return String
-     */
-    public String getFactorValuesLink() {
-        BioMaterial object = ( BioMaterial ) getCurrentRowObject();
-        if ( object.getTreatments() != null ) {
-            return "<a href=\"/Gemma/biomaterial/showBioMaterial.html?id=" + object.getId() + "\">"
-                    + object.getTreatments().size() + "</a>";
-        }
-        return "No treatments";
-    }
+//    /**
+//     * @return String
+//     */
+//    public String getTreatmentsLink() {
+//        BioMaterial object = ( BioMaterial ) getCurrentRowObject();
+//        if ( object.getTreatments() != null ) {
+//            return "<a href=\"/Gemma/biomaterial/showBioMaterial.html?id=" + object.getId() + "\">"
+//                    + object.getTreatments().size() + "</a>";
+//        }
+//        return "No treatments";
+//    }
 }

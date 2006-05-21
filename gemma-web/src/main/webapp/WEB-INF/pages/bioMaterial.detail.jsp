@@ -37,6 +37,7 @@
                     }%>
                 </td>
             </tr>
+                 
          </table>  
         <h3>
             <fmt:message key="treatments.title" />
@@ -59,6 +60,13 @@
             <display:column property="value" maxWords="100" />
         </display:table>
 		
+		<h3>
+            <fmt:message key="taxon.title" />
+        </h3>
+        <Gemma:taxon
+            taxon="<%=bioMaterial.getSourceTaxon()%>" />
+        <br />
+        		
 		<h3>
             <fmt:message key="databaseEntry.title" />
         </h3>

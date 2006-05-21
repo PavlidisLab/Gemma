@@ -26,7 +26,7 @@
 
             <display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
             
-            <display:column property="taxon" sortable="true" titleKey="expressionExperiment.taxon" />
+            <display:column property="taxon" sortable="true" titleKey="taxon.title" />
   
             <display:setProperty name="basic.empty.showtable" value="true" />      
         </display:table>
