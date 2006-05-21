@@ -5,7 +5,7 @@
 <html>
     <body>
         <h2>
-            <fmt:message key="bioMaterial.title" />
+            <fmt:message key="bioMaterial.details" />
         </h2>
         <table width="100%" cellspacing="10">
             <tr>
