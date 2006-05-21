@@ -40,6 +40,7 @@ public class ExperimentalFactorController extends BaseMultiActionController {
     private ExperimentalFactorService experimentalFactorService = null;
 
     private final String messagePrefix = "Experimenal factor with id ";
+    private final String identifierNotFound = "Must provide a valid ExperimentalFactor identifier";
 
     /**
      * @param experimentalFactorService
@@ -52,7 +53,7 @@ public class ExperimentalFactorController extends BaseMultiActionController {
      * @param request
      * @param response
      * @param errors
-     * @return
+     * @return ModelAndView
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
@@ -61,7 +62,7 @@ public class ExperimentalFactorController extends BaseMultiActionController {
 
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Experimental Factor name" );
+            throw new EntityNotFoundException( identifierNotFound );
         }
 
         ExperimentalFactor experimentalFactor = experimentalFactorService.findById( id );
@@ -70,7 +71,7 @@ public class ExperimentalFactorController extends BaseMultiActionController {
         }
 
         this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
-        request.setAttribute( "name", id );
+        request.setAttribute( "id", id );
         return new ModelAndView( "experimentalFactor.detail" ).addObject( "experimentalFactor", experimentalFactor );
     }
 

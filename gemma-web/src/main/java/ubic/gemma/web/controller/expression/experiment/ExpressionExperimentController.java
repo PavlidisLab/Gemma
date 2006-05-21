@@ -44,6 +44,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     private ExpressionExperimentService expressionExperimentService = null;
 
     private final String messagePrefix = "Expression experiment with id";
+    private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
     /**
      * @param expressionExperimentService
@@ -56,15 +57,15 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      * @param request
      * @param response
      * @param errors
-     * @return
+     * @return ModelAndView
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong(request.getParameter( "id" ));
+        Long id = Long.parseLong( request.getParameter( "id" ) );
 
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Expression Experiment id" );
+            throw new EntityNotFoundException( identifierNotFound );
         }
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
@@ -81,7 +82,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     /**
      * @param request
      * @param response
-     * @return
+     * @return ModelAndView
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
@@ -92,18 +93,18 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     /**
      * @param request
      * @param response
-     * @return
+     * @return ModelAndView
      */
     @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        String name = request.getParameter( "name" );
+        Long id = Long.parseLong( request.getParameter( "id" ) );
 
-        if ( name == null ) {
+        if ( id == null ) {
             // should be a validation error.
-            throw new EntityNotFoundException( "Must provide a name" );
+            throw new EntityNotFoundException( identifierNotFound );
         }
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findByName( name );
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }
@@ -114,12 +115,11 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     /**
      * @param request
      * @param expressionExperiment
-     * @return
+     * @return ModelAndView
      */
     private ModelAndView doDelete( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
         expressionExperimentService.delete( expressionExperiment );
-        log.info( "Expression Experiment with name: " + expressionExperiment.getName() + " deleted" );
-        addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getName() } );
+        addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getId() } );
         return new ModelAndView( "expressionExperiments", "expressionExperiment", expressionExperiment );
     }
 }

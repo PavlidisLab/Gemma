@@ -47,6 +47,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 	private ExperimentalDesignService experimentalDesignService = null;
     
     private final String messagePrefix = "ExperimenalDesign with id ";
+    private final String identifierNotFound = "Must provide a valid ExperimentalDesign identifier";
 
 	/**
      * 
@@ -61,7 +62,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 	 * @param request
 	 * @param response
 	 * @param errors
-	 * @return
+	 * @return ModelAndView
 	 */
 	@SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
@@ -69,7 +70,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
 
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide a valid Experimental Design id" );
+            throw new EntityNotFoundException( identifierNotFound );
         }
 
         ExperimentalDesign experimentalDesign = experimentalDesignService.findById( id );

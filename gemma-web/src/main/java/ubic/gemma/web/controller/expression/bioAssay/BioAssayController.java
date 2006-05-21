@@ -44,6 +44,7 @@ public class BioAssayController extends BaseMultiActionController {
     private BioAssayService bioAssayService = null;
 
     private final String messagePrefix = "BioAssay with id ";
+    private final String identifierNotFound = "Must provide a valid BioAssay identifier";
 
     /**
      * @param bioAssayService
@@ -56,7 +57,7 @@ public class BioAssayController extends BaseMultiActionController {
      * @param request
      * @param response
      * @param errors
-     * @return
+     * @return ModelAndView
      */
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
@@ -67,7 +68,7 @@ public class BioAssayController extends BaseMultiActionController {
 
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Experimental Design name" );
+            throw new EntityNotFoundException( identifierNotFound );
         }
 
         BioAssay bioAssay = bioAssayService.findById( id );
@@ -76,14 +77,14 @@ public class BioAssayController extends BaseMultiActionController {
         }
 
         this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
-        request.setAttribute( "name", id );
+        request.setAttribute( "id", id );
         return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", bioAssay );
     }
 
     /**
      * @param request
      * @param response
-     * @return
+     * @return ModelAndView
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
@@ -95,7 +96,7 @@ public class BioAssayController extends BaseMultiActionController {
      * 
      * @param request
      * @param response
-     * @return
+     * @return ModelAndView
      */
     // @SuppressWarnings("unused")
     // public ModelAndView delete(HttpServletRequest request,
@@ -121,7 +122,7 @@ public class BioAssayController extends BaseMultiActionController {
      * 
      * @param request
      * @param bioAssay
-     * @return
+     * @return ModelAndView
      */
     // private ModelAndView doDelete(HttpServletRequest request,
     // BioAssay bioAssay) {
