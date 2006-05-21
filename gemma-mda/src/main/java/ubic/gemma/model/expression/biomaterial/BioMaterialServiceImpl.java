@@ -21,6 +21,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -53,15 +54,37 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         this.getBioMaterialDao().create( bioMaterial );
     }
 
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrCreate(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
     @Override
     protected BioMaterial handleFindOrCreate( BioMaterial bioMaterial ) throws Exception {
         return this.getBioMaterialDao().findOrCreate( bioMaterial );
     }
 
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
     @Override
     protected void handleRemove( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().remove( bioMaterial );
-        
+
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrId(java.lang.Long)
+     */
+    @Override
+    protected BioMaterial handleFindById( Long id ) throws Exception {
+        return this.getBioMaterialDao().findById( id );
+    }
+    
+    /**
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
+     */
+    @Override
+    protected Collection handleLoadAll() throws Exception {
+        return this.getBioMaterialDao().loadAll();
     }
 
 }
