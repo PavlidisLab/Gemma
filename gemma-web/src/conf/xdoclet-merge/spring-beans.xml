@@ -152,6 +152,16 @@
     </property>
 </bean>
 
+<bean id="bioMaterialActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
+    <property name="mappings">
+        <props>
+            <prop key="/bioMaterial/showAllBioMaterials.html">showAll</prop>
+            <!--  <prop key="/bioMaterial/deleteBioMaterial.html">delete</prop> -->
+            <prop key="/bioMaterial/showBioMaterial.html">show</prop>
+        </props>
+    </property>
+</bean>
+
 <bean id="experimentalFactorActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
     <property name="mappings">
         <props>
