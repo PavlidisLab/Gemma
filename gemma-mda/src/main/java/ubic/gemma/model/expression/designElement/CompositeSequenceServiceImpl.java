@@ -77,4 +77,13 @@ public class CompositeSequenceServiceImpl extends
         return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(java.lang.String)
+     */
+    @Override
+    protected CompositeSequence handleFindByName( String name ) throws Exception {
+        return this.getCompositeSequenceDao().findByName( name );
+    }
 }
