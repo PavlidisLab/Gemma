@@ -34,11 +34,11 @@ public class ExpressionExperimentSearchCommand implements Serializable {
 
     private String searchCriteria = null;
 
-    private ExpressionExperiment expressionExperiment = null;
-
     private String name = null;
 
     private String description = null;
+
+    private Long id = null;
 
     private String searchString = null;
 
@@ -59,13 +59,6 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     }
 
     /**
-     * @return ExpressionExperiment
-     */
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    /**
      * @return String
      */
     public String getSearchString() {
@@ -77,13 +70,6 @@ public class ExpressionExperimentSearchCommand implements Serializable {
      */
     public void setSearchString( String searchString ) {
         this.searchString = searchString;
-    }
-
-    /**
-     * @param expressionExperiment
-     */
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
     }
 
     /**
@@ -140,5 +126,13 @@ public class ExpressionExperimentSearchCommand implements Serializable {
      */
     public void setName( String name ) {
         this.name = name;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 }

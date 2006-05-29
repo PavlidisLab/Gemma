@@ -54,6 +54,7 @@
             </tr>
 		</table>
 		<hr/>
+		
 		<table>		
         <tr>
             <td valign="top">
@@ -87,14 +88,15 @@
 	        			<c:if test="${status.value}">checked="checked"</c:if>
 	        	<span class="fieldError">${status.errorMessage}</span>		
 	        	</spring:bind>
-	    	</td>
-   	                       	
+	    	</td>                   	
         </tr>
         
         <tr>
            <td valign="top">
         		<b>
         			<fmt:message key="label.searchString" />
+        			<br/>
+        			(comma sep.)      	
             	</b>
         	</td>
         	<td>

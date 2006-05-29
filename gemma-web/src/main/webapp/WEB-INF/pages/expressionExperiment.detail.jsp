@@ -143,6 +143,13 @@
         </h3>
         <Gemma:auditTrail
             auditTrail="<%=expressionExperiment.getAuditTrail()%>" />
+        
+        <%--  
+        <a href="<c:url value="/expressionExperiment/searchExpressionExperiment.html?id="<%=request.getAttribute("id")%>"/>">
+            <fmt:message key="menu.searchExpressionExperiment" />
+        </a>
+        --%>
+        
         <br />
 
         <hr />
@@ -150,11 +157,18 @@
         
     <table>
     <tr>
-    <td COLSPAN="2">    
+    		<td COLSPAN="2">    
             <div align="left"><input type="button"
             onclick="location.href='showAllExpressionExperiments.html'"
             value="Back"></div>
             </td>
+            
+            <td COLSPAN="2">  
+            <div align="left"><input type="button"
+            onclick="location.href='searchExpressionExperiment.html?id=<%=request.getAttribute("id")%>'"
+            value="Visual"></div>
+            </td>
+            
         <authz:acl domainObject="${expressionExperiment}" hasPermission="1,6">
             <td COLSPAN="2">    
             <div align="left"><input type="button"
@@ -162,6 +176,7 @@
             value="Edit"></div>
             </td>
         </authz:acl>
+        
     </tr>
     </table>
     </body>

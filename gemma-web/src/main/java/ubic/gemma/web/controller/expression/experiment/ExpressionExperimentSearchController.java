@@ -29,10 +29,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -51,12 +53,13 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "successView"
  *                  value="redirect:/expressionExperiment/showExpressionExperimentSearchResults.html"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  */
 public class ExpressionExperimentSearchController extends BaseFormController {// TODO put in validator
     private static Log log = LogFactory.getLog( ExpressionExperimentSearchController.class.getName() );
 
     ExpressionExperimentService expressionExperimentService = null;
-    ContactService contactService = null;
+    CompositeSequenceService compositeSequenceService = null;
 
     // private final String messagePrefix = "Expression experiment with id";
 
@@ -87,13 +90,13 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         else
             ee = ExpressionExperiment.Factory.newInstance();
 
-        eecc.setExpressionExperiment( ee );
+        eecc.setId( ee.getId() );
         eecc.setDescription( ee.getDescription() );
         eecc.setName( ee.getName() );
-        eecc.setSearchString( "NAT1" );
+        eecc.setSearchString( "36936_at" );
         eecc.setStringency( 1 );
 
-        request.setAttribute( "command", eecc );// must manually put the object back in the request scope.
+        request.setAttribute( "command", eecc );// must manually put the command object back in the request scope.
         return eecc;
 
     }
@@ -122,14 +125,37 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings("unchecked")
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
         log.debug( "entering onSubmit" );
 
-        // saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ee.getId() },
-        // request.getLocale() ) );
+        Long id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
+        String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
+        String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
+        String[] searchIds = StringUtils.split( searchString, "," );
+
+        if ( searchIds == null ) {
+            searchIds = new String[1];
+            searchIds[0] = searchString;
+        }
+
+        Collection<DesignElement> designElements = new HashSet();
+        for ( int i = 0; i < searchIds.length; i++ ) {
+            searchIds[i] = StringUtils.trimLeadingWhitespace( searchIds[i] );
+            log.debug( searchIds[i] );
+            designElements.add( compositeSequenceService.findByName( searchIds[i] ) );
+        }
+
+        if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
+            ExpressionExperiment ee = expressionExperimentService.findById( id );
+            // MatrixVisualizationData mVisualizationData = new
+            // MatrixVisualizationData(designElements, ee);
+        } else {
+            log.debug( "search by official gene symbol" );
+            // call service which produces expression data image
+        }
 
         return new ModelAndView( getSuccessView() );
     }
@@ -141,8 +167,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
     @SuppressWarnings("unchecked")
     protected Map referenceData( HttpServletRequest request ) {
         Collection searchCategories = new HashSet();
-        searchCategories.add( "probe set id" );
         searchCategories.add( "gene symbol" );
+        searchCategories.add( "probe set id" );
 
         Map searchByMap = new HashMap();
 
@@ -155,5 +181,12 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param compositeSequenceService
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
     }
 }
