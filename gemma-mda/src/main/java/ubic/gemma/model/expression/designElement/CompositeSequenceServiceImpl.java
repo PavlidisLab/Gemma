@@ -22,6 +22,9 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author keshav
  * @author pavlidis
@@ -30,6 +33,7 @@ import java.util.Collection;
  */
 public class CompositeSequenceServiceImpl extends
         ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase {
+    Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#saveCompositeSequence(ubic.gemma.model.expression.designElement.CompositeSequence)
