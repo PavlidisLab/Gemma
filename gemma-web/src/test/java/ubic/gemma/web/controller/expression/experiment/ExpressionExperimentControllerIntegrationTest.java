@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -35,12 +36,15 @@ import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -78,7 +82,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
         Collection<CompositeSequence> csCol = new HashSet();
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( "Composite Sequence " + i );
+            cs.setName( i + "_at" );
             csCol.add( cs );
         }
         return csCol;
@@ -97,9 +101,9 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
             ad.setDescription( i + ": A test array design." );
             ad.setAdvertisedNumberOfDesignElements( i + 100 );
             ad.setCompositeSequences( getCompositeSequences() );
-            
-            ad = adService.findOrCreate(ad);
-            
+
+            ad = adService.findOrCreate( ad );
+
             adCol.add( ad );
         }
         return adCol;
@@ -233,6 +237,31 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
         return edCol;
     }
 
+    @SuppressWarnings("unchecked")
+    private Collection getDesignElementDataVectors( ExpressionExperiment ee ) {
+        CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+        Collection<DesignElementDataVector> vectorCol = new HashSet();
+        for ( int i = 0; i < testNumCollectionElements; i++ ) {
+            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            byte[] data = new byte[testNumCollectionElements];
+            for ( int j = 0; j < testNumCollectionElements; j++ ) {
+                data[i] = ( byte ) RandomUtils.nextDouble();
+            }
+            vector.setData( data );
+
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( i + "_at" );
+            cs.setArrayDesign( ArrayDesign.Factory.newInstance() );
+            cs = csService.findOrCreate( cs );
+            vector.setDesignElement( cs );
+            vector.setExpressionExperiment( ee );
+            // TODO make QuantitationType and BioAssayDimension (via DesignElementDataVector) mandatory in model.
+            // vector.setQuantitationType( QuantitationType.Factory.newInstance() );
+            vectorCol.add( vector );
+        }
+        return vectorCol;
+    }
+
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations.
      */
@@ -280,6 +309,9 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
         c = cs.findOrCreate( c );
         ee.setOwner( c );
 
+        log.debug( "expression experiment => design element data vectors" );
+        ee.setDesignElementDataVectors( getDesignElementDataVectors( ee ) );
+
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         log.debug( "Loading test expression experiment." );
         ee = ees.create( ee ); // FIXME - again, I would like to use findOrCreate
@@ -321,7 +353,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
         assertEquals( mav.getViewName(), "expressionExperiments" );
 
         /* uncomment to persist and leave data in database */
-        //setComplete();
+        // setComplete();
     }
 
     /**

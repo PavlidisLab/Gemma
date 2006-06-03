@@ -19,17 +19,27 @@
 package ubic.gemma.visualization;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.CompositeSequenceServiceImpl;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author keshav
  * @version $Id$
+ * @spring.bean id="matrixVisualizationData"
+ * @spring.property name="compositeSequnceService" ref="compositeSequenceService"
+ * @spring.property name="expressionExperiment" ref="expressionExperiment"
  */
 public class MatrixVisualizationData {
+    Log log = LogFactory.getLog( this.getClass() );
 
     private ExpressionExperiment expressionExperiment = null;
 
@@ -37,12 +47,14 @@ public class MatrixVisualizationData {
 
     private CompositeSequenceService compositeSequenceService = null;
 
+    private Map metadata = new HashMap();
+
     /**
      * 
      *
      */
     public MatrixVisualizationData() {
-        compositeSequenceService = new CompositeSequenceServiceImpl();
+
     }
 
     /**
@@ -50,14 +62,22 @@ public class MatrixVisualizationData {
      * @param designElements
      */
     public MatrixVisualizationData( ExpressionExperiment expressionExperiment, Collection<DesignElement> designElements ) {
-        compositeSequenceService = new CompositeSequenceServiceImpl();// FIXME you could 'springify' this instead.
 
         this.expressionExperiment = expressionExperiment;
         this.designElements = designElements;
 
         for ( Object designElement : designElements ) {
-            // ((CompositeSequence) designElement).getDesignElementDataVectors();//TODO make association between
-            // DesignElement and DesignElementDataVector bi-directional.
+            // FIXME I have made the association between DesignElement and DesignElementDataVector bi-directional.
+            String key = ( ( CompositeSequence ) designElement ).getName();
+            Collection<DesignElementDataVector> deDataVectors = ( ( CompositeSequence ) designElement )
+                    .getDesignElementDataVectors();
+            metadata.put( key, deDataVectors );
+        }
+
+        Collection<String> keySet = metadata.keySet();
+        for ( String key : keySet ) {
+            // key.getData();
+            log.debug( "key: " + key );
         }
     }
 
@@ -87,6 +107,20 @@ public class MatrixVisualizationData {
      */
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+
+    /**
+     * @return CompositeSequenceService
+     */
+    public CompositeSequenceService getCompositeSequenceService() {
+        return compositeSequenceService;
+    }
+
+    /**
+     * @param compositeSequenceService
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
     }
 
 }
