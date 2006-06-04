@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @spring.property name="expressionExperiment" ref="expressionExperiment"
  */
 public class MatrixVisualizationData {
-    Log log = LogFactory.getLog( this.getClass() );
+    private Log log = LogFactory.getLog( this.getClass() );
 
     private ExpressionExperiment expressionExperiment = null;
 
