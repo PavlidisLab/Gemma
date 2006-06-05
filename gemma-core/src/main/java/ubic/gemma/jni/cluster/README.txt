@@ -1,6 +1,8 @@
 BORLAND C COMPILER 5.5 SETUP
 
-1. Download the free Borland C/C++ 5.5 compiler.
+1. Download the free Borland C/C++ 5.5 compiler from http://www.borland.com/downloads/download_cbuilder.html.
+If you don't have an account, sign up for one.  You can also get it from:  
+stent.cmmt.ubc.ca:/space4/pavlidis/grp/downloads/borlandCCompiler5.5.exe.
 2. Run the installer (freecommandlinetools.exe).  Install in c:\Borland\Bcc55 (the default).
 3. In c:\AUTOEXEC.BAT, add the following:  SET PATH=%PATH%;c:\Borland\Bcc55
 4. In c:\Borland\Bcc55\Bin, create the file bcc32.cfg.  Add the lines:
