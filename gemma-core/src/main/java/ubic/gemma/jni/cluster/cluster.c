@@ -2803,10 +2803,10 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     double localArrayCopy[5][2];
     double **dataMatrix;
     double **distMatrix;
+    int mask[5][2];//not used
     double linkdist[5];
     int result[5][2];
     double weight[5];//not used
-    int mask[5];//not used
     
     size = (*env)->GetArrayLength(env,matrix);
     
@@ -2830,7 +2830,12 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     
     dataMatrix=localArrayCopy;
     
-    treecluster (2, 5, dataMatrix, mask,weight, 0, 'e', 'm',result, linkdist, distMatrix);
+    treecluster (5, 2, dataMatrix, mask,weight, 1, 'e', 'm',result, linkdist, distMatrix);
+    
+    for(i=0;i<5;i++){
+    	printf("result in [%i][0]%i\n",i,result[i][0]);
+    	printf("result in [%i][1]%i\n\n",i,result[i][1]);
+    }
     
 	return 0;
 }
@@ -2902,14 +2907,14 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     clusterid[jsaved] = nNodes-nelements-1;
     clusterid[isaved] = clusterid[nNodes-1];
     
-    printf("%i\n",result[nelements-nNodes][0]);
-    printf("%i\n\n",result[nelements-nNodes][1]);
-    
-    printf("%i\n",clusterid[jsaved]);
-    printf("%i\n\n",clusterid[isaved]);
+  }
+  
+  for (j=0;j<nelements-1;j++){
+  	printf("result[%i][0]: %i\n",j,result[j][0]);
+    printf("result[%i][1]: %i\n\n",j,result[j][1]);
   }
   free(clusterid);
-
+  
   return;
 }
 
