@@ -50,9 +50,9 @@ public class MatrixVisualizationDataTest extends TestCase {
         CompositeSequence cs0 = CompositeSequence.Factory.newInstance();
         cs0.setName( "0_at" );
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs0.setName( "1_at" );
+        cs1.setName( "1_at" );
         CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs0.setName( "2_at" );
+        cs2.setName( "2_at" );
 
         designElements.add( cs0 );
         designElements.add( cs1 );
