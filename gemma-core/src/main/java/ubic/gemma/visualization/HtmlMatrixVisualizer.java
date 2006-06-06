@@ -64,16 +64,15 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      */
     public void createVisualization( double[][] data ) {
         DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
-        JMatrixDisplay matrixDisplay = new JMatrixDisplay( matrix );
-        matrixDisplay.setLabelsVisible( false );
-        
+        // JMatrixDisplay matrixDisplay = new JMatrixDisplay( matrix );
+        // matrixDisplay.setLabelsVisible( false );
 
-        try {
-            matrixDisplay.saveImage( "output.png" );
-        } catch ( IOException e ) {
-            System.err.println( "Could not print image" );
-            e.printStackTrace();
-        }
+        // try {
+        // matrixDisplay.saveImage( "output.png" );
+        // } catch ( IOException e ) {
+        // System.err.println( "Could not print image" );
+        // e.printStackTrace();
+        // }
     }
 
 }
