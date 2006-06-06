@@ -35,8 +35,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  * @spring.bean id="matrixVisualizationData"
- * @spring.property name="compositeSequnceService" ref="compositeSequenceService"
- * @spring.property name="expressionExperiment" ref="expressionExperiment"
+ * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  */
 public class MatrixVisualizationData {
     private Log log = LogFactory.getLog( this.getClass() );
