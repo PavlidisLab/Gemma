@@ -1,22 +1,26 @@
 /*
-* The Gemma project
-* 
-* Copyright (c) 2006 University of British Columbia
-* 
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*       http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-*/
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.jni.cluster;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 /**
  * @author keshav
@@ -26,9 +30,18 @@ public class NCluster {
 
     public native int[][] computeCompleteLinkage( int elements, double matrix[][] );
 
-    static {// FIXME do no hardcode this
-        System
-                .load( "C:\\java\\apps\\eclipse_workspace\\Gemma_m2\\gemma-core\\src\\main\\java\\ubic\\gemma\\jni\\cluster\\cluster.DLL" );
+    static {
+        Configuration config = null;
+        try {
+            config = new PropertiesConfiguration( "Gemma.properties" );
+        } catch ( ConfigurationException e ) {
+            System.err.println( "Could not read properites file " + config );
+            e.printStackTrace();
+        }
+
+        String baseDir = ( String ) config.getProperty( "gemma.baseDir" );
+        String localBasePath = ( String ) config.getProperty( "cluster.dll.path" );
+        System.load( baseDir + localBasePath );
     }
 
     /**
