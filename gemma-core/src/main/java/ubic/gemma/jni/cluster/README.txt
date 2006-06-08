@@ -21,6 +21,7 @@ NOTE: Make sure you do not have spaces in the path to your java sdk.
 (if the ubic_gemma_jni_cluster_NCluster.h file has not been created, first run this)
 javah -classpath %GEMMA_HOME%\build\Gemma\WEB-INF\classes ubic.gemma.jni.cluster.NCluster
 
+(Ignore warnings, but do not ignore errors)
 bcc32 -tWM -tWD command.c
 bcc32 -tWM -tWD com.c
 bcc32 -tWM -tWD data.c
