@@ -2800,18 +2800,17 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
 {
     
     int i,j,size, sizeOneDim=0;
-    double localArrayCopy[5][2];
+    
     //data
     double **dataMatrix = malloc(5*sizeof(double*));
     int** mask = malloc(5*sizeof(int*));
     
     //transpose dependent
-    int transpose = 0; //causes error
-    double weight[5];
-    int result[4][2];
-    double linkdist[4];
-    //double **distMatrix;
-    double distMatrix[5][5];//use NULL
+    int transpose = 0; 
+    double weight[5];//[rows]
+    int result[4][2];//[rows-1][2]
+    double linkdist[4];//[rows-1]
+    //double **distMatrix;//use NULL
     
     char dist = 'e'; //causes error
     char method = 'm';//causes error
@@ -2831,14 +2830,14 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     	for (j=0; j<sizeOneDim; j++){
     		mask[i][j]=1;
     		weight[i]=1;
-    	    printf("%f\n",localArrayCopy[i][j]);
+    	    printf("%f\n",dataMatrix[i][j]);
     	}
     	printf("\n");
     	//(*env)->ReleaseDoubleArrayElements(env, oneDim, row, 0);
     	//(*env)->DeleteLocalRef(env, row);
     }
     
-    treecluster (5, 2, dataMatrix, mask,weight, 0, 'e', 's',result, linkdist, NULL);
+    treecluster (5, 2, dataMatrix, mask,weight, 0, dist, method,result, linkdist, NULL);
     
 	return 0;
 }
