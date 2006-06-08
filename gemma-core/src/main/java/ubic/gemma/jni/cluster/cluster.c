@@ -2801,13 +2801,21 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     
     int i,j,size, sizeOneDim=0;
     double localArrayCopy[5][2];
-    double **dataMatrix;
-    double **distMatrix;
-    int mask[5][2];//not used
-    double linkdist[5];
-    int result[5][2];
-    double weight[5];//not used
+    //data
+    double **dataMatrix = malloc(5*sizeof(double*));
+    int** mask = malloc(5*sizeof(int*));
     
+    //transpose dependent
+    int transpose = 0; //causes error
+    double weight[5];
+    int result[4][2];
+    double linkdist[4];
+    //double **distMatrix;
+    double distMatrix[5][5];//use NULL
+    
+    char dist = 'e'; //causes error
+    char method = 'm';//causes error
+   
     size = (*env)->GetArrayLength(env,matrix);
     
     printf("elements: %i\n\n", size);
@@ -2815,12 +2823,14 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     for (i=0; i<size; i++){
 	    jdoubleArray oneDim = (*env)->GetObjectArrayElement(env,matrix, i);
 	    jdouble *row = (*env)->GetDoubleArrayElements(env,oneDim, 0);
-	    
+	    dataMatrix[i] = row;
 	    sizeOneDim = (*env)->GetArrayLength(env, oneDim);
 	    printf("size of 1D array at %i: %i\n\n", i, sizeOneDim);
+	    mask[i] = malloc(sizeOneDim*sizeof(int));
 	    
     	for (j=0; j<sizeOneDim; j++){
-    		localArrayCopy[i][j]=row[j];
+    		mask[i][j]=1;
+    		weight[i]=1;
     	    printf("%f\n",localArrayCopy[i][j]);
     	}
     	printf("\n");
@@ -2828,14 +2838,7 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     	//(*env)->DeleteLocalRef(env, row);
     }
     
-    dataMatrix=localArrayCopy;
-    
-    treecluster (5, 2, dataMatrix, mask,weight, 1, 'e', 'm',result, linkdist, distMatrix);
-    
-    for(i=0;i<5;i++){
-    	printf("result in [%i][0]%i\n",i,result[i][0]);
-    	printf("result in [%i][1]%i\n\n",i,result[i][1]);
-    }
+    treecluster (5, 2, dataMatrix, mask,weight, 0, 'e', 's',result, linkdist, NULL);
     
 	return 0;
 }
