@@ -775,6 +775,8 @@ public class GeoFamilyParser implements Parser {
             ; // nothing.
         } else if ( startsWithIgnoreCase( line, "!Platform_catalog_number" ) ) {
             // do nothing TODO we might want this.
+        } else if (startsWithIgnoreCase(line, "!Platform_last_update_date")) {
+            // FIXME
         } else {
             log.error( "Unknown flag in platform: " + line );
         }
@@ -982,6 +984,10 @@ public class GeoFamilyParser implements Parser {
                 results.getSeriesMap().get( value ).addSample( results.getSampleMap().get( currentSampleAccession ) );
             }
             seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
+        } else if (startsWithIgnoreCase(line, "!Sample_supplementary_file")) {
+        	// FIXME
+        } else if (startsWithIgnoreCase(line, "!Sample_last_update_date")) {
+            // FIXME
         } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
             // nooop.
         } else {
@@ -1103,6 +1109,10 @@ public class GeoFamilyParser implements Parser {
             GeoVariable v = new GeoVariable();
             v.setType( GeoVariable.convertStringToType( value ) );
             results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
+        } else if (startsWithIgnoreCase(line, "!Series_supplementary_file")) {
+            // FIXME
+        } else if (startsWithIgnoreCase( line, "!Series_last_update_date" )) {
+            // FIXME
         } else {
             log.error( "Unknown flag in series: " + line );
         }
