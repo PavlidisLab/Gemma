@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     ubic_gemma_jni_cluster_NCluster
  * Method:    computeCompleteLinkage
- * Signature: (I[[D)[[I
+ * Signature: (IIICC[[D)[[I
  */
 JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_computeCompleteLinkage
-  (JNIEnv *, jobject, jint, jobjectArray);
+  (JNIEnv *, jobject, jint, jint, jint, jchar, jchar, jobjectArray);
 
 #ifdef __cplusplus
 }

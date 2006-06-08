@@ -2785,7 +2785,12 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
   }
   free(vector);
   free(index);
-
+  
+  for (j=0;j<nelements-1;j++){
+  		printf("result[%i][0]: %i    ",j,result[j][0]);
+    	printf("result[%i][1]: %i\n",j,result[j][1]);
+  }
+  
   return;
 }
 /* ******************************************************************** */
@@ -2796,26 +2801,45 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
  * Signature: (I[[D)[[I
  */
  JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_computeCompleteLinkage
-  (JNIEnv * env, jobject obj, jint nelements, jobjectArray matrix)
+  (JNIEnv * env, jobject obj, jint nrows, jint ncols, jint ntranspose, jchar ndist, jchar nmethod, jobjectArray matrix)
 {
     
+    int rows = nrows;
+    int cols = ncols;
+    int t = ntranspose; //causes an error if used in call to treeCluster;
     int i,j,size, sizeOneDim=0;
     
     //data
-    double **dataMatrix = malloc(5*sizeof(double*));
-    int** mask = malloc(5*sizeof(int*));
+    double **dataMatrix = malloc(rows*sizeof(double*));
+    int** mask = malloc(rows*sizeof(int*));
     
     //transpose dependent
-    int transpose = 0; 
-    double weight[5];//[rows]
-    int result[4][2];//[rows-1][2]
-    double linkdist[4];//[rows-1]
+    double *weight;
+    int **result;
+    double *linkdist;
     //double **distMatrix;//use NULL
     
-    char dist = 'e'; //causes error
-    char method = 'm';//causes error
+    //char dist = 'e'; 
+    //char method = 'm';
+    char dist = ndist;
+    char method = nmethod;
    
     size = (*env)->GetArrayLength(env,matrix);
+    
+    if (t==0){
+    	weight = malloc(rows*sizeof(double));
+    	linkdist = malloc((rows-1)*sizeof(double));
+		for (i=0; i<rows-1;i++){
+    		result[i] = malloc(2*sizeof(int));
+		}
+    }
+    else if(t==1){
+    	weight = malloc(cols*sizeof(double));
+    	linkdist = malloc((cols-1)*sizeof(double));
+    	for (i=0; i<cols-1;i++){
+    		result[i] = malloc(2*sizeof(int));
+		}
+    }
     
     printf("elements: %i\n\n", size);
     
@@ -2837,8 +2861,8 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     	//(*env)->DeleteLocalRef(env, row);
     }
     
-    treecluster (5, 2, dataMatrix, mask,weight, 0, dist, method,result, linkdist, NULL);
-    
+    treecluster (rows, cols, dataMatrix, mask, weight, 0, dist, method,result, linkdist, NULL);
+   
 	return 0;
 }
 
@@ -2912,9 +2936,10 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
   }
   
   for (j=0;j<nelements-1;j++){
-  	printf("result[%i][0]: %i\n",j,result[j][0]);
-    printf("result[%i][1]: %i\n\n",j,result[j][1]);
+  		printf("result[%i][0]: %i    ",j,result[j][0]);
+    	printf("result[%i][1]: %i\n",j,result[j][1]);
   }
+    
   free(clusterid);
   
   return;
@@ -3011,6 +3036,12 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     clusterid[jsaved] = nNodes-nelements-1;
     clusterid[isaved] = clusterid[nNodes-1];
   }
+  
+  for (j=0;j<nelements-1;j++){
+  		printf("result[%i][0]: %i    ",j,result[j][0]);
+    	printf("result[%i][1]: %i\n",j,result[j][1]);
+  }
+  
   free(clusterid);
   free(number);
 

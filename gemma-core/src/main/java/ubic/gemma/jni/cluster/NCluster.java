@@ -27,8 +27,38 @@ import org.apache.commons.configuration.PropertiesConfiguration;
  * @version $Id$
  */
 public class NCluster {
-
-    public native int[][] computeCompleteLinkage( int elements, double matrix[][] );
+    
+    
+    /**
+     * dist       (input) char
+     * Defines which distance measure is used, as given by the table:
+     * dist=='e': Euclidean distance
+     * dist=='b': City-block distance
+     * dist=='c': correlation
+     * dist=='a': absolute value of the correlation
+     * dist=='u': uncentered correlation
+     * dist=='x': absolute uncentered correlation
+     * dist=='s': Spearman's rank correlation
+     * dist=='k': Kendall's tau
+     * For other values of dist, the default (Euclidean distance) is used.
+     * 
+     * method     (input) char
+     * Defines which hierarchical clustering method is used:
+     * method=='s': pairwise single-linkage clustering
+     * method=='m': pairwise maximum- (or complete-) linkage clustering
+     * method=='a': pairwise average-linkage clustering
+     * method=='c': pairwise centroid-linkage clustering
+     * 
+     * @param rows
+     * @param cols
+     * @param transpose
+     * @param dist
+     * @param method
+     * @param matrix
+     * @return int[][]
+     */
+    public native int[][] computeCompleteLinkage( int rows, int cols, int transpose, char dist, char method,
+            double matrix[][] );
 
     static {
         Configuration config = null;
@@ -47,7 +77,8 @@ public class NCluster {
     /**
      * @param args
      */
-    public static void main( String[] args ) {// TODO move me to the test suite.
+    public static void main( String[] args ) {
+        // TODO move me to the test suite.
         NCluster cluster = new NCluster();
         double[][] values = new double[5][2];
 
@@ -63,7 +94,7 @@ public class NCluster {
         values[3] = t3;
         values[4] = t4;
 
-        cluster.computeCompleteLinkage( 5, values );
+        cluster.computeCompleteLinkage( 5, 2, 0, 'e', 's', values );
     }
 
 }
