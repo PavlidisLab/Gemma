@@ -24,6 +24,7 @@ import ubic.basecode.util.StringUtil;
  * A simple tab delim file parser
  * 
  * @author keshav
+ * @version $Id$
  */
 public class TabDelimParser extends BasicLineParser {
 
