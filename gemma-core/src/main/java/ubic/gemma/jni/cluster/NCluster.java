@@ -124,7 +124,7 @@ public class NCluster {
 
         String filename = baseDir + ( String ) config.getProperty( "aTestDataSet_no_headers" );
 
-        double[][] data = readTabFile( filename );// just a pointer ... must copy it
+        double[][] data = readTabFile( filename );
 
         NCluster cluster = new NCluster();
 
