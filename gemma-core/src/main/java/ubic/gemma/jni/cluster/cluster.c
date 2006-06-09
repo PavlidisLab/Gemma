@@ -2815,7 +2815,7 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     
     //transpose dependent
     double *weight;
-    int **result;
+    int (*result)[2];
     double *linkdist;
     //double **distMatrix;//use NULL
     
@@ -2827,18 +2827,16 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
     size = (*env)->GetArrayLength(env,matrix);
     
     if (t==0){
-    	weight = malloc(rows*sizeof(double));
+    	weight = malloc(cols*sizeof(double));
+        result = malloc((rows-1)*sizeof(int[2]));
     	linkdist = malloc((rows-1)*sizeof(double));
-		for (i=0; i<rows-1;i++){
-    		result[i] = malloc(2*sizeof(int));
-		}
+    	for (j=0; j<cols; j++) weight[j]=1;
     }
     else if(t==1){
-    	weight = malloc(cols*sizeof(double));
+    	weight = malloc(rows*sizeof(double));
+        result = malloc((cols-1)*sizeof(int[2]));
     	linkdist = malloc((cols-1)*sizeof(double));
-    	for (i=0; i<cols-1;i++){
-    		result[i] = malloc(2*sizeof(int));
-		}
+    	for (j=0; j<rows; j++) weight[j]=1;
     }
     
     printf("elements: %i\n\n", size);
@@ -2847,16 +2845,14 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
 	    jdoubleArray oneDim = (*env)->GetObjectArrayElement(env,matrix, i);
 	    jdouble *row = (*env)->GetDoubleArrayElements(env,oneDim, 0);
 	    dataMatrix[i] = row;
-	    sizeOneDim = (*env)->GetArrayLength(env, oneDim);
-	    printf("size of 1D array at %i: %i\n\n", i, sizeOneDim);
-	    mask[i] = malloc(sizeOneDim*sizeof(int));
+	    //printf("size of 1D array at %i: %i\n\n", i, sizeOneDim);
+	    mask[i] = malloc(cols*sizeof(int));
 	    
-    	for (j=0; j<sizeOneDim; j++){
+    	for (j=0; j<cols; j++){
     		mask[i][j]=1;
-    		weight[i]=1;
-    	    printf("%f\n",dataMatrix[i][j]);
+    	    //printf("%f\n",dataMatrix[i][j]);
     	}
-    	printf("\n");
+    	//printf("\n");
     	//(*env)->ReleaseDoubleArrayElements(env, oneDim, row, 0);
     	//(*env)->DeleteLocalRef(env, row);
     }
