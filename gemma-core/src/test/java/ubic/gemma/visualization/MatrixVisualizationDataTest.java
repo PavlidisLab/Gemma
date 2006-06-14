@@ -60,7 +60,7 @@ public class MatrixVisualizationDataTest extends TestCase {
      * @return double [][]
      */
     public byte[][] readTabFile( String filename ) {
-        TabDelimParser parser = new TabDelimParser();// FIXME want this to be BasicLineParser
+        TabDelimParser parser = new TabDelimParser();
         InputStream is;
         Collection results = new HashSet();
         try {
@@ -82,12 +82,11 @@ public class MatrixVisualizationDataTest extends TestCase {
         while ( iter.hasNext() ) {
             String[] array = ( String[] ) iter.next();
 
-            String[] sarray = { array[1], array[2], array[3], array[4] };// , array[5], array[6], array[7], array[8],
-            // array[9], array[10] };
+            String[] sarray = { array[1], array[2], array[3], array[4], array[5], array[6], array[7], array[8],
+                    array[9], array[10] };
 
             rowNames[i] = array[0];
 
-            // FIXME refactor parsing string (see GeoConverterTest)
             double[] row = sconverter.stringArrayToDoubles( sarray );
             values[i] = bconverter.doubleArrayToBytes( row );
 
@@ -111,7 +110,7 @@ public class MatrixVisualizationDataTest extends TestCase {
 
         Configuration config = new PropertiesConfiguration( "Gemma.properties" );
         String baseDir = ( String ) config.getProperty( "gemma.baseDir" );
-        String filename = baseDir + ( String ) config.getProperty( "testData" );
+        String filename = baseDir + ( String ) config.getProperty( "testData_100" );
 
         byte[][] data = readTabFile( filename );
 
