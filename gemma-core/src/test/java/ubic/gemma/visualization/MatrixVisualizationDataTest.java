@@ -50,7 +50,7 @@ public class MatrixVisualizationDataTest extends TestCase {
     String[] rowNames = null;
     String[] colNames = null;
 
-    MatrixVisualizationData vizualizationData = null;
+    MatrixVisualizationData visualizationData = null;
     ByteArrayConverter bconverter = null;
     StringConverter sconverter = null;
     byte[][] values;
@@ -128,7 +128,7 @@ public class MatrixVisualizationDataTest extends TestCase {
         }
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        vizualizationData = new MatrixVisualizationData( ee, designElements );
+        visualizationData = new MatrixVisualizationData( ee, designElements );
 
     }
 
@@ -149,15 +149,19 @@ public class MatrixVisualizationDataTest extends TestCase {
     public void testMatrixVisualizationData() {
 
         // vizualizationData.printData();
-        vizualizationData.setColNames( Arrays.asList( colNames ) );
-        vizualizationData.setRowNames( Arrays.asList( rowNames ) );
 
         double[][] ddata = new double[rowNames.length][];
         for ( int i = 0; i < ddata.length; i++ ) {
             ddata[i] = bconverter.byteArrayToDoubles( values[i] );
         }
 
-        vizualizationData.visualize( ddata, "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+        MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+
+        visualizer.setColLabels( Arrays.asList( colNames ) );
+        visualizer.setRowLabels( Arrays.asList( rowNames ) );
+        // visualizer.createVisualization( ddata, "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+        visualizer.createVisualization( visualizationData,
+                "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
 
     }
 }
