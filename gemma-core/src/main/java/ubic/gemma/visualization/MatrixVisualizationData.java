@@ -56,10 +56,6 @@ public class MatrixVisualizationData {
 
     private Map dataMap = new HashMap();
 
-    private List rowNames = null;
-
-    private List colNames = null;
-
     /**
      * 
      *
@@ -83,26 +79,6 @@ public class MatrixVisualizationData {
             DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
 
             dataMap.put( key, vector );
-        }
-    }
-
-    /**
-     * @param data
-     * @param outfile
-     */
-    public void visualize( double[][] data, String outfile ) {
-        assert rowNames != null && colNames != null : "Labels not set";
-
-        DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
-        matrix.setRowNames( rowNames );
-        matrix.setColumnNames( colNames );
-        ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
-        try {
-            display.saveImage( outfile );
-            display.setLabelsVisible( true );
-        } catch ( IOException e ) {
-            e.printStackTrace();
         }
     }
 
@@ -169,19 +145,4 @@ public class MatrixVisualizationData {
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
     }
-
-    /**
-     * @param rowNames The rowNames to set.
-     */
-    public void setRowNames( List rowNames ) {
-        this.rowNames = rowNames;
-    }
-
-    /**
-     * @param colNames The colNames to set.
-     */
-    public void setColNames( List colNames ) {
-        this.colNames = colNames;
-    }
-
 }

@@ -18,22 +18,42 @@
  */
 package ubic.gemma.visualization;
 
+import java.util.List;
+
 /**
- * 
  * @author keshav
  * @version $Id$
  */
 public interface MatrixVisualizer {
-    
+
     /**
-     * 
      * @param matrixVisualizationData
      */
-    public void createVisualization(MatrixVisualizationData matrixVisualizationData);
-    
+    public void createVisualization( MatrixVisualizationData matrixVisualizationData );
+
     /**
-     * 
+     * @param matrixVisualizationData
+     */
+    public void createVisualization( MatrixVisualizationData matrixVisualizationData, String outfile );
+
+    /**
      * @param data
      */
-    public void createVisualization(double[][] data);
+    public void createVisualization( double[][] data );
+
+    /**
+     * @param data
+     * @param outfile
+     */
+    public void createVisualization( double[][] data, String outfile );
+
+    /**
+     * @param rowLabels
+     */
+    public void setRowLabels( List<String> rowLabels );
+
+    /**
+     * @param colLabels
+     */
+    public void setColLabels( List<String> colLabels );
 }
