@@ -18,7 +18,15 @@
  */
 package ubic.gemma.loader.util.parser;
 
-import ubic.basecode.util.StringUtil;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple tab delim file parser
@@ -27,6 +35,54 @@ import ubic.basecode.util.StringUtil;
  * @version $Id$
  */
 public class TabDelimParser extends BasicLineParser {
+    private Log log = LogFactory.getLog( this.getClass() );
+    private Collection<Object> results;
+    private String[] header = null;
+
+    public TabDelimParser() {
+        results = new HashSet<Object>();
+    }
+
+    /**
+     * Extracts header information.
+     * 
+     * @param is
+     * @param header
+     * @throws IOException
+     */
+    public void parse( InputStream is, boolean header ) throws IOException {// FIXME to i really want to override this?
+
+        linesParsed = 0;
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+        String line = null;
+
+        if ( header ) setHeader( line = br.readLine() );
+
+        while ( ( line = br.readLine() ) != null ) {
+            Object newItem = parseOneLine( line );
+
+            if ( newItem != null ) {
+                results.add( newItem );
+                linesParsed++;
+            }
+            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + linesParsed + " lines..." );
+
+        }
+        log.info( "Parsed " + linesParsed + " lines." );
+    }
+
+    public void setHeader( String header ) {
+        this.header = ( String[] ) parseOneLine( header );
+    }
+
+    public String[] getHeader() {
+        return this.header;
+    }
+
+    public Collection getResults() {
+        return this.results;
+    }
 
     /*
      * (non-Javadoc)
