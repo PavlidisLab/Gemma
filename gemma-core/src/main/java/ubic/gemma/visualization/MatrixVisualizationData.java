@@ -18,13 +18,21 @@
  */
 package ubic.gemma.visualization;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.gui.ColorMatrix;
+import ubic.basecode.gui.JMatrixDisplay;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -46,7 +54,11 @@ public class MatrixVisualizationData {
 
     private CompositeSequenceService compositeSequenceService = null;
 
-    private Map metadata = new HashMap();
+    private Map dataMap = new HashMap();
+
+    private List rowNames = null;
+
+    private List colNames = null;
 
     /**
      * 
@@ -65,18 +77,54 @@ public class MatrixVisualizationData {
         this.expressionExperiment = expressionExperiment;
         this.designElements = designElements;
 
-        for ( Object designElement : designElements ) {
+        for ( DesignElement designElement : designElements ) {
             // FIXME I have made the association between DesignElement and DesignElementDataVector bi-directional.
             String key = ( ( CompositeSequence ) designElement ).getName();
-            Collection<DesignElementDataVector> deDataVectors = ( ( CompositeSequence ) designElement )
-                    .getDesignElementDataVectors();
-            metadata.put( key, deDataVectors );
-        }
+            DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
 
-        Collection<String> keySet = metadata.keySet();
-        for ( String key : keySet ) {
-            // key.getData();
-            log.debug( "key: " + key );
+            dataMap.put( key, vector );
+        }
+    }
+
+    /**
+     * @param data
+     * @param outfile
+     */
+    public void visualize( double[][] data, String outfile ) {
+        assert rowNames != null && colNames != null : "Labels not set";
+
+        DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
+        matrix.setRowNames( rowNames );
+        matrix.setColumnNames( colNames );
+        ColorMatrix colorMatrix = new ColorMatrix( matrix );
+        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
+        try {
+            display.saveImage( outfile );
+            display.setLabelsVisible( true );
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 
+     *
+     */
+    public void printData() {
+        assert designElements != null : "Design Elements not initialized";
+
+        for ( DesignElement designElement : designElements ) {
+            ByteArrayConverter converter = new ByteArrayConverter();
+            DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
+            String key = ( ( CompositeSequence ) designElement ).getName();
+
+            byte[] byteData = vector.getData();
+            double[] data = converter.byteArrayToDoubles( byteData );
+
+            log.warn( key );
+            for ( int j = 0; j < data.length; j++ ) {
+                log.warn( "data: " + data[j] );
+            }
         }
     }
 
@@ -120,6 +168,20 @@ public class MatrixVisualizationData {
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param rowNames The rowNames to set.
+     */
+    public void setRowNames( List rowNames ) {
+        this.rowNames = rowNames;
+    }
+
+    /**
+     * @param colNames The colNames to set.
+     */
+    public void setColNames( List colNames ) {
+        this.colNames = colNames;
     }
 
 }
