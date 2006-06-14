@@ -18,10 +18,25 @@
  */
 package ubic.gemma.visualization;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import junit.framework.TestCase;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.io.StringConverter;
+import ubic.gemma.loader.util.parser.TabDelimParser;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,8 +46,59 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public class MatrixVisualizationDataTest extends TestCase {
+    Log log = LogFactory.getLog( this.getClass() );
+    String[] rowNames = null;
+    String[] colNames = null;
 
     MatrixVisualizationData vizualizationData = null;
+    ByteArrayConverter bconverter = null;
+    StringConverter sconverter = null;
+    byte[][] values;
+
+    /**
+     * @param filename
+     * @return double [][]
+     */
+    public byte[][] readTabFile( String filename ) {
+        TabDelimParser parser = new TabDelimParser();// FIXME want this to be BasicLineParser
+        InputStream is;
+        Collection results = new HashSet();
+        try {
+            is = new FileInputStream( new File( filename ) );
+            parser.parse( is, true );
+            results = parser.getResults();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
+        colNames = parser.getHeader();
+
+        bconverter = new ByteArrayConverter();
+        sconverter = new StringConverter();
+        values = new byte[results.size()][];
+        rowNames = new String[results.size()];
+        Iterator iter = results.iterator();
+        int i = 0;
+        while ( iter.hasNext() ) {
+            String[] array = ( String[] ) iter.next();
+
+            String[] sarray = { array[1], array[2], array[3], array[4] };// , array[5], array[6], array[7], array[8],
+            // array[9], array[10] };
+
+            rowNames[i] = array[0];
+
+            // FIXME refactor parsing string (see GeoConverterTest)
+            double[] row = sconverter.stringArrayToDoubles( sarray );
+            values[i] = bconverter.doubleArrayToBytes( row );
+
+            // log.warn( values[i][0] );
+            // log.warn( values[i][1] );
+
+            i++;
+        }
+
+        return values;
+    }
 
     /*
      * (non-Javadoc)
@@ -43,22 +109,28 @@ public class MatrixVisualizationDataTest extends TestCase {
     @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
 
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
+        String baseDir = ( String ) config.getProperty( "gemma.baseDir" );
+        String filename = baseDir + ( String ) config.getProperty( "testData" );
+
+        byte[][] data = readTabFile( filename );
 
         Collection<DesignElement> designElements = new HashSet();
+        for ( int i = 0; i < rowNames.length; i++ ) {
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( rowNames[i] );
 
-        CompositeSequence cs0 = CompositeSequence.Factory.newInstance();
-        cs0.setName( "0_at" );
-        CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
-        cs1.setName( "1_at" );
-        CompositeSequence cs2 = CompositeSequence.Factory.newInstance();
-        cs2.setName( "2_at" );
+            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            vector.setData( data[i] );
+            vector.setDesignElement( cs );
+            cs.setDesignElementDataVector( vector );
 
-        designElements.add( cs0 );
-        designElements.add( cs1 );
-        designElements.add( cs2 );
+            designElements.add( cs );
+        }
 
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         vizualizationData = new MatrixVisualizationData( ee, designElements );
+
     }
 
     /*
@@ -77,6 +149,16 @@ public class MatrixVisualizationDataTest extends TestCase {
      */
     public void testMatrixVisualizationData() {
 
-    }
+        // vizualizationData.printData();
+        vizualizationData.setColNames( Arrays.asList( colNames ) );
+        vizualizationData.setRowNames( Arrays.asList( rowNames ) );
 
+        double[][] ddata = new double[rowNames.length][];
+        for ( int i = 0; i < ddata.length; i++ ) {
+            ddata[i] = bconverter.byteArrayToDoubles( values[i] );
+        }
+
+        vizualizationData.visualize( ddata, "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+
+    }
 }
