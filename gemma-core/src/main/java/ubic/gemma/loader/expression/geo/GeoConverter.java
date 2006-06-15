@@ -62,7 +62,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
+//import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -347,13 +347,13 @@ public class GeoConverter implements Converter {
     private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension result, boolean found,
             String sampleAcc ) {
 
-        BioMaterialDimension bioMaterialDimension = getAssociatedBioMaterialDimension( result );
+   //     BioMaterialDimension bioMaterialDimension = getAssociatedBioMaterialDimension( result );
 
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
             if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
                 result.getDimensionBioAssays().add( bioAssay );
 
-                matchBioMaterialToBioAssay( bioMaterialDimension, bioAssay );
+    //            matchBioMaterialToBioAssay( bioMaterialDimension, bioAssay );
 
                 found = true;
                 break;
@@ -362,38 +362,38 @@ public class GeoConverter implements Converter {
         return found;
     }
 
-    /**
-     * @param result
-     * @return
-     */
-    private BioMaterialDimension getAssociatedBioMaterialDimension( BioAssayDimension result ) {
-        Collection<BioMaterialDimension> bioMaterialDimensions = result.getBioMaterialDimensions();
-        BioMaterialDimension bioMaterialDimension;
-        if ( bioMaterialDimensions == null || bioMaterialDimensions.isEmpty() ) {
-            bioMaterialDimension = BioMaterialDimension.Factory.newInstance();
-            result.getBioMaterialDimensions().add( bioMaterialDimension );
-        } else {
-            if ( bioMaterialDimensions.size() > 1 )
-                throw new UnsupportedOperationException( "Can't handle more than one BioMaterialDimension." );
-            bioMaterialDimension = bioMaterialDimensions.iterator().next();
-        }
-        return bioMaterialDimension;
-    }
+//    /**
+//     * @param result
+//     * @return
+//     */
+//    private BioMaterialDimension getAssociatedBioMaterialDimension( BioAssayDimension result ) {
+//        Collection<BioMaterialDimension> bioMaterialDimensions = result.getBioMaterialDimensions();
+//        BioMaterialDimension bioMaterialDimension;
+//        if ( bioMaterialDimensions == null || bioMaterialDimensions.isEmpty() ) {
+//            bioMaterialDimension = BioMaterialDimension.Factory.newInstance();
+//            result.getBioMaterialDimensions().add( bioMaterialDimension );
+//        } else {
+//            if ( bioMaterialDimensions.size() > 1 )
+//                throw new UnsupportedOperationException( "Can't handle more than one BioMaterialDimension." );
+//            bioMaterialDimension = bioMaterialDimensions.iterator().next();
+//        }
+//        return bioMaterialDimension;
+//    }
 
-    /**
-     * @param bioMaterialDimension
-     * @param bioAssay
-     */
-    private void matchBioMaterialToBioAssay( BioMaterialDimension bioMaterialDimension, BioAssay bioAssay ) {
-        Collection<BioMaterial> bioMaterials = bioAssay.getSamplesUsed();
-        assert !( bioMaterials == null || bioMaterials.isEmpty() );
-        if ( bioMaterials.size() > 1 ) {
-            throw new UnsupportedOperationException(
-                    "Can't handle more than one biomaterial per bioassay (sample used per bioassay)" );
-        }
-        BioMaterial matchingBioMaterial = bioMaterials.iterator().next();
-        bioMaterialDimension.getBioMaterials().add( matchingBioMaterial );
-    }
+//    /**
+//     * @param bioMaterialDimension
+//     * @param bioAssay
+//     */
+//    private void matchBioMaterialToBioAssay( BioMaterialDimension bioMaterialDimension, BioAssay bioAssay ) {
+//        Collection<BioMaterial> bioMaterials = bioAssay.getSamplesUsed();
+//        assert !( bioMaterials == null || bioMaterials.isEmpty() );
+//        if ( bioMaterials.size() > 1 ) {
+//            throw new UnsupportedOperationException(
+//                    "Can't handle more than one biomaterial per bioassay (sample used per bioassay)" );
+//        }
+//        BioMaterial matchingBioMaterial = bioMaterials.iterator().next();
+//        bioMaterialDimension.getBioMaterials().add( matchingBioMaterial );
+//    }
 
     /**
      * // *

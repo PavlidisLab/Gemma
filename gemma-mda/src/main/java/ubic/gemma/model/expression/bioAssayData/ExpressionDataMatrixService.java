@@ -82,18 +82,18 @@ public class ExpressionDataMatrixService {
         List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension()
                 .getDimensionBioAssays();
 
-        List<BioMaterial> biomaterials = ( List<BioMaterial> ) vectors.iterator().next().getBioAssayDimension()
-                .getBioMaterialDimensions().iterator().next().getBioMaterials();
+//        List<BioMaterial> biomaterials = ( List<BioMaterial> ) vectors.iterator().next().getBioAssayDimension()
+//                .getBioMaterialDimensions().iterator().next().getBioMaterials();
 
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
 
         // for ( BioAssay assay : bioAssays ) {
         // matrix.addColumnName( assay.getName() );
         // }
-
-        for ( BioMaterial bioMaterial : biomaterials ) {
-            matrix.addColumnName( bioMaterial.getName() );
-        }
+// FIXME broken
+//        for ( BioMaterial bioMaterial : biomaterials ) {
+//            matrix.addColumnName( bioMaterial.getName() );
+//        }
 
         int rowNum = 0;
         for ( DesignElementDataVector vector : vectors ) {

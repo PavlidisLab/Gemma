@@ -34,8 +34,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
-import ubic.gemma.model.expression.bioAssayData.BioMaterialDimensionService;
+//import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
+//import ubic.gemma.model.expression.bioAssayData.BioMaterialDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -56,7 +56,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
  * @spring.property name="factorValueService" ref="factorValueService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
- * @spring.property name="bioMaterialDimensionService" ref="bioMaterialDimensionService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
@@ -74,7 +73,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     private BioAssayService bioAssayService;
 
-    private BioMaterialDimensionService bioMaterialDimensionService;
+  //  private BioMaterialDimensionService bioMaterialDimensionService;
 
     private BioMaterialService bioMaterialService;
 
@@ -228,11 +227,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
         bioAssayDimension.setDimensionBioAssays( persistedBioAssays );
 
-        Collection<BioMaterialDimension> persistedBioMaterialDimensions = new HashSet<BioMaterialDimension>();
-        for ( BioMaterialDimension bad : bioAssayDimension.getBioMaterialDimensions() ) {
-            persistedBioMaterialDimensions.add( persistBioMaterialDimension( bad ) );
-        }
-        bioAssayDimension.setBioMaterialDimensions( persistedBioMaterialDimensions );
+//        Collection<BioMaterialDimension> persistedBioMaterialDimensions = new HashSet<BioMaterialDimension>();
+//        for ( BioMaterialDimension bad : bioAssayDimension.getBioMaterialDimensions() ) {
+//            persistedBioMaterialDimensions.add( persistBioMaterialDimension( bad ) );
+//        }
+//        bioAssayDimension.setBioMaterialDimensions( persistedBioMaterialDimensions );
 
         return bioAssayDimensionService.findOrCreate( bioAssayDimension );
     }
@@ -265,19 +264,19 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         return bioMaterialService.findOrCreate( entity );
     }
 
-    /**
-     * @param bioMaterialDimension
-     * @return
-     */
-    private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
-        assert bioMaterialDimensionService != null;
-        List<BioMaterial> persistentBioMaterials = new ArrayList<BioMaterial>();
-        for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
-            persistentBioMaterials.add( persistBioMaterial( bioMaterial ) );
-        }
-        bioMaterialDimension.setBioMaterials( persistentBioMaterials );
-        return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
-    }
+//    /**
+//     * @param bioMaterialDimension
+//     * @return
+//     */
+//    private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
+//        assert bioMaterialDimensionService != null;
+//        List<BioMaterial> persistentBioMaterials = new ArrayList<BioMaterial>();
+//        for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
+//            persistentBioMaterials.add( persistBioMaterial( bioMaterial ) );
+//        }
+//        bioMaterialDimension.setBioMaterials( persistentBioMaterials );
+//        return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
+//    }
 
     /**
      * @param entity
@@ -431,12 +430,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.bioAssayService = bioAssayService;
     }
 
-    /**
-     * @param bioMaterialDimensionService The bioMaterialDimensionService to set.
-     */
-    public void setBioMaterialDimensionService( BioMaterialDimensionService bioMaterialDimensionService ) {
-        this.bioMaterialDimensionService = bioMaterialDimensionService;
-    }
+//    /**
+//     * @param bioMaterialDimensionService The bioMaterialDimensionService to set.
+//     */
+//    public void setBioMaterialDimensionService( BioMaterialDimensionService bioMaterialDimensionService ) {
+//        this.bioMaterialDimensionService = bioMaterialDimensionService;
+//    }
 
     /**
      * @param bioMaterialService The bioMaterialService to set.
