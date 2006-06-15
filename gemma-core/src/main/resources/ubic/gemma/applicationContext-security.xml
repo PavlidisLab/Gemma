@@ -290,7 +290,6 @@
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.findOrCreate=user,admin
                 ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
-                ubic.gemma.model.expression.bioAssayData.BioMaterialDimensionService.findOrCreate=user,admin
                 ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.getBioMaterials=user,admin
                 ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate=user,admin 
