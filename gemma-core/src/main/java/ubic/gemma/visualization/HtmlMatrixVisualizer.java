@@ -31,6 +31,7 @@ import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -73,8 +74,12 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
         double[][] data = new double[deCol.size()][];
         int i = 0;
         for ( DesignElement designElement : deCol ) {
-            DesignElementDataVector vector = designElement.getDesignElementDataVector();
-           
+            // DesignElementDataVector vector = designElement.getDesignElementDataVector();
+            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
+                    .getDesignElementDataVectors();
+            Iterator iter = vectors.iterator();
+            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
+
             data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
             i++;
         }

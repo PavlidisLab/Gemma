@@ -71,7 +71,11 @@ public class MatrixVisualizationData {
             // FIXME I have made the association between DesignElement and DesignElementDataVector bi-directional.
             String key = ( ( CompositeSequence ) designElement ).getName();
 
-            DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
+            // DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
+            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
+                    .getDesignElementDataVectors();
+            Iterator iter = vectors.iterator();
+            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
 
             dataMap.put( key, vector );
         }
@@ -86,13 +90,11 @@ public class MatrixVisualizationData {
 
         for ( DesignElement designElement : designElements ) {
             ByteArrayConverter converter = new ByteArrayConverter();
-            // Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
-            // .getDesignElementDataVector();
-            // Iterator iter = vectors.iterator();
-            DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();// (
-            // DesignElementDataVector
-            // )
-            // iter.next();
+            // DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
+            Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
+                    .getDesignElementDataVectors();
+            Iterator iter = vectors.iterator();
+            DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
 
             String key = ( ( CompositeSequence ) designElement ).getName();
 

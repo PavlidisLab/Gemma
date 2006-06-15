@@ -91,9 +91,6 @@ public class MatrixVisualizationDataTest extends TestCase {
             double[] row = sconverter.stringArrayToDoubles( sarray );
             values[i] = bconverter.doubleArrayToBytes( row );
 
-            // log.warn( values[i][0] );
-            // log.warn( values[i][1] );
-
             i++;
         }
 
@@ -122,9 +119,12 @@ public class MatrixVisualizationDataTest extends TestCase {
 
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
             vector.setData( data[i] );
-            //vector.setDesignElement( cs );
-          
-            cs.setDesignElementDataVector( vector );
+            vector.setDesignElement( cs );
+
+            // cs.setDesignElementDataVector( vector );
+            Collection<DesignElementDataVector> vectors = new HashSet();
+            vectors.add( vector );
+            cs.setDesignElementDataVectors( vectors );
 
             designElements.add( cs );
         }
