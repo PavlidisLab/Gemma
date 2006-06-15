@@ -18,15 +18,19 @@
  */
 package ubic.gemma.visualization;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.gui.ColorMap;
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -39,6 +43,7 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     private List<String> rowNames = null;
     private List<String> colNames = null;
     private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/outImage.png";
+    private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
     /**
      * @return MatrixVisualizationData
@@ -68,7 +73,9 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
         double[][] data = new double[deCol.size()][];
         int i = 0;
         for ( DesignElement designElement : deCol ) {
-            data[i] = byteArrayConverter.byteArrayToDoubles( designElement.getDesignElementDataVector().getData() );
+            DesignElementDataVector vector = designElement.getDesignElementDataVector();
+           
+            data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
             i++;
         }
 
@@ -146,6 +153,15 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      */
     public void setRowLabels( List<String> rowNames ) {
         this.rowNames = rowNames;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#setColorMap(null[])
+     */
+    public void setColorMap( Color[] colorMap ) {
+        this.colorMap = colorMap;
     }
 
 }

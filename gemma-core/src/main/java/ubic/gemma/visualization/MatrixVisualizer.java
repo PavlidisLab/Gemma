@@ -18,6 +18,7 @@
  */
 package ubic.gemma.visualization;
 
+import java.awt.Color;
 import java.util.List;
 
 /**
@@ -56,4 +57,10 @@ public interface MatrixVisualizer {
      * @param colLabels
      */
     public void setColLabels( List<String> colLabels );
+    
+    /**
+     * 
+     * @param colorMap
+     */
+    public void setColorMap(Color[] colorMap);
 }

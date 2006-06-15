@@ -18,20 +18,14 @@
  */
 package ubic.gemma.visualization;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.gui.ColorMatrix;
-import ubic.basecode.gui.JMatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -76,6 +70,7 @@ public class MatrixVisualizationData {
         for ( DesignElement designElement : designElements ) {
             // FIXME I have made the association between DesignElement and DesignElementDataVector bi-directional.
             String key = ( ( CompositeSequence ) designElement ).getName();
+
             DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
 
             dataMap.put( key, vector );
@@ -91,7 +86,14 @@ public class MatrixVisualizationData {
 
         for ( DesignElement designElement : designElements ) {
             ByteArrayConverter converter = new ByteArrayConverter();
-            DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();
+            // Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
+            // .getDesignElementDataVector();
+            // Iterator iter = vectors.iterator();
+            DesignElementDataVector vector = ( ( CompositeSequence ) designElement ).getDesignElementDataVector();// (
+            // DesignElementDataVector
+            // )
+            // iter.next();
+
             String key = ( ( CompositeSequence ) designElement ).getName();
 
             byte[] byteData = vector.getData();

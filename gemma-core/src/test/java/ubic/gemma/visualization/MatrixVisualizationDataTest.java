@@ -33,6 +33,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.gui.ColorMap;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.StringConverter;
 import ubic.gemma.loader.util.parser.TabDelimParser;
@@ -121,7 +122,8 @@ public class MatrixVisualizationDataTest extends TestCase {
 
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
             vector.setData( data[i] );
-            vector.setDesignElement( cs );
+            //vector.setDesignElement( cs );
+          
             cs.setDesignElementDataVector( vector );
 
             designElements.add( cs );
@@ -160,6 +162,7 @@ public class MatrixVisualizationDataTest extends TestCase {
         visualizer.setColLabels( Arrays.asList( colNames ) );
         visualizer.setRowLabels( Arrays.asList( rowNames ) );
         // visualizer.createVisualization( ddata, "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+        visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
         visualizer.createVisualization( visualizationData,
                 "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
 
