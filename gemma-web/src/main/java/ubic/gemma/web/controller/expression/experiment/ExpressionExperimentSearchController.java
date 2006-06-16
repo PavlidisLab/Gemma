@@ -141,16 +141,18 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         String[] searchIds = StringUtils.split( searchString, "," );
+        String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
+        if ( filename == null ) filename = "outImage.png";// FIXME use validation instead
 
-        if ( searchIds == null ) {
+        if ( searchIds == null ) {// FIXME not necessary
             searchIds = new String[1];
             searchIds[0] = searchString;
         }
 
         Collection<DesignElement> designElements = new HashSet();
         for ( int i = 0; i < searchIds.length; i++ ) {
-            searchIds[i] = StringUtils.trimLeadingWhitespace( searchIds[i] );
             log.debug( searchIds[i] );
+            searchIds[i] = StringUtils.trimLeadingWhitespace( searchIds[i] );
             designElements.add( compositeSequenceService.findByName( searchIds[i] ) );
         }
 
@@ -161,8 +163,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
             MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
 
             log.debug( "creating visualization" );
-            visualizer.createVisualization( visualizationData,
-                    "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+            visualizer.createVisualization( visualizationData, filename );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image

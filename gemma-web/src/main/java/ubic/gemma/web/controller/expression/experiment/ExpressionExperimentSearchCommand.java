@@ -20,8 +20,6 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.Serializable;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 /**
  * @author keshav
  * @version $Id$
@@ -43,6 +41,22 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     private String searchString = null;
 
     private boolean suppressVisualizations;
+    
+    private String filename = null;
+
+    /**
+     * @return Returns the filename.
+     */
+    public String getFilename() {
+        return filename;
+    }
+
+    /**
+     * @param filename The filename to set.
+     */
+    public void setFilename( String filename ) {
+        this.filename = filename;
+    }
 
     /**
      * @return boolean
