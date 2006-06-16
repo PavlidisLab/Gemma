@@ -18,9 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -37,6 +40,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.visualization.HtmlMatrixVisualizer;
+import ubic.gemma.visualization.MatrixVisualizationData;
+import ubic.gemma.visualization.MatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -150,8 +156,13 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
 
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( id );
-            // MatrixVisualizationData mVisualizationData = new
-            // MatrixVisualizationData(designElements, ee);
+            MatrixVisualizationData visualizationData = new MatrixVisualizationData( ee, designElements );
+
+            MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+
+            log.debug( "creating visualization" );
+            visualizer.createVisualization( visualizationData,
+                    "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image

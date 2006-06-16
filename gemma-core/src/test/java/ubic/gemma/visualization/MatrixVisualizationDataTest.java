@@ -21,7 +21,6 @@ package ubic.gemma.visualization;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,7 +32,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.gui.ColorMap;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.StringConverter;
 import ubic.gemma.loader.util.parser.TabDelimParser;
@@ -141,6 +139,26 @@ public class MatrixVisualizationDataTest extends TestCase {
      */
     @Override
     protected void tearDown() throws Exception {
+        values = null;
+        rowNames = null;
+        colNames = null;
+        visualizationData = null;
+    }
+
+    /**
+     * 
+     *
+     */
+    public void testMatrixVisualizationDataPrimitiveMatrix() {
+        double[][] ddata = new double[rowNames.length][];
+        for ( int i = 0; i < ddata.length; i++ ) {
+            ddata[i] = bconverter.byteArrayToDoubles( values[i] );
+        }
+
+        MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+
+        visualizer.createVisualization( visualizationData,
+                "gemma-core/src/test/java/ubic/gemma/visualization/outImage0.png" );
 
     }
 
@@ -152,19 +170,15 @@ public class MatrixVisualizationDataTest extends TestCase {
 
         // vizualizationData.printData();
 
-        double[][] ddata = new double[rowNames.length][];
-        for ( int i = 0; i < ddata.length; i++ ) {
-            ddata[i] = bconverter.byteArrayToDoubles( values[i] );
-        }
-
         MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
 
-        visualizer.setColLabels( Arrays.asList( colNames ) );
-        visualizer.setRowLabels( Arrays.asList( rowNames ) );
-        // visualizer.createVisualization( ddata, "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
-        visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
+        // visualizer.setColLabels( Arrays.asList( colNames ) );
+        // visualizer.setRowLabels( Arrays.asList( rowNames ) );
+
+        // visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
+
         visualizer.createVisualization( visualizationData,
-                "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+                "gemma-core/src/test/java/ubic/gemma/visualization/outImage1.png" );
 
     }
 }

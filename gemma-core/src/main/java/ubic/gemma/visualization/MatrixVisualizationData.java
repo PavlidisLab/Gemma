@@ -48,7 +48,8 @@ public class MatrixVisualizationData {
 
     private CompositeSequenceService compositeSequenceService = null;
 
-    private Map dataMap = new HashMap();
+    @SuppressWarnings("unchecked")
+    private Map<String, DesignElementDataVector> dataMap = new HashMap();
 
     /**
      * 
@@ -78,6 +79,8 @@ public class MatrixVisualizationData {
             DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
 
             dataMap.put( key, vector );
+
+            printData();
         }
     }
 

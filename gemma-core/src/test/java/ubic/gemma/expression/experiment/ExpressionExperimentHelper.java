@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006 Columbia University
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,21 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.expression.experiment;
+package ubic.gemma.expression.experiment;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -48,7 +41,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
@@ -56,29 +48,18 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
- * Tests the ExpressionExperimentController.
+ * A utility to load expression experiment test data.
  * 
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentControllerIntegrationTest extends BaseTransactionalSpringContextTest {
-    private static Log log = LogFactory.getLog( ExpressionExperimentControllerIntegrationTest.class.getName() );
-
-    /**
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-    }
+public class ExpressionExperimentHelper extends BaseTransactionalSpringContextTest {
 
     /**
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection getCompositeSequences() {
+    private Collection<CompositeSequence> getCompositeSequences() {
         Collection<CompositeSequence> csCol = new HashSet();
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
@@ -92,7 +73,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection getArrayDesignsUsed() {
+    private Collection<ArrayDesign> getArrayDesignsUsed() {
         Collection<ArrayDesign> adCol = new HashSet();
         ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
@@ -113,7 +94,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection getBioMaterials() {
+    private Collection<BioMaterial> getBioMaterials() {
         BioMaterial bm = BioMaterial.Factory.newInstance();
 
         Taxon t = Taxon.Factory.newInstance();
@@ -150,17 +131,17 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
     }
 
     /**
-     * @return
+     * @return Collection
      */
     @SuppressWarnings("unchecked")
-    private Collection getBioAssays() {
+    private Collection<BioAssay> getBioAssays() {
         Collection<BioAssay> baCol = new HashSet();
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance();
             ba.setName( "Bioassay " + i );
             ba.setDescription( i + ": A test bioassay." );
             ba.setSamplesUsed( getBioMaterials() );
-            ba.setArrayDesignsUsed( getArrayDesignsUsed() );
+            // ba.setArrayDesignsUsed( getArrayDesignsUsed() );
 
             if ( i < ( testNumCollectionElements - 5 ) ) {
                 ExternalDatabaseService eds = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
@@ -181,10 +162,10 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
     }
 
     /**
-     * @return
+     * @return Collection
      */
     @SuppressWarnings("unchecked")
-    private Collection getFactorValues() {
+    private Collection<FactorValue> getFactorValues() {
         Collection<FactorValue> fvCol = new HashSet();
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
             FactorValue fv = FactorValue.Factory.newInstance();
@@ -198,7 +179,7 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection getExperimentalFactors() {
+    private Collection<ExperimentalFactor> getExperimentalFactors() {
         Collection<ExperimentalFactor> efCol = new HashSet();
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
@@ -238,20 +219,30 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
     }
 
     @SuppressWarnings("unchecked")
-    private Collection getDesignElementDataVectors( ExpressionExperiment ee ) {
-        CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+    private Collection<DesignElementDataVector> getDesignElementDataVectors( ExpressionExperiment ee ) {
+
         Collection<DesignElementDataVector> vectorCol = new HashSet();
         for ( int i = 0; i < testNumCollectionElements; i++ ) {
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-            byte[] data = new byte[testNumCollectionElements];
-            for ( int j = 0; j < testNumCollectionElements; j++ ) {
-                data[i] = ( byte ) RandomUtils.nextDouble();
+            double[] data = new double[testNumCollectionElements / 2];
+            for ( int j = 0; j < data.length; j++ ) {
+                data[j] = ( double ) RandomUtils.nextDouble();
             }
-            vector.setData( data );
+            ByteArrayConverter bconverter = new ByteArrayConverter();
+            byte[] bdata = bconverter.doubleArrayToBytes( data );
+            vector.setData( bdata );
 
+            CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( i + "_at" );
-            cs.setArrayDesign( ArrayDesign.Factory.newInstance() );
+
+            ArrayDesign ad = ArrayDesign.Factory.newInstance();
+            ad.setName( "arrayDesign_" + i );
+            ArrayDesignDao adDao = ( ArrayDesignDao ) this.getBean( "arrayDesignDao" );
+            ad = adDao.findOrCreate( ad );
+
+            cs.setArrayDesign( ad );
+
             cs = csService.findOrCreate( cs );
             vector.setDesignElement( cs );
             vector.setExpressionExperiment( ee );
@@ -316,72 +307,4 @@ public class ExpressionExperimentControllerIntegrationTest extends BaseTransacti
         log.debug( "Loading test expression experiment." );
         ee = ees.create( ee ); // FIXME - again, I would like to use findOrCreate
     }
-
-    /**
-     * Tests getting all the expressionExperiments, which is implemented in
-     * {@link ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController} in method
-     * {@link #handleRequest(HttpServletRequest request, HttpServletResponse response)}.
-     * 
-     * @throws Exception
-     */
-    public void testGetExpressionExperiments() throws Exception {
-        log.debug( "-> (association), => (composition)" );
-        /* set to avoid using stale data (data from previous tests */
-        setFlushModeCommit();
-
-        /* uncomment to use prod environment instead of test environment */
-        // this.setDisableTestEnv( true );
-        onSetUpInTransaction();
-
-        setExpressionExperimentDependencies();
-
-        ExpressionExperimentController c = ( ExpressionExperimentController ) getBean( "expressionExperimentController" );
-
-        MockHttpServletRequest req = new MockHttpServletRequest( "GET",
-                "/expressionExperiment/showAllExpressionExperiments.html" );
-        req.setRequestURI( "/expressionExperiment/showAllExpressionExperiments.html" );
-
-        ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
-
-        ExpressionExperimentDao eeDao = ( ExpressionExperimentDao ) getBean( "expressionExperimentDao" );
-        ExpressionExperiment expressionExperiment = eeDao.findByName( "Expression Experiment" );
-        log.debug( "Contact: " + expressionExperiment.getOwner() );
-
-        Map m = mav.getModel();
-
-        assertNotNull( m.get( "expressionExperiments" ) );
-        assertEquals( mav.getViewName(), "expressionExperiments" );
-
-        /* uncomment to persist and leave data in database */
-        // setComplete();
-    }
-
-    /**
-     * @throws Exception
-     */
-    // @SuppressWarnings("unchecked")
-    // public void testGetExperimentalDesigns() throws Exception {
-    //
-    // ExpressionExperimentController c = ( ExpressionExperimentController ) ctx
-    // .getBean( "expressionExperimentController" );
-    //
-    // MockHttpServletRequest req = new MockHttpServletRequest( "GET", "Gemma/experimentalDesigns.htm" );
-    // req.setRequestURI( "/Gemma/experimentalDesigns.htm" );
-    // // cannot set parameter (setParmeter does not exist) so I had to set the attribute. On the server side,
-    // // I have used a getAttribute as opposed to a getParameter - difference?
-    // req.setAttribute( "name", "Expression Experiment" );
-    //
-    // ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
-    //
-    // /*
-    // * In this case, the map contains 1 element of type Collection. That is, a collection of experimental designs.
-    // */
-    // Map<String, Object> m = mav.getModel();
-    //
-    // Collection<ExperimentalDesign> col = ( Collection<ExperimentalDesign> ) m.get( "experimentalDesigns" );
-    // log.debug( new Integer( col.size() ) );
-    //
-    // assertNotNull( m.get( "experimentalDesigns" ) );
-    // assertEquals( mav.getViewName(), "experimentalDesign.GetAll.results.view" );
-    // }
 }

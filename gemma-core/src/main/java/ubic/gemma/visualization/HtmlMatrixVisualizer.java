@@ -20,9 +20,13 @@ package ubic.gemma.visualization;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -39,6 +43,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @version $Id$
  */
 public class HtmlMatrixVisualizer implements MatrixVisualizer {
+    Log log = LogFactory.getLog( this.getClass() );
 
     private MatrixVisualizationData matrixVisualizationData = null;
     private List<String> rowNames = null;
@@ -65,11 +70,11 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData)
      */
+    @SuppressWarnings("unchecked")
     public void createVisualization( MatrixVisualizationData matrixVisualizationData ) {
 
-        assert rowNames != null && colNames != null : "Labels not set";
-
         Collection<DesignElement> deCol = matrixVisualizationData.getDesignElements();
+
         ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
         double[][] data = new double[deCol.size()][];
         int i = 0;
@@ -82,6 +87,22 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
 
             data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
             i++;
+        }
+    
+        if ( rowNames == null ) {
+            System.out.println( "Row labels not set.  Using defaults" );
+            rowNames = new ArrayList();
+            for ( DesignElement designElement : deCol ) {
+                rowNames.add( designElement.getName() );
+            }
+        }
+
+        if ( colNames == null ) {
+            System.out.println( "Column labels not set.  Using defaults" );
+            colNames = new ArrayList();
+            for ( int j = 0; j < data[0].length; j++ ) {
+                colNames.add( String.valueOf( j ) );
+            }
         }
 
         DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
