@@ -13,11 +13,11 @@
         <url>http://bioinformatics.ubc.ca/</url>
     </organization>
     <modules>
+    	<module>gemma-util</module>
+    	<module>gemma-mda</module>
         <module>gemma-core</module>
-        <module>gemma-mda</module>
-        <module>gemma-web</module>
-        <module>gemma-util</module>
         <module>gemma-testing</module>
+        <module>gemma-web</module>
     </modules>
     <packaging>pom</packaging>
     <scm>
