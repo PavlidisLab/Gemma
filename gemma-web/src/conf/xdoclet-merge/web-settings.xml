@@ -44,6 +44,8 @@
 </context-param>
 
 <!-- Add the bootstrap listener to start the root WebApplicationContext -->
+<!-- cannot use with spring-1.2.8.jar (used with spring-1.2.6.jar).
 <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 </listener>
+-->
