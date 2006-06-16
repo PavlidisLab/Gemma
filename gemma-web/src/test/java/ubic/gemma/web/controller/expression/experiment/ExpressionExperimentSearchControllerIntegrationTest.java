@@ -55,7 +55,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends BaseTra
         ExpressionExperimentSearchCommand command = new ExpressionExperimentSearchCommand();
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "0_at, 1_at" );
-        command.setFilename( "gemma-core/src/test/java/ubic/gemma/visualization/outImage.png" );
+        command.setFilename( "build/Gemma/images/outImage.png" );
         command.setId( new Long( 0 ) );
 
         if ( ( ( ExpressionExperimentDao ) this.getBean( "expressionExperimentDao" ) ).loadAll().size() == 0 )
