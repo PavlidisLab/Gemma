@@ -214,14 +214,14 @@
 <!-- ==================================================== -->
 
 <!--  Use this if the command class is not _actually_ an "Impl" -->
-<bean id="genericBeanValidator" class="org.springmodules.commons.validator.DefaultBeanValidator">
+<bean id="genericBeanValidator" class="org.springmodules.validation.commons.DefaultBeanValidator">
     <property name="validatorFactory">
         <ref bean="validatorFactory" />
     </property>
 </bean>
 
 <!-- Use this type of validator if you use a data model object as the command object -->
-<bean id="userValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+<bean id="userValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
     <property name="validatorFactory">
         <ref bean="validatorFactory" />
     </property>
@@ -230,7 +230,7 @@
     </property>
 </bean>
 
-<bean id="bibliographicReferenceValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+<bean id="bibliographicReferenceValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
     <property name="validatorFactory">
         <ref bean="validatorFactory" />
     </property>
@@ -239,7 +239,7 @@
     </property>
 </bean>
 
-<bean id="databaseEntryValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+<bean id="databaseEntryValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
     <property name="validatorFactory">
         <ref bean="validatorFactory" />
     </property>
@@ -248,7 +248,7 @@
     </property>
 </bean>
 
-<bean id="bioAssayValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+<bean id="bioAssayValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
     <property name="validatorFactory">
         <ref bean="validatorFactory" />
     </property>
@@ -257,7 +257,7 @@
     </property>
 </bean>
 
-<bean id="expressionExperimentValidator" class="org.springmodules.commons.validator.ConfigurableBeanValidator">
+<bean id="expressionExperimentValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
     <property name="validatorFactory">
         <ref bean="validatorFactory" />
     </property>
