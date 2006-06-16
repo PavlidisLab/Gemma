@@ -21,7 +21,7 @@
 -->
 <beans>
     <bean id="validatorFactory"
-        class="org.springmodules.commons.validator.DefaultValidatorFactory">
+        class="org.springmodules.validation.commons.DefaultValidatorFactory">
         <property name="validationConfigLocations">
             <list>
                 <value>/WEB-INF/validator-rules.xml</value><!--  the standard struts-validation rules -->

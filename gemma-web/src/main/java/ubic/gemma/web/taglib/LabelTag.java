@@ -41,7 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.support.RequestContext;
-import org.springmodules.commons.validator.ValidatorFactory;
+import org.springmodules.validation.commons.ValidatorFactory;
 
 /**
  * <p>

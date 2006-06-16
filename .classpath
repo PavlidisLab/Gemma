@@ -30,11 +30,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-validator/commons-validator/1.1.4/commons-validator-1.1.4.jar"/>
-	<classpathentry sourcepath="/MAVEN_REPO/spring/spring-framework-1.2.6/src" kind="var" path="M2_REPO/spring/spring/1.2.6/spring-1.2.6.jar">
-		<attributes>
-			<attribute value="http://static.springframework.org/spring/docs/1.2.x/api/" name="javadoc_location"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/spring/spring/1.2.8/spring-1.2.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/velocity/velocity/1.4/velocity-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.1/commons-lang-2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/aopalliance/aopalliance/1.0/aopalliance-1.0.jar"/>
@@ -65,7 +61,7 @@
 	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.0-RC1/acegi-security-1.0.0-RC1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/rserve/JRclient/RE817/JRclient-RE817.jar"/>
-	<classpathentry kind="var" path="M2_REPO/spring/springmodules-validator/0.2/springmodules-validator-0.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/spring/springmodules-validator/0.4/springmodules-validator-0.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.3/commons-codec-1.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-dbcp/commons-dbcp/1.2/commons-dbcp-1.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-fileupload/commons-fileupload/1.1/commons-fileupload-1.1.jar"/>
@@ -78,7 +74,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jetty/org.mortbay.jetty/5.1.10/org.mortbay.jetty-5.1.10.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-el/commons-el/1.0/commons-el-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/spring/spring-mock/1.2.6/spring-mock-1.2.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/spring/spring-mock/1.2.8/spring-mock-1.2.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp-api/2.0/jsp-api-2.0.jar"/>
 	<classpathentry kind="con" path="com.genuitec.eclipse.j2eedt.core.J2EE14_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>

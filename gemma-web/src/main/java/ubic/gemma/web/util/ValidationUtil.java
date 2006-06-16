@@ -23,7 +23,7 @@ import org.apache.commons.validator.GenericValidator;
 import org.apache.commons.validator.ValidatorAction;
 import org.apache.commons.validator.util.ValidatorUtils;
 import org.springframework.validation.Errors;
-import org.springmodules.commons.validator.FieldChecks;
+import org.springmodules.validation.commons.FieldChecks;
 
 /**
  * ValidationUtil Helper class for performing custom validations that aren't already included in the core Commons
