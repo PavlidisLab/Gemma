@@ -18,12 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -56,8 +53,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchCommand"
  * @spring.property name = "formView" value="searchExpressionExperimentForm"
- * @spring.property name = "successView"
- *                  value="redirect:/expressionExperiment/showExpressionExperimentSearchResults.html"
+ * @spring.property name = "successView" value="showExpressionExperimentSearchResults"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  */
@@ -142,9 +138,10 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         String[] searchIds = StringUtils.split( searchString, "," );
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
-        if ( filename == null ) filename = "outImage.png";// FIXME use validation instead
+        if ( filename == null ) filename = request.getContextPath() + "/images/outImage.png";// FIXME use validation
+                                                                                                // instead
 
-        if ( searchIds == null ) {// FIXME not necessary
+        if ( searchIds == null ) {// FIXME necessary?
             searchIds = new String[1];
             searchIds[0] = searchString;
         }
