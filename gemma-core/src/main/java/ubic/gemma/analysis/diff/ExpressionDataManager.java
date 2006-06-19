@@ -84,7 +84,7 @@ public class ExpressionDataManager {
      */
     protected Collection<BioAssay> getDataVectorBioAssays(){
         Collection<DesignElementDataVector> dataVectors = getDesignElementDataVectors();
-        return dataVectors.iterator().next().getBioAssayDimension().getDimensionBioAssays();
+        return dataVectors.iterator().next().getBioAssayDimension().getBioAssays();
     }
     
     /**

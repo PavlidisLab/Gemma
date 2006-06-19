@@ -34,8 +34,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-//import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
-//import ubic.gemma.model.expression.bioAssayData.BioMaterialDimensionService;
+// import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
+// import ubic.gemma.model.expression.bioAssayData.BioMaterialDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -72,8 +72,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private BioAssayDimensionService bioAssayDimensionService;
 
     private BioAssayService bioAssayService;
-
-  //  private BioMaterialDimensionService bioMaterialDimensionService;
 
     private BioMaterialService bioMaterialService;
 
@@ -222,17 +220,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( !isTransient( bioAssayDimension ) ) return bioAssayDimension;
 
         List<BioAssay> persistedBioAssays = new ArrayList<BioAssay>();
-        for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
+        for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             persistedBioAssays.add( persistBioAssay( bioAssay ) );
         }
-        bioAssayDimension.setDimensionBioAssays( persistedBioAssays );
-
-//        Collection<BioMaterialDimension> persistedBioMaterialDimensions = new HashSet<BioMaterialDimension>();
-//        for ( BioMaterialDimension bad : bioAssayDimension.getBioMaterialDimensions() ) {
-//            persistedBioMaterialDimensions.add( persistBioMaterialDimension( bad ) );
-//        }
-//        bioAssayDimension.setBioMaterialDimensions( persistedBioMaterialDimensions );
-
+        bioAssayDimension.setBioAssays( persistedBioAssays );
         return bioAssayDimensionService.findOrCreate( bioAssayDimension );
     }
 
@@ -264,19 +255,19 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         return bioMaterialService.findOrCreate( entity );
     }
 
-//    /**
-//     * @param bioMaterialDimension
-//     * @return
-//     */
-//    private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
-//        assert bioMaterialDimensionService != null;
-//        List<BioMaterial> persistentBioMaterials = new ArrayList<BioMaterial>();
-//        for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
-//            persistentBioMaterials.add( persistBioMaterial( bioMaterial ) );
-//        }
-//        bioMaterialDimension.setBioMaterials( persistentBioMaterials );
-//        return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
-//    }
+    // /**
+    // * @param bioMaterialDimension
+    // * @return
+    // */
+    // private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
+    // assert bioMaterialDimensionService != null;
+    // List<BioMaterial> persistentBioMaterials = new ArrayList<BioMaterial>();
+    // for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
+    // persistentBioMaterials.add( persistBioMaterial( bioMaterial ) );
+    // }
+    // bioMaterialDimension.setBioMaterials( persistentBioMaterials );
+    // return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
+    // }
 
     /**
      * @param entity
@@ -430,12 +421,12 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.bioAssayService = bioAssayService;
     }
 
-//    /**
-//     * @param bioMaterialDimensionService The bioMaterialDimensionService to set.
-//     */
-//    public void setBioMaterialDimensionService( BioMaterialDimensionService bioMaterialDimensionService ) {
-//        this.bioMaterialDimensionService = bioMaterialDimensionService;
-//    }
+    // /**
+    // * @param bioMaterialDimensionService The bioMaterialDimensionService to set.
+    // */
+    // public void setBioMaterialDimensionService( BioMaterialDimensionService bioMaterialDimensionService ) {
+    // this.bioMaterialDimensionService = bioMaterialDimensionService;
+    // }
 
     /**
      * @param bioMaterialService The bioMaterialService to set.

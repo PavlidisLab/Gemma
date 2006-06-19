@@ -54,7 +54,7 @@ public class BioAssayDaoImplTest extends BaseTransactionalSpringContextTest {
             bas.add( ba );
         }
 
-        bad.setDimensionBioAssays( bas );
+        bad.setBioAssays( bas );
         bioAssayDimensionDao.update( bad );
 
     }

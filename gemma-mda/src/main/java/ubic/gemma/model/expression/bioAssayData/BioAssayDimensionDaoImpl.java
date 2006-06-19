@@ -57,7 +57,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                 queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
             }
 
-            queryObject.add( Restrictions.sizeEq( "dimensionBioAssays", bioAssayDimension.getDimensionBioAssays()
+            queryObject.add( Restrictions.sizeEq( "dimensionBioAssays", bioAssayDimension.getBioAssays()
                     .size() ) );
 
             // this will not work with detached bioassays.
@@ -66,7 +66,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
             // FIXME this isn't fail-safe, and also doesn't distinguish between dimensions that differ only in the
             // ordering.
             Collection<String> names = new HashSet<String>();
-            for ( BioAssay bioAssay : bioAssayDimension.getDimensionBioAssays() ) {
+            for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
                 names.add( bioAssay.getName() );
             }
             queryObject.createCriteria( "dimensionBioAssays" ).add( Restrictions.in( "name", names ) );
@@ -83,7 +83,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      */
     @Override
     public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null || bioAssayDimension.getDimensionBioAssays() == null ) return null;
+        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null ) return null;
         BioAssayDimension newBioAssayDimension = find( bioAssayDimension );
         if ( newBioAssayDimension != null ) {
             BeanPropertyCompleter.complete( newBioAssayDimension, bioAssayDimension );
