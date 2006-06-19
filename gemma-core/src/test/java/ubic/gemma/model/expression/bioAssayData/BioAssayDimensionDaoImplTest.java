@@ -55,11 +55,10 @@ public class BioAssayDimensionDaoImplTest extends BaseTransactionalSpringContext
 
         for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
             BioAssay ba = this.getTestPersistentBioAssay();
-            ba.getBioAssayDimensions().add( bad );
             bas.add( ba );
         }
 
-        bad.setDimensionBioAssays( bas );
+        bad.setBioAssays( bas );
         bioAssayDimensionDao.update( bad );
 
         ArrayDesign ad = this.getTestPersistentArrayDesign( NUMTESTCOMPOSITESEQUENCES );
@@ -78,13 +77,13 @@ public class BioAssayDimensionDaoImplTest extends BaseTransactionalSpringContext
 
     }
 
-//    public void testFindBioAssayDimension() {
-//        fail( "Not yet implemented" );
-//    }
-//
-//    public void testFindOrCreateBioAssayDimension() {
-//        fail( "Not yet implemented" );
-//    }
+    // public void testFindBioAssayDimension() {
+    // fail( "Not yet implemented" );
+    // }
+    //
+    // public void testFindOrCreateBioAssayDimension() {
+    // fail( "Not yet implemented" );
+    // }
 
     /**
      * Test for HQL query.

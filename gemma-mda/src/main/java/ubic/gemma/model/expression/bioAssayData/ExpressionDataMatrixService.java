@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -69,6 +68,7 @@ public class ExpressionDataMatrixService {
     }
 
     /**
+     * Convert {@link DesignElementDataVector}s into a {@link DoubleMatrixNamed}.
      * @param vectors
      * @return
      */
@@ -80,20 +80,15 @@ public class ExpressionDataMatrixService {
         ByteArrayConverter bac = new ByteArrayConverter();
 
         List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension()
-                .getDimensionBioAssays();
-
-//        List<BioMaterial> biomaterials = ( List<BioMaterial> ) vectors.iterator().next().getBioAssayDimension()
-//                .getBioMaterialDimensions().iterator().next().getBioMaterials();
+                .getBioAssays();
+        
+        assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
 
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
 
-        // for ( BioAssay assay : bioAssays ) {
-        // matrix.addColumnName( assay.getName() );
-        // }
-// FIXME broken
-//        for ( BioMaterial bioMaterial : biomaterials ) {
-//            matrix.addColumnName( bioMaterial.getName() );
-//        }
+         for ( BioAssay assay : bioAssays ) {
+            matrix.addColumnName( assay.getName() );
+        }
 
         int rowNum = 0;
         for ( DesignElementDataVector vector : vectors ) {

@@ -57,7 +57,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                 queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
             }
 
-            queryObject.add( Restrictions.sizeEq( "dimensionBioAssays", bioAssayDimension.getBioAssays()
+            queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays()
                     .size() ) );
 
             // this will not work with detached bioassays.
@@ -69,7 +69,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
             for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
                 names.add( bioAssay.getName() );
             }
-            queryObject.createCriteria( "dimensionBioAssays" ).add( Restrictions.in( "name", names ) );
+            queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
             return ( BioAssayDimension ) queryObject.uniqueResult();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
