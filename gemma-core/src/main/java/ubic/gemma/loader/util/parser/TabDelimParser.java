@@ -50,7 +50,7 @@ public class TabDelimParser extends BasicLineParser {
      * @param header
      * @throws IOException
      */
-    public void parse( InputStream is, boolean header ) throws IOException {// FIXME to i really want to override this?
+    public void parse( InputStream is, boolean header ) throws IOException {// FIXME do i really want to override this?
 
         linesParsed = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );

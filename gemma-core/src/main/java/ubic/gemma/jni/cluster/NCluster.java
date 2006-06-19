@@ -92,12 +92,12 @@ public class NCluster {
      * @return double [][]
      */
     public static double[][] readTabFile( String filename ) {
-        BasicLineParser parser = new TabDelimParser();
+        TabDelimParser parser = new TabDelimParser();
         InputStream is;
         Collection results = new HashSet();
         try {
             is = new FileInputStream( new File( filename ) );
-            parser.parse( is );
+            parser.parse( is, false );
             results = parser.getResults();
         } catch ( Exception e ) {
             e.printStackTrace();
