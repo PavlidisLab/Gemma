@@ -9,10 +9,10 @@ extern "C" {
 #endif
 /*
  * Class:     ubic_gemma_jni_cluster_NCluster
- * Method:    computeCompleteLinkage
+ * Method:    treeCluster
  * Signature: (IIICC[[D)[[I
  */
-JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_computeCompleteLinkage
+JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_treeCluster
   (JNIEnv *, jobject, jint, jint, jint, jchar, jchar, jobjectArray);
 
 #ifdef __cplusplus

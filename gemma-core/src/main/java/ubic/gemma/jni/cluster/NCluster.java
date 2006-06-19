@@ -39,37 +39,8 @@ import ubic.gemma.loader.util.parser.TabDelimParser;
  */
 public class NCluster {
     private static Log log = LogFactory.getLog( NCluster.class );
-    
-    /**
-     * dist       (input) char
-     * Defines which distance measure is used, as given by the table:
-     * dist=='e': Euclidean distance
-     * dist=='b': City-block distance
-     * dist=='c': correlation
-     * dist=='a': absolute value of the correlation
-     * dist=='u': uncentered correlation
-     * dist=='x': absolute uncentered correlation
-     * dist=='s': Spearman's rank correlation
-     * dist=='k': Kendall's tau
-     * For other values of dist, the default (Euclidean distance) is used.
-     * 
-     * method     (input) char
-     * Defines which hierarchical clustering method is used:
-     * method=='s': pairwise single-linkage clustering
-     * method=='m': pairwise maximum- (or complete-) linkage clustering
-     * method=='a': pairwise average-linkage clustering
-     * method=='c': pairwise centroid-linkage clustering
-     * 
-     * @param rows
-     * @param cols
-     * @param transpose
-     * @param dist
-     * @param method
-     * @param matrix
-     * @return int[][]
-     */
-    public native int[][] computeCompleteLinkage( int rows, int cols, int transpose, char dist, char method,
-            double matrix[][] );
+
+    public native int[][] treeCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][] );
 
     static Configuration config = null;
     static String baseDir = null;
@@ -90,7 +61,7 @@ public class NCluster {
      * @param filename
      * @return double [][]
      */
-    public static double[][] readTabFile( String filename ) {
+    private static double[][] readTabFile( String filename ) {
         TabDelimParser parser = new TabDelimParser();
         InputStream is;
         Collection results = new HashSet();
@@ -106,9 +77,10 @@ public class NCluster {
         double[][] values = new double[results.size()][];
         for ( Object result : results ) {
             String[] array = ( String[] ) result;
-            values[i] = new double[2];
-            values[i][0] = Double.parseDouble( array[2] );
-            values[i][1] = Double.parseDouble( array[4] );
+            values[i] = new double[array.length];
+            for ( int j = 0; j < values[i].length; j++ ) {
+                values[i][j] = Double.parseDouble( array[j] );
+            }
             i++;
         }
 
@@ -116,40 +88,56 @@ public class NCluster {
     }
 
     /**
+     * @return
+     */
+    private static double[][] testData() {
+        // filename = baseDir + ( String ) config.getProperty( "aTestDataSet_no_headers" );
+        double values[][] = new double[7][2];
+        /* a simple test example */
+        double[] d0 = { 1, 0 };
+        double[] d1 = { 4, 0 };
+        double[] d2 = { 5, 0 };
+        double[] d3 = { 9, 0 };
+        double[] d4 = { 10, 0 };
+        double[] d5 = { 10, 0 };
+        double[] d6 = { 3, 0 };
+
+        values[0] = d0;
+        values[1] = d1;
+        values[2] = d2;
+        values[3] = d3;
+        values[4] = d4;
+        values[5] = d5;
+        values[6] = d6;
+
+        return values;
+    }
+
+    /**
      * @param args
      */
-    public static void main( String[] args ) {
-        // FIXME Paul, I will move this.
+    public static void main( String[] args ) {// TODO refactor to use commons configuration
 
-        String filename = baseDir + ( String ) config.getProperty( "aTestDataSet_no_headers" );
+        double[][] data = null;
+        boolean test = false;
+        if ( args[0].equalsIgnoreCase( "t" ) || args[0].equalsIgnoreCase( "true" ) ) test = true;
 
-        double[][] data = readTabFile( filename );
+        String filename = args[1];
+        char distance = args[2].charAt( 0 );
+        char method = args[3].charAt( 0 );
+
+        if ( test )
+            data = testData();
+        else
+            data = readTabFile( filename );
 
         NCluster cluster = new NCluster();
 
-        /* uncomment me to use this example */
-        // double[][] dataCopy = new double[7][2];
-        //        
-        // double[] t0 = { 1, 0 };
-        // double[] t1 = { 4, 0 };
-        // double[] t2 = { 5, 0 };
-        // double[] t3 = { 9, 0 };
-        // double[] t4 = { 10, 0 };
-        // double[] t5 = { 10, 0 };
-        // double[] t6 = { 3, 0 };
-        //        
-        // dataCopy[0] = t0;
-        // dataCopy[1] = t1;
-        // dataCopy[2] = t2;
-        // dataCopy[3] = t3;
-        // dataCopy[4] = t4;
-        // dataCopy[5] = t5;
-        // dataCopy[6] = t6;
         StopWatch sw = new StopWatch();
         sw.start();
-        cluster.computeCompleteLinkage( data.length, data[0].length, 0, 'e', 'm', data );
+        cluster.treeCluster( data.length, data[0].length, 0, distance, method, data );
         sw.stop();
-        log.warn( sw.getTime() ); // 7 seconds
+        log.warn( sw.getTime() );
     }
 
 }

@@ -2800,7 +2800,7 @@ clustered, or the number of microarrays minus one if microarrays are clustered.
  * Method:    computeCompleteLinkage
  * Signature: (I[[D)[[I
  */
- JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_computeCompleteLinkage
+ JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_treeCluster
   (JNIEnv * env, jobject obj, jint nrows, jint ncols, jint ntranspose, jchar ndist, jchar nmethod, jobjectArray matrix)
 {
     
