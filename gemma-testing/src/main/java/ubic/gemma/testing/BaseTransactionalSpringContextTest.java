@@ -50,6 +50,20 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeDao;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayDao;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.genome.TaxonDao;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
@@ -86,15 +100,38 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     protected TaxonDao taxonDao;
 
+    protected ArrayDesignDao arrayDesignDao;
+
+    protected QuantitationTypeDao quantitationTypeDao;
+
+    protected ExpressionExperimentDao expressionExperimentDao;
+
+    protected CompositeSequenceDao compositeSequenceDao;
+
+    protected BioAssayDao bioAssayDao;
+    
     private boolean testEnvDisabled = false;
 
+/**
+ * Convenience method to  provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+
+ * @return
+ */    
+    protected BioAssay getTestPersistentBioAssay() {
+        BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
+        ba.setName(  RandomStringUtils.random( 10 ) + "_test" );
+        ba = ( BioAssay ) bioAssayDao.create( ba );
+        flushSession();
+        return ba;
+    }
+    
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      * 
      * @return
      */
-    public DatabaseEntry getTestPersistentDatabaseEntry() {
+    protected DatabaseEntry getTestPersistentDatabaseEntry() {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
 
         /* set the accession of database entry to the pubmed id. */
@@ -116,12 +153,67 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * 
      * @return
      */
-    public Contact getTestPersistentContact() {
+    protected Contact getTestPersistentContact() {
         Contact c = Contact.Factory.newInstance();
         c.setName( RandomStringUtils.random( 10 ) + "_test" );
         c = ( Contact ) contactDao.create( c );
         flushSession();
         return c;
+    }
+
+    /**
+     * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
+     * objects.
+     * 
+     * @return
+     */
+    protected QuantitationType getTestPersistentQuantitationType() {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( RandomStringUtils.random( 10 ) + "_test" );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsBackground( false );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
+        qt.setScale( ScaleType.LINEAR );
+        qt = ( QuantitationType ) quantitationTypeDao.create( qt );
+        flushSession();
+        return qt;
+    }
+
+    /**
+     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
+     * objects.
+     * 
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentExpressionExperiment() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setName( RandomStringUtils.random( 10 ) + "_test" );
+        ee = ( ExpressionExperiment ) expressionExperimentDao.create( ee );
+        flushSession();
+        return ee;
+    }
+
+    /**
+     * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
+     * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired.
+     * 
+     * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
+     * @return
+     */
+    protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences ) {
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+
+        for ( int i = 0; i < numCompositeSequences; i++ ) {
+            CompositeSequence de = CompositeSequence.Factory.newInstance();
+            de.setName( RandomStringUtils.random( 10 ) + "_test" );
+            de = ( CompositeSequence ) compositeSequenceDao.create( de );
+            ad.getCompositeSequences().add( de );
+        }
+
+        ad = ( ArrayDesign ) arrayDesignDao.create( ad );
+        flushSession();
+        return ad;
     }
 
     /**
@@ -222,11 +314,11 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     private Object getStandardLocations() {
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
-        return new String[] { "classpath:/ubic/gemma/localDataSource.xml", "classpath*:/ubic/gemma/applicationContext-*.xml",
-                "*-servlet.xml" };
+        // ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
+        // String daoType = db.getString( "dao.type" );
+        // String servletContext = db.getString( "servlet.name.0" );
+        return new String[] { "classpath:/ubic/gemma/localDataSource.xml",
+                "classpath*:/ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
     }
 
     /*
@@ -328,5 +420,25 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public boolean isTestEnvDisabled() {
         return testEnvDisabled;
+    }
+
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
+
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
+    }
+
+    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
+        this.compositeSequenceDao = compositeSequenceDao;
+    }
+
+    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
+        this.bioAssayDao = bioAssayDao;
     }
 }
