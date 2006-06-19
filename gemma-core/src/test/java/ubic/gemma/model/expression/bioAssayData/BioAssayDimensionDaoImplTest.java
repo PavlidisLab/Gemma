@@ -78,13 +78,13 @@ public class BioAssayDimensionDaoImplTest extends BaseTransactionalSpringContext
 
     }
 
-    public void testFindBioAssayDimension() {
-        fail( "Not yet implemented" );
-    }
-
-    public void testFindOrCreateBioAssayDimension() {
-        fail( "Not yet implemented" );
-    }
+//    public void testFindBioAssayDimension() {
+//        fail( "Not yet implemented" );
+//    }
+//
+//    public void testFindOrCreateBioAssayDimension() {
+//        fail( "Not yet implemented" );
+//    }
 
     /**
      * Test for HQL query.
