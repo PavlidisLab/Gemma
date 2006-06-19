@@ -18,13 +18,14 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService
  */
-public class BioAssayDimensionServiceImpl extends
-        ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase {
+public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase {
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
@@ -32,6 +33,14 @@ public class BioAssayDimensionServiceImpl extends
     protected ubic.gemma.model.expression.bioAssayData.BioAssayDimension handleFindOrCreate(
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) throws java.lang.Exception {
         return this.getBioAssayDimensionDao().findOrCreate( bioAssayDimension );
+    }
+
+    @Override
+    protected Collection handleGetDesignElementDataVectors( BioAssayDimension bioAssayDimension ) throws Exception {
+        if ( bioAssayDimension.getId() == null ) {
+            throw new IllegalArgumentException( "BioAssayDimension must be persistent" );
+        }
+        return this.getBioAssayDimensionDao().findDesignElementDataVectors( bioAssayDimension.getId() );
     }
 
 }
