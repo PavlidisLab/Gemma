@@ -163,7 +163,7 @@ public class NCluster {
     /**
      * @param args
      */
-    public static void main( String[] args ) {// TODO refactor to use commons configuration
+    public static void main( String[] args ) {
 
         String filename = null;
         String distance = "e";
