@@ -24,6 +24,12 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -40,6 +46,38 @@ import ubic.gemma.loader.util.parser.TabDelimParser;
 public class NCluster {
     private static Log log = LogFactory.getLog( NCluster.class );
 
+    private static final String USAGE = "[-h] [-t <true|false>] [-f <filename>] [-d <e|c|s>] [-m <s|m|a|c>] ";
+    private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
+    private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
+    
+    /**
+     * dist       (input) char
+     * Defines which distance measure is used, as given by the table:
+     * dist=='e': Euclidean distance
+     * dist=='b': City-block distance
+     * dist=='c': correlation
+     * dist=='a': absolute value of the correlation
+     * dist=='u': uncentered correlation
+     * dist=='x': absolute uncentered correlation
+     * dist=='s': Spearman's rank correlation
+     * dist=='k': Kendall's tau
+     * For other values of dist, the default (Euclidean distance) is used.
+     * 
+     * method     (input) char
+     * Defines which hierarchical clustering method is used:
+     * method=='s': pairwise single-linkage clustering
+     * method=='m': pairwise maximum- (or complete-) linkage clustering
+     * method=='a': pairwise average-linkage clustering
+     * method=='c': pairwise centroid-linkage clustering
+     * 
+     * @param rows
+     * @param cols
+     * @param transpose
+     * @param dist
+     * @param method
+     * @param matrix
+     * @return int[][]
+     */
     public native int[][] treeCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][] );
 
     static Configuration config = null;
@@ -114,28 +152,106 @@ public class NCluster {
     }
 
     /**
+     * @param opt
+     */
+    private static void printHelp( Options opt ) {
+        HelpFormatter h = new HelpFormatter();
+        // h.setWidth( 80 );
+        h.printHelp( USAGE, HEADER, opt, FOOTER );
+    }
+
+    /**
      * @param args
      */
     public static void main( String[] args ) {// TODO refactor to use commons configuration
 
+        String filename = null;
+        String distance = "e";
+        String method = "m";
+
         double[][] data = null;
-        boolean test = false;
-        if ( args[0].equalsIgnoreCase( "t" ) || args[0].equalsIgnoreCase( "true" ) ) test = true;
-
-        String filename = args[1];
-        char distance = args[2].charAt( 0 );
-        char method = args[3].charAt( 0 );
-
-        if ( test )
-            data = testData();
-        else
-            data = readTabFile( filename );
 
         NCluster cluster = new NCluster();
 
+        try {
+            /* OPTIONS STAGE */
+
+            /* help */
+            OptionBuilder.withDescription( "Print help for this application" );
+            Option helpOpt = OptionBuilder.create( 'h' );
+
+            /* environment (test or prod) */
+            OptionBuilder.hasArgs();
+            OptionBuilder.withDescription( "Run test example" );
+            Option testOpt = OptionBuilder.create( 't' );
+
+            /* parse */
+            OptionBuilder.hasArg();
+            OptionBuilder.withDescription( "Filename" );
+            Option fileOpt = OptionBuilder.create( 'f' );
+
+            /* distance */
+            OptionBuilder.withDescription( "Distance" );
+            Option distanceOpt = OptionBuilder.create( 'd' );
+
+            /* method */
+            OptionBuilder.withDescription( "Method" );
+            Option methodOpt = OptionBuilder.create( 'm' );
+
+            Options opt = new Options();
+            opt.addOption( helpOpt );
+            opt.addOption( testOpt );
+            opt.addOption( fileOpt );
+            opt.addOption( distanceOpt );
+            opt.addOption( methodOpt );
+
+            /* COMMAND LINE PARSER STAGE */
+            BasicParser parser = new BasicParser();
+            CommandLine cl = parser.parse( opt, args );
+
+            /* INTERROGATION STAGE */
+            if ( cl.getOptions().length == 0 || cl.hasOption( 'h' ) ) {
+                printHelp( opt );
+                System.exit( 0 );
+            }
+
+            /* check if using test data */
+            if ( cl.hasOption( 't' ) ) {
+                boolean test = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
+                if ( test )
+                    data = testData();
+                else {
+                    if ( cl.hasOption( 'f' ) ) {
+                        filename = cl.getOptionValue( 'f' );
+                        data = readTabFile( filename );
+                    } else {
+                        data = testData();
+                        System.out.println( "File not specified ... using test data" );
+                    }
+                }
+            }
+
+            if ( cl.hasOption( 'd' ) ) {
+                distance = cl.getOptionValue( 'd' );// TODO validate, fix issue with this option
+                log.warn( distance );
+            } else {
+                System.out.println( "Distance measure not specified ... using euclidean" );
+            }
+
+            if ( cl.hasOption( 'm' ) ) {
+                method = cl.getOptionValue( 'm' );// TODO validate, fix issue with this option
+                log.warn( method );
+            } else {
+                System.out.println( "Linkage not specified ... using complete (maximum) linkage" );
+            }
+
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
         StopWatch sw = new StopWatch();
         sw.start();
-        cluster.treeCluster( data.length, data[0].length, 0, distance, method, data );
+        cluster.treeCluster( data.length, data[0].length, 0, distance.charAt( 0 ), method.charAt( 0 ), data );
         sw.stop();
         log.warn( sw.getTime() );
     }
