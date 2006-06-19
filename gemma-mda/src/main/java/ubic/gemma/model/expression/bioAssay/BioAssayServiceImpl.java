@@ -79,13 +79,19 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     protected Collection handleLoadAll() throws Exception {
         throw new NotImplementedException( "This method has not been implemented" );
     }
-    
+
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#update(BioAssay)
      */
     @Override
     protected void handleUpdate( BioAssay bioAssay ) throws Exception {
-        this.getBioAssayDao().update(bioAssay);
+        this.getBioAssayDao().update( bioAssay );
+    }
+
+    @Override
+    protected Collection handleFindBioAssayDimensions( BioAssay bioAssay ) throws Exception {
+        if ( bioAssay.getId() == null ) throw new IllegalArgumentException( "BioAssay must be persistent" );
+        return this.getBioAssayDao().findBioAssayDimensions( bioAssay );
     }
 
 }
