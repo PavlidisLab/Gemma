@@ -67,7 +67,7 @@ class RawDataMatrix {
         log.info( "Setting up BioAssayDimension" );
         StringBuilder buf = new StringBuilder();
         for ( BioAssay assay : bioAssays ) {
-            bioAssayDimension.getDimensionBioAssays().add( assay );
+            bioAssayDimension.getBioAssays().add( assay );
             String name = assay.getName();
             buf.append( name + "," );
         }

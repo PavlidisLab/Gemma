@@ -661,7 +661,7 @@ public class MageMLConverterHelper {
                 // physical
                 resultBioAssay = convertBioAssay( sample );
 
-            resultBioAssayDimension.getDimensionBioAssays().add( resultBioAssay );
+            resultBioAssayDimension.getBioAssays().add( resultBioAssay );
         }
 
         return resultBioAssayDimension;
