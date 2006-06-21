@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +48,6 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
  * @spring.property name="commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
- * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentFormResult"
  * @spring.property name="persisterHelper" ref="persisterHelper"
@@ -81,36 +82,39 @@ public class ExpressionExperimentLoadController extends BaseFormController {
             return showForm( request, response, errors );
         }
 
-        // Thread t = new Thread( new Runnable() {
-        // public void run() { // Do your real processing here
-        // // once validated.. TODO put this in its own thread and update use with progress.
-        //               
-        log.info( "Loading " + eeLoadCommand.getAccession() );
-        if ( eeLoadCommand.isLoadPlatformOnly() ) {
-            log.info( "Only loading platform" );
-        }
-        GeoDatasetService gds = new GeoDatasetService();
-        GeoConverter geoConv = new GeoConverter();
-        gds.setPersister( persisterHelper );
-        gds.setConverter( geoConv );
-        gds.setGenerator( new GeoDomainObjectGenerator() );
-        gds.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
-        if ( eeLoadCommand.isLoadPlatformOnly() ) {
-            gds.setLoadPlatformOnly( true );
-            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) gds.fetchAndLoad( eeLoadCommand
-                    .getAccession() );
-            request.setAttribute( "arrayDesigns", arrayDesigns );
-        } else {
-            ExpressionExperiment result = ( ExpressionExperiment ) gds.fetchAndLoad( eeLoadCommand.getAccession() );
-            request.setAttribute( "expressionExperiment", result );
-        }
-        // place the data into the request for retrieval on next page
+        final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        log.debug( "authentication object: " + auth );
+        Thread t = new Thread( new Runnable() {
+            public void run() { // Do your real processing here
+                // once validated.. TODO put this in its own thread and update use with progress.
+                SecurityContextHolder.getContext().setAuthentication( auth );
+                log.info( "Loading " + eeLoadCommand.getAccession() );
+                if ( eeLoadCommand.isLoadPlatformOnly() ) {
+                    log.info( "Only loading platform" );
+                }
+                GeoDatasetService gds = new GeoDatasetService();
+                GeoConverter geoConv = new GeoConverter();
+                gds.setPersister( persisterHelper );
+                gds.setConverter( geoConv );
+                gds.setGenerator( new GeoDomainObjectGenerator() );
+                gds.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
+                if ( eeLoadCommand.isLoadPlatformOnly() ) {
+                    gds.setLoadPlatformOnly( true );
+                    Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) gds.fetchAndLoad( eeLoadCommand
+                            .getAccession() );
+                    request.setAttribute( "arrayDesigns", arrayDesigns );
+                } else {
+                    ExpressionExperiment result = ( ExpressionExperiment ) gds.fetchAndLoad( eeLoadCommand
+                            .getAccession() );
+                    request.setAttribute( "expressionExperiment", result );
+                }
+                // place the data into the request for retrieval on next page
 
-        session.setAttribute( "stillProcessing", Boolean.FALSE );
-        // }
-        // } );
-        // t.start();
-        // response.sendRedirect(response.encodeRedirectURL("processing.html"));
+                session.setAttribute( "stillProcessing", Boolean.FALSE );
+            }
+        } );
+        t.start();
+        response.sendRedirect( response.encodeRedirectURL( "processing.html" ) );
 
         return new ModelAndView( getSuccessView() );
     }
