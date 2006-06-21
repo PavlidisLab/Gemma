@@ -61,8 +61,8 @@ import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.parser.Parser;
 
 /**
- * Class for parsing GSE and GDS files from NCBI GEO. See http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html for
- * format information.
+ * Class for parsing GSE and GDS files from NCBI GEO. See
+ * {@link http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
  * <hr>
  * 
  * @author pavlidis
@@ -450,12 +450,12 @@ public class GeoFamilyParser implements Parser {
             Map<String, String> res = extractKeyValue( line );
             String key = res.keySet().iterator().next();
             String value = res.get( key );
-            // only set the title if it isn't already.
 
+            // only set the title if it isn't already.
             if ( key.startsWith( "GSM" ) && !StringUtils.isBlank( value )
                     && StringUtils.isBlank( results.getSampleMap().get( key ).getTitle() ) ) {
                 value = value.substring( value.indexOf( ':' ) + 2 ); // throw out the "Value for GSM1949024:" part.
-                // log.info( key + " " + value );
+                log.debug( key + " " + value );
                 sampleSet( key, "title", value );
             }
         } else {
@@ -775,7 +775,7 @@ public class GeoFamilyParser implements Parser {
             ; // nothing.
         } else if ( startsWithIgnoreCase( line, "!Platform_catalog_number" ) ) {
             // do nothing TODO we might want this.
-        } else if (startsWithIgnoreCase(line, "!Platform_last_update_date")) {
+        } else if ( startsWithIgnoreCase( line, "!Platform_last_update_date" ) ) {
             // FIXME
         } else {
             log.error( "Unknown flag in platform: " + line );
@@ -984,9 +984,9 @@ public class GeoFamilyParser implements Parser {
                 results.getSeriesMap().get( value ).addSample( results.getSampleMap().get( currentSampleAccession ) );
             }
             seriesSet( currentSeriesAccession, "seriesId", value ); // can be many?
-        } else if (startsWithIgnoreCase(line, "!Sample_supplementary_file")) {
-        	// FIXME
-        } else if (startsWithIgnoreCase(line, "!Sample_last_update_date")) {
+        } else if ( startsWithIgnoreCase( line, "!Sample_supplementary_file" ) ) {
+            // FIXME
+        } else if ( startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             // FIXME
         } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
             // nooop.
@@ -1109,9 +1109,9 @@ public class GeoFamilyParser implements Parser {
             GeoVariable v = new GeoVariable();
             v.setType( GeoVariable.convertStringToType( value ) );
             results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
-        } else if (startsWithIgnoreCase(line, "!Series_supplementary_file")) {
+        } else if ( startsWithIgnoreCase( line, "!Series_supplementary_file" ) ) {
             // FIXME
-        } else if (startsWithIgnoreCase( line, "!Series_last_update_date" )) {
+        } else if ( startsWithIgnoreCase( line, "!Series_last_update_date" ) ) {
             // FIXME
         } else {
             log.error( "Unknown flag in series: " + line );
@@ -1163,16 +1163,16 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!subset_description" ) ) {
             subsetAddTo( currentSubsetAccession, "description", value );
         } else if ( startsWithIgnoreCase( line, "!subset_sample_id" ) ) {
+            // This should yield a list of samples we have already seen.
             String[] values = value.split( "," );
             for ( int i = 0; i < values.length; i++ ) {
-                String v = values[i];
-                if ( !results.getSubsetMap().containsKey( v ) ) {
-                    log.debug( "New sample (in subset): " + v );
-                    results.getSampleMap().put( v, new GeoSample() );
-                    results.getSampleMap().get( v ).setGeoAccession( v );
+                String sampleAccession = values[i];
+                if ( !results.getSampleMap().containsKey( sampleAccession ) ) {
+                    throw new RuntimeException( "Unknown sample (in subset): " + sampleAccession );
                 }
-                log.debug( "Adding sample: " + v + " to subset " + currentSubsetAccession );
-                results.getSubsetMap().get( currentSubsetAccession ).addSample( results.getSampleMap().get( v ) );
+                log.debug( "Adding sample: " + sampleAccession + " to subset " + currentSubsetAccession );
+                results.getSubsetMap().get( currentSubsetAccession ).addSample(
+                        results.getSampleMap().get( sampleAccession ) );
             }
 
         } else if ( startsWithIgnoreCase( line, "!subset_type" ) ) {

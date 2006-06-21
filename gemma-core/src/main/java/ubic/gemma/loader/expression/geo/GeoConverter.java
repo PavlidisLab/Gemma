@@ -62,7 +62,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-//import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
+// import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -194,27 +194,29 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param subSet
-     * @param accession
-     * @param experimentBioAssays
+     * Given a BioAssay for searching, locate the corresponding BioAssay in the ExpressionExperiment, and associate it
+     * with the SubSet.
+     * 
+     * @param subSet ExpressionExperimentSubSet to add to.
+     * @param queryBioAssay BioAssay to search for. This need not be filled in completely, it is only used to store
+     *        parameters for the search.
+     * @param expExp ExpressionExperiment to search.
      * @return
      */
     @SuppressWarnings("unchecked")
-    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, BioAssay bioAssay,
+    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, BioAssay queryBioAssay,
             ExpressionExperiment expExp ) {
-        String accession = bioAssay.getAccession().getAccession();
+        String accession = queryBioAssay.getAccession().getAccession();
+        log.debug( "Seeking subset match for " + accession );
         Collection<BioAssay> experimentBioAssays = expExp.getBioAssays();
-        boolean found = false;
         for ( BioAssay assay : experimentBioAssays ) {
             String testAccession = assay.getAccession().getAccession();
             if ( testAccession.equals( accession ) ) {
                 subSet.getBioAssays().add( assay );
-                found = true;
-                break;
+                return true;
             }
-
         }
-        return found;
+        return false;
     }
 
     /**
@@ -304,125 +306,63 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param datasetSamples
-     * @return
+     * @param datasetSamples List of GeoSamples to be matched up with BioAssays.
+     * @param expExp ExpresssionExperiment
+     * @return BioAssayDimension representing the samples.
      */
     @SuppressWarnings("unchecked")
     private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
-        BioAssayDimension result = BioAssayDimension.Factory.newInstance();
+        BioAssayDimension resultBioAssayDimension = BioAssayDimension.Factory.newInstance();
 
-        StringBuilder buf = new StringBuilder();
+        StringBuilder bioAssayDimName = new StringBuilder();
         Collections.sort( datasetSamples );
         for ( GeoSample sample : datasetSamples ) {
             boolean found = false;
             String sampleAcc = sample.getGeoAccession();
-            buf.append( sampleAcc + "," );
-            found = matchSampleToBioAssay( expExp, result, found, sampleAcc );
+            bioAssayDimName.append( sampleAcc + "," );
+            found = matchSampleToBioAssay( expExp, resultBioAssayDimension, sampleAcc );
             if ( !found ) {
-                log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
+                // this is normal because not all headings are
                 // sample ids.
+                log.warn( "No bioassay match for " + sampleAcc );
             }
         }
-        result.setName( formatName( buf ) );
-        result.setDescription( buf.toString() );
-        // expExp.getBioAssayDimensions().add( result );
-        return result;
+        resultBioAssayDimension.setName( formatName( bioAssayDimName ) );
+        resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
+        return resultBioAssayDimension;
     }
 
     /**
-     * @param buf
+     * Turn a rough-cut dimension name into something of reasonable length. FIXME this is pretty hokey.
+     * 
+     * @param dimensionName
      * @return
      */
-    private String formatName( StringBuilder buf ) {
-        return buf.length() > 100 ? buf.toString().substring( 0, 100 ) : buf.toString() + "...";
+    private String formatName( StringBuilder dimensionName ) {
+        return dimensionName.length() > 100 ? dimensionName.toString().substring( 0, 100 ) : dimensionName.toString()
+                + "...";
     }
 
     /**
-     * @param expExp
-     * @param result
-     * @param found
-     * @param sampleAcc
+     * @param expExp ExpressionExperiment to be searched for matching BioAssays
+     * @param bioAssayDimension BioAssayDimension to be added to
+     * @param sampleAcc The GEO accession id for the sample. This is compared to the external accession recorded for the
+     *        BioAssay
      * @return
      */
-    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension result, boolean found,
+    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension bioAssayDimension,
             String sampleAcc ) {
-
-   //     BioMaterialDimension bioMaterialDimension = getAssociatedBioMaterialDimension( result );
 
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
             if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-                result.getDimensionBioAssays().add( bioAssay );
-
-    //            matchBioMaterialToBioAssay( bioMaterialDimension, bioAssay );
-
-                found = true;
-                break;
+                bioAssayDimension.getBioAssays().add( bioAssay );
+                log.debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
+                return true;
             }
         }
-        return found;
+        return false;
     }
 
-//    /**
-//     * @param result
-//     * @return
-//     */
-//    private BioMaterialDimension getAssociatedBioMaterialDimension( BioAssayDimension result ) {
-//        Collection<BioMaterialDimension> bioMaterialDimensions = result.getBioMaterialDimensions();
-//        BioMaterialDimension bioMaterialDimension;
-//        if ( bioMaterialDimensions == null || bioMaterialDimensions.isEmpty() ) {
-//            bioMaterialDimension = BioMaterialDimension.Factory.newInstance();
-//            result.getBioMaterialDimensions().add( bioMaterialDimension );
-//        } else {
-//            if ( bioMaterialDimensions.size() > 1 )
-//                throw new UnsupportedOperationException( "Can't handle more than one BioMaterialDimension." );
-//            bioMaterialDimension = bioMaterialDimensions.iterator().next();
-//        }
-//        return bioMaterialDimension;
-//    }
-
-//    /**
-//     * @param bioMaterialDimension
-//     * @param bioAssay
-//     */
-//    private void matchBioMaterialToBioAssay( BioMaterialDimension bioMaterialDimension, BioAssay bioAssay ) {
-//        Collection<BioMaterial> bioMaterials = bioAssay.getSamplesUsed();
-//        assert !( bioMaterials == null || bioMaterials.isEmpty() );
-//        if ( bioMaterials.size() > 1 ) {
-//            throw new UnsupportedOperationException(
-//                    "Can't handle more than one biomaterial per bioassay (sample used per bioassay)" );
-//        }
-//        BioMaterial matchingBioMaterial = bioMaterials.iterator().next();
-//        bioMaterialDimension.getBioMaterials().add( matchingBioMaterial );
-//    }
-
-    /**
-     * // *
-     * 
-     * @param dataset // *
-     * @param expExp // *
-     * @return //
-     */
-    // @SuppressWarnings("unchecked")
-    // private BioAssayDimension convertDataColumnHeadings( GeoDataset dataset, ExpressionExperiment expExp ) {
-    // BioAssayDimension result = BioAssayDimension.Factory.newInstance();
-    // result.setName( "BioAssayDimension for GEO " + dataset );
-    // for ( String sampleAcc : dataset.getColumnNames() ) {
-    // boolean found = false;
-    // // some extra sanity checking here would be wise. What if two columns have the same id.
-    // for ( BioAssay bioAssay : ( List<BioAssay> ) expExp.getBioAssays() ) {
-    // if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-    // result.getBioAssays().add( bioAssay );
-    // found = true;
-    // break;
-    // }
-    // }
-    // if ( !found ) {
-    // log.warn( "No bioassay match for " + sampleAcc ); // this is normal because not all headings are
-    // // sample ids.
-    // }
-    // }
-    // return result;
-    // }
     /**
      * @param geoDataset
      */
@@ -484,14 +424,18 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * @param geoDataset
-     * @param expExp
+     * Convert the GEO data into DesignElementDataVectors associated with the ExpressionExperiment
+     * 
+     * @param geoDataset Source of the data
+     * @param expExp ExpressionExperiment to fill in.
      */
     @SuppressWarnings("unchecked")
     private void convertDataSetDataVectors( GeoDataset geoDataset, ExpressionExperiment expExp ) {
         List<GeoSample> datasetSamples = new ArrayList<GeoSample>( getDatasetSamples( geoDataset ) );
 
         BioAssayDimension bioAssayDimension = convertGeoSampleList( datasetSamples, expExp );
+
+        assert bioAssayDimension.getBioAssays().size() > 0 : "No bioAssays in the BioAssayDimension";
 
         sanityCheckQuantitationTypes( datasetSamples );
 
@@ -698,8 +642,8 @@ public class GeoConverter implements Converter {
      * 
      * @param datasetSamples The samples we want to get data for.
      * @param quantitationTypeIndex The index of the quantitation type we want to examine. We used to do this by
-     *        quantitationType name but too often these don't match up between samples. The value entered should zero to
-     *        access the first quantitation type column.
+     *        quantitationType name but too often these don't match up between samples. The value entered should be zero
+     *        to access the first quantitation type column.
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
@@ -1088,6 +1032,7 @@ public class GeoConverter implements Converter {
         expExp.setBioAssays( new HashSet() );
         int i = 1;
 
+        /* For each set of "corresponding" samples (from the same RNA) we make up a new BioMaterial. */
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
@@ -1146,15 +1091,15 @@ public class GeoConverter implements Converter {
         subSet.setName( geoSubSet.getDescription() );
         subSet.setDescription( geoSubSet.getType().toString() );
         subSet.setSourceExperiment( expExp );
-        subSet.setBioAssays( new HashSet() );
+        subSet.setBioAssays( new HashSet<BioAssay>() );
 
         for ( GeoSample sample : geoSubSet.getSamples() ) {
 
-            BioAssay bioAssay = convertSample( sample, null ); // converted object only used for searching.
+            BioAssay bioAssayForSearch = convertSample( sample, null ); // converted object only used for searching.
 
-            boolean found = addMatchingBioAssayToSubSet( subSet, bioAssay, expExp );
-            assert found : "No matching bioassay found for " + bioAssay.getAccession().getAccession() + " in subset. "
-                    + " Make sure the ExpressionExperiment was initialized "
+            boolean found = addMatchingBioAssayToSubSet( subSet, bioAssayForSearch, expExp );
+            assert found : "No matching bioassay found for " + bioAssayForSearch.getAccession().getAccession()
+                    + " in subset. " + " Make sure the ExpressionExperiment was initialized "
                     + "properly by converting the samples before converting the subsets.";
         }
         return subSet;

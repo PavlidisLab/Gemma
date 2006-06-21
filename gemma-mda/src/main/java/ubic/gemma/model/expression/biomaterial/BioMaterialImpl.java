@@ -26,8 +26,12 @@ package ubic.gemma.model.expression.biomaterial;
 
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
+ * @author pavlidis
+ * @version $Id$
  */
-public class BioMaterialImpl
-    extends ubic.gemma.model.expression.biomaterial.BioMaterial
-{
+public class BioMaterialImpl extends ubic.gemma.model.expression.biomaterial.BioMaterial {
+
+    public int compareTo( Object arg0 ) {
+        return this.getName().compareTo( ( String ) arg0 );
+    }
 }

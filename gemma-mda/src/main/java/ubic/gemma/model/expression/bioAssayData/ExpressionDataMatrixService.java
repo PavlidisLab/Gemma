@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -26,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -69,6 +73,7 @@ public class ExpressionDataMatrixService {
 
     /**
      * Convert {@link DesignElementDataVector}s into a {@link DoubleMatrixNamed}.
+     * 
      * @param vectors
      * @return
      */
@@ -79,15 +84,21 @@ public class ExpressionDataMatrixService {
 
         ByteArrayConverter bac = new ByteArrayConverter();
 
-        List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension()
-                .getBioAssays();
-        
+        List<BioAssay> bioAssays = ( List<BioAssay> ) vectors.iterator().next().getBioAssayDimension().getBioAssays();
+
         assert bioAssays.size() > 0 : "Empty BioAssayDimension for the vectors";
 
         DoubleMatrixNamed matrix = DoubleMatrix2DNamedFactory.fastrow( vectors.size(), bioAssays.size() );
 
-         for ( BioAssay assay : bioAssays ) {
-            matrix.addColumnName( assay.getName() );
+        // Use BioMaterial names to represent the column in the matrix (as it can span multiple BioAssays)
+        for ( BioAssay assay : bioAssays ) {
+            StringBuilder buf = new StringBuilder();
+            List<BioMaterial> bms = new ArrayList<BioMaterial>( assay.getSamplesUsed() );
+            //Collections.sort( bms );
+            for ( BioMaterial bm : ( Collection<BioMaterial> ) bms ) {
+                buf.append( bm.getName() );
+            }
+            matrix.addColumnName( buf.toString() );
         }
 
         int rowNum = 0;
