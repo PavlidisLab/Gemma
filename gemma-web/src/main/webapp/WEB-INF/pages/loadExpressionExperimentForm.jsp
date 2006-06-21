@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<title><fmt:message key="expressionExperimentLoad.title" /></title>
+<title><fmt:message key="expressionExperiment.load.title" /></title>
 <content tag="heading">
 <fmt:message key="expressionExperiment.load.title" />
 </content>
