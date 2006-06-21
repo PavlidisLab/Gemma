@@ -19,21 +19,19 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix2DNamedFactory;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
-import ubic.basecode.io.ByteArrayConverter;
 
 /**
  * Produces DoubleMatrix objects for ExpressionExperiments.
@@ -94,7 +92,7 @@ public class ExpressionDataMatrixService {
         for ( BioAssay assay : bioAssays ) {
             StringBuilder buf = new StringBuilder();
             List<BioMaterial> bms = new ArrayList<BioMaterial>( assay.getSamplesUsed() );
-            //Collections.sort( bms );
+            // Collections.sort( bms ); // FIXME this should use a sort.
             for ( BioMaterial bm : ( Collection<BioMaterial> ) bms ) {
                 buf.append( bm.getName() );
             }
