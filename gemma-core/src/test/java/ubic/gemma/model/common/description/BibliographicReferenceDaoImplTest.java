@@ -32,8 +32,6 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 /**
  * This class tests the bibliographic reference data access object. It is also used to test some of the Hibernate
  * features.
- * <hr>
- * <p>
  * 
  * @author pavlidis
  * @version $Id$
