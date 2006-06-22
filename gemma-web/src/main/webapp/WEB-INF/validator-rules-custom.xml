@@ -6,7 +6,7 @@
 <form-validation>
     <global>
 
-        <validator name="twofields" classname="ubic.gemma.util.ValidationUtil" method="validateTwoFields"
+        <validator name="twofields" classname="ubic.gemma.web.util.ValidationUtil" method="validateTwoFields"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
