@@ -48,6 +48,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
  * @spring.property name="commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
+ * @spring.property name="validator" ref="genericBeanValidator"                 
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentFormResult"
  * @spring.property name="persisterHelper" ref="persisterHelper"

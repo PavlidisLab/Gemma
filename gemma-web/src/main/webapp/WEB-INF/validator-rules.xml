@@ -40,7 +40,7 @@
 
     <global>
 
-        <validator name="required" classname="org.springmodules.commons.validator.FieldChecks" method="validateRequired"
+        <validator name="required" classname="org.springmodules.validation.commons.FieldChecks" method="validateRequired"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -103,7 +103,7 @@
 
         </validator>
 
-        <validator name="requiredif" classname="org.springmodules.commons.validator.FieldChecks" method="validateRequiredIf"
+        <validator name="requiredif" classname="org.springmodules.validation.commons.FieldChecks" method="validateRequiredIf"
             methodParams="java.lang.Object,
                                org.apache.commons.validator.ValidatorAction,
                                org.apache.commons.validator.Field,
@@ -112,7 +112,7 @@
             msg="errors.required">
         </validator>
 
-        <validator name="minlength" classname="org.springmodules.commons.validator.FieldChecks" method="validateMinLength"
+        <validator name="minlength" classname="org.springmodules.validation.commons.FieldChecks" method="validateMinLength"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -154,7 +154,7 @@
         </validator>
 
 
-        <validator name="maxlength" classname="org.springmodules.commons.validator.FieldChecks" method="validateMaxLength"
+        <validator name="maxlength" classname="org.springmodules.validation.commons.FieldChecks" method="validateMaxLength"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -196,7 +196,7 @@
         </validator>
 
 
-        <validator name="mask" classname="org.springmodules.commons.validator.FieldChecks" method="validateMask"
+        <validator name="mask" classname="org.springmodules.validation.commons.FieldChecks" method="validateMask"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -243,7 +243,7 @@
         </validator>
 
 
-        <validator name="byte" classname="org.springmodules.commons.validator.FieldChecks" method="validateByte"
+        <validator name="byte" classname="org.springmodules.validation.commons.FieldChecks" method="validateByte"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -311,7 +311,7 @@
         </validator>
 
 
-        <validator name="short" classname="org.springmodules.commons.validator.FieldChecks" method="validateShort"
+        <validator name="short" classname="org.springmodules.validation.commons.FieldChecks" method="validateShort"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -378,7 +378,7 @@
         </validator>
 
 
-        <validator name="integer" classname="org.springmodules.commons.validator.FieldChecks" method="validateInteger"
+        <validator name="integer" classname="org.springmodules.validation.commons.FieldChecks" method="validateInteger"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -465,7 +465,7 @@
         </validator>
 
 
-        <validator name="long" classname="org.springmodules.commons.validator.FieldChecks" method="validateLong"
+        <validator name="long" classname="org.springmodules.validation.commons.FieldChecks" method="validateLong"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -473,7 +473,7 @@
             depends="" msg="errors.long" />
 
 
-        <validator name="float" classname="org.springmodules.commons.validator.FieldChecks" method="validateFloat"
+        <validator name="float" classname="org.springmodules.validation.commons.FieldChecks" method="validateFloat"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -543,7 +543,7 @@
         </validator>
 
 
-        <validator name="double" classname="org.springmodules.commons.validator.FieldChecks" method="validateDouble"
+        <validator name="double" classname="org.springmodules.validation.commons.FieldChecks" method="validateDouble"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -551,7 +551,7 @@
             depends="" msg="errors.double" />
 
 
-        <validator name="date" classname="org.springmodules.commons.validator.FieldChecks" method="validateDate"
+        <validator name="date" classname="org.springmodules.validation.commons.FieldChecks" method="validateDate"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -713,7 +713,7 @@
         </validator>
 
         <!-- range is deprecated use intRange instead -->
-        <validator name="range" classname="org.springmodules.commons.validator.FieldChecks" method="validateIntRange"
+        <validator name="range" classname="org.springmodules.validation.commons.FieldChecks" method="validateIntRange"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -729,7 +729,7 @@
 
         </validator>
 
-        <validator name="intRange" classname="org.springmodules.commons.validator.FieldChecks" method="validateIntRange"
+        <validator name="intRange" classname="org.springmodules.validation.commons.FieldChecks" method="validateIntRange"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -773,7 +773,7 @@
 
         </validator>
 
-        <validator name="floatRange" classname="org.springmodules.commons.validator.FieldChecks" method="validateFloatRange"
+        <validator name="floatRange" classname="org.springmodules.validation.commons.FieldChecks" method="validateFloatRange"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -817,7 +817,7 @@
 
         </validator>
 
-        <validator name="creditCard" classname="org.springmodules.commons.validator.FieldChecks" method="validateCreditCard"
+        <validator name="creditCard" classname="org.springmodules.validation.commons.FieldChecks" method="validateCreditCard"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
@@ -892,7 +892,7 @@
         </validator>
 
 
-        <validator name="email" classname="org.springmodules.commons.validator.FieldChecks" method="validateEmail"
+        <validator name="email" classname="org.springmodules.validation.commons.FieldChecks" method="validateEmail"
             methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
                        org.apache.commons.validator.Field,
