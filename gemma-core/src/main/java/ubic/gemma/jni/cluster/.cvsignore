@@ -1,0 +1,12 @@
+cluster.tds
+com.dll
+com.tds
+command.dll
+command.tds
+data.dll
+data.tds
+jni.h
+linpack.dll
+linpack.tds
+ranlib.dll
+ranlib.tds
