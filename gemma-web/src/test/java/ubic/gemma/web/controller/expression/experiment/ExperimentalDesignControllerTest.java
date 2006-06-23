@@ -46,7 +46,7 @@ public class ExperimentalDesignControllerTest extends BaseTransactionalSpringCon
 
     /**
      * Tests showing an experimentalDesign which is implemented in
-     * {@link edu.columbia.gemma.web.controller.expression.experiment.ExpressionExperimentController} in method
+     * {@link ubic.gemma.model.web.controller.expression.experiment.ExpressionExperimentController} in method
      * {@link #handleRequest(HttpServletRequest request, HttpServletResponse response)}.
      * 
      * @throws Exception

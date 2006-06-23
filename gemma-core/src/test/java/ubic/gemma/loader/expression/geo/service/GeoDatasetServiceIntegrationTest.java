@@ -166,7 +166,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     }
 
     /*
-     * Data Access Failure edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl; nested exception is
+     * Data Access Failure ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl; nested exception is
      * org.hibernate.TransientObjectException: edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl
      */
     public void testFetchAndLoadGDS994() throws Exception {
