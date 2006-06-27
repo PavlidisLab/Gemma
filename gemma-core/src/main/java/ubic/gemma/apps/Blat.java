@@ -51,9 +51,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * Class to manage the gfServer and run BLAT searches.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -384,7 +381,8 @@ public class Blat {
      * @throws ExecutionException
      * @throws IOException
      */
-    private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException, IOException {
+    private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException,
+            IOException {
         InputStream result = future.get().getErrorStream();
         BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
         String l = null;
