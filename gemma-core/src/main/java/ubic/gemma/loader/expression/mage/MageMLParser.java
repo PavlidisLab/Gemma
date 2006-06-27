@@ -116,7 +116,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
 
     /**
      * Parse a MAGE-ML stream. This has to be called before any data can be retrieved. Use of this method means that
-     * calling createSimplifiedXml must also be done by the programmer. This method is public primarily to allow
+     * calling createSimplifiedXml must also be done by the programmer. This method is exposed primarily to allow
      * testing.
      * 
      * @param is
