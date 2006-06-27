@@ -63,7 +63,6 @@ import ubic.gemma.loader.util.parser.Parser;
 /**
  * Class for parsing GSE and GDS files from NCBI GEO. See
  * {@link http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
- * <hr>
  * 
  * @author pavlidis
  * @version $Id$
@@ -83,10 +82,10 @@ public class GeoFamilyParser implements Parser {
     private String currentSeriesAccession;
     private String currentSubsetAccession;
     private int dataSetDataLines = 0;
-    // private boolean haveReadDatasetDataHeader = false;
-    private boolean haveReadPlatformHeader = false;
 
+    private boolean haveReadPlatformHeader = false;
     private boolean haveReadSampleDataHeader = false;
+
     private boolean inDatabase = false;
     private boolean inDataset = false;
     private boolean inDatasetTable = false;
@@ -114,8 +113,6 @@ public class GeoFamilyParser implements Parser {
     private int seriesDataLines = 0;
 
     private boolean processPlatformsOnly;
-
-    // private String currentDatasetPlatformAccession;
 
     public GeoFamilyParser() {
         results = new GeoParseResult();
@@ -211,14 +208,31 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * @param b
+     */
+    public void setProcessPlatformsOnly( boolean b ) {
+        this.processPlatformsOnly = b;
+    }
+
+    /**
+     * Add a new sample to the results.
+     * 
+     * @param sampleAccession
+     */
+    private void addNewSample( String sampleAccession ) {
+        log.info( "Adding new sample" + sampleAccession );
+        GeoSample newSample = new GeoSample();
+        newSample.setGeoAccession( sampleAccession );
+        results.getSampleMap().put( sampleAccession, newSample );
+    }
+
+    /**
      * @param value
      */
     private void addSeriesSample( String value ) {
         if ( !results.getSampleMap().containsKey( value ) ) {
             log.debug( "New sample (for series): " + value );
-            GeoSample sample = new GeoSample();
-            sample.setGeoAccession( value );
-            results.getSampleMap().put( value, sample );
+            addNewSample( value );
         }
         log.debug( "Adding sample: " + value + " to series " + currentSeriesAccession );
         results.getSeriesMap().get( currentSeriesAccession ).addSample( results.getSampleMap().get( value ) );
@@ -369,8 +383,15 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Turns a line in the format #key = value into a column name and description. This is used to handle lines such as
+     * (in a platform section of a GSE file):
+     * 
+     * <pre>
+     *          #SEQ_LEN = Sequence length
+     * </pre>
+     * 
      * @param line
-     * @param dataToAddTo
+     * @param dataToAddTo GeoData object, must not be null.
      */
     private void extractColumnIdentifier( String line, GeoData dataToAddTo ) {
         if ( dataToAddTo == null ) throw new IllegalArgumentException( "Data cannot be null" );
@@ -381,8 +402,11 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
-     * @param map
-     * @param line
+     * Extract a key and value pair from a line in the format #key = value.
+     * 
+     * @param line.
+     * @return Map containing the String key and String value.
+     * @throws Exception if the line doesn't contain a =.
      */
     private Map<String, String> extractKeyValue( String line ) {
         if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
@@ -402,8 +426,10 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Extract a value from a line in the format xxxx=value.
+     * 
      * @param line
-     * @return
+     * @return String following the first occurrence of '=', or null if there is no '=' in the String.
      */
     private String extractValue( String line ) {
         int eqIndex = line.indexOf( '=' );
@@ -415,8 +441,12 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Parse a line to extract an integer <em>n</em> from the a variable description line like "!Series_variable_[n] =
+     * age"
+     * 
      * @param line
-     * @return
+     * @return int
+     * @throws Exception if the line doesn't fit the format.
      */
     private int extractVariableNumber( String line ) {
         Pattern p = Pattern.compile( "_(\\d+)$" );
@@ -432,6 +462,30 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Parse the column identifier strings from a GDS or GSE file.
+     * <p>
+     * In GSE files, in a 'platform' section, these become column descriptions for the platform descriptors.
+     * <p>
+     * For samples in GSE files, they become values for the data in the sample. For example
+     * 
+     * <pre>
+     *        #ID_REF = probe id
+     *        #VALUE = RMA value
+     * </pre>
+     * 
+     * <p>
+     * For subsets, these lines are ignored (do they even occur?). In 'series' sections of GSE files, the data are kept
+     * (but does this occur?) FIXME.
+     * <p>
+     * In GDS files, if we are in a 'dataset' section, these become "titles" for the samples if they aren't already
+     * provided. Here is an example.
+     * 
+     * <pre>
+     *        #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
+     *        #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *        #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     * </pre>
+     * 
      * @param line
      */
     private void parseColumnIdentifier( String line ) {
@@ -448,48 +502,33 @@ public class GeoFamilyParser implements Parser {
 
             extractColumnIdentifier( line, currentDataset() );
             Map<String, String> res = extractKeyValue( line );
-            String key = res.keySet().iterator().next();
-            String value = res.get( key );
+            String potentialSampleAccession = res.keySet().iterator().next();
+            String potentialTitle = res.get( potentialSampleAccession );
 
-            // only set the title if it isn't already.
-            if ( key.startsWith( "GSM" ) && !StringUtils.isBlank( value )
-                    && StringUtils.isBlank( results.getSampleMap().get( key ).getTitle() ) ) {
-                value = value.substring( value.indexOf( ':' ) + 2 ); // throw out the "Value for GSM1949024:" part.
-                log.debug( key + " " + value );
-                sampleSet( key, "title", value );
+            // First add the sample if we haven't seen it before.
+            if ( potentialSampleAccession.startsWith( "GSM" )
+                    && !results.getSampleMap().containsKey( potentialSampleAccession ) ) {
+                this.addNewSample( potentialSampleAccession );
             }
+
+            // Set the title, if it hasn't been set before.
+            if ( potentialSampleAccession.startsWith( "GSM" ) && !StringUtils.isBlank( potentialTitle )
+                    && StringUtils.isBlank( results.getSampleMap().get( potentialSampleAccession ).getTitle() ) ) {
+                potentialTitle = potentialTitle.substring( potentialTitle.indexOf( ':' ) + 2 ); // throw out the "Value
+                // for GSM1949024:"
+                // part.
+                log.debug( potentialSampleAccession + " " + potentialTitle );
+                sampleSet( potentialSampleAccession, "title", potentialTitle );
+            }
+
         } else {
             throw new IllegalStateException( "Wrong state to deal with '" + line + "'" );
         }
     }
 
-    // /**
-    // * @param line
-    // */
-    // private void parseDataSetDataLine( String line ) {
-    //
-    // if ( !haveReadDatasetDataHeader ) {
-    // haveReadDatasetDataHeader = true;
-    // return;
-    // }
-    //
-    // String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
-    //
-    // Map<String, List<String>> dataSetDataMap = results.getDatasetMap().get( currentDatasetAccession ).getData();
-    //
-    // for ( int i = 0; i < tokens.length; i++ ) {
-    // String token = tokens[i];
-    // String columnName = results.getDatasetMap().get( currentDatasetAccession ).getColumnNames().get( i );
-    // if ( !dataSetDataMap.containsKey( columnName ) ) {
-    // dataSetDataMap.put( columnName, new ArrayList<String>() );
-    // }
-    // dataSetDataMap.get( columnName ).add( token );
-    // }
-    //
-    // dataSetDataLines++;
-    // }
-
     /**
+     * Parse a line in a 'dataset' section of a GDS file. This is metadata about the experiment.
+     * 
      * @param line
      * @param value
      */
@@ -594,9 +633,7 @@ public class GeoFamilyParser implements Parser {
                 String value = extractValue( line );
                 currentSampleAccession = value;
                 if ( results.getSampleMap().containsKey( value ) ) return;
-                GeoSample sample = new GeoSample();
-                sample.setGeoAccession( value );
-                results.getSampleMap().put( value, sample );
+                addNewSample( value );
                 log.debug( "Starting new sample " + value );
             } else if ( startsWithIgnoreCase( line, "^PLATFORM" ) ) {
                 inPlatform = true;
@@ -704,6 +741,8 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Parse a line in a 'platform' section of a GSE file. This deals with meta-data about the platform.
+     * 
      * @param line
      * @param value
      */
@@ -783,6 +822,13 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Parse lines in GSE and GDS files. Lines are classified into three types:
+     * <ul>
+     * <li>Starting with "!". These indicate meta data.
+     * <li>Starting with "#". These indicate descriptions of columns in a data table.
+     * <li>Starting with anything else, primarily (only?) data tables (expression data or platform probe annotations).
+     * </ul>
+     * 
      * @param line
      */
     private void parseRegularLine( String line ) {
@@ -873,6 +919,9 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Parse a line from a sample section of a GSE file. These contain details about the samples and the 'raw' data for
+     * the sample.
+     * 
      * @param line
      * @param value
      */
@@ -995,33 +1044,9 @@ public class GeoFamilyParser implements Parser {
         }
     }
 
-    // /**
-    // * @param line
-    // */
-    // private void parseSeriesDataLine( String line ) {
-    // // : is this ever called?
-    // if ( !haveReadSeriesDataHeader ) {
-    // haveReadSeriesDataHeader = true;
-    // return;
-    // }
-    //
-    // String[] tokens = StringUtil.splitPreserveAllTokens( line, FIELD_DELIM );
-    //
-    // Map<String, List<String>> seriesDataMap = results.getSeriesMap().get( currentSeriesAccession ).getData();
-    //
-    // for ( int i = 0; i < tokens.length; i++ ) {
-    // String token = tokens[i];
-    // String columnName = results.getSeriesMap().get( currentSeriesAccession ).getColumnNames().get( i );
-    // if ( !seriesDataMap.containsKey( columnName ) ) {
-    // seriesDataMap.put( columnName, new ArrayList<String>() );
-    // }
-    // seriesDataMap.get( columnName ).add( token );
-    // }
-    //
-    // seriesDataLines++;
-    // }
-
     /**
+     * Parse a line from the "series" section of a GSE file. This contains annotations about the series.
+     * 
      * @param line
      * @param value
      */
@@ -1149,6 +1174,9 @@ public class GeoFamilyParser implements Parser {
     }
 
     /**
+     * Parse a line from a "subset" section of a GDS file. This section contains information about experimental subsets
+     * within a dataset. These usually correspond to different factor values such as "drug-treated" vs. "placebo".
+     * 
      * @param line
      * @param value
      */
@@ -1167,10 +1195,12 @@ public class GeoFamilyParser implements Parser {
             String[] values = value.split( "," );
             for ( int i = 0; i < values.length; i++ ) {
                 String sampleAccession = values[i];
+
                 if ( !results.getSampleMap().containsKey( sampleAccession ) ) {
-                    throw new RuntimeException( "Unknown sample (in subset): " + sampleAccession );
+                    addNewSample( sampleAccession );
                 }
-                log.debug( "Adding sample: " + sampleAccession + " to subset " + currentSubsetAccession );
+
+                log.info( "Adding sample: " + sampleAccession + " to subset " + currentSubsetAccession );
                 results.getSubsetMap().get( currentSubsetAccession ).addSample(
                         results.getSampleMap().get( sampleAccession ) );
             }
@@ -1384,15 +1414,11 @@ public class GeoFamilyParser implements Parser {
             throw new RuntimeException( e );
         }
     }
-
-    /**
-     * @param b
-     */
-    public void setProcessPlatformsOnly( boolean b ) {
-        this.processPlatformsOnly = b;
-    }
 }
 
+/**
+ * This simply holds the results obtained from parsing.
+ */
 class GeoParseResult {
     private Map<String, GeoDataset> datasetMap;
 

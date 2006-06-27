@@ -241,6 +241,9 @@ public class DatasetCombiner {
         for ( GeoDataset dataset : dataSets ) {
             for ( GeoSubset subset : dataset.getSubsets() ) {
                 for ( GeoSample sample : subset.getSamples() ) {
+
+                    assert sample != null : "Null sample for subset " + subset.getDescription();
+
                     String title = sample.getTitle();
                     if ( StringUtils.isBlank( title ) ) {
                         continue; // the same sample may show up more than once with a blank title.
