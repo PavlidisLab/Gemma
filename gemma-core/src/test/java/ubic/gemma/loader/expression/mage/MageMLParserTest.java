@@ -92,5 +92,13 @@ public class MageMLParserTest extends AbstractMageTest {
         log.info( "Tally:\n" + mlp );
         istMageExamples.close();
     }
-
+    
+    // The Illumina file is not parseable by the MAGEStk.
+    /*
+     * public void testParseCollectionIlluminaArrayDesign() throws Exception { log.debug( "Parsing MAGE from Illumina
+     * Mouse-6" ); zipXslSetup( mlp, MAGE_DATA_RESOURCE_PATH + "/Mouse-6_V1.zip" ); ZipInputStream istMageExamples = new
+     * ZipInputStream( MageMLParserTest.class .getResourceAsStream( MAGE_DATA_RESOURCE_PATH + "/Mouse-6_V1.zip" ) );
+     * istMageExamples.getNextEntry(); mlp.parse( istMageExamples ); log.info( "Tally:\n" + mlp );
+     * istMageExamples.close(); }
+     */
 }
