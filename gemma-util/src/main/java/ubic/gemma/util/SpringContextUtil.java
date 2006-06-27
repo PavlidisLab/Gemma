@@ -73,12 +73,13 @@ public class SpringContextUtil {
         String servletContext = db.getString( "servlet.name.0" );
         if ( testing ) {
             log.warn( "************** Using test configuration ***************" );
-            return new String[] { "localTestDataSource.xml", "applicationContext-" + daoType + ".xml",
-                    "applicationContext-security.xml", servletContext + "-servlet.xml",
-                    "applicationContext-validation.xml" };
+            return new String[] { "classpath*:localTestDataSource.xml",
+                    "classpath*:applicationContext-" + daoType + ".xml", "classpath*:applicationContext-security.xml",
+                    "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml" };
         }
-        return new String[] { "applicationContext-localDataSource.xml", "applicationContext-" + daoType + ".xml",
-                "applicationContext-security.xml", servletContext + "-servlet.xml", "applicationContext-validation.xml" };
+        return new String[] { "classpath*:applicationContext-localDataSource.xml",
+                "classpath*:applicationContext-" + daoType + ".xml", "classpath*:applicationContext-security.xml",
+                "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml" };
 
     }
 

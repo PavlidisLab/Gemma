@@ -21,65 +21,30 @@ package ubic.gemma.loader.genome.gene;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.loader.util.persister.PersisterHelper;
-import ubic.gemma.model.common.auditAndSecurity.ContactService;
-import ubic.gemma.model.common.auditAndSecurity.PersonService;
-import ubic.gemma.model.common.description.DatabaseEntryService;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.model.common.description.LocalFileService;
-import ubic.gemma.model.common.description.OntologyEntryService;
-import ubic.gemma.model.common.protocol.HardwareService;
-import ubic.gemma.model.common.protocol.ProtocolService;
-import ubic.gemma.model.common.protocol.SoftwareService;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.biomaterial.CompoundService;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.ReporterService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.loader.util.AbstractSpringAwareCLI;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
-import ubic.gemma.util.SpringContextUtil;
 
 /**
  * Command line interface to gene parsing and loading
  * 
  * @author keshav
+ * @author pavlidis
  * @version $Id$
  */
-public class GeneLoaderCLI {
+public class GeneLoaderCLI extends AbstractSpringAwareCLI {
     protected static final Log log = LogFactory.getLog( GeneLoaderCLI.class );
-    protected static ManualAuthenticationProcessing manAuthentication = null;
-    protected static BeanFactory ctx = null;
 
-    private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-x <file>] [-l <file>] [-r] ";
-    private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
-    private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
-    private PersisterHelper ph;
     private GenePersister genePersister;
-    private static String username = null;
-    private static String password = null;
 
     // FIXME this should use the SDOG (source domain object generator)
 
@@ -90,189 +55,71 @@ public class GeneLoaderCLI {
      * @throws ConfigurationException
      * @throws IOException
      */
+    @SuppressWarnings("static-access")
     public static void main( String args[] ) throws IOException {
-        GeneLoaderCLI cli = null;
+        GeneLoaderCLI cli = new GeneLoaderCLI();
 
-        try {
-            /* OPTIONS STAGE */
+        /* COMMAND LINE PARSER STAGE */
+        initCommandParse( "GeneLoaderCLI", args );
 
-            /* help */
-            OptionBuilder.withDescription( "Print help for this application" );
-            Option helpOpt = OptionBuilder.create( 'h' );
-
-            /* username */
-            OptionBuilder.hasArgs();
-            OptionBuilder.withDescription( "Username" );
-            Option usernameOpt = OptionBuilder.create( 'u' );
-
-            /* password */
-            OptionBuilder.hasArgs();
-            OptionBuilder.withDescription( "Password" );
-            Option passwordOpt = OptionBuilder.create( 'p' );
-
-            /* environment (test or prod) */
-            OptionBuilder.hasArgs();
-            OptionBuilder.withDescription( "Set use of test or production environment" );
-            Option testOpt = OptionBuilder.create( 't' );
-
-            /* parse */
-            OptionBuilder.hasArg();
-            OptionBuilder.withDescription( "Parse File" );
-            Option parseOpt = OptionBuilder.create( 'x' );
-
-            /* parse and load */
-            OptionBuilder.hasArgs();
-            OptionBuilder.withDescription( "1) Specify files\n" + "2) Load database with entries from file" );
-            Option loadOpt = OptionBuilder.create( 'l' );
-
-            /* remove */
-            OptionBuilder.withDescription( "Remove from database" );
-            Option removeOpt = OptionBuilder.create( 'r' );
-
-            Options opt = new Options();
-            opt.addOption( helpOpt );
-            opt.addOption( usernameOpt );
-            opt.addOption( passwordOpt );
-            opt.addOption( testOpt );
-            opt.addOption( parseOpt );
-            opt.addOption( loadOpt );
-            opt.addOption( removeOpt );
-
-            /* COMMAND LINE PARSER STAGE */
-            BasicParser parser = new BasicParser();
-            CommandLine cl = parser.parse( opt, args );
-
-            /* INTERROGATION STAGE */
-            if ( cl.hasOption( 'h' ) ) {
-                printHelp( opt );
-                System.exit( 0 );
-
-            }
-
-            /* check if using test or production context */
-            if ( cl.hasOption( 't' ) ) {
-                boolean isTest = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
-                if ( isTest )
-                    ctx = SpringContextUtil.getApplicationContext( true );
-                else
-                    ctx = SpringContextUtil.getApplicationContext( false );
-
-                cli = new GeneLoaderCLI();
-            }
-            // if no ctx is set, default to test environment.
-            else {
-                ctx = SpringContextUtil.getApplicationContext( true );
-                cli = new GeneLoaderCLI();
-            }
-
-            /* check username and password. */
-            if ( cl.hasOption( 'u' ) ) {
-                if ( cl.hasOption( 'p' ) ) {
-                    username = cl.getOptionValue( 'u' );
-                    password = cl.getOptionValue( 'p' );
-                    manAuthentication = ( ManualAuthenticationProcessing ) ctx
-                            .getBean( "manualAuthenticationProcessing" );
-                    manAuthentication.validateRequest( username, password );
-                }
-            } else {
-                log.error( "Not authenticated.  Make sure you entered a valid username and/or password" );
-                System.exit( 0 );
-            }
-
-            /* check parse option. */
-            if ( cl.hasOption( 'x' ) ) {
-                NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-                geneInfoParser.parse( cl.getOptionValue( 'x' ) );
-            }
-
-            /* check load option. */
-            else if ( cl.hasOption( 'l' ) ) {
-
-                NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-                String[] filenames = cl.getOptionValues( 'l' );
-
-                for ( int i = 0; i < filenames.length - 1; i++ ) {
-                    geneInfoParser.parse( filenames[i] );
-                    i++;
-                }
-
-                // AS
-                geneInfoParser.parse( filenames[filenames.length - 1] );
-                Collection<Object> keys = geneInfoParser.getResults();
-
-                NCBIGeneInfo info;
-                Object gene;
-
-                NcbiGeneConverter converter = new NcbiGeneConverter();
-                for ( Object key : keys ) {
-                    info = ( NCBIGeneInfo ) geneInfoParser.get( key );
-                    gene = converter.convert( info );
-
-                    ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getPh().persist( ( ( Gene ) gene ).getTaxon() ) );
-                    if ( gene == null ) {
-                        System.out.println( "gene null. skipping" );
-                    } else {
-                        System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
-                        cli.getGenePersister().persist( gene );
-                    }
-                }
-                // cli.getGenePersister().persist( geneInfoParser.getResults() );
-                // endAS
-
-            }
-
-            /* check remove option. */
-            else if ( cl.hasOption( 'r' ) ) {
-                cli.getGenePersister().removeAll();
-            }
-            /* defaults to print help. */
-            else {
-                printHelp( opt );
-            }
-        } catch ( ParseException e ) {
-            e.printStackTrace();
+        /* check parse option. */
+        if ( commandLine.hasOption( 'x' ) ) {
+            NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
+            geneInfoParser.parse( commandLine.getOptionValue( 'x' ) );
         }
+
+        /* check load option. */
+        else if ( commandLine.hasOption( 'l' ) ) {
+
+            NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
+            String[] filenames = commandLine.getOptionValues( 'l' );
+
+            for ( int i = 0; i < filenames.length - 1; i++ ) {
+                geneInfoParser.parse( filenames[i] );
+                i++;
+            }
+
+            // AS
+            geneInfoParser.parse( filenames[filenames.length - 1] );
+            Collection<Object> keys = geneInfoParser.getResults();
+
+            NCBIGeneInfo info;
+            Object gene;
+
+            NcbiGeneConverter converter = new NcbiGeneConverter();
+            for ( Object key : keys ) {
+                info = ( NCBIGeneInfo ) geneInfoParser.get( key );
+                gene = converter.convert( info );
+
+                ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
+                if ( gene == null ) {
+                    System.out.println( "gene null. skipping" );
+                } else {
+                    System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
+                    cli.getGenePersister().persist( gene );
+                }
+            }
+            // cli.getGenePersister().persist( geneInfoParser.getResults() );
+            // endAS
+
+        }
+
+        /* check remove option. */
+        else if ( commandLine.hasOption( 'r' ) ) {
+            cli.getGenePersister().removeAll();
+        }
+        /* defaults to print help. */
+        else {
+            printHelp( "GeneLoaderCLI" );
+        }
+
     }
 
     public GeneLoaderCLI() {
-
-        ph = new PersisterHelper();
-        ph.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ph
-                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
-                        .getBean( "expressionExperimentService" ) );
-        ph.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
-        ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
-        ph.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-        ph.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ph.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
-        ph.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
-        ph.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
-        ph.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
-        ph.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
-        ph.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
-        ph.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
-        ph.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
-        ph.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
-        ph.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
-        ph.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
-        ph.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
-        ph.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
-        ph.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
-        ph.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
+        super();
         genePersister = new GenePersister();
         genePersister.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
-
-        genePersister.setPersisterHelper( ph );
-    }
-
-    /**
-     * @param opt
-     */
-    private static void printHelp( Options opt ) {
-        HelpFormatter h = new HelpFormatter();
-        // h.setWidth( 80 );
-        h.printHelp( USAGE, HEADER, opt, FOOTER );
+        genePersister.setPersisterHelper( this.getPersisterHelper() );
     }
 
     /**
@@ -282,11 +129,28 @@ public class GeneLoaderCLI {
         return this.genePersister;
     }
 
-    /**
-     * @return Returns the ml.
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
      */
-    public PersisterHelper getPh() {
-        return this.ph;
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        /* parse */
+        Option parseOption = OptionBuilder.hasArg().withLongOpt( "input" ).withDescription( "File to parse" ).create(
+                'x' );
+
+        /* parse and load */
+        Option loadOption = OptionBuilder.hasArg().withDescription(
+                "1: Specify files or 2: Load database with entries from file" ).create( 'l' );
+
+        Option removeOption = OptionBuilder.withDescription( "Remove from database" ).create( 'r' );
+
+        options.addOption( parseOption );
+        options.addOption( loadOption );
+        options.addOption( removeOption );
+
     }
 
 }
