@@ -1,4 +1,7 @@
-/* Copyright (c) 2006 University of British Columbia
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 Columbia University
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +19,6 @@
 
 package ubic.gemma.web.util.progress;
 
-import java.lang.reflect.Method;
-import java.io.File;
 /**
  * 
  *
@@ -25,24 +26,12 @@ import java.io.File;
  * <p>Copyright (c) 2006 UBC Pavlab
  * @author klc
  * @version $Id$
+ * 
+ * Any process that would like to have a long process monitored and displayed to the user can implement this interface.
+ * The implementer of this interface must simply
  */
-public class ParseProgressInterceptor extends IndeterminateProgressInterceptor {
+public interface Progress {
 
+    void updatePercent(ProgressData progress);
     
-    
-    ParseProgressInterceptor(){
-        super("Parsing file....");
-    }
-    @Override
-    protected void estimateEndPoint() {
-        //used the length of the file to estimate
-
-    }
-
-    public void before( Method arg0, Object[] arg1, Object arg2 ) throws Throwable {
-        // TODO Auto-generated method stub
-    
-   
-    }
-
 }

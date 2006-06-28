@@ -27,13 +27,11 @@ package ubic.gemma.web.util.progress;
 public class ProgressData {
 
     private int percent;
-    private int endpoint;
     private String description;
     private boolean done;
 
-    ProgressData( int per, int end, String descrip, boolean finished ) {
+    public ProgressData( int per, String descrip, boolean finished ) {
         percent = per;
-        endpoint = end;
         description = descrip;
         done = finished;
     }
@@ -52,14 +50,6 @@ public class ProgressData {
 
     public void setDescription( String description ) {
         this.description = description;
-    }
-
-    public int getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint( int endpoint ) {
-        this.endpoint = endpoint;
     }
 
     public int getPercent() {

@@ -32,10 +32,10 @@ import uk.ltd.getahead.dwr.ExecutionContext;
 public class ProgressMonitor {
 
     
-    public int getProgressStatus() {
+    public ProgressData getProgressStatus() {
     
         HttpServletRequest req = ExecutionContext.get().getHttpServletRequest();
-        return ((Integer) req.getSession().getAttribute( "ProgessInfo")).intValue();
+        return ((ProgressData) req.getSession().getAttribute( "ProgessInfo"));
 
     }
 

@@ -19,6 +19,10 @@
 
 package ubic.gemma.web.util.progress;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
@@ -33,36 +37,38 @@ import uk.ltd.getahead.dwr.ExecutionContext;
  * Copyright (c) 2006 UBC Pavlab
  * 
  * @author klc
- * @version $Id$
+ * @version $Id$ This interceptor will be invoked
+ *          whenever the updateProgress method in the progress interface gets called. This class is a singleton and will
+ *          deal with the monitoring of several progress bars. Currently just uses the session object to store progress
+ *          bar data. At some point this needs to be changed. What if the session object changes for a given user
+ *          (expires)? What about getting all the progress information for all monitored processes for a given user?
+ *          What if a job takes 5 days? Monitored process perhaps need to be persisted to the database after some
+ *          duration? Ie what happens if the server goes down?
  */
-public abstract class ProgressInterceptor implements MethodBeforeAdvice {
+public class ProgressInterceptor implements MethodBeforeAdvice {
 
-    private HttpServletRequest req;
-    protected static final Log logger = LogFactory.getLog( PersistProgressInterceptor.class );
-    protected int finishingValue; // used to determine the end of the progress metre
-    protected int progress; // just a count of the progress made
-    protected int percent;
-    protected String description;
+    protected static final Log logger = LogFactory.getLog( ProgressInterceptor.class );
+    private Map<Object, HttpServletRequest> monitoredProgress;
 
-    public ProgressInterceptor(String progressDescription) {
+    public ProgressInterceptor() {
         super();
-        description = progressDescription;
-        progress = 0;
-        finishingValue = 0;
-        percent = 0;
-        req = ExecutionContext.get().getHttpServletRequest();
+        monitoredProgress = new HashMap<Object, HttpServletRequest>();
+
     }
 
-    // updates the session info with the new percentage.
-    protected void updateSession( int newPercent ) {
+    @SuppressWarnings("unused")
+    public void before( Method arg0, Object[] arg1, Object arg2 ) throws Throwable {
 
-        if ( newPercent == 100 ) {
-            req.getSession().setAttribute( "ProgessInfo",
-                    new ProgressData( newPercent, finishingValue, description, Boolean.TRUE ) );
-        } else if ( newPercent > percent ) {
-            req.getSession().setAttribute( "ProgessInfo",
-                    new ProgressData( newPercent, finishingValue, description, Boolean.FALSE ) );
+        logger.debug( "before in dbinterceptor got called." );
+
+        HttpServletRequest req;
+
+        if ( !monitoredProgress.containsKey( arg2 ) ) {
+            monitoredProgress.put( arg2, ExecutionContext.get().getHttpServletRequest() );
         }
+
+        req = monitoredProgress.get( arg2 );
+        req.setAttribute( "ProgressInfo", arg1[0] );
 
     }
 
