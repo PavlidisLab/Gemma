@@ -31,8 +31,7 @@ public class ProgressPointCut extends StaticMethodMatcherPointcut {
         // for some reason this could be null....
         if ( arg1 == null ) return false;
 
-        log.debug("Trying to find a match: " + arg1);
-        boolean found = arg1.isAssignableFrom( Progress.class );
+        boolean found = Progress.class.isAssignableFrom(arg1);
         
         if ( found ) log.debug( "Creating proxy for progress class:  " + arg1 + "  Method: " + arg0 );
 
