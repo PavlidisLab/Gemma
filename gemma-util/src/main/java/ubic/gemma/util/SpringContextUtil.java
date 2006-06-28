@@ -75,11 +75,13 @@ public class SpringContextUtil {
             log.warn( "************** Using test configuration ***************" );
             return new String[] { "classpath*:localTestDataSource.xml",
                     "classpath*:applicationContext-" + daoType + ".xml", "classpath*:applicationContext-security.xml",
-                    "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml" };
+                    "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml",
+                    "classpath*:applicationContext-serviceBeans.xml" };
         }
         return new String[] { "classpath*:applicationContext-localDataSource.xml",
                 "classpath*:applicationContext-" + daoType + ".xml", "classpath*:applicationContext-security.xml",
-                "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml" };
+                "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml",
+                "classpath*:applicationContext-serviceBeans.xml" };
 
     }
 
