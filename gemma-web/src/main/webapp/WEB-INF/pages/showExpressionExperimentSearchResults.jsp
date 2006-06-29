@@ -7,7 +7,7 @@
         </h2>
 		<div id="logo">
             <a href="<%=request.getContextPath()%>">
-                <img src="<%=request.getContextPath()%>/images/outImage.png" />
+                <img src="${visualization}"/>
             </a>
         </div>
     </body>
