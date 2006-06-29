@@ -44,7 +44,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
 
 /**
- * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
+ * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. FIXME -
+ * make this use the standard CLI.
  * 
  * @author pavlidis
  * @version $Id$
@@ -52,19 +53,20 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
 public class ProbeThreePrimeLocator {
 
     /**
-     * 
+     * FIXME make this an option
      */
     private static final String PASSWORD = "toast";
     /**
-     * 
+     * FIXME make this an option
      */
     private static final String USERNAME = "pavlidis";
     /**
-     * 
+     * FIXME make this an option
      */
     private static final String HOST = "localhost";
+
     /**
-     * 
+     * FIXME make this an option
      */
     private static final int PORT = 3306;
 
@@ -95,6 +97,9 @@ public class ProbeThreePrimeLocator {
         int count = 0;
         int skipped = 0;
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
+
+        writeHeader( output );
+
         for ( Iterator<Object> iter = brp.getResults().iterator(); iter.hasNext(); ) {
             BlatResult blatRes = ( BlatResult ) iter.next();
 
@@ -176,6 +181,24 @@ public class ProbeThreePrimeLocator {
     // }
 
     /**
+     * Generate a header for the output file. TODO: should be optional.
+     */
+    private void writeHeader( Writer output ) throws IOException {
+        output.write( "Probe" + "\t" + "Array" + "\t" + "Blat.matches" + "\t" + "Blat.queryLength" + "\t"
+                + "Blat.targetAlignmentLength" + "\t" + "Blat.score" + "\t" + "Gene.symbol" + "\t" + "Gene.NCBIid"
+                + "\t" + "threePrime.distance" + "\t" + "exonOverlap" + "\t" + "Blat.Chromosome" + "\t"
+                + "Blat.targetStart" + "\t" + "Blat.targetEnd" + "\n" );
+    }
+
+    /**
+     * Generate a header for the "best result" file.
+     */
+    private void writeBestHeader( Writer writer ) throws IOException {
+        LocationData f = new LocationData( null, null );
+        writer.write( f.generateHeader() );
+    }
+
+    /**
      * Trim the results down to a set of "best" results. The results are sent to a provided writer
      * <p>
      * FIXME handle ties.
@@ -186,6 +209,9 @@ public class ProbeThreePrimeLocator {
      */
     protected void getBest( Map<String, Collection<LocationData>> results, BufferedWriter writer ) throws IOException {
         log.info( "Preparing 'best' matches" );
+
+        writeBestHeader( writer );
+
         for ( String probe : results.keySet() ) {
             log.debug( "Checking " + probe );
             Collection<LocationData> probeResults = results.get( probe );
@@ -388,6 +414,22 @@ public class ProbeThreePrimeLocator {
 
         public void setTpd( ThreePrimeData tpd ) {
             this.tpd = tpd;
+        }
+
+        /**
+         * Generate a header to be used in output files.
+         * 
+         * @return
+         */
+        public String generateHeader() {
+            StringBuilder buf = new StringBuilder();
+
+            buf.append( "probe" + "\t" + "array" + "\t" + "gene.symbol" + "\t" + "gene.NCBIid" + "\t" + "numHits"
+                    + "\t" + "blat.score" + "\t" + "blat.exonOverlap" + "\t" + "threeprime.distance" + "\t"
+                    + "blat.alignLenth" + "\t" + "targetSequenceName" + "\t" + "startInTarget" + "\t" + "endInTarget"
+                    + "\t" + "numberTied" );
+
+            return buf.toString();
         }
 
         public String toString() {
