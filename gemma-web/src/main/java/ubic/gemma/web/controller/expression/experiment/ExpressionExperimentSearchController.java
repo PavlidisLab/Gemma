@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -137,9 +138,21 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         String[] searchIds = StringUtils.split( searchString, "," );
+
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
-        if ( filename == null ) filename = request.getContextPath() + "/images/outImage.png";// FIXME use validation
-                                                                                                // instead
+        if ( filename == null ) filename = "visualization.png";
+
+        String uploadDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
+
+        File dirPath = new File( uploadDir );
+
+        // Create the directory if it doesn't exist
+        if ( !dirPath.exists() ) {
+            dirPath.mkdirs();
+        }
+
+        filename = uploadDir + filename;
+        log.info( "filename: " + filename );
 
         if ( searchIds == null ) {// FIXME necessary?
             searchIds = new String[1];
