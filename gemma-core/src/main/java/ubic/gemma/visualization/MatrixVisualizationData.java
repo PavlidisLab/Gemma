@@ -104,9 +104,9 @@ public class MatrixVisualizationData {
             byte[] byteData = vector.getData();
             double[] data = converter.byteArrayToDoubles( byteData );
 
-            log.warn( key );
+            log.debug( key );
             for ( int j = 0; j < data.length; j++ ) {
-                log.warn( "data: " + data[j] );
+                log.debug( "data: " + data[j] );
             }
         }
     }
