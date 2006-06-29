@@ -21,6 +21,7 @@ package ubic.gemma.visualization;
 
 /**
  * @author keshav
+ * @version $Id$
  */
 public class JAISampleProgram {
 
@@ -61,14 +62,14 @@ public class JAISampleProgram {
     // int height = image2.getHeight();
     //
     // /* attach to scrolling image panel */
-    // ScrollingImagePanel panel = new ScrollingImagePanel( image2, width*2, height*2 );
+    // ScrollingImagePanel panel = new ScrollingImagePanel( image2, width * 2, height * 2 );
     //
     // /* attach panel to frame */
-    // Frame window = new Frame( "JAI Sample Program" );
-    // window.add( panel );
-    // window.pack();
-    // window.show();
+    //        Frame window = new Frame( "JAI Sample Program" );
+    //        window.add( panel );
+    //        window.pack();
+    //        window.show();
     //
-    // }
+    //    }
 
 }
