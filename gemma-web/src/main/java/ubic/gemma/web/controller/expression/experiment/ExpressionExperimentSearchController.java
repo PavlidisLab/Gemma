@@ -137,7 +137,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         Long id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
-        String[] searchIds = StringUtils.split( searchString, "," );
+        String[] searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
 
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
         if ( filename == null ) filename = "visualization.png";
@@ -154,15 +154,9 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         filename = uploadDir + filename;
         log.info( "filename: " + filename );
 
-        if ( searchIds == null ) {// FIXME necessary?
-            searchIds = new String[1];
-            searchIds[0] = searchString;
-        }
-
         Collection<DesignElement> designElements = new HashSet();
         for ( int i = 0; i < searchIds.length; i++ ) {
             log.debug( searchIds[i] );
-            searchIds[i] = StringUtils.trimLeadingWhitespace( searchIds[i] );
             designElements.add( compositeSequenceService.findByName( searchIds[i] ) );
         }
 
@@ -176,10 +170,10 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
             visualizer.createVisualization( visualizationData, filename );
         } else {
             log.debug( "search by official gene symbol" );
-            // call service which produces expression data image
+            // call service which produces expression data image based on gene symbol search criteria
         }
 
-        return new ModelAndView( getSuccessView() );
+        return new ModelAndView( getSuccessView(), "visualization", filename );
     }
 
     /**
