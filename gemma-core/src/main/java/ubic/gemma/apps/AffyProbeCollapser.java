@@ -28,6 +28,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.util.SequenceManipulation;
 import ubic.gemma.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -69,7 +70,8 @@ public class AffyProbeCollapser {
         AffyProbeCollapser apc = new AffyProbeCollapser();
         // int sequenceColumn = Integer.parseInt(args[3]);
 
-        apc.collapse( arrayName, new FileInputStream( f ), new BufferedWriter( new FileWriter( o ) ) );
+        apc.collapse( arrayName, FileTools.getInputStreamFromPlainOrCompressedFile( filename ), new BufferedWriter(
+                new FileWriter( o ) ) );
 
     }
 }

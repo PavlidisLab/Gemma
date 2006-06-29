@@ -38,9 +38,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * <p>
  * A one-line header starting with the word "Probe" is permitted. In later versions of the format the second field
  * (column) is omitted.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -59,7 +56,13 @@ public class AffyProbeReader extends BasicLineMapParser {
     @SuppressWarnings("unchecked")
     public Object parseOneLine( String line ) {
         String[] sArray = line.split( "\t" );
-        if ( sArray.length == 0 ) throw new IllegalArgumentException( "Line format is not valid" );
+        if ( sArray.length == 0 )
+            throw new IllegalArgumentException( "Line format is not valid (not tab-delimited or no fields found)" );
+
+        if ( sArray.length < sequenceField + 1 ) {
+            throw new IllegalArgumentException( "Too few fields in line, expected at least " + ( sequenceField + 1 )
+                    + " but got " + sArray.length );
+        }
 
         String probeSetId = sArray[0];
         if ( probeSetId.startsWith( "Probe" ) ) return null;
