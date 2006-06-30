@@ -50,14 +50,15 @@ public class TabDelimParser extends BasicLineParser {
      * @param header
      * @throws IOException
      */
-    public void parse( InputStream is, boolean header ) throws IOException {// FIXME do i really want to override this?
+    public void parse( InputStream is, boolean hasHeader ) throws IOException {// FIXME do i really want to override
+                                                                                // this?
 
         linesParsed = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
         String line = null;
 
-        if ( header ) setHeader( line = br.readLine() );
+        if ( hasHeader ) setHeader( line = br.readLine() );
 
         while ( ( line = br.readLine() ) != null ) {
             Object newItem = parseOneLine( line );
@@ -80,7 +81,7 @@ public class TabDelimParser extends BasicLineParser {
         return this.header;
     }
 
-    public Collection getResults() {
+    public Collection<Object> getResults() {
         return this.results;
     }
 

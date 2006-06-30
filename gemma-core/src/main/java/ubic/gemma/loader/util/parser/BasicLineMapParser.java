@@ -26,12 +26,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-
 /**
  * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

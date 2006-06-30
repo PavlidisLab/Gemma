@@ -155,7 +155,7 @@ public class ProbeMapperGui extends JFrame {
         try {
             String bestOutputFileName = outputFile.getAbsolutePath().replaceFirst( "\\.", ".best." );
             log.info( "Saving best to " + bestOutputFileName );
-            Map<String, Collection<LocationData>> results = ptpl.run( new FileInputStream( inputFile ),
+            Map<String, Collection<LocationData>> results = ptpl.runOnBlatResults( new FileInputStream( inputFile ),
                     new BufferedWriter( new FileWriter( outputFile ) ) );
             File o = new File( bestOutputFileName );
             ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );

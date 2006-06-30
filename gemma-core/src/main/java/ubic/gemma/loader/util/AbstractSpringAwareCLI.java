@@ -18,8 +18,6 @@
  */
 package ubic.gemma.loader.util;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
@@ -64,19 +62,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         this.buildOptions();
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildStandardOptions() {
-        // TODO Auto-generated method stub
         super.buildStandardOptions();
-        Option usernameOpt = OptionBuilder.withArgName( "user" ).isRequired().withLongOpt( "user" ).hasArg()
-                .withDescription( "User name for accessing the system" ).create( 'u' );
-
-        Option passwordOpt = OptionBuilder.withArgName( "passwd" ).isRequired().withLongOpt( "password" ).hasArg()
-                .withDescription( "Password for accessing the system" ).create( 'p' );
-        options.addOption( usernameOpt );
-        options.addOption( passwordOpt );
-
+        addUserNameAndPasswordOptions();
     }
 
     /**

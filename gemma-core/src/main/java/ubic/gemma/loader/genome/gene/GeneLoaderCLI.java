@@ -56,7 +56,7 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
         GeneLoaderCLI cli = new GeneLoaderCLI();
 
         /* COMMAND LINE PARSER STAGE */
-        cli.initCommandParse( "GeneLoaderCLI", args );
+        cli.processCommandLine( "GeneLoaderCLI", args );
 
         /* check parse option. */
         if ( cli.hasOption( 'x' ) ) {

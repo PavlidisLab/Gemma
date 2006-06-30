@@ -25,9 +25,6 @@ import java.util.Collection;
 
 /**
  * Interface for classes that allow parsing of files and streams.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

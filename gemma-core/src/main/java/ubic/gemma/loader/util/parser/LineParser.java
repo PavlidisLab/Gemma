@@ -21,9 +21,6 @@ package ubic.gemma.loader.util.parser;
 /**
  * A Parser that processes its input line-by-line. One of the parse methods must be called before data becomes
  * available.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

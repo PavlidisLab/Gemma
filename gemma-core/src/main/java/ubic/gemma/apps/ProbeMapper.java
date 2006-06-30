@@ -29,10 +29,12 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,6 +43,7 @@ import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 import ubic.gemma.externalDb.GoldenPath.ThreePrimeData;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.util.AbstractCLI;
+import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
@@ -54,28 +57,18 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
  */
 public class ProbeMapper extends AbstractCLI {
 
-    /**
-     * FIXME make this an option
-     */
-    private static final String PASSWORD = "toast";
-    /**
-     * FIXME make this an option
-     */
-    private static final String USERNAME = "pavlidis";
-    /**
-     * FIXME make this an option
-     */
-    private static final String HOST = "localhost";
+    private static final String DEFAULT_DATABASE = "hg18";
+    private String databaseName = DEFAULT_DATABASE;
 
-    /**
-     * FIXME make this an option
-     */
-    private static final int PORT = 3306;
+    private static final double DFEAULT_IDENTITY_THRESHOLD = 0.90;
+    private static final double DEFAULT_SCORE_THRESHOLD = 0.90;
+    private double identityThreshold = DFEAULT_IDENTITY_THRESHOLD;
+    private double scoreThreshold = DEFAULT_SCORE_THRESHOLD;
+    private String outputFileName = null;
 
-    private String databaseName = "hg18";
-    private double identityThreshold = 0.90;
-    private double scoreThreshold = 0.90;
     private MeasurementMethod threeprimeMethod = MeasurementMethod.right;
+    private String blatFileName = null;
+    private String ncbiIdentifierFileName = null;
     private static Log log = LogFactory.getLog( ProbeMapper.class.getName() );
 
     /**
@@ -88,21 +81,84 @@ public class ProbeMapper extends AbstractCLI {
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
      */
-    public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
-            SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-        GoldenPath goldenPathDb = new GoldenPath( PORT, databaseName, HOST, USERNAME, PASSWORD );
+    private Map<String, Collection<LocationData>> runOnBlatResults( InputStream input, Writer output )
+            throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+
+        GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( input );
 
         writeHeader( output );
 
-        Collection<Object> blatResults = brp.getResults();
+        Collection blatResults = brp.getResults();
 
+        @SuppressWarnings("unchecked")
         Map<String, Collection<LocationData>> allRes = processBlatResults( output, goldenPathDb, blatResults );
+
         input.close();
         output.close();
+        return allRes;
+    }
+
+    /**
+     * @param stream containing genbank ids, one per line.
+     * @param writer
+     * @return
+     */
+    private Map<String, Collection<LocationData>> runOnGbIds( FileInputStream stream, BufferedWriter writer )
+            throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+        GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+
+        TabDelimParser brp = new TabDelimParser();
+        brp.parse( stream );
+
+        writeHeader( writer );
+
+        Collection<Object> genbankIds = brp.getResults();
+
+        Map<String, Collection<LocationData>> allRes = processGbIds( writer, goldenPathDb, genbankIds );
+        stream.close();
+        writer.close();
+        return allRes;
+    }
+
+    /**
+     * @param writer
+     * @param goldenPathDb
+     * @param genbankIds
+     * @return
+     */
+    private Map<String, Collection<LocationData>> processGbIds( BufferedWriter writer, GoldenPath goldenPathDb,
+            Collection<Object> genbankIds ) throws IOException {
+        Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
+        int count = 0;
+        int skipped = 0;
+        for ( Object obj : genbankIds ) {
+
+            assert obj instanceof String[];
+
+            String[] genbankIdAr = ( String[] ) obj;
+
+            if ( genbankIdAr == null || genbankIdAr.length == 0 ) {
+                continue;
+            }
+
+            if ( genbankIdAr.length > 1 ) {
+                throw new IllegalArgumentException( "Input file must have just one genbank identifier per line" );
+            }
+
+            String genbankId = genbankIdAr[0];
+
+            Collection<BlatResult> blatResults = goldenPathDb.findSequenceLocations( genbankId );
+
+            this.processBlatResults( writer, goldenPathDb, blatResults );
+
+            count++;
+            if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
+        }
+        log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         return allRes;
     }
 
@@ -116,7 +172,7 @@ public class ProbeMapper extends AbstractCLI {
      * @throws IOException
      */
     private Map<String, Collection<LocationData>> processBlatResults( Writer output, GoldenPath goldenPathDb,
-            Collection<Object> blatResults ) throws IOException {
+            Collection<BlatResult> blatResults ) throws IOException {
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
         int count = 0;
         int skipped = 0;
@@ -307,33 +363,42 @@ public class ProbeMapper extends AbstractCLI {
 
         ProbeMapper ptpl = new ProbeMapper();
 
-        ptpl.initCommandParse( "probeMapper", args );
+        ptpl.processCommandLine( "probeMapper", args );
 
         try {
 
-            String[] moreArgs = ptpl.getArgs();
-
-            if ( moreArgs.length < 3 ) {
-                System.err.println( "usage: <input blat result file name> <output filename>, <dbName (hg18)>" );
-                System.exit( 0 );
-            }
-            String filename = moreArgs[0];
-            File f = new File( filename );
-            if ( !f.canRead() ) throw new IOException( "Can't read file" );
-
-            String outputFileName = moreArgs[1];
-
-            File o = new File( outputFileName );
-            // if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
-            String bestOutputFileName = outputFileName + ".best";
+            String bestOutputFileName = ptpl.outputFileName + ".best";
             log.info( "Saving best to " + bestOutputFileName );
+            File o = new File( bestOutputFileName );
 
-            ptpl.databaseName = moreArgs[2];
-            Map<String, Collection<LocationData>> results = ptpl.run( new FileInputStream( f ), new BufferedWriter(
-                    new FileWriter( o ) ) );
+            if ( ptpl.blatFileName != null ) {
+                File f = new File( ptpl.blatFileName );
 
-            o = new File( bestOutputFileName );
-            ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+                Map<String, Collection<LocationData>> results = ptpl.runOnBlatResults( new FileInputStream( f ),
+                        new BufferedWriter( new FileWriter( o ) ) );
+
+                ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+
+            } else if ( ptpl.ncbiIdentifierFileName != null ) {
+                File f = new File( ptpl.ncbiIdentifierFileName );
+                if ( !f.canRead() ) throw new IOException( "Can't read file" );
+
+                Map<String, Collection<LocationData>> results = ptpl.runOnGbIds( new FileInputStream( f ),
+                        new BufferedWriter( new FileWriter( o ) ) );
+
+                ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+            } else {
+                String[] moreArgs = ptpl.getArgs();
+                if ( moreArgs.length == 0 ) {
+                    System.out
+                            .println( "You must provide either a Blat result file, a Genbank identifier file, or some Genbank identifiers" );
+                    ptpl.printHelp( "probeMapper" );
+                    System.exit( 0 );
+                }
+
+                // TODO - process loose Genbank identifiers.
+
+            }
 
         } catch ( IOException e ) {
             log.error( e, e );
@@ -518,15 +583,61 @@ public class ProbeMapper extends AbstractCLI {
 
     }
 
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
+        Option blatResultOption = OptionBuilder.hasArg().withArgName( "PSL file" ).withDescription(
+                "Blat result file in PSL format" ).withLongOpt( "blatfile" ).create( 'b' );
+
+        options.addOption( blatResultOption );
+
+        Option databaseNameOption = OptionBuilder.hasArg().withArgName( "database" ).withDescription(
+                "GoldenPath database id (default=" + DEFAULT_DATABASE + ")" ).withLongOpt( "database" ).create( 'd' );
+
+        options.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Sequence identity threshold, default = " + DFEAULT_IDENTITY_THRESHOLD ).withLongOpt(
+                "identityThreshold" ).create( 'i' ) );
+
+        options.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Blat score threshold, default = " + DEFAULT_SCORE_THRESHOLD ).withLongOpt( "scoreThreshold" ).create(
+                's' ) );
+
+        options.addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
+                "File containing Genbank identifiers" ).withLongOpt( "gbfile" ).create( 'g' ) );
+
+        options.addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription( "Output file basename" )
+                .isRequired().withLongOpt( "outputFile" ).create( 'o' ) );
+
+        options.addOption( databaseNameOption );
+
+        addUserNameAndPasswordOptions();
+        addHostAndPortOptions( false, false );
 
     }
 
     @Override
     protected void processOptions() {
-        // TODO Auto-generated method stub
+        if ( commandLine.hasOption( 's' ) ) {
+            this.scoreThreshold = getDoubleOptionValue( 's' );
+        }
+
+        if ( commandLine.hasOption( 'i' ) ) {
+            this.identityThreshold = getDoubleOptionValue( 'i' );
+        }
+
+        if ( commandLine.hasOption( 'd' ) ) {
+            this.databaseName = getOptionValue( 'd' );
+        }
+
+        if ( commandLine.hasOption( 'b' ) ) {
+            this.blatFileName = getFileNameOptionValue( 'b' );
+        }
+
+        if ( commandLine.hasOption( 'g' ) ) {
+            this.ncbiIdentifierFileName = getFileNameOptionValue( 'g' );
+        }
+
+        this.outputFileName = getOptionValue( 'o' );
 
     }
 
