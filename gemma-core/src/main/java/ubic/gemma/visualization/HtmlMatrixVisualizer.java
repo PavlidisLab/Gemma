@@ -48,7 +48,7 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     private MatrixVisualizationData matrixVisualizationData = null;
     private List<String> rowNames = null;
     private List<String> colNames = null;
-    private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/outImage.png";
+    private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/visualization.png";
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
     /**
@@ -63,6 +63,18 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      */
     public void setMatrixVisualizationData( MatrixVisualizationData matrixVisualizationData ) {
         this.matrixVisualizationData = matrixVisualizationData;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData,
+     *      java.lang.String)
+     */
+    public void createVisualization( MatrixVisualizationData matrixVisualizationData, String outfile ) {
+        this.outfile = outfile;
+
+        createVisualization( matrixVisualizationData );
     }
 
     /*
@@ -88,7 +100,7 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
             data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
             i++;
         }
-    
+
         if ( rowNames == null ) {
             System.out.println( "Row labels not set.  Using defaults" );
             rowNames = new ArrayList();
@@ -104,31 +116,18 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
                 colNames.add( String.valueOf( j ) );
             }
         }
-
-        DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
-        matrix.setRowNames( rowNames );
-        matrix.setColumnNames( colNames );
-        ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
-        try {
-            display.saveImage( outfile );
-            display.setLabelsVisible( true );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
-
+        createVisualization( data );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData,
-     *      java.lang.String)
+     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(double[][], java.lang.String)
      */
-    public void createVisualization( MatrixVisualizationData matrixVisualizationData, String outfile ) {
+    public void createVisualization( double[][] data, String outfile ) {
         this.outfile = outfile;
 
-        createVisualization( matrixVisualizationData );
+        createVisualization( data );
     }
 
     /*
@@ -150,17 +149,6 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
         } catch ( IOException e ) {
             e.printStackTrace();
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(double[][], java.lang.String)
-     */
-    public void createVisualization( double[][] data, String outfile ) {
-        this.outfile = outfile;
-
-        createVisualization( data );
     }
 
     /*
