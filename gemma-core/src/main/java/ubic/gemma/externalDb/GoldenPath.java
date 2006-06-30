@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -39,33 +40,25 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
  * <p>
  * This is partly temporary, until we have this in our own database.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class GoldenPath {
-    /**
-     * 3' distances are measured from the center of the query
-     */
-    public static final String CENTER = "center";
 
     /**
-     * 3' distances are measured from the 3' (right) edge of the query
+     * Describes how distances of a sequence from a relevant part of a gene are measured: either from the center, left
+     * (5' end) or right (3' end).
      */
-    public static final String RIGHTEND = "right";
-
-    /**
-     * 3' distance are measured from the 5' (left) edge of the query.
-     */
-    private static final String LEFTEND = "left";
+    public enum MeasurementMethod {
+        center, right, left
+    };
 
     private static final Log log = LogFactory.getLog( GoldenPath.class );
 
@@ -94,6 +87,81 @@ public class GoldenPath {
         String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
         conn = DriverManager.getConnection( url, user, password );
         qr = new QueryRunner();
+    }
+
+    /**
+     * @param identifier A Genbank accession referring to an EST or mRNA. For other types of queries this will not
+     *        return any results.
+     * @return Set containing Lists of PhysicalLocation representing places GoldenPath says the sequence referred to by
+     *         the identifier aligns. If no results are found the Set will be empty.
+     */
+    public Set<BlatResult> findSequenceLocations( String identifier ) {
+
+        Object[] params = new Object[] { identifier };
+        String query = "";
+        Set<BlatResult> matchingBlocks = new HashSet<BlatResult>();
+
+        /* ESTs */
+        query = "SELECT est.tName, est.blockSizes, est.tStarts,est.qStarts,  est.strand FROM all_est AS est WHERE est.qName = ?";
+        matchingBlocks.addAll( findLocationsByQuery( query, params ) );
+
+        /* mRNA */
+        query = "SELECT mrna.tName, mrna.blockSizes, mrna.tStarts, mrna.qStarts, mrna.strand FROM all_mrna AS mrna WHERE mrna.qName = ?";
+        matchingBlocks.addAll( findLocationsByQuery( query, params ) );
+
+        return matchingBlocks;
+    }
+
+    /**
+     * Uses a query that can retrieve BlatResults from GoldenPath. The query must have the appropriate form.
+     * 
+     * @param query
+     * @param params
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Set<BlatResult> findLocationsByQuery( String query, Object[] params ) {
+        try {
+            return ( Set<BlatResult> ) qr.query( conn, query, params, new ResultSetHandler() {
+
+                @SuppressWarnings("synthetic-access")
+                public Object handle( ResultSet rs ) throws SQLException {
+                    Set<BlatResult> r = new HashSet<BlatResult>();
+                    while ( rs.next() ) {
+
+                        BlatResult blatResult = BlatResult.Factory.newInstance();
+
+                        Chromosome c = Chromosome.Factory.newInstance();
+                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
+                        blatResult.setTargetChromosome( c );
+                        blatResult.setBlockSizes( rs.getString( 2 ) );
+                        blatResult.setTargetStarts( rs.getString( 3 ) );
+                        blatResult.setQueryStarts( rs.getString( 4 ) );
+                        blatResult.setStrand( rs.getString( 5 ) );
+
+                        //
+                        // String blockSizes = rs.getString( 2 );
+                        // String blockStarts = rs.getString( 3 );
+                        //
+                        // int[] blockSizeInts = SequenceManipulation.blatLocationsToIntArray( blockSizes );
+                        // int[] blockStartInts = SequenceManipulation.blatLocationsToIntArray( blockStarts );
+                        //
+                        // List<PhysicalLocation> blocks = blocksToPhysicalLocations( blockSizeInts, blockStartInts, c
+                        // );
+                        //
+                        // for ( PhysicalLocation block : blocks ) {
+                        // block.setStrand( rs.getString( 4 ) );
+                        // }
+
+                        r.add( blatResult );
+                    }
+                    return r;
+                }
+
+            } );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -148,6 +216,30 @@ public class GoldenPath {
     }
 
     /**
+     * @param identifier
+     * @return
+     */
+    public List<ThreePrimeData> getThreePrimeDistances( String identifier, MeasurementMethod method ) {
+        Set<BlatResult> locations = findSequenceLocations( identifier );
+        List<ThreePrimeData> results = new ArrayList<ThreePrimeData>();
+        for ( BlatResult br : locations ) {
+            results.addAll( getThreePrimeDistances( br, method ) );
+        }
+        return results;
+    }
+
+    /**
+     * Given a physical location, find how close it is to the 3' end of a gene it is in.
+     * 
+     * @param br BlatResult holding the parameters needed.
+     * @param method The constant representing the method to use to locate the 3' distance.
+     */
+    public Collection<? extends ThreePrimeData> getThreePrimeDistances( BlatResult br, MeasurementMethod method ) {
+        return getThreePrimeDistances( br.getTargetChromosome().getName(), br.getTargetStart(), br.getTargetEnd(), br
+                .getTargetStarts(), br.getBlockSizes(), br.getStrand(), method );
+    }
+
+    /**
      * Given a physical location, find how close it is to the 3' end of a gene it is in.
      * 
      * @param chromosome The chromosome name (the organism is set by the constructor)
@@ -162,7 +254,7 @@ public class GoldenPath {
      *         is null;
      */
     public List<ThreePrimeData> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
-            String starts, String sizes, String strand, String method ) {
+            String starts, String sizes, String strand, MeasurementMethod method ) {
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 
@@ -240,7 +332,7 @@ public class GoldenPath {
      *      FIXME this should take a PhysicalLocation as an argument.
      */
     private ThreePrimeData computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
-            String sizes, Gene gene, String method ) {
+            String sizes, Gene gene, MeasurementMethod method ) {
         ThreePrimeData tpd = new ThreePrimeData( gene );
         PhysicalLocation geneLoc = gene.getPhysicalLocation();
         int geneStart = geneLoc.getNucleotide().intValue();
@@ -258,7 +350,7 @@ public class GoldenPath {
         tpd.setExonOverlap( exonOverlap );
         tpd.setInIntron( exonOverlap == 0 );
 
-        if ( method == GoldenPath.CENTER ) {
+        if ( method == MeasurementMethod.center ) {
             int center = SequenceManipulation.findCenter( starts, sizes );
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
@@ -269,7 +361,7 @@ public class GoldenPath {
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
-        } else if ( method == GoldenPath.RIGHTEND ) {
+        } else if ( method == MeasurementMethod.right ) {
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
                 tpd.setDistance( Math.max( 0, geneEnd - queryEnd ) );
@@ -279,7 +371,7 @@ public class GoldenPath {
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
-        } else if ( method == GoldenPath.LEFTEND ) {
+        } else if ( method == MeasurementMethod.left ) {
             throw new UnsupportedOperationException( "Left edge measure not supported" );
         } else {
             throw new IllegalArgumentException( "Unknown method" );
@@ -443,21 +535,36 @@ public class GoldenPath {
         assert exonSizeInts.length == exonStartInts.length;
 
         GeneProduct gp = GeneProduct.Factory.newInstance();
-        Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
-        for ( int i = 0; i < exonSizeInts.length; i++ ) {
-            long exonStart = exonStartInts[i];
-            int exonSize = exonSizeInts[i];
-            PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
-            if ( gene.getPhysicalLocation() != null ) exon.setChromosome( gene.getPhysicalLocation().getChromosome() );
-            exon.setNucleotide( exonStart );
-            exon.setNucleotideLength( new Integer( exonSize ) );
-            exons.add( exon );
-        }
+        Chromosome chromosome = null;
+        if ( gene.getPhysicalLocation() != null ) chromosome = gene.getPhysicalLocation().getChromosome();
+        Collection<PhysicalLocation> exons = blocksToPhysicalLocations( exonSizeInts, exonStartInts, chromosome );
         gp.setExons( exons );
         gp.setName( gene.getNcbiId() );
         Collection<GeneProduct> products = new HashSet<GeneProduct>();
         products.add( gp );
         gene.setProducts( products );
+    }
+
+    /**
+     * Convert blocks into PhysicalLocations
+     * 
+     * @param blockSizes array of block sizes.
+     * @param blockStarts array of block start locations (in the target).
+     * @param chromosome
+     * @return
+     */
+    private List<PhysicalLocation> blocksToPhysicalLocations( int[] blockSizes, int[] blockStarts, Chromosome chromosome ) {
+        List<PhysicalLocation> blocks = new ArrayList<PhysicalLocation>();
+        for ( int i = 0; i < blockSizes.length; i++ ) {
+            long exonStart = blockStarts[i];
+            int exonSize = blockSizes[i];
+            PhysicalLocation block = PhysicalLocation.Factory.newInstance();
+            block.setChromosome( chromosome );
+            block.setNucleotide( exonStart );
+            block.setNucleotideLength( new Integer( exonSize ) );
+            blocks.add( block );
+        }
+        return blocks;
     }
 
     /**

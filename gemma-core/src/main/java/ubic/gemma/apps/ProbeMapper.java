@@ -37,8 +37,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPath;
+import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 import ubic.gemma.externalDb.GoldenPath.ThreePrimeData;
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.loader.util.AbstractCLI;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
@@ -50,7 +52,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
  * @author pavlidis
  * @version $Id$
  */
-public class ProbeThreePrimeLocator {
+public class ProbeMapper extends AbstractCLI {
 
     /**
      * FIXME make this an option
@@ -70,11 +72,11 @@ public class ProbeThreePrimeLocator {
      */
     private static final int PORT = 3306;
 
-    private String databaseName = "hg17";
+    private String databaseName = "hg18";
     private double identityThreshold = 0.90;
     private double scoreThreshold = 0.90;
-    private String threeprimeMethod = GoldenPath.RIGHTEND;
-    private static Log log = LogFactory.getLog( ProbeThreePrimeLocator.class.getName() );
+    private MeasurementMethod threeprimeMethod = MeasurementMethod.right;
+    private static Log log = LogFactory.getLog( ProbeMapper.class.getName() );
 
     /**
      * @param input
@@ -89,19 +91,39 @@ public class ProbeThreePrimeLocator {
     public Map<String, Collection<LocationData>> run( InputStream input, Writer output ) throws IOException,
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-        GoldenPath bp = new GoldenPath( PORT, databaseName, HOST, USERNAME, PASSWORD );
+        GoldenPath goldenPathDb = new GoldenPath( PORT, databaseName, HOST, USERNAME, PASSWORD );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( input );
 
-        int count = 0;
-        int skipped = 0;
-        Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
-
         writeHeader( output );
 
-        for ( Iterator<Object> iter = brp.getResults().iterator(); iter.hasNext(); ) {
-            BlatResult blatRes = ( BlatResult ) iter.next();
+        Collection<Object> blatResults = brp.getResults();
+
+        Map<String, Collection<LocationData>> allRes = processBlatResults( output, goldenPathDb, blatResults );
+        input.close();
+        output.close();
+        return allRes;
+    }
+
+    /**
+     * Given some blat results,
+     * 
+     * @param output
+     * @param goldenPathDb
+     * @param blatResults
+     * @return
+     * @throws IOException
+     */
+    private Map<String, Collection<LocationData>> processBlatResults( Writer output, GoldenPath goldenPathDb,
+            Collection<Object> blatResults ) throws IOException {
+        Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
+        int count = 0;
+        int skipped = 0;
+        for ( Object blatResult : blatResults ) {
+
+            assert blatResult instanceof BlatResult;
+            BlatResult blatRes = ( BlatResult ) blatResult;
 
             if ( blatRes.score() < scoreThreshold || blatRes.identity() < identityThreshold ) {
                 skipped++;
@@ -112,44 +134,59 @@ public class ProbeThreePrimeLocator {
             String arrayName = sa[0];
             String probeName = sa[1];
 
-            List<ThreePrimeData> tpds = bp.getThreePrimeDistances( blatRes.getTargetChromosome().getName(), blatRes
-                    .getTargetStart(), blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes.getBlockSizes(),
-                    blatRes.getStrand(), threeprimeMethod );
+            List<ThreePrimeData> tpds = goldenPathDb.getThreePrimeDistances( blatRes.getTargetChromosome().getName(),
+                    blatRes.getTargetStart(), blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes
+                            .getBlockSizes(), blatRes.getStrand(), threeprimeMethod );
 
             if ( tpds == null ) continue;
 
             for ( ThreePrimeData tpd : tpds ) {
 
-                Gene gene = tpd.getGene();
-                assert gene != null : "Null gene";
+                LocationData res = processThreePrimeData( output, blatRes, arrayName, probeName, tpd );
 
-                LocationData ld = new LocationData( tpd, blatRes );
                 if ( !allRes.containsKey( probeName ) ) {
                     log.debug( "Adding " + probeName + " to results" );
                     allRes.put( probeName, new HashSet<LocationData>() );
                 }
-                allRes.get( probeName ).add( ld );
+                allRes.get( probeName ).add( res );
 
-                output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
-                        + blatRes.getQuerySequence().getLength() + "\t"
-                        + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t" + blatRes.score() + "\t"
-                        + gene.getOfficialSymbol() + "\t" + gene.getNcbiId() + "\t" + tpd.getDistance() + "\t"
-                        + tpd.getExonOverlap() + "\t" + blatRes.getTargetChromosome().getName() + "\t"
-                        + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
-
-                count++;
                 try {
                     Thread.sleep( 5 );
                 } catch ( InterruptedException e ) {
                     e.printStackTrace();
                 }
-                if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " probes" );
             }
+
+            count++;
+            if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " blat results" );
         }
         log.info( "Skipped " + skipped + " results that didn't meet criteria" );
-        input.close();
-        output.close();
         return allRes;
+    }
+
+    /**
+     * @param output
+     * @param blatRes
+     * @param arrayName
+     * @param probeName
+     * @param tpd
+     * @return LocationDAta
+     * @throws IOException
+     */
+    private LocationData processThreePrimeData( Writer output, BlatResult blatRes, String arrayName, String probeName,
+            ThreePrimeData tpd ) throws IOException {
+        Gene gene = tpd.getGene();
+        assert gene != null : "Null gene";
+
+        LocationData ld = new LocationData( tpd, blatRes );
+
+        output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
+                + blatRes.getQuerySequence().getLength() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() )
+                + "\t" + blatRes.score() + "\t" + gene.getOfficialSymbol() + "\t" + gene.getNcbiId() + "\t"
+                + tpd.getDistance() + "\t" + tpd.getExonOverlap() + "\t" + blatRes.getTargetChromosome().getName()
+                + "\t" + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
+
+        return ld;
     }
 
     // /**
@@ -268,15 +305,19 @@ public class ProbeThreePrimeLocator {
 
     public static void main( String[] args ) {
 
+        ProbeMapper ptpl = new ProbeMapper();
+
+        ptpl.initCommandParse( "probeMapper", args );
+
         try {
             if ( args.length < 3 ) {
-                System.err.println( "usage: input blat result file name, output filename, dbName (hg17)" );
+                System.err.println( "usage: <input blat result file name> <output filename>, <dbName (hg18)>" );
                 System.exit( 0 );
             }
             String filename = args[0];
             File f = new File( filename );
             if ( !f.canRead() ) throw new IOException( "Can't read file" );
-            ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
+
             String outputFileName = args[1];
 
             File o = new File( outputFileName );
@@ -471,6 +512,18 @@ public class ProbeThreePrimeLocator {
         public void setAlignLength( long alignLength ) {
             this.alignLength = alignLength;
         }
+
+    }
+
+    @Override
+    protected void buildOptions() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void processOptions() {
+        // TODO Auto-generated method stub
 
     }
 

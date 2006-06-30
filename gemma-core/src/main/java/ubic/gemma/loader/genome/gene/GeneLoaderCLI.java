@@ -23,8 +23,6 @@ import java.util.Collection;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
@@ -42,8 +40,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @version $Id$
  */
 public class GeneLoaderCLI extends AbstractSpringAwareCLI {
-    protected static final Log log = LogFactory.getLog( GeneLoaderCLI.class );
-
     private GenePersister genePersister;
 
     // FIXME this should use the SDOG (source domain object generator)
@@ -60,7 +56,7 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
         GeneLoaderCLI cli = new GeneLoaderCLI();
 
         /* COMMAND LINE PARSER STAGE */
-        initCommandParse( "GeneLoaderCLI", args );
+        cli.initCommandParse( "GeneLoaderCLI", args );
 
         /* check parse option. */
         if ( commandLine.hasOption( 'x' ) ) {

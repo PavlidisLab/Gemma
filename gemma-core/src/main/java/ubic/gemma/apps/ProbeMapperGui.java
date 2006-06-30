@@ -45,15 +45,16 @@ import javax.swing.UnsupportedLookAndFeelException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.apps.ProbeThreePrimeLocator.LocationData;
+import ubic.gemma.apps.ProbeMapper.LocationData;
 import ubic.gemma.externalDb.GoldenPath;
+import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ProbeGeneMapperGui extends JFrame {
-    private static Log log = LogFactory.getLog( ProbeGeneMapperGui.class.getName() );
+public class ProbeMapperGui extends JFrame {
+    private static Log log = LogFactory.getLog( ProbeMapperGui.class.getName() );
     private javax.swing.JPanel jContentPane = null;
     private JPanel topButtonPanel = null;
     private JPanel fileNamesPanel = null;
@@ -70,7 +71,7 @@ public class ProbeGeneMapperGui extends JFrame {
     private JLabel locationMethodLabel = null;
     JComboBox locationMethodComboBox = null;
 
-    String method = GoldenPath.RIGHTEND;
+    MeasurementMethod method = MeasurementMethod.right;
     protected File inputFile;
     protected File outputFile;
 
@@ -150,7 +151,7 @@ public class ProbeGeneMapperGui extends JFrame {
      * 
      */
     protected void run() {
-        ProbeThreePrimeLocator ptpl = new ProbeThreePrimeLocator();
+        ProbeMapper ptpl = new ProbeMapper();
         try {
             String bestOutputFileName = outputFile.getAbsolutePath().replaceFirst( "\\.", ".best." );
             log.info( "Saving best to " + bestOutputFileName );
@@ -362,10 +363,10 @@ public class ProbeGeneMapperGui extends JFrame {
 
                 @SuppressWarnings("unused")
                 public void actionPerformed( java.awt.event.ActionEvent e ) {
-                    if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( GoldenPath.CENTER ) ) {
-                        method = GoldenPath.CENTER;
-                    } else if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( GoldenPath.RIGHTEND ) ) {
-                        method = GoldenPath.RIGHTEND;
+                    if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( MeasurementMethod.center ) ) {
+                        method = MeasurementMethod.center;
+                    } else if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( MeasurementMethod.right ) ) {
+                        method = MeasurementMethod.right;
                     }
                 }
             } );
@@ -389,7 +390,7 @@ public class ProbeGeneMapperGui extends JFrame {
         } catch ( UnsupportedLookAndFeelException e ) {
             e.printStackTrace();
         }
-        ProbeGeneMapperGui pgmg = new ProbeGeneMapperGui();
+        ProbeMapperGui pgmg = new ProbeMapperGui();
 
         pgmg.pack();
         pgmg.setVisible( true );
@@ -399,7 +400,7 @@ public class ProbeGeneMapperGui extends JFrame {
     /**
      * This is the default constructor
      */
-    public ProbeGeneMapperGui() {
+    public ProbeMapperGui() {
         super();
         initialize();
     }

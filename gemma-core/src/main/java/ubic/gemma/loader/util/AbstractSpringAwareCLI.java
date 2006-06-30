@@ -18,21 +18,8 @@
  */
 package ubic.gemma.loader.util;
 
-import java.io.IOException;
-
-import org.apache.commons.cli.AlreadySelectedException;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingArgumentException;
-import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.UnrecognizedOptionException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
@@ -67,16 +54,8 @@ import ubic.gemma.util.SpringContextUtil;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class AbstractSpringAwareCLI {
+public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
-    private static final String HEADER = "Options:";
-    private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia\n"
-            + "For more information, visit http://www.neurogemma.org/";
-
-    protected static Options options = new Options();
-    protected static CommandLine commandLine;
-
-    protected static final Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
     protected static BeanFactory ctx = null;
     PersisterHelper ph = null;
 
@@ -86,24 +65,19 @@ public abstract class AbstractSpringAwareCLI {
     }
 
     @SuppressWarnings("static-access")
-    private void buildStandardOptions() {
-        Option helpOpt = new Option( "h", "help", false, "Print this message" );
-        Option testOpt = new Option( "testing", false, "Use the test environment" );
-
+    @Override
+    protected void buildStandardOptions() {
+        // TODO Auto-generated method stub
+        super.buildStandardOptions();
         Option usernameOpt = OptionBuilder.withArgName( "user" ).isRequired().withLongOpt( "user" ).hasArg()
                 .withDescription( "User name for accessing the system" ).create( 'u' );
 
         Option passwordOpt = OptionBuilder.withArgName( "passwd" ).isRequired().withLongOpt( "password" ).hasArg()
                 .withDescription( "Password for accessing the system" ).create( 'p' );
-
-        options.addOption( helpOpt );
         options.addOption( usernameOpt );
         options.addOption( passwordOpt );
-        options.addOption( testOpt );
 
     }
-
-    protected abstract void buildOptions();
 
     /**
      * @return
@@ -142,7 +116,7 @@ public abstract class AbstractSpringAwareCLI {
     }
 
     /** check username and password. */
-    private static void authenticate() {
+    static void authenticate() {
 
         if ( commandLine.hasOption( 'u' ) ) {
             if ( commandLine.hasOption( 'p' ) ) {
@@ -160,7 +134,7 @@ public abstract class AbstractSpringAwareCLI {
     }
 
     /** check if using test or production context */
-    private static void setTestOrProduction() {
+    static void setTestOrProduction() {
 
         if ( commandLine.hasOption( "testing" ) ) {
             ctx = SpringContextUtil.getApplicationContext( true );
@@ -170,59 +144,10 @@ public abstract class AbstractSpringAwareCLI {
 
     }
 
-    /**
-     * This must be called in your main method.
-     * 
-     * @param args
-     * @throws ParseException
-     */
-    protected static void initCommandParse( String commandName, String[] args ) {
-        /* COMMAND LINE PARSER STAGE */
-        BasicParser parser = new BasicParser();
-
-        if ( args == null ) {
-            printHelp( commandName );
-            System.exit( 0 );
-        }
-
-        try {
-            commandLine = parser.parse( options, args );
-        } catch ( ParseException e ) {
-
-            if ( e instanceof MissingOptionException ) {
-                System.out.println( "Required option(s) were not supplied: " + e.getMessage() );
-            } else if ( e instanceof AlreadySelectedException ) {
-                System.out.println( "The option(s) " + e.getMessage() + " were already selected" );
-            } else if ( e instanceof MissingArgumentException ) {
-                System.out.println( "Missing argument(s) " + e.getMessage() );
-            } else if ( e instanceof UnrecognizedOptionException ) {
-                System.out.println( "Unrecognized option " + e.getMessage() );
-            } else {
-                e.printStackTrace();
-            }
-
-            printHelp( commandName );
-
-            System.exit( 0 );
-        }
-
-        /* INTERROGATION STAGE */
-        if ( commandLine.hasOption( 'h' ) ) {
-            printHelp( commandName );
-            System.exit( 0 );
-        }
-
+    @Override
+    protected void processOptions() {
         setTestOrProduction();
         authenticate();
-
-    }
-
-    /**
-     * @param command The name of the command as used at the command line.
-     */
-    protected static void printHelp( String command ) {
-        HelpFormatter h = new HelpFormatter();
-        h.printHelp( command, HEADER, options, FOOTER );
     }
 
 }
