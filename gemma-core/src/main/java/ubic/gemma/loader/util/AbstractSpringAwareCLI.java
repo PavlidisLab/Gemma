@@ -116,10 +116,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /** check username and password. */
-    static void authenticate() {
+    void authenticate() {
 
-        if ( commandLine.hasOption( 'u' ) ) {
-            if ( commandLine.hasOption( 'p' ) ) {
+        if ( hasOption( 'u' ) ) {
+            if ( hasOption( 'p' ) ) {
                 String username = commandLine.getOptionValue( 'u' );
                 String password = commandLine.getOptionValue( 'p' );
                 ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
@@ -134,9 +134,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /** check if using test or production context */
-    static void setTestOrProduction() {
+    void setTestOrProduction() {
 
-        if ( commandLine.hasOption( "testing" ) ) {
+        if ( hasOption( "testing" ) ) {
             ctx = SpringContextUtil.getApplicationContext( true );
         } else {
             ctx = SpringContextUtil.getApplicationContext( false );

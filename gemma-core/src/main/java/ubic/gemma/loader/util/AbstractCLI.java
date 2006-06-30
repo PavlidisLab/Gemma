@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.util;
 
+import java.util.List;
+
 import org.apache.commons.cli.AlreadySelectedException;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -40,8 +42,8 @@ public abstract class AbstractCLI {
     private static final String HEADER = "Options:";
     private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia\n"
             + "For more information, visit http://www.neurogemma.org/";
-    protected static Options options = new Options();
-    protected static CommandLine commandLine;
+    protected Options options = new Options();
+    protected CommandLine commandLine;
     protected static final Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
 
     @SuppressWarnings("static-access")
@@ -51,7 +53,6 @@ public abstract class AbstractCLI {
 
         options.addOption( helpOpt );
         options.addOption( testOpt );
-
     }
 
     protected abstract void buildOptions();
@@ -110,9 +111,61 @@ public abstract class AbstractCLI {
     /**
      * @param command The name of the command as used at the command line.
      */
-    protected static void printHelp( String command ) {
+    protected void printHelp( String command ) {
         HelpFormatter h = new HelpFormatter();
         h.printHelp( command, HEADER, options, FOOTER );
+    }
+
+    public List getArgList() {
+        return commandLine.getArgList();
+    }
+
+    public String[] getArgs() {
+        return commandLine.getArgs();
+    }
+
+    public boolean hasOption( char opt ) {
+        return commandLine.hasOption( opt );
+    }
+
+    public boolean hasOption( String opt ) {
+        return commandLine.hasOption( opt );
+    }
+
+    public Object getOptionObject( char opt ) {
+        return commandLine.getOptionObject( opt );
+    }
+
+    public Object getOptionObject( String opt ) {
+        return commandLine.getOptionObject( opt );
+    }
+
+    public Option[] getOptions() {
+        return commandLine.getOptions();
+    }
+
+    public String getOptionValue( char opt, String defaultValue ) {
+        return commandLine.getOptionValue( opt, defaultValue );
+    }
+
+    public String getOptionValue( char opt ) {
+        return commandLine.getOptionValue( opt );
+    }
+
+    public String getOptionValue( String opt, String defaultValue ) {
+        return commandLine.getOptionValue( opt, defaultValue );
+    }
+
+    public String getOptionValue( String opt ) {
+        return commandLine.getOptionValue( opt );
+    }
+
+    public String[] getOptionValues( char opt ) {
+        return commandLine.getOptionValues( opt );
+    }
+
+    public String[] getOptionValues( String opt ) {
+        return commandLine.getOptionValues( opt );
     }
 
 }

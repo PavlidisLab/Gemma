@@ -59,16 +59,16 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
         cli.initCommandParse( "GeneLoaderCLI", args );
 
         /* check parse option. */
-        if ( commandLine.hasOption( 'x' ) ) {
+        if ( cli.hasOption( 'x' ) ) {
             NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            geneInfoParser.parse( commandLine.getOptionValue( 'x' ) );
+            geneInfoParser.parse( cli.getOptionValue( 'x' ) );
         }
 
         /* check load option. */
-        else if ( commandLine.hasOption( 'l' ) ) {
+        else if ( cli.hasOption( 'l' ) ) {
 
             NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            String[] filenames = commandLine.getOptionValues( 'l' );
+            String[] filenames = cli.getOptionValues( 'l' );
 
             for ( int i = 0; i < filenames.length - 1; i++ ) {
                 geneInfoParser.parse( filenames[i] );
@@ -101,12 +101,12 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
         }
 
         /* check remove option. */
-        else if ( commandLine.hasOption( 'r' ) ) {
+        else if ( cli.hasOption( 'r' ) ) {
             cli.getGenePersister().removeAll();
         }
         /* defaults to print help. */
         else {
-            printHelp( "GeneLoaderCLI" );
+            cli.printHelp( "GeneLoaderCLI" );
         }
 
     }

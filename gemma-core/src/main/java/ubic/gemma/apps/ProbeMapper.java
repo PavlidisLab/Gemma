@@ -310,22 +310,25 @@ public class ProbeMapper extends AbstractCLI {
         ptpl.initCommandParse( "probeMapper", args );
 
         try {
-            if ( args.length < 3 ) {
+
+            String[] moreArgs = ptpl.getArgs();
+
+            if ( moreArgs.length < 3 ) {
                 System.err.println( "usage: <input blat result file name> <output filename>, <dbName (hg18)>" );
                 System.exit( 0 );
             }
-            String filename = args[0];
+            String filename = moreArgs[0];
             File f = new File( filename );
             if ( !f.canRead() ) throw new IOException( "Can't read file" );
 
-            String outputFileName = args[1];
+            String outputFileName = moreArgs[1];
 
             File o = new File( outputFileName );
             // if ( !o.canWrite() ) throw new IOException( "Can't write " + outputFileName );
             String bestOutputFileName = outputFileName + ".best";
             log.info( "Saving best to " + bestOutputFileName );
 
-            ptpl.databaseName = args[2];
+            ptpl.databaseName = moreArgs[2];
             Map<String, Collection<LocationData>> results = ptpl.run( new FileInputStream( f ), new BufferedWriter(
                     new FileWriter( o ) ) );
 
