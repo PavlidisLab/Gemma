@@ -9,3 +9,5 @@ test-build
 build
 generated-sources
 andromda*.exc
+*.jar
+
