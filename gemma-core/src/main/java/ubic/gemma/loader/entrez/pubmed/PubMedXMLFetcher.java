@@ -36,8 +36,6 @@ import ubic.gemma.model.common.description.BibliographicReference;
 
 /**
  * Class that can retrieve pubmed records (in XML format) via HTTP. The url used is configured via a resource.
- * <hr>
- * <p>
  * 
  * @author pavlidis
  * @version $Id$

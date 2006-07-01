@@ -56,7 +56,9 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
         GeneLoaderCLI cli = new GeneLoaderCLI();
 
         /* COMMAND LINE PARSER STAGE */
-        cli.processCommandLine( "GeneLoaderCLI", args );
+        int err = cli.processCommandLine( "GeneLoaderCLI", args );
+
+        if ( err != 0 ) return;
 
         /* check parse option. */
         if ( cli.hasOption( 'x' ) ) {
@@ -143,9 +145,9 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
 
         Option removeOption = OptionBuilder.withDescription( "Remove from database" ).create( 'r' );
 
-        options.addOption( parseOption );
-        options.addOption( loadOption );
-        options.addOption( removeOption );
+        addOption( parseOption );
+        addOption( loadOption );
+        addOption( removeOption );
 
     }
 

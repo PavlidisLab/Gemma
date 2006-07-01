@@ -57,15 +57,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected static BeanFactory ctx = null;
     PersisterHelper ph = null;
 
-    public AbstractSpringAwareCLI() {
-        this.buildStandardOptions();
-        this.buildOptions();
-    }
-
     @Override
     protected void buildStandardOptions() {
         super.buildStandardOptions();
         addUserNameAndPasswordOptions();
+    }
+
+    public AbstractSpringAwareCLI() {
+        super();
     }
 
     /**
@@ -107,24 +106,25 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /** check username and password. */
     void authenticate() {
 
-        if ( hasOption( 'u' ) ) {
-            if ( hasOption( 'p' ) ) {
-                String username = commandLine.getOptionValue( 'u' );
-                String password = commandLine.getOptionValue( 'p' );
-                ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-                        .getBean( "manualAuthenticationProcessing" );
-                manAuthentication.validateRequest( username, password );
+        if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
+            username = getOptionValue( 'u' );
+            password = getOptionValue( 'p' );
+            ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                    .getBean( "manualAuthenticationProcessing" );
+            boolean success = manAuthentication.validateRequest( username, password );
+            if ( !success ) {
+                System.err.println( "Not authenticated. Make sure you entered a valid username and/or password" );
+                bail( -1 );
             }
         } else {
-            log.error( "Not authenticated. Make sure you entered a valid username and/or password" );
-            System.exit( 0 );
+            System.err.println( "Not authenticated. Make sure you entered a valid username and/or password" );
+            bail( -1 );
         }
 
     }
 
     /** check if using test or production context */
-    void setTestOrProduction() {
-
+    void createSpringContext() {
         if ( hasOption( "testing" ) ) {
             ctx = SpringContextUtil.getApplicationContext( true );
         } else {
@@ -135,7 +135,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     @Override
     protected void processOptions() {
-        setTestOrProduction();
+        createSpringContext();
         authenticate();
     }
 

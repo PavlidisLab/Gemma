@@ -71,6 +71,10 @@ public class ProbeMapper extends AbstractCLI {
     private String ncbiIdentifierFileName = null;
     private static Log log = LogFactory.getLog( ProbeMapper.class.getName() );
 
+    public ProbeMapper() {
+        super();
+    }
+
     /**
      * @param input
      * @param output
@@ -82,7 +86,7 @@ public class ProbeMapper extends AbstractCLI {
      * @throws ClassNotFoundException
      */
 
-    private Map<String, Collection<LocationData>> runOnBlatResults( InputStream input, Writer output )
+    public Map<String, Collection<LocationData>> runOnBlatResults( InputStream input, Writer output )
             throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
         GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
@@ -363,7 +367,8 @@ public class ProbeMapper extends AbstractCLI {
 
         ProbeMapper ptpl = new ProbeMapper();
 
-        ptpl.processCommandLine( "probeMapper", args );
+        int err = ptpl.processCommandLine( "probeMapper", args );
+        if ( err != 0 ) return;
 
         try {
 
@@ -393,7 +398,7 @@ public class ProbeMapper extends AbstractCLI {
                     System.out
                             .println( "You must provide either a Blat result file, a Genbank identifier file, or some Genbank identifiers" );
                     ptpl.printHelp( "probeMapper" );
-                    System.exit( 0 );
+                    return;
                 }
 
                 // TODO - process loose Genbank identifiers.
@@ -589,26 +594,26 @@ public class ProbeMapper extends AbstractCLI {
         Option blatResultOption = OptionBuilder.hasArg().withArgName( "PSL file" ).withDescription(
                 "Blat result file in PSL format" ).withLongOpt( "blatfile" ).create( 'b' );
 
-        options.addOption( blatResultOption );
+        addOption( blatResultOption );
 
         Option databaseNameOption = OptionBuilder.hasArg().withArgName( "database" ).withDescription(
                 "GoldenPath database id (default=" + DEFAULT_DATABASE + ")" ).withLongOpt( "database" ).create( 'd' );
 
-        options.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
                 "Sequence identity threshold, default = " + DFEAULT_IDENTITY_THRESHOLD ).withLongOpt(
                 "identityThreshold" ).create( 'i' ) );
 
-        options.addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
                 "Blat score threshold, default = " + DEFAULT_SCORE_THRESHOLD ).withLongOpt( "scoreThreshold" ).create(
                 's' ) );
 
-        options.addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
+        addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
                 "File containing Genbank identifiers" ).withLongOpt( "gbfile" ).create( 'g' ) );
 
-        options.addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription( "Output file basename" )
+        addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription( "Output file basename" )
                 .isRequired().withLongOpt( "outputFile" ).create( 'o' ) );
 
-        options.addOption( databaseNameOption );
+        addOption( databaseNameOption );
 
         addUserNameAndPasswordOptions();
         addHostAndPortOptions( false, false );
@@ -617,23 +622,23 @@ public class ProbeMapper extends AbstractCLI {
 
     @Override
     protected void processOptions() {
-        if ( commandLine.hasOption( 's' ) ) {
+        if ( hasOption( 's' ) ) {
             this.scoreThreshold = getDoubleOptionValue( 's' );
         }
 
-        if ( commandLine.hasOption( 'i' ) ) {
+        if ( hasOption( 'i' ) ) {
             this.identityThreshold = getDoubleOptionValue( 'i' );
         }
 
-        if ( commandLine.hasOption( 'd' ) ) {
+        if ( hasOption( 'd' ) ) {
             this.databaseName = getOptionValue( 'd' );
         }
 
-        if ( commandLine.hasOption( 'b' ) ) {
+        if ( hasOption( 'b' ) ) {
             this.blatFileName = getFileNameOptionValue( 'b' );
         }
 
-        if ( commandLine.hasOption( 'g' ) ) {
+        if ( hasOption( 'g' ) ) {
             this.ncbiIdentifierFileName = getFileNameOptionValue( 'g' );
         }
 

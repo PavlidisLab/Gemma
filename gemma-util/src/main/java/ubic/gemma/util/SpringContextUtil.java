@@ -73,15 +73,20 @@ public class SpringContextUtil {
         String servletContext = db.getString( "servlet.name.0" );
         if ( testing ) {
             log.warn( "************** Using test configuration ***************" );
-            return new String[] { "classpath*:localTestDataSource.xml",
-                    "classpath*:applicationContext-" + daoType + ".xml", "classpath*:applicationContext-security.xml",
-                    "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml",
-                    "classpath*:applicationContext-serviceBeans.xml" };
+            return new String[] { "classpath*:/ubic/gemma/localTestDataSource.xml",
+                    "classpath*:/ubic/gemma/applicationContext-" + daoType + ".xml",
+                    "classpath*:/ubic/gemma/applicationContext-security.xml",
+                 //   "classpath*:" + servletContext + "-servlet.xml",
+                    "classpath*:/ubic/gemma/applicationContext-validation.xml",
+                    "classpath*:/ubic/gemma/applicationContext-serviceBeans.xml" };
         }
-        return new String[] { "classpath*:applicationContext-localDataSource.xml",
-                "classpath*:applicationContext-" + daoType + ".xml", "classpath*:applicationContext-security.xml",
-                "classpath*:" + servletContext + "-servlet.xml", "classpath*:applicationContext-validation.xml",
-                "classpath*:applicationContext-serviceBeans.xml" };
+        return new String[] { "classpath*:/ubic/gemma/applicationContext-resources.xml",
+                "classpath*:/ubic/gemma/localDataSource.xml",
+                "classpath*:/ubic/gemma/applicationContext-" + daoType + ".xml",
+                "classpath*:/ubic/gemma/applicationContext-security.xml",
+                "classpath*:" + servletContext + "-servlet.xml",
+                "classpath*:/ubic/gemma/applicationContext-validation.xml",
+                "classpath*:/ubic/gemma/applicationContext-serviceBeans.xml" };
 
     }
 

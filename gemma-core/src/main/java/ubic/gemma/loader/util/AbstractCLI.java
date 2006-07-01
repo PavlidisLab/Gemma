@@ -19,6 +19,7 @@
 package ubic.gemma.loader.util;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.cli.AlreadySelectedException;
@@ -29,9 +30,9 @@ import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PatternOptionBuilder;
 import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,8 +46,8 @@ public abstract class AbstractCLI {
     private static final String HEADER = "Options:";
     private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia\n"
             + "For more information, visit http://www.neurogemma.org/";
-    protected Options options = new Options();
-    protected CommandLine commandLine;
+    private Options options = new Options();
+    private CommandLine commandLine;
     protected static final Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
 
     /* support for convenience options */
@@ -56,8 +57,14 @@ public abstract class AbstractCLI {
     protected String username;
     protected String password;
 
+    public AbstractCLI() {
+        this.buildStandardOptions();
+        this.buildOptions();
+    }
+
     @SuppressWarnings("static-access")
     protected void buildStandardOptions() {
+        log.debug( "Creating standard options" );
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
 
@@ -69,17 +76,19 @@ public abstract class AbstractCLI {
 
     /**
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
+     * Check the error code to decide whether execution of your program should proceed.
      * 
      * @param args
+     * @return int error code. Zero is normal condition.
      * @throws ParseException
      */
-    protected final void processCommandLine( String commandName, String[] args ) {
+    protected final int processCommandLine( String commandName, String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
 
         if ( args == null ) {
             printHelp( commandName );
-            System.exit( 0 );
+            return -1;
         }
 
         try {
@@ -87,31 +96,46 @@ public abstract class AbstractCLI {
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
                 System.out.println( "Required option(s) were not supplied: " + e.getMessage() );
+
             } else if ( e instanceof AlreadySelectedException ) {
                 System.out.println( "The option(s) " + e.getMessage() + " were already selected" );
             } else if ( e instanceof MissingArgumentException ) {
-                System.out.println( "Missing argument(s) " + e.getMessage() );
+                System.out.println( "Missing argument: " + e.getMessage() );
             } else if ( e instanceof UnrecognizedOptionException ) {
-                System.out.println( "Unrecognized option " + e.getMessage() );
+                System.out.println( e.getMessage() );
             } else {
                 e.printStackTrace();
             }
 
             printHelp( commandName );
 
-            System.exit( 0 );
+            if ( log.isDebugEnabled() ) {
+                log.debug( e );
+            }
+
+            return -1;
         }
 
         /* INTERROGATION STAGE */
         if ( commandLine.hasOption( 'h' ) ) {
             printHelp( commandName );
-            System.exit( 0 );
+            return -1;
         }
 
         processStandardOptions();
-
         processOptions();
 
+        return 0;
+
+    }
+
+    /**
+     * Stop exeucting the CLI.
+     * <p>
+     * FIXME figure out a way to do this without stopping subsequent unit tests, for example.
+     */
+    protected void bail( int errorCode ) {
+        System.exit( errorCode );
     }
 
     /**
@@ -172,10 +196,6 @@ public abstract class AbstractCLI {
 
     public Object getOptionObject( String opt ) {
         return commandLine.getOptionObject( opt );
-    }
-
-    public Option[] getOptions() {
-        return commandLine.getOptions();
     }
 
     public String getOptionValue( char opt, String defaultValue ) {
@@ -243,7 +263,7 @@ public abstract class AbstractCLI {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( option ) + ", not a valid double" );
-            System.exit( 0 );
+            bail( 0 );
         }
         return 0.0;
     }
@@ -253,7 +273,7 @@ public abstract class AbstractCLI {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( "" + option ) + ", not a valid double" );
-            System.exit( 0 );
+            bail( 0 );
         }
         return 0.0;
     }
@@ -263,7 +283,7 @@ public abstract class AbstractCLI {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( option ) + ", not a valid integer" );
-            System.exit( 0 );
+            bail( 0 );
         }
         return 0;
     }
@@ -277,7 +297,7 @@ public abstract class AbstractCLI {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( "" + option ) + ", not a valid integer" );
-            System.exit( 0 );
+            bail( 0 );
         }
         return 0;
     }
@@ -291,7 +311,7 @@ public abstract class AbstractCLI {
         File f = new File( fileName );
         if ( !f.canRead() ) {
             System.out.println( invalidOptionString( "" + c ) + ", cannot read from file" );
-            System.exit( 0 );
+            bail( 0 );
         }
         return fileName;
     }
@@ -305,8 +325,83 @@ public abstract class AbstractCLI {
         File f = new File( fileName );
         if ( !f.canRead() ) {
             System.out.println( invalidOptionString( "" + c ) + ", cannot read from file" );
-            System.exit( 0 );
+            bail( 0 );
         }
         return fileName;
+    }
+
+    /**
+     * @param opt
+     * @return
+     * @see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
+     */
+    public Options addOption( Option opt ) {
+        return this.options.addOption( opt );
+    }
+
+    /**
+     * @param opt
+     * @param hasArg
+     * @param description
+     * @return
+     * @see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
+     */
+    public Options addOption( String opt, boolean hasArg, String description ) {
+        return this.options.addOption( opt, hasArg, description );
+    }
+
+    /**
+     * @param opt
+     * @param longOpt
+     * @param hasArg
+     * @param description
+     * @return
+     * @see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
+     */
+    public Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
+        return this.options.addOption( opt, longOpt, hasArg, description );
+    }
+
+    /**
+     * @param group
+     * @return
+     * @see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
+     */
+    public Options addOptionGroup( OptionGroup group ) {
+        return this.options.addOptionGroup( group );
+    }
+
+    /**
+     * @param opt
+     * @return
+     * @see org.apache.commons.cli.Options#getOption(java.lang.String)
+     */
+    public Option getOption( String opt ) {
+        return this.options.getOption( opt );
+    }
+
+    /**
+     * @param opt
+     * @return
+     * @see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
+     */
+    public OptionGroup getOptionGroup( Option opt ) {
+        return this.options.getOptionGroup( opt );
+    }
+
+    /**
+     * @return
+     * @see org.apache.commons.cli.Options#getOptions()
+     */
+    public Collection getOptions() {
+        return this.options.getOptions();
+    }
+
+    /**
+     * @return
+     * @see org.apache.commons.cli.Options#getRequiredOptions()
+     */
+    public List getRequiredOptions() {
+        return this.options.getRequiredOptions();
     }
 }

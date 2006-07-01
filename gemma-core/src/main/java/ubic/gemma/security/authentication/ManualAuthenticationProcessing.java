@@ -21,6 +21,7 @@ package ubic.gemma.security.authentication;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.AuthenticationManager;
+import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.event.authentication.InteractiveAuthenticationSuccessEvent;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
@@ -90,8 +91,8 @@ public class ManualAuthenticationProcessing {
             authResult = attemptAuthentication( username, password );
         } catch ( AuthenticationException failed ) {
             // Authentication failed
-            logger.error( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **",
-                    failed );
+            logger.error( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **" );
+            logger.info( failed );
             unsuccessfulAuthentication( failed );
             return false;
         }
