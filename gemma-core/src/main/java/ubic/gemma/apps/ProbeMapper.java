@@ -85,7 +85,7 @@ public class ProbeMapper extends AbstractCLI {
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
      */
-
+    @SuppressWarnings("unchecked")
     public Map<String, Collection<LocationData>> runOnBlatResults( InputStream input, Writer output )
             throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
@@ -98,7 +98,6 @@ public class ProbeMapper extends AbstractCLI {
 
         Collection blatResults = brp.getResults();
 
-        @SuppressWarnings("unchecked")
         Map<String, Collection<LocationData>> allRes = processBlatResults( output, goldenPathDb, blatResults );
 
         input.close();
