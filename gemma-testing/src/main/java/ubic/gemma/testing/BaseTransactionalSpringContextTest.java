@@ -109,22 +109,22 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected CompositeSequenceDao compositeSequenceDao;
 
     protected BioAssayDao bioAssayDao;
-    
+
     private boolean testEnvDisabled = false;
 
-/**
- * Convenience method to  provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
-
- * @return
- */    
+    /**
+     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     * 
+     * @return
+     */
     protected BioAssay getTestPersistentBioAssay() {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-        ba.setName(  RandomStringUtils.random( 10 ) + "_test" );
+        ba.setName( RandomStringUtils.random( 10 ) + "_test" );
         ba = ( BioAssay ) bioAssayDao.create( ba );
         flushSession();
         return ba;
     }
-    
+
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
@@ -228,7 +228,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
-     * Force the hibernate session to flush.
+     * Force the hibernate session to flush and clear.
      */
     public void flushAndClearSession() {
         try {
@@ -272,10 +272,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected Object getBean( String name ) {
-        if ( isTestEnvDisabled() )
-            return getContext( getStandardLocations() ).getBean( name );
-        else
-            return getContext( getConfigLocations() ).getBean( name );
+        if ( isTestEnvDisabled() ) return getContext( getStandardLocations() ).getBean( name );
+        return getContext( getConfigLocations() ).getBean( name );
     }
 
     /**
@@ -304,8 +302,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "classpath:/localTestDataSource.xml", "classpath*:/ubic/gemma/applicationContext-*.xml",
-                "*-servlet.xml" };
+        return new String[] { "classpath*:/ubic/gemma/localTestDataSource.xml",
+                "classpath*:/ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
     }
 
     /**

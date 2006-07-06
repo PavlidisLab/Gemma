@@ -120,13 +120,15 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
 
     /**
      * Returns config locations needed for test environment.
+     * <p>
+     * FIXME this duplicates some code in the SpringContextUtil.
      * 
      * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#getConfigLocations()
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "classpath:/localTestDataSource.xml", "classpath*:/ubic/gemma/applicationContext-*.xml",
-                "*-servlet.xml" };
+        return new String[] { "classpath*:/ubic/gemma/localTestDataSource.xml",
+                "classpath*:/ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
     }
 
     /*
