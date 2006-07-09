@@ -142,16 +142,16 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
         if ( filename == null ) filename = "visualization.png";
 
-        String uploadDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
+        String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
 
-        File dirPath = new File( uploadDir );
+        File dirPath = new File( visualDir );
 
         // Create the directory if it doesn't exist
         if ( !dirPath.exists() ) {
             dirPath.mkdirs();
         }
 
-        filename = uploadDir + filename;
+        filename = visualDir + filename;
         log.info( "filename: " + filename );
 
         Collection<DesignElement> designElements = new HashSet();
