@@ -48,8 +48,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
 
 /**
- * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. FIXME -
- * make this use the standard CLI.
+ * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
  * 
  * @author pavlidis
  * @version $Id$
@@ -105,7 +104,7 @@ public class ProbeMapper extends AbstractCLI {
     }
 
     /**
-     * @param stream containing genbank ids, one per line.
+     * @param stream containing genbank accessions, one per line.
      * @param writer
      * @return
      */
