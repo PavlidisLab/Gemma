@@ -18,7 +18,6 @@
  */
 package ubic.gemma.loader.genome.gene;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.cli.Option;
@@ -45,30 +44,23 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
     // FIXME this should use the SDOG (source domain object generator)
 
     /**
-     * Command line interface to run the gene parser/loader
-     * 
      * @param args
-     * @throws ConfigurationException
      * @throws IOException
      */
-    @SuppressWarnings("static-access")
-    public static void main( String args[] ) throws IOException {
+    protected static Exception doWork( String[] args ) throws Exception {
         GeneLoaderCLI cli = new GeneLoaderCLI();
 
         /* COMMAND LINE PARSER STAGE */
-        int err = cli.processCommandLine( "GeneLoaderCLI", args );
+        Exception err = cli.processCommandLine( "GeneLoaderCLI", args );
 
-        if ( err != 0 ) return;
+        if ( err != null ) return err;
 
         /* check parse option. */
         if ( cli.hasOption( 'x' ) ) {
             NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
             geneInfoParser.parse( cli.getOptionValue( 'x' ) );
-        }
-
-        /* check load option. */
-        else if ( cli.hasOption( 'l' ) ) {
-
+        } else if ( cli.hasOption( 'l' ) ) {
+            /* check load option. */
             NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
             String[] filenames = cli.getOptionValues( 'l' );
 
@@ -100,17 +92,12 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
             // cli.getGenePersister().persist( geneInfoParser.getResults() );
             // endAS
 
-        }
-
-        /* check remove option. */
-        else if ( cli.hasOption( 'r' ) ) {
+        } else if ( cli.hasOption( 'r' ) ) { /* check remove option. */
             cli.getGenePersister().removeAll();
-        }
-        /* defaults to print help. */
-        else {
+        } else { /* defaults to print help. */
             cli.printHelp( "GeneLoaderCLI" );
         }
-
+        return null;
     }
 
     public GeneLoaderCLI() {

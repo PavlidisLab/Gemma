@@ -44,16 +44,41 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractCLI {
 
     private static final String HEADER = "Options:";
-    private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia\n"
+    private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia. "
             + "For more information, visit http://www.neurogemma.org/";
     private Options options = new Options();
     private CommandLine commandLine;
     protected static final Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
+    private static final int DEFAULT_PORT = 3306;
+
+    private String DEFAULT_HOST = "localhost";
+
+    public enum ErrorCode {
+        NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENITCATION_ERROR
+    };
+
+    /**
+     * Override this method and call it from 'main'.
+     * 
+     * @param args
+     * @return
+     */
+    @SuppressWarnings("unused")
+    protected static Exception doWork( String[] args ) throws Exception {
+        return null;
+    }
+
+    public final static void main( String[] args ) {
+        try {
+            doWork( args );
+        } catch ( Exception e ) {
+        }
+    }
 
     /* support for convenience options */
 
-    protected String host;
-    protected int port;
+    protected String host = DEFAULT_HOST;
+    protected int port = DEFAULT_PORT;
     protected String username;
     protected String password;
 
@@ -79,16 +104,16 @@ public abstract class AbstractCLI {
      * Check the error code to decide whether execution of your program should proceed.
      * 
      * @param args
-     * @return int error code. Zero is normal condition.
+     * @return Exception; null if nothing went wrong.
      * @throws ParseException
      */
-    protected final int processCommandLine( String commandName, String[] args ) {
+    protected final Exception processCommandLine( String commandName, String[] args ) throws Exception {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
 
         if ( args == null ) {
             printHelp( commandName );
-            return -1;
+            return new Exception( "No arguments" );
         }
 
         try {
@@ -113,42 +138,44 @@ public abstract class AbstractCLI {
                 log.debug( e );
             }
 
-            return -1;
+            return e;
         }
 
         /* INTERROGATION STAGE */
         if ( commandLine.hasOption( 'h' ) ) {
             printHelp( commandName );
-            return -1;
+            return new Exception( "Asked for help" );
         }
 
         processStandardOptions();
         processOptions();
 
-        return 0;
+        return null;
 
     }
 
     /**
      * Stop exeucting the CLI.
-     * <p>
-     * FIXME figure out a way to do this without stopping subsequent unit tests, for example.
      */
-    protected void bail( int errorCode ) {
-        System.exit( errorCode );
+    protected void bail( ErrorCode errorCode ) throws Exception {
+        throw new Exception( errorCode.toString() );
     }
 
     /**
      * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' for their own purposes.
      */
-    private void processStandardOptions() {
+    private void processStandardOptions() throws Exception {
 
         if ( commandLine.hasOption( 'h' ) ) {
             this.host = commandLine.getOptionValue( 'h' );
+        } else {
+            this.host = DEFAULT_HOST;
         }
 
         if ( commandLine.hasOption( 'P' ) ) {
             this.port = getIntegerOptionValue( 'P' );
+        } else {
+            this.port = DEFAULT_PORT;
         }
 
         if ( commandLine.hasOption( 'u' ) ) {
@@ -164,14 +191,14 @@ public abstract class AbstractCLI {
     /**
      * Implement this to provide processing of options. It is called at the end of processCommandLine.
      */
-    protected abstract void processOptions();
+    protected abstract void processOptions() throws Exception;
 
     /**
      * @param command The name of the command as used at the command line.
      */
     protected void printHelp( String command ) {
         HelpFormatter h = new HelpFormatter();
-        h.printHelp( command, HEADER, options, FOOTER );
+        h.printHelp( command + " [options]", HEADER, options, FOOTER );
     }
 
     public List getArgList() {
@@ -245,12 +272,12 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
         Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg().withDescription(
-                "Hostname to use" ).create( 'h' );
+                "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( 'h' );
 
         hostOpt.setRequired( hostRequired );
 
-        Option portOpt = OptionBuilder.withArgName( "port" ).isRequired().withLongOpt( "port" ).hasArg()
-                .withDescription( "Port to use on host" ).create( 'P' );
+        Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg().withDescription(
+                "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( 'P' );
 
         portOpt.setRequired( portRequired );
 
@@ -258,46 +285,46 @@ public abstract class AbstractCLI {
         options.addOption( portOpt );
     }
 
-    protected double getDoubleOptionValue( String option ) {
+    protected double getDoubleOptionValue( String option ) throws Exception {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( option ) + ", not a valid double" );
-            bail( 0 );
+            bail( ErrorCode.INVALID_OPTION );
         }
         return 0.0;
     }
 
-    protected double getDoubleOptionValue( char option ) {
+    protected double getDoubleOptionValue( char option ) throws Exception {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( "" + option ) + ", not a valid double" );
-            bail( 0 );
+            bail( ErrorCode.INVALID_OPTION );
         }
         return 0.0;
     }
 
-    protected int getIntegerOptionValue( String option ) {
+    protected int getIntegerOptionValue( String option ) throws Exception {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( option ) + ", not a valid integer" );
-            bail( 0 );
+            bail( ErrorCode.INVALID_OPTION );
         }
         return 0;
     }
 
-    private String invalidOptionString( String option ) {
+    private String invalidOptionString( String option ) throws Exception {
         return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
     }
 
-    protected int getIntegerOptionValue( char option ) {
+    protected int getIntegerOptionValue( char option ) throws Exception {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
             System.out.println( invalidOptionString( "" + option ) + ", not a valid integer" );
-            bail( 0 );
+            bail( ErrorCode.INVALID_OPTION );
         }
         return 0;
     }
@@ -306,12 +333,12 @@ public abstract class AbstractCLI {
      * @param c
      * @return
      */
-    protected String getFileNameOptionValue( char c ) {
+    protected String getFileNameOptionValue( char c ) throws Exception {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
             System.out.println( invalidOptionString( "" + c ) + ", cannot read from file" );
-            bail( 0 );
+            bail( ErrorCode.INVALID_OPTION );
         }
         return fileName;
     }
@@ -320,12 +347,12 @@ public abstract class AbstractCLI {
      * @param c
      * @return
      */
-    protected String getFileNameOptionValue( String c ) {
+    protected String getFileNameOptionValue( String c ) throws Exception {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
             System.out.println( invalidOptionString( "" + c ) + ", cannot read from file" );
-            bail( 0 );
+            bail( ErrorCode.INVALID_OPTION );
         }
         return fileName;
     }

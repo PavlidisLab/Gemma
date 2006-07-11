@@ -20,13 +20,11 @@ package ubic.gemma.apps;
 
 import java.io.File;
 
-import junit.framework.TestCase;
-
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ProbeMapperTest extends TestCase {
+public class ProbeMapperTest extends AbstractCLITestCase {
 
     File tempFile;
 
@@ -37,39 +35,54 @@ public class ProbeMapperTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        tempFile = File.createTempFile( "cli", "txt" );
-
+        tempFile = File.createTempFile( "cli", ".txt" );
     }
 
     protected void tearDown() throws Exception {
-        tempFile.delete();
+      //  tempFile.delete();
     }
 
     public final void testMainBadPort() {
-        ProbeMapper.main( new String[] { "-P", "b" } );
-    }
-
-    public final void testMainBadOptionB() {
-        fail( "Not yet implemented" ); // TODO
-    }
-
-    public final void testMainBadOptionC() {
-        fail( "Not yet implemented" ); // TODO
-    }
-
-    public final void testMainBadOptionD() {
-        fail( "Not yet implemented" ); // TODO
+        Exception result = ProbeMapper.doWork( new String[] { "-P", "c", "-u", "pavlidis", "-p", "toast", "-o",
+                tempFile.getAbsolutePath() } );
+        // should result in an exception
+        assertTrue( result.getMessage(), result != null );
     }
 
     public void testBlatHandling() throws Exception {
-        ProbeMapper.main( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath() } );
+
+        String basePath = this.getTestFileBasePath();
+
+        String blatFile = basePath + System.getProperty( "file.separator" )
+                + "/gemma-core/src/test/resources/data/loader/genome/blatresult.noheader.txt";
+
+        Exception result = ProbeMapper.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o",
+                tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg17" } );
+        if ( result != null ) {
+            fail( result.getMessage() );
+        }
     }
 
     public void testGbHandling() throws Exception {
-        ProbeMapper.main( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath() } );
+
+        String basePath = this.getTestFileBasePath();
+
+        String gbFile = basePath + System.getProperty( "file.separator" )
+                + "/gemma-core/src/test/resources/data/loader/genome/ncbiGenes.test.txt";
+
+        Exception result = ProbeMapper.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o",
+                tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg17" } );
+        if ( result != null ) {
+            fail( result.getMessage() );
+        }
     }
 
     public void testSingleGb() throws Exception {
-        ProbeMapper.main( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath() } );
+        Exception result = ProbeMapper.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o",
+                tempFile.getAbsolutePath(), "-d", "hg17", "AF015731", "BX473803" } );
+        if ( result != null ) {
+            result.printStackTrace();
+            fail( result.getMessage() );
+        }
     }
 }

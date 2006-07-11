@@ -65,7 +65,11 @@ public class SequenceManipulation {
         String[] strings = blatLocations.split( "," );
         int[] result = new int[strings.length];
         for ( int i = 0; i < strings.length; i++ ) {
-            result[i] = Integer.parseInt( strings[i] );
+            try {
+                result[i] = Integer.parseInt( strings[i] );
+            } catch ( NumberFormatException e ) {
+                throw new RuntimeException( "Could not parse integer blat location from " + strings[i], e );
+            }
         }
         return result;
     }

@@ -19,7 +19,6 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,11 +42,12 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
     /**
      * @param args
      */
-    public static void main( String[] args ) {
+    @SuppressWarnings("unchecked")
+    protected static Exception doWork( String[] args ) throws Exception {
         PubMedSearcher searcher = new PubMedSearcher();
-        int err = searcher.processCommandLine( "pubmed [options] searchterm1 searchterm2 ... searchtermN", args );
+        Exception err = searcher.processCommandLine( "pubmed [options] searchterm1 searchterm2 ... searchtermN", args );
 
-        if ( err != 0 ) return;
+        if ( err != null ) return err;
 
         try {
             Collection<BibliographicReference> refs = pms.searchAndRetriveByHTTP( searcher.getArgList() );
@@ -66,6 +66,7 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
             e.printStackTrace();
         }
 
+        return null;
     }
 
     /*

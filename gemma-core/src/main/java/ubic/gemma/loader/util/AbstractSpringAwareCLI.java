@@ -20,6 +20,7 @@ package ubic.gemma.loader.util;
 
 import org.springframework.beans.factory.BeanFactory;
 
+import ubic.gemma.loader.util.AbstractCLI.ErrorCode;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
@@ -104,7 +105,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /** check username and password. */
-    void authenticate() {
+    void authenticate() throws Exception {
 
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
@@ -114,11 +115,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username and/or password" );
-                bail( -1 );
+                bail( ErrorCode.AUTHENITCATION_ERROR );
             }
         } else {
             System.err.println( "Not authenticated. Make sure you entered a valid username and/or password" );
-            bail( -1 );
+            bail( ErrorCode.AUTHENITCATION_ERROR );
         }
 
     }
@@ -134,7 +135,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions() throws Exception {
         createSpringContext();
         authenticate();
     }

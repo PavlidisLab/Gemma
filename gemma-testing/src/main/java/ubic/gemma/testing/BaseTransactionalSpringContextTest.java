@@ -326,6 +326,14 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     @Override
     protected ConfigurableApplicationContext loadContextLocations( String[] locations ) {
+
+        if ( log.isDebugEnabled() ) {
+            for ( int i = 0; i < locations.length; i++ ) {
+                String string = locations[i];
+                log.debug( "Location: " + string );
+            }
+        }
+
         ConfigurableApplicationContext ctx = new XmlWebApplicationContext();
 
         /*

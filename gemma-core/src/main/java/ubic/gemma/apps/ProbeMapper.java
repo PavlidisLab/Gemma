@@ -34,7 +34,6 @@ import java.util.Map;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -96,7 +95,7 @@ public class ProbeMapper extends AbstractCLI {
 
         writeHeader( output );
 
-        Collection blatResults = brp.getResults();
+        Collection<Object> blatResults = brp.getResults();
 
         Map<String, Collection<LocationData>> allRes = processBlatResults( output, goldenPathDb, blatResults );
 
@@ -110,8 +109,8 @@ public class ProbeMapper extends AbstractCLI {
      * @param writer
      * @return
      */
-    private Map<String, Collection<LocationData>> runOnGbIds( FileInputStream stream, BufferedWriter writer )
-            throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+    private Map<String, Collection<LocationData>> runOnGbIds( InputStream stream, Writer writer ) throws IOException,
+            SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
 
         TabDelimParser brp = new TabDelimParser();
@@ -133,7 +132,7 @@ public class ProbeMapper extends AbstractCLI {
      * @param genbankIds
      * @return
      */
-    private Map<String, Collection<LocationData>> processGbIds( BufferedWriter writer, GoldenPath goldenPathDb,
+    private Map<String, Collection<LocationData>> processGbIds( Writer writer, GoldenPath goldenPathDb,
             Collection<Object> genbankIds ) throws IOException {
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
         int count = 0;
@@ -154,15 +153,44 @@ public class ProbeMapper extends AbstractCLI {
 
             String genbankId = genbankIdAr[0];
 
-            Collection<BlatResult> blatResults = goldenPathDb.findSequenceLocations( genbankId );
-
-            this.processBlatResults( writer, goldenPathDb, blatResults );
+            processGbId( writer, goldenPathDb, genbankId );
 
             count++;
             if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
         }
         log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         return allRes;
+    }
+
+    /**
+     * @param writer
+     * @param goldenPathDb
+     * @param genbankId
+     * @throws IOException
+     */
+    public Map<String, Collection<LocationData>> processGbId( Writer writer, GoldenPath goldenPathDb, String genbankId )
+            throws IOException {
+        if ( goldenPathDb == null ) {
+            try {
+                goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+            } catch ( SQLException e ) {
+                throw new RuntimeException( e );
+            } catch ( InstantiationException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalAccessException e ) {
+                throw new RuntimeException( e );
+            } catch ( ClassNotFoundException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        Collection<BlatResult> blatResults = goldenPathDb.findSequenceLocations( genbankId );
+
+        if ( blatResults == null || blatResults.size() == 0 ) {
+            log.warn( "No results obtained for " + genbankId );
+        }
+
+        return this.processBlatResults( writer, goldenPathDb, blatResults );
+
     }
 
     /**
@@ -175,7 +203,7 @@ public class ProbeMapper extends AbstractCLI {
      * @throws IOException
      */
     private Map<String, Collection<LocationData>> processBlatResults( Writer output, GoldenPath goldenPathDb,
-            Collection<BlatResult> blatResults ) throws IOException {
+            Collection<?> blatResults ) throws IOException {
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
         int count = 0;
         int skipped = 0;
@@ -190,8 +218,16 @@ public class ProbeMapper extends AbstractCLI {
             }
 
             String[] sa = splitBlatQueryName( blatRes );
-            String arrayName = sa[0];
-            String probeName = sa[1];
+            String arrayName = "";
+            String queryName = null;
+            if ( sa.length == 2 ) {
+                arrayName = sa[0];
+                queryName = sa[1];
+            } else if ( sa.length == 1 ) {
+                queryName = sa[0];
+            } else {
+                throw new RuntimeException( "Query name was not in understood format" );
+            }
 
             List<ThreePrimeData> tpds = goldenPathDb.getThreePrimeDistances( blatRes.getTargetChromosome().getName(),
                     blatRes.getTargetStart(), blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes
@@ -201,13 +237,13 @@ public class ProbeMapper extends AbstractCLI {
 
             for ( ThreePrimeData tpd : tpds ) {
 
-                LocationData res = processThreePrimeData( output, blatRes, arrayName, probeName, tpd );
+                LocationData res = processThreePrimeData( output, blatRes, arrayName, queryName, tpd );
 
-                if ( !allRes.containsKey( probeName ) ) {
-                    log.debug( "Adding " + probeName + " to results" );
-                    allRes.put( probeName, new HashSet<LocationData>() );
+                if ( !allRes.containsKey( queryName ) ) {
+                    log.debug( "Adding " + queryName + " to results" );
+                    allRes.put( queryName, new HashSet<LocationData>() );
                 }
-                allRes.get( probeName ).add( res );
+                allRes.get( queryName ).add( res );
 
                 try {
                     Thread.sleep( 5 );
@@ -303,7 +339,7 @@ public class ProbeMapper extends AbstractCLI {
      * @param results
      * @param writer
      */
-    protected void getBest( Map<String, Collection<LocationData>> results, BufferedWriter writer ) throws IOException {
+    protected void getBest( Map<String, Collection<LocationData>> results, Writer writer ) throws IOException {
         log.info( "Preparing 'best' matches" );
 
         writeBestHeader( writer );
@@ -348,7 +384,7 @@ public class ProbeMapper extends AbstractCLI {
             best.setNumTied( numTied );
             writer.write( best.toString() );
         }
-        writer.close();
+
     }
 
     /**
@@ -358,63 +394,99 @@ public class ProbeMapper extends AbstractCLI {
     protected String[] splitBlatQueryName( BlatResult blatRes ) {
         String qName = blatRes.getQuerySequence().getName();
         String[] sa = qName.split( ":" );
-        if ( sa.length < 2 ) throw new IllegalArgumentException( "Expected query name in format 'xxx:xxx'" );
+        // if ( sa.length < 2 ) throw new IllegalArgumentException( "Expected query name in format 'xxx:xxx'" );
         return sa;
     }
 
-    public static void main( String[] args ) {
-
+    /**
+     * @param args
+     */
+    protected static Exception doWork( String[] args ) {
         ProbeMapper ptpl = new ProbeMapper();
 
-        int err = ptpl.processCommandLine( "probeMapper", args );
-        if ( err != 0 ) return;
-
         try {
-
+            Exception err = ptpl.processCommandLine( "probeMapper", args );
+            if ( err != null ) return err;
             String bestOutputFileName = ptpl.outputFileName + ".best";
             log.info( "Saving best to " + bestOutputFileName );
-            File o = new File( bestOutputFileName );
+
+            Writer resultsOut = getWriterForBestResults( ptpl.outputFileName );
+            Writer bestResultsOut = getWriterForBestResults( bestOutputFileName );
 
             if ( ptpl.blatFileName != null ) {
                 File f = new File( ptpl.blatFileName );
-
+                if ( !f.canRead() ) throw new IOException( "Can't read file " + ptpl.blatFileName );
                 Map<String, Collection<LocationData>> results = ptpl.runOnBlatResults( new FileInputStream( f ),
-                        new BufferedWriter( new FileWriter( o ) ) );
+                        resultsOut );
 
-                ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+                ptpl.getBest( results, bestResultsOut );
 
             } else if ( ptpl.ncbiIdentifierFileName != null ) {
                 File f = new File( ptpl.ncbiIdentifierFileName );
-                if ( !f.canRead() ) throw new IOException( "Can't read file" );
+                if ( !f.canRead() ) throw new IOException( "Can't read file " + ptpl.ncbiIdentifierFileName );
 
-                Map<String, Collection<LocationData>> results = ptpl.runOnGbIds( new FileInputStream( f ),
-                        new BufferedWriter( new FileWriter( o ) ) );
+                Map<String, Collection<LocationData>> results = ptpl.runOnGbIds( new FileInputStream( f ), resultsOut );
 
-                ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+                ptpl.getBest( results, bestResultsOut );
             } else {
                 String[] moreArgs = ptpl.getArgs();
                 if ( moreArgs.length == 0 ) {
                     System.out
                             .println( "You must provide either a Blat result file, a Genbank identifier file, or some Genbank identifiers" );
                     ptpl.printHelp( "probeMapper" );
-                    return;
+                    return new Exception( "Missing genbank identifiers" );
                 }
 
-                // TODO - process loose Genbank identifiers.
+                for ( int i = 0; i < moreArgs.length; i++ ) {
+                    String gbId = moreArgs[i];
 
+                    log.debug( "Got " + gbId );
+                    Map<String, Collection<LocationData>> results = ptpl.processGbId( resultsOut, null, gbId );
+                    ptpl.getBest( results, bestResultsOut );
+                }
             }
+
+            resultsOut.close();
+            bestResultsOut.close();
 
         } catch ( IOException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( SQLException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InstantiationException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( ClassNotFoundException e ) {
             log.error( e, e );
+            throw new RuntimeException( e );
+        } catch ( Exception e ) {
+            return e;
         }
+
+        return null;
+    }
+
+    /**
+     * @param bestOutputFileName
+     * @return
+     * @throws IOException
+     */
+    private static Writer getWriterForBestResults( String bestOutputFileName ) throws IOException {
+        Writer w = null;
+        File o = new File( bestOutputFileName );
+        w = new BufferedWriter( new FileWriter( o ) );
+
+        try {
+            w.write( "" );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Could not write to " + bestOutputFileName );
+        }
+        return w;
     }
 
     /**
@@ -548,9 +620,17 @@ public class ProbeMapper extends AbstractCLI {
         public String toString() {
             StringBuilder buf = new StringBuilder();
             String[] sa = splitBlatQueryName( this.getBr() );
-            String probeName = sa[0];
-            String arrayName = sa[1];
-            buf.append( probeName + "\t" + arrayName + "\t" + tpd.getGene().getOfficialSymbol() + "\t"
+            String arrayName = "";
+            String queryName = null;
+            if ( sa.length == 2 ) {
+                arrayName = sa[0];
+                queryName = sa[1];
+            } else if ( sa.length == 1 ) {
+                queryName = sa[0];
+            } else {
+                throw new RuntimeException( "Query name was not in understood format" );
+            }
+            buf.append( queryName + "\t" + arrayName + "\t" + tpd.getGene().getOfficialSymbol() + "\t"
                     + tpd.getGene().getNcbiId() + "\t" );
             buf.append( this.getNumHits() + "\t" + this.getMaxBlatScore() + "\t" + this.getMaxOverlap() );
             buf.append( "\t" + tpd.getDistance() );
@@ -620,7 +700,7 @@ public class ProbeMapper extends AbstractCLI {
     }
 
     @Override
-    protected void processOptions() {
+    protected void processOptions() throws Exception {
         if ( hasOption( 's' ) ) {
             this.scoreThreshold = getDoubleOptionValue( 's' );
         }
@@ -631,6 +711,8 @@ public class ProbeMapper extends AbstractCLI {
 
         if ( hasOption( 'd' ) ) {
             this.databaseName = getOptionValue( 'd' );
+        } else {
+            this.databaseName = DEFAULT_DATABASE;
         }
 
         if ( hasOption( 'b' ) ) {

@@ -46,7 +46,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.apps.ProbeMapper.LocationData;
-import ubic.gemma.externalDb.GoldenPath;
 import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 
 /**

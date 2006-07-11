@@ -39,6 +39,7 @@ import ubic.gemma.analysis.util.SequenceManipulation;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -83,8 +84,10 @@ public class GoldenPath {
      */
     public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException,
             InstantiationException, IllegalAccessException, ClassNotFoundException {
+
         Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
         String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
+        log.info( "Connecting to Golden Path : " + url );
         conn = DriverManager.getConnection( url, user, password );
         qr = new QueryRunner();
     }
@@ -102,11 +105,15 @@ public class GoldenPath {
         Set<BlatResult> matchingBlocks = new HashSet<BlatResult>();
 
         /* ESTs */
-        query = "SELECT est.tName, est.blockSizes, est.tStarts,est.qStarts,  est.strand FROM all_est AS est WHERE est.qName = ?";
+        query = "SELECT est.tName, est.blockSizes, est.tStarts,est.qStarts, est.strand, est.qSize, est.matches, "
+                + "est.misMatches, est.qNumInsert, est.tNumInsert, est.qStart, est.qEnd, est.tStart, est.tEnd, est.repMatches FROM"
+                + " all_est AS est WHERE est.qName = ?";
         matchingBlocks.addAll( findLocationsByQuery( query, params ) );
 
         /* mRNA */
-        query = "SELECT mrna.tName, mrna.blockSizes, mrna.tStarts, mrna.qStarts, mrna.strand FROM all_mrna AS mrna WHERE mrna.qName = ?";
+        query = "SELECT mrna.tName, mrna.blockSizes, mrna.tStarts, mrna.qStarts, mrna.strand, mrna.qSize, mrna.matches, "
+                + "mrna.misMatches, mrna.qNumInsert, mrna.tNumInsert, mrna.qStart, mrna.qEnd, mrna.tStart, mrna.tEnd, mrna.repMatches"
+                + " FROM all_mrna AS mrna WHERE mrna.qName = ?";
         matchingBlocks.addAll( findLocationsByQuery( query, params ) );
 
         return matchingBlocks;
@@ -120,7 +127,7 @@ public class GoldenPath {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Set<BlatResult> findLocationsByQuery( String query, Object[] params ) {
+    private Set<BlatResult> findLocationsByQuery( final String query, final Object[] params ) {
         try {
             return ( Set<BlatResult> ) qr.query( conn, query, params, new ResultSetHandler() {
 
@@ -134,24 +141,34 @@ public class GoldenPath {
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
                         blatResult.setTargetChromosome( c );
-                        blatResult.setBlockSizes( rs.getString( 2 ) );
-                        blatResult.setTargetStarts( rs.getString( 3 ) );
-                        blatResult.setQueryStarts( rs.getString( 4 ) );
+
+                        Blob blockSizes = rs.getBlob( 2 );
+                        Blob targetStarts = rs.getBlob( 3 );
+                        Blob queryStarts = rs.getBlob( 4 );
+
+                        blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes ) );
+                        blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts ) );
+                        blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts ) );
+
                         blatResult.setStrand( rs.getString( 5 ) );
 
-                        //
-                        // String blockSizes = rs.getString( 2 );
-                        // String blockStarts = rs.getString( 3 );
-                        //
-                        // int[] blockSizeInts = SequenceManipulation.blatLocationsToIntArray( blockSizes );
-                        // int[] blockStartInts = SequenceManipulation.blatLocationsToIntArray( blockStarts );
-                        //
-                        // List<PhysicalLocation> blocks = blocksToPhysicalLocations( blockSizeInts, blockStartInts, c
-                        // );
-                        //
-                        // for ( PhysicalLocation block : blocks ) {
-                        // block.setStrand( rs.getString( 4 ) );
-                        // }
+                        // need the query size to compute scores.
+                        blatResult.setQuerySequence( BioSequence.Factory.newInstance() );
+                        blatResult.getQuerySequence().setLength( rs.getLong( 6 ) );
+                        blatResult.getQuerySequence().setName( ( String ) params[0] );
+
+                        blatResult.setMatches( rs.getInt( 7 ) );
+                        blatResult.setMismatches( rs.getInt( 8 ) );
+                        blatResult.setQueryGapCount( rs.getInt( 9 ) );
+                        blatResult.setTargetGapCount( rs.getInt( 10 ) );
+
+                        blatResult.setQueryStart( rs.getInt( 11 ) );
+                        blatResult.setQueryEnd( rs.getInt( 12 ) );
+
+                        blatResult.setTargetStart( rs.getLong( 13 ) );
+                        blatResult.setTargetEnd( rs.getLong( 14 ) );
+
+                        blatResult.setRepMatches( rs.getInt( 15 ) );
 
                         r.add( blatResult );
                     }
