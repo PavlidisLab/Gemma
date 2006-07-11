@@ -43,9 +43,12 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class AbstractCLI {
 
+    private static final char PASSWORD_CONSTANT = 'p';
+    private static final char USERNAME_OPTION = 'u';
+    private static final char PORT_OPTION = 'P';
+    private static final char HOST_OPTION = 'H';
     private static final String HEADER = "Options:";
-    private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia. "
-            + "For more information, visit http://www.neurogemma.org/";
+    private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia.";
     private Options options = new Options();
     private CommandLine commandLine;
     protected static final Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
@@ -56,24 +59,6 @@ public abstract class AbstractCLI {
     public enum ErrorCode {
         NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENITCATION_ERROR
     };
-
-    /**
-     * Override this method and call it from 'main'.
-     * 
-     * @param args
-     * @return
-     */
-    @SuppressWarnings("unused")
-    protected static Exception doWork( String[] args ) throws Exception {
-        return null;
-    }
-
-    public final static void main( String[] args ) {
-        try {
-            doWork( args );
-        } catch ( Exception e ) {
-        }
-    }
 
     /* support for convenience options */
 
@@ -98,6 +83,8 @@ public abstract class AbstractCLI {
     }
 
     protected abstract void buildOptions();
+
+    protected abstract Exception doWork( String[] args ) throws Exception;
 
     /**
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
@@ -166,24 +153,24 @@ public abstract class AbstractCLI {
      */
     private void processStandardOptions() throws Exception {
 
-        if ( commandLine.hasOption( 'h' ) ) {
-            this.host = commandLine.getOptionValue( 'h' );
+        if ( commandLine.hasOption( HOST_OPTION ) ) {
+            this.host = commandLine.getOptionValue( HOST_OPTION );
         } else {
             this.host = DEFAULT_HOST;
         }
 
-        if ( commandLine.hasOption( 'P' ) ) {
-            this.port = getIntegerOptionValue( 'P' );
+        if ( commandLine.hasOption( PORT_OPTION ) ) {
+            this.port = getIntegerOptionValue( PORT_OPTION );
         } else {
             this.port = DEFAULT_PORT;
         }
 
-        if ( commandLine.hasOption( 'u' ) ) {
-            this.username = commandLine.getOptionValue( 'u' );
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            this.username = commandLine.getOptionValue( USERNAME_OPTION );
         }
 
-        if ( commandLine.hasOption( 'p' ) ) {
-            this.password = commandLine.getOptionValue( 'p' );
+        if ( commandLine.hasOption( PASSWORD_CONSTANT ) ) {
+            this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
         }
 
     }
@@ -255,10 +242,10 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addUserNameAndPasswordOptions() {
         Option usernameOpt = OptionBuilder.withArgName( "user" ).isRequired().withLongOpt( "user" ).hasArg()
-                .withDescription( "User name for accessing the system" ).create( 'u' );
+                .withDescription( "User name for accessing the system" ).create( USERNAME_OPTION );
 
         Option passwordOpt = OptionBuilder.withArgName( "passwd" ).isRequired().withLongOpt( "password" ).hasArg()
-                .withDescription( "Password for accessing the system" ).create( 'p' );
+                .withDescription( "Password for accessing the system" ).create( PASSWORD_CONSTANT );
         options.addOption( usernameOpt );
         options.addOption( passwordOpt );
     }
@@ -272,12 +259,12 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
         Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg().withDescription(
-                "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( 'h' );
+                "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( HOST_OPTION );
 
         hostOpt.setRequired( hostRequired );
 
         Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg().withDescription(
-                "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( 'P' );
+                "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( PORT_OPTION );
 
         portOpt.setRequired( portRequired );
 
@@ -285,7 +272,7 @@ public abstract class AbstractCLI {
         options.addOption( portOpt );
     }
 
-    protected double getDoubleOptionValue( String option ) throws Exception {
+    protected final double getDoubleOptionValue( String option ) throws Exception {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -295,7 +282,7 @@ public abstract class AbstractCLI {
         return 0.0;
     }
 
-    protected double getDoubleOptionValue( char option ) throws Exception {
+    protected final double getDoubleOptionValue( char option ) throws Exception {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -305,7 +292,7 @@ public abstract class AbstractCLI {
         return 0.0;
     }
 
-    protected int getIntegerOptionValue( String option ) throws Exception {
+    protected final int getIntegerOptionValue( String option ) throws Exception {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -319,7 +306,7 @@ public abstract class AbstractCLI {
         return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
     }
 
-    protected int getIntegerOptionValue( char option ) throws Exception {
+    protected final int getIntegerOptionValue( char option ) throws Exception {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -333,7 +320,7 @@ public abstract class AbstractCLI {
      * @param c
      * @return
      */
-    protected String getFileNameOptionValue( char c ) throws Exception {
+    protected final String getFileNameOptionValue( char c ) throws Exception {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
@@ -347,7 +334,7 @@ public abstract class AbstractCLI {
      * @param c
      * @return
      */
-    protected String getFileNameOptionValue( String c ) throws Exception {
+    protected final String getFileNameOptionValue( String c ) throws Exception {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
@@ -362,7 +349,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
      */
-    public Options addOption( Option opt ) {
+    public final Options addOption( Option opt ) {
         return this.options.addOption( opt );
     }
 
@@ -373,7 +360,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
      */
-    public Options addOption( String opt, boolean hasArg, String description ) {
+    public final Options addOption( String opt, boolean hasArg, String description ) {
         return this.options.addOption( opt, hasArg, description );
     }
 
@@ -385,7 +372,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
      */
-    public Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
+    public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
         return this.options.addOption( opt, longOpt, hasArg, description );
     }
 
@@ -394,7 +381,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
      */
-    public Options addOptionGroup( OptionGroup group ) {
+    public final Options addOptionGroup( OptionGroup group ) {
         return this.options.addOptionGroup( group );
     }
 
@@ -403,7 +390,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getOption(java.lang.String)
      */
-    public Option getOption( String opt ) {
+    public final Option getOption( String opt ) {
         return this.options.getOption( opt );
     }
 
@@ -412,7 +399,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
      */
-    public OptionGroup getOptionGroup( Option opt ) {
+    public final OptionGroup getOptionGroup( Option opt ) {
         return this.options.getOptionGroup( opt );
     }
 
@@ -420,7 +407,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getOptions()
      */
-    public Collection getOptions() {
+    public final Collection getOptions() {
         return this.options.getOptions();
     }
 
@@ -428,7 +415,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getRequiredOptions()
      */
-    public List getRequiredOptions() {
+    public final List getRequiredOptions() {
         return this.options.getRequiredOptions();
     }
 }

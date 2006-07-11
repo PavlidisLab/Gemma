@@ -28,6 +28,8 @@ public class ProbeMapperTest extends AbstractCLITestCase {
 
     File tempFile;
 
+    ProbeMapper p;
+
     /*
      * (non-Javadoc)
      * 
@@ -36,14 +38,15 @@ public class ProbeMapperTest extends AbstractCLITestCase {
     protected void setUp() throws Exception {
         super.setUp();
         tempFile = File.createTempFile( "cli", ".txt" );
+        p = new ProbeMapper();
     }
 
     protected void tearDown() throws Exception {
-      //  tempFile.delete();
+        // tempFile.delete();
     }
 
-    public final void testMainBadPort() {
-        Exception result = ProbeMapper.doWork( new String[] { "-P", "c", "-u", "pavlidis", "-p", "toast", "-o",
+    public final void testMainBadPort() throws Exception {
+        Exception result = p.doWork( new String[] { "-P", "c", "-u", "pavlidis", "-p", "toast", "-o",
                 tempFile.getAbsolutePath() } );
         // should result in an exception
         assertTrue( result.getMessage(), result != null );
@@ -56,8 +59,8 @@ public class ProbeMapperTest extends AbstractCLITestCase {
         String blatFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.noheader.txt";
 
-        Exception result = ProbeMapper.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg17" } );
+        Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
+                "-b", blatFile, "-d", "hg17" } );
         if ( result != null ) {
             fail( result.getMessage() );
         }
@@ -70,16 +73,16 @@ public class ProbeMapperTest extends AbstractCLITestCase {
         String gbFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/ncbiGenes.test.txt";
 
-        Exception result = ProbeMapper.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg17" } );
+        Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
+                "-g", gbFile, "-d", "hg17" } );
         if ( result != null ) {
             fail( result.getMessage() );
         }
     }
 
     public void testSingleGb() throws Exception {
-        Exception result = ProbeMapper.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-d", "hg17", "AF015731", "BX473803" } );
+        Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
+                "-d", "hg17", "AF015731", "BX473803" } );
         if ( result != null ) {
             result.printStackTrace();
             fail( result.getMessage() );

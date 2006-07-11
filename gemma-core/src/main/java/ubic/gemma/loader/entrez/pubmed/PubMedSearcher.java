@@ -39,23 +39,30 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
     protected static BeanFactory ctx = null;
     static PubMedSearch pms = new PubMedSearch();
 
-    /**
-     * @param args
-     */
+    public static void main( String[] args ) {
+        PubMedSearcher p = new PubMedSearcher();
+        try {
+            p.doWork( args );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    protected static Exception doWork( String[] args ) throws Exception {
-        PubMedSearcher searcher = new PubMedSearcher();
-        Exception err = searcher.processCommandLine( "pubmed [options] searchterm1 searchterm2 ... searchtermN", args );
+    @Override
+    protected Exception doWork( String[] args ) throws Exception {
+
+        Exception err = processCommandLine( "pubmed [options] searchterm1 searchterm2 ... searchtermN", args );
 
         if ( err != null ) return err;
 
         try {
-            Collection<BibliographicReference> refs = pms.searchAndRetriveByHTTP( searcher.getArgList() );
+            Collection<BibliographicReference> refs = pms.searchAndRetriveByHTTP( getArgList() );
 
             System.out.println( refs.size() + " references found" );
 
-            if ( searcher.hasOption( "d" ) ) {
-                searcher.getPersisterHelper().persist( refs );
+            if ( hasOption( "d" ) ) {
+                getPersisterHelper().persist( refs );
             }
 
         } catch ( IOException e ) {

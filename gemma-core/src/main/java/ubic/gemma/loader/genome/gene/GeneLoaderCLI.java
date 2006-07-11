@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.genome.gene;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.cli.Option;
@@ -43,26 +44,31 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
 
     // FIXME this should use the SDOG (source domain object generator)
 
-    /**
-     * @param args
-     * @throws IOException
-     */
-    protected static Exception doWork( String[] args ) throws Exception {
-        GeneLoaderCLI cli = new GeneLoaderCLI();
+    public static void main( String[] args ) {
+        GeneLoaderCLI p = new GeneLoaderCLI();
+        try {
+            p.doWork( args );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) throws Exception {
 
         /* COMMAND LINE PARSER STAGE */
-        Exception err = cli.processCommandLine( "GeneLoaderCLI", args );
+        Exception err = processCommandLine( "GeneLoaderCLI", args );
 
         if ( err != null ) return err;
 
         /* check parse option. */
-        if ( cli.hasOption( 'x' ) ) {
+        if ( hasOption( 'x' ) ) {
             NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            geneInfoParser.parse( cli.getOptionValue( 'x' ) );
-        } else if ( cli.hasOption( 'l' ) ) {
+            geneInfoParser.parse( getOptionValue( 'x' ) );
+        } else if ( hasOption( 'l' ) ) {
             /* check load option. */
             NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            String[] filenames = cli.getOptionValues( 'l' );
+            String[] filenames = getOptionValues( 'l' );
 
             for ( int i = 0; i < filenames.length - 1; i++ ) {
                 geneInfoParser.parse( filenames[i] );
@@ -81,21 +87,21 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
                 info = ( NCBIGeneInfo ) geneInfoParser.get( key );
                 gene = converter.convert( info );
 
-                ( ( Gene ) gene ).setTaxon( ( Taxon ) cli.getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
+                ( ( Gene ) gene ).setTaxon( ( Taxon ) getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
                 if ( gene == null ) {
                     System.out.println( "gene null. skipping" );
                 } else {
                     System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
-                    cli.getGenePersister().persist( gene );
+                    getGenePersister().persist( gene );
                 }
             }
             // cli.getGenePersister().persist( geneInfoParser.getResults() );
             // endAS
 
-        } else if ( cli.hasOption( 'r' ) ) { /* check remove option. */
-            cli.getGenePersister().removeAll();
+        } else if ( hasOption( 'r' ) ) { /* check remove option. */
+            getGenePersister().removeAll();
         } else { /* defaults to print help. */
-            cli.printHelp( "GeneLoaderCLI" );
+            printHelp( "GeneLoaderCLI" );
         }
         return null;
     }
