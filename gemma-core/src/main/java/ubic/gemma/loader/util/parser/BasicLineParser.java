@@ -55,6 +55,7 @@ public abstract class BasicLineParser implements LineParser {
      */
     public void parse( InputStream is ) throws IOException {
         linesParsed = 0;
+        int nullLines = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
         String line = null;
@@ -65,11 +66,14 @@ public abstract class BasicLineParser implements LineParser {
             if ( newItem != null ) {
                 results.add( newItem );
                 linesParsed++;
+            } else {
+                log.debug( "Got null parse from " + line );
+                nullLines++;
             }
             if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + linesParsed + " lines..." );
 
         }
-        log.info( "Parsed " + linesParsed + " lines." );
+        log.info( "Parsed " + linesParsed + " lines; " + nullLines + " yielded no parse result." );
     }
 
     /*

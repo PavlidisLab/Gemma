@@ -18,15 +18,10 @@
  */
 package ubic.gemma.loader.util.parser;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * A simple tab delim file parser
@@ -35,43 +30,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Id$
  */
 public class TabDelimParser extends BasicLineParser {
-    private Log log = LogFactory.getLog( this.getClass() );
-    private Collection<Object> results;
+
     private String[] header = null;
-
-    public TabDelimParser() {
-        results = new HashSet<Object>();
-    }
-
-    /**
-     * Extracts header information.
-     * 
-     * @param is
-     * @param header
-     * @throws IOException
-     */
-    public void parse( InputStream is, boolean hasHeader ) throws IOException {// FIXME do i really want to override
-                                                                                // this?
-
-        linesParsed = 0;
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
-        String line = null;
-
-        if ( hasHeader ) setHeader( line = br.readLine() );
-
-        while ( ( line = br.readLine() ) != null ) {
-            Object newItem = parseOneLine( line );
-
-            if ( newItem != null ) {
-                results.add( newItem );
-                linesParsed++;
-            }
-            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + linesParsed + " lines..." );
-
-        }
-        log.info( "Parsed " + linesParsed + " lines." );
-    }
 
     public void setHeader( String header ) {
         this.header = ( String[] ) parseOneLine( header );
@@ -81,19 +41,15 @@ public class TabDelimParser extends BasicLineParser {
         return this.header;
     }
 
-    public Collection<Object> getResults() {
-        return this.results;
-    }
-
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.util.parser.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {
-        // String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' ); TODO test which is more efficient
-        String[] fields = line.split( "\t" );
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
+        log.debug( "Got " + fields.length + " fields from line '" + line.substring( 0, Math.min( line.length(), 100 ) )
+                + "' ..." );
         return fields;
     }
-
 }
