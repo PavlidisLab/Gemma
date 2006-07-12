@@ -49,25 +49,14 @@ public class NCluster {
     private static final String USAGE = "[-h] [-t <true|false>] [-f <filename>] [-d <e|c|s>] [-m <s|m|a|c>] ";
     private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
-    
+
     /**
-     * dist       (input) char
-     * Defines which distance measure is used, as given by the table:
-     * dist=='e': Euclidean distance
-     * dist=='b': City-block distance
-     * dist=='c': correlation
-     * dist=='a': absolute value of the correlation
-     * dist=='u': uncentered correlation
-     * dist=='x': absolute uncentered correlation
-     * dist=='s': Spearman's rank correlation
-     * dist=='k': Kendall's tau
-     * For other values of dist, the default (Euclidean distance) is used.
-     * 
-     * method     (input) char
-     * Defines which hierarchical clustering method is used:
-     * method=='s': pairwise single-linkage clustering
-     * method=='m': pairwise maximum- (or complete-) linkage clustering
-     * method=='a': pairwise average-linkage clustering
+     * dist (input) char Defines which distance measure is used, as given by the table: dist=='e': Euclidean distance
+     * dist=='b': City-block distance dist=='c': correlation dist=='a': absolute value of the correlation dist=='u':
+     * uncentered correlation dist=='x': absolute uncentered correlation dist=='s': Spearman's rank correlation
+     * dist=='k': Kendall's tau For other values of dist, the default (Euclidean distance) is used. method (input) char
+     * Defines which hierarchical clustering method is used: method=='s': pairwise single-linkage clustering
+     * method=='m': pairwise maximum- (or complete-) linkage clustering method=='a': pairwise average-linkage clustering
      * method=='c': pairwise centroid-linkage clustering
      * 
      * @param rows
@@ -105,7 +94,7 @@ public class NCluster {
         Collection results = new HashSet();
         try {
             is = new FileInputStream( new File( filename ) );
-            parser.parse( is, false );
+            parser.parse( is );
             results = parser.getResults();
         } catch ( Exception e ) {
             e.printStackTrace();
