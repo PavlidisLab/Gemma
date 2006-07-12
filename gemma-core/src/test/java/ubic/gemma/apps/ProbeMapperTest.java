@@ -58,7 +58,9 @@ public class ProbeMapperTest extends AbstractCLITestCase {
 
         String blatFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.noheader.txt";
-
+        
+        assert ( new File( blatFile ) ).canRead();
+        
         Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
                 "-b", blatFile, "-d", "hg17" } );
         if ( result != null ) {
@@ -72,6 +74,8 @@ public class ProbeMapperTest extends AbstractCLITestCase {
 
         String gbFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/ncbiGenes.test.txt";
+
+        assert ( new File( gbFile ) ).canRead();
 
         Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
                 "-g", gbFile, "-d", "hg17" } );
