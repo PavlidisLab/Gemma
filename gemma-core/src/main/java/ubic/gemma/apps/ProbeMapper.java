@@ -42,6 +42,7 @@ import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 import ubic.gemma.externalDb.GoldenPath.ThreePrimeData;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.util.AbstractCLI;
+import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -525,6 +526,9 @@ public class ProbeMapper extends AbstractCLI {
      */
     public Map<String, Collection<LocationData>> processGbId( Writer writer, GoldenPath goldenPathDb, String genbankId )
             throws IOException {
+
+        log.debug( "Entering processGbId with " + genbankId );
+
         if ( goldenPathDb == null ) {
             try {
                 goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
@@ -580,6 +584,7 @@ public class ProbeMapper extends AbstractCLI {
             count++;
             if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
         }
+        log.info( "Annotations computed for " + count + " genbank identifiers" );
         log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         return allRes;
     }
@@ -676,12 +681,14 @@ public class ProbeMapper extends AbstractCLI {
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
 
-        TabDelimParser brp = new TabDelimParser();
-        brp.parse( stream );
+        Parser parser = new TabDelimParser();
+        parser.parse( stream );
 
         writeHeader( writer );
 
-        Collection<Object> genbankIds = brp.getResults();
+        Collection<Object> genbankIds = parser.getResults();
+
+        log.debug( "Parsed " + genbankIds.size() + " lines from the stream" );
 
         Map<String, Collection<LocationData>> allRes = processGbIds( writer, goldenPathDb, genbankIds );
         stream.close();
