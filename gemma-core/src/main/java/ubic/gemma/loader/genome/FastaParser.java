@@ -1,0 +1,180 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.loader.genome;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+
+import ubic.gemma.loader.util.parser.RecordParser;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
+/**
+ * FASTA sequence file parser. Results are in BioSequence objects.
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class FastaParser extends RecordParser {
+    Pattern pattern;
+
+    public FastaParser() {
+        String patternStr = "^(.*)$";
+        pattern = Pattern.compile( patternStr, Pattern.MULTILINE );
+    }
+
+    @Override
+    public Object parseOneRecord( String record ) {
+
+        if ( StringUtils.isBlank( record ) ) return null;
+
+        Matcher matcher = pattern.matcher( record );
+
+        BioSequence bioSequence = BioSequence.Factory.newInstance();
+
+        parseHeader( matcher, bioSequence );
+
+        StringBuilder sequence = new StringBuilder();
+        while ( matcher.find() ) {
+            // skip comments.
+            if ( matcher.group( 1 ).startsWith( ";" ) ) continue;
+
+            sequence.append( matcher.group( 1 ) );
+        }
+
+        if ( sequence.length() == 0 ) {
+            return null;
+        }
+
+        bioSequence.setLength( new Long( sequence.length() ) );
+        bioSequence.setIsApproximateLength( false );
+        bioSequence.setSequence( sequence.toString() );
+        return bioSequence;
+
+    }
+
+    /**
+     * Recognizes Defline format as described at http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers.
+     * 
+     * <pre>
+     *                       GenBank                           gi|gi-number|gb|accession|locus
+     *                       EMBL Data Library                 gi|gi-number|emb|accession|locus
+     *                       DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
+     *                       NBRF PIR                          pir||entry
+     *                       Protein Research Foundation       prf||name
+     *                       SWISS-PROT                        sp|accession|name
+     *                       Brookhaven Protein Data Bank (1)  pdb|entry|chain
+     *                       Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
+     *                       Patents                           pat|country|number 
+     *                       GenInfo Backbone Id               bbs|number 
+     *                       General database identifier       gnl|database|identifier
+     *                       NCBI Reference Sequence           ref|accession|locus
+     *                       Local Sequence identifier         lcl|identifier
+     * </pre>
+     * 
+     * Our amendments:
+     * 
+     * <pre>
+     *                       Affymetrix collapsed sequence     target:array:probeset;
+     *                       Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
+     *                       Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     * </pre>
+     * 
+     * FIXME: recognize multi-line headers separated by ^A. FIXME: parsing of more obscure (to us) headers might not be
+     * complete.
+     * 
+     * @param bioSequence
+     */
+    private void parseHeader( Matcher matcher, BioSequence bioSequence ) {
+        boolean gotSomething = matcher.find();
+
+        if ( !gotSomething ) {
+            throw new IllegalArgumentException( "Invalid FASTA record" );
+        }
+
+        String header = matcher.group( 1 );
+
+        bioSequence.setName( header );
+
+        if ( header.indexOf( '|' ) >= 0 ) {
+            // one of the genbank formats.
+            String[] split = StringUtils.splitPreserveAllTokens( header, '|' );
+
+            if ( split == null || split.length == 0 ) {
+                throw new IllegalArgumentException( "FASTA header in unrecognized format" );
+            }
+
+            String firstTag = split[0];
+
+            assert firstTag.startsWith( ">" );
+            assert firstTag.length() > 1;
+            firstTag = firstTag.substring( 1 );
+
+            // FIXME check for array lengths, throw illegal argument exceptions.
+
+            if ( firstTag.equals( "gi" ) ) {
+                bioSequence.setName( split[3] );
+                bioSequence.setDescription( split[4] );
+            } else if ( firstTag.equals( "pir" ) ) {
+                bioSequence.setName( split[1] );
+            } else if ( firstTag.equals( "sp" ) ) {
+                bioSequence.setName( split[1] );
+                bioSequence.setDescription( split[2] );
+            } else if ( firstTag.equals( "ref" ) ) {
+                bioSequence.setName( split[1] );
+                bioSequence.setDescription( split[2] );
+            } else if ( firstTag.equals( "lcl" ) ) {
+                bioSequence.setName( split[1] );
+            } else if ( firstTag.equals( "pdb" ) ) {
+                bioSequence.setName( split[1] );
+                bioSequence.setDescription( split[2] );
+            } else if ( firstTag.equals( "gnl" ) ) {
+                bioSequence.setName( split[2] );
+            } else if ( firstTag.equals( "entry:chain" ) ) {
+                bioSequence.setName( split[1] );
+            } else {
+                // throw new IllegalArgumentException( "FASTA header in unrecognized format, started with " + firstTag
+                // );
+            }
+        } else if ( header.indexOf( ':' ) >= 0 ) {
+            // affymetrix format
+            String[] split = StringUtils.splitPreserveAllTokens( header, ':' );
+
+            if ( split == null || split.length == 0 ) {
+                throw new IllegalArgumentException( "FASTA header in unrecognized format" );
+            }
+            String firstTag = split[0];
+            if ( firstTag.equals( "probe" ) ) {
+                bioSequence.setName( split[1] + ":" + split[2] + ":" + split[3] + ":" + split[4] );
+            } else if ( firstTag.equals( "target" ) ) {
+                bioSequence.setName( split[1] + ":" + split[2] );
+            } else if ( firstTag.equals( "exemplar" ) ) {
+                bioSequence.setName( split[1] + ":" + split[2] );
+                bioSequence.setDescription( split[3] );
+            } else {
+                throw new IllegalArgumentException( "FASTA header in unrecognized format, started with " + firstTag );
+            }
+
+        } else {
+            throw new IllegalArgumentException( "FASTA header in unrecognized format." );
+        }
+
+    }
+}
