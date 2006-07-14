@@ -5,11 +5,12 @@
         <h2>
             <fmt:message key="expression.visualization.results" />
         </h2>
-        
+        <b>(Applet Test)</b>
 		<div id="logo">
             <a href="<%=request.getContextPath()%>">
                 <%-- <img src="${visualization}"/> --%>
                 <%--<applet code="/applets/HtmlMatrixVisualizerApplet.class" width=550 height=250></applet>--%>
+                <%--<jsp:plugin type="applet" archive="Blur.jar" codebase="/Gemma/applet"--%>
                 <jsp:plugin type="applet" code="applet.HtmlMatrixVisualizerApplet.class" codebase="/Gemma"
                 jreversion="1.5" width="160" height="150">
                 <jsp:params>
