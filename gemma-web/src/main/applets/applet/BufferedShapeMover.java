@@ -1,20 +1,33 @@
 /*
- * The Gemma project
+ * @(#)BufferedShapeMover.java  1.2 99/07/26
  * 
- * Copyright (c) 2006 Columbia University
+ * Copyright 1997, 1998, 1999 Sun Microsystems, Inc. All Rights
+ * Reserved.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * Sun grants you ("Licensee") a non-exclusive, royalty free,
+ * license to use, modify and redistribute this software in source and
+ * binary code form, provided that i) this copyright notice and license
+ * appear on all copies of the software; and ii) Licensee does not utilize
+ * the software in a manner which is disparaging to Sun.
+ * 
+ * This software is provided "AS IS," without a warranty of any
+ * kind. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND
+ * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN
+ * AND ITS LICENSORS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+ * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THE SOFTWARE
+ * OR ITS DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR
+ * ANY LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,
+ * CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND  
+ * REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF 
+ * OR INABILITY TO USE SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
+ * 
+ * This software is not designed or intended for use in on-line
+ * control of aircraft, air traffic, aircraft navigation or aircraft
+ * communications; or in the design, construction, operation or
+ * maintenance of any nuclear facility. Licensee represents and warrants
+ * that it will not use or redistribute the Software for such purposes. 
  */
 package applet;
 
@@ -77,27 +90,31 @@ class BSMCanvas extends Canvas implements MouseListener, MouseMotionListener {
         addMouseMotionListener( this );
         addMouseListener( this );
 
-        // Creates the fill texture paint pattern.
+        // // Creates the fill texture paint pattern.
+        // bi = new BufferedImage( 5, 5, BufferedImage.TYPE_INT_RGB );
+        // big = bi.createGraphics();
+        // big.setColor( Color.pink );
+        // big.fillRect( 0, 0, 7, 7 );
+        // big.setColor( Color.cyan );
+        // big.fillOval( 0, 0, 3, 3 );
+        // Rectangle r = new Rectangle( 0, 0, 5, 5 );
+        // fillPolka = new TexturePaint( bi, r );
+        // big.dispose();
+        //
+        // // Creates the stroke texture paint pattern.
+        // bi = new BufferedImage( 5, 5, BufferedImage.TYPE_INT_RGB );
+        // big = bi.createGraphics();
+        // big.setColor( Color.cyan );
+        // big.fillRect( 0, 0, 7, 7 );
+        // big.setColor( Color.pink );
+        // big.fillOval( 0, 0, 3, 3 );
+        // r = new Rectangle( 0, 0, 5, 5 );
+        // strokePolka = new TexturePaint( bi, r );
+        // big.dispose();
         bi = new BufferedImage( 5, 5, BufferedImage.TYPE_INT_RGB );
         big = bi.createGraphics();
-        big.setColor( Color.pink );
-        big.fillRect( 0, 0, 7, 7 );
-        big.setColor( Color.cyan );
-        big.fillOval( 0, 0, 3, 3 );
-        Rectangle r = new Rectangle( 0, 0, 5, 5 );
-        fillPolka = new TexturePaint( bi, r );
-        big.dispose();
-
-        // Creates the stroke texture paint pattern.
-        bi = new BufferedImage( 5, 5, BufferedImage.TYPE_INT_RGB );
-        big = bi.createGraphics();
-        big.setColor( Color.cyan );
-        big.fillRect( 0, 0, 7, 7 );
-        big.setColor( Color.pink );
-        big.fillOval( 0, 0, 3, 3 );
-        r = new Rectangle( 0, 0, 5, 5 );
-        strokePolka = new TexturePaint( bi, r );
-        big.dispose();
+        Image img = getToolkit().getImage( "resources/administrator/visualization.png" );
+        big.drawImage( img, 0, 0, this );
     }
 
     // Handles the event of the user pressing down the mouse button.

@@ -1,20 +1,33 @@
 /*
- * The Gemma project
+ * @(#)Blur.java	1.2 99/07/26 
  * 
- * Copyright (c) 2006 Columbia University
+ * Copyright 1997, 1998, 1999 Sun Microsystems, Inc. All Rights
+ * Reserved.
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Sun grants you ("Licensee") a non-exclusive, royalty free,
+ * license to use, modify and redistribute this software in source and
+ * binary code form, provided that i) this copyright notice and license 
+ * appear on all copies of the software; and ii) Licensee does not utilize
+ * the software in a manner which is disparaging to Sun.
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * This software is provided "AS IS," without a warranty of any
+ * kind. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND
+ * WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN
+ * AND ITS LICENSORS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+ * LICENSEE AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THE SOFTWARE
+ * OR ITS DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR
+ * ANY LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,
+ * CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND
+ * REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF
+ * OR INABILITY TO USE SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * This software is not designed or intended for use in on-line
+ * control of aircraft, air traffic, aircraft navigation or aircraft
+ * communications; or in the design, construction, operation or
+ * maintenance of any nuclear facility. Licensee represents and warrants
+ * that it will not use or redistribute the Software for such purposes.
  */
 package applet;
 
@@ -35,12 +48,9 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
+import java.net.MalformedURLException;
+import java.net.URL;
 
-/**
- * @author unattributable
- * @author keshav
- * @version $Id$
- */
 public class Blur extends Applet {
 
     private BufferedImage bi;
@@ -50,7 +60,18 @@ public class Blur extends Applet {
 
         setBackground( Color.white );
 
-        Image img = getToolkit().getImage( "resources/administrator/visualization.png" );
+        // this works, but not in a web context because of the applet security ... you cannot read and write files from
+        // the filesystem without a certificate(obviously, you would have to remove build/Gemma from the path)
+        // Image img = getToolkit().getImage( "build/Gemma/resources/administrator/visualization.png" );
+        URL url = null;
+        try {
+            //System.err.println( this.getParameter( "visualization" ) );FIXME use parameters from jsp:param
+            url = new URL( "http://localhost:8080/Gemma/resources/administrator/visualization.png" );
+        } catch ( MalformedURLException e1 ) {
+            System.err.println( "couldn't read url: " + url );
+            e1.printStackTrace();
+        }
+        Image img = getToolkit().getImage( url );
         try {
             MediaTracker tracker = new MediaTracker( this );
             tracker.addImage( img, 0 );
@@ -60,7 +81,8 @@ public class Blur extends Applet {
 
         int iw = img.getWidth( this );
         int ih = img.getHeight( this );
-        bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB );
+        // bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB ); kk
+        bi = new BufferedImage( 100, 100, BufferedImage.TYPE_INT_RGB );
         Graphics2D big = bi.createGraphics();
         big.drawImage( img, 0, 0, this );
 

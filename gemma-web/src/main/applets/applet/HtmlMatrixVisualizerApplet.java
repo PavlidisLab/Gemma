@@ -19,25 +19,24 @@
 package applet;
 
 import java.applet.Applet;
-import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Label;
 import java.awt.MediaTracker;
-import java.awt.Rectangle;
-import java.awt.TexturePaint;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * @author keshav
@@ -45,45 +44,25 @@ import java.awt.image.BufferedImage;
  */
 public class HtmlMatrixVisualizerApplet extends Applet {
 
-    private static final long serialVersionUID = -3724123567848276753L;
-
     private BufferedImage bi;
+    float[] elements = { .1111f, .1111f, .1111f, .1111f, .1111f, .1111f, .1111f, .1111f, .1111f };
 
-    static protected Label label;
+    public HtmlMatrixVisualizerApplet() {
 
-    public void init() {
-        // Initialize the layout.
-        setLayout( new BorderLayout() );
-        add( new VisualizerCanvas() );
-        label = new Label( "Drag rectangle around within the area" );
-        add( "South", label );
-    }
-
-    /**
-     * @param s
-     */
-    public static void main( String s[] ) {
-        Frame f = new Frame( "HtmlMatrixVisualizerApplet" );
-        f.addWindowListener( new WindowAdapter() {
-            public void windowClosing( WindowEvent e ) {
-                System.exit( 0 );
-            }
-        } );
-        Applet applet = new HtmlMatrixVisualizerApplet();
-        f.add( "Center", applet );
-        applet.init();
-        f.pack();
-        f.setSize( new Dimension( 550, 250 ) );
-        f.show();
-    }
-
-    /**
-     * @param data
-     */
-    public void createVisualization( double[][] data ) {
         setBackground( Color.white );
 
-        Image img = getToolkit().getImage( "resources/administrator/visualization.png" );
+        // this works, but not in a web context because of the applet security ... you cannot read and write files from
+        // the filesystem without a certificate(obviously, you would have to remove build/Gemma from the path)
+        // Image img = getToolkit().getImage( "build/Gemma/resources/administrator/visualization.png" );
+        URL url = null;
+        try {
+            // System.err.println( this.getParameter( "visualization" ) );FIXME use parameters from jsp:param
+            url = new URL( "http://localhost:8080/Gemma/resources/administrator/visualization.png" );
+        } catch ( MalformedURLException e1 ) {
+            System.err.println( "couldn't read url: " + url );
+            e1.printStackTrace();
+        }
+        Image img = getToolkit().getImage( url );
         try {
             MediaTracker tracker = new MediaTracker( this );
             tracker.addImage( img, 0 );
@@ -93,227 +72,48 @@ public class HtmlMatrixVisualizerApplet extends Applet {
 
         int iw = img.getWidth( this );
         int ih = img.getHeight( this );
-        bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB );
+        // bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB ); kk
+        bi = new BufferedImage( 100, 100, BufferedImage.TYPE_INT_RGB );
         Graphics2D big = bi.createGraphics();
         big.drawImage( img, 0, 0, this );
 
     }
 
-    /**
-     * @author keshav
-     */
-    class VisualizerCanvas extends Canvas implements MouseListener, MouseMotionListener {
+    public void paint( Graphics g ) {
+        Graphics2D g2 = ( Graphics2D ) g;
+        int w = getSize().width;
+        int h = getSize().height;
+        int bw = bi.getWidth( this );
+        int bh = bi.getHeight( this );
 
-        Rectangle rect = new Rectangle( 0, 0, 100, 50 );
-        BufferedImage bi;
-        Graphics2D big;
+        AffineTransform at = new AffineTransform();
+        at.scale( w / 2.0 / bw, h / 1.0 / bh );
 
-        // Holds the coordinates of the user's last mousePressed event.
-        int last_x, last_y;
-        boolean firstTime = true;
-        TexturePaint fillPolka, strokePolka;
-        Rectangle area;
+        BufferedImageOp biop = null;
 
-        // True if the user pressed, dragged or released the mouse outside of the rectangle; false otherwise.
-        boolean pressOut = false;
+        BufferedImage bimg = new BufferedImage( bw, bh, BufferedImage.TYPE_INT_RGB );
 
-        /**
-         * 
-         *
-         */
-        public VisualizerCanvas() {
-            setBackground( Color.white );
-            addMouseMotionListener( this );
-            addMouseListener( this );
+        Kernel kernel = new Kernel( 3, 3, elements );
+        ConvolveOp cop = new ConvolveOp( kernel, ConvolveOp.EDGE_NO_OP, null );
+        cop.filter( bi, bimg );
+        biop = new AffineTransformOp( at, AffineTransformOp.TYPE_NEAREST_NEIGHBOR );
 
-            Image img = getToolkit().getImage( "resources/administrator/visualization.png" );
-            try {
-                MediaTracker tracker = new MediaTracker( this );
-                tracker.addImage( img, 0 );
-                tracker.waitForID( 0 );
-            } catch ( Exception e ) {
+        g2.drawImage( bi, biop, 0, 0 );
+        g2.drawImage( bimg, biop, w / 2 + 3, 0 );
+
+    }
+
+    public static void main( String s[] ) {
+        WindowListener l = new WindowAdapter() {
+            public void windowClosing( WindowEvent e ) {
+                System.exit( 0 );
             }
-
-            int iw = img.getWidth( this );
-            int ih = img.getHeight( this );
-            bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB );
-            big = bi.createGraphics();
-            big.drawImage( img, 0, 0, this );
-
-            // Creates the fill texture paint pattern.
-            // bi = new BufferedImage( 5, 5, BufferedImage.TYPE_INT_RGB );
-            // big = bi.createGraphics();
-            // big.setColor( Color.pink );
-            // big.fillRect( 0, 0, 7, 7 );
-            // big.setColor( Color.cyan );
-            // big.fillOval( 0, 0, 3, 3 );
-            // Rectangle r = new Rectangle( 0, 0, 5, 5 );
-            // fillPolka = new TexturePaint( bi, r );
-            // big.dispose();
-            //
-            // // Creates the stroke texture paint pattern.
-            // bi = new BufferedImage( 5, 5, BufferedImage.TYPE_INT_RGB );
-            // big = bi.createGraphics();
-            // big.setColor( Color.cyan );
-            // big.fillRect( 0, 0, 7, 7 );
-            // big.setColor( Color.pink );
-            // big.fillOval( 0, 0, 3, 3 );
-            // r = new Rectangle( 0, 0, 5, 5 );
-            // strokePolka = new TexturePaint( bi, r );
-            // big.dispose();
-        }
-
-        /**
-         * Handles the event of the user pressing down the mouse button.
-         * 
-         * @param e
-         */
-        public void mousePressed( MouseEvent e ) {
-
-            last_x = rect.x - e.getX();
-            last_y = rect.y - e.getY();
-
-            // Checks whether or not the cursor is inside of the rectangle while the user is pressing themouse.
-            if ( rect.contains( e.getX(), e.getY() ) ) {
-                updateLocation( e );
-            } else {
-                BufferedShapeMover.label.setText( "First position the cursor on the rectangle and then drag." );
-                pressOut = true;
-            }
-        }
-
-        /**
-         * Handles the event of a user dragging the mouse while holding down the mouse button.
-         * 
-         * @param e
-         */
-        public void mouseDragged( MouseEvent e ) {
-
-            if ( !pressOut ) {
-                updateLocation( e );
-            } else {
-                BufferedShapeMover.label.setText( "First position the cursor on the rectangle and then drag." );
-            }
-        }
-
-        /**
-         * Handles the event of a user releasing the mouse button.
-         * 
-         * @param e
-         */
-        public void mouseReleased( MouseEvent e ) {
-
-            // Checks whether or not the cursor is inside of the rectangle when the user releases the
-            // mouse button.
-            if ( rect.contains( e.getX(), e.getY() ) ) {
-                updateLocation( e );
-            } else {
-                BufferedShapeMover.label.setText( "First position the cursor on the rectangle and then drag." );
-                pressOut = false;
-            }
-        }
-
-        // This method required by MouseListener.
-        public void mouseMoved( MouseEvent e ) {
-        }
-
-        // These methods are required by MouseMotionListener.
-        public void mouseClicked( MouseEvent e ) {
-        }
-
-        public void mouseExited( MouseEvent e ) {
-        }
-
-        public void mouseEntered( MouseEvent e ) {
-        }
-
-        /**
-         * @param e
-         */
-        public void updateLocation( MouseEvent e ) {
-
-            rect.setLocation( last_x + e.getX(), last_y + e.getY() );
-            /*
-             * Updates the label to reflect the location of the current rectangle if checkRect returns true; otherwise,
-             * returns error message.
-             */
-            if ( checkRect() ) {
-                BufferedShapeMover.label.setText( "Rectangle located at " + rect.getX() + ", " + rect.getY() );
-            } else {
-                BufferedShapeMover.label.setText( "Please don't try to " + " drag outside the area." );
-            }
-            repaint();
-        }
-
-        /**
-         * @param g
-         */
-        public void paint( Graphics g ) {
-            update( g );
-        }
-
-        /**
-         * @param g
-         */
-        public void update( Graphics g ) {
-            Graphics2D g2 = ( Graphics2D ) g;
-
-            if ( firstTime ) {
-                Dimension dim = getSize();
-                int w = dim.width;
-                int h = dim.height;
-                area = new Rectangle( dim );
-                bi = ( BufferedImage ) createImage( w, h );
-                big = bi.createGraphics();
-                rect.setLocation( w / 2 - 50, h / 2 - 25 );
-                big.setStroke( new BasicStroke( 8.0f ) );
-                firstTime = false;
-            }
-
-            // Clears the rectangle that was previously drawn.
-            big.setColor( Color.white );
-            big.clearRect( 0, 0, area.width, area.height );
-
-            // Draws and fills the newly positioned rectangle to the buffer.
-            big.setPaint( strokePolka );
-            big.draw( rect );
-            big.setPaint( fillPolka );
-            big.fill( rect );
-
-            // Draws the buffered image to the screen.
-            g2.drawImage( bi, 0, 0, this );
-        }
-
-        /**
-         * Checks if the rectangle is contained within the applet window. If the rectangle is not contained withing the
-         * applet window, it is redrawn so that it is adjacent to the edge of the window and just inside the window.
-         * 
-         * @return boolean
-         */
-        boolean checkRect() {
-            if ( area == null ) {
-                return false;
-            }
-            if ( area.contains( rect.x, rect.y, 100, 50 ) ) {
-                return true;
-            }
-            int new_x = rect.x;
-            int new_y = rect.y;
-
-            if ( ( rect.x + 100 ) > area.width ) {
-                new_x = area.width - 99;
-            }
-            if ( rect.x < 0 ) {
-                new_x = -1;
-            }
-            if ( ( rect.y + 50 ) > area.height ) {
-                new_y = area.height - 49;
-            }
-            if ( rect.y < 0 ) {
-                new_y = -1;
-            }
-            rect.setLocation( new_x, new_y );
-            return false;
-        }
+        };
+        Frame f = new Frame( "Blur" );
+        f.addWindowListener( l );
+        f.add( "Center", new Blur() );
+        f.pack();
+        f.setSize( new Dimension( 600, 300 ) );
+        f.show();
     }
 }
