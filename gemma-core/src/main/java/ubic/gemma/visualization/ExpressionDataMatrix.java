@@ -29,17 +29,15 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="matrixVisualizationData"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
+ * @spring.bean id="expressionDataMatrix"
  */
-public class MatrixVisualizationData {
+public class ExpressionDataMatrix {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private ExpressionExperiment expressionExperiment = null;
@@ -50,10 +48,18 @@ public class MatrixVisualizationData {
     private Map<String, DesignElementDataVector> dataMap = new HashMap();
 
     /**
+     * 
+     *
+     */
+    public ExpressionDataMatrix() {
+        // spring looks for this on application startup
+    }
+
+    /**
      * @param expressionExperiment
      * @param designElements
      */
-    public MatrixVisualizationData( ExpressionExperiment expressionExperiment, Collection<DesignElement> designElements ) {
+    public ExpressionDataMatrix( ExpressionExperiment expressionExperiment, Collection<DesignElement> designElements ) {
 
         this.expressionExperiment = expressionExperiment;
         this.designElements = designElements;
@@ -109,23 +115,9 @@ public class MatrixVisualizationData {
     }
 
     /**
-     * @param designElements
-     */
-    public void setDesignElements( Collection<DesignElement> designElements ) {
-        this.designElements = designElements;
-    }
-
-    /**
      * @return ExpressionExperiment
      */
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
-    }
-
-    /**
-     * @param expressionExperiment
-     */
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
     }
 }

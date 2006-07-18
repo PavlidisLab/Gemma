@@ -44,12 +44,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public class MatrixVisualizationDataTest extends TestCase {
+public class ExpessionDataMatrixTest extends TestCase {
     Log log = LogFactory.getLog( this.getClass() );
     String[] rowNames = null;
     String[] colNames = null;
 
-    MatrixVisualizationData visualizationData = null;
+    ExpressionDataMatrix matrixData = null;
     ByteArrayConverter bconverter = null;
     StringConverter sconverter = null;
     byte[][] values;
@@ -128,7 +128,7 @@ public class MatrixVisualizationDataTest extends TestCase {
         }
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        visualizationData = new MatrixVisualizationData( ee, designElements );
+        matrixData = new ExpressionDataMatrix( ee, designElements );
 
     }
 
@@ -142,7 +142,7 @@ public class MatrixVisualizationDataTest extends TestCase {
         values = null;
         rowNames = null;
         colNames = null;
-        visualizationData = null;
+        matrixData = null;
     }
 
     /**
@@ -157,7 +157,7 @@ public class MatrixVisualizationDataTest extends TestCase {
 
         MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
 
-        visualizer.createVisualization( visualizationData,
+        visualizer.createVisualization( matrixData,
                 "gemma-core/src/test/java/ubic/gemma/visualization/outImage0.png" );
 
     }
@@ -177,7 +177,7 @@ public class MatrixVisualizationDataTest extends TestCase {
 
         // visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
 
-        visualizer.createVisualization( visualizationData,
+        visualizer.createVisualization( matrixData,
                 "gemma-core/src/test/java/ubic/gemma/visualization/outImage1.png" );
 
     }

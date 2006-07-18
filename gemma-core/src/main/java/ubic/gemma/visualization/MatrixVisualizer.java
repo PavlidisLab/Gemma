@@ -30,12 +30,12 @@ public interface MatrixVisualizer {
     /**
      * @param matrixVisualizationData
      */
-    public void createVisualization( MatrixVisualizationData matrixVisualizationData );
+    public void createVisualization( ExpressionDataMatrix matrixVisualizationData );
 
     /**
      * @param matrixVisualizationData
      */
-    public void createVisualization( MatrixVisualizationData matrixVisualizationData, String outfile );
+    public void createVisualization( ExpressionDataMatrix matrixVisualizationData, String outfile );
 
     /**
      * @param data

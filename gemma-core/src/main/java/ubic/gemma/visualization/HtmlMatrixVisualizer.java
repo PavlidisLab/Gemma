@@ -45,7 +45,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 public class HtmlMatrixVisualizer implements MatrixVisualizer {
     Log log = LogFactory.getLog( this.getClass() );
 
-    private MatrixVisualizationData matrixVisualizationData = null;
+    private ExpressionDataMatrix expressionDataMatrix = null;
     private List<String> rowNames = null;
     private List<String> colNames = null;
     private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/visualization.png";
@@ -54,15 +54,15 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     /**
      * @return MatrixVisualizationData
      */
-    public MatrixVisualizationData getMatrixVisualizationData() {
-        return matrixVisualizationData;
+    public ExpressionDataMatrix getMatrixVisualizationData() {
+        return expressionDataMatrix;
     }
 
     /**
-     * @param matrixVisualizationData
+     * @param expressionDataMatrix
      */
-    public void setMatrixVisualizationData( MatrixVisualizationData matrixVisualizationData ) {
-        this.matrixVisualizationData = matrixVisualizationData;
+    public void setMatrixVisualizationData( ExpressionDataMatrix expressionDataMatrix ) {
+        this.expressionDataMatrix = expressionDataMatrix;
     }
 
     /*
@@ -71,7 +71,7 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData,
      *      java.lang.String)
      */
-    public void createVisualization( MatrixVisualizationData matrixVisualizationData, String outfile ) {
+    public void createVisualization( ExpressionDataMatrix matrixVisualizationData, String outfile ) {
         this.outfile = outfile;
 
         createVisualization( matrixVisualizationData );
@@ -83,9 +83,9 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData)
      */
     @SuppressWarnings("unchecked")
-    public void createVisualization( MatrixVisualizationData matrixVisualizationData ) {
+    public void createVisualization( ExpressionDataMatrix expressionDataMatrix ) {
 
-        Collection<DesignElement> deCol = matrixVisualizationData.getDesignElements();
+        Collection<DesignElement> deCol = expressionDataMatrix.getDesignElements();
 
         ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
         double[][] data = new double[deCol.size()][];
@@ -142,7 +142,7 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
         matrix.setRowNames( rowNames );
         matrix.setColumnNames( colNames );
         ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
+        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );// FIXME this should not depend on Swing components
         try {
             display.saveImage( outfile );
             display.setLabelsVisible( true );

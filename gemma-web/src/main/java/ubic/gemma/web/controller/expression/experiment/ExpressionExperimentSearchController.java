@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.visualization.HtmlMatrixVisualizer;
-import ubic.gemma.visualization.MatrixVisualizationData;
+import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.MatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -162,7 +162,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
 
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( id );
-            MatrixVisualizationData visualizationData = new MatrixVisualizationData( ee, designElements );
+            ExpressionDataMatrix visualizationData = new ExpressionDataMatrix( ee, designElements );
 
             MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
 
