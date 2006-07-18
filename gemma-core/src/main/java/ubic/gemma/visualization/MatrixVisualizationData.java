@@ -46,18 +46,8 @@ public class MatrixVisualizationData {
 
     private Collection<DesignElement> designElements = null;
 
-    private CompositeSequenceService compositeSequenceService = null;
-
     @SuppressWarnings("unchecked")
     private Map<String, DesignElementDataVector> dataMap = new HashMap();
-
-    /**
-     * 
-     *
-     */
-    public MatrixVisualizationData() {
-
-    }
 
     /**
      * @param expressionExperiment
@@ -137,19 +127,5 @@ public class MatrixVisualizationData {
      */
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
-    }
-
-    /**
-     * @return CompositeSequenceService
-     */
-    public CompositeSequenceService getCompositeSequenceService() {
-        return compositeSequenceService;
-    }
-
-    /**
-     * @param compositeSequenceService
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
     }
 }
