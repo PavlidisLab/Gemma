@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.expression.experiment.ExpressionExperimentHelper;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
@@ -55,12 +56,14 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends BaseTra
         ExpressionExperimentSearchCommand command = new ExpressionExperimentSearchCommand();
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "0_at, 1_at" );
-        command.setFilename( "build/Gemma/images/outImage.png" );
+        //command.setFilename( "build/Gemma/images/outImage.png" );
         command.setId( new Long( 0 ) );
 
         if ( ( ( ExpressionExperimentDao ) this.getBean( "expressionExperimentDao" ) ).loadAll().size() == 0 )
             setComplete();// leave data in database
 
-        searchController.onSubmit( request, response, command, null );
+        ModelAndView mav = searchController.onSubmit( request, response, command, null );
+        assertEquals( "showExpressionExperimentSearchResults", mav.getViewName() );
+
     }
 }
