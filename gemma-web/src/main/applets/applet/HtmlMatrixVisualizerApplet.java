@@ -32,6 +32,8 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.DataBuffer;
 import java.awt.image.Kernel;
 import java.awt.image.Raster;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * @author keshav
@@ -46,20 +48,19 @@ public class HtmlMatrixVisualizerApplet extends Applet {
 
         setBackground( Color.white );
 
-        // this works, but not in a web context because of the applet security ... you cannot read and write files from
-        // the filesystem without a certificate(obviously, you would have to remove build/Gemma from the path)
-
-        Image img = getToolkit().getImage( "build/Gemma/resources/administrator/visualization.png" );
-
-        // URL url = null;
-        // try {
-        // // System.err.println( this.getParameter( "visualization" ) );FIXME use parameters from jsp:param
-        // url = new URL( "http://localhost:8080/Gemma/resources/administrator/visualization.png" );
-        // } catch ( MalformedURLException e1 ) {
-        // System.err.println( "couldn't read url: " + url );
-        // e1.printStackTrace();
-        // }
-        // Image img = getToolkit().getImage( url );
+        /* uncomment this when testing this applet outside of the web-context */
+        // Image img = getToolkit().getImage( "build/Gemma/resources/administrator/visualization.png" );
+        /* Set up the url for the web-context - this step will be removed as we don't want static images */
+        URL url = null;
+        try {
+            // System.err.println( this.getParameter( "visualization" ) );FIXME use parameters from jsp:param if you
+            // must use a static image
+            url = new URL( "http://localhost:8080/Gemma/resources/administrator/visualization.png" );
+        } catch ( MalformedURLException e1 ) {
+            System.err.println( "couldn't read url: " + url );
+            e1.printStackTrace();
+        }
+        Image img = getToolkit().getImage( url );
 
         try {
             MediaTracker tracker = new MediaTracker( this );
@@ -70,8 +71,8 @@ public class HtmlMatrixVisualizerApplet extends Applet {
 
         int iw = img.getWidth( this );
         int ih = img.getHeight( this );
-        bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB ); 
-        //bi = new BufferedImage( 100, 100, BufferedImage.TYPE_INT_RGB );//kk
+        bi = new BufferedImage( iw, ih, BufferedImage.TYPE_INT_RGB );
+        // bi = new BufferedImage( 100, 100, BufferedImage.TYPE_INT_RGB );//kk
         Graphics2D big = bi.createGraphics();
         big.drawImage( img, 0, 0, this );
 
@@ -98,18 +99,18 @@ public class HtmlMatrixVisualizerApplet extends Applet {
 
         g2.drawImage( bi, biop, 0, 0 );
         g2.drawImage( bimg, biop, w / 2 + 3, 0 );
-        
+
     }
 
     public static void main( String s[] ) {
-        MatrixVisualizerFrame f = new MatrixVisualizerFrame("HtmlMatrixVisualizerApplet");
-        
+        MatrixVisualizerFrame f = new MatrixVisualizerFrame( "HtmlMatrixVisualizerApplet" );
+
         Raster r = bi.getRaster();
         DataBuffer db = r.getDataBuffer();
         int banks = db.getNumBanks();
-        System.err.println(db.getSize());
-        for (int i=0; i<banks; i++){
-            System.err.println(db.getElemDouble(i, 0));    
+        System.err.println( db.getSize() );
+        for ( int i = 0; i < banks; i++ ) {
+            System.err.println( db.getElemDouble( i, 0 ) );
         }
 
     }
