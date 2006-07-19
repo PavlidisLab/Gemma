@@ -1,13 +1,12 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<jsp:useBean id="expressionDataMatrix" scope="request"
-    class="ubic.gemma.visualization.ExpressionDataMatrix" />
+<jsp:useBean id="expressionDataMatrixVisualization" scope="request"
+    class="ubic.gemma.visualization.ExpressionDataMatrixVisualization" />
 <html>
     <body>
         <h2>
             <fmt:message key="expression.visualization.results" />
         </h2>
-        <b>(Applet Test)</b>
 		<div id="logo">
             <a href="<%=request.getContextPath()%>">
                 <%-- <img src="${visualization}"/> --%>
@@ -17,13 +16,13 @@
                 <jsp:plugin type="applet" code="applet.HtmlMatrixVisualizerApplet.class" codebase="/Gemma"
                 jreversion="1.5" width="160" height="150">
                 <jsp:params>
-                	<jsp:param name="bgcolor" value="ccddff" />
+                	<jsp:param name="bgcolor" value="ccddff" />	
                 </jsp:params>
                 	<jsp:fallback>Plugin tag OBJECT or EMBED bot supported by browser</jsp:fallback>
                 </jsp:plugin>
                 --%>
-                
-                <Gemma:expressionDataMatrix expressionDataMatrix="<%=expressionDataMatrix%>"/>
+                <Gemma:expressionDataMatrixVisualization expressionDataMatrixVisualization="<%=expressionDataMatrixVisualization%>"/>
+                <%--<img src="<%=expressionDataMatrixVisualization.getOutfile()%>" width="300" height="300"/>--%>
             </a>
         </div>
     </body>
