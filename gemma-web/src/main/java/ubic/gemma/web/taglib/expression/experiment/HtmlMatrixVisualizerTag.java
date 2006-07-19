@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.logging.Log;
@@ -29,10 +30,11 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.visualization.ExpressionDataMatrix;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
 import ubic.gemma.visualization.HtmlMatrixVisualizer;
 
 /**
- * @jsp.tag name="expressionDataMatrix" body-content="empty"
+ * @jsp.tag name="expressionDataMatrixVisualization" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -45,14 +47,15 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
     // with adding EL support to this before
     // private String expressionDataMatrixName = null;
 
-    private ExpressionDataMatrix expressionDataMatrix = null;
+    private ExpressionDataMatrixVisualization expressionDataMatrixVisualization = null;
 
     /**
-     * @jsp.attribute description="The expressionDataMatrix object" required="true" rtexprvalue="true"
-     * @param expressionDataMatrix
+     * @jsp.attribute description="The expressionDataMatrixVisualization object" required="true" rtexprvalue="true"
+     * @param expressionDataMatrixVisualization
      */
-    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
-        this.expressionDataMatrix = expressionDataMatrix;
+    public void setExpressionDataMatrixVisualization(
+            ExpressionDataMatrixVisualization expressionDataMatrixVisualization ) {
+        this.expressionDataMatrixVisualization = expressionDataMatrixVisualization;
     }
 
     /*
@@ -61,24 +64,40 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
-    public int doStartTag() {
+    public int doStartTag() throws JspException {
 
         log.debug( "start tag" );
 
+        ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
+        String outfile = expressionDataMatrixVisualization.getOutfile();
         Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
         List<String> designElementNames = new ArrayList( m.keySet() ); // convert set to list to set the labels
 
-        // for ( String key : m.keySet() ) {
-        // log.debug( key );
-        // DesignElementDataVector vector = m.get(key);
-        // }
-
+        // TODO I want to do this here, not in the ExpressionExperimentSearchController - just need to get the outfile
+        // right
         HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
         visualizer.setRowLabels( designElementNames );
-        log.debug("pageContext " + this.pageContext);
         visualizer.createVisualization( expressionDataMatrix );
 
+        log.debug( "outfile " + outfile );
+        visualizer.saveImage( outfile );
+
+        StringBuilder buf = new StringBuilder();
+
+        if ( expressionDataMatrix == null || expressionDataMatrix.getDataMap().size() == 0 ) {
+            buf.append( "No data to display" );
+        } else {
+            buf.append( "<ol>" );
+            buf.append( "<img src=\"" + outfile + "\" width=\"300\" height=\"300\"/>" );
+            buf.append( "</ol>" );
+        }
+
+        try {
+            pageContext.getOut().print( buf.toString() );
+        } catch ( Exception ex ) {
+            throw new JspException( "HtmlMatrixVisualizationTag: " + ex.getMessage() );
+        }
         return SKIP_BODY;
     }
 
