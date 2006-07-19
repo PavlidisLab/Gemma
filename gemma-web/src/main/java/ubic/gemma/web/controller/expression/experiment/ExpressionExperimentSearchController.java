@@ -97,6 +97,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         eecc.setName( ee.getName() );
         eecc.setSearchString( "36936_at" );
         eecc.setStringency( 1 );
+        eecc.setImageWidth( 400 );
+        eecc.setImageHeight( 350 );
 
         request.setAttribute( "command", eecc );// must manually put the command object back in the request scope.
         return eecc;
@@ -137,6 +139,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         String[] searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
+        int imageWidth = ( ( ExpressionExperimentSearchCommand ) command ).getImageWidth();
+        int imageHeight = ( ( ExpressionExperimentSearchCommand ) command ).getImageHeight();
 
         // TODO allow filename to be entered from form
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
@@ -168,6 +172,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
             matrixVisualization = new ExpressionDataMatrixVisualization();
             matrixVisualization.setExpressionDataMatrix( expressionDataMatrix );
             matrixVisualization.setOutfile( filename );
+            matrixVisualization.setImageWidth( imageWidth );
+            matrixVisualization.setImageHeight( imageHeight );
 
         } else {
             log.debug( "search by official gene symbol" );
@@ -177,7 +183,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         // return new ModelAndView( getSuccessView(), "visualization", filename );
         // return new ModelAndView( getSuccessView(), "expressionDataMatrix", expressionDataMatrix );
 
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualization", matrixVisualization );
+        return new ModelAndView( getSuccessView() )
+                .addObject( "expressionDataMatrixVisualization", matrixVisualization );
     }
 
     /**

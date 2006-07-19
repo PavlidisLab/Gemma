@@ -39,6 +39,9 @@ import ubic.gemma.visualization.HtmlMatrixVisualizer;
  * @version $Id$
  */
 public class HtmlMatrixVisualizerTag extends TagSupport {
+
+    private static final long serialVersionUID = 6403196597063627020L;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     // TODO if you decide to add EL support, set this and not the
@@ -70,6 +73,9 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
         String outfile = expressionDataMatrixVisualization.getOutfile();
+        int imageWidth = expressionDataMatrixVisualization.getImageWidth();
+        int imageHeight = expressionDataMatrixVisualization.getImageHeight();
+
         Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
         List<String> designElementNames = new ArrayList( m.keySet() ); // convert set to list to set the labels
@@ -89,7 +95,8 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             buf.append( "No data to display" );
         } else {
             buf.append( "<ol>" );
-            buf.append( "<img src=\"" + outfile + "\" width=\"300\" height=\"300\"/>" );
+            // buf.append( "<img src=\"" + outfile + "\" width=\"400\" height=\"350\"/>" );
+            buf.append( "<img src=\"" + outfile + "\" width=\"" + imageWidth + "\" height=\"" + imageHeight + "\"/>" );
             buf.append( "</ol>" );
         }
 

@@ -158,8 +158,8 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );// FIXME this should not depend on Swing components
         try {
-            display.saveImage( outfile );
             display.setLabelsVisible( true );
+            display.saveImage( outfile );
         } catch ( IOException e ) {
             e.printStackTrace();
         }

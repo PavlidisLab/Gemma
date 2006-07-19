@@ -30,18 +30,62 @@ public class ExpressionDataMatrixVisualization {
 
     private String outfile = null;
 
+    private int imageWidth = 0;
+
+    private int imageHeight = 0;
+
+    /**
+     * @return int
+     */
+    public int getImageHeight() {
+        return imageHeight;
+    }
+
+    /**
+     * @param imageHeight
+     */
+    public void setImageHeight( int imageHeight ) {
+        this.imageHeight = imageHeight;
+    }
+
+    /**
+     * @return int
+     */
+    public int getImageWidth() {
+        return imageWidth;
+    }
+
+    /**
+     * @param imageWidth
+     */
+    public void setImageWidth( int imageWidth ) {
+        this.imageWidth = imageWidth;
+    }
+
+    /**
+     * @return ExpressionDataMatrix
+     */
     public ExpressionDataMatrix getExpressionDataMatrix() {
         return expressionDataMatrix;
     }
 
+    /**
+     * @param expressionDataMatrix
+     */
     public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
         this.expressionDataMatrix = expressionDataMatrix;
     }
 
+    /**
+     * @return String
+     */
     public String getOutfile() {
         return outfile;
     }
 
+    /**
+     * @param outfile
+     */
     public void setOutfile( String outfile ) {
         this.outfile = outfile;
     }

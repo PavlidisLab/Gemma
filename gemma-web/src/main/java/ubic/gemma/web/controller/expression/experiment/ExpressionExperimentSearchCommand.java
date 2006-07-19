@@ -41,8 +41,12 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     private String searchString = null;
 
     private boolean suppressVisualizations;
-    
+
     private String filename = null;
+
+    private int imageWidth = 0;
+
+    private int imageHeight = 0;
 
     /**
      * @return Returns the filename.
@@ -142,11 +146,45 @@ public class ExpressionExperimentSearchCommand implements Serializable {
         this.name = name;
     }
 
+    /**
+     * @return Long
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * @param id
+     */
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    /**
+     * @return int
+     */
+    public int getImageHeight() {
+        return imageHeight;
+    }
+
+    /**
+     * @param imageHeight
+     */
+    public void setImageHeight( int imageHeight ) {
+        this.imageHeight = imageHeight;
+    }
+
+    /**
+     * @return int
+     */
+    public int getImageWidth() {
+        return imageWidth;
+    }
+
+    /**
+     * @param imageWidth
+     */
+    public void setImageWidth( int imageWidth ) {
+        this.imageWidth = imageWidth;
     }
 }
