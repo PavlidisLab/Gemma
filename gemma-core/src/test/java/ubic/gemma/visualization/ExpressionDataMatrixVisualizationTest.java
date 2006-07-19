@@ -1,14 +1,17 @@
 package ubic.gemma.visualization;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class HtmlMatrixVisualizerTest extends TestCase {
+public class ExpressionDataMatrixVisualizationTest extends TestCase {
     private Log log = LogFactory.getLog( this.getClass() );
 
-    MatrixVisualizer matrixVisualizer = null;
+    ExpressionDataMatrixVisualization matrixVisualizer = null;
 
     /*
      * (non-Javadoc)
@@ -19,7 +22,7 @@ public class HtmlMatrixVisualizerTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        matrixVisualizer = new HtmlMatrixVisualizer();
+        matrixVisualizer = new ExpressionDataMatrixVisualization();
     }
 
     /*
@@ -49,13 +52,23 @@ public class HtmlMatrixVisualizerTest extends TestCase {
         data[3] = d3;
         data[4] = d4;
 
-        // for ( int i = 0; i < 5; i++ ) {
-        // for ( int j = 0; j < 5; j++ ) {
-        // log.debug( data[i][j] );
-        //            }
-        //        }
+        String[] rowLabels = { "a", "b", "c", "d", "e" };
+        List<String> rowLabelsList = new ArrayList();
+        for ( int i = 0; i < rowLabels.length; i++ ) {
+            rowLabelsList.add( i, rowLabels[i] );
+        }
+
+        List<String> colLabelsList = new ArrayList();
+        for ( int i = 0; i < data[0].length; i++ ) {
+            rowLabelsList.add( i, String.valueOf( i ) );
+        }
+
+        matrixVisualizer.setRowLabels( rowLabelsList );
+        matrixVisualizer.setColLabels( colLabelsList );
 
         matrixVisualizer.createVisualization( data );
+        
+        assertNotNull(matrixVisualizer.getColorMatrix());
 
     }
 

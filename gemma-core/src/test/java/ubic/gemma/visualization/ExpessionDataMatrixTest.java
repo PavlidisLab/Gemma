@@ -149,28 +149,11 @@ public class ExpessionDataMatrixTest extends TestCase {
      * 
      *
      */
-    public void testMatrixVisualizationDataPrimitiveMatrix() {
-        double[][] ddata = new double[rowNames.length][];
-        for ( int i = 0; i < ddata.length; i++ ) {
-            ddata[i] = bconverter.byteArrayToDoubles( values[i] );
-        }
-
-        HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
-
-        visualizer.createVisualization( matrixData );
-        visualizer.saveImage( "gemma-core/src/test/java/ubic/gemma/visualization/outImage0.png" );
-
-    }
-
-    /**
-     * 
-     *
-     */
     public void testMatrixVisualizationData() {
 
         // vizualizationData.printData();
 
-        HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+        ExpressionDataMatrixVisualization visualizer = new ExpressionDataMatrixVisualization();
 
         // visualizer.setColLabels( Arrays.asList( colNames ) );
         // visualizer.setRowLabels( Arrays.asList( rowNames ) );
