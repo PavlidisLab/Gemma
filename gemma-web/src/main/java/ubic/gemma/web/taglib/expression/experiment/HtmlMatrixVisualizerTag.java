@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
-import ubic.gemma.visualization.HtmlMatrixVisualizer;
 
 /**
  * @jsp.tag name="expressionDataMatrixVisualization" body-content="empty"
@@ -45,10 +44,10 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
     private Log log = LogFactory.getLog( this.getClass() );
 
     // TODO if you decide to add EL support, set this and not the
-    // expressionDataMatrix in the setter. A good refresher is
+    // expressionDataMatrixVisualization in the setter. A good refresher is
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1. Remember, you were having problems
     // with adding EL support to this before
-    // private String expressionDataMatrixName = null;
+    // private String expressionDataMatrixVisualizationName = null;
 
     private ExpressionDataMatrixVisualization expressionDataMatrixVisualization = null;
 
@@ -80,14 +79,11 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         List<String> designElementNames = new ArrayList( m.keySet() ); // convert set to list to set the labels
 
-        // TODO I want to do this here, not in the ExpressionExperimentSearchController - just need to get the outfile
-        // right
-        HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
-        visualizer.setRowLabels( designElementNames );
-        visualizer.createVisualization( expressionDataMatrix );
+        expressionDataMatrixVisualization.setRowLabels( designElementNames );
+        expressionDataMatrixVisualization.createVisualization();
 
         log.debug( "outfile " + outfile );
-        visualizer.saveImage( outfile );
+        expressionDataMatrixVisualization.saveImage( outfile );
 
         StringBuilder buf = new StringBuilder();
 
@@ -95,7 +91,6 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             buf.append( "No data to display" );
         } else {
             buf.append( "<ol>" );
-            // buf.append( "<img src=\"" + outfile + "\" width=\"400\" height=\"350\"/>" );
             buf.append( "<img src=\"" + outfile + "\" width=\"" + imageWidth + "\" height=\"" + imageHeight + "\"/>" );
             buf.append( "</ol>" );
         }
