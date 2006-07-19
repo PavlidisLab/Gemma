@@ -21,7 +21,8 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.io.Serializable;
 
 /**
- * Expression experiment command object that wraps expression experiment search preferences. 
+ * Expression experiment command object that wraps expression experiment search preferences.
+ * 
  * @author keshav
  * @version $Id$
  */
