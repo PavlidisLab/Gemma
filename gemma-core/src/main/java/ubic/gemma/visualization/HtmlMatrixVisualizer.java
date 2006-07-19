@@ -48,7 +48,8 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     private ExpressionDataMatrix expressionDataMatrix = null;
     private List<String> rowNames = null;
     private List<String> colNames = null;
-    private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/visualization.png";
+    //private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/visualization.png";
+    private String outfile = "visualization.png";
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
     /**
@@ -71,10 +72,10 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData,
      *      java.lang.String)
      */
-    public void createVisualization( ExpressionDataMatrix matrixVisualizationData, String outfile ) {
+    public void createVisualization( ExpressionDataMatrix expressionDataMatrix, String outfile ) {
         this.outfile = outfile;
 
-        createVisualization( matrixVisualizationData );
+        createVisualization( expressionDataMatrix );
     }
 
     /*

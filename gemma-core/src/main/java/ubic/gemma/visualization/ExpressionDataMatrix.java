@@ -120,4 +120,11 @@ public class ExpressionDataMatrix {
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
     }
+
+    /**
+     * @return Returns the dataMap.
+     */
+    public Map<String, DesignElementDataVector> getDataMap() {
+        return dataMap;
+    }
 }
