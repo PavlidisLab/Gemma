@@ -64,7 +64,7 @@ public class ExpessionDataMatrixTest extends TestCase {
         Collection results = new HashSet();
         try {
             is = new FileInputStream( new File( filename ) );
-            parser.parse( is );
+            parser.parse( is, true );
             results = parser.getResults();
         } catch ( Exception e ) {
             e.printStackTrace();
@@ -103,7 +103,6 @@ public class ExpessionDataMatrixTest extends TestCase {
     @Override
     @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
-
         Configuration config = new PropertiesConfiguration( "Gemma.properties" );
         String baseDir = ( String ) config.getProperty( "gemma.baseDir" );
         String filename = baseDir + ( String ) config.getProperty( "testData_100" );
@@ -123,7 +122,6 @@ public class ExpessionDataMatrixTest extends TestCase {
             Collection<DesignElementDataVector> vectors = new HashSet();
             vectors.add( vector );
             cs.setDesignElementDataVectors( vectors );
-
             designElements.add( cs );
         }
 
@@ -159,7 +157,6 @@ public class ExpessionDataMatrixTest extends TestCase {
         // visualizer.setRowLabels( Arrays.asList( rowNames ) );
 
         // visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
-
         visualizer.createVisualization( matrixData );
         visualizer.saveImage( "gemma-core/src/test/java/ubic/gemma/visualization/outImage1.png" );
 
