@@ -38,9 +38,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.visualization.HtmlMatrixVisualizer;
 import ubic.gemma.visualization.ExpressionDataMatrix;
-import ubic.gemma.visualization.MatrixVisualizer;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -139,19 +138,20 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         String[] searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
 
+        // TODO allow filename to be entered from form
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
         if ( filename == null ) filename = "visualization.png";
         String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
-        
-         File dirPath = new File( visualDir );
-        
-         // Create the directory if it doesn't exist
-         if ( !dirPath.exists() ) {
-         dirPath.mkdirs();
-         }
-        
-         filename = visualDir + filename;
-         log.info( "filename: " + filename );
+
+        File dirPath = new File( visualDir );
+
+        // Create the directory if it doesn't exist
+        if ( !dirPath.exists() ) {
+            dirPath.mkdirs();
+        }
+
+        filename = visualDir + filename;
+        log.info( "filename: " + filename );
 
         Collection<DesignElement> designElements = new HashSet();
         for ( int i = 0; i < searchIds.length; i++ ) {
@@ -160,14 +160,15 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         }
 
         ExpressionDataMatrix expressionDataMatrix = null;
+        ExpressionDataMatrixVisualization matrixVisualization = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( id );
             expressionDataMatrix = new ExpressionDataMatrix( ee, designElements );
 
-            // MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
-            //
-            // log.debug( "creating visualization" );
-            // visualizer.createVisualization( visualizationData, filename );
+            matrixVisualization = new ExpressionDataMatrixVisualization();
+            matrixVisualization.setExpressionDataMatrix( expressionDataMatrix );
+            matrixVisualization.setOutfile( filename );
+
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
@@ -175,7 +176,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
 
         // return new ModelAndView( getSuccessView(), "visualization", filename );
         // return new ModelAndView( getSuccessView(), "expressionDataMatrix", expressionDataMatrix );
-        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrix", expressionDataMatrix );
+
+        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrixVisualization", matrixVisualization );
     }
 
     /**
