@@ -156,13 +156,13 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     public void saveImage( String outfile ) {
         if ( outfile != null ) this.outfile = outfile;
 
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );// FIXME this should not depend on Swing components
+        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
         try {
-            display.setLabelsVisible( true );
+            display.setLabelsVisible( true ); // TODO allow user to set via web front end
+            // display.setToolTipText("add pixel text");
             display.saveImage( outfile );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
     }
-
 }
