@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006 Columbia University
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,37 +18,32 @@
  */
 package ubic.gemma.visualization;
 
-import java.awt.Color;
-import java.util.List;
-
 /**
+ * A value object to visualize the ExpressionDataMatrix
+ * 
  * @author keshav
  * @version $Id$
  */
-public interface MatrixVisualizer {
+public class ExpressionDataMatrixVisualization {
 
-    /**
-     * @param matrixVisualizationData
-     */
-    public void createVisualization( ExpressionDataMatrix matrixVisualizationData );
+    private ExpressionDataMatrix expressionDataMatrix = null;
 
-    /**
-     * @param data
-     */
-    public void createVisualization( double[][] data );
+    private String outfile = null;
 
-    /**
-     * @param rowLabels
-     */
-    public void setRowLabels( List<String> rowLabels );
+    public ExpressionDataMatrix getExpressionDataMatrix() {
+        return expressionDataMatrix;
+    }
 
-    /**
-     * @param colLabels
-     */
-    public void setColLabels( List<String> colLabels );
+    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+        this.expressionDataMatrix = expressionDataMatrix;
+    }
 
-    /**
-     * @param colorMap
-     */
-    public void setColorMap( Color[] colorMap );
+    public String getOutfile() {
+        return outfile;
+    }
+
+    public void setOutfile( String outfile ) {
+        this.outfile = outfile;
+    }
+
 }

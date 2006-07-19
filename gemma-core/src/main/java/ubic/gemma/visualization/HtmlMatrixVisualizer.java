@@ -48,9 +48,10 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     private ExpressionDataMatrix expressionDataMatrix = null;
     private List<String> rowNames = null;
     private List<String> colNames = null;
-    //private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/visualization.png";
+    // private String outfile = "gemma-core/src/main/java/ubic/gemma/visualization/visualization.png";
     private String outfile = "visualization.png";
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
+    private ColorMatrix colorMatrix = null;
 
     /**
      * @return MatrixVisualizationData
@@ -64,18 +65,6 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      */
     public void setMatrixVisualizationData( ExpressionDataMatrix expressionDataMatrix ) {
         this.expressionDataMatrix = expressionDataMatrix;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData,
-     *      java.lang.String)
-     */
-    public void createVisualization( ExpressionDataMatrix expressionDataMatrix, String outfile ) {
-        this.outfile = outfile;
-
-        createVisualization( expressionDataMatrix );
     }
 
     /*
@@ -123,17 +112,6 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(double[][], java.lang.String)
-     */
-    public void createVisualization( double[][] data, String outfile ) {
-        this.outfile = outfile;
-
-        createVisualization( data );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(double[][])
      */
     public void createVisualization( double[][] data ) {
@@ -142,14 +120,7 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
         DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
         matrix.setRowNames( rowNames );
         matrix.setColumnNames( colNames );
-        ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );// FIXME this should not depend on Swing components
-        try {
-            display.saveImage( outfile );
-            display.setLabelsVisible( true );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
+        colorMatrix = new ColorMatrix( matrix );
     }
 
     /*
@@ -177,6 +148,21 @@ public class HtmlMatrixVisualizer implements MatrixVisualizer {
      */
     public void setColorMap( Color[] colorMap ) {
         this.colorMap = colorMap;
+    }
+
+    /**
+     * @param outfile
+     */
+    public void saveImage( String outfile ) {
+        if ( outfile != null ) this.outfile = outfile;
+
+        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );// FIXME this should not depend on Swing components
+        try {
+            display.saveImage( outfile );
+            display.setLabelsVisible( true );
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
     }
 
 }
