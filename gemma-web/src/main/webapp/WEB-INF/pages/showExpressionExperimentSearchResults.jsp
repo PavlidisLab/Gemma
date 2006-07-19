@@ -1,5 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<jsp:useBean id="expressionDataMatrix" scope="request"
+    class="ubic.gemma.visualization.ExpressionDataMatrix" />
 <html>
     <body>
         <h2>
@@ -20,7 +22,8 @@
                 	<jsp:fallback>Plugin tag OBJECT or EMBED bot supported by browser</jsp:fallback>
                 </jsp:plugin>
                 --%>
-                <Gemma:expressionDataMatrix expressionDataMatrix="${expressionDataMatrix}" />
+                
+                <Gemma:expressionDataMatrix expressionDataMatrix="<%=expressionDataMatrix%>"/>
             </a>
         </div>
     </body>

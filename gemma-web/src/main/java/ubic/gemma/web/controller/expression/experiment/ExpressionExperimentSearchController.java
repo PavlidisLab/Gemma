@@ -139,20 +139,19 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         String[] searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
 
-        // String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
-        // if ( filename == null ) filename = "visualization.png";
-        //
-        // String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
-        //
-        // File dirPath = new File( visualDir );
-        //
-        // // Create the directory if it doesn't exist
-        // if ( !dirPath.exists() ) {
-        // dirPath.mkdirs();
-        // }
-        //
-        //        filename = visualDir + filename;
-        //        log.info( "filename: " + filename );
+        String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
+        if ( filename == null ) filename = "visualization.png";
+        String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
+        
+         File dirPath = new File( visualDir );
+        
+         // Create the directory if it doesn't exist
+         if ( !dirPath.exists() ) {
+         dirPath.mkdirs();
+         }
+        
+         filename = visualDir + filename;
+         log.info( "filename: " + filename );
 
         Collection<DesignElement> designElements = new HashSet();
         for ( int i = 0; i < searchIds.length; i++ ) {
@@ -175,7 +174,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         }
 
         // return new ModelAndView( getSuccessView(), "visualization", filename );
-        return new ModelAndView( getSuccessView(), "expressionDataMatrix", expressionDataMatrix );
+        // return new ModelAndView( getSuccessView(), "expressionDataMatrix", expressionDataMatrix );
+        return new ModelAndView( getSuccessView() ).addObject( "expressionDataMatrix", expressionDataMatrix );
     }
 
     /**

@@ -18,13 +18,16 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import javax.servlet.jsp.JspException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.taglibs.standard.lang.support.ExpressionEvaluatorManager;
 
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.HtmlMatrixVisualizer;
 
@@ -36,15 +39,20 @@ import ubic.gemma.visualization.HtmlMatrixVisualizer;
 public class HtmlMatrixVisualizerTag extends TagSupport {
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private String expressionDataMatrixName = null;
+    // TODO if you decide to add EL support, set this and not the
+    // expressionDataMatrix in the setter. A good refresher is
+    // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1. Remember, you were having problems
+    // with adding EL support to this before
+    // private String expressionDataMatrixName = null;
+
     private ExpressionDataMatrix expressionDataMatrix = null;
 
     /**
      * @jsp.attribute description="The expressionDataMatrix object" required="true" rtexprvalue="true"
      * @param expressionDataMatrix
      */
-    public void setExpressionDataMatrix( String expressionDataMatrixName ) {
-        this.expressionDataMatrixName = expressionDataMatrixName;
+    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+        this.expressionDataMatrix = expressionDataMatrix;
     }
 
     /*
@@ -53,30 +61,24 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
-    public int doStartTag() throws JspException {
+    public int doStartTag() {
 
-        System.err.println( "start tag" );
+        log.debug( "start tag" );
 
-        expressionDataMatrix = ( ExpressionDataMatrix ) ExpressionEvaluatorManager.evaluate( "expressionDataMatrix",
-                expressionDataMatrixName, ExpressionDataMatrix.class, pageContext );
+        Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
-        // StringBuilder buf = new StringBuilder();
-        // if ( this.expressionDataMatrix == null ) {
-        // buf.append( "No data" );
-        // } else {
-        // buf.append( "<ol>" );
-        // buf.append( "<render PNG>" );
-        // HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
-        // visualizer.createVisualization( expressionDataMatrix );
-        // visualizer.saveImage( null );
-        // buf.append( "</ol>" );
+        List<String> designElementNames = new ArrayList( m.keySet() ); // convert set to list to set the labels
+
+        // for ( String key : m.keySet() ) {
+        // log.debug( key );
+        // DesignElementDataVector vector = m.get(key);
         // }
-        //
-        // try {
-        // pageContext.getOut().print( buf.toString() );
-        // } catch ( Exception ex ) {
-        // throw new JspException( this.getClass().getName() + ex.getMessage() );
-        // }
+
+        HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+        visualizer.setRowLabels( designElementNames );
+        log.debug("pageContext " + this.pageContext);
+        visualizer.createVisualization( expressionDataMatrix );
+
         return SKIP_BODY;
     }
 
@@ -88,7 +90,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
     @Override
     public int doEndTag() {
 
-        System.err.println( "end tag" );
+        log.debug( "end tag" );
 
         return EVAL_PAGE;
     }
