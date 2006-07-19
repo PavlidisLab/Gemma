@@ -155,10 +155,10 @@ public class ExpessionDataMatrixTest extends TestCase {
             ddata[i] = bconverter.byteArrayToDoubles( values[i] );
         }
 
-        MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+        HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
 
-        visualizer.createVisualization( matrixData,
-                "gemma-core/src/test/java/ubic/gemma/visualization/outImage0.png" );
+        visualizer.createVisualization( matrixData );
+        visualizer.saveImage( "gemma-core/src/test/java/ubic/gemma/visualization/outImage0.png" );
 
     }
 
@@ -170,15 +170,15 @@ public class ExpessionDataMatrixTest extends TestCase {
 
         // vizualizationData.printData();
 
-        MatrixVisualizer visualizer = new HtmlMatrixVisualizer();
+        HtmlMatrixVisualizer visualizer = new HtmlMatrixVisualizer();
 
         // visualizer.setColLabels( Arrays.asList( colNames ) );
         // visualizer.setRowLabels( Arrays.asList( rowNames ) );
 
         // visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
 
-        visualizer.createVisualization( matrixData,
-                "gemma-core/src/test/java/ubic/gemma/visualization/outImage1.png" );
+        visualizer.createVisualization( matrixData );
+        visualizer.saveImage( "gemma-core/src/test/java/ubic/gemma/visualization/outImage1.png" );
 
     }
 }
