@@ -87,7 +87,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        if ( expressionDataMatrix == null || expressionDataMatrix.getDataMap().size() == 0 ) {
+        if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
             buf.append( "<ol>" );
