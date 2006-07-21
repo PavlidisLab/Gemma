@@ -90,9 +90,26 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
+            buf.append( "<table>" );
             buf.append( "<ol>" );
+            buf.append( "<tr>" );
+
+            buf.append( "<td>" );
             buf.append( "<img src=\"" + outfile + "\" width=\"" + imageWidth + "\" height=\"" + imageHeight + "\"/>" );
+            buf.append( "</td>" );
+            
+            //buf.append( "<td>" );
+            for ( String name : designElementNames ) {
+                buf.append( "<tr>" );
+                //<a href="<c:url value="home.jsp"/>">Home</a>
+                buf.append( "<a href=\"<c:url value=\"www.google.com\"/>\">"+ name + "</a>" + "\n" );
+                buf.append( "</tr>" );
+            }
+            //buf.append( "</td>" );
+            
+            buf.append( "</tr>" );
             buf.append( "</ol>" );
+            buf.append( "</table>" );
         }
 
         try {

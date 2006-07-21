@@ -8,7 +8,7 @@
             <fmt:message key="expression.visualization.results" />
         </h2>
 		<div id="logo">
-            <a href="<%=request.getContextPath()%>">
+            <%--<a href="<%=request.getContextPath()%>">--%>
                 <%-- <img src="${visualization}"/> --%>
                 <%--<applet code="/applets/HtmlMatrixVisualizerApplet.class" width=550 height=250></applet>--%>
                 <%--<jsp:plugin type="applet" archive="Blur.jar" codebase="/Gemma/applet"--%>
