@@ -25,7 +25,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.expression.experiment.ExpressionExperimentHelper;
+import ubic.gemma.expression.experiment.ExpressionExperimentTestHelper;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -45,7 +45,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends BaseTra
     public void testOnSubmit() throws Exception {
 
         onSetUpInTransaction();// set up in a transaction
-        ExpressionExperimentHelper eeh = new ExpressionExperimentHelper();
+        ExpressionExperimentTestHelper eeh = new ExpressionExperimentTestHelper();
         eeh.setExpressionExperimentDependencies();
 
         ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this

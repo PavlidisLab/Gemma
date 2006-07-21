@@ -53,7 +53,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentHelper extends BaseTransactionalSpringContextTest {
+public class ExpressionExperimentTestHelper extends BaseTransactionalSpringContextTest {
 
     /**
      * @return

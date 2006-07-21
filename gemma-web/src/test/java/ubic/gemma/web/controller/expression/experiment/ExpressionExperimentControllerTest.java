@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.expression.experiment.ExpressionExperimentHelper;
+import ubic.gemma.expression.experiment.ExpressionExperimentTestHelper;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -68,7 +68,7 @@ public class ExpressionExperimentControllerTest extends BaseTransactionalSpringC
         // this.setDisableTestEnv( true );
         onSetUpInTransaction();
 
-        ExpressionExperimentHelper eeh = new ExpressionExperimentHelper();
+        ExpressionExperimentTestHelper eeh = new ExpressionExperimentTestHelper();
         eeh.setExpressionExperimentDependencies();
 
         ExpressionExperimentController c = ( ExpressionExperimentController ) getBean( "expressionExperimentController" );
