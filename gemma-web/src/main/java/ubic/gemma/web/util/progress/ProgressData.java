@@ -24,6 +24,7 @@ package ubic.gemma.web.util.progress;
  * @author klc
  * @version $Id$
  */
+
 public class ProgressData {
 
     private int percent;

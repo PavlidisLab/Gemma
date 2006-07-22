@@ -34,7 +34,6 @@ import uk.ltd.getahead.dwr.ExecutionContext;
 /**
  * <hr>
  * <p>
- * Copyright (c) 2006 UBC Pavlab
  * 
  * @author klc
  * @version $Id$ This interceptor will be invoked
@@ -44,7 +43,41 @@ import uk.ltd.getahead.dwr.ExecutionContext;
  *          (expires)? What about getting all the progress information for all monitored processes for a given user?
  *          What if a job takes 5 days? Monitored process perhaps need to be persisted to the database after some
  *          duration? Ie what happens if the server goes down?
+ *          
+
+ *            
+ *            xml stuff that's needed for these interceptors to work.
+ *            
+ *            <!-- ===================== PROGRESS INTERCEPTORS ========================= -->
+
+
+    <bean id="progressProxy.progressAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+        
+        <property name="advice"> 
+                   <bean class="ubic.gemma.web.util.progress.ProgressInterceptor" />
+        </property>
+        
+        <property name="pointcut">
+                <bean class="ubic.gemma.web.util.progress.ProgressPointCut" />
+        </property>
+        
+    </bean>
+
+    <bean name="progressProxy" class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator">
+         <property name="usePrefix" value="true"/>
+         <property name="proxyTargetClass" value="true"/>
+         <property name="exposeProxy" value ="true" />
+         
+    </bean>
+    
+
+    <bean name ="progressTest" class="ubic.gemma.web.util.progress.ProgressImplTest" singleton="false"/>
+
+ *          
+ *          
  */
+
+
 public class ProgressInterceptor implements MethodBeforeAdvice {
 
     protected static final Log logger = LogFactory.getLog( ProgressInterceptor.class );
@@ -53,22 +86,20 @@ public class ProgressInterceptor implements MethodBeforeAdvice {
     public ProgressInterceptor() {
         super();
         monitoredProgress = new HashMap<Object, HttpServletRequest>();
-
     }
 
     @SuppressWarnings("unused")
     public void before( Method arg0, Object[] arg1, Object arg2 ) throws Throwable {
 
-        logger.debug( "before in dbinterceptor got called." );
-
-        HttpServletRequest req;
+        
+        HttpServletRequest req = ExecutionContext.get().getHttpServletRequest();
 
         if ( !monitoredProgress.containsKey( arg2 ) ) {
-            monitoredProgress.put( arg2, ExecutionContext.get().getHttpServletRequest() );
+            monitoredProgress.put( arg2, req );
         }
 
         req = monitoredProgress.get( arg2 );
-        req.setAttribute( "ProgressInfo", arg1[0] );
+        req.getSession().setAttribute( "ProgressInfo", arg1[0] );
 
     }
 

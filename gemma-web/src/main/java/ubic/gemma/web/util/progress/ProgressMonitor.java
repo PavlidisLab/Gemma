@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,25 +16,40 @@
 
 package ubic.gemma.web.util.progress;
 
-import javax.servlet.http.HttpServletRequest;
-
 import uk.ltd.getahead.dwr.ExecutionContext;
 
 /**
- * 
- *
  * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
+ * <p>
+ * Copyright (c) 2006 UBC Pavlab
+ * 
  * @author klc
  * @version $Id$
  */
-public class ProgressMonitor {
 
-    
+
+
+
+public class ProgressMonitor implements ProgressObserver {
+
+    private ProgressData pData;
+
+    public ProgressMonitor() {
+        pData = new ProgressData( 0, "Initilizing", false );
+        //Not sure the best way to do this.  Perpaps subclassing for different types of monitors...
+        //SecurityContextHolder.getContext().getAuthentication.getName();
+        ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
+    }
+
     public ProgressData getProgressStatus() {
-    
-        HttpServletRequest req = ExecutionContext.get().getHttpServletRequest();
-        return ((ProgressData) req.getSession().getAttribute( "ProgessInfo"));
+
+        return pData;
+
+    }
+
+    public void progressUpdate( ProgressData pd ) {
+
+        pData = pd;
 
     }
 

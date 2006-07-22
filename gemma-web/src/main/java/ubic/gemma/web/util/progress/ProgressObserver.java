@@ -1,7 +1,4 @@
-/*
- * The Gemma project
- * 
- * Copyright (c) 2006 Columbia University
+/* Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,18 +17,18 @@
 package ubic.gemma.web.util.progress;
 
 /**
- * 
- *
  * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
+ * <p>
+ * Copyright (c) 2006 UBC Pavlab
+ * 
  * @author klc
  * @version $Id$
- * 
- * Any process that would like to have a long process monitored and displayed to the user can implement this interface.
- * The implementer of this interface must simply
  */
-public interface Progress {
 
-    void updatePercent(ProgressData progress);
-    
+public interface ProgressObserver {
+
+    /**
+     * @param pd
+     */
+    public void progressUpdate( ProgressData pd );
 }
