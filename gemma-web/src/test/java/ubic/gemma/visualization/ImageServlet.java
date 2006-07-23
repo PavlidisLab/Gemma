@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
  * 
  * @author Ken McCrary
  * @author keshav
+ * @version $Id$
  */
 public class ImageServlet extends HttpServlet {
     public void doGet( HttpServletRequest request, HttpServletResponse response ) throws IOException, ServletException {

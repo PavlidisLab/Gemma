@@ -35,6 +35,7 @@ import com.sun.image.codec.jpeg.JPEGImageEncoder;
  * 
  * @author Ken McCrary
  * @author keshav
+ * @version $Id$
  */
 public class StockGraphProducer implements ImageProducer {
     private static int ImageWidth = 300;

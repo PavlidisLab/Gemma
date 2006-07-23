@@ -26,6 +26,7 @@ import java.io.IOException;
  * 
  * @author Ken McCrary
  * @author keshav
+ * @version $Id$
  */
 public interface ImageProducer {
     /**
