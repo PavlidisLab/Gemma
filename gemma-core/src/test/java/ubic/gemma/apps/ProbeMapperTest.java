@@ -58,9 +58,9 @@ public class ProbeMapperTest extends AbstractCLITestCase {
 
         String blatFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.noheader.txt";
-        
+
         assert ( new File( blatFile ) ).canRead();
-        
+
         Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
                 "-b", blatFile, "-d", "hg17" } );
         if ( result != null ) {
@@ -89,6 +89,21 @@ public class ProbeMapperTest extends AbstractCLITestCase {
                 "-d", "hg17", "AF015731", "BX473803" } );
         if ( result != null ) {
             result.printStackTrace();
+            fail( result.getMessage() );
+        }
+    }
+
+    public void testSequenceHandling() throws Exception {
+        String basePath = this.getTestFileBasePath();
+
+        String file = basePath + System.getProperty( "file.separator" )
+                + "/gemma-core/src/test/resources/data/loader/genome/testsequence.fa";
+
+        assert ( new File( file ) ).canRead();
+
+        Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
+                "-f", file, "-d", "mm8" } );
+        if ( result != null ) {
             fail( result.getMessage() );
         }
     }

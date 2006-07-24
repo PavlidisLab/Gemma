@@ -29,9 +29,9 @@ public class PubMedSearcherTest extends TestCase {
     /**
      * Test method for {@link ubic.gemma.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
      */
-    public final void testMain() {
-        PubMedSearcher.main( new String[] { "-u", "pavlidis", "-p", "toast", "-testing", "hippocampus", "diazepam",
-                "juvenile" } );
+    public final void testMain() throws Exception {
+        PubMedSearcher p = new PubMedSearcher();
+        p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-testing", "hippocampus", "diazepam", "juvenile" } );
     }
 
 }

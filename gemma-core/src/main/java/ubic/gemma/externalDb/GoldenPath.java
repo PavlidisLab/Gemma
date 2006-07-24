@@ -72,6 +72,8 @@ public class GoldenPath {
 
     private QueryRunner qr;
 
+    private String databaseName;
+
     /**
      * @param databaseName
      * @param host
@@ -85,6 +87,7 @@ public class GoldenPath {
     public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException,
             InstantiationException, IllegalAccessException, ClassNotFoundException {
 
+        this.databaseName = databaseName;
         Class.forName( "com.mysql.jdbc.Driver" ).newInstance();
         String url = "jdbc:mysql://" + host + ":" + port + "/" + databaseName + "?relaxAutoCommit=true";
         log.info( "Connecting to Golden Path : " + url );
@@ -677,6 +680,10 @@ public class GoldenPath {
             this.inIntron = inIntron;
         }
 
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
 }

@@ -46,6 +46,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -83,7 +84,9 @@ public class Blat {
     private String host = "localhost";
     private String seqDir = "/";
 
-    private String seqFiles;
+    private String humanSeqFiles;
+    private String ratSeqFiles;
+    private String mouseSeqFiles;
 
     private Process serverProcess;
     private int humanServerPort;
@@ -150,18 +153,29 @@ public class Blat {
     /**
      * @return Returns the seqFiles.
      */
-    public String getSeqFiles() {
-        return this.seqFiles;
+    public String getSeqFiles( BlattableGenome genome ) {
+        switch ( genome ) {
+            case HUMAN:
+                return this.humanSeqFiles;
+            case MOUSE:
+                return this.mouseSeqFiles;
+            case RAT:
+                return this.ratSeqFiles;
+            default:
+                return this.humanSeqFiles;
+
+        }
     }
 
     /**
      * Run a BLAT search using the gfClient.
      * 
      * @param b
+     * @param genome
      * @return Collection of BlatResult objects.
      * @throws IOException
      */
-    public Collection<Object> GfClient( BioSequence b, BlattableGenome genome ) throws IOException {
+    public Collection<Object> blatQuery( BioSequence b, BlattableGenome genome ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
@@ -178,6 +192,34 @@ public class Blat {
         cleanUpTmpFiles( querySequenceFile, outputPath );
         return results;
 
+    }
+
+    /**
+     * Run a BLAT search using the gfClient.
+     * 
+     * @param b. The genome is inferred from the Taxon held by the sequence.
+     * @return Collection of BlatResult objects.
+     * @throws IOException
+     */
+    public Collection<Object> blatQuery( BioSequence b ) throws IOException {
+        Taxon t = b.getTaxon();
+        if ( t == null ) {
+            throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
+        }
+
+        // FIXME - this should not be hard coded like this, what happens when more genomes are added.
+        BlattableGenome g = BlattableGenome.MOUSE;
+        if ( t.getNcbiId() == 10090 ) {
+            g = BlattableGenome.MOUSE;
+        } else if ( t.getNcbiId() == 9606 ) {
+            g = BlattableGenome.HUMAN;
+        } else if ( t.getNcbiId() == 10116 ) {
+            g = BlattableGenome.RAT;
+        } else {
+            throw new IllegalArgumentException( "Unsupported taxon " + t );
+        }
+
+        return blatQuery( b, g );
     }
 
     /**
@@ -213,7 +255,7 @@ public class Blat {
      * @return map of the input sequence names to a corresponding collection of blat result(s)
      * @throws IOException
      */
-    public Map<String, Collection<BlatResult>> GfClient( Collection<BioSequence> sequences, BlattableGenome genome )
+    public Map<String, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, BlattableGenome genome )
             throws IOException {
         Map<String, Collection<BlatResult>> results = new HashMap<String, Collection<BlatResult>>();
 
@@ -249,7 +291,7 @@ public class Blat {
     /**
      * Start the server, if the port isn't already being used. If the port is in use, we assume it is a gfServer.
      */
-    public void startServer( int port ) throws IOException {
+    public void startServer( BlattableGenome genome, int port ) throws IOException {
         try {
             new Socket( host, port );
             log.info( "There is already a server on port " + port );
@@ -258,7 +300,7 @@ public class Blat {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
             String cmd = this.getGfServerExe() + " -canStop start " + this.getHost() + " " + port + " "
-                    + this.getSeqFiles();
+                    + this.getSeqFiles( genome );
             log.info( "Starting gfServer with command " + cmd );
             this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
 
@@ -334,7 +376,7 @@ public class Blat {
                             throw new IOException( "Could not locate executable to run command (Error " + errorCode
                                     + ") " + cmd );
 
-                        throw new IOException( "Error " + errorCode + ") " + cmd );
+                        throw new IOException( "Error (" + errorCode + ") " + cmd );
                     }
                     return null;
                 }
@@ -451,7 +493,9 @@ public class Blat {
             this.ratServerHost = universalConfig.getString( "gfClient.ratServerHost" );
             this.host = universalConfig.getString( "gfClient.host" );
             this.seqDir = universalConfig.getString( "gfClient.seqDir" );
-            this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
+            this.mouseSeqFiles = universalConfig.getString( "gfClient.mouse.seqFiles" );
+            this.ratSeqFiles = universalConfig.getString( "gfClient.rat.seqFiles" );
+            this.humanSeqFiles = universalConfig.getString( "gfClient.human.seqFiles" );
             this.gfClientExe = universalConfig.getString( "gfClient.exe" );
             this.gfServerExe = universalConfig.getString( "gfServer.exe" );
         }
@@ -523,13 +567,27 @@ public class Blat {
             this.gfServerExe = universalConfig.getString( "gfServer.exe" );
         }
         try {
-            this.seqFiles = userConfig.getString( "gfClient.seqFiles" );
-            if ( seqFiles == null ) throw new NoSuchElementException();
+            this.humanSeqFiles = userConfig.getString( "gfClient.human.seqFiles" );
+            if ( humanSeqFiles == null ) throw new NoSuchElementException();
         } catch ( NoSuchElementException e ) {
-            this.seqFiles = universalConfig.getString( "gfClient.seqFiles" );
+            this.humanSeqFiles = universalConfig.getString( "gfClient.human.seqFiles" );
         }
 
-        if ( gfServerExe == null || seqFiles == null ) {
+        try {
+            this.ratSeqFiles = userConfig.getString( "gfClient.rat.seqFiles" );
+            if ( ratSeqFiles == null ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.ratSeqFiles = universalConfig.getString( "gfClient.rat.seqFiles" );
+        }
+
+        try {
+            this.mouseSeqFiles = userConfig.getString( "gfClient.mouse.seqFiles" );
+            if ( mouseSeqFiles == null ) throw new NoSuchElementException();
+        } catch ( NoSuchElementException e ) {
+            this.mouseSeqFiles = universalConfig.getString( "gfClient.mouse.seqFiles" );
+        }
+
+        if ( gfServerExe == null ) {
             log.warn( "You will not be able to start the server due to a configuration error." );
         }
 

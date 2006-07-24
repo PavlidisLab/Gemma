@@ -37,19 +37,23 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.apps.Blat.BlattableGenome;
 import ubic.gemma.externalDb.GoldenPath;
 import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 import ubic.gemma.externalDb.GoldenPath.ThreePrimeData;
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.util.AbstractCLI;
 import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
 
 /**
- * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
+ * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. FIXME
+ * this class contains more logic and functionality than just command line processing; it should be refactored.
  * 
  * @author pavlidis
  * @version $Id$
@@ -278,6 +282,8 @@ public class ProbeMapper extends AbstractCLI {
 
     private String ncbiIdentifierFileName = null;
 
+    private String fastaFileName = null;
+
     public ProbeMapper() {
         super();
     }
@@ -303,6 +309,9 @@ public class ProbeMapper extends AbstractCLI {
 
         addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
                 "File containing Genbank identifiers" ).withLongOpt( "gbfile" ).create( 'g' ) );
+
+        addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription(
+                "File containing sequences in FASTA format" ).withLongOpt( "fastaFile" ).create( 'f' ) );
 
         addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription( "Output file basename" )
                 .isRequired().withLongOpt( "outputFile" ).create( 'o' ) );
@@ -338,6 +347,13 @@ public class ProbeMapper extends AbstractCLI {
                 if ( !f.canRead() ) throw new IOException( "Can't read file " + ncbiIdentifierFileName );
 
                 Map<String, Collection<LocationData>> results = runOnGbIds( new FileInputStream( f ), resultsOut );
+
+                getBest( results, bestResultsOut );
+            } else if ( fastaFileName != null ) {
+                File f = new File( fastaFileName );
+                if ( !f.canRead() ) throw new IOException( "Can't read file " + fastaFileName );
+
+                Map<String, Collection<LocationData>> results = runOnSequences( new FileInputStream( f ), resultsOut );
 
                 getBest( results, bestResultsOut );
             } else {
@@ -451,6 +467,59 @@ public class ProbeMapper extends AbstractCLI {
     // }
     // return transcriptSignatureBuf.toString();
     // }
+
+    /**
+     * Given a sequence, BLAT it against the appropriate genome.
+     */
+    private Map<String, Collection<LocationData>> processSequences( Writer output, GoldenPath goldenpath,
+            Collection<?> sequences ) {
+        Blat b = new Blat();
+        Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
+
+        BlattableGenome bg = BlattableGenome.HUMAN;
+        // FIXME - this should not be hard coded like this, what happens when more genomes are added.
+        if ( goldenpath.getDatabaseName().startsWith( "mm" ) ) {
+            bg = BlattableGenome.MOUSE;
+        } else if ( goldenpath.getDatabaseName().startsWith( "hg" ) ) {
+            bg = BlattableGenome.HUMAN;
+        } else if ( goldenpath.getDatabaseName().startsWith( "rn" ) ) {
+            bg = BlattableGenome.RAT;
+        } else {
+            throw new IllegalArgumentException( "Unsupported database for blatting " + goldenpath.getDatabaseName() );
+        }
+
+        for ( Object object : sequences ) {
+            BioSequence sequence = ( BioSequence ) object;
+            try {
+                Collection<Object> results = b.blatQuery( sequence, bg );
+                Map<String, Collection<LocationData>> res = processBlatResults( output, null, results );
+                allRes.putAll( res );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        return allRes;
+    }
+
+    public Map<String, Collection<LocationData>> runOnSequences( InputStream stream, Writer output ) {
+        GoldenPath goldenPathDb;
+        try {
+            goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+
+            Parser parser = new FastaParser();
+            parser.parse( stream );
+
+            writeHeader( output );
+
+            Collection<Object> sequences = parser.getResults();
+
+            log.debug( "Parsed " + sequences.size() + " sequences from the stream" );
+
+            return processSequences( output, goldenPathDb, sequences );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * Given some blat results,
@@ -605,6 +674,10 @@ public class ProbeMapper extends AbstractCLI {
             this.databaseName = DEFAULT_DATABASE;
         }
 
+        if ( hasOption( 'f' ) ) {
+            this.fastaFileName = getOptionValue( 'f' );
+        }
+
         if ( hasOption( 'b' ) ) {
             this.blatFileName = getFileNameOptionValue( 'b' );
         }
@@ -677,7 +750,7 @@ public class ProbeMapper extends AbstractCLI {
      * @param writer
      * @return
      */
-    private Map<String, Collection<LocationData>> runOnGbIds( InputStream stream, Writer writer ) throws IOException,
+    public Map<String, Collection<LocationData>> runOnGbIds( InputStream stream, Writer writer ) throws IOException,
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
 
