@@ -42,15 +42,11 @@ public class ProgressMonitor implements ProgressObserver {
     }
 
     public ProgressData getProgressStatus() {
-
         return pData;
-
     }
 
     public void progressUpdate( ProgressData pd ) {
-
         pData = pd;
-
     }
 
 }
