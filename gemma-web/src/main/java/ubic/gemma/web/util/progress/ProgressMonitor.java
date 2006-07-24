@@ -16,6 +16,8 @@
 
 package ubic.gemma.web.util.progress;
 
+import org.acegisecurity.context.SecurityContextHolder;
+
 import uk.ltd.getahead.dwr.ExecutionContext;
 
 /**
@@ -38,15 +40,20 @@ public class ProgressMonitor implements ProgressObserver {
         pData = new ProgressData( 0, "Initilizing", false );
         //Not sure the best way to do this.  Perpaps subclassing for different types of monitors...
         //SecurityContextHolder.getContext().getAuthentication.getName();
-        ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
+        ProgressManager.addToNotification(SecurityContextHolder.getContext().getAuthentication().getName(), this);
+       // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
     }
 
     public ProgressData getProgressStatus() {
+
         return pData;
+
     }
 
     public void progressUpdate( ProgressData pd ) {
+
         pData = pd;
+
     }
 
 }
