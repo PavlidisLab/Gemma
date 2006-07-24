@@ -14,7 +14,7 @@ JNIEXPORT jobject JNICALL Java_ubic_gemma_apps_Blat_GfClientCall
   const char *queryFile = (*env)->GetStringUTFChars(env, jqueryFile, 0);
   const char *outputFile = (*env)->GetStringUTFChars(env, joutputFile, 0);
   fprintf(stderr, "Hello world\n");  
-  gfClientMinimal(hostname, port, seqDir, queryFile, outputFile);
+  gfClient(hostname, port, seqDir, queryFile, outputFile, "dna", "dna");
   
   (*env)->ReleaseStringUTFChars(env, jhostname, hostname);
   (*env)->ReleaseStringUTFChars(env, jport, port);
