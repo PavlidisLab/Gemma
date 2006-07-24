@@ -43,13 +43,13 @@ import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
 import ubic.gemma.externalDb.GoldenPath.ThreePrimeData;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.genome.FastaParser;
-import ubic.gemma.loader.util.AbstractCLI;
 import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.loader.util.parser.TabDelimParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
+import ubic.gemma.util.AbstractCLI;
 
 /**
  * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. FIXME

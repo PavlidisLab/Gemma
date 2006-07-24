@@ -26,8 +26,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.xml.sax.SAXException;
 
-import ubic.gemma.loader.util.AbstractSpringAwareCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Simple application to perform pubmed searches from a list of terms, and persist the results in the database.

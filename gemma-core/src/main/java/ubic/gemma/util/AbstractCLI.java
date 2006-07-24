@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util;
+package ubic.gemma.util;
 
 import java.io.File;
 import java.util.Collection;
@@ -36,8 +36,20 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
+ * Base Command Line Interface. Provides some default functionality.
+ * <p>
+ * To use this, in your concrete subclass, implement your main method so that it calls processCommandLine. You must
+ * implement buildOptions and processOptions to handle any application-specific options. In your main method, you should
+ * return any non-null return value from processCommandLine.
+ * <p>
+ * To facilitate testing of your subclass, your main method can just call a non-static 'doWork' method, that will be
+ * exposed for testing.
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -47,11 +59,13 @@ public abstract class AbstractCLI {
     private static final char USERNAME_OPTION = 'u';
     private static final char PORT_OPTION = 'P';
     private static final char HOST_OPTION = 'H';
+    private static final char VERBOSITY_OPTION = 'v';
+
     private static final String HEADER = "Options:";
     private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia.";
     private Options options = new Options();
     private CommandLine commandLine;
-    protected static final Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
+    protected Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
     private static final int DEFAULT_PORT = 3306;
 
     private String DEFAULT_HOST = "localhost";
@@ -66,6 +80,7 @@ public abstract class AbstractCLI {
     protected int port = DEFAULT_PORT;
     protected String username;
     protected String password;
+    private int verbosity = 3; // corresponds to "Error".
 
     public AbstractCLI() {
         this.buildStandardOptions();
@@ -77,7 +92,9 @@ public abstract class AbstractCLI {
         log.debug( "Creating standard options" );
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
+        Option logOpt = new Option( "v", "verbosity", true, "Set verbosity level (0=quiet, 5=very verbose)" );
 
+        options.addOption( logOpt );
         options.addOption( helpOpt );
         options.addOption( testOpt );
     }
@@ -149,7 +166,7 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' for their own purposes.
+     * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own purposes.
      */
     private void processStandardOptions() throws Exception {
 
@@ -173,6 +190,52 @@ public abstract class AbstractCLI {
             this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
         }
 
+        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
+            this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
+            if ( verbosity < 1 || verbosity > 5 ) {
+                throw new RuntimeException( "Verbosity must be from 1 to 5" );
+            }
+        }
+
+        configureLogging();
+
+    }
+
+    /**
+     * Set up logging according to the user-selected (or default) verbosity level.
+     */
+    private void configureLogging() {
+
+        // This only configures the base logger.
+
+        String loggerName = "ubic.gemma";
+        Logger log4jLogger = LogManager.exists( loggerName );
+
+        assert log4jLogger != null : "No logger of name '" + loggerName + "'";
+
+        switch ( verbosity ) {
+            case 1:
+                log4jLogger.setLevel( ( Level ) Level.OFF );
+                break;
+            case 2:
+                log4jLogger.setLevel( ( Level ) Level.FATAL );
+                break;
+            case 3:
+                log4jLogger.setLevel( ( Level ) Level.ERROR );
+                break;
+            case 4:
+                log4jLogger.setLevel( ( Level ) Level.INFO );
+                break;
+            case 5:
+                log4jLogger.setLevel( ( Level ) Level.DEBUG );
+                break;
+            default:
+                // Don't change the logging.
+                break;
+        }
+
+        log = LogFactory.getLog( AbstractSpringAwareCLI.class );
+        log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
     }
 
     /**

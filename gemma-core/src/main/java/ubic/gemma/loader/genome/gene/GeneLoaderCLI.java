@@ -27,10 +27,10 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneConverter;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneInfoParser;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
-import ubic.gemma.loader.util.AbstractSpringAwareCLI;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * Command line interface to gene parsing and loading

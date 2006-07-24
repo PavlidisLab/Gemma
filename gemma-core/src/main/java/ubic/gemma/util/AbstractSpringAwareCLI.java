@@ -16,11 +16,10 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util;
+package ubic.gemma.util;
 
 import org.springframework.beans.factory.BeanFactory;
 
-import ubic.gemma.loader.util.AbstractCLI.ErrorCode;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
