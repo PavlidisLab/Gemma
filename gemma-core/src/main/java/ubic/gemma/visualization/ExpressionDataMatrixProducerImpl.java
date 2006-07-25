@@ -26,13 +26,11 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import ubic.basecode.gui.ColorMatrix;
 import ubic.basecode.gui.graphics.text.Util;
-
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 /**
  * An ExpressionDataMatrix image producer class
@@ -66,9 +64,7 @@ public class ExpressionDataMatrixProducerImpl extends JPanel {
     public String createDynamicImage( OutputStream stream, boolean showLabels, boolean standardize )
             throws java.io.IOException {
 
-        JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder( stream );
-        // PNGImageEncoder encoder = new PNGImageEncoder( stream, PNGEncodeParam.RGB ); TODO - batik package issues
-        // PngEncoder encoder = new PngEncoder(PngEncoder.COLOR_INDEXED); TODO - causes error
+        // JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder( stream );
 
         Graphics2D graphics = null;
 
@@ -92,10 +88,10 @@ public class ExpressionDataMatrixProducerImpl extends JPanel {
             drawColumnNames( graphics );
         }
 
-        encoder.encode( m_image );
-        // encoder.encode( m_image, stream );
+        ImageIO.write( m_image, "png", stream );
+        // encoder.encode( m_image );
 
-        return "image/jpg";
+        return "image/png";
     } // end createDynamicImage
 
     /**
