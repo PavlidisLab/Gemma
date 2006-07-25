@@ -101,22 +101,22 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
                 log.debug( "setting content type " + type );
                 response.setContentType( type );
-                
-                log.debug("wrapping with html");
-               
-                buf.append("<img src=" + response.getOutputStream() + "/>");
+
+                log.debug( "wrapping with html" );
+
+                buf.append( "<img src=" + response.getOutputStream() + "/>" );
 
             } catch ( IOException e ) {
                 throw new JspException( e );
             }
         }
-        
+
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
             throw new JspException( "HtmlMatrixVisualizationTag: " + ex.getMessage() );
         }
-        
+
         log.debug( "return SKIP_BODY" );
         return SKIP_BODY;
     }
