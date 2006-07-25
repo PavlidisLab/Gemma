@@ -8,9 +8,10 @@
             <fmt:message key="expression.visualization.results" />
         </h2>
 		<div id="logo">
-            <%--<a href="<%=request.getContextPath()%>">--%>
-                <%-- <img src="${visualization}"/> --%>
+				<%--<img src="<%=expressionDataMatrixVisualization.getOutfile()%>" width="300" height="300"/>--%>
+
                 <%--<applet code="/applets/HtmlMatrixVisualizerApplet.class" width=550 height=250></applet>--%>
+       
                 <%--<jsp:plugin type="applet" archive="Blur.jar" codebase="/Gemma/applet"--%>
                 <%--
                 <jsp:plugin type="applet" code="applet.HtmlMatrixVisualizerApplet.class" codebase="/Gemma"
@@ -21,8 +22,14 @@
                 	<jsp:fallback>Plugin tag OBJECT or EMBED bot supported by browser</jsp:fallback>
                 </jsp:plugin>
                 --%>
+            <a> 
+            	<%=response.getOutputStream()%>
+            	<%--
+            	<%expressionDataMatrixVisualization.drawDynamicImage( stream);%>
+            	<%response.setContentType( "image/jpg" );%>
+  				--%>
                 <Gemma:expressionDataMatrixVisualization expressionDataMatrixVisualization="<%=expressionDataMatrixVisualization%>"/>
-                <%--<img src="<%=expressionDataMatrixVisualization.getOutfile()%>" width="300" height="300"/>--%>
+                
             </a>
         </div>
     </body>
