@@ -47,7 +47,7 @@ import org.apache.log4j.Logger;
  * implement buildOptions and processOptions to handle any application-specific options. In your main method, you should
  * return any non-null return value from processCommandLine.
  * <p>
- * To facilitate testing of your subclass, your main method can just call a non-static 'doWork' method, that will be
+ * To facilitate testing of your subclass, your main method can must call a non-static 'doWork' method, that will be
  * exposed for testing.
  * 
  * @author pavlidis
@@ -101,9 +101,18 @@ public abstract class AbstractCLI {
         options.addOption( testOpt );
     }
 
+    /**
+     * 
+     *
+     */
     protected abstract void buildOptions();
 
-    protected abstract Exception doWork( String[] args ) throws Exception;
+    /**
+     * @param args
+     * @return
+     * @throws Exception
+     */
+    protected abstract Exception doWork( String[] args );
 
     /**
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
@@ -113,7 +122,7 @@ public abstract class AbstractCLI {
      * @return Exception; null if nothing went wrong.
      * @throws ParseException
      */
-    protected final Exception processCommandLine( String commandName, String[] args ) throws Exception {
+    protected final Exception processCommandLine( String commandName, String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
 
@@ -163,14 +172,16 @@ public abstract class AbstractCLI {
     /**
      * Stop exeucting the CLI.
      */
-    protected void bail( ErrorCode errorCode ) throws Exception {
-        throw new Exception( errorCode.toString() );
+    protected void bail( ErrorCode errorCode ) {
+        // do something, but not System.exit.
+        log.debug( "Bailing with error code " + errorCode );
+        throw new IllegalStateException( errorCode.toString() );
     }
 
     /**
      * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own purposes.
      */
-    private void processStandardOptions() throws Exception {
+    private void processStandardOptions() {
 
         if ( commandLine.hasOption( HOST_OPTION ) ) {
             this.host = commandLine.getOptionValue( HOST_OPTION );
@@ -245,7 +256,7 @@ public abstract class AbstractCLI {
     /**
      * Implement this to provide processing of options. It is called at the end of processCommandLine.
      */
-    protected abstract void processOptions() throws Exception;
+    protected abstract void processOptions();
 
     /**
      * @param command The name of the command as used at the command line.
@@ -339,7 +350,7 @@ public abstract class AbstractCLI {
         options.addOption( portOpt );
     }
 
-    protected final double getDoubleOptionValue( String option ) throws Exception {
+    protected final double getDoubleOptionValue( String option ) {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -349,7 +360,7 @@ public abstract class AbstractCLI {
         return 0.0;
     }
 
-    protected final double getDoubleOptionValue( char option ) throws Exception {
+    protected final double getDoubleOptionValue( char option ) {
         try {
             return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -359,7 +370,7 @@ public abstract class AbstractCLI {
         return 0.0;
     }
 
-    protected final int getIntegerOptionValue( String option ) throws Exception {
+    protected final int getIntegerOptionValue( String option ) {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -369,11 +380,11 @@ public abstract class AbstractCLI {
         return 0;
     }
 
-    private String invalidOptionString( String option ) throws Exception {
+    private String invalidOptionString( String option ) {
         return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
     }
 
-    protected final int getIntegerOptionValue( char option ) throws Exception {
+    protected final int getIntegerOptionValue( char option ) {
         try {
             return Integer.parseInt( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
@@ -387,7 +398,7 @@ public abstract class AbstractCLI {
      * @param c
      * @return
      */
-    protected final String getFileNameOptionValue( char c ) throws Exception {
+    protected final String getFileNameOptionValue( char c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {
@@ -401,7 +412,7 @@ public abstract class AbstractCLI {
      * @param c
      * @return
      */
-    protected final String getFileNameOptionValue( String c ) throws Exception {
+    protected final String getFileNameOptionValue( String c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
         if ( !f.canRead() ) {

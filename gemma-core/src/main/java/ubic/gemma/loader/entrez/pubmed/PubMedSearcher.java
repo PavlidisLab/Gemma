@@ -50,7 +50,7 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Exception doWork( String[] args ) throws Exception {
+    protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "pubmed [options] searchterm1 searchterm2 ... searchtermN", args );
 

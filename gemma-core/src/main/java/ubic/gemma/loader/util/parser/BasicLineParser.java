@@ -21,9 +21,11 @@ package ubic.gemma.loader.util.parser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.CharBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -56,9 +58,12 @@ public abstract class BasicLineParser implements LineParser {
      */
     public void parse( InputStream is ) throws IOException {
 
-        if ( is == null || is.available() == 0 ) {
-            log.fatal( "Inputstream null or empty" );
-            throw new IllegalArgumentException( "Inputstream null or empty" );
+        if ( is == null ) {
+            throw new IllegalArgumentException( "Inputstream null" );
+        }
+
+        if ( is.available() == 0 ) {
+            throw new IOException( "No bytes available to read from inputStream" );
         }
 
         linesParsed = 0;
@@ -90,7 +95,6 @@ public abstract class BasicLineParser implements LineParser {
      */
     public void parse( File file ) throws IOException {
         if ( file == null ) {
-            log.fatal( "File cannot be null" );
             throw new IllegalArgumentException( "File cannot be null" );
         }
         if ( !file.exists() || !file.canRead() ) {

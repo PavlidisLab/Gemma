@@ -104,7 +104,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /** check username and password. */
-    void authenticate() throws Exception {
+    void authenticate() {
 
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
@@ -134,7 +134,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     @Override
-    protected void processOptions() throws Exception {
+    protected void processOptions() {
         createSpringContext();
         authenticate();
     }

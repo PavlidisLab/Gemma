@@ -54,55 +54,61 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) throws Exception {
+    protected Exception doWork( String[] args ) {
 
-        /* COMMAND LINE PARSER STAGE */
-        Exception err = processCommandLine( "GeneLoaderCLI", args );
+        try {
+            /* COMMAND LINE PARSER STAGE */
+            Exception err = processCommandLine( "GeneLoaderCLI", args );
 
-        if ( err != null ) return err;
+            if ( err != null ) return err;
 
-        /* check parse option. */
-        if ( hasOption( 'x' ) ) {
-            NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            geneInfoParser.parse( getOptionValue( 'x' ) );
-        } else if ( hasOption( 'l' ) ) {
-            /* check load option. */
-            NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
-            String[] filenames = getOptionValues( 'l' );
+            /* check parse option. */
+            if ( hasOption( 'x' ) ) {
+                NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
+                geneInfoParser.parse( getOptionValue( 'x' ) );
+            } else if ( hasOption( 'l' ) ) {
+                /* check load option. */
+                NcbiGeneInfoParser geneInfoParser = new NcbiGeneInfoParser();
+                String[] filenames = getOptionValues( 'l' );
 
-            for ( int i = 0; i < filenames.length - 1; i++ ) {
-                geneInfoParser.parse( filenames[i] );
-                i++;
-            }
-
-            // AS
-            geneInfoParser.parse( filenames[filenames.length - 1] );
-            Collection<Object> keys = geneInfoParser.getResults();
-
-            NCBIGeneInfo info;
-            Object gene;
-
-            NcbiGeneConverter converter = new NcbiGeneConverter();
-            for ( Object key : keys ) {
-                info = ( NCBIGeneInfo ) geneInfoParser.get( key );
-                gene = converter.convert( info );
-
-                ( ( Gene ) gene ).setTaxon( ( Taxon ) getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
-                if ( gene == null ) {
-                    System.out.println( "gene null. skipping" );
-                } else {
-                    System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
-                    getGenePersister().persist( gene );
+                for ( int i = 0; i < filenames.length - 1; i++ ) {
+                    geneInfoParser.parse( filenames[i] );
+                    i++;
                 }
-            }
-            // cli.getGenePersister().persist( geneInfoParser.getResults() );
-            // endAS
 
-        } else if ( hasOption( 'r' ) ) { /* check remove option. */
-            getGenePersister().removeAll();
-        } else { /* defaults to print help. */
-            printHelp( "GeneLoaderCLI" );
+                // AS
+                geneInfoParser.parse( filenames[filenames.length - 1] );
+                Collection<Object> keys = geneInfoParser.getResults();
+
+                NCBIGeneInfo info;
+                Object gene;
+
+                NcbiGeneConverter converter = new NcbiGeneConverter();
+                for ( Object key : keys ) {
+                    info = ( NCBIGeneInfo ) geneInfoParser.get( key );
+                    gene = converter.convert( info );
+
+                    ( ( Gene ) gene ).setTaxon( ( Taxon ) getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
+                    if ( gene == null ) {
+                        System.out.println( "gene null. skipping" );
+                    } else {
+                        System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
+                        getGenePersister().persist( gene );
+                    }
+                }
+                // cli.getGenePersister().persist( geneInfoParser.getResults() );
+                // endAS
+
+            } else if ( hasOption( 'r' ) ) { /* check remove option. */
+                getGenePersister().removeAll();
+            } else { /* defaults to print help. */
+                printHelp( "GeneLoaderCLI" );
+            }
+
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
+
         return null;
     }
 

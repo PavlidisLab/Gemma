@@ -189,7 +189,7 @@ public class Blat {
 
         Collection<Object> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
 
-        cleanUpTmpFiles( querySequenceFile, outputPath );
+        // cleanUpTmpFiles( querySequenceFile, outputPath );
         return results;
 
     }

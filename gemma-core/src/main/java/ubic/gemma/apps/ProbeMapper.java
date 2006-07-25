@@ -265,10 +265,12 @@ public class ProbeMapper extends AbstractCLI {
 
     public static void main( String[] args ) {
         ProbeMapper p = new ProbeMapper();
-        try {
-            p.doWork( args );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        Exception e = p.doWork( args );
+        if ( e != null ) {
+            System.err.println( e.getLocalizedMessage() );
+            if ( log.isDebugEnabled() ) {
+                log.debug( e, e );
+            }
         }
     }
 
@@ -325,7 +327,7 @@ public class ProbeMapper extends AbstractCLI {
     }
 
     @Override
-    protected Exception doWork( String[] args ) throws Exception {
+    protected Exception doWork( String[] args ) {
 
         try {
             Exception err = processCommandLine( "probeMapper", args );
@@ -492,8 +494,9 @@ public class ProbeMapper extends AbstractCLI {
         for ( Object object : sequences ) {
             BioSequence sequence = ( BioSequence ) object;
             try {
+                log.debug( "Running blat on " + sequence );
                 Collection<Object> results = b.blatQuery( sequence, bg );
-                Map<String, Collection<LocationData>> res = processBlatResults( output, null, results );
+                Map<String, Collection<LocationData>> res = processBlatResults( output, goldenpath, results );
                 allRes.putAll( res );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
@@ -502,22 +505,36 @@ public class ProbeMapper extends AbstractCLI {
         return allRes;
     }
 
+    /**
+     * @param stream
+     * @param output
+     * @return
+     */
     public Map<String, Collection<LocationData>> runOnSequences( InputStream stream, Writer output ) {
         GoldenPath goldenPathDb;
+        Parser parser;
         try {
             goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
 
-            Parser parser = new FastaParser();
+            parser = new FastaParser();
             parser.parse( stream );
 
             writeHeader( output );
-
             Collection<Object> sequences = parser.getResults();
 
             log.debug( "Parsed " + sequences.size() + " sequences from the stream" );
 
+            assert goldenPathDb != null;
             return processSequences( output, goldenPathDb, sequences );
-        } catch ( Exception e ) {
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        } catch ( InstantiationException e ) {
+            throw new RuntimeException( e );
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( ClassNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -533,6 +550,10 @@ public class ProbeMapper extends AbstractCLI {
      */
     private Map<String, Collection<LocationData>> processBlatResults( Writer output, GoldenPath goldenPathDb,
             Collection<?> blatResults ) throws IOException {
+
+        assert goldenPathDb != null;
+        assert output != null;
+
         Map<String, Collection<LocationData>> allRes = new HashMap<String, Collection<LocationData>>();
         int count = 0;
         int skipped = 0;
@@ -558,6 +579,7 @@ public class ProbeMapper extends AbstractCLI {
                 throw new RuntimeException( "Query name was not in understood format" );
             }
 
+            assert blatRes.getTargetChromosome() != null : "Chromosome not filled in for blat result";
             List<ThreePrimeData> tpds = goldenPathDb.getThreePrimeDistances( blatRes.getTargetChromosome().getName(),
                     blatRes.getTargetStart(), blatRes.getTargetEnd(), blatRes.getTargetStarts(), blatRes
                             .getBlockSizes(), blatRes.getStrand(), threeprimeMethod );
@@ -582,9 +604,13 @@ public class ProbeMapper extends AbstractCLI {
             }
 
             count++;
-            if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " blat results" );
+            if ( log.isInfoEnabled() && count % 100 == 0 )
+                log.info( "Annotations computed for " + count + " blat results" );
         }
-        log.info( "Skipped " + skipped + " results that didn't meet criteria" );
+
+        if ( log.isInfoEnabled() && skipped > 0 )
+            log.info( "Skipped " + skipped + " results that didn't meet criteria" );
+
         return allRes;
     }
 
@@ -655,12 +681,13 @@ public class ProbeMapper extends AbstractCLI {
             if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
         }
         log.info( "Annotations computed for " + count + " genbank identifiers" );
-        log.info( "Skipped " + skipped + " results that didn't meet criteria" );
+        if ( log.isInfoEnabled() && skipped > 0 )
+            log.info( "Skipped " + skipped + " results that didn't meet criteria" );
         return allRes;
     }
 
     @Override
-    protected void processOptions() throws Exception {
+    protected void processOptions() {
         if ( hasOption( 's' ) ) {
             this.scoreThreshold = getDoubleOptionValue( 's' );
         }
