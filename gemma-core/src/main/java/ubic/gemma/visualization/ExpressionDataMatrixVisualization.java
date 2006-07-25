@@ -20,11 +20,15 @@ package ubic.gemma.visualization;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix2DNamed;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
@@ -43,6 +47,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @version $Id$
  */
 public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Serializable {
+    private Log log = LogFactory.getLog( this.getClass() );
 
     private static final long serialVersionUID = -5075323948059345296L;
 
@@ -216,16 +221,33 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
         try {
-            display.setLabelsVisible( true ); // TODO allow user to set via web front end
-            // display.setToolTipText("add pixel text");
+            display.setLabelsVisible( true );
             display.saveImage( outfile );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
     }
-    
+
     /**
-     * 
+     * @return
+     * @throws IOException
+     * @throws IOException
+     */
+    public String drawDynamicImage( OutputStream stream ) throws IOException {
+        log.warn( "drawing dynamic image" );
+
+        ExpressionDataMatrixProducerImpl producer = new ExpressionDataMatrixProducerImpl();
+        producer.setColorMatrix( this.colorMatrix );
+
+        String type = producer.createDynamicImage( stream, true, true );
+
+        log.warn( "returning content type " + type );
+
+        return type;
+
+    }
+
+    /**
      * @return ColorMatrix
      */
     public ColorMatrix getColorMatrix() {
