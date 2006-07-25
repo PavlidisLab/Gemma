@@ -180,9 +180,6 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
             // call service which produces expression data image based on gene symbol search criteria
         }
 
-        // return new ModelAndView( getSuccessView(), "visualization", filename );
-        // return new ModelAndView( getSuccessView(), "expressionDataMatrix", expressionDataMatrix );
-
         return new ModelAndView( getSuccessView() )
                 .addObject( "expressionDataMatrixVisualization", matrixVisualization );
     }
