@@ -28,7 +28,8 @@ import org.apache.commons.logging.LogFactory;
  * Singleton for creating observers for monitoring long-running processes.
  * <p>
  * To use, call ProgressManager.createProgressJob(). The returned value can be used by a client object to indicate
- * progress by calling ... (FIXME, describe how to use)
+ * progress by calling updateProgress on the job that is returned. Observers can register themselves for receiving
+ * progress updates by passing themselves into the addToNotification function
  * 
  * @author kelsey
  * @version $Id$
@@ -44,61 +45,75 @@ public class ProgressManager {
     /**
      * @param pj
      * @param po
-     * @return
+     * @return FIXME: Don't Use. Adding notification by ProgressJob doesn't make sense as it genearlly turns out to be
+     *         the situation that the observer doesn't have an instance of the progressJob that they would like to
+     *         observe. But there seams to be no other way to deal with an owner having multiple jobs running at the
+     *         same time and being able to distinguish which job would like to be observed. this needs to be flushed out
+     *         and this functionality needs to be added correctly.
      */
     public static boolean addToNotification( ProgressJob pj, ProgressObserver po ) {
 
-        if ( !notificationListByJob.containsKey( pj ) ) return false;
+        if ( !progressJobs.containsKey( pj.getUser() ) ) return false; // No such job exists
 
-        notificationListByJob.get( pj ).add( po );
+        if ( !notificationListByJob.containsKey( pj ) ) {
+            Collection<ProgressObserver> newList = new Vector<ProgressObserver>();
+            newList.add( po );
+            notificationListByJob.put( pj, newList );
+
+        } else {
+            Collection<ProgressObserver> poList = notificationListByJob.get( pj );
+            if ( !poList.contains( po ) ) poList.add( po );
+        }
         return true;
+
     }
 
     /**
      * @param username
      * @param po
-     * @return
+     * @return currently the best way for observers to add themselves to watching a given job. There are issues with an
+     *         owner having multiple jobs.
      */
     public static boolean addToNotification( String username, ProgressObserver po ) {
 
-        if ( !notificationListByUser.containsKey( username ) ) return false;
+        if ( !progressJobs.containsKey( username ) ) return false; // No such job exists
 
-        notificationListByUser.get( username ).add( po );
+        if ( !notificationListByUser.containsKey( username ) ) {
+            Collection<ProgressObserver> newList = new Vector<ProgressObserver>();
+            newList.add( po );
+            notificationListByUser.put( username, newList );
+
+        } else {
+            Collection<ProgressObserver> poList = notificationListByUser.get( username );
+            if ( !poList.contains( po ) ) poList.add( po );
+        }
         return true;
     }
 
     /**
-     * @param userName
-     * @param description
-     * @return
+     * @param userName (owner of the job)
+     * @param description (description of the job)
+     * @return Use this static method for creating ProgressJobs.
      */
     public static ProgressJob createProgressJob( String userName, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
-        if ( !progressJobs.containsKey( userName ) ) progressJobs.put( userName, new Vector<ProgressJob>() );
+        if ( !progressJobs.containsKey( userName ) ) {
+            progressJobs.put( userName, new Vector<ProgressJob>() );
+        }
 
         usersJobs = progressJobs.get( userName );
         newJob = new ProgressJobImpl( userName, description );
         usersJobs.add( newJob );
 
         return newJob;
-
     }
 
-    // static boolean Notify( String UserName ) {
-    //        
-    // if (!notificationListByJob.containsKey(pj))
-    // return false;
-    //        
-    // for ( Iterator iter = notificationListByJob.get(UserName)).iterator(); iter.hasNext();) {
-    // ((ProgressObserver) iter.next()).progressUpdate());
-    //        
-    // }
-
     /**
-     * @param ajob
+     * @param ajob Removes ProgressJob form lists and provides clean up. This is a package level service used for
+     *        maintaing progress jobs.
      */
     static boolean destroyProgressJob( ProgressJob ajob ) {
 
@@ -116,17 +131,30 @@ public class ProgressManager {
 
     /**
      * @param pj
-     * @return
+     * @return Another packgage level serverice for notifying the observers that there has been changes in the
+     *         ProgressJob that they have registered to watch.
      */
     static boolean notify( ProgressJob pj ) {
 
-        if ( !notificationListByJob.containsKey( pj ) ) return false;
+        if ( notificationListByJob.containsKey( pj ) ) {
 
-        for ( ProgressObserver observer : notificationListByJob.get( pj ) ) {
-            observer.progressUpdate( pj.getProgressData() );
+            for ( ProgressObserver observer : notificationListByJob.get( pj ) ) {
+                observer.progressUpdate( pj.getProgressData() );
+            }
+
+            // return true;
         }
 
-        return true;
+        if ( notificationListByUser.containsKey( pj.getUser() ) ) {
+
+            for ( ProgressObserver observer : notificationListByUser.get( pj.getUser() ) ) {
+                observer.progressUpdate( pj.getProgressData() );
+            }
+
+            return true;
+        }
+
+        return false;
 
     }
 

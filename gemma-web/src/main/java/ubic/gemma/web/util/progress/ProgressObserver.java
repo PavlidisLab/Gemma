@@ -18,6 +18,7 @@ package ubic.gemma.web.util.progress;
 
 /**
  * <hr>
+ * any object that implements this interface will be able to recieve progress updates that they register themselves for
  * <p>
  * Copyright (c) 2006 UBC Pavlab
  * 
@@ -28,7 +29,7 @@ package ubic.gemma.web.util.progress;
 public interface ProgressObserver {
 
     /**
-     * @param pd
+     * @param ProgressData pd
      */
     public void progressUpdate( ProgressData pd );
 }

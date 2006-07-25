@@ -14,62 +14,42 @@
  *
  */
 
-
 package ubic.gemma.web.util.progress;
 
 /**
- * 
- *
  * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
+ * Implementation of the ProgressJob interface. Used by the client to add hooks for providing feedback to any users
+ * <p>
+ * Copyright (c) 2006 UBC Pavlab
+ * 
  * @author klc
  * @version $Id$
  */
-/**
- * 
- *
- * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
- * @author klc
- * @version $Id$
- */
-/**
- * 
- *
- * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
- * @author klc
- * @version $Id$
- */
-/**
- * 
- *
- * <hr>
- * <p>Copyright (c) 2006 UBC Pavlab
- * @author klc
- * @version $Id$
- */
-public class ProgressJobImpl implements ProgressJob{
+public class ProgressJobImpl implements ProgressJob {
 
     public static final int DOWNLOAD_PROGRESS = 0;
     public static final int COMPUTATIONAL_PROGRESS = 1;
     public static final int DATABASE_PROGRESS = 2;
     public static final int PARSING_PROGRESS = 3;
-    
+
     protected ProgressData pData;
     protected boolean runningStatus;
     protected int progressType;
     protected String failedMessage;
     protected String ownerId;
 
-    
-   //Make constructors default to limit creation to this package.
-    ProgressJobImpl( String ownerId, String description) {
+    /**
+     * The factory create method in ProgressManager is the advised way to create a ProgressJob
+     * 
+     * @param ownerId
+     * @param description
+     */
+    ProgressJobImpl( String ownerId, String description ) {
         this.ownerId = ownerId;
-        this.pData = new ProgressData(0,description, false);
+        this.pData = new ProgressData( 0, description, false );
     }
 
-     /**
+    /**
      * @return Returns the pData.
      */
     public ProgressData getProgressData() {
@@ -83,7 +63,6 @@ public class ProgressJobImpl implements ProgressJob{
         pData = data;
     }
 
-
     /**
      * @return Returns the runningStatus.
      */
@@ -96,33 +75,40 @@ public class ProgressJobImpl implements ProgressJob{
      */
     public void setRunningStatus( boolean runningStatus ) {
         this.runningStatus = runningStatus;
-        if ( this.runningStatus && pData.isDone()  ) this.pData.setDone(false);
+        if ( this.runningStatus && pData.isDone() ) this.pData.setDone( false );
     }
 
     /**
      * @return Returns the progressType.
      */
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.util.progress.ProgressJob#getProgressType()
-     */
     public int getProgressType() {
         return progressType;
     }
 
-    /**
-     * @param progressType The progressType to set.
-     */
     public void setProgressType( int progressType ) {
         this.progressType = progressType;
     }
-    
-    
-  public String getUser() {
-       
-       return this.ownerId;
-   
-   }
-   
-   
+
+    public String getUser() {
+        return this.ownerId;
+    }
+
+    /**
+     * Updates the percent completion of the job by 1 percent
+     */
+    public void updateProgress() {
+        pData.setPercent( pData.getPercent() + 1 );
+        ProgressManager.notify( this );
+    }
+
+    /**
+     * Updates the progress job by a complete progressData. Used if more than the percent needs to be updates.
+     * 
+     * @param pd
+     */
+    public void updateProgress( ProgressData pd ) {
+        setProgressData( pd );
+        ProgressManager.notify( this );
+    }
 
 }

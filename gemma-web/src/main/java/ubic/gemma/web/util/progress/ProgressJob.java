@@ -14,10 +14,18 @@
  *
  */
 
-
-
 package ubic.gemma.web.util.progress;
 
+/**
+ * <hr>
+ * All progressJobs must implement the following functionality. ProgressJobs are used by the client to provide hooks for
+ * providing feedback to a user for long running processes
+ * <p>
+ * Copyright (c) 2006 UBC Pavlab
+ * 
+ * @author klc
+ * @version $Id$
+ */
 public interface ProgressJob {
 
     /**
@@ -49,8 +57,19 @@ public interface ProgressJob {
      * @param progressType The progressType to set.
      */
     public abstract void setProgressType( int progressType );
-    
-    
+
     public abstract String getUser();
+
+    /**
+     * Updates the current progress of the job. Simple increments the progress percent by 1.
+     */
+    public abstract void updateProgress();
+
+    /**
+     * Updates the progress job by a complete progressData. In case a few things need to be updated
+     * 
+     * @param pd
+     */
+    public abstract void updateProgress( ProgressData pd );
 
 }

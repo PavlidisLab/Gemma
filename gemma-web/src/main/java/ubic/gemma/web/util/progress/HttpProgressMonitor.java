@@ -18,30 +18,26 @@ package ubic.gemma.web.util.progress;
 
 import org.acegisecurity.context.SecurityContextHolder;
 
-import uk.ltd.getahead.dwr.ExecutionContext;
-
 /**
- * <hr>
+ * <hr
  * <p>
- * Copyright (c) 2006 UBC Pavlab
+ * A convience class that can be used by ajax controls to update a progress bar Copyright 
+ * 
  * 
  * @author klc
  * @version $Id$
  */
 
-
-
-
-public class ProgressMonitor implements ProgressObserver {
+public class HttpProgressMonitor implements ProgressObserver {
 
     private ProgressData pData;
 
-    public ProgressMonitor() {
+    public HttpProgressMonitor() {
         pData = new ProgressData( 0, "Initilizing", false );
-        //Not sure the best way to do this.  Perpaps subclassing for different types of monitors...
-        //SecurityContextHolder.getContext().getAuthentication.getName();
-        ProgressManager.addToNotification(SecurityContextHolder.getContext().getAuthentication().getName(), this);
-       // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
+        // Not sure the best way to do this. Perpaps subclassing for different types of monitors...
+        // SecurityContextHolder.getContext().getAuthentication.getName();
+        ProgressManager.addToNotification( SecurityContextHolder.getContext().getAuthentication().getName(), this );
+        // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
     }
 
     public ProgressData getProgressStatus() {
@@ -50,6 +46,9 @@ public class ProgressMonitor implements ProgressObserver {
 
     }
 
+    /**
+     * Implementation for the progress Observer class
+     */
     public void progressUpdate( ProgressData pd ) {
 
         pData = pd;

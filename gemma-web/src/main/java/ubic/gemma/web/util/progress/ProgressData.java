@@ -16,6 +16,8 @@
 
 package ubic.gemma.web.util.progress;
 
+import java.io.Serializable;
+
 /**
  * <hr>
  * <p>
@@ -25,7 +27,11 @@ package ubic.gemma.web.util.progress;
  * @version $Id$
  */
 
-public class ProgressData {
+public class ProgressData implements Serializable {
+
+    /** The serial version UID of this class. Needed for serialization. */
+    private static final long serialVersionUID = -1618654342446645213L; // TODO: This needs to be generated... currently
+                                                                        // just one number off off UserRoleImpl.
 
     private int percent;
     private String description;
