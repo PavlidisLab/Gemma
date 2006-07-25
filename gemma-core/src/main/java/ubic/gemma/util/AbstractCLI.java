@@ -80,7 +80,8 @@ public abstract class AbstractCLI {
     protected int port = DEFAULT_PORT;
     protected String username;
     protected String password;
-    private int verbosity = 3; // corresponds to "Error".
+    private static int DEFAULT_VERBOSITY = 2;
+    private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
 
     public AbstractCLI() {
         this.buildStandardOptions();
@@ -92,7 +93,8 @@ public abstract class AbstractCLI {
         log.debug( "Creating standard options" );
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
-        Option logOpt = new Option( "v", "verbosity", true, "Set verbosity level (0=quiet, 5=very verbose)" );
+        Option logOpt = new Option( "v", "verbosity", true,
+                "Set verbosity level (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
 
         options.addOption( logOpt );
         options.addOption( helpOpt );
@@ -214,27 +216,29 @@ public abstract class AbstractCLI {
         assert log4jLogger != null : "No logger of name '" + loggerName + "'";
 
         switch ( verbosity ) {
-            case 1:
+            case 0:
                 log4jLogger.setLevel( ( Level ) Level.OFF );
                 break;
-            case 2:
+            case 1:
                 log4jLogger.setLevel( ( Level ) Level.FATAL );
                 break;
-            case 3:
+            case 2:
                 log4jLogger.setLevel( ( Level ) Level.ERROR );
                 break;
-            case 4:
+            case 3:
                 log4jLogger.setLevel( ( Level ) Level.INFO );
                 break;
-            case 5:
+            case 4:
                 log4jLogger.setLevel( ( Level ) Level.DEBUG );
+                break;
+            case 5:
+                log4jLogger.setLevel( ( Level ) Level.ALL );
                 break;
             default:
                 // Don't change the logging.
                 break;
         }
 
-        log = LogFactory.getLog( AbstractSpringAwareCLI.class );
         log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
     }
 

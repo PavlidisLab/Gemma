@@ -608,7 +608,6 @@ public class Blat {
             this.GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
         } catch ( UnsatisfiedLinkError e ) {
             log.error( e, e );
-            // throw new RuntimeException( "Failed call to native gfClient: " + e.getMessage() );
             log.info( "Falling back on exec()" );
             this.execGfClient( querySequenceFile, outputPath, portToUse );
         }
@@ -620,6 +619,7 @@ public class Blat {
      * @return processed results.
      */
     private Collection<Object> processPsl( String outputPath ) throws IOException {
+        log.debug( "Processing " + outputPath );
         BlatResultParser brp = new BlatResultParser();
         brp.parse( outputPath );
         return brp.getResults();

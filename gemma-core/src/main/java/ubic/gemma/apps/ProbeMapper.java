@@ -52,8 +52,9 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl;
 import ubic.gemma.util.AbstractCLI;
 
 /**
- * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits. FIXME
- * this class contains more logic and functionality than just command line processing; it should be refactored.
+ * Given a blat result set for an array design, annotate and find the 3' locations for all the really good hits.
+ * <p>
+ * FIXME this class contains more logic and functionality than just command line processing; it should be refactored.
  * 
  * @author pavlidis
  * @version $Id$
@@ -360,7 +361,7 @@ public class ProbeMapper extends AbstractCLI {
                 String[] moreArgs = getArgs();
                 if ( moreArgs.length == 0 ) {
                     System.out
-                            .println( "You must provide either a Blat result file, a Genbank identifier file, or some Genbank identifiers" );
+                            .println( "You must provide either a Blat result file, a FASTA file, a Genbank identifier file, or some Genbank identifiers" );
                     printHelp( "probeMapper" );
                     return new Exception( "Missing genbank identifiers" );
                 }
