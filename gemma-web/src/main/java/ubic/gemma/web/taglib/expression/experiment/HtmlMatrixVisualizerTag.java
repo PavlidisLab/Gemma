@@ -18,10 +18,12 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletResponse;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -82,42 +84,40 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         expressionDataMatrixVisualization.setRowLabels( designElementNames );
         expressionDataMatrixVisualization.createVisualization();
 
-        log.debug( "outfile " + outfile );
-        expressionDataMatrixVisualization.saveImage( outfile );
+        // expressionDataMatrixVisualization.saveImage( outfile );
 
         StringBuilder buf = new StringBuilder();
 
         if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
-            buf.append( "<table>" );
-            buf.append( "<ol>" );
-            //buf.append( "<tr>" );
+            ServletResponse response = pageContext.getResponse();
+            log.debug( "response " + response );
 
-            buf.append( "<td>" );
-            buf.append( "<img src=\"" + outfile + "\" width=\"" + imageWidth + "\" height=\"" + imageHeight + "\"/>" );
-            buf.append( "</td>" );
-            
-            //buf.append( "<td>" );
-            for ( String name : designElementNames ) {
-                buf.append( "<tr>" );
-                //<a href="<c:url value="home.jsp"/>">Home</a>
-                //buf.append( "<a href=\"<c:url value=\"www.google.com\"/>\">"+ name + "</a>" + "\n" );
-                buf.append( "<a href=\"http:\\www.google.com\">"+ name + "</a>" + "\n" );
-                buf.append( "</tr>" );
+            try {
+
+                log.debug( "response output stream " + response.getOutputStream() );
+                String type = expressionDataMatrixVisualization.drawDynamicImage( response.getOutputStream() );
+
+                log.debug( "setting content type " + type );
+                response.setContentType( type );
+                
+                log.debug("wrapping with html");
+               
+                buf.append("<img src=" + response.getOutputStream() + "/>");
+
+            } catch ( IOException e ) {
+                throw new JspException( e );
             }
-            //buf.append( "</td>" );
-            
-            //buf.append( "</tr>" );
-            buf.append( "</ol>" );
-            buf.append( "</table>" );
         }
-
+        
         try {
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
             throw new JspException( "HtmlMatrixVisualizationTag: " + ex.getMessage() );
         }
+        
+        log.debug( "return SKIP_BODY" );
         return SKIP_BODY;
     }
 
@@ -127,7 +127,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
-    public int doEndTag() {
+    public int doEndTag() throws JspException {
 
         log.debug( "end tag" );
 
