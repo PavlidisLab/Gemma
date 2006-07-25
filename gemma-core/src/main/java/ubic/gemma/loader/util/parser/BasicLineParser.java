@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -54,6 +55,12 @@ public abstract class BasicLineParser implements LineParser {
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
+
+        if ( is == null || is.available() == 0 ) {
+            log.fatal( "Inputstream null or empty" );
+            throw new IllegalArgumentException( "Inputstream null or empty" );
+        }
+
         linesParsed = 0;
         int nullLines = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
@@ -65,11 +72,11 @@ public abstract class BasicLineParser implements LineParser {
 
             if ( newItem != null ) {
                 results.add( newItem );
-                linesParsed++;
             } else {
                 log.debug( "Got null parse from " + line );
                 nullLines++;
             }
+            linesParsed++;
             if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + linesParsed + " lines..." );
 
         }
@@ -82,6 +89,10 @@ public abstract class BasicLineParser implements LineParser {
      * @see baseCode.io.reader.LineParser#parse(java.io.File)
      */
     public void parse( File file ) throws IOException {
+        if ( file == null ) {
+            log.fatal( "File cannot be null" );
+            throw new IllegalArgumentException( "File cannot be null" );
+        }
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
@@ -96,6 +107,10 @@ public abstract class BasicLineParser implements LineParser {
      * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
      */
     public void parse( String filename ) throws IOException {
+        if ( StringUtils.isBlank( filename ) ) {
+            throw new IllegalArgumentException( "No filename provided" );
+        }
+        log.info( "Parsing " + filename );
         File infile = new File( filename );
         parse( infile );
     }
