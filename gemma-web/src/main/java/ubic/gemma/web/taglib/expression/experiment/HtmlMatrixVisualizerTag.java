@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,8 +71,10 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         log.debug( "start tag" );
 
+        // get metadata from ExpressionDataMatrixVisualization
         ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
         String outfile = expressionDataMatrixVisualization.getOutfile();
+        // TODO use to set image size ... problem is that text gets a little distorted
         int imageWidth = expressionDataMatrixVisualization.getImageWidth();
         int imageHeight = expressionDataMatrixVisualization.getImageHeight();
 
@@ -84,7 +85,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         expressionDataMatrixVisualization.setRowLabels( designElementNames );
         expressionDataMatrixVisualization.createVisualization();
 
-        // expressionDataMatrixVisualization.saveImage( outfile );
+        expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
 
         StringBuilder buf = new StringBuilder();
 
@@ -94,21 +95,31 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             ServletResponse response = pageContext.getResponse();
             log.debug( "response " + response );
 
-            try {
+            // try {/* add me when using dynamic images */
 
-                log.debug( "response output stream " + response.getOutputStream() );
-                String type = expressionDataMatrixVisualization.drawDynamicImage( response.getOutputStream() );
+            // log.debug( "response output stream " + response.getOutputStream() );
+            // String type = expressionDataMatrixVisualization.drawDynamicImage( response.getOutputStream() );
+            // log.debug( "setting content type " + type );
+            // response.setContentType( type );
 
-                log.debug( "setting content type " + type );
-                response.setContentType( type );
+            log.debug( "wrapping with html" );
 
-                log.debug( "wrapping with html" );
+            // TODO get the coords from the JMatrixDisplay (see xRatio and yRatio) and construct hrefs on the fly from
+            // the design element name
+            buf
+                    .append( "<img src=\"" + outfile
+                            + "\" usemap=\"#visualization\" alt=\"\" style=\"border-style:none\"/>" );
+            buf.append( "<map id=\"visualization\" name=\"visualization\">" );
+            buf
+                    .append( "<area shape=\"rect\" alt=\"\" coords=\"105,12,126,18\" href=\"http://www.google.com\" title=\"\" />" );
+            buf
+                    .append( "<area shape=\"rect\" alt=\"\" coords=\"106,23,127,29\" href=\"http://www.ece.queensu.ca\" title=\"\" />" );
+            buf.append( "<area shape=\"default\" nohref=\"nohref\" alt=\"\" />" );
+            buf.append( "</map>" );
 
-                buf.append( "<img src=" + response.getOutputStream() + "/>" );
-
-            } catch ( IOException e ) {
-                throw new JspException( e );
-            }
+            // } catch ( IOException e ) {
+            // throw new JspException( e );
+            // }
         }
 
         try {
