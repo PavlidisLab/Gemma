@@ -214,6 +214,8 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     }
 
     /**
+     * Saves the image to outfile
+     * 
      * @param outfile
      */
     public void saveImage( String outfile ) {
@@ -229,8 +231,10 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     }
 
     /**
-     * @return
-     * @throws IOException
+     * Draw the dynamic image and write to stream
+     * 
+     * @param stream
+     * @return String
      * @throws IOException
      */
     public String drawDynamicImage( OutputStream stream ) throws IOException {
