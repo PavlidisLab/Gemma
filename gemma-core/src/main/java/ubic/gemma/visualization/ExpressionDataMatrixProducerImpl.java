@@ -64,7 +64,7 @@ public class ExpressionDataMatrixProducerImpl extends JPanel {
     public String createDynamicImage( OutputStream stream, boolean showLabels, boolean standardize )
             throws java.io.IOException {
 
-        // JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder( stream );
+        // JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder( stream ); //use with encoder.encode(m_image) below
 
         Graphics2D graphics = null;
 

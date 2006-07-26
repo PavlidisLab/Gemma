@@ -241,7 +241,7 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
         String type = producer.createDynamicImage( stream, true, true );
 
-        log.warn( "returning content type " + type );
+        log.debug( "returning content type " + type );
 
         return type;
 

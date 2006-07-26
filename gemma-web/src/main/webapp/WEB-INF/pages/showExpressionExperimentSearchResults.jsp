@@ -23,7 +23,6 @@
                 </jsp:plugin>
                 --%>
             <a> 
-            	<%=response.getOutputStream()%>
             	<%--
             	<%expressionDataMatrixVisualization.drawDynamicImage( stream);%>
             	<%response.setContentType( "image/jpg" );%>
