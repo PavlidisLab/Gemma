@@ -104,22 +104,21 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
             log.debug( "wrapping with html" );
 
-            // TODO get the coords from the JMatrixDisplay (see xRatio and yRatio) and construct hrefs on the fly from
-            // the design element name
-
-            Map<String, Integer> rowNamesYCoords = expressionDataMatrixVisualization.getRowNameYCoords();
-            for ( String rowName : rowNamesYCoords.keySet() ) {
-                log.debug( rowName + " " + rowNamesYCoords.get( rowName ) );
-            }
-
             buf
                     .append( "<img src=\"" + outfile
                             + "\" usemap=\"#visualization\" alt=\"\" style=\"border-style:none\"/>" );
             buf.append( "<map id=\"visualization\" name=\"visualization\">" );
-            buf
-                    .append( "<area shape=\"rect\" alt=\"\" coords=\"105,12,126,18\" href=\"http://www.google.com\" title=\"\" />" );
-            buf
-                    .append( "<area shape=\"rect\" alt=\"\" coords=\"106,23,127,29\" href=\"http://www.ece.queensu.ca\" title=\"\" />" );
+
+            Map<String, Integer> rowNamesYCoords = expressionDataMatrixVisualization.getRowNameYCoords();
+            int rowNamesXCoord = expressionDataMatrixVisualization.getRowNameXCoord();
+            for ( String rowName : rowNamesYCoords.keySet() ) {
+                log.debug( rowName + " " + rowNamesYCoords.get( rowName ) );
+                // 105,12,126,18
+                buf.append( "<area shape=\"rect\" alt=\"\" coords=\"" + rowNamesXCoord + ","
+                        + ( rowNamesYCoords.get( rowName ) - 5 ) + "," + ( rowNamesXCoord + 20 ) + ","
+                        + rowNamesYCoords.get( rowName ) + "\" href=\"http://www.google.com\" title=\"\" />" );
+            }
+
             buf.append( "<area shape=\"default\" nohref=\"nohref\" alt=\"\" />" );
             buf.append( "</map>" );
 
