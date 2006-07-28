@@ -106,6 +106,12 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
             // TODO get the coords from the JMatrixDisplay (see xRatio and yRatio) and construct hrefs on the fly from
             // the design element name
+
+            Map<String, Integer> rowNamesYCoords = expressionDataMatrixVisualization.getRowNameYCoords();
+            for ( String rowName : rowNamesYCoords.keySet() ) {
+                log.debug( rowName + " " + rowNamesYCoords.get( rowName ) );
+            }
+
             buf
                     .append( "<img src=\"" + outfile
                             + "\" usemap=\"#visualization\" alt=\"\" style=\"border-style:none\"/>" );

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,6 +67,9 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     private List<String> colNames = null;
 
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
+
+    private int rowNameXCoord = 0;
+    private Map<String, Integer> rowNameYCoords = null;
 
     /**
      * Create visualization for the implicit expressionDataMatrix
@@ -225,6 +229,8 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
         try {
             display.setLabelsVisible( true );
             display.saveImage( outfile );
+            rowNameYCoords = display.getRowNameYCoords();
+            rowNameXCoord = display.getRowNameXCoord();
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -256,6 +262,20 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      */
     public ColorMatrix getColorMatrix() {
         return colorMatrix;
+    }
+
+    /**
+     * @return int
+     */
+    public int getRowNameXCoord() {
+        return rowNameXCoord;
+    }
+
+    /**
+     * @return Map
+     */
+    public Map<String, Integer> getRowNameYCoords() {
+        return rowNameYCoords;
     }
 
 }
