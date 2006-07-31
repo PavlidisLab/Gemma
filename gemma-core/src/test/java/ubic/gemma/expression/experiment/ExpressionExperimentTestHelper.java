@@ -235,6 +235,7 @@ public class ExpressionExperimentTestHelper extends BaseTransactionalSpringConte
             CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( i + "_at" );
+            cs.setDescription( "A test design element " + i + " created from ExpressionExperimentTestHelper" );
 
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setName( "arrayDesign_" + i );
