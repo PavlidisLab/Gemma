@@ -116,7 +116,9 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
                 // 105,12,126,18
                 buf.append( "<area shape=\"rect\" alt=\"\" coords=\"" + rowNamesXCoord + ","
                         + ( rowNamesYCoords.get( rowName ) - 5 ) + "," + ( rowNamesXCoord + 20 ) + ","
-                        + rowNamesYCoords.get( rowName ) + "\" href=\"http://www.google.com\" title=\"\" />" );
+                        + rowNamesYCoords.get( rowName )
+                        + "\" href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term=" + rowName
+                        + "\" title=\"\" />" );
             }
 
             buf.append( "<area shape=\"default\" nohref=\"nohref\" alt=\"\" />" );
