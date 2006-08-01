@@ -71,10 +71,10 @@ public class NCluster {
      * method=='a': pairwise average-linkage clustering
      * method=='c': pairwise centroid-linkage clustering
      * 
-     * @param rows
-     * @param cols
+     * @param rows Num rows in data matrix
+     * @param cols Num columns in data matrix
      * @param transpose
-     * @param dist
+     * @param dist Distance metrix to use (see above).
      * @param method
      * @param matrix
      * @return int[][]
@@ -82,24 +82,23 @@ public class NCluster {
     public native int[][] treeCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][] );
     
     /**
-     * Self Organizing Maps native call.
-     * @param rows
+     * Self Organizing Maps Clustering native call.
+     * @param rows 
      * @param cols
      * @param transpose
-     * @param dist
-     * @param method
+     * @param dist Distance metric to use.
      * @param matrix
-     * @param nxgrid
-     * @param nygrid
-     * @param inittau
-     * @param niter
+     * @param nxgrid The number of grid cells horizontally in the rectangular topology of clusters.
+     * @param nygrid The number of grid cells vertically in the rectangular topology of clusters.
+     * @param inittau The initial value of tau, representing the neighborhood function.
+     * @param niter The number of iterations.
      * @param cellData
      * @param clusterId
      * @return
      */
     public native int[][] somCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][],
-            int nxgrid, int nygrid, double inittau, int niter, double cellData[][], int clusterId[][] );
-
+            int nxgrid, int nygrid, double inittau, int niter, double cellData[][], int clusterId[][] );// TODO remove
+                                                                                                        // 'method'
     static Configuration config = null;
     static String baseDir = null;
     static {
@@ -146,7 +145,7 @@ public class NCluster {
     }
 
     /**
-     * @return
+     * @return double[][]
      */
     private static double[][] testData() {
         // filename = baseDir + ( String ) config.getProperty( "aTestDataSet_no_headers" );
