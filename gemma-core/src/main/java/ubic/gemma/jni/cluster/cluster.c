@@ -3450,6 +3450,69 @@ void somassign (int nrows, int ncolumns, double** data, int** mask,
 
 /* ******************************************************************* */
 
+JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_somCluster
+  (JNIEnv * env, jobject obj, jint nrows, jint ncols, jint ntranspose, jchar ndist, jchar nmethod, jobjectArray matrix, jint nxgrid, jint nygrid, jdouble inittau, jint niter, jobjectArray cellData, jobjectArray clusterId)
+{
+	int rows = nrows;
+    int cols = ncols;
+    int t = ntranspose; //causes an error if used in call to treeCluster;
+    int xgrid = nxgrid;
+    int ygrid = nygrid;
+    double tau = inittau;
+    int iter = niter;
+    int i,j,size, sizeOneDim=0;
+    
+    //data
+    double **dataMatrix = malloc(rows*sizeof(double*));
+    int** mask = malloc(rows*sizeof(int*));
+    
+    //transpose dependent
+    double *weight;
+    int (*result)[2];
+    double *linkdist;
+    //double **distMatrix;//use NULL
+    
+    char dist = ndist;
+    char method = nmethod;
+   
+    size = (*env)->GetArrayLength(env,matrix);
+    
+    if (t==0){
+    	weight = malloc(cols*sizeof(double));
+        result = malloc((rows-1)*sizeof(int[2]));
+    	linkdist = malloc((rows-1)*sizeof(double));
+    	for (j=0; j<cols; j++) weight[j]=1;
+    }
+    else if(t==1){
+    	weight = malloc(rows*sizeof(double));
+        result = malloc((cols-1)*sizeof(int[2]));
+    	linkdist = malloc((cols-1)*sizeof(double));
+    	for (j=0; j<rows; j++) weight[j]=1;
+    }
+    
+    printf("SOM clustering\nelements: %i\n\n", size);
+    
+    for (i=0; i<size; i++){
+	    jdoubleArray oneDim = (*env)->GetObjectArrayElement(env,matrix, i);
+	    jdouble *row = (*env)->GetDoubleArrayElements(env,oneDim, 0);
+	    dataMatrix[i] = row;
+	    //printf("size of 1D array at %i: %i\n\n", i, sizeOneDim);
+	    mask[i] = malloc(cols*sizeof(int));
+	    
+    	for (j=0; j<cols; j++){
+    		mask[i][j]=1;
+    	    //printf("%f\n",dataMatrix[i][j]);
+    	}
+    	//printf("\n");
+    	//(*env)->ReleaseDoubleArrayElements(env, oneDim, row, 0);
+    	//(*env)->DeleteLocalRef(env, row);
+    }
+    
+    somcluster (rows, cols, dataMatrix, mask, weight, 0, xgrid, ygrid, tau, iter, dist, NULL, NULL);
+   
+	return 0;
+}	
+
 void CALL somcluster (int nrows, int ncolumns, double** data, int** mask,
   const double weight[], int transpose, int nxgrid, int nygrid,
   double inittau, int niter, char dist, double*** celldata, int clusterid[][2])
@@ -3544,7 +3607,8 @@ somcluster.
         celldata[i][j] = malloc(ndata*sizeof(double));
     }
   }
-
+	
+  printf("somcluster invoked ...\n\n ");	
   somworker (nrows, ncolumns, data, mask, weight, transpose, nxgrid, nygrid,
     inittau, celldata, niter, dist);
   if (clusterid)

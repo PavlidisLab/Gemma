@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_treeCluster
   (JNIEnv *, jobject, jint, jint, jint, jchar, jchar, jobjectArray);
 
+/*
+ * Class:     ubic_gemma_jni_cluster_NCluster
+ * Method:    somCluster
+ * Signature: (IIICC[[DIIDI[[D[[I)[[I
+ */
+JNIEXPORT jobjectArray JNICALL Java_ubic_gemma_jni_cluster_NCluster_somCluster
+  (JNIEnv *, jobject, jint, jint, jint, jchar, jchar, jobjectArray, jint, jint, jdouble, jint, jobjectArray, jobjectArray);
+
 #ifdef __cplusplus
 }
 #endif

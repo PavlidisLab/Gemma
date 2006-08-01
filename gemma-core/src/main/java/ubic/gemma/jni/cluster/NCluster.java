@@ -51,12 +51,23 @@ public class NCluster {
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
 
     /**
-     * dist (input) char Defines which distance measure is used, as given by the table: dist=='e': Euclidean distance
-     * dist=='b': City-block distance dist=='c': correlation dist=='a': absolute value of the correlation dist=='u':
-     * uncentered correlation dist=='x': absolute uncentered correlation dist=='s': Spearman's rank correlation
-     * dist=='k': Kendall's tau For other values of dist, the default (Euclidean distance) is used. method (input) char
-     * Defines which hierarchical clustering method is used: method=='s': pairwise single-linkage clustering
-     * method=='m': pairwise maximum- (or complete-) linkage clustering method=='a': pairwise average-linkage clustering
+     * dist       (input) char
+     * Defines which distance measure is used, as given by the table:
+     * dist=='e': Euclidean distance
+     * dist=='b': City-block distance
+     * dist=='c': correlation
+     * dist=='a': absolute value of the correlation
+     * dist=='u': uncentered correlation
+     * dist=='x': absolute uncentered correlation
+     * dist=='s': Spearman's rank correlation
+     * dist=='k': Kendall's tau
+     * For other values of dist, the default (Euclidean distance) is used.
+     * 
+     * method     (input) char
+     * Defines which hierarchical clustering method is used:
+     * method=='s': pairwise single-linkage clustering
+     * method=='m': pairwise maximum- (or complete-) linkage clustering
+     * method=='a': pairwise average-linkage clustering
      * method=='c': pairwise centroid-linkage clustering
      * 
      * @param rows
@@ -68,6 +79,9 @@ public class NCluster {
      * @return int[][]
      */
     public native int[][] treeCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][] );
+
+    public native int[][] somCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][],
+            int nxgrid, int nygrid, double inittau, int niter, double cellData[][], int clusterId[][] );
 
     static Configuration config = null;
     static String baseDir = null;
@@ -94,7 +108,7 @@ public class NCluster {
         Collection results = new HashSet();
         try {
             is = new FileInputStream( new File( filename ) );
-            parser.parse( is );
+            parser.parse( is, false );
             results = parser.getResults();
         } catch ( Exception e ) {
             e.printStackTrace();
@@ -174,6 +188,11 @@ public class NCluster {
             OptionBuilder.withDescription( "Run test example" );
             Option testOpt = OptionBuilder.create( 't' );
 
+            /* clustering algorithm */
+            OptionBuilder.hasArgs();
+            OptionBuilder.withDescription( "Hierarchical clustering or Self Organizing Maps" );
+            Option algoOpt = OptionBuilder.create( 'a' );
+
             /* parse */
             OptionBuilder.hasArg();
             OptionBuilder.withDescription( "Filename" );
@@ -190,6 +209,7 @@ public class NCluster {
             Options opt = new Options();
             opt.addOption( helpOpt );
             opt.addOption( testOpt );
+            opt.addOption( algoOpt );
             opt.addOption( fileOpt );
             opt.addOption( distanceOpt );
             opt.addOption( methodOpt );
@@ -227,22 +247,43 @@ public class NCluster {
                 System.out.println( "Distance measure not specified ... using euclidean" );
             }
 
-            if ( cl.hasOption( 'm' ) ) {
-                method = cl.getOptionValue( 'm' );// TODO validate, fix issue with this option
-                log.warn( method );
-            } else {
-                System.out.println( "Linkage not specified ... using complete (maximum) linkage" );
+            if ( cl.hasOption( 'a' ) ) {
+                String algo = cl.getOptionValue( 'a' );
+
+                /* som clustering */
+                if ( algo.equalsIgnoreCase( "som" ) ) {
+                    StopWatch sw = new StopWatch();
+                    sw.start();
+
+                    int xgrid = 2;
+                    int ygrid = 2;
+                    double tau = 0.02;
+                    int iter = 2;
+                    cluster.somCluster( data.length, data[0].length, 0, distance.charAt( 0 ), method.charAt( 0 ), data,
+                            xgrid, ygrid, tau, iter, null, null );
+                    sw.stop();
+                    log.warn( sw.getTime() );
+                }
+            }
+            /* hierarchical clustering */
+            else {
+                if ( cl.hasOption( 'm' ) ) {
+                    method = cl.getOptionValue( 'm' );// TODO validate, fix issue with this option
+                    log.warn( method );
+                } else {
+                    System.out.println( "Linkage not specified ... using complete (maximum) linkage" );
+                }
+
+                StopWatch sw = new StopWatch();
+                sw.start();
+                cluster.treeCluster( data.length, data[0].length, 0, distance.charAt( 0 ), method.charAt( 0 ), data );
+                sw.stop();
+                log.warn( sw.getTime() );
             }
 
         } catch ( Exception e ) {
             e.printStackTrace();
         }
-
-        StopWatch sw = new StopWatch();
-        sw.start();
-        cluster.treeCluster( data.length, data[0].length, 0, distance.charAt( 0 ), method.charAt( 0 ), data );
-        sw.stop();
-        log.warn( sw.getTime() );
     }
 
 }
