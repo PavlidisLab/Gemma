@@ -56,10 +56,6 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
     private String outfile = "visualization.png";
 
-    private int imageWidth = 0;
-
-    private int imageHeight = 0;
-
     private ColorMatrix colorMatrix = null;
 
     private List<String> rowNames = null;
@@ -135,34 +131,6 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     }
 
     /**
-     * @return int
-     */
-    public int getImageHeight() {
-        return imageHeight;
-    }
-
-    /**
-     * @param imageHeight
-     */
-    public void setImageHeight( int imageHeight ) {
-        this.imageHeight = imageHeight;
-    }
-
-    /**
-     * @return int
-     */
-    public int getImageWidth() {
-        return imageWidth;
-    }
-
-    /**
-     * @param imageWidth
-     */
-    public void setImageWidth( int imageWidth ) {
-        this.imageWidth = imageWidth;
-    }
-
-    /**
      * @return ExpressionDataMatrix
      */
     public ExpressionDataMatrix getExpressionDataMatrix() {
@@ -227,7 +195,7 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
         try {
-            display.setLabelsVisible( true );
+            // display.setLabelsVisible( true );
             display.saveImage( outfile );
             rowNameYCoords = display.getRowNameYCoords();
             rowNameXCoord = display.getRowNameXCoord();

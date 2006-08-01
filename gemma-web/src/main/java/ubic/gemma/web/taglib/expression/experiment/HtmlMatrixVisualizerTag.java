@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletResponse;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -30,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
 
@@ -46,8 +46,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
     // TODO if you decide to add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
-    // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1. Remember, you were having problems
-    // with adding EL support to this before
+    // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
 
     private ExpressionDataMatrixVisualization expressionDataMatrixVisualization = null;
@@ -74,9 +73,6 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         // get metadata from ExpressionDataMatrixVisualization
         ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
         String outfile = expressionDataMatrixVisualization.getOutfile();
-        // TODO use to set image size ... problem is that text gets a little distorted
-        int imageWidth = expressionDataMatrixVisualization.getImageWidth();
-        int imageHeight = expressionDataMatrixVisualization.getImageHeight();
 
         Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
@@ -92,41 +88,32 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
-            ServletResponse response = pageContext.getResponse();
-            log.debug( "response " + response );
-
-            // try {/* add me when using dynamic images */
-
-            // log.debug( "response output stream " + response.getOutputStream() );
-            // String type = expressionDataMatrixVisualization.drawDynamicImage( response.getOutputStream() );
-            // log.debug( "setting content type " + type );
-            // response.setContentType( type );
 
             log.debug( "wrapping with html" );
 
-            buf
-                    .append( "<img src=\"" + outfile
-                            + "\" usemap=\"#visualization\" alt=\"\" style=\"border-style:none\"/>" );
-            buf.append( "<map id=\"visualization\" name=\"visualization\">" );
-
-            Map<String, Integer> rowNamesYCoords = expressionDataMatrixVisualization.getRowNameYCoords();
-            int rowNamesXCoord = expressionDataMatrixVisualization.getRowNameXCoord();
-            for ( String rowName : rowNamesYCoords.keySet() ) {
-                log.debug( rowName + " " + rowNamesYCoords.get( rowName ) );
-                // 105,12,126,18
-                buf.append( "<area shape=\"rect\" alt=\"\" coords=\"" + rowNamesXCoord + ","
-                        + ( rowNamesYCoords.get( rowName ) - 5 ) + "," + ( rowNamesXCoord + 20 ) + ","
-                        + rowNamesYCoords.get( rowName )
-                        + "\" href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term=" + rowName
-                        + "\" title=\"\" />" );
+            buf.append( "<table border=\"0\" width=\"200px\" height=\"5px\">" );
+            buf.append( "<tr>" );
+            buf.append( "<td border=\"0\" rowspan=\"5\">" );
+            buf.append( "<img width=\"" + 200 + "\" height=\"" + 150 + "\" src=\"" + outfile + "\">" );
+            buf.append( "</td>" );
+            buf.append( "<td>" );
+            for ( String name : designElementNames ) {
+                buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term=" + name
+                        + "\">" + name + "</a>" );
+                buf.append( "<br/>" );
             }
+            buf.append( "</td>" );
 
-            buf.append( "<area shape=\"default\" nohref=\"nohref\" alt=\"\" />" );
-            buf.append( "</map>" );
-
-            // } catch ( IOException e ) {
-            // throw new JspException( e );
+            // buf.append( "<td>" );
+            // for ( DesignElement de : expressionDataMatrix.getDesignElements() ) {
+            // log.debug(de.getDescription());
+            // buf.append( de.getDescription() );
+            // buf.append( "<br/>" );
             // }
+            // buf.append( "</td>" );
+            buf.append( "</tr>" );
+            buf.append( "</table>" );
+
         }
 
         try {
