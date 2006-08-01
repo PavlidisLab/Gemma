@@ -29,7 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
 
@@ -85,7 +84,10 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        if ( expressionDataMatrix == null || m.size() == 0 ) {
+        if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
+            buf
+                    .append( "Visualizations suppressed.  To download the raw data file click <a href=\"resources/administrator/\">here</a>." );
+        } else if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
 
@@ -104,16 +106,8 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             }
             buf.append( "</td>" );
 
-            // buf.append( "<td>" );
-            // for ( DesignElement de : expressionDataMatrix.getDesignElements() ) {
-            // log.debug(de.getDescription());
-            // buf.append( de.getDescription() );
-            // buf.append( "<br/>" );
-            // }
-            // buf.append( "</td>" );
             buf.append( "</tr>" );
             buf.append( "</table>" );
-
         }
 
         try {

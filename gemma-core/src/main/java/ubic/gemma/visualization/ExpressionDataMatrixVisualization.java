@@ -67,6 +67,8 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     private int rowNameXCoord = 0;
     private Map<String, Integer> rowNameYCoords = null;
 
+    private boolean suppressVisualizations;
+
     /**
      * Create visualization for the implicit expressionDataMatrix
      */
@@ -246,4 +248,17 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
         return rowNameYCoords;
     }
 
+    /**
+     * @param suppressVisualizations
+     */
+    public void setSuppressVisualizations( boolean suppressVisualizations ) {
+        this.suppressVisualizations = suppressVisualizations;
+    }
+
+    /**
+     * @return Returns the suppressVisualizations.
+     */
+    public boolean isSuppressVisualizations() {
+        return suppressVisualizations;
+    }
 }

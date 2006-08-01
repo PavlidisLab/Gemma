@@ -159,6 +159,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         Long id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
+        boolean suppressVisualizations = ( ( ExpressionExperimentSearchCommand ) command ).isSuppressVisualizations();
 
         // TODO allow filename to be entered from form
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
@@ -184,6 +185,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
             matrixVisualization = new ExpressionDataMatrixVisualization();
             matrixVisualization.setExpressionDataMatrix( expressionDataMatrix );
             matrixVisualization.setOutfile( filename );
+            matrixVisualization.setSuppressVisualizations( suppressVisualizations );
 
         } else {
             log.debug( "search by official gene symbol" );
