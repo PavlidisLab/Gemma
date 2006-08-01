@@ -21,7 +21,9 @@ package ubic.gemma.loader.genome.gene.ncbi;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
+import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -33,9 +35,9 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
     public void testFetchAndLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
         try {
-            Collection<Object> results = sdog.generate( null );
+            Collection<NCBIGene2Accession> results = sdog.generate( null );
             NcbiGeneConverter ngc = new NcbiGeneConverter();
-            Collection<Object> gemmaObj = ngc.convert( results );
+            Gene gemmaObj = ngc.convert( results );
             PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
             persisterHelper.persist( gemmaObj );
         } catch ( Exception e ) {

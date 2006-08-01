@@ -20,6 +20,8 @@ package ubic.gemma.loader.association;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,6 +33,8 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.Gene2GOAssociation;
 
 /**
+ * FIXME - document what this is for.
+ * 
  * @author keshav
  * @author pavlidis
  * @spring.bean id="gene2GOAssociationParser"
@@ -40,6 +44,8 @@ public class Gene2GOAssociationParserImpl extends BasicLineParser {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserImpl.class );
 
     private Gene2GOAssociationMappings gene2GOAssociationMappings = null;
+
+    private Collection<Gene2GOAssociation> results = new HashSet<Gene2GOAssociation>();
 
     int i = 0;
 
@@ -77,6 +83,17 @@ public class Gene2GOAssociationParserImpl extends BasicLineParser {
         g2GO = ( Gene2GOAssociation ) obj;
         return g2GO;
 
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( Gene2GOAssociation ) obj );
+
+    }
+
+    @Override
+    public Collection<Gene2GOAssociation> getResults() {
+        return results;
     }
 
 }

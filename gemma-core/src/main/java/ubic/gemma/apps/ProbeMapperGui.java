@@ -45,8 +45,9 @@ import javax.swing.UnsupportedLookAndFeelException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.apps.ProbeMapper.LocationData;
-import ubic.gemma.externalDb.GoldenPath.MeasurementMethod;
+import ubic.gemma.apps.ProbeMapperCli;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
 /**
  * @author pavlidis
@@ -70,7 +71,7 @@ public class ProbeMapperGui extends JFrame {
     private JLabel locationMethodLabel = null;
     JComboBox locationMethodComboBox = null;
 
-    MeasurementMethod method = MeasurementMethod.right;
+    ThreePrimeDistanceMethod method = ThreePrimeDistanceMethod.RIGHT;
     protected File inputFile;
     protected File outputFile;
 
@@ -150,14 +151,14 @@ public class ProbeMapperGui extends JFrame {
      * 
      */
     protected void run() {
-        ProbeMapper ptpl = new ProbeMapper();
+        ProbeMapperCli ptpl = new ProbeMapperCli();
         try {
             String bestOutputFileName = outputFile.getAbsolutePath().replaceFirst( "\\.", ".best." );
             log.info( "Saving best to " + bestOutputFileName );
-            Map<String, Collection<LocationData>> results = ptpl.runOnBlatResults( new FileInputStream( inputFile ),
+            Map<String, Collection<BlatAssociation>> results = ptpl.runOnBlatResults( new FileInputStream( inputFile ),
                     new BufferedWriter( new FileWriter( outputFile ) ) );
             File o = new File( bestOutputFileName );
-            ptpl.getBest( results, new BufferedWriter( new FileWriter( o ) ) );
+            ptpl.printBestResults( results, new BufferedWriter( new FileWriter( o ) ) );
         } catch ( FileNotFoundException e ) {
             log.error( e, e );
         } catch ( IOException e ) {
@@ -362,10 +363,12 @@ public class ProbeMapperGui extends JFrame {
 
                 @SuppressWarnings("unused")
                 public void actionPerformed( java.awt.event.ActionEvent e ) {
-                    if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( MeasurementMethod.center ) ) {
-                        method = MeasurementMethod.center;
-                    } else if ( ( ( String ) locationMethodComboBox.getSelectedItem() ).equals( MeasurementMethod.right ) ) {
-                        method = MeasurementMethod.right;
+                    if ( ( ( String ) locationMethodComboBox.getSelectedItem() )
+                            .equals( ThreePrimeDistanceMethod.MIDDLE ) ) {
+                        method = ThreePrimeDistanceMethod.MIDDLE;
+                    } else if ( ( ( String ) locationMethodComboBox.getSelectedItem() )
+                            .equals( ThreePrimeDistanceMethod.RIGHT ) ) {
+                        method = ThreePrimeDistanceMethod.RIGHT;
                     }
                 }
             } );

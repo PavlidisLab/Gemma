@@ -18,6 +18,9 @@
  */
 package ubic.gemma.loader.genome;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,6 +39,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * Target sequences are assumed to be chromosomes. If a chromosome name (chr10 or chr10.fa) is detected, the name is
  * stripped to be a chromosome number only (e.g. 10). Otherwise, the value is used as is. If the query name starts with
  * "target:", this is removed.
+ * <p>
+ * Results can be filtered by setting the scoreThreshold parameter.
  * 
  * @author pavlidis
  * @version $Id$
@@ -65,6 +70,18 @@ public class BlatResultParser extends BasicLineParser {
     private static final int BLOCKSIZES_FIELD = 18;
     private static final int QSTARTS_FIELD = 19;
     private static final int TSTARTS_FIELD = 20;
+
+    private Collection<BlatResult> results = new HashSet<BlatResult>();
+    private double scoreThreshold = 0.0;
+
+    /**
+     * Define a threshold, below which results are ignored. By default all results are read in.
+     * 
+     * @param score
+     */
+    public void setScoreThreshold( double score ) {
+        this.scoreThreshold = score;
+    }
 
     /*
      * (non-Javadoc)
@@ -136,6 +153,11 @@ public class BlatResultParser extends BasicLineParser {
             result.getTargetChromosome().setSequence( BioSequence.Factory.newInstance() );
             result.getTargetChromosome().getSequence().setName( chrom );
             result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
+
+            if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
+                return null;
+            }
+
             return result;
         } catch ( NumberFormatException e ) {
             log.error( "Invalid number format", e );
@@ -153,5 +175,16 @@ public class BlatResultParser extends BasicLineParser {
         queryName = queryName.replace( "target:", "" );
         queryName = queryName.replaceFirst( ";$", "" );
         return queryName;
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( BlatResult ) obj );
+
+    }
+
+    @Override
+    public Collection<BlatResult> getResults() {
+        return results;
     }
 }

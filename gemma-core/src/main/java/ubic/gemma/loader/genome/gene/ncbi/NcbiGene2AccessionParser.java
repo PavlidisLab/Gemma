@@ -18,15 +18,15 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 
 /**
  * Class to parse the NCBI gene2accession files. Results are stored in a "Source domain object", not a Gemma Gene.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$
@@ -37,6 +37,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser {
      * 
      */
     private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 12;
+
+    Collection<NCBIGene2Accession> results = new HashSet<NCBIGene2Accession>();
 
     /*
      * (non-Javadoc)
@@ -69,6 +71,17 @@ public class NcbiGene2AccessionParser extends BasicLineParser {
             throw new RuntimeException( e );
         }
         return newGene;
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( NCBIGene2Accession ) obj );
+
+    }
+
+    @Override
+    public Collection<NCBIGene2Accession> getResults() {
+        return results;
     }
 
 }

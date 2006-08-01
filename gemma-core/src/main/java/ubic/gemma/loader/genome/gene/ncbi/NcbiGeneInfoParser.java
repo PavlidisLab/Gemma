@@ -18,6 +18,14 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.StringUtil;
@@ -38,6 +46,8 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
      * 
      */
     private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 13;
+
+    private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
 
     /*
      * (non-Javadoc)
@@ -96,6 +106,21 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
     @Override
     protected Object getKey( Object newItem ) {
         return ( ( NCBIGeneInfo ) newItem ).getGeneId();
+    }
+
+    @Override
+    public Collection<NCBIGeneInfo> getResults() {
+        return results.values();
+    }
+
+    @Override
+    public NCBIGeneInfo get( Object key ) {
+        return results.get( key );
+    }
+
+    @Override
+    protected void put( Object key, Object value ) {
+        results.put( ( String ) key, ( NCBIGeneInfo ) value );
     }
 
 }

@@ -18,7 +18,10 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +50,8 @@ public class AffyProbeReader extends BasicLineMapParser {
     protected static final Log log = LogFactory.getLog( AffyProbeReader.class );
 
     private int sequenceField = 4;
+
+    private Map<String, CompositeSequence> results = new HashMap<String, CompositeSequence>();
 
     /*
      * (non-Javadoc)
@@ -116,6 +121,21 @@ public class AffyProbeReader extends BasicLineMapParser {
      */
     public void setSequenceField( int sequenceField ) {
         this.sequenceField = sequenceField;
+    }
+
+    @Override
+    public CompositeSequence get( Object key ) {
+        return results.get( key );
+    }
+
+    @Override
+    public Collection<CompositeSequence> getResults() {
+        return results.values();
+    }
+
+    @Override
+    protected void put( Object key, Object value ) {
+        results.put( ( String ) key, ( CompositeSequence ) value );
     }
 
 }

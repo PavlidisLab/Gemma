@@ -19,13 +19,14 @@
 package ubic.gemma.loader.association;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
+import ubic.gemma.model.association.ProteinProteinInteraction;
 import ubic.gemma.model.association.ProteinProteinInteractionDao;
 import ubic.gemma.model.association.ProteinProteinInteractionImpl;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
 
@@ -33,7 +34,7 @@ import ubic.gemma.model.genome.gene.GeneProductDao;
  * Class to parse a file of protein-protein interactions (retrieved from BIND). Format: (read whole row)
  * 
  * <pre>
- *          pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
+ *            pl_ncbiid\tp2_ncbiid\t external_db\t db_id\t numMentions\t action\t
  * </pre>
  * 
  * @author anshu
@@ -41,16 +42,16 @@ import ubic.gemma.model.genome.gene.GeneProductDao;
  */
 public class PPIFileParser extends BasicLineParser /* implements Persister */{
 
+    private Collection<ProteinProteinInteraction> results = new HashSet<ProteinProteinInteraction>();
+
     public static final int PPI_FIELDS_PER_ROW = 6;
 
     private GeneProductDao gpDao;
     private ProteinProteinInteractionDao ppiDao;
-    private ExternalDatabaseDao dbDao;
 
-    public PPIFileParser( GeneProductDao gdao, ProteinProteinInteractionDao ldao, ExternalDatabaseDao dDao ) {
+    public PPIFileParser( GeneProductDao gdao, ProteinProteinInteractionDao ldao ) {
         this.gpDao = gdao;
         this.ppiDao = ldao;
-        this.dbDao = dDao;
     }
 
     /*
@@ -69,7 +70,7 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
         }
 
         Collection<GeneProduct> c;
-        ProteinProteinInteractionImpl assoc = new ProteinProteinInteractionImpl();
+        ProteinProteinInteraction assoc = new ProteinProteinInteractionImpl();
         GeneProduct g1 = null;
         GeneProduct g2 = null;
         String id = null;
@@ -107,6 +108,17 @@ public class PPIFileParser extends BasicLineParser /* implements Persister */{
     public void removeAll() {
         Collection col = ppiDao.loadAll();
         ppiDao.remove( col );
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( ProteinProteinInteraction ) obj );
+
+    }
+
+    @Override
+    public Collection<ProteinProteinInteraction> getResults() {
+        return results;
     }
 
 }

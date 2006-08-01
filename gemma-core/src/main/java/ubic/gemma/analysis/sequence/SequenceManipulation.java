@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.util;
+package ubic.gemma.analysis.sequence;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
  * @author pavlidis
  * @version $Id$
  */
-@SuppressWarnings("unchecked")
 public class SequenceManipulation {
     protected static final Log log = LogFactory.getLog( SequenceManipulation.class );
 
@@ -81,7 +80,7 @@ public class SequenceManipulation {
      * @return
      */
     public static BioSequence collapse( CompositeSequence compositeSequence ) {
-        Set copyOfProbes = copyCompositeSequenceReporters( compositeSequence );
+        Set<Reporter> copyOfProbes = copyCompositeSequenceReporters( compositeSequence );
         BioSequence collapsed = BioSequence.Factory.newInstance();
         collapsed.setSequence( "" );
         while ( !copyOfProbes.isEmpty() ) {
@@ -125,11 +124,11 @@ public class SequenceManipulation {
     }
 
     /**
-     * Given a physical location, find out how much of it overlaps with exons of a gene. This could involve more than
-     * one exon.
+     * Given a gene, find out how much of it overlaps with exons provided as starts and sizes. This could involve more
+     * than one exon.
      * <p>
      * 
-     * @param chromosome
+     * @param chromosome, as "chrX" or "X".
      * @param starts of the locations we are testing.
      * @param sizes of the locations we are testing.
      * @param strand to consider. If null, strandedness is ignored.
@@ -173,6 +172,7 @@ public class SequenceManipulation {
         if ( starts == null || sizes == null || geneProduct == null )
             throw new IllegalArgumentException( "Null data" );
 
+        // If strand is null we don't bother looking at it.
         if ( strand != null && geneProduct.getPhysicalLocation().getStrand() != null
                 && geneProduct.getPhysicalLocation().getStrand() != strand ) {
             return 0;

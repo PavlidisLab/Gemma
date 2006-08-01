@@ -38,7 +38,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
      * @return a collection of NCBIGene2Accession
      * @see ubic.gemma.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
      */
-    public Collection<Object> generate() {
+    public Collection<NCBIGene2Accession> generate() {
         return this.generate( null );
     }
 
@@ -48,7 +48,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
      * @see ubic.gemma.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
      */
     @SuppressWarnings("unused")
-    public Collection<Object> generate( String accession ) {
+    public Collection<NCBIGene2Accession> generate( String accession ) {
 
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
         LocalFile geneInfoFile = fetcher.fetch( "gene_info" ).iterator().next();
@@ -60,12 +60,11 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
             infoParser.parse( geneInfoFile.asFile() );
             accParser.parse( gene2AccessionFile.asFile() );
 
-            Collection<Object> ncbiGenes = accParser.getResults();
+            Collection<NCBIGene2Accession> ncbiGenes = accParser.getResults();
 
-            for ( Object o : ncbiGenes ) {
-                NCBIGene2Accession accession2 = ( NCBIGene2Accession ) o;
-                NCBIGeneInfo info = ( NCBIGeneInfo ) infoParser.get( accession2.getGeneId() );
-                accession2.setInfo( info );
+            for ( NCBIGene2Accession o : ncbiGenes ) {
+                NCBIGeneInfo info = ( NCBIGeneInfo ) infoParser.get( o.getGeneId() );
+                o.setInfo( info );
             }
 
             return ncbiGenes;

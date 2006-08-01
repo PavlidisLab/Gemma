@@ -18,6 +18,9 @@
  */
 package ubic.gemma.loader.util.parser;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -38,6 +41,12 @@ public class TabDelimParser extends BasicLineParser {
         return this.header;
     }
 
+    Collection<String[]> results;
+
+    public TabDelimParser() {
+        this.results = new HashSet<String[]>();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -49,4 +58,15 @@ public class TabDelimParser extends BasicLineParser {
                 + "' ..." );
         return fields;
     }
+
+    @Override
+    public Collection<String[]> getResults() {
+        return results;
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( String[] ) obj );
+    }
+
 }

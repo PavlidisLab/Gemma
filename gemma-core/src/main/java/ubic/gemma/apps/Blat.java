@@ -59,6 +59,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 public class Blat {
 
     private static final Log log = LogFactory.getLog( Blat.class );
+    private static final double BLAT_SCORE_THRESHOLD = 0.8; // FIXME - make this user-modifiable.
     private static String os = System.getProperty( "os.name" ).toLowerCase();
 
     public static enum BlattableGenome {
@@ -68,9 +69,9 @@ public class Blat {
     static {
         if ( !os.toLowerCase().startsWith( "windows" ) ) {
             try {
-                log.info( "Loading gfClient library, looking in " + System.getProperty( "java.library.path" ) );
+                log.debug( "Loading gfClient library, looking in " + System.getProperty( "java.library.path" ) );
                 System.loadLibrary( "Blat" );
-                log.info( "Loaded Blat library successfully" );
+                log.info( "Loaded Blat native library successfully" );
             } catch ( UnsatisfiedLinkError e ) {
                 log.error( e, e );
                 throw new ExceptionInInitializerError( "Unable to locate or load the Blat native library: "
@@ -175,7 +176,7 @@ public class Blat {
      * @return Collection of BlatResult objects.
      * @throws IOException
      */
-    public Collection<Object> blatQuery( BioSequence b, BlattableGenome genome ) throws IOException {
+    public Collection<BlatResult> blatQuery( BioSequence b, BlattableGenome genome ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
@@ -187,9 +188,9 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath();
 
-        Collection<Object> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
+        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
 
-        // cleanUpTmpFiles( querySequenceFile, outputPath );
+        cleanUpTmpFiles( querySequenceFile, outputPath );
         return results;
 
     }
@@ -201,7 +202,7 @@ public class Blat {
      * @return Collection of BlatResult objects.
      * @throws IOException
      */
-    public Collection<Object> blatQuery( BioSequence b ) throws IOException {
+    public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
         Taxon t = b.getTaxon();
         if ( t == null ) {
             throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
@@ -260,21 +261,27 @@ public class Blat {
         Map<String, Collection<BlatResult>> results = new HashMap<String, Collection<BlatResult>>();
 
         File querySequenceFile = File.createTempFile( "pattern", ".fa" );
-        querySequenceFile.deleteOnExit();
         BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) );
 
+        /*
+         * Note this silliness. Often the sequences have been read in from a file in the first place. The problem is
+         * there are no easy hooks to gfClient that don't use a file. This could be changed at a later time. It would
+         * require customizing Kent's code (even more than we do).
+         */
+
+        log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
         for ( BioSequence b : sequences ) {
-            out.write( ">" + b.getName() + "\n" + b.getSequence() );
+            out.write( ">" + b.getName() + "\n" + b.getSequence() + "\n" );
         }
         out.close();
 
         String outputPath = getTmpPslFilePath();
 
-        gfClient( querySequenceFile, outputPath, this.choosePortForQuery( genome ) );
+        Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( genome ) );
 
-        Collection<Object> rawResults = this.processPsl( outputPath );
-        for ( Object object : rawResults ) {
-            assert object instanceof BlatResult;
+        log.debug( "Got" + rawresults.size() + " raw blat results" );
+
+        for ( BlatResult object : rawresults ) {
             String name = ( ( BlatResult ) object ).getQuerySequence().getName();
 
             if ( !results.containsKey( name ) ) {
@@ -351,7 +358,7 @@ public class Blat {
      * @param outputPath
      * @return
      */
-    private Collection<Object> execGfClient( File querySequenceFile, String outputPath, int portToUse )
+    private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         final String cmd = gfClientExe + " -nohead " + host + " " + portToUse + " " + seqDir + " "
                 + querySequenceFile.getAbsolutePath() + " " + outputPath;
@@ -451,7 +458,8 @@ public class Blat {
      * @return processed results.
      * @throws IOException
      */
-    private Collection<Object> gfClient( File querySequenceFile, String outputPath, int portToUse ) throws IOException {
+    private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
+            throws IOException {
         if ( !os.startsWith( "windows" ) ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
 
         return execGfClient( querySequenceFile, outputPath, portToUse );
@@ -602,7 +610,7 @@ public class Blat {
      * @param outputPath
      * @return processed results.
      */
-    private Collection<Object> jniGfClientCall( File querySequenceFile, String outputPath, int portToUse )
+    private Collection<BlatResult> jniGfClientCall( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
         try {
             this.GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
@@ -618,9 +626,10 @@ public class Blat {
      * @param outputPath to the Blat output file in psl format
      * @return processed results.
      */
-    private Collection<Object> processPsl( String outputPath ) throws IOException {
+    private Collection<BlatResult> processPsl( String outputPath ) throws IOException {
         log.debug( "Processing " + outputPath );
         BlatResultParser brp = new BlatResultParser();
+        brp.setScoreThreshold( BLAT_SCORE_THRESHOLD );
         brp.parse( outputPath );
         return brp.getResults();
     }

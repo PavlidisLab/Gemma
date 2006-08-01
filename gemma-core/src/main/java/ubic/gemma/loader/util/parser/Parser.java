@@ -60,6 +60,6 @@ public interface Parser {
     /**
      * @return the results of the parse.
      */
-    public Collection<Object> getResults();
+    public Collection getResults();
 
 }

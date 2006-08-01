@@ -55,7 +55,7 @@ public class NcbiGeneConverter implements Converter {
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public Object convert( NCBIGeneInfo info ) {
+    public Gene convert( NCBIGeneInfo info ) {
         Gene gene = Gene.Factory.newInstance();
 
         gene.setNcbiId( info.getGeneId() );
@@ -96,7 +96,7 @@ public class NcbiGeneConverter implements Converter {
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public Object convert( Object sourceDomainObject ) {
+    public Gene convert( Object sourceDomainObject ) {
         assert sourceDomainObject instanceof NCBIGene2Accession;
         NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
         return convert( ncbiGene.getInfo() );

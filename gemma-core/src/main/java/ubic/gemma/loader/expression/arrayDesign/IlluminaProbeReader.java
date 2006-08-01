@@ -18,6 +18,10 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,6 +41,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 public class IlluminaProbeReader extends BasicLineMapParser {
 
     protected static final Log log = LogFactory.getLog( IlluminaProbeReader.class );
+
+    private Map<String, Reporter> results = new HashMap<String, Reporter>();
 
     /*
      * (non-Javadoc)
@@ -75,5 +81,20 @@ public class IlluminaProbeReader extends BasicLineMapParser {
      */
     protected Object getKey( Object newItem ) {
         return ( ( Reporter ) newItem ).getName();
+    }
+
+    @Override
+    public Reporter get( Object key ) {
+        return results.get( key );
+    }
+
+    @Override
+    public Collection<Reporter> getResults() {
+        return results.values();
+    }
+
+    @Override
+    protected void put( Object key, Object value ) {
+        results.put( ( String ) key, ( Reporter ) value );
     }
 }

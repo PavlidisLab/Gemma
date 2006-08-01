@@ -19,6 +19,7 @@
 package ubic.gemma.loader.genome.gene;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +36,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *            taxon\t ncbi_gene_id\t ncbi_prot_id
+ *             taxon\t ncbi_gene_id\t ncbi_prot_id
  * </pre>
  * 
  * <hr>
@@ -51,6 +52,8 @@ public class ProteinFileParser extends BasicLineParser {
 
     private GeneDao geneDao;
     private GeneProductDao gpDao;
+
+    private Collection<GeneProduct> results = new HashSet<GeneProduct>();
 
     public ProteinFileParser( GeneDao gdao, GeneProductDao pdao ) {
         this.geneDao = gdao;
@@ -102,6 +105,17 @@ public class ProteinFileParser extends BasicLineParser {
     public void removeAll() {
         Collection col = gpDao.loadAll();
         gpDao.remove( col );
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( GeneProduct ) obj );
+
+    }
+
+    @Override
+    public Collection<GeneProduct> getResults() {
+        return results;
     }
 
 }

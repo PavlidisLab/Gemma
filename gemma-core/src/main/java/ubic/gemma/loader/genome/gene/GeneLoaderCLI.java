@@ -78,17 +78,13 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
 
                 // AS
                 geneInfoParser.parse( filenames[filenames.length - 1] );
-                Collection<Object> keys = geneInfoParser.getResults();
-
-                NCBIGeneInfo info;
-                Object gene;
+                Collection<NCBIGeneInfo> keys = geneInfoParser.getResults();
 
                 NcbiGeneConverter converter = new NcbiGeneConverter();
-                for ( Object key : keys ) {
-                    info = ( NCBIGeneInfo ) geneInfoParser.get( key );
-                    gene = converter.convert( info );
+                for ( NCBIGeneInfo info : keys ) {
+                    Gene gene = ( Gene ) converter.convert( info );
 
-                    ( ( Gene ) gene ).setTaxon( ( Taxon ) getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
+                    gene.setTaxon( ( Taxon ) getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
                     if ( gene == null ) {
                         System.out.println( "gene null. skipping" );
                     } else {

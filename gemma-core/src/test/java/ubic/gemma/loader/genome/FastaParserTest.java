@@ -45,7 +45,7 @@ public class FastaParserTest extends TestCase {
     public void testParseInputStream() throws Exception {
         FastaParser p = new FastaParser();
         p.parse( f );
-        Collection<Object> actualResult = p.getResults();
+        Collection<BioSequence> actualResult = p.getResults();
         assertTrue( actualResult != null );
         assertEquals( 2, actualResult.size() );
         assertTrue( actualResult.iterator().next() instanceof BioSequence );

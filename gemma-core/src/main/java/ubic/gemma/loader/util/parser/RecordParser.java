@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,16 +24,11 @@ public abstract class RecordParser implements Parser {
 
     protected static final Log log = LogFactory.getLog( RecordParser.class );
 
-    private Collection<Object> results;
-
-    public RecordParser() {
-        results = new HashSet<Object>();
-    }
-
-    public Collection<Object> getResults() {
-        return results;
-    }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.parser.Parser#parse(java.io.InputStream)
+     */
     public void parse( InputStream is ) throws IOException {
         int recordsParsed = 0;
         int nullRecords = 0;
@@ -63,20 +57,22 @@ public abstract class RecordParser implements Parser {
             Object newItem = parseOneRecord( lastRecord );
 
             if ( newItem != null ) {
-                results.add( newItem );
+                addResult( newItem );
                 recordsParsed++;
             } else {
                 log.debug( "Got null parse from " + line );
                 nullRecords++;
             }
-            if ( recordsParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + recordsParsed + " lines..." );
+            if ( log.isDebugEnabled() && recordsParsed % PARSE_ALERT_FREQUENCY == 0 )
+                log.debug( "Parsed " + recordsParsed + " lines..." );
 
             if ( line == null ) { // EOF.
                 break;
             }
 
         }
-        log.info( "Parsed " + recordsParsed + " records; " + nullRecords + " yielded no parse result." );
+        log.info( "Parsed " + recordsParsed + " records. "
+                + ( nullRecords > 0 ? nullRecords + " yielded no parse result." : "" ) );
 
     }
 
@@ -109,9 +105,7 @@ public abstract class RecordParser implements Parser {
      * 
      * @param obj
      */
-    protected void addResult( Object obj ) {
-        this.results.add( obj );
-    }
+    protected abstract void addResult( Object obj );
 
     public void setRecordSeparator( String recordSeparator ) {
         this.recordSeparator = recordSeparator;
@@ -123,4 +117,6 @@ public abstract class RecordParser implements Parser {
      * @param line
      */
     public abstract Object parseOneRecord( String record );
+
+    public abstract Collection getResults();
 }

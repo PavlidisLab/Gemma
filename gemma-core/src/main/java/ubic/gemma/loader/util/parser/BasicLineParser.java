@@ -21,13 +21,10 @@ package ubic.gemma.loader.util.parser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.CharBuffer;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -43,13 +40,7 @@ public abstract class BasicLineParser implements LineParser {
 
     protected static final Log log = LogFactory.getLog( BasicLineParser.class );
 
-    private Collection<Object> results;
-
     protected int linesParsed = 0;
-
-    public BasicLineParser() {
-        results = new HashSet<Object>();
-    }
 
     /*
      * (non-Javadoc)
@@ -76,16 +67,18 @@ public abstract class BasicLineParser implements LineParser {
             Object newItem = parseOneLine( line );
 
             if ( newItem != null ) {
-                results.add( newItem );
+                addResult( newItem );
             } else {
                 log.debug( "Got null parse from " + line );
                 nullLines++;
             }
             linesParsed++;
-            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 ) log.debug( "Parsed " + linesParsed + " lines..." );
+            if ( log.isDebugEnabled() && linesParsed % PARSE_ALERT_FREQUENCY == 0 )
+                log.debug( "Parsed " + linesParsed + " lines..." );
 
         }
-        log.info( "Parsed " + linesParsed + " lines; " + nullLines + " yielded no parse result." );
+        log.info( "Parsed " + linesParsed + " lines. "
+                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
     }
 
     /*
@@ -124,15 +117,11 @@ public abstract class BasicLineParser implements LineParser {
      * 
      * @param obj
      */
-    protected void addResult( Object obj ) {
-        this.results.add( obj );
-    }
+    protected abstract void addResult( Object obj );
 
     /**
      * 
      */
-    public Collection<Object> getResults() {
-        return results;
-    }
+    public abstract Collection getResults();
 
 }

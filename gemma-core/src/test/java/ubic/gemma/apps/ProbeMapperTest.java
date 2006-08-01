@@ -28,7 +28,7 @@ public class ProbeMapperTest extends AbstractCLITestCase {
 
     File tempFile;
 
-    ProbeMapper p;
+    ProbeMapperCli p;
 
     /*
      * (non-Javadoc)
@@ -38,7 +38,7 @@ public class ProbeMapperTest extends AbstractCLITestCase {
     protected void setUp() throws Exception {
         super.setUp();
         tempFile = File.createTempFile( "cli", ".txt" );
-        p = new ProbeMapper();
+        p = new ProbeMapperCli();
     }
 
     protected void tearDown() throws Exception {
@@ -104,18 +104,19 @@ public class ProbeMapperTest extends AbstractCLITestCase {
         assertTrue( result.getMessage(), result != null );
     }
 
-    public void testSequenceHandling() throws Exception {
-        String basePath = this.getTestFileBasePath();
-
-        String file = basePath + System.getProperty( "file.separator" )
-                + "/gemma-core/src/test/resources/data/loader/genome/testsequence.fa";
-
-        assert ( new File( file ) ).canRead();
-
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "pavlidis", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-f", file, "-d", "mm8" } );
-        if ( result != null ) {
-            fail( result.getMessage() );
-        }
-    }
+    // This test requires a running gfServer with java client. Only works under linux.
+    // public void testSequenceHandling() throws Exception {
+    // String basePath = this.getTestFileBasePath();
+    //
+    // String file = basePath + System.getProperty( "file.separator" )
+    // + "/gemma-core/src/test/resources/data/loader/genome/testsequence.fa";
+    //
+    // assert ( new File( file ) ).canRead();
+    //
+    // Exception result = p.doWork( new String[] { "-v", "3", "-u", "pavlidis", "-p", "toast", "-o",
+    // tempFile.getAbsolutePath(), "-f", file, "-d", "mm8" } );
+    // if ( result != null ) {
+    // fail( result.getMessage() );
+    // }
+    // }
 }

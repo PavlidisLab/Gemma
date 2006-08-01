@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.genome;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,6 +36,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class FastaParser extends RecordParser {
     Pattern pattern;
+
+    private Collection<BioSequence> results = new HashSet<BioSequence>();
 
     public FastaParser() {
         String patternStr = "^(.*)$";
@@ -74,27 +78,27 @@ public class FastaParser extends RecordParser {
      * Recognizes Defline format as described at http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers.
      * 
      * <pre>
-     *                                GenBank                           gi|gi-number|gb|accession|locus
-     *                                EMBL Data Library                 gi|gi-number|emb|accession|locus
-     *                                DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
-     *                                NBRF PIR                          pir||entry
-     *                                Protein Research Foundation       prf||name
-     *                                SWISS-PROT                        sp|accession|name
-     *                                Brookhaven Protein Data Bank (1)  pdb|entry|chain
-     *                                Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
-     *                                Patents                           pat|country|number 
-     *                                GenInfo Backbone Id               bbs|number 
-     *                                General database identifier       gnl|database|identifier
-     *                                NCBI Reference Sequence           ref|accession|locus
-     *                                Local Sequence identifier         lcl|identifier
+     *                                                   GenBank                           gi|gi-number|gb|accession|locus
+     *                                                   EMBL Data Library                 gi|gi-number|emb|accession|locus
+     *                                                   DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
+     *                                                   NBRF PIR                          pir||entry
+     *                                                   Protein Research Foundation       prf||name
+     *                                                   SWISS-PROT                        sp|accession|name
+     *                                                   Brookhaven Protein Data Bank (1)  pdb|entry|chain
+     *                                                   Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
+     *                                                   Patents                           pat|country|number 
+     *                                                   GenInfo Backbone Id               bbs|number 
+     *                                                   General database identifier       gnl|database|identifier
+     *                                                   NCBI Reference Sequence           ref|accession|locus
+     *                                                   Local Sequence identifier         lcl|identifier
      * </pre>
      * 
      * Our amendments:
      * 
      * <pre>
-     *                                Affymetrix collapsed sequence     target:array:probeset;
-     *                                Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
-     *                                Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     *                                                   Affymetrix collapsed sequence     target:array:probeset;
+     *                                                   Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
+     *                                                   Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
      * 
      * FIXME: recognize multi-line headers separated by ^A. FIXME: parsing of more obscure (to us) headers might not be
@@ -113,13 +117,17 @@ public class FastaParser extends RecordParser {
 
         bioSequence.setName( header );
 
-        if ( header.indexOf( '|' ) >= 0 ) {
+        /*
+         * Look for either a '|' or a ':'. Allow for the possibility of ':' and then '|' occuring; use whichever comes
+         * first.
+         */
+
+        int firstPipe = header.indexOf( '|' );
+        int firstColon = header.indexOf( ':' );
+
+        if ( firstPipe > 0 && ( firstColon < 0 || firstPipe < firstColon ) ) {
             // one of the genbank formats.
             String[] split = StringUtils.splitPreserveAllTokens( header, '|' );
-
-            if ( split == null || split.length == 0 ) {
-                throw new IllegalArgumentException( "FASTA header in unrecognized format" );
-            }
 
             String firstTag = split[0];
 
@@ -150,31 +158,43 @@ public class FastaParser extends RecordParser {
             } else if ( firstTag.equals( "entry:chain" ) ) {
                 bioSequence.setName( split[1] );
             } else {
-                log.warn( "FASTA header in unrecognized format, started with " + firstTag );
+                throw new IllegalArgumentException( "Defline-style FASTA header in unrecognized format, started with "
+                        + firstTag );
             }
-        } else if ( header.indexOf( ':' ) >= 0 ) {
+        } else if ( firstColon > 0 ) {
             // affymetrix format
             String[] split = StringUtils.splitPreserveAllTokens( header, ':' );
-
-            if ( split == null || split.length == 0 ) {
-                throw new IllegalArgumentException( "FASTA header in unrecognized format" );
-            }
 
             String firstTag = StringUtils.removeStart( split[0], ">" );
             if ( firstTag.equals( "probe" ) ) {
                 bioSequence.setName( split[1] + ":" + split[2] + ":" + split[3] + ":" + split[4] );
             } else if ( firstTag.equals( "target" ) ) {
-                bioSequence.setName( split[1] + ":" + split[2] );
+                // split[1] = array name
+                // split[2] = probe name
+                String probeName = split[2].replaceFirst( ";", "" ); // Illumina files
+                bioSequence.setName( split[1] + ":" + probeName );
             } else if ( firstTag.equals( "exemplar" ) ) {
                 bioSequence.setName( split[1] + ":" + split[2] );
                 bioSequence.setDescription( split[3] );
             } else {
-                throw new IllegalArgumentException( "FASTA header in unrecognized format, started with " + firstTag );
+                throw new IllegalArgumentException(
+                        "Affymetrix-style FASTA header in unrecognized format, started with " + firstTag );
             }
 
         } else {
             throw new IllegalArgumentException( "FASTA header in unrecognized format." );
         }
 
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( BioSequence ) obj );
+
+    }
+
+    @Override
+    public Collection<BioSequence> getResults() {
+        return results;
     }
 }

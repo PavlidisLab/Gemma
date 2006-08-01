@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.analysis.util.SequenceManipulation;
+import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.expression.arrayDesign.AffyProbeReader;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -46,14 +46,14 @@ public class AffyProbeCollapser {
         apr.setSequenceField( 4 );
         apr.parse( is );
 
-        Collection<Object> results = apr.getResults();
+        Collection<CompositeSequence> results = apr.getResults();
 
-        for ( Iterator<Object> iter = results.iterator(); iter.hasNext(); ) {
-            String probeSetname = ( String ) iter.next();
-            CompositeSequence apset = ( CompositeSequence ) apr.get( probeSetname );
+        for ( Iterator<CompositeSequence> iter = results.iterator(); iter.hasNext(); ) {
+
+            CompositeSequence apset = iter.next();
 
             BioSequence m = SequenceManipulation.collapse( apset );
-            writer.write( ">target:" + arrayName + ":" + probeSetname + ";\n" + m.getSequence() + "\n" );
+            writer.write( ">target:" + arrayName + ":" + apset.getName() + ";\n" + m.getSequence() + "\n" );
         }
     }
 

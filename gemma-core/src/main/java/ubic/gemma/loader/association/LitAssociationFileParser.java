@@ -19,9 +19,11 @@
 package ubic.gemma.loader.association;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.util.parser.BasicLineParser;
+import ubic.gemma.model.association.LiteratureAssociation;
 import ubic.gemma.model.association.LiteratureAssociationDao;
 import ubic.gemma.model.association.LiteratureAssociationImpl;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -33,7 +35,7 @@ import ubic.gemma.model.genome.GeneDao;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *                g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
+ *                 g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * </pre>
  * 
  * @author anshu
@@ -41,6 +43,8 @@ import ubic.gemma.model.genome.GeneDao;
  */
 
 public class LitAssociationFileParser extends BasicLineParser {
+
+    private Collection<LiteratureAssociation> results = new HashSet<LiteratureAssociation>();
 
     public static final int LIT_ASSOCIATION_FIELDS_PER_ROW = 9;
     public static final int PERSIST_CONCURRENTLY = 1;
@@ -76,7 +80,7 @@ public class LitAssociationFileParser extends BasicLineParser {
         }
 
         Collection<Gene> c;
-        LiteratureAssociationImpl assoc = new LiteratureAssociationImpl();
+        LiteratureAssociation assoc = new LiteratureAssociationImpl();
         Gene g1 = null;
         Gene g2 = null;
         String id = null;
@@ -125,6 +129,17 @@ public class LitAssociationFileParser extends BasicLineParser {
     public void removeAll() {
         Collection col = laDao.loadAll();
         laDao.remove( col );
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( LiteratureAssociation ) obj );
+
+    }
+
+    @Override
+    public Collection<LiteratureAssociation> getResults() {
+        return results;
     }
 
 }

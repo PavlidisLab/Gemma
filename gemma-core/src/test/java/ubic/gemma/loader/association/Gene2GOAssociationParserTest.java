@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -43,7 +44,7 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
 
     Gene2GOAssociationLoaderImpl gene2GOAssLoader = null;
 
-    Collection<Object> gene2GOCol = null;
+    Collection<Gene2GOAssociation> gene2GOCol = null;
 
     TaxonDao taxonDao = null;
     private PersisterHelper persisterHelper;
@@ -52,7 +53,6 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
      * Tests both the parser and the loader. This is more of an integration test, but since its dependencies are
      * localized to the Gemma project it has been added to the test suite.
      */
-
     public void testParseAndLoad() throws Exception {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );

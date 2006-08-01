@@ -35,13 +35,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.SQLUtils;
-import ubic.gemma.analysis.util.SequenceManipulation;
+import ubic.gemma.analysis.sequence.SequenceManipulation;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
 /**
  * Perform useful queries against GoldenPath (UCSC) databases.
@@ -53,13 +56,13 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class GoldenPath {
 
-    /**
-     * Describes how distances of a sequence from a relevant part of a gene are measured: either from the center, left
-     * (5' end) or right (3' end).
-     */
-    public enum MeasurementMethod {
-        center, right, left
-    };
+    // /**
+    // * Describes how distances of a sequence from a relevant part of a gene are measured: either from the center, left
+    // * (5' end) or right (3' end).
+    // */
+    // public enum MeasurementMethod {
+    // center, right, left
+    // };
 
     private static final Log log = LogFactory.getLog( GoldenPath.class );
 
@@ -194,7 +197,7 @@ public class GoldenPath {
      * @param strand
      * @return
      */
-    public List<Gene> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
+    public List<GeneProduct> findKnownGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT kgxr.refSeq, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds "
                 + " FROM knownGene as kg INNER JOIN"
@@ -219,7 +222,7 @@ public class GoldenPath {
      * @param strand
      * @param end
      */
-    public List<Gene> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
+    public List<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         String query = "SELECT name, geneName, txStart, txEnd, strand, exonStarts, exonEnds FROM refFlat WHERE "
                 + "((txStart > ? AND txEnd < ?) OR (txStart < ? AND txEnd > ?) OR "
@@ -239,9 +242,9 @@ public class GoldenPath {
      * @param identifier
      * @return
      */
-    public List<ThreePrimeData> getThreePrimeDistances( String identifier, MeasurementMethod method ) {
+    public List<BioSequence2GeneProduct> getThreePrimeDistances( String identifier, ThreePrimeDistanceMethod method ) {
         Set<BlatResult> locations = findSequenceLocations( identifier );
-        List<ThreePrimeData> results = new ArrayList<ThreePrimeData>();
+        List<BioSequence2GeneProduct> results = new ArrayList<BioSequence2GeneProduct>();
         for ( BlatResult br : locations ) {
             results.addAll( getThreePrimeDistances( br, method ) );
         }
@@ -254,7 +257,8 @@ public class GoldenPath {
      * @param br BlatResult holding the parameters needed.
      * @param method The constant representing the method to use to locate the 3' distance.
      */
-    public Collection<? extends ThreePrimeData> getThreePrimeDistances( BlatResult br, MeasurementMethod method ) {
+    public Collection<? extends BioSequence2GeneProduct> getThreePrimeDistances( BlatResult br,
+            ThreePrimeDistanceMethod method ) {
         return getThreePrimeDistances( br.getTargetChromosome().getName(), br.getTargetStart(), br.getTargetEnd(), br
                 .getTargetStarts(), br.getBlockSizes(), br.getStrand(), method );
     }
@@ -269,26 +273,27 @@ public class GoldenPath {
      * @param sizes Sizes of alignment blocks (comma-delimited from blat)
      * @param strand Either + or - indicating the strand to look on, or null to search both strands.
      * @param method The constant representing the method to use to locate the 3' distance.
-     * @return A list of ThreePrimeData objects. The distance stored by a ThreePrimeData will be 0 if the sequence
-     *         overhangs the found genes (rather than providing a negative distance). If no genes are found, the result
-     *         is null;
+     * @return A list of BioSequence2GeneProduct objects. The distance stored by a ThreePrimeData will be 0 if the
+     *         sequence overhangs the found genes (rather than providing a negative distance). If no genes are found,
+     *         the result is null;
      */
-    public List<ThreePrimeData> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
-            String starts, String sizes, String strand, MeasurementMethod method ) {
+    public List<BlatAssociation> getThreePrimeDistances( String chromosome, Long queryStart, Long queryEnd,
+            String starts, String sizes, String strand, ThreePrimeDistanceMethod method ) {
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 
         // starting with refgene means we can get the correct transcript name etc.
-        Collection<Gene> genes = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
+        Collection<GeneProduct> geneProducts = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
 
         // get known genes as well, in case all we got was an intron.
-        genes.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
+        geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
-        if ( genes.size() == 0 ) return null;
+        if ( geneProducts.size() == 0 ) return null;
 
-        List<ThreePrimeData> results = new ArrayList<ThreePrimeData>();
-        for ( Gene gene : genes ) {
-            ThreePrimeData tpd = computeLocationInGene( chromosome, queryStart, queryEnd, starts, sizes, gene, method );
+        List<BlatAssociation> results = new ArrayList<BlatAssociation>();
+        for ( GeneProduct geneProduct : geneProducts ) {
+            BlatAssociation tpd = computeLocationInGene( chromosome, queryStart, queryEnd, starts, sizes, geneProduct,
+                    method );
             results.add( tpd );
         }
         return results;
@@ -335,31 +340,40 @@ public class GoldenPath {
     }
 
     /**
-     * Given a location and a gene, compute the distance from the 3' end of the gene as well as the amount of overlap.
-     * If the location has low overlaps with known exons (threshold set by RECHECK_OVERLAP_THRESHOLD), we search for
-     * mRNAs in the region. If there are overlapping mRNAs, we use the best overlap value.
+     * Given a location and a gene product, compute the distance from the 3' end of the gene product as well as the
+     * amount of overlap. If the location has low overlaps with known exons (threshold set by
+     * RECHECK_OVERLAP_THRESHOLD), we search for mRNAs in the region. If there are overlapping mRNAs, we use the best
+     * overlap value.
      * 
      * @param chromosome
      * @param queryStart
      * @param queryEnd
      * @param starts Start locations of alignments of the query.
      * @param sizes Sizes of alignments of the query.
-     * @param gene Gene with which the overlap and distance is to be computed.
+     * @param geneProduct GeneProduct with which the overlap and distance is to be computed.
      * @param method
      * @return a ThreePrimeData object containing the results.
      * @see getThreePrimeDistances
      *      <p>
      *      FIXME this should take a PhysicalLocation as an argument.
      */
-    private ThreePrimeData computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
-            String sizes, Gene gene, MeasurementMethod method ) {
-        ThreePrimeData tpd = new ThreePrimeData( gene );
-        PhysicalLocation geneLoc = gene.getPhysicalLocation();
+    private BlatAssociation computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
+            String sizes, GeneProduct geneProduct, ThreePrimeDistanceMethod method ) {
+
+        assert geneProduct != null : "GeneProduct is null";
+
+        BlatAssociation blatAssociation = BlatAssociation.Factory.newInstance();
+        blatAssociation.getGeneProducts().add( geneProduct );
+        PhysicalLocation geneLoc = geneProduct.getPhysicalLocation();
+
+        assert geneLoc != null : "PhysicalLocation for GeneProduct " + geneProduct + " is null";
+        assert geneLoc.getNucleotide() != null;
+
         int geneStart = geneLoc.getNucleotide().intValue();
         int geneEnd = geneLoc.getNucleotide().intValue() + geneLoc.getNucleotideLength().intValue();
         int exonOverlap = 0;
         if ( starts != null & sizes != null ) {
-            exonOverlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, gene );
+            exonOverlap = SequenceManipulation.getGeneProductExonOverlap( starts, sizes, null, geneProduct );
             int totalSize = SequenceManipulation.totalSize( sizes );
             assert exonOverlap <= totalSize;
             if ( exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
@@ -367,36 +381,35 @@ public class GoldenPath {
             }
         }
 
-        tpd.setExonOverlap( exonOverlap );
-        tpd.setInIntron( exonOverlap == 0 );
+        blatAssociation.setOverlap( exonOverlap );
 
-        if ( method == MeasurementMethod.center ) {
+        if ( method == ThreePrimeDistanceMethod.MIDDLE ) {
             int center = SequenceManipulation.findCenter( starts, sizes );
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
-                tpd.setDistance( new Long( Math.max( 0, geneEnd - center ) ) );
-            } else if ( gene.getPhysicalLocation().getStrand().equals( "-" ) ) {
+                blatAssociation.setThreePrimeDistance( new Long( Math.max( 0, geneEnd - center ) ) );
+            } else if ( geneProduct.getPhysicalLocation().getStrand().equals( "-" ) ) {
                 // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
-                tpd.setDistance( new Long( Math.max( 0, center - geneStart ) ) );
+                blatAssociation.setThreePrimeDistance( new Long( Math.max( 0, center - geneStart ) ) );
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
-        } else if ( method == MeasurementMethod.right ) {
+        } else if ( method == ThreePrimeDistanceMethod.RIGHT ) {
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
-                tpd.setDistance( Math.max( 0, geneEnd - queryEnd ) );
-            } else if ( gene.getPhysicalLocation().getStrand().equals( "-" ) ) {
+                blatAssociation.setThreePrimeDistance( Math.max( 0, geneEnd - queryEnd ) );
+            } else if ( geneProduct.getPhysicalLocation().getStrand().equals( "-" ) ) {
                 // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
-                tpd.setDistance( Math.max( 0, queryStart - geneStart ) );
+                blatAssociation.setThreePrimeDistance( Math.max( 0, queryStart - geneStart ) );
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
-        } else if ( method == MeasurementMethod.left ) {
+        } else if ( method == ThreePrimeDistanceMethod.LEFT ) {
             throw new UnsupportedOperationException( "Left edge measure not supported" );
         } else {
             throw new IllegalArgumentException( "Unknown method" );
         }
-        return tpd;
+        return blatAssociation;
     }
 
     /**
@@ -406,11 +419,12 @@ public class GoldenPath {
      * @param endi
      * @param chromosome
      * @param query
-     * @return List of Genes.
+     * @return List of GeneProducts.
      * @throws SQLException
      */
     @SuppressWarnings("unchecked")
-    private List<Gene> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand, String query ) {
+    private List<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
+            String query ) {
         // Cases:
         // 1. gene is contained within the region: txStart > start & txEnd < end;
         // 2. region is conained within the gene: txStart < start & txEnd > end;
@@ -426,19 +440,19 @@ public class GoldenPath {
                 params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
             }
 
-            return ( List<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( List<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
 
                 @SuppressWarnings("synthetic-access")
                 public Object handle( ResultSet rs ) throws SQLException {
-                    List<Gene> r = new ArrayList<Gene>();
+                    List<GeneProduct> r = new ArrayList<GeneProduct>();
                     while ( rs.next() ) {
 
+                        GeneProduct product = GeneProduct.Factory.newInstance();
+                        product.setNcbiId( rs.getString( 1 ) ); // transcript identifier, not gene...or set accessions?
+
                         Gene gene = Gene.Factory.newInstance();
-
-                        gene.setNcbiId( rs.getString( 1 ) );
-
                         gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setId( new Long( gene.getNcbiId().hashCode() ) );
+                        // gene.setId( new Long( gene.getNcbiId().hashCode() ) );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
                         pl.setNucleotide( rs.getLong( 3 ) );
@@ -451,12 +465,17 @@ public class GoldenPath {
 
                         // note that we aren't setting the chromosome here; we already know that.
                         gene.setPhysicalLocation( pl );
-                        r.add( gene );
+
+                        product.setPhysicalLocation( pl );
+                        product.setGene( gene );
 
                         Blob exonStarts = rs.getBlob( 6 );
                         Blob exonEnds = rs.getBlob( 7 );
+                        product.setName( gene.getNcbiId() );
+                        product.setExons( getExons( c, exonStarts, exonEnds ) );
 
-                        setExons( gene, exonStarts, exonEnds );
+                        r.add( product );
+
                     }
                     return r;
                 }
@@ -597,9 +616,9 @@ public class GoldenPath {
      * @param exonEnds
      * @throws SQLException
      */
-    private void setExons( Gene gene, Blob exonStarts, Blob exonEnds ) throws SQLException {
+    private List<PhysicalLocation> getExons( Chromosome chrom, Blob exonStarts, Blob exonEnds ) throws SQLException {
 
-        if ( exonStarts == null || exonEnds == null ) return;
+        if ( exonStarts == null || exonEnds == null ) return null;
 
         String exonStartLocations = SQLUtils.blobToString( exonStarts );
         String exonEndLocations = SQLUtils.blobToString( exonEnds );
@@ -609,78 +628,71 @@ public class GoldenPath {
 
         assert exonStartsInts.length == exonEndsInts.length;
 
-        GeneProduct gp = GeneProduct.Factory.newInstance();
-        Collection<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
+        // GeneProduct gp = GeneProduct.Factory.newInstance();
+        List<PhysicalLocation> exons = new ArrayList<PhysicalLocation>();
         for ( int i = 0; i < exonEndsInts.length; i++ ) {
             int exonStart = exonStartsInts[i];
             int exonEnd = exonEndsInts[i];
             PhysicalLocation exon = PhysicalLocation.Factory.newInstance();
-            if ( gene.getPhysicalLocation() != null ) exon.setChromosome( gene.getPhysicalLocation().getChromosome() );
+
+            exon.setChromosome( chrom );
+
             exon.setNucleotide( new Long( exonStart ) );
             exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
             exons.add( exon );
         }
-        gp.setExons( exons );
-        gp.setName( gene.getNcbiId() );
-        Collection<GeneProduct> products = new HashSet<GeneProduct>();
-        products.add( gp );
-        gene.setProducts( products );
+        // gp.setExons( exons );
+        // gp.setName( gene.getNcbiId() );
+        // Collection<GeneProduct> products = new HashSet<GeneProduct>();
+        // products.add( gp );
+        // gene.setProducts( products );
+        return exons;
     }
 
-    /**
-     * Helper data transfer object.
-     */
-    public class ThreePrimeData {
-
-        /**
-         * The distance from the gene (measured from a point defined by the caller)
-         */
-        private Long distance;
-        private int exonOverlap = 0;
-
-        private Gene gene;
-
-        private boolean inIntron = false;
-
-        public ThreePrimeData( Gene gene ) {
-            this.gene = gene;
-        }
-
-        public Long getDistance() {
-            return this.distance;
-        }
-
-        /**
-         * @return Returns the exonOverlap.
-         */
-        public int getExonOverlap() {
-            return this.exonOverlap;
-        }
-
-        public Gene getGene() {
-            return this.gene;
-        }
-
-        public boolean isInIntron() {
-            return this.inIntron;
-        }
-
-        public void setDistance( Long i ) {
-            this.distance = i;
-        }
-
-        /**
-         * @param exonOverlap The exonOverlap to set.
-         */
-        public void setExonOverlap( int exonOverlap ) {
-            this.exonOverlap = exonOverlap;
-        }
-
-        public void setInIntron( boolean inIntron ) {
-            this.inIntron = inIntron;
-        }
-
-    }
+    // /**
+    // * Helper data transfer object.
+    // */
+    // public class ThreePrimeData {
+    //
+    // /**
+    // * The distance from the gene (measured from a point defined by the caller)
+    // */
+    // private Long distance;
+    // private int exonOverlap = 0;
+    //
+    // private Gene gene;
+    //
+    // public ThreePrimeData( Gene gene ) {
+    // this.gene = gene;
+    // }
+    //
+    // public Long getDistance() {
+    // return this.distance;
+    // }
+    //
+    // /**
+    // * @return Returns the exonOverlap.
+    // */
+    // public int getExonOverlap() {
+    // return this.exonOverlap;
+    // }
+    //
+    // public Gene getGene() {
+    // return this.gene;
+    // }
+    //
+    // public void setDistance( Long i ) {
+    // this.distance = i;
+    // }
+    //
+    // /**
+    // * @param exonOverlap The exonOverlap to set.
+    // */
+    // public void setExonOverlap( int exonOverlap ) {
+    // this.exonOverlap = exonOverlap;
+    // }
+    //
+    // }
 
     public String getDatabaseName() {
         return databaseName;

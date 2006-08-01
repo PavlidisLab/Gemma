@@ -18,6 +18,9 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,7 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
- * Parse ArrayDesigns from a flat file. This is used to seed the system from our legacy data.
+ * Parse ArrayDesigns from a flat file. This is used to seed the system from our legacy data. (probably not used)
  * <p>
  * Format:
  * <ol>
@@ -38,15 +41,14 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * <li>10044 --- advertised number of design elements
  * <li>(Masked) Affymetrix GeneChip expression probe array... --- Description
  * </ol>
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author keshav
  * @version $Id$
  */
 public class ArrayDesignParser extends BasicLineParser {
     protected static final Log log = LogFactory.getLog( ArrayDesignParser.class );
+
+    private Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
 
     public Object parseOneLine( String line ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
@@ -60,6 +62,17 @@ public class ArrayDesignParser extends BasicLineParser {
 
         ad.setAdvertisedNumberOfDesignElements( Integer.parseInt( fields[4] ) );
         return ad;
+    }
+
+    @Override
+    protected void addResult( Object obj ) {
+        results.add( ( ArrayDesign ) obj );
+
+    }
+
+    @Override
+    public Collection<ArrayDesign> getResults() {
+        return results;
     }
 
 }
