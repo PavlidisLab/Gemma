@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -58,11 +59,13 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name = "validator" ref="genericBeanValidator"
  */
-public class ExpressionExperimentSearchController extends BaseFormController {// TODO put in validator
+public class ExpressionExperimentSearchController extends BaseFormController {
     private static Log log = LogFactory.getLog( ExpressionExperimentSearchController.class.getName() );
 
     ExpressionExperimentService expressionExperimentService = null;
     CompositeSequenceService compositeSequenceService = null;
+    String[] searchIds = null;
+    Collection<DesignElement> designElements = null;
 
     // private final String messagePrefix = "Expression experiment with id";
 
@@ -116,6 +119,27 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
 
         log.debug( "entering processFormSubmission" );
 
+        // more searchString validation - see also validation.xml
+        String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
+        searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
+        designElements = new HashSet();
+        for ( int i = 0; i < searchIds.length; i++ ) {
+            log.debug( "searching for " + searchIds[i] );
+
+            DesignElement de = compositeSequenceService.findByName( searchIds[i] );
+            if ( de != null ) designElements.add( de );
+        }
+
+        log.debug( designElements.size() );
+        if ( designElements.size() == 0 ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "Requested probe sets do not exist." ) );
+        }
+
+        // more searchCriteria validation - see also validation.xml
+        if ( ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria().equalsIgnoreCase( "gene symbol" ) )
+            errors.addError( new ObjectError( command.toString(), null, null,
+                    "Search by gene symbol unsupported at this time." ) );
+
         return super.processFormSubmission( request, response, command, errors );
     }
 
@@ -135,8 +159,6 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
 
         Long id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
-        String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
-        String[] searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
 
         // TODO allow filename to be entered from form
         String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
@@ -152,12 +174,6 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
 
         filename = visualDir + filename;
         log.info( "filename: " + filename );
-
-        Collection<DesignElement> designElements = new HashSet();
-        for ( int i = 0; i < searchIds.length; i++ ) {
-            log.debug( searchIds[i] );
-            designElements.add( compositeSequenceService.findByName( searchIds[i] ) );
-        }
 
         ExpressionDataMatrix expressionDataMatrix = null;
         ExpressionDataMatrixVisualization matrixVisualization = null;
