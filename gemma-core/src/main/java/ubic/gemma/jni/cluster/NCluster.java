@@ -51,6 +51,7 @@ public class NCluster {
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
 
     /**
+     * Hierarchical Clustering native call.
      * dist       (input) char
      * Defines which distance measure is used, as given by the table:
      * dist=='e': Euclidean distance
@@ -79,7 +80,23 @@ public class NCluster {
      * @return int[][]
      */
     public native int[][] treeCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][] );
-
+    
+    /**
+     * Self Organizing Maps native call.
+     * @param rows
+     * @param cols
+     * @param transpose
+     * @param dist
+     * @param method
+     * @param matrix
+     * @param nxgrid
+     * @param nygrid
+     * @param inittau
+     * @param niter
+     * @param cellData
+     * @param clusterId
+     * @return
+     */
     public native int[][] somCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][],
             int nxgrid, int nygrid, double inittau, int niter, double cellData[][], int clusterId[][] );
 
