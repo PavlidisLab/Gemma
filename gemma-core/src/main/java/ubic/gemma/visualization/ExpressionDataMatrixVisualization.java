@@ -19,6 +19,7 @@
 package ubic.gemma.visualization;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -198,9 +199,10 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
         try {
             // display.setLabelsVisible( true );
+            display.setCellSize( new Dimension( 16, 16 ) );
             display.saveImage( outfile );
-            rowNameYCoords = display.getRowNameYCoords();
-            rowNameXCoord = display.getRowNameXCoord();
+            // rowNameYCoords = display.getRowNameYCoords();
+            // rowNameXCoord = display.getRowNameXCoord();
         } catch ( IOException e ) {
             e.printStackTrace();
         }

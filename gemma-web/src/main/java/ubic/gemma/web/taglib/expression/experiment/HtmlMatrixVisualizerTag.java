@@ -85,8 +85,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         StringBuilder buf = new StringBuilder();
 
         if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
-            buf
-                    .append( "Visualizations suppressed.  To download the raw data file click <a href=\"resources/administrator/\">here</a>." );
+            buf.append( "Visualizations suppressed.  To download image click <a href=\"" + outfile + "\">here</a>." );
         } else if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
@@ -96,12 +95,14 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             buf.append( "<table border=\"0\" width=\"200px\" height=\"5px\">" );
             buf.append( "<tr>" );
             buf.append( "<td border=\"0\" rowspan=\"5\">" );
-            buf.append( "<img width=\"" + 200 + "\" height=\"" + 150 + "\" src=\"" + outfile + "\">" );
+            buf.append( "<img src=\"" + outfile + "\">" );
             buf.append( "</td>" );
-            buf.append( "<td>" );
+            buf.append( "<td align=\"left\">" );
             for ( String name : designElementNames ) {
+                buf.append( "<font size=\"-1\">" );
                 buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term=" + name
                         + "\">" + name + "</a>" );
+                buf.append( "</font>" );
                 buf.append( "<br/>" );
             }
             buf.append( "</td>" );
