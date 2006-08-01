@@ -1,9 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<jsp:useBean id="command" scope="request"
+<jsp:useBean id="expressionExperimentSearchCommand" scope="request"
     class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchCommand" />
 
-<spring:bind path="command.*">
+<spring:bind path="expressionExperimentSearchCommand.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error"><c:forEach var="error"
 			items="${status.errorMessages}">
@@ -30,8 +30,8 @@
                     </b>
                 </td>
                 <td>
-                	<%if (command.getName() != null){%>
-                    <jsp:getProperty name="command" property="name"/>                   	
+                	<%if (expressionExperimentSearchCommand.getName() != null){%>
+                    <jsp:getProperty name="expressionExperimentSearchCommand" property="name"/>                   	
                     <%}else{
                     	out.print("Name unavailable");
                     }%>
@@ -45,8 +45,8 @@
                     </b>
                 </td>	
                 <td>
-                	<%if (command.getDescription() != null){%>
-                    	<jsp:getProperty name="command" property="description" />
+                	<%if (expressionExperimentSearchCommand.getDescription() != null){%>
+                    	<jsp:getProperty name="expressionExperimentSearchCommand" property="description" />
                     <%}else{
                     	out.print("Description unavailable");
                     }%>
@@ -64,7 +64,7 @@
             </td>
         
             <td>  
-       		<spring:bind path="command.searchCriteria">
+       		<spring:bind path="expressionExperimentSearchCommand.searchCriteria">
        			<select name="${status.expression}">
           			<c:forEach items="${searchCategories}" var="searchCategory">
             			<option value="${searchCategory}" <c:if test="${status.value == searchCategory}">selected="selected" </c:if>>
@@ -82,7 +82,7 @@
                     </b>
                 </td>
                 <td>
-        		<spring:bind path="command.suppressVisualizations">
+        		<spring:bind path="expressionExperimentSearchCommand.suppressVisualizations">
         			<input type="hidden" name="_${status.expression}"/>
 	        		<input type="checkbox" name="${status.expression}" value="true"/>
 	        			<c:if test="${status.value}">checked="checked"</c:if>
@@ -100,7 +100,7 @@
             	</b>
         	</td>
         	<td>
-        		<spring:bind path="command.searchString">
+        		<spring:bind path="expressionExperimentSearchCommand.searchString">
 	        		<input type="text" size=10 name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
 	        	</spring:bind>
 	    	</td>     
@@ -113,7 +113,7 @@
             	</b>
         	</td>
         	<td>
-        		<spring:bind path="command.stringency">
+        		<spring:bind path="expressionExperimentSearchCommand.stringency">
 	        		<input "type="text" size=1 name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
 	        	</spring:bind>
 	    	</td>

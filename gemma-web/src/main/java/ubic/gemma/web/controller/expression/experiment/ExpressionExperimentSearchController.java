@@ -56,6 +56,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name = "successView" value="showExpressionExperimentSearchResults"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
+ * @spring.property name = "validator" ref="genericBeanValidator"
  */
 public class ExpressionExperimentSearchController extends BaseFormController {// TODO put in validator
     private static Log log = LogFactory.getLog( ExpressionExperimentSearchController.class.getName() );
@@ -84,7 +85,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         log.debug( id );
 
         ExpressionExperiment ee = null;
-        ExpressionExperimentSearchCommand eecc = new ExpressionExperimentSearchCommand();
+        ExpressionExperimentSearchCommand eesc = new ExpressionExperimentSearchCommand();
 
         if ( !"".equals( id ) )
             ee = expressionExperimentService.findById( id );
@@ -92,14 +93,13 @@ public class ExpressionExperimentSearchController extends BaseFormController {//
         else
             ee = ExpressionExperiment.Factory.newInstance();
 
-        eecc.setId( ee.getId() );
-        eecc.setDescription( ee.getDescription() );
-        eecc.setName( ee.getName() );
-        eecc.setSearchString( "36936_at" );
-        eecc.setStringency( 1 );
+        eesc.setId( ee.getId() );
+        eesc.setDescription( ee.getDescription() );
+        eesc.setName( ee.getName() );
+        eesc.setSearchString( "36936_at" );
+        eesc.setStringency( 1 );
 
-        request.setAttribute( "command", eecc );// must manually put the command object back in the request scope.
-        return eecc;
+        return eesc;
 
     }
 
