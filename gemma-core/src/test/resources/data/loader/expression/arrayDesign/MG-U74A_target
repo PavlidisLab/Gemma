@@ -1,0 +1,195 @@
+>target:MG-U74A:100001_at; gb|M18228; Cluster Incl M18228:CD3 antigen, gamma polypeptide /cds=(104,652) /gb=M18228 /gi=192497 /ug=Mm.4513 /len=670 /STRA=for
+ctctgttgcaaaatgaacagctgtaccagcccctcaaggaccgggaatatgaccagtaca
+gccatctccaaggaaaccaactgaggaagaagtgaactcagcaggactcagggtgtcccc
+ccttntatccagcacccagaatcaaaacaatgcattttggagagagcccagtagagagat
+tttcaaccctacaggtagactgcaagcagagaggaagaactgtcaaagaaattttggtct
+tttttttttttttnncaaaataaaataaaagcttggaggagccagtggtatgantnnnnn
+>target:MG-U74A:100002_at; gb|X70393; Cluster Incl X70393:Inter-alpha trypsin inhibitor, heavy chain 3 /cds=(4,2664) /gb=X70393 /gi=695635 /ug=Mm.4517 /len=2775 /STRA=for
+tcatcctagggactggggccgagctgagcacgttcagttggctagacacaatcacggtca
+cacagactgggctgtctgtaacaatcaacaggaaaangaatatggtggtgtcctttggag
+atgggattagctttgtgatcatcctacaccaggtttggaagaaacatccagttcaccagg
+acttcctagggttctacgtggtggacagtcaccggatgtcagcacagacacatnnnnnnn
+nnnnnnnnnnnnnnnnnncctttgactttaaagtgtttggcatccgcccaggctctgacc
+>target:MG-U74A:100003_at; gb|D38216; Cluster Incl D38216:Mouse RyR1 mRNA for skeletal muscle ryanodine receptor, partial cds /cds=(0,371) /gb=D38216 /gi=1030707 /ug=Mm.4519 /len=486 /STRA=for
+aggacgagcctgacatgaagtgtgatgacatgatgacgtgctacctgttccacatgtatg
+tgggcgtccgggccggtggagggatcggggacgagatcgaggacccggccggcgatgaat
+atgaactttaccgggtcgtcttcgacatcacctttttcttcttcgttnnnnnnnnnnnnn
+nnnnnnnnnnnnnnnnnnnnnntattgatgcttttggggagctccgagaccaacaagagc
+aagtgaaggaagacatggnnnnnnnnnnnnnnntctgtggaataggcagtgactacttcg
+>target:MG-U74A:100004_at; gb|AW120890; Cluster Incl AW120890:UI-M-BH2.3-aob-a-12-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-BH2.3-aob-a-12-0-UI /clone_end=3' /gb=AW120890 /gi=6096223 /ug=Mm.45194 /len=364 /STRA=for
+agaatgaggccttcacagaggccgcacctgccttctggtctgtgggagcctgtgggcnac
+angntcagcggcctgctgcattggcacctcttacccaccttctgtcctgaagcaatgtta
+gtttattgttttggtctttgattgacccaaaaaacagctccagctagaaaggttggaaat
+gaatgtgttgttttttctggtatgtgactagtgtggacttctgatattttttttctacaa
+atggaatgtggttcacatatgtnnnnnnnnnnnnngnannggnnncagatccttccccgc
+>target:MG-U74A:100005_at; gb|X92346; Cluster Incl X92346:Tnf receptor associated factor 4 /cds=(130,1542) /gb=X92346 /gi=1041445 /ug=Mm.4521 /len=2043 /STRA=for
+cccaccaggacatccgaaagcggaactacgtgcgggatgatgcggttttcatccgtgcct
+ctgtcgaactgccccggaagatcctcagctgagtagagccttttggnttcaagtgggang
+ggaggcgggactggatctgaaactggattgggggccggacctcctttcagcttcttttgc
+ctaggctgttagcccactctccctaccaccaccaccaccaccaccaccatccctacccct
+caggtgcctccaattggtgct
+>target:MG-U74A:100006_at; gb|D21253; Cluster Incl D21253:Cadherin 11 /cds=(269,2659) /gb=D21253 /gi=994774 /ug=Mm.4525 /len=3489 /STRA=for
+actgttgctttaatatgagcttcaatatannnnnnnnnnnnnnnnntaaaaaaaagattn
+ttttttaantntgggtttgattcnttaacattgnaaaaaaanaaggnnttctaatgatcc
+attnnnnntcctaattnnantgtgatcttnaataaccctatttatgatctgttgtagtct
+gctgctctcattgtttatttaaatcaaatatgtttgagtttttttnaaagataagattct
+gtaacttcatgtaaattattttttgtatgttctggcttttcctggagtatatcttctaaa
+>target:MG-U74A:100007_at; gb|AI837573; Cluster Incl AI837573:UI-M-AL0-abs-g-06-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-AL0-abs-g-06-0-UI /clone_end=3' /gb=AI837573 /gi=5471786 /ug=Mm.4532 /len=293 /STRA=for
+ctcccgagagtttatcaaggcacagggcccagccggagaggtgtactgccccagtggaga
+caaatgtccactggtgggttcctctgtcccctgggccttcatgcagggcgagatcgctac
+tattcttgctggtgacatcaaggtcaagaaagaaagagacccctaggctgccactgccag
+gcttctttcccctcccccttaaccatcaccgcatctgcgnntaaattattccctaccgca
+cccaaccctgtaccaccctaacctatgtatataccctttcctctgcccagatgggtcccc
+>target:MG-U74A:100009_r_at; gb|X94127; Cluster Incl X94127:SRY-box containing gene 2 /cds=(0,959) /gb=X94127 /gi=1209429 /ug=Mm.4541 /len=960 /STRA=for
+aaaaaaaatgtccatgcaggttgatatcgntggtaatttataatagnttttgntcaatcc
+tacccnttcnnnttgttnacataannnatnngganntacngnntttgaaatattttntta
+tggtttgtaatatttctgtaaattnngatattttaaggtttttccccccttttattttcc
+gtagttgtattttaaaagattnggntntgttattggaatcaggctnccgagaatccatgt
+atatatttgaactaataccatccttataacagctacattttc
+>target:MG-U74A:100010_at; gb|U36340; Cluster Incl U36340:Mus musculus CACCC-box binding protein BKLF mRNA, complete cds /cds=(44,1078) /gb=U36340 /gi=1244514 /ug=Mm.4549 /len=1200 /STRA=for
+aattgaaccacagaggactgactattaccctgaagaaatgtcaccccctttaatgaaccc
+agtgtcccccccgcaagccttgttgcaagagaaccatccttccgtcatcgtgcagcctgg
+gaagagacctctacctgtggaatccccggatacccaaaggaagcgcaggatacacannnn
+nnnnnnnnnnnggtgcaataaggtctacactaagagctcgcacttgaaagcacacagaag
+aactcatacaggagaaaagccgtacaaatgcacctgggaaggctgcacgtngaagttcgn
+>target:MG-U74A:100011_at; gb|AI851658; Cluster Incl AI851658:UI-M-BH0-ain-f-03-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-BH0-ain-f-03-0-UI /clone_end=3' /gb=AI851658 /gi=5495564 /ug=Mm.4549 /len=448 /STRA=for
+tgtattcctcaaaagaatgtcaaagtaaatgtattagaaatgcagtatccagcctattag
+tccttgccagagaccttcgactttctgccacattttgtgtttgacgacagaaagaattct
+gtccctgttaccagctagcgagacctacaagatgtcaagctggacccaccgtctcgcctt
+cgccctccccacgattcgcctgttgacctggctcacctgctcagctaaatcagctccttt
+gtcctctgtggcacctgaagctcatgtggagggctttgacatccctgggagctgagcagg
+>target:MG-U74A:100012_at; gb|U29539; Cluster Incl U29539:Mus musculus retinoic acid-inducible E3 protein mRNA, complete cds /cds=UNKNOWN /gb=U29539 /gi=924941 /ug=Mm.4554 /len=2450 /STRA=rev
+gtccttatcttcagtcaagtgttccctagggncacacagtggtgaggtccctgcaagagt
+nnnnnnnnnnnnnnnnnnnttagggtctggtgatcacacatcccagcggccaggttgctt
+cagcttgcttgcccnnnnnnnnnnnnnnnnnnnngcaggtttggagttggccgccctggg
+ggtggntgtctgtcactatggctgcccagttggggnaggctagcctatggggtgtgaaga
+gttggccagagtcatgtgttctatggtggcagcaaggagggtcagttcatatgcctctgc
+>target:MG-U74A:100013_at; gb|AW121732; Cluster Incl AW121732:UI-M-BH2.3-aoe-b-05-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-BH2.3-aoe-b-05-0-UI /clone_end=3' /gb=AW121732 /gi=6097065 /ug=Mm.45558 /len=377 /STRA=rev
+ttcctgctggacttaggctgagtgaagaggaactgttggacaagctggagatcttctttg
+gcaaggncaagaatggaggtggggatgtagagacccgggagatgctgcaagggaccgtca
+tgctagggtttgctgatgaagaagtnggcccancacttatgccagattggccagttcaga
+gtcccactggaccggcagcaggtcctcctgagggtctctccctatgtgagtggtgagatc
+cagaaagccgagatcaaattnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+>target:MG-U74A:100014_at; gb|AI845038; Cluster Incl AI845038:UI-M-BG0-ahy-b-01-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-BG0-ahy-b-01-0-UI /clone_end=3' /gb=AI845038 /gi=5488944 /ug=Mm.4557 /len=380 /STRA=for
+atctcctgaaaagctggtagcacaaggctcggctggggatggtgtttgacttgggaggaa
+aaagttgctactgccattaaaggcactagagttagtgtgctagccctgaataatctcagt
+ttctaaaaacatgcagcttccttcaccccttttttatttttgaaagaatacatttggtca
+taaagtgaaacccgtattagcg
+>target:MG-U74A:100015_at; gb|X67677; Cluster Incl X67677:Yamaguchi sarcoma viral (v-yes) oncogene homolog /cds=(602,2227) /gb=X67677 /gi=50623 /ug=Mm.4558 /len=4550 /STRA=for
+caagagggtctcctgagaagactgggtcctcttgccctgatgtctactctgtgacatgag
+tgttttaaaggncttcatgtganctatggntatnatagtgtatgtaagcattcattaaag
+gntaataaaatatgtttatgtactaaagctgatcanaaaaataaggcagaaaaattgatg
+gcattctttagattttaactaaatggagcagctccttataatacaaattgtatagtaagg
+atacaacactaattaatatgttttcagtttaatttgttatgtattttttaattatcaaga
+>target:MG-U74A:100016_at; gb|Z12604; Cluster Incl Z12604:Matrix metalloproteinase 11 /cds=(10,1488) /gb=Z12604 /gi=467682 /ug=Mm.4561 /len=2246 /STRA=for
+agccactgtttgtaggaacgaccatgctggtcatggtcacctgccaacaattgtctcaga
+ctaggcaaaggctttggtgttacttaaaaataagggaggttttgggctggcaatatttca
+gctaccaataatccacagtcagcctggttgcccaaggtctccatctctgtccctcaaagt
+agaacccccacacaaactcaggaatcacctgcaatgaggttcctgttgggagtggtgttg
+gtaatgagatgcccagggtaccatgctgcccctgctaagcaactggaccagtatctttcc
+>target:MG-U74A:100017_at; gb|U68267; Cluster Incl U68267:Mus musculus myosin binding protein H (MyBP-H) mRNA, complete cds /cds=(50,1501) /gb=U68267 /gi=1546812 /ug=Mm.4562 /len=1850 /STRA=for
+gctatagcacgcagcttttctgcagcgtccgagcatcacctaagcccaagatcatctgga
+tgaaaaacaagatggacatccagggtgacnnnnnnnnnnnnnnnnnctccgagcaagggg
+tctgcaccctggagatccggaagcccagcccctttgattctggggtctacacttgcaagg
+ccatcaacgtgctaggggaggcctctgtggattgtcggctggaggttaaagcttctgcca
+cacactaaagagcaacagaggcagagactgggacaaggagacnnnnnnnnnnnnnnnnnn
+>target:MG-U74A:100018_at; gb|X71327; Cluster Incl X71327:M. musculus mRNA for MRE-binding transcription factor /cds=(96,2123) /gb=X71327 /gi=510149 /ug=Mm.4563 /len=2559 /STRA=for
+ctgtgagcacagcagacaggctgaggctcctcagaccctccgaaacgttaagtgccatgg
+atgtgtcagagttcctgtccctccagagcctggacaccccgtccantccggttcacnnnn
+nnnnnnnnnnncaggggtagaggaaagagcctggccggcagcttctccaggggaagggcc
+tgtgcgcacacccctccaggaacagggtgagcaggaagtaccggctgtgatgctgccgtc
+atggggtcagaaattggaaggannnnnnnnnnnnnnnnnngaaagnnnnnnnnnnnnnnn
+>target:MG-U74A:100019_at; gb|D45889; Cluster Incl D45889:Chondroitin sulfate proteoglycan 2 /cds=(0,124) /gb=D45889 /gi=994777 /ug=Mm.4575 /len=2201 /STRA=for
+cattgaagcatcgtgcggtgtcccataagtatggncagactttatgttttatacatcagg
+tcaaaatatatattcagcaaagaagagtagaggaagagcagactgganttggtcctatgt
+tgactgtttcccatgaatgctactttagcttagagggaatgactgtgctcacaagcatac
+atagtgtcttagacatggtcctgggtctcagcagtaaatgtaattcatcctaatgtgtac
+tagagcacagaaaatcactgtgttgacttactagggnnttttttctttttcattacaatg
+>target:MG-U74A:100020_at; gb|J04036; Cluster Incl J04036:Solute carrier family 4 (anion exchanger), member 2 /cds=(182,3895) /gb=J04036 /gi=192132 /ug=Mm.4580 /len=4088 /STRA=for
+ttggggacctcctgcggcagatccccctggctgtgctctttggcattttcttgtacatgg
+gagtcacctccctcaatgggatccagttctacgagcggctgcacctgctgctcatgccgc
+ccaaacaccacccagatgtcacctatgtcaaaaaggttcggaccatgcggatgcacctgt
+tcactgccttgcagttgctctgcctggccctgctttgggcagtcatgtccacagccgctt
+ccctggccttccccttcannnnnnnnnnnnnnnnnnnnnnnnnnnnngtggtacttaccc
+>target:MG-U74A:100021_at; gb|M17640; Cluster Incl M17640:Mus musculus acetylcholine receptor alpha-subunit mRNA, complete cds /cds=(104,1477) /gb=M17640 /gi=2073542 /ug=Mm.4583 /len=1860 /STRA=for
+ttgcagagaccatgaagtcagaccaggagtccaataacgccgctgaggaatggaagtatg
+ttgccatggtgatggatcacatcctcctcggagtctttatgctggtgtgtctcatcggga
+cgctggctgtgtttgcaggtcggctcattgagttacatcaacaaggatgagcagaggctg
+agctaagcctacctctgtcccagccatagccatcgctaggaaagatggaagagaggaagg
+tctgtctccttgaatcctttcacacttaccaaacatgcagtgttctacatgtcctacatg
+>target:MG-U74A:100022_at; gb|D89613; Cluster Incl D89613:Cytokine inducible SH2-containing protein /cds=UNKNOWN /gb=D89613 /gi=2554633 /ug=Mm.4592 /len=1010 /STRA=for
+gggactacacagttatacagtatttatttatttattctccttgcaggggttgggggtgga
+atgatggcgtgannnnancccacttctctgccctgtgctctgggtggtccagagaccccn
+aggtctggttcttccctgtggagacccccatcccaaaacattgttgggcccaaagtagtc
+ctgaatgtcctgggcccatccacctgtgtatggatgtgcccacttttttctcccaagcct
+cttttgggaggctgggtggccagacagacaggagccagaaacacaagggctcccactctt
+>target:MG-U74A:100023_at; gb|X70472; Cluster Incl X70472:Myeloblastosis oncogene-like 2 /cds=(142,2256) /gb=X70472 /gi=312825 /ug=Mm.4594 /len=2632 /STRA=for
+cagaagactcggagccacattccaacccctgcccntatgacccatgcctggaagacggtg
+gcctgtgggggcaccaaagaccagctcttcatgcaggagaaagcccggcagctcctgagc
+cgcctgaagtccagccacacatctcggaccctcattctgtcctgagggacttgaatggca
+agagccggctctcatgtttacaggggtagggtgtggggtaaggttaaagtcacattaagt
+gaccagcttcaggatgtcttctgccagcccctcaaactacttaggtggcagaagtcacgt
+>target:MG-U74A:100024_at; gb|AI641895; Cluster Incl AI641895:vq44e08.y1 Mus musculus cDNA, 5' end /clone=IMAGE-1097126 /clone_end=5' /gb=AI641895 /gi=4720370 /ug=Mm.46014 /len=413 /STRA=for
+catcttattggtagggttttccaagttacctttctcnntnnntnnnnnnnngcnnnnnnt
+gccactntcnccactnttcantctgaaagcgntttcactacaanctgcggnttnantngt
+gggttnctgggggcttcctgagtaacaggaagaggctttccaggaatctctcttnccntn
+cacngtnggtcttctgcgagcttgcacgctctgtggaagagagtcggtgacntgcggcct
+gatggagggtgtctggcacgggtttccccaggctgaggcggcggagatgggtgtgtggca
+>target:MG-U74A:100026_at; gb|U42443; Cluster Incl U42443:Mus musculus MECA39 mRNA, complete cds /cds=(0,1160) /gb=U42443 /gi=1480454 /ug=Mm.4606 /len=1161 /STRA=for
+ctaaggtgactgtcccttcttcgtatcacggtctgcantaatcncacccaaggtgtctga
+ggctggttgtccgcactgccctttttacgtaactataactggctgntcactgcgctgcta
+tgagactaggggtcctgtgccttctagatctttgnatcctcaaagcccagcacatagtna
+ggtattttcagtacatgtttactctaagaatg
+>target:MG-U74A:98442_at; gb|AI853706; Cluster Incl AI853706:UI-M-BH0-ajq-c-11-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-BH0-ajq-c-11-0-UI /clone_end=3' /gb=AI853706 /gi=5497577 /ug=Mm.34514 /len=501 /STRA=for
+>target:MG-U74A:100027_s_at; gb|AI881987; Cluster Incl AI881987:ul56h05.x1 Mus musculus cDNA, 3' end /clone=IMAGE-2123097 /clone_end=3' /gb=AI881987 /gi=5567139 /ug=Mm.4609 /len=512 /STRA=for
+tagggctggcacttggctgcccgccttccaagtgccccgggacacagaggcaggtgggca
+agggctgcggctctgcctccacgactgggcggaagcccaggtaggggtggggctgcccnn
+nnnnnnnnnnnnntgggctgcatttctgttcaccagcctcccaaacacggcccagcccca
+gccagccccagccagccccagcggctctggctgtccacaagccaggcagagaactcagga
+gctctgcactcaacgcccctgctgcctcgccnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+>target:MG-U74A:100028_r_at; gb|AI881987; Cluster Incl AI881987:ul56h05.x1 Mus musculus cDNA, 3' end /clone=IMAGE-2123097 /clone_end=3' /gb=AI881987 /gi=5567139 /ug=Mm.4609 /len=512 /STRA=for
+gactgggcggaagcccaggtaggggtggggctgcccnnnnnnnnnnnnnnntgggctgca
+tttctgttcaccagcctcccaaacacggcccagccccagccagccccagccagccccagc
+ggctctggctgtccacaagccaggcagagaactca
+>target:MG-U74A:98372_at; gb|AW050387; Cluster Incl AW050387:UI-M-BH1-ang-h-10-0-UI.s1 Mus musculus cDNA, 3' end /clone=UI-M-BH1-ang-h-10-0-UI /clone_end=3' /gb=AW050387 /gi=5910916 /ug=Mm.4458 /len=380 /STRA=for
+tcccaaagagtttgccctatagttatgagatggtcttccacgacataggcccatctaagg
+>target:MG-U74A:100029_at; gb|AW208667; Cluster Incl AW208667:uo62e02.x1 Mus musculus cDNA, 3' end /clone=IMAGE-2647130 /clone_end=3' /gb=AW208667 /gi=6514607 /ug=Mm.4609 /len=474 /STRA=for
+cctccctgacaggtgtcttgtcaaggtgtatcctccgagtatcttgaccacctggcacca
+tgcatggccagagctcatgtcatctcctgcctctgtcacctcagtgcagggaaactatgg
+cccctgtggtcttgctgtctctcccactgtgccctggcctggcttgtggcttcttctttg
+cctgttccaaaagccagggccctgggcctgctcttcatctt
+>target:MG-U74A:100051_at; gb|U17297; Cluster Incl U17297:Erythrocyte protein band 7.2 /cds=(90,944) /gb=U17297 /gi=972906 /ug=Mm.4441 /len=2821 /STRA=for
+>target:MG-U74A:100030_at; gb|D44464; Cluster Incl D44464:Mouse mRNA for uridine phosphorylase, complete cds /cds=(278,1213) /gb=D44464 /gi=1526557 /ug=Mm.4610 /len=1278 /STRA=for
+tcaagatgctgtaccatgccaggtgntccaacatcncnnnnnncnnnntnggcanttcag
+gcgggataggnnngnnnnnnnnntnnntnnncnncacgcagcaggcagtgaatgagtgct
+tnaagccggagtttgagcagattgtcctgggaaaacgggtgattcgcaacaccaacctgg
+acgcgcagntggttcaggagttggtgcagtgctcctcagacctgaatgagttccccatgg
+ttgtgggcaacaccatgtgcaccttggacttctatgaggggcaaggccgtctggatggcg
+>target:MG-U74A:100032_at; gb|X60136; Cluster Incl X60136:Trans-acting transcription factor 1 /cds=(0,307) /gb=X60136 /gi=54158 /ug=Mm.4618 /len=454 /STRA=for
+aactcttagtcttgggttcagaagttagtggaattattcggatnncagtatcattgtctt
+ccaaatagctataagcctcaatgtatgggcttctgagttcacactctgaaaggaagtaca
+cttcctcttttgaacatttctgtagttccttcctattactgttttaatgttaaggagcat
+cagccagtgaacctgtttggattttccatcctgtagagtgcaaaacttnnnnnnnnnnnn
+nnngtggttctttaaaaaaaaaaaaaannnnncccnttaactcttccttagatatacttg
+>target:MG-U74A:100033_at; gb|X81143; Cluster Incl X81143:MutS homolog 2 (E. coli) /cds=(39,2846) /gb=X81143 /gi=534944 /ug=Mm.4619 /len=3079 /STRA=for
+aaattattctggagttcctgtcgaaggtcaagcaggtgccctttactgccatgtcggagg
+agagcatctccgcgaannnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnncaacagct
+tcgtaaacgagatcatttcacggataaaggctccggctc
+>target:MG-U74A:100034_at; gb|U54705; Cluster Incl U54705:Mus musculus tumor supressor maspin mRNA, complete cds /cds=(189,1316) /gb=U54705 /gi=1490512 /ug=Mm.4622 /len=1432 /STRA=for
+gacatcagctgtaagatcatagaacttcctttccagaataagcatctgagtatgctcatt
+gtgctccccaaggacgtggaggatgagtccacaggcctggagaagattgaacagcaactc
+aacccagaaacattgttacagtggaccaaccccagtaccatggccaatgcnaaagtcaaa
+ctttccctcccaaagtttaaggtagaaaagatgattgatcccaaggctagtctggaaagc
+ctagggctgaaaagtctcttcaatgaaagtacatcggatttctctggaatgtcagagacc
+>target:MG-U74A:100035_at; gb|L31932; Cluster Incl L31932:Mus musculus natriuretic peptide receptor A (NprA) mRNA, complete cds /cds=(11,3184) /gb=L31932 /gi=473633 /ug=Mm.4627 /len=3209 /STRA=for
+tagctccactgtgacttagagggagggaaattgccacctgaaggaaagagaaaagagatt
+ctcggggtttgcaggaggcaggcantcctgtgtcacaaatantcccctcantcccagtcc
+accacctgccccaccgacttcccttcccacacagtgcactgaggagaagagaggcatggg
+gttgccttgcttntcctatgagcaaaacccattaaagtctttattcctgtgnaaaaaaaa
+aaaaactgngctgaaaccgtagtnatnnggntattnncagcttgctgtnntanagtcgta
+>target:MG-U74A:100037_at; gb|AW213225; Cluster Incl AW213225:uo01f08.y1 Mus musculus cDNA, 5' end /clone=IMAGE-2582151 /clone_end=5' /gb=AW213225 /gi=6519407 /ug=Mm.44219 /len=725 /STRA=for
+gaaactcacaactttagccaacggagaagcagcaccaacaccacctcctgattcagaagt
+aaaaaagaaaaagaagaaaaagaggaaaatggcaaatgatgccgggcctgatacaaaaaa
+agcgaaaactgaagaaagtgctgaggcttgtgaggaaccagaagatgatgtgaaaaaggc
+agatgacagcgaggtgcccagcctgcccctaggactgacaggtgcttttgaggacacttc
+atttgcttccttgtctaatctcgtcaatgagaacaccctgaaggccatagaagaaannnn
