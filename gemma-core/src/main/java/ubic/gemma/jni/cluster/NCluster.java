@@ -51,25 +51,13 @@ public class NCluster {
     private static final String FOOTER = "For more information, see our website at http://www.neurogemma.org";
 
     /**
-     * Hierarchical Clustering native call.
-     * dist       (input) char
-     * Defines which distance measure is used, as given by the table:
-     * dist=='e': Euclidean distance
-     * dist=='b': City-block distance
-     * dist=='c': correlation
-     * dist=='a': absolute value of the correlation
-     * dist=='u': uncentered correlation
-     * dist=='x': absolute uncentered correlation
-     * dist=='s': Spearman's rank correlation
-     * dist=='k': Kendall's tau
-     * For other values of dist, the default (Euclidean distance) is used.
-     * 
-     * method     (input) char
-     * Defines which hierarchical clustering method is used:
-     * method=='s': pairwise single-linkage clustering
-     * method=='m': pairwise maximum- (or complete-) linkage clustering
-     * method=='a': pairwise average-linkage clustering
-     * method=='c': pairwise centroid-linkage clustering
+     * Hierarchical Clustering native call. dist (input) char Defines which distance measure is used, as given by the
+     * table: dist=='e': Euclidean distance dist=='b': City-block distance dist=='c': correlation dist=='a': absolute
+     * value of the correlation dist=='u': uncentered correlation dist=='x': absolute uncentered correlation dist=='s':
+     * Spearman's rank correlation dist=='k': Kendall's tau For other values of dist, the default (Euclidean distance)
+     * is used. method (input) char Defines which hierarchical clustering method is used: method=='s': pairwise
+     * single-linkage clustering method=='m': pairwise maximum- (or complete-) linkage clustering method=='a': pairwise
+     * average-linkage clustering method=='c': pairwise centroid-linkage clustering
      * 
      * @param rows Num rows in data matrix
      * @param cols Num columns in data matrix
@@ -80,10 +68,11 @@ public class NCluster {
      * @return int[][]
      */
     public native int[][] treeCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][] );
-    
+
     /**
      * Self Organizing Maps Clustering native call.
-     * @param rows 
+     * 
+     * @param rows
      * @param cols
      * @param transpose
      * @param dist Distance metric to use.
@@ -98,7 +87,8 @@ public class NCluster {
      */
     public native int[][] somCluster( int rows, int cols, int transpose, char dist, char method, double matrix[][],
             int nxgrid, int nygrid, double inittau, int niter, double cellData[][], int clusterId[][] );// TODO remove
-                                                                                                        // 'method'
+
+    // 'method'
     static Configuration config = null;
     static String baseDir = null;
     static {
@@ -124,7 +114,7 @@ public class NCluster {
         Collection results = new HashSet();
         try {
             is = new FileInputStream( new File( filename ) );
-            parser.parse( is, false );
+            parser.parse( is );
             results = parser.getResults();
         } catch ( Exception e ) {
             e.printStackTrace();
