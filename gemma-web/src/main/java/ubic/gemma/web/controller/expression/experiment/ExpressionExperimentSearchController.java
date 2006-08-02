@@ -34,6 +34,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -66,6 +67,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
     CompositeSequenceService compositeSequenceService = null;
     String[] searchIds = null;
     Collection<DesignElement> designElements = null;
+    Long id = null;
 
     // private final String messagePrefix = "Expression experiment with id";
 
@@ -119,6 +121,13 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         log.debug( "entering processFormSubmission" );
 
+        id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":8080"
+                    + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+        }
+
         // more searchString validation - see also validation.xml
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
@@ -157,7 +166,6 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         log.debug( "entering onSubmit" );
 
-        Long id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         boolean suppressVisualizations = ( ( ExpressionExperimentSearchCommand ) command ).isSuppressVisualizations();
 
