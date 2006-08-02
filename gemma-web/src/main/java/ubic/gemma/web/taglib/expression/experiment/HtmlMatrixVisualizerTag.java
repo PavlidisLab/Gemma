@@ -92,7 +92,12 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
             log.debug( "wrapping with html" );
 
-            buf.append( "<table border=\"0\" width=\"200px\" height=\"5px\">" );
+            buf.append( "<table border=\"0\">" );
+            buf.append( "<tr>" );
+            buf.append( "<td>&nbsp;</td>" );
+            buf.append( "<td align=\"left\">Probe Set<br/><br/></td>" );
+            buf.append( "</tr>" );
+    
             buf.append( "<tr>" );
             buf.append( "<td border=\"0\" rowspan=\"5\">" );
             buf.append( "<img src=\"" + outfile + "\">" );
