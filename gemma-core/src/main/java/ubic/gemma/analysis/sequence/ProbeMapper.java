@@ -71,6 +71,8 @@ public class ProbeMapper {
     }
 
     /**
+     * From a collection of BlatAssociations, pick the one with the best scoring statistics.
+     * 
      * @param results
      * @return
      */

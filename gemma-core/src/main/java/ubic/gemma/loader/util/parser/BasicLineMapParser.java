@@ -40,6 +40,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class BasicLineMapParser implements LineParser {
 
+    private static final String COMMENTMARK = "#";
+
     protected Log log = LogFactory.getLog( BasicLineMapParser.class.getName() );
 
     protected Map<Object, Object> results = new HashMap<Object, Object>();
@@ -78,6 +80,11 @@ public abstract class BasicLineMapParser implements LineParser {
         String line = null;
         int count = 0;
         while ( ( line = br.readLine() ) != null ) {
+
+            if ( line.startsWith( COMMENTMARK ) ) {
+                continue;
+            }
+
             Object newItem = parseOneLine( line );
 
             if ( newItem == null ) {

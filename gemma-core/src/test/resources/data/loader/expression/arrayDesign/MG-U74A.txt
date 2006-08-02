@@ -1,5 +1,4 @@
-Probe Set	Identifier	Description
-
+#Probe Set	Identifier	Description
 100001_at	M18228	"Cluster Incl M18228:CD3 antigen, gamma polypeptide /cds=(104,652) /gb=M18228 /gi=192497 /ug=Mm.4513 /len=670 /STRA=for"
 100002_at	X70393	"Cluster Incl X70393:Inter-alpha trypsin inhibitor, heavy chain 3 /cds=(4,2664) /gb=X70393 /gi=695635 /ug=Mm.4517 /len=2775 /STRA=for"
 100003_at	D38216	"Cluster Incl D38216:Mouse RyR1 mRNA for skeletal muscle ryanodine receptor, partial cds /cds=(0,371) /gb=D38216 /gi=1030707 /ug=Mm.4519 /len=486 /STRA=for"

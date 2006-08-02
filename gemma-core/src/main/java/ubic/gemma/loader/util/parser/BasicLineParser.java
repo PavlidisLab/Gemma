@@ -38,6 +38,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class BasicLineParser implements LineParser {
 
+    private static final String COMMENTMARK = "#";
+
     protected static final Log log = LogFactory.getLog( BasicLineParser.class );
 
     protected int linesParsed = 0;
@@ -64,6 +66,11 @@ public abstract class BasicLineParser implements LineParser {
         String line = null;
 
         while ( ( line = br.readLine() ) != null ) {
+
+            if ( line.startsWith( COMMENTMARK ) ) {
+                continue;
+            }
+
             Object newItem = parseOneLine( line );
 
             if ( newItem != null ) {
