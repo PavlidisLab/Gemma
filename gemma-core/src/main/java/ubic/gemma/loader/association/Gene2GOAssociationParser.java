@@ -40,8 +40,8 @@ import ubic.gemma.model.association.Gene2GOAssociation;
  * @spring.bean id="gene2GOAssociationParser"
  * @version $Id$
  */
-public class Gene2GOAssociationParserImpl extends BasicLineParser {
-    protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserImpl.class );
+public class Gene2GOAssociationParser extends BasicLineParser {
+    protected static final Log log = LogFactory.getLog( Gene2GOAssociationParser.class );
 
     private Gene2GOAssociationMappings gene2GOAssociationMappings = null;
 
@@ -49,7 +49,7 @@ public class Gene2GOAssociationParserImpl extends BasicLineParser {
 
     int i = 0;
 
-    public Gene2GOAssociationParserImpl() {
+    public Gene2GOAssociationParser() {
         try {
             gene2GOAssociationMappings = new Gene2GOAssociationMappings();
         } catch ( ConfigurationException e ) {

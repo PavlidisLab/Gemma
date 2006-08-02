@@ -47,9 +47,11 @@ public class IlluminaProbeReaderTest extends TestCase {
 
         String expectedValue = "GTGGCTGCCTTCCCAGCAGTCTCTACTTCAGCATATCTGGGAGCCAGAAG";
 
+        assertTrue( apr.containsKey( "GI_42655756-S" ) );
+
         Reporter r = ( Reporter ) apr.get( "GI_42655756-S" );
 
-        assertFalse( "Reporter not found", r == null );
+        assertFalse( "Reporter GI_42655756-S not found", r == null );
 
         BioSequence bs = r.getImmobilizedCharacteristic();
 

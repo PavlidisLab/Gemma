@@ -19,11 +19,9 @@
 package ubic.gemma.analysis.sequence;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -80,16 +78,16 @@ public class ProbeMapper {
 
         int maxScore = 0;
         BlatAssociation best = null;
-        for ( BlatAssociation ld : results ) {
+        for ( BlatAssociation blatAssociation : results ) {
 
-            BlatResult br = ld.getBlatResult();
+            BlatResult br = blatAssociation.getBlatResult();
 
             double blatScore = br.score();
-            double overlap = ( double ) ld.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
-            int score = ( int ) ( 1000 * blatScore * overlap );
+            double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
+            int score = computeScore( blatScore, overlap );
             if ( score >= maxScore ) {
                 maxScore = score;
-                best = ld;
+                best = blatAssociation;
             }
         }
 
@@ -100,13 +98,26 @@ public class ProbeMapper {
         for ( BlatAssociation ld : results ) {
             double blatScore = ld.getBlatResult().score();
             double overlap = ld.getOverlap() / ( double ) ( ld.getBlatResult().getQuerySequence().getLength() );
-            int score = ( int ) ( 1000 * blatScore * overlap );
+            int score = computeScore( blatScore, overlap );
             if ( score == maxScore ) {
                 numTied++;
             }
         }
 
         return best;
+    }
+
+    /**
+     * Compute a score we use to quantify the quality of a hit to a GeneProduct.
+     * <p>
+     * There are two criteria being considered: the quality of the alignment, and the amount of overlap.
+     * 
+     * @param blatScore A value from 0-1 indicating alignment quality.
+     * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
+     * @return
+     */
+    private int computeScore( double blatScore, double overlap ) {
+        return ( int ) ( 1000 * blatScore * overlap );
     }
 
     /**
@@ -203,7 +214,8 @@ public class ProbeMapper {
 
             String genbankId = genbankIdAr[0];
 
-            processGbId( goldenPathDb, genbankId );
+            Map<String, Collection<BlatAssociation>> res = processGbId( goldenPathDb, genbankId );
+            allRes.putAll( res );
 
             count++;
             if ( count % 100 == 0 ) log.info( "Annotations computed for " + count + " genbank identifiers" );
@@ -272,19 +284,14 @@ public class ProbeMapper {
         Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
                 .getTargetChromosome().getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult
                 .getTargetStarts(), blatResult.getBlockSizes(), blatResult.getStrand(), threeprimeMethod );
-        return blatAssociations;
-    }
 
-    /**
-     * Generate a header for the "best result" file.
-     */
-    public void writeBestHeader( Writer writer ) throws IOException {
-        StringBuilder buf = new StringBuilder();
-        buf.append( "probe" + "\t" + "array" + "\t" + "gene.symbol" + "\t" + "gene.NCBIid" + "\t" + "numHits" + "\t"
-                + "blat.score" + "\t" + "blat.exonOverlap" + "\t" + "threeprime.distance" + "\t" + "blat.alignLenth"
-                + "\t" + "targetSequenceName" + "\t" + "startInTarget" + "\t" + "endInTarget" + "\t" + "numberTied"
-                + "\n" );
-        writer.write( buf.toString() );
+        if ( blatAssociations == null ) return null;
+
+        for ( BlatAssociation association : blatAssociations ) {
+            association.setBlatResult( blatResult );
+        }
+
+        return blatAssociations;
     }
 
     public void setScoreThreshold( double scoreThreshold ) {

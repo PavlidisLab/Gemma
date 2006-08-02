@@ -93,6 +93,7 @@ public class PersistAclInterceptorTest extends BaseTransactionalSpringContextTes
             fail( "Failed to create ACL for " + ee );
         }
 
+        assert ee.getExperimentalDesigns().size() > 0 : "No experimentalDesigns";
         ed = ee.getExperimentalDesigns().iterator().next();
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ed ) ) == null ) {

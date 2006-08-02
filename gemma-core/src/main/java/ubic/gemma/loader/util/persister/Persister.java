@@ -38,7 +38,7 @@ public interface Persister {
      * @param col
      * @return The persistent versions of the objects.
      */
-    public Collection<?> persist( Collection<Object> col );
+    public Collection<?> persist( Collection<?> col );
 
     /**
      * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,

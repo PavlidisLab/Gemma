@@ -64,7 +64,7 @@ public class ExpessionDataMatrixTest extends TestCase {
         Collection results = new HashSet();
         try {
             is = new FileInputStream( new File( filename ) );
-            parser.parse( is, true );
+            parser.parse( is );
             results = parser.getResults();
         } catch ( Exception e ) {
             e.printStackTrace();

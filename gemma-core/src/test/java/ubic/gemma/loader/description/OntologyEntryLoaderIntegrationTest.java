@@ -48,7 +48,7 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
     String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
     OntologyEntryPersister ontologyEntryPersister = null;
     GeneOntologyEntryParser ontologyEntryParser = null;
-    Collection<Object> createdObjects = null;
+    Collection<?> createdObjects = null;
 
     /**
      * Tests both the parser and the loader.

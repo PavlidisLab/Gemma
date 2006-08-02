@@ -31,9 +31,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Parse an Illumina "manifest.txt" file (tab-delimited). A one-line header is permitted.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

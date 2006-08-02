@@ -49,7 +49,7 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
     /**
      * @param oeCol
      */
-    public Collection<Object> persist( Collection<Object> g2GoCol ) {
+    public Collection<Object> persist( Collection<?> g2GoCol ) {
         assert gene2GOAssociationDao != null;
         Collection<Object> results = new HashSet<Object>();
         for ( Object ob : g2GoCol ) {
@@ -65,7 +65,11 @@ public class Gene2GOAssociationLoaderImpl implements Persister {
      * @param object
      */
     public Object persist( Object object ) {
-        assert object instanceof Gene2GOAssociation;
+        if ( object instanceof Collection ) {
+            this.persist( ( Collection ) object );
+        }
+        assert object instanceof Gene2GOAssociation : "Expected a Gene2GOAssociation, got a "
+                + object.getClass().getSimpleName();
         return persistGene2GOAssociation( ( Gene2GOAssociation ) object );
     }
 

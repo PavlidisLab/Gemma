@@ -42,7 +42,7 @@ public class OntologyEntryPersister implements Persister {
 
     private PersisterHelper persisterHelper;
 
-    public Collection<Object> persist( Collection<Object> oeCol ) {
+    public Collection<?> persist( Collection<?> oeCol ) {
         int i = 0;
         for ( Object oe : oeCol ) {
             persist( oe );

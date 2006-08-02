@@ -281,14 +281,14 @@ public class Blat {
 
         log.debug( "Got" + rawresults.size() + " raw blat results" );
 
-        for ( BlatResult object : rawresults ) {
-            String name = ( ( BlatResult ) object ).getQuerySequence().getName();
+        for ( BlatResult blatResult : rawresults ) {
+            String name = blatResult.getQuerySequence().getName();
 
             if ( !results.containsKey( name ) ) {
                 results.put( name, new HashSet<BlatResult>() );
             }
 
-            results.get( name ).add( ( BlatResult ) object );
+            results.get( name ).add( blatResult );
         }
 
         querySequenceFile.delete();

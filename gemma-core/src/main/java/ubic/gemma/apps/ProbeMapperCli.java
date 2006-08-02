@@ -226,7 +226,7 @@ public class ProbeMapperCli extends AbstractCLI {
             throws IOException {
         log.info( "Preparing 'best' matches" );
 
-        probeMapper.writeBestHeader( writer );
+        writeHeader( writer );
 
         for ( String probe : results.keySet() ) {
             BlatAssociation best = probeMapper.selectBest( results.get( probe ) );
@@ -311,9 +311,9 @@ public class ProbeMapperCli extends AbstractCLI {
      * @param ld
      * @throws IOException
      */
-    public void writeDesignElementBlatAssociation( Writer output, BlatAssociation tpd ) throws IOException {
+    public void writeDesignElementBlatAssociation( Writer output, BlatAssociation association ) throws IOException {
 
-        BlatResult blatRes = tpd.getBlatResult();
+        BlatResult blatRes = association.getBlatResult();
 
         String[] sa = splitBlatQueryName( blatRes );
         String arrayName = "";
@@ -326,7 +326,7 @@ public class ProbeMapperCli extends AbstractCLI {
         } else {
             throw new RuntimeException( "Query name was not in understood format" );
         }
-        Collection<GeneProduct> geneProducts = tpd.getGeneProducts();
+        Collection<GeneProduct> geneProducts = association.getGeneProducts();
 
         for ( GeneProduct product : geneProducts ) {
 
@@ -335,8 +335,8 @@ public class ProbeMapperCli extends AbstractCLI {
             output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
                     + blatRes.getQuerySequence().getLength() + "\t"
                     + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t" + blatRes.score() + "\t"
-                    + g.getOfficialSymbol() + "\t" + g.getNcbiId() + "\t" + tpd.getThreePrimeDistance() + "\t"
-                    + tpd.getOverlap() + "\t" + blatRes.getTargetChromosome().getName() + "\t"
+                    + g.getOfficialSymbol() + "\t" + product.getNcbiId() + "\t" + association.getThreePrimeDistance()
+                    + "\t" + association.getOverlap() + "\t" + blatRes.getTargetChromosome().getName() + "\t"
                     + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
         }
 
@@ -423,6 +423,8 @@ public class ProbeMapperCli extends AbstractCLI {
      * @return
      */
     private String[] splitBlatQueryName( BlatResult blatRes ) {
+        assert blatRes != null;
+        assert blatRes.getQuerySequence() != null;
         String qName = blatRes.getQuerySequence().getName();
         String[] sa = qName.split( ":" );
         // if ( sa.length < 2 ) throw new IllegalArgumentException( "Expected query name in format 'xxx:xxx'" );

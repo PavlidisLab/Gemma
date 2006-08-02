@@ -47,7 +47,7 @@ public class GenePersister implements Persister {
      * 
      * @param col
      */
-    public Collection<Object> persist( Collection<Object> col ) {
+    public Collection<Object> persist( Collection<?> col ) {
         Collection<Object> result = new HashSet<Object>();
         for ( Object object : col ) {
             result.add( this.persist( object ) );

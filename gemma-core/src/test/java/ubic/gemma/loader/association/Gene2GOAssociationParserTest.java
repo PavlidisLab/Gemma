@@ -40,7 +40,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserTest.class );
 
-    Gene2GOAssociationParserImpl gene2GOAssParser = null;
+    Gene2GOAssociationParser gene2GOAssParser = null;
 
     Gene2GOAssociationLoaderImpl gene2GOAssLoader = null;
 
@@ -74,7 +74,7 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        gene2GOAssParser = new Gene2GOAssociationParserImpl();
+        gene2GOAssParser = new Gene2GOAssociationParser();
 
         gene2GOAssLoader = new Gene2GOAssociationLoaderImpl();
 

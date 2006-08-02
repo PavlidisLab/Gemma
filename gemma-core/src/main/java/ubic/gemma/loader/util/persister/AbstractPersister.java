@@ -63,7 +63,7 @@ public abstract class AbstractPersister implements Persister {
     /*
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
      */
-    public Collection<Object> persist( Collection<Object> col ) {
+    public Collection<?> persist( Collection<?> col ) {
 
         try {
             int count = 0;
