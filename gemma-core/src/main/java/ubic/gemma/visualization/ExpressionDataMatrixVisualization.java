@@ -59,9 +59,9 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
     private ColorMatrix colorMatrix = null;
 
-    private List<String> rowNames = null;
+    private List<String> rowLabels = null;
 
-    private List<String> colNames = null;
+    private List<String> colLabels = null;
 
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
@@ -91,29 +91,27 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
         double[][] data = new double[deCol.size()][];
         int i = 0;
         for ( DesignElement designElement : deCol ) {
-            // DesignElementDataVector vector = designElement.getDesignElementDataVector();
             Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
                     .getDesignElementDataVectors();
             Iterator iter = vectors.iterator();
             DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
 
             data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
+
+            if ( rowLabels == null ) {
+                System.out.println( "Setting row names" );
+                rowLabels = new ArrayList();
+            }
+            log.debug( designElement.getName() );
+            rowLabels.add( designElement.getName() );
             i++;
         }
 
-        if ( rowNames == null ) {
-            System.out.println( "Row labels not set.  Using defaults" );
-            rowNames = new ArrayList();
-            for ( DesignElement designElement : deCol ) {
-                rowNames.add( designElement.getName() );
-            }
-        }
-
-        if ( colNames == null ) {
+        if ( colLabels == null ) {
             System.out.println( "Column labels not set.  Using defaults" );
-            colNames = new ArrayList();
+            colLabels = new ArrayList();
             for ( int j = 0; j < data[0].length; j++ ) {
-                colNames.add( String.valueOf( j ) );
+                colLabels.add( String.valueOf( j ) );
             }
         }
         createVisualization( data );
@@ -125,11 +123,11 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(double[][])
      */
     public void createVisualization( double[][] data ) {
-        assert rowNames != null && colNames != null : "Labels not set";
+        assert rowLabels != null && colLabels != null : "Labels not set";
 
         DoubleMatrixNamed matrix = new DenseDoubleMatrix2DNamed( data );
-        matrix.setRowNames( rowNames );
-        matrix.setColumnNames( colNames );
+        matrix.setRowNames( rowLabels );
+        matrix.setColumnNames( colLabels );
         colorMatrix = new ColorMatrix( matrix );
     }
 
@@ -167,7 +165,7 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      * @see ubic.gemma.visualization.MatrixVisualizer#setColLabels(java.util.List)
      */
     public void setColLabels( List<String> colNames ) {
-        this.colNames = colNames;
+        this.colLabels = colNames;
     }
 
     /*
@@ -175,8 +173,17 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#setRowLabels(java.util.List)
      */
-    public void setRowLabels( List<String> rowNames ) {
-        this.rowNames = rowNames;
+    public void setRowLabels( List<String> rowLabels ) {
+        this.rowLabels = rowLabels;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#getRowLabels()
+     */
+    public List<String> getRowLabels() {
+        return rowLabels;
     }
 
     /*

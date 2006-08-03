@@ -75,10 +75,9 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
-        List<String> designElementNames = new ArrayList( m.keySet() ); // convert set to list to set the labels
-
-        expressionDataMatrixVisualization.setRowLabels( designElementNames );
         expressionDataMatrixVisualization.createVisualization();
+
+        List<String> designElementNames = expressionDataMatrixVisualization.getRowLabels();
 
         expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
 
@@ -97,7 +96,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             buf.append( "<td>&nbsp;</td>" );
             buf.append( "<td align=\"left\">Probe Set<br/><br/></td>" );
             buf.append( "</tr>" );
-    
+
             buf.append( "<tr>" );
             buf.append( "<td border=\"0\" rowspan=\"5\">" );
             buf.append( "<img src=\"" + outfile + "\">" );
