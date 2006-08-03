@@ -123,4 +123,9 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
         results.put( ( String ) key, ( NCBIGeneInfo ) value );
     }
 
+    @Override
+    public boolean containsKey( Object key ) {
+        return results.containsKey( key );
+    }
+
 }

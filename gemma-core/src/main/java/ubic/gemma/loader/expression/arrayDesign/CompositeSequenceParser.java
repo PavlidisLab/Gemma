@@ -24,7 +24,11 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * Parse the "old" array description format. This has three columns, with probe id, a genbank id, and a description.
@@ -56,12 +60,32 @@ public class CompositeSequenceParser extends BasicLineParser {
         }
 
         String probeid = tokens[0];
-        // String genbankAcc = tokens[1];
+        String genbankAcc = tokens[1];
         String description = tokens[2];
 
         CompositeSequence result = CompositeSequence.Factory.newInstance();
         result.setName( probeid );
         result.setDescription( description );
+
+        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+
+        // FIXME: should have methods to obtain this in a standard way.
+        ExternalDatabase genBank = ExternalDatabase.Factory.newInstance();
+        genBank.setType( DatabaseType.SEQUENCE );
+        genBank.setName( "Genbank" );
+
+        dbEntry.setAccession( genbankAcc );
+        dbEntry.setExternalDatabase( genBank );
+
+        BioSequence biologicalCharacteristic = BioSequence.Factory.newInstance();
+        biologicalCharacteristic.setName( genbankAcc ); // this will be changed later, typically.
+
+        // this will be changed later, typically.
+        biologicalCharacteristic.setDescription( description + " (From microarray manufacturer)" );
+
+        biologicalCharacteristic.setSequenceDatabaseEntry( dbEntry );
+
+        result.setBiologicalCharacteristic( biologicalCharacteristic );
 
         return result;
 

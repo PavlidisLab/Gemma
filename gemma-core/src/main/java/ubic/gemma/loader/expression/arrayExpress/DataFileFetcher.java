@@ -57,7 +57,9 @@ public class DataFileFetcher extends FtpArchiveFetcher {
     public Collection<LocalFile> fetch( String identifier ) {
 
         try {
-            if ( f == null || !f.isConnected() ) f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( f == null || !f.isConnected() ) {
+                f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+            }
 
             File newDir = mkdir( identifier );
             final String outputFileName = formLocalFilePath( identifier, newDir );

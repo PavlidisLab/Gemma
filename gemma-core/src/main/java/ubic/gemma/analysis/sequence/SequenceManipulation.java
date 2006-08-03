@@ -20,7 +20,6 @@ package ubic.gemma.analysis.sequence;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,23 +73,35 @@ public class SequenceManipulation {
     }
 
     /**
+     * @param sequences
+     * @return BioSequence. Not all fields are filled in and must be set by the caller.
+     */
+    public static BioSequence collapse( Collection<Reporter> sequences ) {
+        Collection<Reporter> copyOfSequences = copyReporters( sequences );
+        BioSequence collapsed = BioSequence.Factory.newInstance();
+        collapsed.setSequence( "" );
+        while ( !copyOfSequences.isEmpty() ) {
+            Reporter next = findLeftMostProbe( copyOfSequences );
+            int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
+            String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
+            collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
+            copyOfSequences.remove( next );
+        }
+        collapsed.setIsCircular( false );
+        collapsed.setIsApproximateLength( false );
+        collapsed.setLength( new Long( collapsed.getSequence().length() ) );
+        collapsed.setDescription( "Collapsed from " + sequences.size() + " reporter sequences" );
+        return collapsed;
+    }
+
+    /**
      * Convert a CompositeSequence's immobilizedCharacteristics into a single sequence, using a simple merge-join
      * strategy.
      * 
      * @return
      */
     public static BioSequence collapse( CompositeSequence compositeSequence ) {
-        Set<Reporter> copyOfProbes = copyCompositeSequenceReporters( compositeSequence );
-        BioSequence collapsed = BioSequence.Factory.newInstance();
-        collapsed.setSequence( "" );
-        while ( !copyOfProbes.isEmpty() ) {
-            Reporter next = findLeftMostProbe( copyOfProbes );
-            int ol = SequenceManipulation.rightHandOverlap( collapsed, next.getImmobilizedCharacteristic() );
-            String nextSeqStr = next.getImmobilizedCharacteristic().getSequence();
-            collapsed.setSequence( collapsed.getSequence() + nextSeqStr.substring( ol ) );
-            copyOfProbes.remove( next );
-        }
-        return collapsed;
+        return collapse( compositeSequence.getComponentReporters() );
     }
 
     /**
@@ -288,22 +299,48 @@ public class SequenceManipulation {
         return overlap;
     }
 
+    // /**
+    // * @param compositeSequence
+    // * @return Collection of Reporters for this compositesequence.
+    // */
+    // private static Collection<Reporter> copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
+    // if ( compositeSequence == null ) throw new IllegalArgumentException( "CompositeSequence cannot be null" );
+    // assert compositeSequence.getComponentReporters() != null : "Null reporters for composite sequence";
+    // return copyReporters( compositeSequence.getComponentReporters() );
+    // }
+
     /**
-     * @param compositeSequence
-     * @return Set of Reporters for this compositesequence.
+     * @param reporters
+     * @return
      */
-    private static Set<Reporter> copyCompositeSequenceReporters( CompositeSequence compositeSequence ) {
-        Set<Reporter> copyOfProbes = new HashSet<Reporter>();
-        if ( compositeSequence == null ) throw new IllegalArgumentException( "CompositeSequence cannot be null" );
-        assert compositeSequence.getComponentReporters() != null : "Null reporters for composite sequence";
-        for ( Reporter next : compositeSequence.getComponentReporters() ) {
+    private static Collection<Reporter> copyReporters( Collection<Reporter> reporters ) {
+        Collection<Reporter> copyReporters = new HashSet<Reporter>();
+        for ( Reporter next : reporters ) {
             Reporter copy = Reporter.Factory.newInstance();
             copy.setImmobilizedCharacteristic( next.getImmobilizedCharacteristic() );
             copy.setStartInBioChar( next.getStartInBioChar() );
-            copyOfProbes.add( copy );
+            copyReporters.add( copy );
         }
-        return copyOfProbes;
+        return copyReporters;
     }
+
+    //
+    // /**
+    // * Make a shallow copy of a collectoin of sequences. This is used only internally to allow desctructive
+    // manipulation
+    // * of the sequence strings.
+    // *
+    // * @return
+    // */
+    // private static Collection<BioSequence> copyBioSequences( Collection<BioSequence> sequences ) {
+    // Collection<BioSequence> copy = new HashSet<BioSequence>();
+    // for ( BioSequence sequence : sequences ) {
+    // BioSequence copySeq = BioSequence.Factory.newInstance();
+    // copySeq.setSequence( sequence.getSequence() );
+    // }
+    //
+    // return copy;
+    // }
 
     /**
      * Find the index of the aligned base in the center exon that is the center of the query.
@@ -334,7 +371,7 @@ public class SequenceManipulation {
      * @param copyOfProbes
      * @return
      */
-    private static Reporter findLeftMostProbe( Set<Reporter> copyOfProbes ) {
+    private static Reporter findLeftMostProbe( Collection<Reporter> copyOfProbes ) {
         Long minLocation = new Long( Integer.MAX_VALUE );
         Reporter next = null;
         for ( Reporter probe : copyOfProbes ) {

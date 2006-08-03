@@ -18,7 +18,9 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -32,20 +34,23 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaParser;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.PolymerType;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
- * Handles collapsing the sequences, loading the sequences into the database.
+ * Handles collapsing the sequences, attaching sequences to DesignElements
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class AffyProbeProcessor {
+public class ArrayDesignSequenceProcessor {
 
-    private static Log log = LogFactory.getLog( AffyProbeProcessor.class.getName() );
+    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessor.class.getName() );
 
     /**
      * Collapse probe sequences down into biosequences.
@@ -109,7 +114,7 @@ public class AffyProbeProcessor {
      * Associate sequences with an array design.
      * 
      * @param designElements
-     * @param sequences
+     * @param sequences, for Affymetrix these should be the Collapsed probe sequences.
      * @throws IOException
      */
     public void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements,
@@ -146,6 +151,74 @@ public class AffyProbeProcessor {
         if ( numNotFound > 0 ) {
             log.warn( numNotFound + " probes had no matching sequence" );
         }
+    }
 
+    /**
+     * @param Array design name.
+     * @param Array design file in our 'old fashioned' format.
+     * @param Affymetrix probe file
+     * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
+     *         filled in.
+     */
+    public ArrayDesign processAffymetrixDesign( String arrayDesignName, String arrayDesignFile, String probeSequenceFile )
+            throws IOException {
+        InputStream arrayDesignFileStream = new BufferedInputStream( new FileInputStream( arrayDesignFile ) );
+        InputStream probeSequenceFileStream = new BufferedInputStream( new FileInputStream( probeSequenceFile ) );
+        return this.processAffymetrixDesign( arrayDesignName, arrayDesignFileStream, probeSequenceFileStream );
+    }
+
+    /**
+     * @param Array design name.
+     * @param Array design file in our 'old fashioned' format.
+     * @param Affymetrix probe file
+     * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
+     *         filled in.
+     */
+    protected ArrayDesign processAffymetrixDesign( String arrayDesignName, InputStream arrayDesignFile,
+            InputStream probeSequenceFile ) throws IOException {
+        ArrayDesign result = ArrayDesign.Factory.newInstance();
+        result.setName( arrayDesignName );
+
+        AffyProbeReader apr = new AffyProbeReader();
+        apr.parse( probeSequenceFile );
+        Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
+        Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
+        for ( CompositeSequence compositeSequence : compositeSequencesFromProbes ) {
+
+            compositeSequence.setArrayDesign( result );
+            BioSequence collapsed = SequenceManipulation.collapse( compositeSequence );
+            collapsed.setName( compositeSequence.getName() + "_collapsed" );
+            collapsed.setType( SequenceType.AFFY_COLLAPSED );
+            collapsed.setPolymerType( PolymerType.DNA );
+            compositeSequence.setBiologicalCharacteristic( collapsed );
+
+            result.getReporters().addAll( compositeSequence.getComponentReporters() );
+
+            for ( Reporter reporter : compositeSequence.getComponentReporters() ) {
+                reporter.setArrayDesign( result );
+            }
+
+            quickFindMap.put( compositeSequence.getName(), compositeSequence );
+        }
+
+        CompositeSequenceParser csp = new CompositeSequenceParser();
+        csp.parse( arrayDesignFile );
+        Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
+
+        for ( CompositeSequence compositeSequence : rawCompositeSequences ) {
+            // go back and fill this information into the composite sequences, namely the database entry information.
+            CompositeSequence keeper = quickFindMap.get( compositeSequence.getName() );
+            if ( keeper == null ) {
+                throw new IllegalArgumentException( "Array Design file did not contain " + compositeSequence.getName() );
+            }
+
+            keeper.getBiologicalCharacteristic().setSequenceDatabaseEntry(
+                    compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
+
+        }
+
+        result.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
+        result.setCompositeSequences( compositeSequencesFromProbes );
+        return result;
     }
 }

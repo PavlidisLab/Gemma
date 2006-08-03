@@ -30,6 +30,8 @@ import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.PolymerType;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
  * Reads Affymetrix Probe files.
@@ -90,6 +92,11 @@ public class AffyProbeReader extends BasicLineMapParser {
         reporter.setName( probeSetId + ":" + xcoord + ":" + ycoord );
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
+        immobChar.setIsApproximateLength( false );
+        immobChar.setLength( new Long( sequence.length() ) );
+        immobChar.setType( SequenceType.AFFY_PROBE );
+        immobChar.setPolymerType( PolymerType.DNA );
+
         reporter.setImmobilizedCharacteristic( immobChar );
 
         CompositeSequence probeSet = ( CompositeSequence ) get( probeSetId );
@@ -136,6 +143,11 @@ public class AffyProbeReader extends BasicLineMapParser {
     @Override
     protected void put( Object key, Object value ) {
         results.put( ( String ) key, ( CompositeSequence ) value );
+    }
+
+    @Override
+    public boolean containsKey( Object key ) {
+        return results.containsKey( key );
     }
 
 }

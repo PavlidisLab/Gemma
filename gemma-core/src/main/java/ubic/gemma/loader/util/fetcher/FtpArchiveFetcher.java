@@ -116,7 +116,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
             try {
                 expectedSize = NetUtils.ftpFileSize( f, seekFile );
             } catch ( FileNotFoundException e ) {
-                log.warn( "Didn't get remote file size" );
+                log.warn( "Couldn't get remote file size for " + seekFile );
             }
 
             while ( !future.isDone() ) {

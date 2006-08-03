@@ -18,16 +18,18 @@
  */
 package ubic.gemma.loader.expression.arrayExpress;
 
-import java.io.File;
+import java.util.Collection;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
 
 import ubic.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
+import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * @author pavlidis
@@ -41,21 +43,19 @@ public class DataFileFetcherTest extends TestCase {
      * Test method for 'ubic.gemma.loader.expression.arrayExpress.DataFileFetcher.fetch(String)'
      */
     public void testFetch() throws Exception {
-        FtpArchiveFetcher f = new DataFileFetcher();
-
         try {
-            ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+            FTPClient f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+            ArrayExpressUtil.disconnect( f );
         } catch ( Exception e ) {
             log.warn( "Cannot connect to ArrayExpress FTP site, skipping test." );
             return;
         }
 
-        if ( !( new File( f.getLocalBasePath() ).canWrite() ) ) {
-            log.warn( "Path to copy files not reachable, skipping test." );
-            return;
-        }
-        f.fetch( "SMDB-14" );
+        FtpArchiveFetcher f = new DataFileFetcher();
+
+        Collection<LocalFile> files = f.fetch( "SMDB-14" );
         // FIMXE no good fail condition!
+        assertTrue( files.size() > 0 );
 
     }
 }

@@ -94,4 +94,9 @@ public class IlluminaProbeReader extends BasicLineMapParser {
     protected void put( Object key, Object value ) {
         results.put( ( String ) key, ( Reporter ) value );
     }
+
+    @Override
+    public boolean containsKey( Object key ) {
+        return results.containsKey( key );
+    }
 }

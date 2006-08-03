@@ -16,27 +16,24 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.expression.arrayDesign;
+package ubic.gemma.loader.genome;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test for ubic.gemma.loader.expression.arrayDesign
+ * Tests for the genome package.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class AllArrayDesignTests {
+public class AllGenomeTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.expression.arrayDesign" );
+        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.genome" );
         // $JUnit-BEGIN$
-        suite.addTestSuite( ArrayDesignParserIntegrationTest.class );
-        suite.addTestSuite( IlluminaProbeReaderTest.class );
-        suite.addTestSuite( AffyProbeReaderTest.class );
-        suite.addTestSuite( ArrayDesignSequenceProcessorTest.class );
-        suite.addTestSuite( CompositeSequenceParserTest.class );
+        suite.addTestSuite( BlatResultParserTest.class );
+        suite.addTestSuite( FastaParserTest.class );
         // $JUnit-END$
         return suite;
     }

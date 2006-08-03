@@ -21,6 +21,7 @@ package ubic.gemma;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
+import ubic.gemma.apps.ProbeMapperTest;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
@@ -30,6 +31,7 @@ import ubic.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
 import ubic.gemma.loader.expression.geo.AllGeoTests;
 import ubic.gemma.loader.expression.mage.AllMageTests;
 import ubic.gemma.loader.expression.smd.AllSmdTests;
+import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
 import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
@@ -60,9 +62,13 @@ public class AllCoreTests {
         suite.addTest( AllArrayDesignTests.suite() );
         suite.addTest( AllPreProcessTests.suite() );
 
+        suite.addTest( AllGenomeTests.suite() );
+
         suite.addTestSuite( AuditInterceptorTest.class );
         suite.addTestSuite( PersistAclInterceptorTest.class );
         suite.addTestSuite( SecurityIntegrationTest.class );
+
+        suite.addTestSuite( ProbeMapperTest.class );
 
         suite.addTestSuite( ArrayDesignDaoImplTest.class );
         suite.addTestSuite( BioMaterialDaoImplTest.class );

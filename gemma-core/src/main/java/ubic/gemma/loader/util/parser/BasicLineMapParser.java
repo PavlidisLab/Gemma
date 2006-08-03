@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -40,11 +39,12 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class BasicLineMapParser implements LineParser {
 
+    /**
+     * Lines starting with this will be ignored.
+     */
     private static final String COMMENTMARK = "#";
 
     protected Log log = LogFactory.getLog( BasicLineMapParser.class.getName() );
-
-    protected Map<Object, Object> results = new HashMap<Object, Object>();
 
     /**
      * @param key
@@ -63,9 +63,7 @@ public abstract class BasicLineMapParser implements LineParser {
      * @return
      * @see Map
      */
-    public boolean containsKey( Object key ) {
-        return results.containsKey( key );
-    }
+    public abstract boolean containsKey( Object key );
 
     /*
      * (non-Javadoc)
@@ -96,7 +94,7 @@ public abstract class BasicLineMapParser implements LineParser {
             if ( key == null ) {
                 throw new IllegalStateException( "Got null key for item " + count );
             }
-            results.put( key, newItem );
+            put( key, newItem );
             count++;
             if ( count % PARSE_ALERT_FREQUENCY == 0 )
                 log.debug( "Parsed " + count + " lines..., last had key " + key );
