@@ -84,7 +84,8 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         StringBuilder buf = new StringBuilder();
 
         if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
-            buf.append( "Visualizations suppressed.  To download image click <a href=\"" + outfile + "\">here</a>." );
+            // buf.append( "Visualizations suppressed. To download image click <a href=\"" + outfile + "\">here</a>." );
+            buf.append( "Visualizations suppressed." );
         } else if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
         } else {
