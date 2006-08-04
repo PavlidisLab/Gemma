@@ -363,7 +363,7 @@
                 </includes>
             </resource>
             <resource>
-                <directory>target/generated-sourcesF/resources</directory>
+                <directory>target/generated-sources/resources</directory>
                 <includes>
                     <include>**/*</include>
                 </includes>
