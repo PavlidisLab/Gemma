@@ -36,10 +36,13 @@ public class FastaParserTest extends TestCase {
 
     private static Log log = LogFactory.getLog( FastaParserTest.class.getName() );
     InputStream f;
+    InputStream g;
 
     protected void setUp() throws Exception {
         super.setUp();
         f = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
+
+        g = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
     }
 
     public void testParseInputStream() throws Exception {
@@ -48,10 +51,29 @@ public class FastaParserTest extends TestCase {
         Collection<BioSequence> actualResult = p.getResults();
         assertTrue( actualResult != null );
         assertEquals( 2, actualResult.size() );
-        assertTrue( actualResult.iterator().next() instanceof BioSequence );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
             log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
+        }
+    }
+
+    public void testParseInputStreamAffyTarget() throws Exception {
+        FastaParser p = new FastaParser();
+        p.parse( g );
+        Collection<BioSequence> actualResult = p.getResults();
+        assertTrue( actualResult != null );
+        assertEquals( 2, actualResult.size() );
+        for ( Object object : actualResult ) {
+            BioSequence b = ( BioSequence ) object;
+
+            assertTrue( b.getSequenceDatabaseEntry() != null
+                    && b.getSequenceDatabaseEntry().getExternalDatabase() != null
+                    && b.getSequenceDatabaseEntry().getExternalDatabase().getName().equalsIgnoreCase( "genbank" ) );
+
+            if ( log.isDebugEnabled() )
+                log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() + " GB="
+                        + b.getSequenceDatabaseEntry().getAccession() );
+
         }
     }
 
