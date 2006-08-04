@@ -66,7 +66,7 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.quantitationtype.QuantitationType ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( QuantitationType ) result;

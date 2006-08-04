@@ -62,7 +62,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                             "More than one instance of '" + Gene.class.getName() + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( Gene ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Gene ) result;

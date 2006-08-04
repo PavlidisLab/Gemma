@@ -25,6 +25,7 @@ import java.util.HashSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 
 import junit.framework.TestCase;
 
@@ -110,4 +111,26 @@ public class ArrayDesignSequenceProcessorTest extends TestCase {
         assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
 
     }
+
+    public void testProcessNonAffyDesign() throws Exception {
+
+        ArrayDesignSequenceProcessor app = new ArrayDesignSequenceProcessor();
+        ArrayDesign arrayDesign = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile );
+
+        // erase the reporters and biological charactersistics
+        arrayDesign.getReporters().clear();
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            cs.getComponentReporters().clear();
+            cs.setBiologicalCharacteristic( null );
+        }
+
+        app.processArrayDesign( arrayDesign, seqFile, SequenceType.EST );
+
+        assertEquals( "composite sequence count", 33, arrayDesign.getCompositeSequences().size() );
+        assertEquals( "reporter count", 33, arrayDesign.getReporters().size() );
+        assertEquals( "reporter per composite sequence", 1, arrayDesign.getCompositeSequences().iterator().next()
+                .getComponentReporters().size() );
+        assertTrue( arrayDesign.getCompositeSequences().iterator().next().getArrayDesign() == arrayDesign );
+    }
+
 }

@@ -59,7 +59,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ExpressionExperiment ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( ExpressionExperiment ) result;

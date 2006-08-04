@@ -82,13 +82,13 @@ public class GeneLoaderCLI extends AbstractSpringAwareCLI {
 
                 NcbiGeneConverter converter = new NcbiGeneConverter();
                 for ( NCBIGeneInfo info : keys ) {
-                    Gene gene = ( Gene ) converter.convert( info );
+                    Gene gene = converter.convert( info );
 
-                    gene.setTaxon( ( Taxon ) getPersisterHelper().persist( ( ( Gene ) gene ).getTaxon() ) );
+                    gene.setTaxon( ( Taxon ) getPersisterHelper().persist( gene.getTaxon() ) );
                     if ( gene == null ) {
-                        System.out.println( "gene null. skipping" );
+                        log.warn( "gene null. skipping" );
                     } else {
-                        System.out.println( "persisting gene: " + ( ( Gene ) gene ).getNcbiId() );
+                        log.debug( "persisting gene: " + gene.getNcbiId() );
                         getGenePersister().persist( gene );
                     }
                 }

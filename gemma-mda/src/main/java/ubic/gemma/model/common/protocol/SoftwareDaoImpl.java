@@ -53,7 +53,7 @@ public class SoftwareDaoImpl extends ubic.gemma.model.common.protocol.SoftwareDa
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.protocol.Software ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Software ) result;

@@ -18,12 +18,8 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;

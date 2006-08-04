@@ -60,7 +60,7 @@ public class ParserAndLoaderTools {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        loader.persist( ( Collection<Object> ) col );
+        loader.persist( col );
 
         stopWatch.stop();
 

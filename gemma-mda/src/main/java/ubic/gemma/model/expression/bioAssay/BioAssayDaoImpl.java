@@ -57,7 +57,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( BioAssay ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( BioAssay ) result;

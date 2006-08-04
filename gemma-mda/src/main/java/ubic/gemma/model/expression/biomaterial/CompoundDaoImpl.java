@@ -58,7 +58,7 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( Compound ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Compound ) result;

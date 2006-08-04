@@ -50,7 +50,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
                                     + "' was found when executing query for " + databaseEntry );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.description.DatabaseEntry ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( DatabaseEntry ) result;

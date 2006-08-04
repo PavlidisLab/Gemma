@@ -61,7 +61,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( BioSequence ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( BioSequence ) result;

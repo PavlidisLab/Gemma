@@ -24,7 +24,6 @@ import org.hibernate.criterion.Restrictions;
 import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
-
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.Hardware
@@ -55,7 +54,7 @@ public class HardwareDaoImpl extends ubic.gemma.model.common.protocol.HardwareDa
                             "More than one instance of '" + ubic.gemma.model.common.protocol.Hardware.class.getName()
                                     + "' was found when executing query" );
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.protocol.Hardware ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Hardware ) result;

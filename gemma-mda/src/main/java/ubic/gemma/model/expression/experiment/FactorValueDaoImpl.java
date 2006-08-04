@@ -59,7 +59,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( FactorValue ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( FactorValue ) result;

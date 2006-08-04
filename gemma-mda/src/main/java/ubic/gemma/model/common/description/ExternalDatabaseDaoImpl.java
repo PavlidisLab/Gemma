@@ -51,7 +51,7 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.description.ExternalDatabase ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( ExternalDatabase ) result;

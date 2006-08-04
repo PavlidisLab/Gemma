@@ -24,9 +24,8 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
+import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseType;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -67,15 +66,7 @@ public class CompositeSequenceParser extends BasicLineParser {
         result.setName( probeid );
         result.setDescription( description );
 
-        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-
-        // FIXME: should have methods to obtain this in a standard way.
-        ExternalDatabase genBank = ExternalDatabase.Factory.newInstance();
-        genBank.setType( DatabaseType.SEQUENCE );
-        genBank.setName( "Genbank" );
-
-        dbEntry.setAccession( genbankAcc );
-        dbEntry.setExternalDatabase( genBank );
+        DatabaseEntry dbEntry = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
 
         BioSequence biologicalCharacteristic = BioSequence.Factory.newInstance();
         biologicalCharacteristic.setName( genbankAcc ); // this will be changed later, typically.

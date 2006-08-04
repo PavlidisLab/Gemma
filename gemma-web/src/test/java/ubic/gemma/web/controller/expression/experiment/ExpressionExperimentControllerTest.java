@@ -88,7 +88,7 @@ public class ExpressionExperimentControllerTest extends BaseTransactionalSpringC
         assertEquals( mav.getViewName(), "expressionExperiments" );
 
         /* uncomment to persist and leave data in database */
-        // setComplete();
+        setComplete();
     }
 
     /**

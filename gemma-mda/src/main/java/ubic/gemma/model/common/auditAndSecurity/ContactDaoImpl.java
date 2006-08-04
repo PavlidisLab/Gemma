@@ -57,7 +57,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.auditAndSecurity.Contact ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Contact ) result;

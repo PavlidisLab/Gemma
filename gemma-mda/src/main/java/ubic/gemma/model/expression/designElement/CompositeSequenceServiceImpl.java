@@ -78,7 +78,7 @@ public class CompositeSequenceServiceImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleCreate( Collection compositeSequences ) throws Exception {
-        return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
+        return this.getCompositeSequenceDao().create( compositeSequences );
     }
 
     /*

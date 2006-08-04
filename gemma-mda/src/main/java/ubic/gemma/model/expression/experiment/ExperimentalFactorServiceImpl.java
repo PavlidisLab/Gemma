@@ -25,8 +25,7 @@ package ubic.gemma.model.expression.experiment;
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService
  */
-public class ExperimentalFactorServiceImpl extends
-        ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
+public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
@@ -53,7 +52,7 @@ public class ExperimentalFactorServiceImpl extends
      */
     @Override
     protected ExperimentalFactor handleFindById( Long id ) throws Exception {
-        return ( ExperimentalFactor ) this.getExperimentalFactorDao().findById( id );
+        return this.getExperimentalFactorDao().findById( id );
     }
 
 }

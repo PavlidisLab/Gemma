@@ -65,7 +65,7 @@ public class AffyProbeReaderTest extends TestCase {
         apr.parse( is );
 
         String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
-        CompositeSequence cs = ( ( CompositeSequence ) apr.get( "1000_at" ) );
+        CompositeSequence cs = apr.get( "1000_at" );
 
         assertTrue( "CompositeSequence was null", cs != null );
 
@@ -93,7 +93,7 @@ public class AffyProbeReaderTest extends TestCase {
         apr.parse( is );
 
         String expectedValue = "TCACGGCAGGACAACGAGAAAGCCC"; // 10
-        CompositeSequence cs = ( ( CompositeSequence ) apr.get( "1004_at" ) );
+        CompositeSequence cs = apr.get( "1004_at" );
 
         assertTrue( "CompositeSequence was null", cs != null );
 

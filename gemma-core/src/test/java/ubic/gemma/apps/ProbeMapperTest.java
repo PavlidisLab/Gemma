@@ -42,7 +42,7 @@ public class ProbeMapperTest extends AbstractCLITestCase {
     }
 
     protected void tearDown() throws Exception {
-        // tempFile.delete();
+        tempFile.delete();
     }
 
     public final void testMainBadPort() throws Exception {

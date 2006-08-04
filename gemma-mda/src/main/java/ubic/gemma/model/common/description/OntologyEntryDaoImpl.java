@@ -63,7 +63,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( OntologyEntry ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( OntologyEntry ) result;

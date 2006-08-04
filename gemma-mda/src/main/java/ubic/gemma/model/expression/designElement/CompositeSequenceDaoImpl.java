@@ -64,7 +64,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( CompositeSequence ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( CompositeSequence ) result;

@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.loader.util.parser.RecordParser;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -75,30 +77,30 @@ public class FastaParser extends RecordParser {
     }
 
     /**
-     * Recognizes Defline format as described at http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers.
+     * Recognizes Defline format as described at {@link http://en.wikipedia.org/wiki/Fasta_format#Sequence_identifiers}.
      * 
      * <pre>
-     *                                                        GenBank                           gi|gi-number|gb|accession|locus
-     *                                                        EMBL Data Library                 gi|gi-number|emb|accession|locus
-     *                                                        DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
-     *                                                        NBRF PIR                          pir||entry
-     *                                                        Protein Research Foundation       prf||name
-     *                                                        SWISS-PROT                        sp|accession|name
-     *                                                        Brookhaven Protein Data Bank (1)  pdb|entry|chain
-     *                                                        Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
-     *                                                        Patents                           pat|country|number 
-     *                                                        GenInfo Backbone Id               bbs|number 
-     *                                                        General database identifier       gnl|database|identifier
-     *                                                        NCBI Reference Sequence           ref|accession|locus
-     *                                                        Local Sequence identifier         lcl|identifier
+     *                                                                             GenBank                           gi|gi-number|gb|accession|locus
+     *                                                                             EMBL Data Library                 gi|gi-number|emb|accession|locus
+     *                                                                             DDBJ, DNA Database of Japan       gi|gi-number|dbj|accession|locus
+     *                                                                             NBRF PIR                          pir||entry
+     *                                                                             Protein Research Foundation       prf||name
+     *                                                                             SWISS-PROT                        sp|accession|name
+     *                                                                             Brookhaven Protein Data Bank (1)  pdb|entry|chain
+     *                                                                             Brookhaven Protein Data Bank (2)  entry:chain|PDBID|CHAIN|SEQUENCE
+     *                                                                             Patents                           pat|country|number 
+     *                                                                             GenInfo Backbone Id               bbs|number 
+     *                                                                             General database identifier       gnl|database|identifier
+     *                                                                             NCBI Reference Sequence           ref|accession|locus
+     *                                                                             Local Sequence identifier         lcl|identifier
      * </pre>
      * 
      * Our amendments:
      * 
      * <pre>
-     *                                                        Affymetrix targets or collapsed sequence     target:array:probeset;
-     *                                                        Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
-     *                                                        Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
+     *                                                                             Affymetrix targets or collapsed sequence     target:array:probeset;
+     *                                                                             Affymetrix probe                  probe:array:probeset:xcoord:ycoord; Interrogation_Position=XXXX; Antisense;
+     *                                                                             Affymetrix consensus/exemplar     exemplar:array:probeset; gb|accession; gb:accession /DEF=Homo sapiens metalloprotease-like, disintegrin-like, cysteine-rich protein 2 delta (ADAM22) mRNA, alternative splice product, complete cds.  /FEA=mRNA /GEN=ADAM22 /PROD=metalloprotease-like,
      * </pre>
      * 
      * FIXME: recognize multi-line headers separated by ^A.
@@ -141,6 +143,11 @@ public class FastaParser extends RecordParser {
             if ( firstTag.equals( "gi" ) ) {
                 bioSequence.setName( split[3] );
                 bioSequence.setDescription( split[4] );
+
+                String genbankAcc = split[3];
+                DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+                bioSequence.setSequenceDatabaseEntry( genbank );
+
             } else if ( firstTag.equals( "pir" ) ) {
                 bioSequence.setName( split[1] );
             } else if ( firstTag.equals( "sp" ) ) {
@@ -164,7 +171,7 @@ public class FastaParser extends RecordParser {
             }
         } else if ( firstColon > 0 ) {
             // affymetrix format
-            String[] split = StringUtils.splitPreserveAllTokens( header, ":;" );
+            String[] split = StringUtils.split( header, ":;" );
 
             String firstTag = StringUtils.removeStart( split[0], ">" );
             if ( firstTag.equals( "probe" ) ) {
@@ -180,6 +187,23 @@ public class FastaParser extends RecordParser {
             } else {
                 throw new IllegalArgumentException(
                         "Affymetrix-style FASTA header in unrecognized format, started with " + firstTag );
+            }
+
+            for ( String string : split ) {
+
+                string = StringUtils.strip( string );
+
+                // fill in the sequence database entry
+                if ( string.startsWith( "gb|" ) || string.startsWith( "gb:" ) ) {
+                    String[] splits = StringUtils.split( string, ":|" );
+                    String genbankAcc = splits[1];
+                    DatabaseEntry genbank = ExternalDatabaseUtils.getGenbankAccession( genbankAcc );
+                    bioSequence.setSequenceDatabaseEntry( genbank );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Got genbank accession " + genbankAcc + " for " + bioSequence.getName() );
+                    break;
+                }
+
             }
 
         } else {

@@ -99,7 +99,7 @@ public class AffyProbeReader extends BasicLineMapParser {
 
         reporter.setImmobilizedCharacteristic( immobChar );
 
-        CompositeSequence probeSet = ( CompositeSequence ) get( probeSetId );
+        CompositeSequence probeSet = get( probeSetId );
 
         if ( probeSet == null ) probeSet = CompositeSequence.Factory.newInstance();
         probeSet.setName( probeSetId );

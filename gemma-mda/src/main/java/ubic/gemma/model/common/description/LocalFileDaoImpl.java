@@ -61,7 +61,7 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.description.LocalFile ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( LocalFile ) result;

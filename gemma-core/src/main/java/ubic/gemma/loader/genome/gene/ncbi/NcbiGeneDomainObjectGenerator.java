@@ -63,7 +63,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
             Collection<NCBIGene2Accession> ncbiGenes = accParser.getResults();
 
             for ( NCBIGene2Accession o : ncbiGenes ) {
-                NCBIGeneInfo info = ( NCBIGeneInfo ) infoParser.get( o.getGeneId() );
+                NCBIGeneInfo info = infoParser.get( o.getGeneId() );
                 o.setInfo( info );
             }
 

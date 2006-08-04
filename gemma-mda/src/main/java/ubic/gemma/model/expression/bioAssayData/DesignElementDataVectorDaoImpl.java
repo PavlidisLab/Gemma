@@ -65,7 +65,7 @@ public class DesignElementDataVectorDaoImpl extends
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( DesignElementDataVector ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( DesignElementDataVector ) result;

@@ -78,7 +78,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleCreate( Collection bioSequences ) throws Exception {
-        return ( Collection<BioSequence> ) this.getBioSequenceDao().create( bioSequences );
+        return this.getBioSequenceDao().create( bioSequences );
     }
 
     /*

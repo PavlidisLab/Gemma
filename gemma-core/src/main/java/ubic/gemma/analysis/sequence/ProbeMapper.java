@@ -55,8 +55,7 @@ public class ProbeMapper {
      * @param genbankId
      * @throws IOException
      */
-    public Map<String, Collection<BlatAssociation>> processGbId( GoldenPath goldenPathDb, String genbankId )
-            throws IOException {
+    public Map<String, Collection<BlatAssociation>> processGbId( GoldenPath goldenPathDb, String genbankId ) {
 
         log.debug( "Entering processGbId with " + genbankId );
 

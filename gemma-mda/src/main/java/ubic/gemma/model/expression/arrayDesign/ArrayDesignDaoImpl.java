@@ -60,7 +60,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ArrayDesign ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( ArrayDesign ) result;
@@ -118,7 +118,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                             "More than one instance of 'Integer" + "' was found when executing query --> '"
                                     + queryString + "'" );
                 } else if ( results.size() == 1 ) {
-                    result = ( Integer ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
 

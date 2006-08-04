@@ -226,7 +226,7 @@ public class ExpressionExperimentTestHelper extends BaseTransactionalSpringConte
             DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
             double[] data = new double[testNumCollectionElements / 2];
             for ( int j = 0; j < data.length; j++ ) {
-                data[j] = ( double ) RandomUtils.nextDouble();
+                data[j] = RandomUtils.nextDouble();
             }
             ByteArrayConverter bconverter = new ByteArrayConverter();
             byte[] bdata = bconverter.doubleArrayToBytes( data );

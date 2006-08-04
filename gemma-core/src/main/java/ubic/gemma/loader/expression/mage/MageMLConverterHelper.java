@@ -586,7 +586,7 @@ public class MageMLConverterHelper {
         QuantitationTypeDimension qtd = mageObj.getQuantitationTypeDimension();
         LinkedHashMap<String, ubic.gemma.model.common.quantitationtype.QuantitationType> convertedQuantitationTypes = new LinkedHashMap<String, ubic.gemma.model.common.quantitationtype.QuantitationType>();
         if ( qtd != null ) {
-            List<QuantitationType> quantitationTypes = ( List<QuantitationType> ) qtd.getQuantitationTypes();
+            List<QuantitationType> quantitationTypes = qtd.getQuantitationTypes();
             for ( QuantitationType type : quantitationTypes ) {
                 ubic.gemma.model.common.quantitationtype.QuantitationType convertedType = convertQuantitationType( type );
                 convertedQuantitationTypes.put( convertedType.getName(), convertedType );
@@ -599,20 +599,17 @@ public class MageMLConverterHelper {
         BioAssayDimension bioAssayDim = mageObj.getBioAssayDimension();
         if ( bioAssayDim == null ) return;
 
-        List<BioAssay> bioAssays = ( List<BioAssay> ) bioAssayDim.getBioAssays();
+        List<BioAssay> bioAssays = bioAssayDim.getBioAssays();
         for ( BioAssay bioAssay : bioAssays ) {
             if ( ded instanceof FeatureDimension ) {
                 log.debug( "Got a feature dimension: " + ded.getIdentifier() );
-                designElements = ( List<org.biomage.DesignElement.DesignElement> ) ( ( FeatureDimension ) ded )
-                        .getContainedFeatures();
+                designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
             } else if ( ded instanceof CompositeSequenceDimension ) {
                 log.debug( "Got a compositesequence dimension: " + ded.getIdentifier() );
-                designElements = ( List<org.biomage.DesignElement.DesignElement> ) ( ( CompositeSequenceDimension ) ded )
-                        .getCompositeSequences();
+                designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
             } else if ( ded instanceof ReporterDimension ) {
                 log.debug( "Got a reporter dimension: " + ded.getIdentifier() );
-                designElements = ( List<org.biomage.DesignElement.DesignElement> ) ( ( ReporterDimension ) ded )
-                        .getReporters();
+                designElements = ( ( ReporterDimension ) ded ).getReporters();
             }
 
             LinkedHashMap<String, DesignElement> convertedDesignElements = new LinkedHashMap<String, DesignElement>();
@@ -3512,8 +3509,7 @@ public class MageMLConverterHelper {
         result.getArrayDesignsUsed().add( conv );
 
         // add biomaterials to the resulting bioassay
-        Collection<BioMaterialMeasurement> measurements = ( Collection<BioMaterialMeasurement> ) bac
-                .getSourceBioMaterialMeasurements();
+        Collection<BioMaterialMeasurement> measurements = bac.getSourceBioMaterialMeasurements();
 
         Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
 

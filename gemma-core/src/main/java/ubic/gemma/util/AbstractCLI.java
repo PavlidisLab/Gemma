@@ -228,22 +228,22 @@ public abstract class AbstractCLI {
 
         switch ( verbosity ) {
             case 0:
-                log4jLogger.setLevel( ( Level ) Level.OFF );
+                log4jLogger.setLevel( Level.OFF );
                 break;
             case 1:
-                log4jLogger.setLevel( ( Level ) Level.FATAL );
+                log4jLogger.setLevel( Level.FATAL );
                 break;
             case 2:
-                log4jLogger.setLevel( ( Level ) Level.ERROR );
+                log4jLogger.setLevel( Level.ERROR );
                 break;
             case 3:
-                log4jLogger.setLevel( ( Level ) Level.INFO );
+                log4jLogger.setLevel( Level.INFO );
                 break;
             case 4:
-                log4jLogger.setLevel( ( Level ) Level.DEBUG );
+                log4jLogger.setLevel( Level.DEBUG );
                 break;
             case 5:
-                log4jLogger.setLevel( ( Level ) Level.ALL );
+                log4jLogger.setLevel( Level.ALL );
                 break;
             default:
                 // Don't change the logging.

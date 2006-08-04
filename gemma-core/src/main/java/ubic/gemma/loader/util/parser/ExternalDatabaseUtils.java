@@ -1,0 +1,104 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.loader.util.parser;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
+
+/**
+ * Provides convenience methods to provide ExternalDatabases and DatabaseEntries for common cases, such as Genbank.
+ * 
+ * @spring.bean externalDatabaseUtils
+ * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
+ * @author pavlidis
+ * @version $Id$
+ */
+public class ExternalDatabaseUtils {
+
+    private static Log log = LogFactory.getLog( ExternalDatabaseUtils.class.getName() );
+
+    ExternalDatabaseDao externalDatabaseDao;
+
+    /**
+     * @return a transient instance of the Genbank database referece.
+     */
+    public static ExternalDatabase getGenbank() {
+        ExternalDatabase genBank = ExternalDatabase.Factory.newInstance();
+        genBank.setType( DatabaseType.SEQUENCE );
+        genBank.setName( "Genbank" );
+        return genBank;
+    }
+
+    /**
+     * @param seekPersistent if true, searches the database for an existing persistent copy. If false, just returns a
+     *        transient instance.
+     * @return
+     */
+    public ExternalDatabase getGenbank( boolean seekPersistent ) {
+        if ( seekPersistent ) {
+            ExternalDatabase genBank = externalDatabaseDao.findByName( "Genbank" );
+            if ( genBank == null ) {
+                log.error( "Persistent Genbank not found" );
+                return getGenbank();
+            }
+            return genBank;
+        }
+        return getGenbank();
+    }
+
+    /**
+     * @param dao the dao to set
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    /**
+     * @param accession
+     * @return
+     */
+    public static DatabaseEntry getGenbankAccession( String accession ) {
+        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+
+        dbEntry.setAccession( accession );
+        dbEntry.setExternalDatabase( getGenbank() );
+
+        return dbEntry;
+    }
+
+    /**
+     * @param accession
+     * @param seekPersistentDb
+     * @return
+     */
+    public DatabaseEntry getGenbankAccession( String accession, boolean seekPersistentDb ) {
+        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+
+        dbEntry.setAccession( accession );
+        dbEntry.setExternalDatabase( this.getGenbank( seekPersistentDb ) );
+
+        return dbEntry;
+    }
+
+}

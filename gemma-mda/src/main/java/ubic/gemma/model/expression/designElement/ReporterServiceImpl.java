@@ -76,7 +76,7 @@ public class ReporterServiceImpl extends ubic.gemma.model.expression.designEleme
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleCreate( Collection reporters ) throws Exception {
-        return ( Collection<Reporter> ) this.getReporterDao().create( reporters );
+        return this.getReporterDao().create( reporters );
     }
 
 }

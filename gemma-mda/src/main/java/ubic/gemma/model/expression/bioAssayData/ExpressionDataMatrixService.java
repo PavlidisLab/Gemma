@@ -93,7 +93,7 @@ public class ExpressionDataMatrixService {
             StringBuilder buf = new StringBuilder();
             List<BioMaterial> bms = new ArrayList<BioMaterial>( assay.getSamplesUsed() );
             // Collections.sort( bms ); // FIXME this should use a sort.
-            for ( BioMaterial bm : ( Collection<BioMaterial> ) bms ) {
+            for ( BioMaterial bm : bms ) {
                 buf.append( bm.getName() );
             }
             matrix.addColumnName( buf.toString() );

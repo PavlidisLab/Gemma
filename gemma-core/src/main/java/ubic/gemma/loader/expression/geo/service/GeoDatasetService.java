@@ -54,10 +54,10 @@ public class GeoDatasetService extends AbstractGeoService {
         }
 
         Collection<?> results = generator.generate( geoAccession );
-        
+
         assert results.iterator().next() instanceof GeoSeries : "Got a "
                 + results.iterator().next().getClass().getName() + " instead of a " + GeoSeries.class.getName();
-        
+
         GeoSeries series = ( GeoSeries ) results.iterator().next();
 
         log.info( "Generated GEO domain objects for " + geoAccession );
@@ -65,9 +65,8 @@ public class GeoDatasetService extends AbstractGeoService {
         ExpressionExperiment result = ( ExpressionExperiment ) converter.convert( series );
 
         log.info( "Converted " + series.getGeoAccession() );
-        series = null; // try to help GC.
         assert persisterHelper != null;
-        return ( ExpressionExperiment ) persisterHelper.persist( result );
+        return persisterHelper.persist( result );
 
     }
 

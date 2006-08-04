@@ -56,7 +56,7 @@ public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDa
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( ubic.gemma.model.common.protocol.Protocol ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Protocol ) result;

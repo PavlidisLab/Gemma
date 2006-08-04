@@ -66,7 +66,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
                                     + " was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( BibliographicReference ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( BibliographicReference ) result;

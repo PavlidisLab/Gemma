@@ -70,7 +70,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( Taxon ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( Taxon ) result;

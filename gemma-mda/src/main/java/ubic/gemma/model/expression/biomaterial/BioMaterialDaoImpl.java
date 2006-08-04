@@ -72,7 +72,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                                     + "' was found when executing query" );
 
                 } else if ( results.size() == 1 ) {
-                    result = ( BioMaterial ) results.iterator().next();
+                    result = results.iterator().next();
                 }
             }
             return ( BioMaterial ) result;
