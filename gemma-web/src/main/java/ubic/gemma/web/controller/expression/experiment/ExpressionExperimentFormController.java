@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -61,9 +62,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
     private final String messagePrefix = "Expression experiment with id";
 
-    private ExternalDatabaseDao externalDatabaseDao = null; // FIXME Use Service. Methods have been put in model for
+    private Long id = null;
 
-    // service
+    private ExternalDatabaseDao externalDatabaseDao = null;
+
+    // FIXME Use ExternalDatabaseService instead of ExternalDatabaseDao. Methods have been put in model for service
     // but when I use them I get NonUniqueObjectException. This seems to be documented here:
     // http://saloon.javaranch.com/cgi-bin/ubb/ultimatebb.cgi?ubb=get_topic&f=78&t=000475.
     // It works if you call the dao layer directly from your controller (I know we are not supposed to do this, but it
@@ -85,7 +88,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+        id = Long.parseLong( request.getParameter( "id" ) );
 
         ExpressionExperiment ee = null;
 
@@ -115,6 +118,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
             Object command, BindException errors ) throws Exception {
 
         log.debug( "entering processFormSubmission" );
+
+        id = ( ( ExpressionExperiment ) command ).getId();
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":8080"
+                    + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+        }
 
         String accession = request.getParameter( "expressionExperiment.accession.accession" );
 

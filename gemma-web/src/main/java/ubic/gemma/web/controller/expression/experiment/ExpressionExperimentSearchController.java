@@ -85,7 +85,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
      */
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+        id = Long.parseLong( request.getParameter( "id" ) );
 
         log.debug( id );
 
