@@ -58,7 +58,7 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
         ba.setDescription( "A bioassay created from the BioAssayFormControllerTest." );
 
         Collection<ArrayDesign> adCol = new HashSet();
-        for ( int i = 0; i < testNumCollectionElements; i++ ) {
+        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setName( "Array Design Bot" );
             ad.setDescription( "An array design created from the ExperimentalDesignFormControllerTest" );

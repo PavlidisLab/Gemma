@@ -313,7 +313,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 }
 
                 for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
-                    factorValue.setId( persistFactorValue( factorValue ).getId() );
+                    persistFactorValue( factorValue );
                 }
             }
         }
@@ -354,17 +354,20 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
             OntologyEntry ontologyEntry = factorValue.getOntologyEntry();
             factorValue.setOntologyEntry( persistOntologyEntry( ontologyEntry ) );
+            return factorValueService.findOrCreate( factorValue );
         } else if ( factorValue.getValue() != null ) {
             if ( factorValue.getMeasurement() != null || factorValue.getOntologyEntry() != null ) {
                 throw new IllegalStateException(
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
-        } else {
-            Measurement measurement = factorValue.getMeasurement();
-            factorValue.setMeasurement( persistMeasurement( measurement ) );
+            return factorValueService.findOrCreate( factorValue );
         }
+        Measurement measurement = factorValue.getMeasurement();
+        factorValue.setMeasurement( persistMeasurement( measurement ) );
 
+        // FIXME: For measurements situation, maybe we shouldmake a unique instance every time.
         return factorValueService.findOrCreate( factorValue );
+
     }
 
     /**

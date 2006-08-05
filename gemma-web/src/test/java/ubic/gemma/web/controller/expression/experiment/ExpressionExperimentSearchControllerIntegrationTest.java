@@ -25,9 +25,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.expression.experiment.ExpressionExperimentTestHelper;
+import ubic.gemma.expression.experiment.AbstractExpressionExperimentTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * Tests the expressionExperimentSearchController functionality. For this to work, data must be left in the database,
@@ -36,7 +35,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentSearchControllerIntegrationTest extends BaseTransactionalSpringContextTest {
+public class ExpressionExperimentSearchControllerIntegrationTest extends AbstractExpressionExperimentTest {
 
     /**
      * @throws Exception
@@ -45,8 +44,8 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends BaseTra
     public void testOnSubmit() throws Exception {
 
         onSetUpInTransaction();// set up in a transaction
-        ExpressionExperimentTestHelper eeh = new ExpressionExperimentTestHelper();
-        eeh.setExpressionExperimentDependencies();
+        // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
+        this.setExpressionExperimentDependencies();
 
         ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this
                 .getBean( "expressionExperimentSearchController" );
@@ -56,7 +55,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends BaseTra
         ExpressionExperimentSearchCommand command = new ExpressionExperimentSearchCommand();
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "0_at, 1_at" );
-        //command.setFilename( "build/Gemma/images/outImage.png" );
+        // command.setFilename( "build/Gemma/images/outImage.png" );
         command.setId( new Long( 0 ) );
 
         if ( ( ( ExpressionExperimentDao ) this.getBean( "expressionExperimentDao" ) ).loadAll().size() == 0 )

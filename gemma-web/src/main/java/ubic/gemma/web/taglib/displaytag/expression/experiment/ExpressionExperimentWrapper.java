@@ -116,8 +116,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getIdLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getExperimentalDesigns() != null ) {
-            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getId()
-                    + "</a>";
+            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getId() + "</a>";
         }
         return "No design";
     }
@@ -156,13 +155,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         Collection bioMaterialCol = bioAssay.getSamplesUsed();
         Taxon taxon = null;
 
-        if ( bioMaterialCol != null ) {
+        if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) {
             BioMaterial bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next();
             taxon = bioMaterial.getSourceTaxon();
-        }
-
-        else
+        } else {
             return "Taxon unavailable";
+        }
 
         if ( taxon != null ) return taxon.getScientificName();
 

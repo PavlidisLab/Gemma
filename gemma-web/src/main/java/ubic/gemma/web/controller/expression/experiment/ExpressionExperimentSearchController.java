@@ -85,8 +85,11 @@ public class ExpressionExperimentSearchController extends BaseFormController {
      */
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        id = Long.parseLong( request.getParameter( "id" ) );
-
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            // return an error.
+        }
         log.debug( id );
 
         ExpressionExperiment ee = null;

@@ -87,10 +87,11 @@ import uk.ltd.getahead.dwr.create.SpringCreator;
  */
 abstract public class BaseTransactionalSpringContextTest extends AbstractTransactionalSpringContextTests {
 
+    protected static final int RANDOM_STRING_LENGTH = 10;
     protected CompositeConfiguration config;
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
-    protected final int testNumCollectionElements = 20;
+    protected static final int TEST_ELEMENT_COLLECTION_SIZE = 20;
 
     protected ExternalDatabaseDao externalDatabaseDao;
 
@@ -119,7 +120,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     protected BioAssay getTestPersistentBioAssay() {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-        ba.setName( RandomStringUtils.random( 10 ) + "_test" );
+        ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ba = ( BioAssay ) bioAssayDao.create( ba );
         flushSession();
         return ba;
@@ -135,10 +136,10 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
 
         /* set the accession of database entry to the pubmed id. */
-        result.setAccession( RandomStringUtils.random( 10 ) + "_test" );
+        result.setAccession( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( RandomStringUtils.random( 10 ) + "_testdb" );
+        ed.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testdb" );
 
         ed = ( ExternalDatabase ) externalDatabaseDao.create( ed );
 
@@ -155,7 +156,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     protected Contact getTestPersistentContact() {
         Contact c = Contact.Factory.newInstance();
-        c.setName( RandomStringUtils.random( 10 ) + "_test" );
+        c.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         c = ( Contact ) contactDao.create( c );
         flushSession();
         return c;
@@ -169,7 +170,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     protected QuantitationType getTestPersistentQuantitationType() {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        qt.setName( RandomStringUtils.random( 10 ) + "_test" );
+        qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setIsBackground( false );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -188,7 +189,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setName( RandomStringUtils.random( 10 ) + "_test" );
+        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ee = ( ExpressionExperiment ) expressionExperimentDao.create( ee );
         flushSession();
         return ee;
@@ -206,7 +207,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
             CompositeSequence de = CompositeSequence.Factory.newInstance();
-            de.setName( RandomStringUtils.random( 10 ) + "_test" );
+            de.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
             de = ( CompositeSequence ) compositeSequenceDao.create( de );
             ad.getCompositeSequences().add( de );
         }

@@ -404,8 +404,6 @@ abstract public class CommonPersister extends AbstractPersister {
     protected DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) return null;
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
-        assert !isTransient( databaseEntry.getExternalDatabase() );
-
         DatabaseEntry nde = databaseEntryService.findOrCreate( databaseEntry );
         log.info( "Persisted " + nde );
         return nde;

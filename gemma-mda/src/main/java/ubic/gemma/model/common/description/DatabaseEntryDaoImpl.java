@@ -44,10 +44,9 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '"
-                                    + ubic.gemma.model.common.description.DatabaseEntry.class.getName()
-                                    + "' was found when executing query for " + databaseEntry );
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
+                            + " instances of '" + ubic.gemma.model.common.description.DatabaseEntry.class.getName()
+                            + "' was found when executing query for " + databaseEntry + ", expected only 1" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();

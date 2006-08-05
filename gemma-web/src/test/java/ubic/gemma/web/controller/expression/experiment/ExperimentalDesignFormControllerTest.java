@@ -57,7 +57,7 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
         ed.setDescription( "An experimental design created from the ExperimentalDesignFormControllerTest." );
 
         Collection<ExperimentalFactor> efCol = new HashSet();
-        for ( int i = 0; i < testNumCollectionElements; i++ ) {
+        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setName( "Experimental Factor Bot" );
             ef.setDescription( "An experimental factor created from the ExperimentalDesignFormControllerTest" );
