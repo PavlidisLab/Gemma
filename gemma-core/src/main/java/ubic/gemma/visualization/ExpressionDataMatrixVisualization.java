@@ -63,7 +63,7 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
     private List<String> colLabels = null;
 
-    private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
+    private Color[] colorMap = ColorMap.REDGREEN_COLORMAP; // TODO add support for color map
 
     private int rowNameXCoord = 0;
     private Map<String, Integer> rowNameYCoords = null;
