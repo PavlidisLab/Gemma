@@ -19,9 +19,11 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -66,7 +68,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
     ExpressionExperimentService expressionExperimentService = null;
     CompositeSequenceService compositeSequenceService = null;
     String[] searchIds = null;
-    Collection<DesignElement> designElements = null;
+    List<DesignElement> designElements = null;
     Long id = null;
 
     // private final String messagePrefix = "Expression experiment with id";
@@ -134,7 +136,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         // more searchString validation - see also validation.xml
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
-        designElements = new HashSet();
+        designElements = new ArrayList<DesignElement>();
         for ( int i = 0; i < searchIds.length; i++ ) {
             log.debug( "searching for " + searchIds[i] );
 
