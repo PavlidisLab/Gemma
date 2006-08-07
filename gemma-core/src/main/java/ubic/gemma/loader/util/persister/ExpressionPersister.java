@@ -185,7 +185,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private void fillInBioAssayAssociations( BioAssay assay ) {
 
         for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
-            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
+            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId());
         }
 
         for ( FactorValue factorValue : assay.getFactorValues() ) {

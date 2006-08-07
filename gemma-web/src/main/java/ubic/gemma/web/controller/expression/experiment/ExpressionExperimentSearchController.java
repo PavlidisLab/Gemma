@@ -30,14 +30,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -47,8 +49,7 @@ import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * <hr>
- * <p>
+ * TODO document me
  * 
  * @author keshav
  * @version $Id$
@@ -67,9 +68,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
     ExpressionExperimentService expressionExperimentService = null;
     CompositeSequenceService compositeSequenceService = null;
-    String[] searchIds = null;
     List<DesignElement> designElements = null;
-    Long id = null;
 
     // private final String messagePrefix = "Expression experiment with id";
 
@@ -85,28 +84,30 @@ public class ExpressionExperimentSearchController extends BaseFormController {
      * @return Object
      * @throws ServletException
      */
+    @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
+        Long id = null;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            // return an error.
+            throw new RuntimeException( "Id was not valid Long integer", e );
         }
         log.debug( id );
 
         ExpressionExperiment ee = null;
         ExpressionExperimentSearchCommand eesc = new ExpressionExperimentSearchCommand();
 
-        if ( !"".equals( id ) )
+        if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
             ee = expressionExperimentService.findById( id );
-
-        else
+        } else {
             ee = ExpressionExperiment.Factory.newInstance();
+        }
 
-        eesc.setId( ee.getId() );
+        eesc.setExpressionExperimentId( ee.getId() );
         eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
-        eesc.setSearchString( "36936_at" );
+        eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
         eesc.setStringency( 1 );
 
         return eesc;
@@ -121,32 +122,56 @@ public class ExpressionExperimentSearchController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
+    @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
 
         log.debug( "entering processFormSubmission" );
 
-        id = ( ( ExpressionExperimentSearchCommand ) command ).getId();
+        ExpressionExperimentSearchCommand eesc = ( ( ExpressionExperimentSearchCommand ) command );
+        Long id = eesc.getExpressionExperimentId();
 
         if ( request.getParameter( "cancel" ) != null ) {
+            log.info( "Canceled" );
+            // FIXME - port number should NOT be included here. Not portable.
+            // FIXME = what if id is null?
             return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":8080"
                     + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
         }
 
+        ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
+
+        if ( expressionExperiment == null ) {
+            errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
+                    + " found" ) );
+        }
+
+        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expressionExperiment );
+
+        log.debug( "Got " + arrayDesigns.size() + " array designs for the expression experiment with id " + id );
+
         // more searchString validation - see also validation.xml
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
-        searchIds = StringUtils.tokenizeToStringArray( searchString, ",", true, true );
+        log.debug( "Got search string " + searchString );
+        String[] searchIds = StringUtils.split( searchString, "," );
         designElements = new ArrayList<DesignElement>();
-        for ( int i = 0; i < searchIds.length; i++ ) {
-            log.debug( "searching for " + searchIds[i] );
+        for ( ArrayDesign design : arrayDesigns ) {
 
-            DesignElement de = compositeSequenceService.findByName( searchIds[i] );
-            if ( de != null ) designElements.add( de );
+            for ( int i = 0; i < searchIds.length; i++ ) {
+                log.debug( "searching for " + searchIds[i] );
+
+                DesignElement de = compositeSequenceService.findByName( design, searchIds[i] );
+
+                if ( de != null ) {
+                    designElements.add( de );
+                }
+            }
         }
 
         log.debug( designElements.size() );
         if ( designElements.size() == 0 ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "Requested probe sets do not exist." ) );
+            errors.addError( new ObjectError( command.toString(), null, null, "None of the probe sets exist." ) );
         }
 
         // more searchCriteria validation - see also validation.xml
@@ -165,39 +190,44 @@ public class ExpressionExperimentSearchController extends BaseFormController {
      * @return ModelAndView
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unused")
+    @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
         log.debug( "entering onSubmit" );
-
+        ExpressionExperimentSearchCommand eesc = ( ( ExpressionExperimentSearchCommand ) command );
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         boolean suppressVisualizations = ( ( ExpressionExperimentSearchCommand ) command ).isSuppressVisualizations();
 
         // TODO allow filename to be entered from form
-        String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
-        if ( filename == null ) filename = "visualization.png";
-        String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
+        // String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
+        // if ( filename == null ) filename = "visualization.png";
+        // String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
+        //
+        // File dirPath = new File( visualDir );
 
-        File dirPath = new File( visualDir );
+        File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
+                + RandomStringUtils.randomAlphabetic( 5 ), ".png" );
+        log.debug( "Image to be stored in " + imageFile );
 
-        // Create the directory if it doesn't exist
-        if ( !dirPath.exists() ) {
-            dirPath.mkdirs();
-        }
-
-        filename = visualDir + filename;
-        log.info( "filename: " + filename );
+        // // Create the directory if it doesn't exist
+        // if ( !dirPath.exists() ) {
+        // dirPath.mkdirs();
+        // }
+        //
+        // filename = visualDir + filename;
+        // log.info( "filename: " + filename );
 
         ExpressionDataMatrix expressionDataMatrix = null;
         ExpressionDataMatrixVisualization matrixVisualization = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
-            ExpressionExperiment ee = expressionExperimentService.findById( id );
+            ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
             expressionDataMatrix = new ExpressionDataMatrix( ee, designElements );
 
             matrixVisualization = new ExpressionDataMatrixVisualization();
             matrixVisualization.setExpressionDataMatrix( expressionDataMatrix );
-            matrixVisualization.setOutfile( filename );
+            matrixVisualization.setOutfile( imageFile.getAbsolutePath() );
             matrixVisualization.setSuppressVisualizations( suppressVisualizations );
 
         } else {
@@ -213,13 +243,14 @@ public class ExpressionExperimentSearchController extends BaseFormController {
      * @param request
      * @return Map
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unused")
+    @Override
     protected Map referenceData( HttpServletRequest request ) {
-        Collection searchCategories = new HashSet();
+        Collection<String> searchCategories = new HashSet<String>();
         searchCategories.add( "gene symbol" );
         searchCategories.add( "probe set id" );
 
-        Map searchByMap = new HashMap();
+        Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
 
         searchByMap.put( "searchCategories", searchCategories );
         return searchByMap;

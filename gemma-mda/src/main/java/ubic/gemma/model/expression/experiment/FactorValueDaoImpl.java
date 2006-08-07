@@ -54,9 +54,9 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + FactorValue.class.getName()
-                                    + "' was found when executing query" );
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
+                            + " instances of '" + FactorValue.class.getName() + "' was found when executing query for "
+                            + factorValue );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();

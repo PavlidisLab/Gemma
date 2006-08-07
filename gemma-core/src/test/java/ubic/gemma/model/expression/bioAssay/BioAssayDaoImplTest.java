@@ -50,7 +50,7 @@ public class BioAssayDaoImplTest extends BaseTransactionalSpringContextTest {
                 .newInstance() );
 
         for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
-            ba = this.getTestPersistentBioAssay();
+            ba = this.getTestPersistentBioAssay( null );
             bas.add( ba );
         }
 

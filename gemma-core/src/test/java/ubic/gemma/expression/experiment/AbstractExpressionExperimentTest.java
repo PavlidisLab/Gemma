@@ -69,106 +69,14 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
 
     }
 
-    // /**
-    // * @return
-    // */
-    // @SuppressWarnings("unchecked")
-    // private Collection<CompositeSequence> getCompositeSequences() {
-    // Collection<CompositeSequence> csCol = new HashSet();
-    // for ( int i = 0; i < testNumCollectionElements; i++ ) {
-    // CompositeSequence cs = CompositeSequence.Factory.newInstance();
-    // cs.setName( i + "_at" );
-    // csCol.add( cs );
-    // }
-    // return csCol;
-    // }
-
-    // /**
-    // * @return
-    // */
-    // @SuppressWarnings("unchecked")
-    // private Collection<ArrayDesign> getArrayDesignsUsed() {
-    // Collection<ArrayDesign> adCol = new HashSet();
-    // // ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-    // for ( int i = 0; i < testNumCollectionElements; i++ ) {
-    // ArrayDesign ad = ArrayDesign.Factory.newInstance();
-    // ad.setName( "Array Design " + i );
-    // ad.setDescription( i + ": A test array design." );
-    // ad.setAdvertisedNumberOfDesignElements( i + 100 );
-    // ad.setCompositeSequences( getCompositeSequences() );
-    //
-    // // ad = adService.findOrCreate( ad );
-    //
-    // adCol.add( ad );
-    // }
-    // return adCol;
-    // }
-    //
-    // /**
-    // * @return
-    // */
-    // @SuppressWarnings("unchecked")
-    // private Collection<BioMaterial> getBioMaterials() {
-    // BioMaterial bm = BioMaterial.Factory.newInstance();
-    //
-    // Taxon t = Taxon.Factory.newInstance();
-    // t.setScientificName( "Mus musculus" );
-    // // TaxonService ts = ( TaxonService ) getBean( "taxonService" );
-    // // t = ts.findOrCreate( t );
-    // bm.setSourceTaxon( t );
-    //
-    // // ExternalDatabaseService eds = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-    // ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-    // ed.setName( "PubMed" );
-    // // ed = eds.findOrCreate( ed );
-    //
-    // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-    // de.setAccession( " Biomaterial accession " );
-    // de.setExternalDatabase( ed );
-    // bm.setExternalAccession( de );
-    //
-    // bm.setName( " BioMaterial " );
-    // bm.setDescription( " A test biomaterial" );
-    //
-    // /*
-    // * FIXME - change to use the service, not the dao. will not do until merging Gemma V01_MVN1 because I am trying
-    // * to reduce the number of model changes.
-    // */
-    // // BioMaterialDao bmDao = ( BioMaterialDao ) this.getBean( "bioMaterialDao" );
-    // // bmDao.findOrCreate( bm ); - FIXME this is what I want to use, but there is a problem with this:
-    // // TransientObjectException. The error is consistent. If you have A => B -> C where => is composition and -> is
-    // // association
-    // // bm = ( BioMaterial ) bmDao.create( bm );
-    // Collection<BioMaterial> bmCol = new HashSet();
-    // bmCol.add( bm );
-    // return bmCol;
-    // }
-
     /**
      * @return Collection
      */
-    private Collection<BioAssay> getBioAssays() {
+    private Collection<BioAssay> getBioAssays( ArrayDesign ad ) {
         Collection<BioAssay> baCol = new HashSet<BioAssay>();
         for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
-            // BioAssay ba = BioAssay.Factory.newInstance();
-            // ba.setName( "Bioassay " + i );
-            // ba.setDescription( i + ": A test bioassay." );
-            // ba.setSamplesUsed( getBioMaterials() );
-            // // ba.setArrayDesignsUsed( getArrayDesignsUsed() );
-            //
-            // if ( i < ( testNumCollectionElements - 5 ) ) {
-            // // ExternalDatabaseService eds = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-            // ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            // ed.setName( "PubMed" );
-            // // ed = eds.findOrCreate( ed );
-            //
-            // DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-            // de.setExternalDatabase( ed );
-            // de.setAccession( i + ": Accession added from ExpressionExperimentControllerIntegrationTest" );
-            // ba.setAccession( de );
-            // }
-
-            baCol.add( this.getTestPersistentBioAssay() );
+            BioAssay ba = this.getTestPersistentBioAssay( ad );
+            baCol.add( ba );
         }
 
         return baCol;
@@ -196,13 +104,6 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
             ef.setDescription( i + ": A test experimental factor" );
-            // FIXME - another
-            // OntologyEntry oe = OntologyEntry.Factory.newInstance();
-            // oe.setAccession( "oe:" + i );
-            // oe.setDescription( "Ontology Entry " + i );
-            // log.debug( "ontology entry => experimental factor." );
-            // ef.setCategory( oe );
-            // ef.setAnnotations(oeCol);
             log.debug( "experimental factor => factor values" );
             ef.setFactorValues( getFactorValues() );
             efCol.add( ef );
@@ -242,9 +143,12 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
             vector.setData( bdata );
 
             vector.setDesignElement( cs );
+
+            assert cs.getArrayDesign() != null;
+
             vector.setExpressionExperiment( ee );
 
-            Collection<BioAssay> bioAssays = getBioAssays();
+            Collection<BioAssay> bioAssays = getBioAssays( ad );
 
             BioAssayDimension bad = BioAssayDimension.Factory.newInstance( bioAssays );
 
@@ -260,47 +164,33 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
      * Add an expressionExperiment to the database for testing purposes. Includes associations.
      */
     protected void setExpressionExperimentDependencies() {
-        /*
-         * Create & Persist the expression experiment and dependencies
-         */
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ArrayDesign ad = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false );
+
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
 
         ee.setDescription( "A test expression experiment" );
 
         ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
 
-        // // ExternalDatabaseService eds = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-        // ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        // ed.setName( "PubMed" );
-        // // ed = eds.findOrCreate( ed );
-
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry();
-        //
-        // log.debug( "database entry -> external database" );
-        // de1.setExternalDatabase( ed );
 
         log.debug( "expression experiment => database entry" );
         ee.setAccession( de1 );
 
         log.debug( "expression experiment => bioassays" );
-        ee.setBioAssays( getBioAssays() );
+        ee.setBioAssays( getBioAssays( ad ) );
 
         log.debug( ee + " => experimentalDesigns designs" );
         ee.setExperimentalDesigns( getExperimentalDesigns() );
 
         log.debug( "expression experiment -> owner " );
 
-        Contact c = this.getTestPersistentContact();
-        // c = cs.findOrCreate( c );
-        ee.setOwner( c );
-
-        ArrayDesign ad = getArrayDesign();
+        ee.setOwner( this.getTestPersistentContact() );
 
         log.debug( "expression experiment => design element data vectors" );
         ee.setDesignElementDataVectors( getDesignElementDataVectors( ee, ad ) );
 
-        // ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         log.debug( "Loading test expression experiment." );
 
         PersisterHelper ph = ( PersisterHelper ) getBean( "persisterHelper" );
@@ -308,29 +198,6 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
         assert ph != null;
 
         ph.persist( ee );
-
-        // ee = ees.create( ee ); // FIXME - again, I would like to use findOrCreate
     }
 
-    /**
-     * @return
-     */
-    private ArrayDesign getArrayDesign() {
-        // CompositeSequenceService csService = ( CompositeSequenceService ) this.getBean(
-        // "compositeSequenceService" );
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "arrayDesign_" + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
-
-        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
-            CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( i + "_at" );
-            cs.setDescription( "A test design element " + i + " created from ExpressionExperimentTestHelper" );
-            // ArrayDesignDao adDao = ( ArrayDesignDao ) this.getBean( "arrayDesignDao" );
-            // ad = adDao.findOrCreate( ad );
-
-            cs.setArrayDesign( ad );
-            ad.getCompositeSequences().add( cs );
-        }
-        return ad;
-    }
 }

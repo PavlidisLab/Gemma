@@ -52,16 +52,15 @@ public class BioAssayDimensionDaoImplTest extends BaseTransactionalSpringContext
         List<BioAssay> bas = new ArrayList<BioAssay>();
         ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory.newInstance() );
-
+        ArrayDesign ad = this.getTestPersistentArrayDesign( NUMTESTCOMPOSITESEQUENCES, true );
         for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
-            BioAssay ba = this.getTestPersistentBioAssay();
+            BioAssay ba = this.getTestPersistentBioAssay( ad );
             bas.add( ba );
         }
 
         bad.setBioAssays( bas );
         bioAssayDimensionDao.update( bad );
 
-        ArrayDesign ad = this.getTestPersistentArrayDesign( NUMTESTCOMPOSITESEQUENCES );
         QuantitationType qt = this.getTestPersistentQuantitationType();
 
         for ( DesignElement de : ad.getCompositeSequences() ) {

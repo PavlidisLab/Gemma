@@ -118,10 +118,11 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * 
      * @return
      */
-    protected BioAssay getTestPersistentBioAssay() {
+    protected BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ba = ( BioAssay ) bioAssayDao.create( ba );
+        if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
         flushSession();
         return ba;
     }
@@ -200,19 +201,29 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired.
      * 
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
+     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_at....N_at
      * @return
      */
-    protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences ) {
+    protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
             CompositeSequence de = CompositeSequence.Factory.newInstance();
-            de.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+            if ( randomNames ) {
+                de.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+            } else {
+                de.setName( i + "_at" );
+            }
             de = ( CompositeSequence ) compositeSequenceDao.create( de );
             ad.getCompositeSequences().add( de );
         }
 
         ad = ( ArrayDesign ) arrayDesignDao.create( ad );
+
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            cs.setArrayDesign( ad );
+        }
+
         flushSession();
         return ad;
     }

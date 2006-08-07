@@ -38,7 +38,7 @@ public class ExpressionExperimentSearchCommand implements Serializable {
 
     private String description = null;
 
-    private Long id = null;
+    private Long expressionExperimentId = null;
 
     private String searchString = null;
 
@@ -147,14 +147,15 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     /**
      * @return Long
      */
-    public Long getId() {
-        return id;
+    public Long getExpressionExperimentId() {
+        return expressionExperimentId;
     }
 
     /**
      * @param id
      */
-    public void setId( Long id ) {
-        this.id = id;
+    public void setExpressionExperimentId( Long id ) {
+        this.expressionExperimentId = id;
     }
+
 }

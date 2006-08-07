@@ -56,7 +56,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "0_at, 1_at" );
         // command.setFilename( "build/Gemma/images/outImage.png" );
-        command.setId( new Long( 0 ) );
+        command.setExpressionExperimentId( new Long( 0 ) );
 
         if ( ( ( ExpressionExperimentDao ) this.getBean( "expressionExperimentDao" ) ).loadAll().size() == 0 )
             setComplete();// leave data in database
