@@ -29,9 +29,12 @@ import java.util.HashSet;
 
 import junit.framework.TestCase;
 import ubic.gemma.model.common.auditAndSecurity.Person;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * @author daq2101
+ * @author paul
  * @version $Id$
  */
 public class ExpressionExperimentServiceImplTest extends TestCase {
@@ -44,7 +47,6 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
     private ExpressionExperimentDao eeDao;
 
-    @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -61,8 +63,19 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         ee.setName( "Test experiment" );
         ee.setOwner( nobody );
 
+        ArrayDesign ad1 = ArrayDesign.Factory.newInstance();
+        ArrayDesign ad2 = ArrayDesign.Factory.newInstance();
+
+        for ( int i = 0; i < 10; i++ ) {
+            BioAssay ba = BioAssay.Factory.newInstance();
+            ba.getArrayDesignsUsed().add( ad2 );
+            if ( i % 2 == 0 ) {
+                ba.getArrayDesignsUsed().add( ad1 );
+            }
+            ee.getBioAssays().add( ba );
+        }
+
         ee.getInvestigators().add( admin );
-        ee = svc.findOrCreate( ee );
 
         c = new HashSet<ExpressionExperiment>();
         ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
@@ -77,8 +90,14 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
     }
 
-    public void testExpressionExperimentFindByInvestigator() {
+    @SuppressWarnings("unchecked")
+    public void testGetArrayDesignsUsed() throws Exception {
+        assert ee != null;
+        Collection<ArrayDesign> ads = svc.getArrayDesignsUsed( ee );
+        assertTrue( ads.size() == 2 );
+    }
 
+    public void testExpressionExperimentFindByInvestigator() {
         reset( eeDao );
         eeDao.findByInvestigator( nobody );
         expectLastCall().andReturn( cJustTwelve );
@@ -96,16 +115,8 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         verify( eeDao );
     }
 
-    // public void testExpressionExperimentFindById() {
-    // reset( eeDao );
-    // eeDao.findById( 13 );
-    // expectLastCall().andReturn( null );
-    // replay( eeDao );
-    // svc.findById( 13 );
-    // verify( eeDao );
-    // }
-
     protected void tearDown() throws Exception {
         super.tearDown();
+        ee = null;
     }
 }

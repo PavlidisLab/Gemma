@@ -19,9 +19,12 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * @author pavlidis
@@ -118,5 +121,19 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected ExpressionExperiment handleFind( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().find( expressionExperiment );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetArrayDesignsUsed(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
+        Collection<ArrayDesign> result = new HashSet<ArrayDesign>();
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            result.addAll( ba.getArrayDesignsUsed() );
+        }
+        return result;
     }
 }

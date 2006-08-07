@@ -25,6 +25,8 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+
 /**
  * @author keshav
  * @author pavlidis
@@ -75,9 +77,9 @@ public class CompositeSequenceServiceImpl extends
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleCreate( Collection compositeSequences ) throws Exception {
+    @SuppressWarnings("unchecked")
+    protected Collection<CompositeSequence> handleCreate( Collection compositeSequences ) throws Exception {
         return this.getCompositeSequenceDao().create( compositeSequences );
     }
 
@@ -87,7 +89,19 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(java.lang.String)
      */
     @Override
-    protected CompositeSequence handleFindByName( String name ) throws Exception {
+    @SuppressWarnings("unchecked")
+    protected Collection<CompositeSequence> handleFindByName( String name ) throws Exception {
         return this.getCompositeSequenceDao().findByName( name );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
+     *      java.lang.String)
+     */
+    @Override
+    protected CompositeSequence handleFindByName( ArrayDesign arrayDesign, String name ) throws Exception {
+        return this.getCompositeSequenceDao().findByName( arrayDesign, name );
     }
 }
