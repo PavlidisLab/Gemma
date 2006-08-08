@@ -21,11 +21,15 @@
 package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneProduct;
 
 /**
  * @author keshav
@@ -103,5 +107,29 @@ public class CompositeSequenceServiceImpl extends
     @Override
     protected CompositeSequence handleFindByName( ArrayDesign arrayDesign, String name ) throws Exception {
         return this.getCompositeSequenceDao().findByName( arrayDesign, name );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetAssociatedGenes(ubic.gemma.model.expression.designElement.CompositeSequence)
+     */
+    @Override
+    protected Collection<Gene> handleGetAssociatedGenes( CompositeSequence compositeSequence ) throws Exception {
+
+        Collection<Gene> genes = null;
+
+        if ( compositeSequence.getBiologicalCharacteristic() != null ) {
+            genes = new HashSet<Gene>();
+            for ( BioSequence2GeneProduct bs2gp : compositeSequence.getBiologicalCharacteristic()
+                    .getBioSequence2GeneProduct() ) {
+                if ( bs2gp != null ) {
+                    for ( GeneProduct geneProduct : bs2gp.getGeneProducts() ) {
+                        if ( geneProduct != null ) genes.add( geneProduct.getGene() );
+                    }
+                }
+            }
+        }
+        return genes;
     }
 }
