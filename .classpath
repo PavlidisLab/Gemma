@@ -77,12 +77,16 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/ognl/ognl/2.6.7/ognl-2.6.7.jar"/>
-	<classpathentry kind="var" path="M2_REPO/hibernate/hibernate/3.1.2/hibernate-3.1.2.jar"/>
+	<classpathentry sourcepath="/JAR_SOURCE/hibernate-3.1/src" kind="var" path="M2_REPO/hibernate/hibernate/3.1.2/hibernate-3.1.2.jar">
+		<attributes>
+			<attribute value="http://www.hibernate.org/hib_docs/v3/api/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/mage/mage/1.1/mage-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.0-RC1/acegi-security-1.0.0-RC1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/rserve/JRclient/RE817/JRclient-RE817.jar"/>
-	<classpathentry sourcepath="/JAR_SOURCE/springmodules-validation-src" kind="var" path="M2_REPO/spring/springmodules-validator/0.4/springmodules-validator-0.4.jar">
+	<classpathentry kind="var" path="M2_REPO/spring/springmodules-validator/0.4/springmodules-validator-0.4.jar">
 		<attributes>
 			<attribute value="https://springmodules.dev.java.net/source/browse/*checkout*/springmodules/www/docs/javadocs/0.4/" name="javadoc_location"/>
 		</attributes>
@@ -92,7 +96,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-fileupload/commons-fileupload/1.1/commons-fileupload-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/junit/junit/3.8.1/junit-3.8.1.jar">
 		<attributes>
-			<attribute value="http://www.junit.org/junit/javadoc/3.8.1/" name="javadoc_location"/>
+			<attribute value="http://junit.sourceforge.net/javadoc/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/jaxen/jaxen/1.1-beta-5/jaxen-1.1-beta-5.jar"/>
