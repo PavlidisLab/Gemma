@@ -40,16 +40,22 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * TODO document me
+ * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
+ * success view returns either a visual representation of the result set or a downloadable data file.
+ * <p>
+ * {@link stringency} sets the number of data sets the link must be seen in before it is listed in the results, and
+ * {@link species} sets the type of species to search. {@link keywords} restrict the search.
  * 
  * @author keshav
  * @version $Id$
@@ -66,9 +72,10 @@ import ubic.gemma.web.controller.BaseFormController;
 public class ExpressionExperimentSearchController extends BaseFormController {
     private static Log log = LogFactory.getLog( ExpressionExperimentSearchController.class.getName() );
 
-    ExpressionExperimentService expressionExperimentService = null;
-    CompositeSequenceService compositeSequenceService = null;
-    List<DesignElement> designElements = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private CompositeSequenceService compositeSequenceService = null;
+    private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
+    private List<DesignElement> compositeSequences = null;
 
     // private final String messagePrefix = "Expression experiment with id";
 
@@ -134,7 +141,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Canceled" );
-            // FIXME - port number should NOT be included here. Not portable.
+            // FIXME - port number should NOT be included here. Not portable. - I know ... there should be a way to get
+            // the port num - kiran
             // FIXME = what if id is null?
             return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":8080"
                     + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
@@ -155,30 +163,43 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         String searchString = ( ( ExpressionExperimentSearchCommand ) command ).getSearchString();
         log.debug( "Got search string " + searchString );
         String[] searchIds = StringUtils.split( searchString, "," );
-        designElements = new ArrayList<DesignElement>();
-        for ( ArrayDesign design : arrayDesigns ) {
 
-            for ( int i = 0; i < searchIds.length; i++ ) {
-                log.debug( "searching for " + searchIds[i] );
+        /* handle search by design element */
+        if ( ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
+            compositeSequences = new ArrayList<DesignElement>();
+            Collection<Gene> geneCol = null;
+            for ( ArrayDesign design : arrayDesigns ) {
 
-                DesignElement de = compositeSequenceService.findByName( design, searchIds[i] );
+                for ( int i = 0; i < searchIds.length; i++ ) {
+                    log.debug( "searching for " + searchIds[i] );
 
-                if ( de != null ) {
-                    designElements.add( de );
+                    CompositeSequence cs = compositeSequenceService.findByName( design, searchIds[i] );
+
+                    if ( cs != null ) {
+                        compositeSequences.add( cs );
+
+                        /* get the genes associated with this design element */
+                        geneCol = compositeSequenceService.getAssociatedGenes( cs );
+
+                        log.debug( "geneCol " + geneCol );
+                        if ( geneCol != null ) {
+                            // FIXME For now, if geneCol is 0 I am still putting in map. Unnecessary and inefficient.
+                            designElementToGeneMap.put( cs, geneCol );
+                        }
+                    }
                 }
             }
+            log.debug( compositeSequences.size() );
+            if ( compositeSequences.size() == 0 ) {
+                errors.addError( new ObjectError( command.toString(), null, null, "None of the probe sets exist." ) );
+            }
         }
-
-        log.debug( designElements.size() );
-        if ( designElements.size() == 0 ) {
-            errors.addError( new ObjectError( command.toString(), null, null, "None of the probe sets exist." ) );
-        }
-
-        // more searchCriteria validation - see also validation.xml
-        if ( ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria().equalsIgnoreCase( "gene symbol" ) )
+        /* handle search by gene */
+        if ( ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria().equalsIgnoreCase( "gene symbol" ) ) {
+            // TODO add search by gene symbol
             errors.addError( new ObjectError( command.toString(), null, null,
                     "Search by gene symbol unsupported at this time." ) );
-
+        }
         return super.processFormSubmission( request, response, command, errors );
     }
 
@@ -223,7 +244,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         ExpressionDataMatrixVisualization matrixVisualization = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
-            expressionDataMatrix = new ExpressionDataMatrix( ee, designElements );
+            expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
 
             matrixVisualization = new ExpressionDataMatrixVisualization();
             matrixVisualization.setExpressionDataMatrix( expressionDataMatrix );
