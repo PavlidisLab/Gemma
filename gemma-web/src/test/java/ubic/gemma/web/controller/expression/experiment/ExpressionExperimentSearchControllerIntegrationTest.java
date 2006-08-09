@@ -23,9 +23,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.expression.experiment.AbstractExpressionExperimentTest;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 
 /**
@@ -44,8 +46,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
     public void testOnSubmit() throws Exception {
 
         onSetUpInTransaction();// set up in a transaction
-        // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
-        this.setExpressionExperimentDependencies();
+        ExpressionExperiment ee = this.setExpressionExperimentDependencies();
 
         ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this
                 .getBean( "expressionExperimentSearchController" );
@@ -56,12 +57,15 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
         command.setSearchCriteria( "probe set id" );
         command.setSearchString( "0_at, 1_at" );
         // command.setFilename( "build/Gemma/images/outImage.png" );
-        command.setExpressionExperimentId( new Long( 0 ) );
+        log.debug( "expression experiment id " + ee.getId() );
+        command.setExpressionExperimentId( ee.getId() );
 
         if ( ( ( ExpressionExperimentDao ) this.getBean( "expressionExperimentDao" ) ).loadAll().size() == 0 )
             setComplete();// leave data in database
 
-        ModelAndView mav = searchController.onSubmit( request, response, command, null );
+        BindException errors = new BindException( command, "ExpressionExperimentSearchCommand" );
+        searchController.processFormSubmission( request, response, command, errors );
+        ModelAndView mav = searchController.onSubmit( request, response, command, errors );
         assertEquals( "showExpressionExperimentSearchResults", mav.getViewName() );
 
     }
