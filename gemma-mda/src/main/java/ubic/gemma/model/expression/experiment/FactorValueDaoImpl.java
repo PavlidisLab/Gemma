@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -54,6 +56,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
+                    this.debug( results );
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size()
                             + " instances of '" + FactorValue.class.getName() + "' was found when executing query for "
                             + factorValue );
@@ -66,6 +69,22 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\nFactorValues found:\n" );
+        for ( Object object : results ) {
+            FactorValue fv = ( FactorValue ) object;
+            sb.append( "\tID=" + fv.getId() + " Value=" + fv.getValue() );
+            if ( fv.getMeasurement() != null ) sb.append( " Measurement=" + fv.getMeasurement().getValue() );
+            if ( fv.getOntologyEntry() != null ) sb.append( " OntologyEntry=" + fv.getOntologyEntry().getValue() );
+            sb.append( "\n" );
+        }
+        log.error( sb.toString() );
     }
 
     /*

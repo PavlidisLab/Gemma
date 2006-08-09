@@ -410,24 +410,33 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      */
     protected ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
         assert isTransient( arrayDesign );
+
+        if ( arrayDesign == null ) return null;
+
         log.info( "Persisting new array design " + arrayDesign.getName() );
 
         arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
 
-        for ( LocalFile file : arrayDesign.getLocalFiles() ) {
-            file.setId( persistLocalFile( file ).getId() );
+        if ( arrayDesign.getLocalFiles() != null ) {
+            for ( LocalFile file : arrayDesign.getLocalFiles() ) {
+                // file.setId( persistLocalFile( file ).getId() );
+                file = persistLocalFile( file );
+            }
         }
 
         // bare-bones - we don't persist the probes by composition.
-        arrayDesign.setId( arrayDesignService.create( arrayDesign ).getId() );
+        // arrayDesign.setId( arrayDesignService.create( arrayDesign ).getId() );
+        arrayDesign = arrayDesignService.create( arrayDesign );
 
-        arrayDesign.setId( persistArrayDesignReporterAssociations( arrayDesign ).getId() );
+        // arrayDesign.setId( persistArrayDesignReporterAssociations( arrayDesign ).getId() );
+        persistArrayDesignReporterAssociations( arrayDesign );
 
-        arrayDesign.setId( persistArrayDesignCompositeSequenceAssociations( arrayDesign ).getId() );
+        // arrayDesign.setId( persistArrayDesignCompositeSequenceAssociations( arrayDesign ).getId() );
+        persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
         // arrayDesignService.update( arrayDesign );
 
-        arrayDesign.setId( arrayDesign.getId() );
+        // arrayDesign.setId( arrayDesign.getId() );
 
         return arrayDesign;
     }

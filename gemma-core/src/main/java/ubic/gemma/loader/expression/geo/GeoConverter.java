@@ -766,17 +766,23 @@ public class GeoConverter implements Converter {
             cs.setDescription( description );
             cs.setArrayDesign( arrayDesign );
 
-            BioSequence bs = BioSequence.Factory.newInstance();
-            bs.setName( externalRef );
-            bs.setTaxon( taxon );
-            bs.setPolymerType( PolymerType.DNA );
-            bs.setType( SequenceType.DNA ); // TODO need to determine SequenceType and PolymerType.
-
-            DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-            dbe.setAccession( externalRef );
-            dbe.setExternalDatabase( externalDb );
-
-            cs.setBiologicalCharacteristic( bs );
+            if ( StringUtils.isBlank( externalRef ) ) {
+                if ( log.isDebugEnabled()  ) {
+                    log.debug( "Blank external reference for biosequence for " + cs + " on " + arrayDesign
+                            + ", no biological characteristic will be added." );
+                }
+            } else {
+                BioSequence bs = BioSequence.Factory.newInstance();
+                bs.setTaxon( taxon );
+                bs.setPolymerType( PolymerType.DNA );
+                bs.setType( SequenceType.DNA ); // TODO need to determine SequenceType and PolymerType.
+                bs.setName( externalRef );
+                DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+                dbe.setAccession( externalRef );
+                dbe.setExternalDatabase( externalDb );
+                bs.setSequenceDatabaseEntry( dbe );
+                cs.setBiologicalCharacteristic( bs );
+            }
 
             compositeSequences.add( cs );
 

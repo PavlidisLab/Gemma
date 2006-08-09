@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -41,21 +44,37 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     @Override
     public BioSequence find( BioSequence bioSequence ) {
+
+        if ( bioSequence == null
+                || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
+                        .getSequenceDatabaseEntry() == null ) ) {
+            throw new IllegalArgumentException(
+                    "BioSequence must have a name, sequence, and/or accession to use as comparison key" );
+        }
+
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( BioSequence.class );
-            queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
 
-            if ( bioSequence.getSequenceDatabaseEntry() != null )
+            if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
+                queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
+            }
+
+            if ( bioSequence.getSequenceDatabaseEntry() != null ) {
                 queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
                         Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
+            }
 
-            if ( bioSequence.getSequence() != null )
+            if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
                 queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
+            }
 
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
+
+                    this.debug( results );
+
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '" + BioSequence.class.getName()
                                     + "' was found when executing query" );
@@ -77,16 +96,35 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     @Override
     public BioSequence findOrCreate( BioSequence bioSequence ) {
-        if ( bioSequence.getName() == null ) {
-            log.debug( "BioSequence must have a name to use as comparison key" );
-            return null;
+        if ( bioSequence == null ) {
+            throw new IllegalArgumentException( "biosequence cannot be null" );
         }
-        BioSequence newBioSequence = this.find( bioSequence );
-        if ( newBioSequence != null ) {
-            BeanPropertyCompleter.complete( newBioSequence, bioSequence );
-            return newBioSequence;
+        BioSequence existingBioSequence = this.find( bioSequence );
+        if ( existingBioSequence != null ) {
+            BeanPropertyCompleter.complete( existingBioSequence, bioSequence );
+            return existingBioSequence;
         }
-        log.debug( "Creating new bioSequence: " + bioSequence.getName() );
+        log.debug( "Creating new: " + bioSequence );
         return ( BioSequence ) create( bioSequence );
+    }
+
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append( "\nBioSequences found:\n" );
+        for ( Object object : results ) {
+            BioSequence entity = ( BioSequence ) object;
+            sb.append( "\tID=" + entity.getId() + " Name=" + entity.getName() );
+            if ( StringUtils.isNotBlank( entity.getSequence() ) )
+                sb.append( " Sequence="
+                        + entity.getSequence().substring( 0, Math.min( 10, entity.getSequence().length() - 1 ) )
+                        + " ..." );
+            if ( entity.getSequenceDatabaseEntry() != null )
+                sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
+            sb.append( "\n" );
+        }
+        log.error( sb.toString() );
     }
 }

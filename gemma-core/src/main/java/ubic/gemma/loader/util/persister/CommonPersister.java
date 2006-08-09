@@ -423,8 +423,8 @@ abstract public class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
-        log.info( "Loading or creating " + name );
-        database.setId( externalDatabaseService.findOrCreate( database ).getId() );
+        log.debug( "Loading or creating " + name );
+        database = externalDatabaseService.findOrCreate( database );
         seenDatabases.put( database.getName(), database );
         return database;
     }
@@ -461,10 +461,13 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected LocalFile persistLocalFile( LocalFile file ) {
         if ( file == null ) return null;
+        if ( !isTransient( file ) ) return file;
         return localFileService.findOrCreate( file );
     }
 
     /**
+     * Unlike many entities, measurements are 'unique' - there is no 'findOrCreate' method.
+     * 
      * @param measurement
      * @return
      */
@@ -487,7 +490,7 @@ abstract public class CommonPersister extends AbstractPersister {
         ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
 
         for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
-            associatedOntologyEntry.setId( persistOntologyEntry( associatedOntologyEntry ).getId() );
+            associatedOntologyEntry = persistOntologyEntry( associatedOntologyEntry );
         }
 
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );

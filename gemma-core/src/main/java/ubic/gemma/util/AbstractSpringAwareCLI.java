@@ -18,6 +18,7 @@
  */
 package ubic.gemma.util;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
@@ -109,15 +110,30 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
             password = getOptionValue( 'p' );
+
+            if ( StringUtils.isBlank( username ) ) {
+                System.err.println( "Not authenticated. Username was blank" );
+                log.debug( "Username=" + username );
+                bail( ErrorCode.AUTHENITCATION_ERROR );
+            }
+
+            if ( StringUtils.isBlank( password ) ) {
+                System.err.println( "Not authenticated. You didn't enter a password" );
+                bail( ErrorCode.AUTHENITCATION_ERROR );
+            }
+
             ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
                     .getBean( "manualAuthenticationProcessing" );
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
-                System.err.println( "Not authenticated. Make sure you entered a valid username and/or password" );
+                System.err.println( "Not authenticated. Make sure you entered a valid username (got " + username
+                        + ") and/or password" );
                 bail( ErrorCode.AUTHENITCATION_ERROR );
             }
         } else {
-            System.err.println( "Not authenticated. Make sure you entered a valid username and/or password" );
+
+            System.err.println( "Not authenticated. Make sure you entered a valid username (got " + username
+                    + ") and/or password" );
             bail( ErrorCode.AUTHENITCATION_ERROR );
         }
 

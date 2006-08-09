@@ -39,6 +39,10 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
     protected static BeanFactory ctx = null;
     static PubMedSearch pms = new PubMedSearch();
 
+    public PubMedSearcher() {
+        super();
+    }
+
     public static void main( String[] args ) {
         PubMedSearcher p = new PubMedSearcher();
         try {

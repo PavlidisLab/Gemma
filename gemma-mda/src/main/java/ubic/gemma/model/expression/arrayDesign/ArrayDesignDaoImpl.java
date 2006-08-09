@@ -51,6 +51,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             Criteria queryObject = super.getSession( false ).createCriteria( ArrayDesign.class );
             queryObject.add( Restrictions.eq( "name", arrayDesign.getName() ) );
 
+            if ( arrayDesign.getDesignProvider() != null && arrayDesign.getDesignProvider().getName() != null ) {
+                queryObject.createCriteria( "designProvider" ).add(
+                        Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
+            }
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {
