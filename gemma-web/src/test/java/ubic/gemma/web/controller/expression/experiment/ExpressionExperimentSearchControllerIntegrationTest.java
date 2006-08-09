@@ -60,8 +60,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
         log.debug( "expression experiment id " + ee.getId() );
         command.setExpressionExperimentId( ee.getId() );
 
-        if ( ( ( ExpressionExperimentDao ) this.getBean( "expressionExperimentDao" ) ).loadAll().size() == 0 )
-            setComplete();// leave data in database
+        setComplete();// leave data in database
 
         BindException errors = new BindException( command, "ExpressionExperimentSearchCommand" );
         searchController.processFormSubmission( request, response, command, errors );
