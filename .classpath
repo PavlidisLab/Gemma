@@ -35,7 +35,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-validator/commons-validator/1.1.4/commons-validator-1.1.4.jar"/>
-	<classpathentry sourcepath="/JAR_SOURCE/spring-1.2.8" kind="var" path="M2_REPO/spring/spring/1.2.8/spring-1.2.8.jar">
+	<classpathentry sourcepath="/JAR_SOURCE/spring-framework-1.2.8/src" kind="var" path="M2_REPO/spring/spring/1.2.8/spring-1.2.8.jar">
 		<attributes>
 			<attribute value="http://static.springframework.org/spring/docs/1.2.x/api/" name="javadoc_location"/>
 		</attributes>
