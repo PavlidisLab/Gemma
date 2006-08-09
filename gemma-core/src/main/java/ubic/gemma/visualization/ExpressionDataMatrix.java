@@ -65,7 +65,6 @@ public class ExpressionDataMatrix {
         this.designElements = designElements;
 
         for ( DesignElement designElement : designElements ) {
-            // FIXME I have made the association between DesignElement and DesignElementDataVector bi-directional.
             String key = ( ( CompositeSequence ) designElement ).getName();
 
             // FIXME quantitation type
