@@ -350,7 +350,7 @@
         </plugins>
 
     </build>
-    <repositories>
+ <!--    <repositories>
         <repository>
             <id>andromda-snapshot</id>
             <name>AndroMDA</name>
@@ -381,5 +381,5 @@
                 <updatePolicy>never</updatePolicy>
             </releases>
         </pluginRepository>
-    </pluginRepositories>
+    </pluginRepositories>-->
 </project>
