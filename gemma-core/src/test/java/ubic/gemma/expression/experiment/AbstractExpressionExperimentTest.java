@@ -26,7 +26,6 @@ import org.apache.commons.lang.math.RandomUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.util.persister.PersisterHelper;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -155,7 +154,9 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
             vector.setQuantitationType( this.getTestPersistentQuantitationType() );
             vector.setBioAssayDimension( bad );
 
+            // we're only creating one vector here, but each design element can have more than one.
             vectors.add( vector );
+            cs.setDesignElementDataVectors( vectors );
         }
         return vectors;
     }
@@ -163,7 +164,7 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
     /**
      * Add an expressionExperiment to the database for testing purposes. Includes associations.
      */
-    protected void setExpressionExperimentDependencies() {
+    protected ExpressionExperiment setExpressionExperimentDependencies() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ArrayDesign ad = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false );
 
@@ -197,7 +198,7 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
 
         assert ph != null;
 
-        ph.persist( ee );
+        return ( ExpressionExperiment ) ph.persist( ee );
     }
 
 }
