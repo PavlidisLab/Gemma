@@ -270,4 +270,32 @@ abstract public class GenomePersister extends CommonPersister {
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }
+    
+    /**
+     * @param blatAssociationService The blatAssociationService to set.
+     */
+    public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
+        this.blatAssociationService = blatAssociationService;
+    }
+    
+    /**
+     * @param blastAssociationService The blastAssociationService to set.
+     */
+    public void setBlastAssociationService( BlastAssociationService blastAssociationService ) {
+        this.blastAssociationService = blastAssociationService;
+    }
+    
+    /**
+     * @param blatResultService The blatResultService to set.
+     */
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+    
+    /**
+     * @param blastResultService The blastResultService to set.
+     */
+    public void setBlastResultService( BlastResultService blastResultService ) {
+        this.blastResultService = blastResultService;
+    }
 }
