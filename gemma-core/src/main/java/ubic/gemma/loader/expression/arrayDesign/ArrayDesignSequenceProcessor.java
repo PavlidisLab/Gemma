@@ -294,7 +294,8 @@ public class ArrayDesignSequenceProcessor {
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
      * @throws IOException
      */
-    public void processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile ) throws IOException {
+    public ArrayDesign processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile )
+            throws IOException {
 
         if ( arrayDesign.getReporters().size() != 0 ) {
             throw new IllegalArgumentException(
@@ -349,6 +350,8 @@ public class ArrayDesignSequenceProcessor {
 
         // FIXME - if there are already CS's, issue a warning (instead of throwing an exception?)
         arrayDesign.setCompositeSequences( compositeSequencesFromProbes );
+
+        return arrayDesign;
     }
 
     /**
