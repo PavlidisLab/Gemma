@@ -1,385 +1,384 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>gemma</groupId>
-    <name>Gemma MDA</name>
-    <description>
-        Module for model-driven architecture generated code and implementations.
-    </description>
-    <artifactId>gemma-mda</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <parent>
-        <groupId>gemma</groupId>
-        <artifactId>gemma</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-    <packaging>jar</packaging>
-    <dependencies>
-        <dependency>
-            <groupId>gemma</groupId>
-            <artifactId>gemma-util</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>hibernate</groupId>
-            <artifactId>hibernate</artifactId>
-            <version>3.1.2</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>baseCode</groupId>
-            <artifactId>baseCode</artifactId>
-            <version>0.3.1-RC1</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
-            <version>2.0</version>
-            <scope>test</scope>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-            <type>jar</type>
-        </dependency>
-    </dependencies>
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>target/generated-sources/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
-        <filters>
-            <filter>${project.basedir}/src/main/filters/project.properties</filter>
-        </filters>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                    <verbose>false</verbose>
-                    <fork>false</fork>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>target/generated-sources/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.andromda.maven.plugins</groupId>
-                <artifactId>andromda-maven-plugin</artifactId>
-                <version>3.2-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <buildSourceDirectory>target/generated-sources</buildSourceDirectory>
-                            <configurationUri>
-                                ${project.basedir}/src/main/conf/andromda.xml
-                            </configurationUri>
-                            <lastModifiedCheck>true</lastModifiedCheck>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-datatype</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-webservice</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-service</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-process</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-meta</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-xml</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-persistence</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.profiles.uml14</groupId>
-                        <artifactId>andromda-profile-presentation</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <type>xml.zip</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.cartridges</groupId>
-                        <artifactId>andromda-spring-cartridge</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                        <scope>provided</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.cartridges</groupId>
-                        <artifactId>andromda-hibernate-cartridge</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.cartridges</groupId>
-                        <artifactId>andromda-webservice-cartridge</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.cartridges</groupId>
-                        <artifactId>andromda-java-cartridge</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.cartridges</groupId>
-                        <artifactId>andromda-jsf-cartridge</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.translationlibraries</groupId>
-                        <artifactId>andromda-ocl-validation-library</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.andromda.translationlibraries</groupId>
-                        <artifactId>andromda-ocl-query-library</artifactId>
-                        <version>3.2-SNAPSHOT</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin><!--  fixme does this work or do we have to build from source -->
-                <groupId>org.andromda.maven.plugins</groupId>
-                <artifactId>andromda-maven-plugin</artifactId>
-                <version>3.2-SNAPSHOT</version>
-            </plugin>
-            <plugin>
-                <groupId>org.andromda.maven.plugins</groupId>
-                <artifactId>andromda-multi-source-plugin</artifactId>
-                <version>3.2-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sourceDirectories>
-                                <directory>target/generated-sources/java</directory>
-                            </sourceDirectories>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <configuration>
-                    <tasks>
-                        <echo message="*******  Building DDL file *******" />
-                        <taskdef name="schemaexport"
-                            classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
-                            <classpath>
-                                <path refid="maven.dependency.classpath" />
-                            </classpath>
-                        </taskdef>
-                        <mkdir dir="target/schema" />
-                        <schemaexport quiet="yes" text="yes" drop="no" delimiter=";"
-                            output="target/schema/gemma-ddl.sql"
-                            properties="src/main/resources/hibernate.properties">
-                            <fileset dir="target/generated-sources/resources"
-                                includes="**/*.hbm.xml" />
-                        </schemaexport>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>gemma</groupId>
+	<name>Gemma MDA</name>
+	<description>
+		Module for model-driven architecture generated code and implementations.
+	</description>
+	<artifactId>gemma-mda</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<parent>
+		<groupId>gemma</groupId>
+		<artifactId>gemma</artifactId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<packaging>jar</packaging>
+	<dependencies>
+		<dependency>
+			<groupId>gemma</groupId>
+			<artifactId>gemma-util</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>hibernate</groupId>
+			<artifactId>hibernate</artifactId>
+			<version>3.1.2</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>baseCode</groupId>
+			<artifactId>baseCode</artifactId>
+			<version>0.3.1-RC1</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
+			<version>2.0</version>
+			<scope>test</scope>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>target/generated-sources/resources</directory>
+				<includes>
+					<include>**/*</include>
+				</includes>
+			</resource>
+		</resources>
+		<filters>
+			<filter>${project.basedir}/src/main/filters/project.properties</filter>
+		</filters>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+					<verbose>false</verbose>
+					<fork>false</fork>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>target/generated-sources/java</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.andromda.maven.plugins</groupId>
+				<artifactId>andromda-maven-plugin</artifactId>
+				<version>3.2-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<configuration>
+							<buildSourceDirectory>target/generated-sources</buildSourceDirectory>
+							<configurationUri>
+								${project.basedir}/src/main/conf/andromda.xml
+							</configurationUri>
+							<lastModifiedCheck>true</lastModifiedCheck>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-datatype</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-webservice</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-service</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-process</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-meta</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-xml</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-persistence</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.profiles.uml14</groupId>
+						<artifactId>andromda-profile-presentation</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<type>xml.zip</type>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.cartridges</groupId>
+						<artifactId>andromda-spring-cartridge</artifactId>
+						<version>3.2-SNAPSHOT</version>
+						<scope>provided</scope>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.cartridges</groupId>
+						<artifactId>andromda-hibernate-cartridge</artifactId>
+						<version>3.2-SNAPSHOT</version>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.cartridges</groupId>
+						<artifactId>andromda-webservice-cartridge</artifactId>
+						<version>3.2-SNAPSHOT</version>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.cartridges</groupId>
+						<artifactId>andromda-java-cartridge</artifactId>
+						<version>3.2-SNAPSHOT</version>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.cartridges</groupId>
+						<artifactId>andromda-jsf-cartridge</artifactId>
+						<version>3.2-SNAPSHOT</version>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.translationlibraries</groupId>
+						<artifactId>andromda-ocl-validation-library</artifactId>
+						<version>3.2-SNAPSHOT</version>
+					</dependency>
+					<dependency>
+						<groupId>org.andromda.translationlibraries</groupId>
+						<artifactId>andromda-ocl-query-library</artifactId>
+						<version>3.2-SNAPSHOT</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin><!--  fixme does this work or do we have to build from source -->
+				<groupId>org.andromda.maven.plugins</groupId>
+				<artifactId>andromda-maven-plugin</artifactId>
+				<version>3.2-SNAPSHOT</version>
+			</plugin>
+			<plugin>
+				<groupId>org.andromda.maven.plugins</groupId>
+				<artifactId>andromda-multi-source-plugin</artifactId>
+				<version>3.2-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sourceDirectories>
+								<directory>target/generated-sources/java</directory>
+							</sourceDirectories>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<configuration>
+					<tasks>
+						<echo message="*******  Building DDL file *******" />
+						<taskdef name="schemaexport"
+							classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
+							<classpath>
+								<path refid="maven.dependency.classpath" />
+							</classpath>
+						</taskdef>
+						<mkdir dir="target/schema" />
+						<schemaexport quiet="yes" text="yes" drop="no" delimiter=";"
+							output="target/schema/gemma-ddl.sql" properties="src/main/resources/hibernate.properties">
+							<fileset dir="target/generated-sources/resources"
+								includes="**/*.hbm.xml" />
+						</schemaexport>
 
-                        <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-                        <if>
-                            <isset property="testdb.build" />
-                            <then>
-                                <echo message="*******  Building Test db  *******" />
-                                <sql driver="com.mysql.jdbc.Driver"
-                                    url="jdbc:mysql://localhost:3306/gemdtest" userid="pavlidis"
-                                    password="toast" onerror="continue">
-                                    <transaction>
-                                        <![CDATA[drop database gemdtest;]]>
-                                    </transaction>
-                                    <transaction>
-                                        <![CDATA[create database gemdtest;]]>
-                                    </transaction>
-                                </sql>
-                                <sql driver="com.mysql.jdbc.Driver"
-                                    url="jdbc:mysql://localhost:3306/gemdtest" userid="pavlidis"
-                                    password="toast" onerror="continue">
-                                    <transaction src="target/schema/gemma-ddl.sql" />
-                                    <transaction src="src/test/resources/sql/mysql-acegi-acl.sql" />
-                                    <transaction src="src/test/resources/sql/init-script.sql" />
-                                </sql>
-                            </then>
-                        </if>
+						<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+						<if>
+							<isset property="testdb.build" />
+							<then>
+								<echo message="*******  Building Test db  *******" />
+								<sql driver="com.mysql.jdbc.Driver"
+									url="jdbc:mysql://localhost:3306/gemdtest" userid="pavlidis" password="toast"
+									onerror="continue">
+									<transaction>
+										<![CDATA[drop database gemdtest;]]>
+									</transaction>
+									<transaction>
+										<![CDATA[create database gemdtest;]]>
+									</transaction>
+								</sql>
+								<sql driver="com.mysql.jdbc.Driver"
+									url="jdbc:mysql://localhost:3306/gemdtest" userid="pavlidis" password="toast"
+									onerror="continue">
+									<transaction src="target/schema/gemma-ddl.sql" />
+									<transaction src="src/test/resources/sql/mysql-acegi-acl.sql" />
+									<transaction src="src/test/resources/sql/init-script.sql" />
+								</sql>
+							</then>
+						</if>
 
-                        <if>
-                            <isset property="db.build" />
-                            <then>
-                                <echo message="*******  Building Database  *******" />
-                                <sql driver="com.mysql.jdbc.Driver"
-                                    url="jdbc:mysql://localhost:3306/gemd" userid="pavlidis"
-                                    password="toast" onerror="continue">
-                                    <transaction>
-                                        <![CDATA[drop database gemd;]]>
-                                    </transaction>
-                                    <transaction>
-                                        <![CDATA[create database gemd;]]>
-                                    </transaction>
-                                </sql>
-                                <sql driver="com.mysql.jdbc.Driver"
-                                    url="jdbc:mysql://localhost:3306/gemd" userid="pavlidis"
-                                    password="toast" onerror="continue">
-                                    <transaction src="target/schema/gemma-ddl.sql" />
-                                    <transaction src="src/test/resources/sql/mysql-acegi-acl.sql" />
-                                    <transaction src="src/test/resources/sql/init-script.sql" />
-                                </sql>
-                            </then>
-                        </if>
+						<if>
+							<isset property="db.build" />
+							<then>
+								<echo message="*******  Building Database  *******" />
+								<sql driver="com.mysql.jdbc.Driver"
+									url="jdbc:mysql://localhost:3306/gemd" userid="pavlidis" password="toast"
+									onerror="continue">
+									<transaction>
+										<![CDATA[drop database gemd;]]>
+									</transaction>
+									<transaction>
+										<![CDATA[create database gemd;]]>
+									</transaction>
+								</sql>
+								<sql driver="com.mysql.jdbc.Driver"
+									url="jdbc:mysql://localhost:3306/gemd" userid="pavlidis" password="toast"
+									onerror="continue">
+									<transaction src="target/schema/gemma-ddl.sql" />
+									<transaction src="src/test/resources/sql/mysql-acegi-acl.sql" />
+									<transaction src="src/test/resources/sql/init-script.sql" />
+								</sql>
+							</then>
+						</if>
 
-                    </tasks>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate</artifactId>
-                        <version>3.1.2</version>
-                        <type>jar</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>mysql</groupId>
-                        <artifactId>mysql-connector-java</artifactId>
-                        <version>3.1.11</version>
-                        <type>jar</type>
-                    </dependency>
-                    <dependency>
-                        <groupId>ant-contrib</groupId>
-                        <artifactId>ant-contrib</artifactId>
-                        <version>20020829</version>
-                        <type>jar</type>
-                    </dependency>
-                </dependencies>
-            </plugin>
+					</tasks>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.hibernate</groupId>
+						<artifactId>hibernate</artifactId>
+						<version>3.1.2</version>
+						<type>jar</type>
+					</dependency>
+					<dependency>
+						<groupId>mysql</groupId>
+						<artifactId>mysql-connector-java</artifactId>
+						<version>3.1.11</version>
+						<type>jar</type>
+					</dependency>
+					<dependency>
+						<groupId>ant-contrib</groupId>
+						<artifactId>ant-contrib</artifactId>
+						<version>20020829</version>
+						<type>jar</type>
+					</dependency>
+				</dependencies>
+			</plugin>
 
 
-            <!--  alternative way of generating the ddl file -->
-            <!--             
-                <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>hibernate3-maven-plugin</artifactId>
-                <configuration>
-                <config>target/generated-sources/resources/hibernate.cfg.xml</config>
-                <properties>src/main/resources/hibernate.properties</properties>
-                <jdk5>true</jdk5>
-                <drop>false</drop>
-                <update>false</update>
-                <outputFile>target/schema/gemma-ddl.sql</outputFile>
-                </configuration>
-                <dependencies>
-                <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>3.1.11</version>
-                <type>jar</type>
-                </dependency>
-                </dependencies>
-                </plugin>
-            -->
-        </plugins>
+			<!--  alternative way of generating the ddl file -->
+			<!--             
+				<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>hibernate3-maven-plugin</artifactId>
+				<configuration>
+				<config>target/generated-sources/resources/hibernate.cfg.xml</config>
+				<properties>src/main/resources/hibernate.properties</properties>
+				<jdk5>true</jdk5>
+				<drop>false</drop>
+				<update>false</update>
+				<outputFile>target/schema/gemma-ddl.sql</outputFile>
+				</configuration>
+				<dependencies>
+				<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>3.1.11</version>
+				<type>jar</type>
+				</dependency>
+				</dependencies>
+				</plugin>
+			-->
+		</plugins>
 
-    </build>
- <!--    <repositories>
-        <repository>
-            <id>andromda-snapshot</id>
-            <name>AndroMDA</name>
-            <url>http://galaxy.andromda.org/maven2</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>andromda-plugins</id>
-            <name>AndroMDA</name>
-            <url>http://galaxy.andromda.org/maven2</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-        </pluginRepository>
-    </pluginRepositories>-->
+	</build>
+	<repositories>
+		<repository>
+			<id>andromda-snapshot</id>
+			<name>AndroMDA</name>
+			<url>http://galaxy.andromda.org/maven2</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>andromda-plugins</id>
+			<name>AndroMDA</name>
+			<url>http://galaxy.andromda.org/maven2</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
