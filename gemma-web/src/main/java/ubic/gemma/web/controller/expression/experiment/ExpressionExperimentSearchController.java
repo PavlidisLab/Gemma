@@ -142,7 +142,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Canceled" );
             // FIXME = what if id is null?
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+            return new ModelAndView( new RedirectView( request.getProtocol() + request.getServerName() + ":"
                     + request.getServerPort() + request.getContextPath()
                     + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
         }
