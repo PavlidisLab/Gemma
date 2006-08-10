@@ -141,11 +141,10 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Canceled" );
-            // FIXME - port number should NOT be included here. Not portable. - I know ... there should be a way to get
-            // the port num - kiran
             // FIXME = what if id is null?
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":8080"
-                    + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath()
+                    + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
         }
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
