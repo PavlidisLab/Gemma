@@ -18,13 +18,13 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,7 +43,13 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    // TODO if you decide to add EL support, set this and not the
+    /* supported only by internet explorer */
+    private final String IE_IMG_PATH_SEPARATOR = "\\";
+
+    /* supported by all browsers */
+    private final String ALL_IMG_PATH_SEPARATOR = "/";
+
+    // TODO To add EL support, set this and not the
     // expressionDataMatrixVisualization in the setter. A good refresher is
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
@@ -69,7 +75,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         log.debug( "start tag" );
 
-        // get metadata from ExpressionDataMatrixVisualization
+        /* get metadata from ExpressionDataMatrixVisualization */
         ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
         String outfile = expressionDataMatrixVisualization.getOutfile();
 
@@ -81,10 +87,24 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
 
+        // log.debug("here " + outfile);
+        //        
+        // String array[] = StringUtils.splitByWholeSeparator(outfile, "visualization");
+        //        
+        // log.debug("left " + array[0]);
+        // log.debug("right " + array[1]);
+
+        /* Cannot use \ in non internet explorer browsers. Using / instead. */
+        outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
+
+        outfile = StringUtils.replace( outfile, StringUtils.splitByWholeSeparator( outfile, "visualization" )[0],
+                "http://localhost:8080/" );// FIXME get the protocol, server, and port from request
+
+        log.debug( "setting compatibility for non-IE browsers " + outfile );
+
         StringBuilder buf = new StringBuilder();
 
         if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
-            // buf.append( "Visualizations suppressed. To download image click <a href=\"" + outfile + "\">here</a>." );
             buf.append( "Visualizations suppressed." );
         } else if ( expressionDataMatrix == null || m.size() == 0 ) {
             buf.append( "No data to display" );
