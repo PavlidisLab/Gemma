@@ -87,13 +87,6 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
 
-        // log.debug("here " + outfile);
-        //        
-        // String array[] = StringUtils.splitByWholeSeparator(outfile, "visualization");
-        //        
-        // log.debug("left " + array[0]);
-        // log.debug("right " + array[1]);
-
         /* Cannot use \ in non internet explorer browsers. Using / instead. */
         outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
 
