@@ -122,8 +122,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
         id = ( ( ExpressionExperiment ) command ).getId();
 
         if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":8080"
-                    + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+            return new ModelAndView( new RedirectView( request.getProtocol() + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath()
+                    + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
         }
 
         String accession = request.getParameter( "expressionExperiment.accession.accession" );
