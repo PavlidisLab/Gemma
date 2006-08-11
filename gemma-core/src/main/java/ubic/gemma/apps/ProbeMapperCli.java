@@ -326,19 +326,16 @@ public class ProbeMapperCli extends AbstractCLI {
         } else {
             throw new RuntimeException( "Query name was not in understood format" );
         }
-        Collection<GeneProduct> geneProducts = association.getGeneProducts();
+        GeneProduct product = association.getGeneProduct();
 
-        for ( GeneProduct product : geneProducts ) {
+        Gene g = product.getGene();
 
-            Gene g = product.getGene();
-
-            output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
-                    + blatRes.getQuerySequence().getLength() + "\t"
-                    + ( blatRes.getTargetEnd() - blatRes.getTargetStart() ) + "\t" + blatRes.score() + "\t"
-                    + g.getOfficialSymbol() + "\t" + product.getNcbiId() + "\t" + association.getThreePrimeDistance()
-                    + "\t" + association.getOverlap() + "\t" + blatRes.getTargetChromosome().getName() + "\t"
-                    + blatRes.getTargetStart() + "\t" + blatRes.getTargetEnd() + "\n" );
-        }
+        output.write( probeName + "\t" + arrayName + "\t" + blatRes.getMatches() + "\t"
+                + blatRes.getQuerySequence().getLength() + "\t" + ( blatRes.getTargetEnd() - blatRes.getTargetStart() )
+                + "\t" + blatRes.score() + "\t" + g.getOfficialSymbol() + "\t" + product.getNcbiId() + "\t"
+                + association.getThreePrimeDistance() + "\t" + association.getOverlap() + "\t"
+                + blatRes.getTargetChromosome().getName() + "\t" + blatRes.getTargetStart() + "\t"
+                + blatRes.getTargetEnd() + "\n" );
 
     }
 

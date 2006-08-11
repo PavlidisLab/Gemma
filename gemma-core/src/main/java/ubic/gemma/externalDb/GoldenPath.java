@@ -367,7 +367,7 @@ public class GoldenPath {
         assert geneProduct != null : "GeneProduct is null";
 
         BlatAssociation blatAssociation = BlatAssociation.Factory.newInstance();
-        blatAssociation.getGeneProducts().add( geneProduct );
+        blatAssociation.setGeneProduct ( geneProduct );
         PhysicalLocation geneLoc = geneProduct.getPhysicalLocation();
 
         assert geneLoc != null : "PhysicalLocation for GeneProduct " + geneProduct + " is null";

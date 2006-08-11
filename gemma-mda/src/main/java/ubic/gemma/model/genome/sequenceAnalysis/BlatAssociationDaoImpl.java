@@ -23,12 +23,16 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
@@ -44,30 +48,50 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     @Override
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
 
-        if ( bioSequence == null
-                || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
-                        .getSequenceDatabaseEntry() == null ) ) {
-            throw new IllegalArgumentException(
-                    "BioSequence must have a name, sequence, and/or accession to use as comparison key" );
-        }
+        BusinessKey.checkValidKey( bioSequence );
 
         Criteria queryObject = super.getSession( false ).createCriteria( BlatAssociation.class );
-        Criteria innerQuery = queryObject.createCriteria( "bioSequence" );
 
-        if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-            innerQuery.add( Restrictions.eq( "name", bioSequence.getName() ) );
-        }
-
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-            innerQuery.createCriteria( "sequenceDatabaseEntry" ).add(
-                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-        }
-
-        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-            innerQuery.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-        }
+        BusinessKey.attachCriteria( queryObject, bioSequence );
 
         return queryObject.list();
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase#find(ubic.gemma.model.genome.Gene)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<BlatAssociation> find( Gene gene ) {
+
+        if ( gene.getProducts().size() == 0 ) {
+            throw new IllegalArgumentException( "Gene has no products" );
+        }
+
+        Collection<BlatAssociation> result = new HashSet<BlatAssociation>();
+
+        for ( GeneProduct geneProduct : gene.getProducts() ) {
+
+            BusinessKey.checkValidKey( geneProduct );
+
+            Criteria queryObject = super.getSession( false ).createCriteria( BlatAssociation.class );
+            Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
+
+            if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) ) {
+                innerQuery.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
+            }
+
+            if ( StringUtils.isNotBlank( geneProduct.getName() ) ) {
+                innerQuery.add( Restrictions.eq( "name", geneProduct.getName() ) );
+            }
+
+            result.addAll( queryObject.list() );
+        }
+
+        return result;
 
     }
 

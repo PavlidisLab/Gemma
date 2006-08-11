@@ -52,17 +52,11 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                 queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
             }
 
-            /*
-             * This syntax allows you to look at an association.
-             */
-            // if ( bioMaterial.getExternalAccession() != null ) {
-            // queryObject.createCriteria( "externalAccession" ).add(
-            // Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
-            // }
-            // but this is easier:
             if ( bioMaterial.getExternalAccession() != null ) {
-                queryObject.add( Restrictions.eq( "externalAccession", bioMaterial.getExternalAccession() ) );
+                queryObject.createCriteria( "externalAccession" ).add(
+                        Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
             }
+
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {

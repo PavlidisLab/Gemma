@@ -11,14 +11,13 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
 
 import ubic.basecode.util.NetUtils;
-import ubic.gemma.loader.expression.smd.util.SmdUtil;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
 public class ArrayExpressUtil {
-    protected static final Log log = LogFactory.getLog( SmdUtil.class );
+    protected static final Log log = LogFactory.getLog( ArrayExpressUtil.class );
     private static String host;
     private static String login;
     private static String password;

@@ -24,11 +24,10 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
@@ -43,29 +42,13 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
     @SuppressWarnings("unchecked")
     @Override
     public Collection<BlatResult> find( BioSequence bioSequence ) {
-        if ( bioSequence == null
-                || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
-                        .getSequenceDatabaseEntry() == null ) ) {
-            throw new IllegalArgumentException(
-                    "BioSequence must have a name, sequence, and/or accession to use as comparison key" );
-        }
+        BusinessKey.checkValidKey( bioSequence );
 
         Criteria queryObject = super.getSession( false ).createCriteria( BlatResult.class );
-        Criteria innerQuery = queryObject.createCriteria( "bioSequence" );
 
-        if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-            innerQuery.add( Restrictions.eq( "name", bioSequence.getName() ) );
-        }
-
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-            innerQuery.createCriteria( "sequenceDatabaseEntry" ).add(
-                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-        }
-
-        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-            innerQuery.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-        }
+        BusinessKey.attachCriteria( queryObject, bioSequence );
 
         return queryObject.list();
     }
+
 }

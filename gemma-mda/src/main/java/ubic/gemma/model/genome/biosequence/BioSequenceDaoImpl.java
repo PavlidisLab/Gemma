@@ -27,6 +27,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -45,28 +46,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     @Override
     public BioSequence find( BioSequence bioSequence ) {
 
-        if ( bioSequence == null
-                || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
-                        .getSequenceDatabaseEntry() == null ) ) {
-            throw new IllegalArgumentException(
-                    "BioSequence must have a name, sequence, and/or accession to use as comparison key" );
-        }
+        BusinessKey.checkValidKey( bioSequence );
 
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( BioSequence.class );
 
-            if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-                queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
-            }
-
-            if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-                queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
-                        Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-            }
-
-            if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-                queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-            }
+            Criteria queryObject = BusinessKey.createQueryObject( this.getSession( false ), bioSequence );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -96,9 +80,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     @Override
     public BioSequence findOrCreate( BioSequence bioSequence ) {
-        if ( bioSequence == null ) {
-            throw new IllegalArgumentException( "biosequence cannot be null" );
-        }
         BioSequence existingBioSequence = this.find( bioSequence );
         if ( existingBioSequence != null ) {
             BeanPropertyCompleter.complete( existingBioSequence, bioSequence );

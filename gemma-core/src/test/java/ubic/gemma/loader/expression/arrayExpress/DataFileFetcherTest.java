@@ -22,12 +22,6 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
-
-import ubic.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 
@@ -36,26 +30,24 @@ import ubic.gemma.model.common.description.LocalFile;
  * @version $Id$
  */
 public class DataFileFetcherTest extends TestCase {
+    FtpArchiveFetcher faf;
 
-    private static Log log = LogFactory.getLog( DataFileFetcherTest.class.getName() );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see junit.framework.TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        faf = new DataFileFetcher();
+    }
 
     /*
      * Test method for 'ubic.gemma.loader.expression.arrayExpress.DataFileFetcher.fetch(String)'
      */
     public void testFetch() throws Exception {
-        try {
-            FTPClient f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
-            ArrayExpressUtil.disconnect( f );
-        } catch ( Exception e ) {
-            log.warn( "Cannot connect to ArrayExpress FTP site, skipping test." );
-            return;
-        }
-
-        FtpArchiveFetcher f = new DataFileFetcher();
-
-        Collection<LocalFile> files = f.fetch( "SMDB-14" );
-        // FIMXE no good fail condition!
+        Collection<LocalFile> files = faf.fetch( "SMDB-14" );
         assertTrue( files.size() > 0 );
-
     }
 }

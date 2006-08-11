@@ -41,10 +41,9 @@ public class PubMedSearchTest extends TestCase {
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
         Collection<BibliographicReference> actualResult = pms.searchAndRetriveByHTTP( searchTerms );
-        assertEquals( 5, actualResult.size() ); // at least, this was the result on 3/3/2006.
+        assertEquals( 4, actualResult.size() ); // at least, this was the result on 8/10/2006.
     }
-    
-    
+
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
      */

@@ -124,9 +124,8 @@ public class CompositeSequenceServiceImpl extends
             for ( BioSequence2GeneProduct bs2gp : compositeSequence.getBiologicalCharacteristic()
                     .getBioSequence2GeneProduct() ) {
                 if ( bs2gp != null ) {
-                    for ( GeneProduct geneProduct : bs2gp.getGeneProducts() ) {
-                        if ( geneProduct != null ) genes.add( geneProduct.getGene() );
-                    }
+                    GeneProduct geneProduct = bs2gp.getGeneProduct();
+                    if ( geneProduct != null ) genes.add( geneProduct.getGene() );
                 }
             }
         }

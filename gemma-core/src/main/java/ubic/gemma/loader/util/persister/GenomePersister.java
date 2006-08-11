@@ -132,9 +132,7 @@ abstract public class GenomePersister extends CommonPersister {
         if ( bioSequence2GeneProduct == null ) return null;
         if ( !isTransient( bioSequence2GeneProduct ) ) return bioSequence2GeneProduct;
 
-        for ( GeneProduct geneProduct : bioSequence2GeneProduct.getGeneProducts() ) {
-            geneProduct = persistGeneProduct( geneProduct );
-        }
+        bioSequence2GeneProduct.setGeneProduct( persistGeneProduct( bioSequence2GeneProduct.getGeneProduct() ) );
 
         if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
             return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
@@ -276,8 +274,7 @@ abstract public class GenomePersister extends CommonPersister {
      */
     public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
         this.blatAssociationService = blatAssociationService;
-    }
-    
+}
     /**
      * @param blastAssociationService The blastAssociationService to set.
      */

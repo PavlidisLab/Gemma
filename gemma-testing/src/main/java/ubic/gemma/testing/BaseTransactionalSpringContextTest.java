@@ -60,11 +60,22 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayDao;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneDao;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonDao;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceDao;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductDao;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
@@ -111,6 +122,16 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     protected BioAssayDao bioAssayDao;
 
+    protected BioMaterialDao bioMaterialDao;
+
+    protected BlatResultDao blatResultDao;
+
+    protected BioSequenceDao bioSequenceDao;
+
+    protected GeneDao geneDao;
+
+    protected GeneProductDao geneProductDao;
+
     private boolean testEnvDisabled = false;
 
     /**
@@ -122,9 +143,62 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ba = ( BioAssay ) bioAssayDao.create( ba );
+        BioMaterial bm = this.getTestPersistentBioMaterial(); // might make this a parameter passed in.
+        ba.getSamplesUsed().add( bm );
         if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
         flushSession();
         return ba;
+    }
+
+    protected BioMaterial getTestPersistentBioMaterial() {
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry() );
+        bm = ( BioMaterial ) bioMaterialDao.create( bm );
+        return bm;
+    }
+
+    protected BioSequence getTestPersistentBioSequence() {
+        BioSequence bs = BioSequence.Factory.newInstance();
+        bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
+        bs.setTaxon( getTestPersistentTaxon() );
+        return ( BioSequence ) bioSequenceDao.create( bs );
+    }
+
+    private static Taxon testTaxon = null;
+
+    /**
+     * @return
+     */
+    private Taxon getTestPersistentTaxon() {
+        if ( testTaxon == null ) {
+            Taxon t = Taxon.Factory.newInstance();
+            t.setCommonName( "elephant" );
+            t.setScientificName( "Loxodonta" );
+            testTaxon = taxonDao.create( t );
+        }
+
+        return testTaxon;
+    }
+
+    protected BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
+        BlatResult br = BlatResult.Factory.newInstance();
+        br.setQuerySequence( querySequence );
+        return ( BlatResult ) this.blatResultDao.create( br );
+    }
+
+    protected Gene getTestPeristentGene() {
+        Gene gene = Gene.Factory.newInstance();
+        gene.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        gene.setOfficialName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        return ( Gene ) this.geneDao.create( gene );
+    }
+
+    protected GeneProduct getTestPersistentGeneProduct( Gene gene ) {
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+
+        return ( GeneProduct ) this.geneProductDao.create( gp );
     }
 
     /**
@@ -458,5 +532,40 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     public void setBioAssayDao( BioAssayDao bioAssayDao ) {
         this.bioAssayDao = bioAssayDao;
+    }
+
+    /**
+     * @param bioMaterialDao the bioMaterialDao to set
+     */
+    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
+        this.bioMaterialDao = bioMaterialDao;
+    }
+
+    /**
+     * @param bioSequenceDao the bioSequenceDao to set
+     */
+    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
+        this.bioSequenceDao = bioSequenceDao;
+    }
+
+    /**
+     * @param blatResultDao the blatResultDao to set
+     */
+    public void setBlatResultDao( BlatResultDao blatResultDao ) {
+        this.blatResultDao = blatResultDao;
+    }
+
+    /**
+     * @param geneDao the geneDao to set
+     */
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
+    }
+
+    /**
+     * @param geneProductDao the geneProductDao to set
+     */
+    public void setGeneProductDao( GeneProductDao geneProductDao ) {
+        this.geneProductDao = geneProductDao;
     }
 }
