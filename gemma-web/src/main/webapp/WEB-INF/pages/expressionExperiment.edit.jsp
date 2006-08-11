@@ -81,7 +81,7 @@
             export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
             <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
             <display:column property="description" sortable="true" maxWords="100"  />
-            <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="expressionExperiment.factors"  />
+            <display:column property="factorsLink" sortable="true" maxWords="100"/>
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>	
         
