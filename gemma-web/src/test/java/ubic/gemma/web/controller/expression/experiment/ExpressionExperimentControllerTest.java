@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.expression.experiment.AbstractExpressionExperimentTest;
+import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 
 /**
  * Tests the ExpressionExperimentController.

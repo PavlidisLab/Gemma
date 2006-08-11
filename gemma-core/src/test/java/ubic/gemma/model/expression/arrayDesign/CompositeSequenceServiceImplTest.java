@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.expression.arrayDesign;
+package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 

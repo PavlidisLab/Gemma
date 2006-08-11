@@ -26,7 +26,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.expression.experiment.AbstractExpressionExperimentTest;
+import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 
