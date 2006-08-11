@@ -220,24 +220,10 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         boolean suppressVisualizations = ( ( ExpressionExperimentSearchCommand ) command ).isSuppressVisualizations();
 
-        // TODO allow filename to be entered from form
-        // String filename = ( ( ExpressionExperimentSearchCommand ) command ).getFilename();
-        // if ( filename == null ) filename = "visualization.png";
-        // String visualDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
-        //
-        // File dirPath = new File( visualDir );
-
         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
-                + RandomStringUtils.randomAlphabetic( 5 ), ".png" );
-        log.debug( "Image to be stored in " + imageFile );
+                + RandomStringUtils.randomAlphabetic( 5 ), ".png", new File( "../webapps/ROOT/visualization/" ) );
 
-        // // Create the directory if it doesn't exist
-        // if ( !dirPath.exists() ) {
-        // dirPath.mkdirs();
-        // }
-        //
-        // filename = visualDir + filename;
-        // log.info( "filename: " + filename );
+        log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
 
         ExpressionDataMatrix expressionDataMatrix = null;
         ExpressionDataMatrixVisualization matrixVisualization = null;
