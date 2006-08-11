@@ -52,7 +52,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
         Criteria queryObject = super.getSession( false ).createCriteria( BlatAssociation.class );
 
-        BusinessKey.attachCriteria( queryObject, bioSequence );
+        BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
 
         return queryObject.list();
 

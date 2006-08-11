@@ -30,9 +30,11 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
+import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,17 +91,18 @@ public class NCluster {
             int nxgrid, int nygrid, double inittau, int niter, double cellData[][], int clusterId[][] );// TODO remove
 
     // 'method'
-    static Configuration config = null;
+    static CompositeConfiguration config = null;
     static String baseDir = null;
     static {
         try {
-            config = new PropertiesConfiguration( "Gemma.properties" );
+            config = new CompositeConfiguration();
+            config.addConfiguration( new SystemConfiguration() );
+            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
         } catch ( ConfigurationException e ) {
-            System.err.println( "Could not read properites file " + config );
-            e.printStackTrace();
+            throw new RuntimeException( e );
         }
 
-        baseDir = ( String ) config.getProperty( "gemma.baseDir" );
+        baseDir = ( String ) config.getProperty( "gemma.home" );
         String localBasePath = ( String ) config.getProperty( "cluster.dll.path" );
         System.load( baseDir + localBasePath );
     }

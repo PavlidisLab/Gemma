@@ -46,7 +46,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
         Criteria queryObject = super.getSession( false ).createCriteria( BlatResult.class );
 
-        BusinessKey.attachCriteria( queryObject, bioSequence );
+        BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
 
         return queryObject.list();
     }

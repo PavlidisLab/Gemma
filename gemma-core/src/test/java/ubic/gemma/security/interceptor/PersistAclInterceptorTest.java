@@ -51,12 +51,10 @@ public class PersistAclInterceptorTest extends BaseTransactionalSpringContextTes
     /**
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
      * actual method invocation.
-     * <p>
      * 
      * @throws Exception
      */
     public void testAddPermissionsInterceptor() throws Exception {
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "fooblyDoobly" );
 

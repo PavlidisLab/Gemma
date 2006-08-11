@@ -18,7 +18,8 @@
  */
 package ubic.gemma.model;
 
-import ubic.gemma.externalDb.ExternalDatabaseTest;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
 import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
@@ -29,8 +30,6 @@ import ubic.gemma.model.genome.QtlDaoImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoImplTest;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * @author pavlidis
@@ -43,7 +42,6 @@ public class AllModelTests {
 
         suite.addTestSuite( ArrayDesignDaoImplTest.class );
         suite.addTestSuite( BioMaterialDaoImplTest.class );
-        suite.addTestSuite( ExternalDatabaseTest.class );
         suite.addTestSuite( CandidateGeneListDaoImplTest.class );
         suite.addTestSuite( QtlDaoImplTest.class );
 

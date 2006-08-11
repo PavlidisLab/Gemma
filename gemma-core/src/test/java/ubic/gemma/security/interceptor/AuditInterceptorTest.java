@@ -30,6 +30,9 @@ public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
     ExpressionExperimentService expressionExperimentService;
 
     public void testSimpleAuditAddition() throws Exception {
+
+        // FIXME, this isn't a very good test...
+
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );

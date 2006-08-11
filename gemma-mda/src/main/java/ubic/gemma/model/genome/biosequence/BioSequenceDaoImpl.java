@@ -24,7 +24,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.util.BusinessKey;

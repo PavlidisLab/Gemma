@@ -20,6 +20,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -57,6 +58,13 @@ public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         bs.setSequence( testSequence );
+
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( "elephant" );
+        t.setScientificName( "Loxodonta" );
+
+        bs.setTaxon( t );
+
         Collection res = this.blatResultDao.find( bs );
         assertEquals( 1, res.size() );
     }

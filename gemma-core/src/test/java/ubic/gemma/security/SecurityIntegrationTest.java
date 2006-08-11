@@ -50,7 +50,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
 
     private ManualAuthenticationProcessing manualAuthenticationProcessing;
     private ArrayDesignService arrayDesignService;
-    private CompositeSequenceService compositeSequenceService;
     private UserDao userDao;
     private UserService userService;
     ArrayDesign notYourArrayDesign;
@@ -73,7 +72,7 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     protected void onSetUpInTransaction() throws Exception {
 
         super.onSetUpInTransaction(); // so we have authority to add a user.
-        persisterHelper =( PersisterHelper ) this.getBean( "persisterHelper" );
+        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         User testUser = User.Factory.newInstance();
         testUser.setEmail( "foo@bar" );
         testUser.setFirstName( "Foo" );
@@ -161,10 +160,10 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
         arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
 
         // FIXME - this test always passes unless exception.
-      //  col = compositeSequenceService.getAllCompositeSequences();
-//        if ( col.size() == 0 ) {
-//            fail( "User not authorized for to access at least one of the objects in the graph" );
-//        }
+        // col = compositeSequenceService.getAllCompositeSequences();
+        // if ( col.size() == 0 ) {
+        // fail( "User not authorized for to access at least one of the objects in the graph" );
+        // }
     }
 
     /**
@@ -172,13 +171,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param compositeSequenceService The compositeSequenceService to set.
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
     }
 
     /**

@@ -60,6 +60,7 @@ public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringCont
      * @throws Exception
      */
     public void testGetOwner() throws Exception {
+        // FIXME not a good test?
         ExpressionExperiment expressionExperiment = eeDao.findByName( "Expression Experiment with Contact" );
         log.debug( "Contact: " + expressionExperiment.getOwner() );
 

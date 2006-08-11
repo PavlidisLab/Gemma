@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.apps.ProbeMapperTest;
+import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
@@ -52,7 +53,6 @@ public class AllCoreTests {
         suite.addTest( AllPubMedTests.suite() );
         suite.addTest( AllGeoTests.suite() );
         suite.addTest( AllMageTests.suite() );
-
         suite.addTest( AllSmdTests.suite() );
 
         suite.addTest( AllArrayDesignTests.suite() );
@@ -60,6 +60,10 @@ public class AllCoreTests {
 
         suite.addTest( AllGenomeTests.suite() );
         suite.addTest( AllModelTests.suite() );
+
+        suite.addTestSuite( ProbeMapperTest.class );
+
+        suite.addTestSuite( ExternalDatabaseTest.class );
 
         suite.addTestSuite( AuditInterceptorTest.class );
         suite.addTestSuite( PersistAclInterceptorTest.class );

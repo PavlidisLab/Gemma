@@ -65,10 +65,10 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
         if ( externalDatabase == null || externalDatabase.getName() == null ) {
             throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
         }
-        ExternalDatabase newExternalDatabase = find( externalDatabase );
-        if ( newExternalDatabase != null ) {
-            BeanPropertyCompleter.complete( newExternalDatabase, externalDatabase );
-            return newExternalDatabase;
+        ExternalDatabase existingExternalDatabase = find( externalDatabase );
+        if ( existingExternalDatabase != null ) {
+            BeanPropertyCompleter.complete( existingExternalDatabase, externalDatabase );
+            return existingExternalDatabase;
         }
         log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
         return ( ExternalDatabase ) create( externalDatabase );

@@ -190,7 +190,7 @@
         <dependency>
             <groupId>org.acegisecurity</groupId>
             <artifactId>acegi-security</artifactId>
-            <version>1.0.0-RC1</version>
+            <version>1.0.0</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -357,6 +357,9 @@
                     <include>**/*.properties</include> 
                     <include>**/*.xml</include>
                     <include>**/*.txt</include>
+                    <include>**/*.fa</include>
+                    <include>**/*_target</include>
+                    <include>**/*_probe</include>
                     <include>**/*.gz</include>
                     <include>**/*.zip</include>
                     <include>**/*.probes</include>

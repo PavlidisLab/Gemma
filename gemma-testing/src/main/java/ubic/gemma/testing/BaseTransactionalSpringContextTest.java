@@ -134,6 +134,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     private boolean testEnvDisabled = false;
 
+    private Taxon testTaxon = null;
+
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * 
@@ -146,7 +148,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         BioMaterial bm = this.getTestPersistentBioMaterial(); // might make this a parameter passed in.
         ba.getSamplesUsed().add( bm );
         if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
-        flushSession();
         return ba;
     }
 
@@ -166,8 +167,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         return ( BioSequence ) bioSequenceDao.create( bs );
     }
 
-    private static Taxon testTaxon = null;
-
     /**
      * @return
      */
@@ -177,8 +176,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
             t.setCommonName( "elephant" );
             t.setScientificName( "Loxodonta" );
             testTaxon = taxonDao.create( t );
+            assert testTaxon != null;
         }
-
         return testTaxon;
     }
 
@@ -220,7 +219,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
         result.setExternalDatabase( ed );
         result = databaseEntryDao.create( result );
-        flushSession();
         return result;
     }
 
@@ -233,7 +231,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         Contact c = Contact.Factory.newInstance();
         c.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         c = ( Contact ) contactDao.create( c );
-        flushSession();
         return c;
     }
 
@@ -252,7 +249,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
         qt.setScale( ScaleType.LINEAR );
         qt = ( QuantitationType ) quantitationTypeDao.create( qt );
-        flushSession();
         return qt;
     }
 
@@ -266,7 +262,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ee = ( ExpressionExperiment ) expressionExperimentDao.create( ee );
-        flushSession();
         return ee;
     }
 
@@ -388,8 +383,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "classpath*:localTestDataSource.xml", "classpath*:applicationContext-*.xml",
-                "*-servlet.xml" };
+        return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
+                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
     }
 
     /**
@@ -401,7 +396,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         // ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
         // String daoType = db.getString( "dao.type" );
         // String servletContext = db.getString( "servlet.name.0" );
-        return new String[] { "classpath:localDataSource.xml", "classpath*:applicationContext-*.xml", "*-servlet.xml" };
+        return new String[] { "classpath:ubic/gemma/localDataSource.xml",
+                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
     }
 
     /*

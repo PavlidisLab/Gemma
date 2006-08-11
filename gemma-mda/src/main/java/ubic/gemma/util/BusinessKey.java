@@ -52,7 +52,7 @@ public class BusinessKey {
 
     public static void checkValidKey( Taxon taxon ) {
         if ( taxon == null || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) ) ) {
-            throw new IllegalArgumentException( "Taxon did not have a valid key" );
+            throw new IllegalArgumentException( "Taxon " + taxon + " did not have a valid key" );
         }
     }
 
@@ -83,8 +83,8 @@ public class BusinessKey {
      * @param queryObject
      * @param string
      */
-    public static void attachCriteria( Criteria queryObject, BioSequence bioSequence ) {
-        Criteria innerQuery = queryObject.createCriteria( "bioSequence" );
+    public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, bioSequence );
     }
 
