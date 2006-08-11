@@ -127,14 +127,15 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "classpath*:/ubic/gemma/localTestDataSource.xml",
-                "classpath*:/ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
+        return new String[] { "classpath*:localTestDataSource.xml", "classpath*:applicationContext-*.xml",
+                "*-servlet.xml" };
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#loadContextLocations(java.lang.String[])
+     * @see org.springframework.test.Abstra
+     *      ctDependencyInjectionSpringContextTests#loadContextLocations(java.lang.String[])
      */
     @Override
     protected ConfigurableApplicationContext loadContextLocations( String[] locations ) {

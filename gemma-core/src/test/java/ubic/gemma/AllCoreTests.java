@@ -22,7 +22,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.apps.ProbeMapperTest;
-import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
@@ -32,15 +31,12 @@ import ubic.gemma.loader.expression.geo.AllGeoTests;
 import ubic.gemma.loader.expression.mage.AllMageTests;
 import ubic.gemma.loader.expression.smd.AllSmdTests;
 import ubic.gemma.loader.genome.AllGenomeTests;
-import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
-import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
-import ubic.gemma.model.expression.experiment.biomaterial.BioMaterialDaoImplTest;
-import ubic.gemma.model.genome.QtlDaoImplTest;
-import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
+import ubic.gemma.model.AllModelTests;
 import ubic.gemma.security.SecurityIntegrationTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
 import ubic.gemma.security.interceptor.PersistAclInterceptorTest;
+import ubic.gemma.visualization.ExpressionDataMatrixTest;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
 
 /**
  * Tests for gemma-core
@@ -63,6 +59,7 @@ public class AllCoreTests {
         suite.addTest( AllPreProcessTests.suite() );
 
         suite.addTest( AllGenomeTests.suite() );
+        suite.addTest( AllModelTests.suite() );
 
         suite.addTestSuite( AuditInterceptorTest.class );
         suite.addTestSuite( PersistAclInterceptorTest.class );
@@ -70,18 +67,12 @@ public class AllCoreTests {
 
         suite.addTestSuite( ProbeMapperTest.class );
 
-        suite.addTestSuite( ArrayDesignDaoImplTest.class );
-        suite.addTestSuite( BioMaterialDaoImplTest.class );
-        suite.addTestSuite( ExternalDatabaseTest.class );
-        suite.addTestSuite( CandidateGeneListDaoImplTest.class );
-        suite.addTestSuite( QtlDaoImplTest.class );
-
-        suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
-        suite.addTestSuite( DatabaseEntryDaoImplTest.class );
-
         suite.addTestSuite( Gene2GOAssociationParserTest.class );
         suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
         suite.addTestSuite( DataFileFetcherTest.class );
+
+        suite.addTestSuite( ExpressionDataMatrixTest.class );
+        suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
 
         return suite;
     }

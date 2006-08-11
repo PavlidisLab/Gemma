@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public class ExpessionDataMatrixTest extends TestCase {
+public class ExpressionDataMatrixTest extends TestCase {
     Log log = LogFactory.getLog( this.getClass() );
     String[] rowNames = null;
     String[] colNames = null;
@@ -105,7 +105,7 @@ public class ExpessionDataMatrixTest extends TestCase {
     protected void setUp() throws Exception {
         Configuration config = new PropertiesConfiguration( "Gemma.properties" );
         String baseDir = ( String ) config.getProperty( "gemma.baseDir" );
-        String filename = baseDir + ( String ) config.getProperty( "testData_100" );
+        String filename = baseDir + ( String ) config.getProperty( "/data/visualization/testData_100" );
 
         byte[][] data = readTabFile( filename );
 

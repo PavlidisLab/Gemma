@@ -19,6 +19,8 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -67,6 +69,40 @@ public class BioMaterialDaoImplTest extends BaseTransactionalSpringContextTest {
         bm.setName( searchkeyName );
         BioMaterial found = this.bioMaterialDao.find( bm );
         assertTrue( found != null );
+    }
+    
+    /**
+     * @throws Exception
+     */
+    public void testSetExternalAccession() throws Exception {
+
+        /* set to avoid using stale data (data from previous tests */
+        setFlushModeCommit();
+
+        /* uncomment to use prod environment as opposed to the test environment */
+        // this.setDisableTestEnv( true );
+        onSetUpInTransaction();
+
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setName( "Test Biomaterial" );
+
+        ExternalDatabaseDao edd = ( ExternalDatabaseDao ) this.getBean( "externalDatabaseDao" );
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setName( "Test Database Entry" );
+        ed = edd.findOrCreate( ed );
+
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+        de.setAccession( "Test Biomaterial Accession" );
+        de.setExternalDatabase( ed );
+
+        /* testing this method */
+        bm.setExternalAccession( de );
+
+        BioMaterialDao bmDao = ( BioMaterialDao ) this.getBean( "bioMaterialDao" );
+        // bmDao.findOrCreate( bm ); - FIXME use this
+        bmDao.create( bm );
+
+        // setComplete();
     }
 
 }
