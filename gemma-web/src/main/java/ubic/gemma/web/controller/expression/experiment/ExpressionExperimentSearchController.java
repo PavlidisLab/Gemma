@@ -141,10 +141,18 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             log.info( "Canceled" );
-            // FIXME = what if id is null?
-            return new ModelAndView( new RedirectView( request.getProtocol() + request.getServerName() + ":"
+
+            if ( id != null ) {
+                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                        + request.getServerPort() + request.getContextPath()
+                        + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+            }
+
+            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
                     + request.getServerPort() + request.getContextPath()
-                    + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                    + "/expressionExperiment/showAllExpressionExperiments.html" ) );
+
         }
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );

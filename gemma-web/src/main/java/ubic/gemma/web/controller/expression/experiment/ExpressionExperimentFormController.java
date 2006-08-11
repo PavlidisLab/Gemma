@@ -120,11 +120,18 @@ public class ExpressionExperimentFormController extends BaseFormController {
         log.debug( "entering processFormSubmission" );
 
         id = ( ( ExpressionExperiment ) command ).getId();
-
+        
         if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( new RedirectView( request.getProtocol() + request.getServerName() + ":"
+            if ( id != null ) {
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
                     + request.getServerPort() + request.getContextPath()
                     + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+            }
+            
+            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath()
+                    + "/expressionExperiment/showAllExpressionExperiments.html" ) );
         }
 
         String accession = request.getParameter( "expressionExperiment.accession.accession" );
