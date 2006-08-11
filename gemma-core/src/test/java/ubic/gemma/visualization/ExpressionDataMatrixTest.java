@@ -20,6 +20,7 @@ package ubic.gemma.visualization;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,8 +28,6 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -52,29 +51,18 @@ public class ExpressionDataMatrixTest extends TestCase {
     ExpressionDataMatrix matrixData = null;
     ByteArrayConverter bconverter = null;
     StringConverter sconverter = null;
-    byte[][] values;
 
-    /**
-     * @param filename
-     * @return double [][]
-     */
-    public byte[][] readTabFile( String filename ) {
+    private byte[][] readTabFile( InputStream stream ) throws IOException {
         TabDelimParser parser = new TabDelimParser();
-        InputStream is;
         Collection results = new HashSet();
-        try {
-            is = new FileInputStream( new File( filename ) );
-            parser.parse( is );
-            results = parser.getResults();
-        } catch ( Exception e ) {
-            e.printStackTrace();
-        }
+        parser.parse( stream );
+        results = parser.getResults();
 
         colNames = parser.getHeader();
 
         bconverter = new ByteArrayConverter();
         sconverter = new StringConverter();
-        values = new byte[results.size()][];
+        byte[][] values = new byte[results.size()][];
         rowNames = new String[results.size()];
         Iterator iter = results.iterator();
         int i = 0;
@@ -95,6 +83,15 @@ public class ExpressionDataMatrixTest extends TestCase {
         return values;
     }
 
+    /**
+     * @param filename
+     * @return double [][]
+     */
+    public byte[][] readTabFile( String filename ) throws IOException {
+        InputStream is = new FileInputStream( new File( filename ) );
+        return this.readTabFile( is );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -103,11 +100,9 @@ public class ExpressionDataMatrixTest extends TestCase {
     @Override
     @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-        String baseDir = ( String ) config.getProperty( "gemma.baseDir" );
-        String filename = baseDir + ( String ) config.getProperty( "/data/visualization/testData_100" );
+        byte[][] data = readTabFile( this.getClass().getResourceAsStream( "/data/visualization/testData_100.txt" ) );
 
-        byte[][] data = readTabFile( filename );
+        assert data != null;
 
         Collection<DesignElement> designElements = new HashSet();
         for ( int i = 0; i < rowNames.length; i++ ) {
@@ -137,7 +132,6 @@ public class ExpressionDataMatrixTest extends TestCase {
      */
     @Override
     protected void tearDown() throws Exception {
-        values = null;
         rowNames = null;
         colNames = null;
         matrixData = null;
@@ -147,7 +141,7 @@ public class ExpressionDataMatrixTest extends TestCase {
      * 
      *
      */
-    public void testMatrixVisualizationData() {
+    public void testMatrixVisualizationData() throws Exception {
 
         // vizualizationData.printData();
 
