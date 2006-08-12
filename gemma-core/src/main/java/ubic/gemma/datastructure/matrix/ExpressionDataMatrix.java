@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.visualization;
+package ubic.gemma.datastructure.matrix;
 
 import java.util.Collection;
 import java.util.HashMap;

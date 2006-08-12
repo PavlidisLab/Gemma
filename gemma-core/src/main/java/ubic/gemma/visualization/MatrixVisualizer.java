@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+
 /**
  * @author keshav
  * @version $Id$

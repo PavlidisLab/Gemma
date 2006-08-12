@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
 import ubic.gemma.apps.ProbeMapperTest;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixTest;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
@@ -36,7 +37,6 @@ import ubic.gemma.model.AllModelTests;
 import ubic.gemma.security.SecurityIntegrationTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
 import ubic.gemma.security.interceptor.PersistAclInterceptorTest;
-import ubic.gemma.visualization.ExpressionDataMatrixTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
 
 /**
