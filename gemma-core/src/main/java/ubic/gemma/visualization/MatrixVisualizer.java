@@ -19,7 +19,8 @@
 package ubic.gemma.visualization;
 
 import java.awt.Color;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -27,6 +28,11 @@ import java.util.List;
  * @version $Id$
  */
 public interface MatrixVisualizer {
+
+    /**
+     * Create the visualization object.
+     */
+    public void createVisualization();
 
     /**
      * @param matrixVisualizationData
@@ -39,19 +45,76 @@ public interface MatrixVisualizer {
     public void createVisualization( double[][] data );
 
     /**
-     * @param rowLabels
+     * Saves the image to outfile
+     * 
+     * @param outfile
      */
-    public void setRowLabels( List<String> rowLabels );
-    
+    public void saveImage( File outfile ) throws IOException;
+
+    /**
+     * Returns the outfile.
+     * 
+     * @return String
+     */
+    public String getOutfile();
+
+    /**
+     * Sets the outfile.
+     * 
+     * @param outfile
+     */
+    public void setOutfile( String outfile );
+
+    /**
+     * Returns the data matrix to be visualized.
+     * 
+     * @return ExpressionDataMatrix
+     */
+    public ExpressionDataMatrix getExpressionDataMatrix();
+
+    /**
+     * Sets the data matrix to be visualized.
+     * 
+     * @param expressionDataMatrix
+     */
+    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix );
+
+    /**
+     * Returns the suppressVisualizations.
+     * 
+     * @return boolean
+     */
+    public boolean isSuppressVisualizations();
+
+    /**
+     * @param suppressVisualizations
+     */
+    public void setSuppressVisualizations( boolean suppressVisualizations );
+
     /**
      * @param rowLabels
      */
     public List<String> getRowLabels();
 
     /**
+     * @param rowLabels
+     */
+    public void setRowLabels( List<String> rowLabels );
+
+    /**
+     * @return List<String>
+     */
+    public List<String> getColLabels();
+
+    /**
      * @param colLabels
      */
     public void setColLabels( List<String> colLabels );
+
+    /**
+     * @return Color[]
+     */
+    public Color[] getColorMap();
 
     /**
      * @param colorMap

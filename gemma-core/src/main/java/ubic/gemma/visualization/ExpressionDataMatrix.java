@@ -44,8 +44,7 @@ public class ExpressionDataMatrix {
 
     private Collection<DesignElement> designElements = null;
 
-    @SuppressWarnings("unchecked")
-    private Map<String, DesignElementDataVector> dataMap = new HashMap();
+    private Map<String, DesignElementDataVector> dataMap = new HashMap<String, DesignElementDataVector>();
 
     /**
      * 
@@ -53,6 +52,7 @@ public class ExpressionDataMatrix {
      */
     public ExpressionDataMatrix() {
         // spring looks for this on application startup
+        // FIXME this will brek the api ... remove it
     }
 
     /**
@@ -67,7 +67,7 @@ public class ExpressionDataMatrix {
         for ( DesignElement designElement : designElements ) {
             String key = ( ( CompositeSequence ) designElement ).getName();
 
-            // FIXME quantitation type
+            // FIXME what about the quantitation type?
             Collection<DesignElementDataVector> vectors = ( ( CompositeSequence ) designElement )
                     .getDesignElementDataVectors();
             Iterator iter = vectors.iterator();
@@ -80,10 +80,9 @@ public class ExpressionDataMatrix {
     }
 
     /**
-     * 
-     *
+     * Log the data values
      */
-    public void printData() {
+    private void printData() {
         assert designElements != null : "Design Elements not initialized";
 
         for ( DesignElement designElement : designElements ) {
