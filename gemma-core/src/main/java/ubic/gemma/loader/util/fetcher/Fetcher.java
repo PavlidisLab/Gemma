@@ -1,14 +1,12 @@
 package ubic.gemma.loader.util.fetcher;
 
+import java.net.URL;
 import java.util.Collection;
 
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Interface for classes that can fetch files from a remote location and copy them to a specified location.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

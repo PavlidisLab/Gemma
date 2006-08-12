@@ -36,7 +36,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser {
     /**
      * 
      */
-    private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 12;
+    private static final int NCBI_GENE2ACCESSION_FIELDS_PER_ROW = 13;
 
     Collection<NCBIGene2Accession> results = new HashSet<NCBIGene2Accession>();
 

@@ -19,15 +19,24 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.FutureTask;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 
@@ -56,7 +65,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
     public NCBIGeneFileFetcher() {
         initConfig();
-        initArchiveHandler( "gzip" );
+        initArchiveHandler( "gz" );
     }
 
     /*
@@ -77,6 +86,58 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
             long expectedSize = this.getExpectedSize( seekFile );
             return this.doTask( future, seekFile, expectedSize, outputFileName, identifier, newDir, ".gz" );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    public Collection<LocalFile> fetch( URL file ) {
+        if ( file == null ) {
+            throw new IllegalArgumentException();
+        }
+
+        String[] chunks = StringUtils.splitByWholeSeparator( file.getPath(), "/" );
+        assert chunks.length > 1;
+        String identifier = FileTools.chompExtension( chunks[chunks.length - 1] );
+
+        log.info( "Seeking Ncbi " + file.toExternalForm() + " file, using identifier " + identifier );
+
+        try {
+
+            // FIXME - clean this up.
+
+            File newDir = mkdir( identifier );
+
+            InputStream is = file.openStream();
+            String outputFileName = newDir + File.separator + identifier + ".gz";
+
+            log.info( "output file name is " + outputFileName );
+
+            OutputStream out = new FileOutputStream( new File( outputFileName ) );
+
+            LocalFile f = LocalFile.Factory.newInstance();
+
+            f.setLocalURI( ( new File( outputFileName ).toURI() ).toString() );
+
+            Collection<LocalFile> result = new HashSet<LocalFile>();
+
+            result.add( f );
+
+            // Transfer bytes from in to out
+            byte[] buf = new byte[1024];
+            int len;
+            while ( ( len = is.read( buf ) ) > 0 ) {
+                out.write( buf, 0, len );
+            }
+            is.close();
+
+            String finalOutputPath = FileTools.unGzipFile( outputFileName );
+
+            f.setLocalURI( ( new File( finalOutputPath ).toURI() ).toString() );
+            f.setSize( new File( finalOutputPath ).length() );
+
+            return result;
+
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

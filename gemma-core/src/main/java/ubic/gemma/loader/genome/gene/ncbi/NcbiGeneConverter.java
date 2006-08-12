@@ -54,7 +54,6 @@ public class NcbiGeneConverter implements Converter {
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     public Gene convert( NCBIGeneInfo info ) {
         Gene gene = Gene.Factory.newInstance();
 
@@ -67,25 +66,14 @@ public class NcbiGeneConverter implements Converter {
         t.setNcbiId( new Integer( info.getTaxId() ) );
         gene.setTaxon( t );
 
-        // gene.setPhysicalLocation();
-        // gene.setCytogenicLocation();
-        // gene.setGeneticLocation();
-        // gene.setProducts();
-        // gene.setAccessions();
-
-        // System.out.println("synonyms: "+info.getSynonyms());
-        // System.out.println("aliases: "+gene.getGeneAliasses());
-        // System.out.println("aliases null: "+(gene.getGeneAliasses()==null));
-        Collection<GeneAlias> aliases = gene.getGeneAlias();
+        Collection<GeneAlias> aliases = gene.getAliases();
         for ( String alias : info.getSynonyms() ) {
             GeneAlias newAlias = GeneAlias.Factory.newInstance();
             newAlias.setGene( gene );
             newAlias.setSymbol( gene.getOfficialSymbol() );
-            newAlias.setAlias( alias ); // added by AS - non-nullable, won't work w/o it!
+            newAlias.setAlias( alias );
             aliases.add( newAlias );
         }
-
-        System.out.println( "added aliases" );
         return gene;
 
     }
@@ -96,10 +84,13 @@ public class NcbiGeneConverter implements Converter {
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
-    public Gene convert( Object sourceDomainObject ) {
+    public Object convert( Object sourceDomainObject ) {
+        if ( sourceDomainObject instanceof Collection ) {
+            return this.convert( ( Collection ) sourceDomainObject );
+        }
         assert sourceDomainObject instanceof NCBIGene2Accession;
         NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
         return convert( ncbiGene.getInfo() );
-
     }
+
 }

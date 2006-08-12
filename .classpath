@@ -88,7 +88,11 @@
 			<attribute value="http://acegisecurity.org/multiproject/acegi-security/apidocs/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar"/>
+	<classpathentry sourcepath="/JAR_SOURCE/apache-ant-1.6.5/src/main" kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar">
+		<attributes>
+			<attribute value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/rserve/JRclient/RE817/JRclient-RE817.jar"/>
 	<classpathentry kind="var" path="M2_REPO/spring/springmodules-validator/0.4/springmodules-validator-0.4.jar">
 		<attributes>

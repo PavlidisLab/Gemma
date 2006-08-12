@@ -18,8 +18,13 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
@@ -33,6 +38,8 @@ import ubic.gemma.model.common.description.LocalFile;
  * @version $Id$
  */
 public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerator {
+
+    private static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
 
     /**
      * @return a collection of NCBIGene2Accession
@@ -50,28 +57,56 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
     @SuppressWarnings("unused")
     public Collection<NCBIGene2Accession> generate( String accession ) {
 
+        log.info( "Fetching..." );
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
         LocalFile geneInfoFile = fetcher.fetch( "gene_info" ).iterator().next();
         LocalFile gene2AccessionFile = fetcher.fetch( "gene2accession" ).iterator().next();
 
-        NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
-        NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
+        return processLocalFiles( geneInfoFile, gene2AccessionFile );
+    }
+
+    /**
+     * Primarily for testing.
+     * 
+     * @param geneInfoFilePath
+     * @param gene2AccesionFilePath
+     * @return
+     */
+    public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath ) {
+        log.info( "Fetching..." );
         try {
-            infoParser.parse( geneInfoFile.asFile() );
-            accParser.parse( gene2AccessionFile.asFile() );
+            URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURL();
+            URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURL();
 
-            Collection<NCBIGene2Accession> ncbiGenes = accParser.getResults();
+            NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
+            LocalFile geneInfoFile = fetcher.fetch( geneInfoUrl ).iterator().next();
+            LocalFile gene2AccessionFile = fetcher.fetch( gene2AccesionUrl ).iterator().next();
 
-            for ( NCBIGene2Accession o : ncbiGenes ) {
-                NCBIGeneInfo info = infoParser.get( o.getGeneId() );
-                o.setInfo( info );
-            }
-
-            return ncbiGenes;
+            return processLocalFiles( geneInfoFile, gene2AccessionFile );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-
     }
+
+    private Collection<NCBIGene2Accession> processLocalFiles( LocalFile geneInfoFile, LocalFile gene2AccessionFile ) {
+        log.info( "Parsing" );
+        NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
+        NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
+
+        try {
+            infoParser.parse( geneInfoFile.asFile() );
+            accParser.parse( gene2AccessionFile.asFile() );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        Collection<NCBIGene2Accession> ncbiGenes = accParser.getResults();
+
+        for ( NCBIGene2Accession o : ncbiGenes ) {
+            NCBIGeneInfo info = infoParser.get( o.getGeneId() );
+            o.setInfo( info );
+        }
+        return ncbiGenes;
+    }
+
 }

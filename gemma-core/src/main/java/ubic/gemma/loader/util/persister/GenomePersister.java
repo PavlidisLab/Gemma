@@ -29,6 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation;
@@ -101,7 +102,16 @@ abstract public class GenomePersister extends CommonPersister {
         if ( !isTransient( gene ) ) return gene;
 
         gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
-        return geneService.findOrCreate( gene );
+        gene.setTaxon( ( Taxon ) persistTaxon( gene.getTaxon() ) );
+ 
+        
+        gene = geneService.findOrCreate( gene );
+        for ( GeneAlias alias : gene.getAliases() ) {
+            alias.setGene( gene );
+        }
+
+     //   gene.setGeneAlias( temp );
+        return gene;
     }
 
     /**
@@ -268,27 +278,28 @@ abstract public class GenomePersister extends CommonPersister {
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
     }
-    
+
     /**
      * @param blatAssociationService The blatAssociationService to set.
      */
     public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
         this.blatAssociationService = blatAssociationService;
-}
+    }
+
     /**
      * @param blastAssociationService The blastAssociationService to set.
      */
     public void setBlastAssociationService( BlastAssociationService blastAssociationService ) {
         this.blastAssociationService = blastAssociationService;
     }
-    
+
     /**
      * @param blatResultService The blatResultService to set.
      */
     public void setBlatResultService( BlatResultService blatResultService ) {
         this.blatResultService = blatResultService;
     }
-    
+
     /**
      * @param blastResultService The blastResultService to set.
      */

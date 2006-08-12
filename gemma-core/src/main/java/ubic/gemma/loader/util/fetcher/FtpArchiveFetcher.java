@@ -20,7 +20,10 @@ package ubic.gemma.loader.util.fetcher;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
@@ -32,11 +35,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 
@@ -54,7 +59,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      */
     private static final int INFO_UPDATE_INTERVAL = 2000;
     protected static Log log = LogFactory.getLog( FtpArchiveFetcher.class.getName() );
-    public Untar untarrer;
+    public Expand expander;
     protected boolean doDelete = false;
     protected FTPClient f;
 
@@ -149,12 +154,17 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * @param methodName e.g., "gzip". If null, ignored
      */
     protected void initArchiveHandler( String methodName ) {
-        untarrer = new Untar();
-        untarrer.setProject( new Project() );
+
         if ( methodName != null ) {
-            UntarCompressionMethod method = new UntarCompressionMethod();
-            method.setValue( methodName );
-            untarrer.setCompression( method );
+            if ( methodName.equals( "gz" ) ) {
+                expander = null;
+            } else {
+                expander = new Untar();
+                expander.setProject( new Project() );
+                UntarCompressionMethod method = new UntarCompressionMethod();
+                method.setValue( methodName );
+                ( ( Untar ) expander ).setCompression( method );
+            }
         }
     }
 
@@ -171,7 +181,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
     @SuppressWarnings("unchecked")
     protected Collection<LocalFile> listFiles( String identifier, File newDir, String excludePattern )
             throws IOException {
-        log.info( "Got files for experiment " + identifier + ":" );
+        log.info( "Got files for " + identifier + ":" );
         Collection<LocalFile> result = new HashSet<LocalFile>();
         for ( File file : ( Collection<File> ) FileTools.listDirectoryFiles( newDir ) ) {
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;
@@ -193,12 +203,21 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             @SuppressWarnings("synthetic-access")
             public Boolean call() {
-                log.info( "Fetching " + seekFile );
-                untarrer.setSrc( new File( seekFile ) );
-                untarrer.setDest( newDir );
-                untarrer.perform();
+                log.info( "Unpacking " + seekFile );
+                if ( expander != null ) {
+                    expander.setSrc( new File( seekFile ) );
+                    expander.setDest( newDir );
+                    expander.perform();
+                } else { // gzip.
+                    try {
+                        FileTools.unGzipFile( seekFile );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
                 return Boolean.TRUE;
             }
+
         } );
 
         Executors.newSingleThreadExecutor().execute( future );
@@ -218,7 +237,7 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
 
     protected long getExpectedSize( final String seekFile ) throws IOException, SocketException {
         long expectedSize = 0;
-    
+
         try {
             expectedSize = NetUtils.ftpFileSize( f, seekFile );
         } catch ( FileNotFoundException e ) {
