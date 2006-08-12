@@ -111,7 +111,11 @@
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jetty/org.mortbay.jetty/5.1.10/org.mortbay.jetty-5.1.10.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-el/commons-el/1.0/commons-el-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/spring/spring-mock/1.2.8/spring-mock-1.2.8.jar"/>
+	<classpathentry sourcepath="/JAR_SOURCE/spring-framework-1.2.8/mock" kind="var" path="M2_REPO/spring/spring-mock/1.2.8/spring-mock-1.2.8.jar">
+		<attributes>
+			<attribute value="http://static.springframework.org/spring/docs/1.2.x/api/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp-api/2.0/jsp-api-2.0.jar"/>
 	<classpathentry kind="con" path="com.genuitec.eclipse.j2eedt.core.J2EE14_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
