@@ -29,8 +29,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.MatrixVisualizer;
 
 /**

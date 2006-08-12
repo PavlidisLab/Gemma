@@ -40,6 +40,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -47,7 +48,6 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.visualization.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.MatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
