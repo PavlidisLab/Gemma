@@ -71,7 +71,7 @@ public abstract class AbstractCLI {
     private String DEFAULT_HOST = "localhost";
 
     public enum ErrorCode {
-        NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENITCATION_ERROR
+        NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENTICATION_ERROR
     };
 
     /* support for convenience options */

@@ -20,6 +20,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -35,9 +37,9 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
     /**
      * 
      */
-    private String testGeneIdentifier = "ACT2B";
+    private String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
 
-    String testSequence = "AAAAACGCATTAA";
+    String testSequence = RandomStringUtils.random( 35, "ATGC" );
 
     private BlatAssociationDao blatAssociationDao;
 
@@ -53,12 +55,14 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
             BioSequence bs = this.getTestPersistentBioSequence();
             if ( i == 11 ) {
                 bs.setSequence( testSequence );
+                this.bioSequenceDao.update( bs );
             }
+
             BlatResult br = this.getTestPersistentBlatResult( bs );
+            br.setQuerySequence( bs );
+            blatResultDao.update( br );
 
             BlatAssociation ba = BlatAssociation.Factory.newInstance();
-
-            ba.setBlatResult( br );
 
             Gene g = this.getTestPeristentGene();
 
@@ -67,15 +71,17 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
                 g.setOfficialName( testGeneIdentifier ); // fixme need taxon too.
                 gp.setGene( g );
                 gp.setName( testGeneIdentifier );
+                this.geneProductDao.update( gp );
             }
 
             ba.setGeneProduct( gp );
+            ba.setBlatResult( br );
+            ba.setBioSequence( bs );
 
             blatAssociationDao.create( ba );
 
-            br.setQuerySequence( bs );
         }
-
+        this.flushSession();
     }
 
     /**
@@ -85,11 +91,16 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "elephant" );
+        // t.setCommonName( "elephant" );
+        t.setScientificName( "Loxodonta" );
         bs.setSequence( testSequence );
         bs.setTaxon( t );
+
+        BioSequence bsIn = this.bioSequenceDao.find( bs );
+        assertNotNull( bsIn );
+
         Collection res = this.blatAssociationDao.find( bs );
-        assertEquals( 1, res.size() );
+        assertEquals( "Was seeking blatresults for sequence " + testSequence, 1, res.size() );
     }
 
     public final void testFindGene() {

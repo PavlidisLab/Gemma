@@ -29,10 +29,10 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * Tests of ACL management.
@@ -40,13 +40,18 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class PersistAclInterceptorTest extends BaseTransactionalSpringContextTest {
+public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest {
     private BasicAclExtendedDao basicAclExtendedDao;
     private PersisterHelper persisterHelper;
     ArrayDesignService arrayDesignService;
     ExpressionExperimentService expressionExperimentService;
     ProtocolService protocolService;
     HardwareService hardwareService;
+
+    @Override
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+    }
 
     /**
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
@@ -55,10 +60,7 @@ public class PersistAclInterceptorTest extends BaseTransactionalSpringContextTes
      * @throws Exception
      */
     public void testAddPermissionsInterceptor() throws Exception {
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "fooblyDoobly" );
-
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 10, true );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ad ) ) == null ) {
             arrayDesignService.remove( ad );
@@ -77,22 +79,14 @@ public class PersistAclInterceptorTest extends BaseTransactionalSpringContextTes
      * @throws Exception
      */
     public void testCascadeCreateAndDelete() throws Exception {
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setDescription( "From test" );
-        ee.setName( "Test experiment" );
-
-        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
-        ed.setName( "foo" );
-        ee.getExperimentalDesigns().add( ed );
-        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
+        ExpressionExperiment ee = this.setExpressionExperimentDependencies();
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );
         }
 
         assert ee.getExperimentalDesigns().size() > 0 : "No experimentalDesigns";
-        ed = ee.getExperimentalDesigns().iterator().next();
+        ExperimentalDesign ed = ee.getExperimentalDesigns().iterator().next();
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ed ) ) == null ) {
             fail( "Failed to cascade create ACL for " + ed );

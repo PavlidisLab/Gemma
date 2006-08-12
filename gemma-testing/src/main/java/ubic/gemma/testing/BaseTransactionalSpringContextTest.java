@@ -60,6 +60,7 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -68,6 +69,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.Taxon;
@@ -142,7 +144,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     private Taxon testTaxon = null;
 
-    private UserDao userDao;
+    protected UserDao userDao;
 
     /**
      * 
@@ -153,8 +155,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
         setAutowireMode( AutowireCapableBeanFactory.AUTOWIRE_BY_NAME );
 
-        // Since a ResourceBundle is not required for each class, just
-        // do a simple check to see if one exists
         String className = this.getClass().getName();
 
         try {
@@ -260,7 +260,9 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
             ad.getCompositeSequences().add( de );
         }
 
-        ad = ( ArrayDesign ) arrayDesignDao.create( ad );
+        // use service to get acl
+        ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        ad = ( ArrayDesign ) arrayDesignService.create( ad );
 
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             cs.setArrayDesign( ad );
@@ -353,7 +355,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     /**
      * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
-     * objects.
+     * objects. This implementation does NOT fill in associations of the created object.
      * 
      * @return
      */
@@ -400,7 +402,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
             Taxon t = Taxon.Factory.newInstance();
             t.setCommonName( "elephant" );
             t.setScientificName( "Loxodonta" );
-            testTaxon = taxonDao.create( t );
+            testTaxon = taxonDao.findOrCreate( t );
             assert testTaxon != null;
         }
         return testTaxon;
@@ -621,4 +623,5 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     public void setUserDao( UserDao userDao ) {
         this.userDao = userDao;
     }
+
 }

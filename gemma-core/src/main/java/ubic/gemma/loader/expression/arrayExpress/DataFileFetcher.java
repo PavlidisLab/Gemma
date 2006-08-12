@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.arrayExpress;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.Collection;
 import java.util.concurrent.FutureTask;
 
@@ -64,9 +65,10 @@ public class DataFileFetcher extends FtpArchiveFetcher {
             File newDir = mkdir( identifier );
             final String outputFileName = formLocalFilePath( identifier, newDir );
             final String seekFile = formRemoteFilePath( identifier );
+            long expectedSize = getExpectedSize( seekFile );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, seekFile, outputFileName, identifier, newDir, ".mageml.tgz" );
+            return this.doTask( future, seekFile, expectedSize, outputFileName, identifier, newDir, ".mageml.tgz" );
 
         } catch ( IOException e ) {
             throw new RuntimeException( "Couldn't fetch file for " + identifier, e );

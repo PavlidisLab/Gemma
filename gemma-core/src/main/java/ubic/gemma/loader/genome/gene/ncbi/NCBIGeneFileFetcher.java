@@ -75,7 +75,8 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
             final String seekFile = formRemoteFilePath( identifier );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, seekFile, outputFileName, identifier, newDir, ".gz" );
+            long expectedSize = this.getExpectedSize( seekFile );
+            return this.doTask( future, seekFile, expectedSize, outputFileName, identifier, newDir, ".gz" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

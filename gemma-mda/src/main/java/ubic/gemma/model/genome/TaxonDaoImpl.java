@@ -26,6 +26,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.common.protocol.ProtocolDaoImpl;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * <hr>
@@ -49,6 +50,9 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
     @Override
     public Taxon find( Taxon taxon ) {
         try {
+
+            BusinessKey.checkValidKey( taxon );
+
             Criteria queryObject = super.getSession( false ).createCriteria( Taxon.class );
             if ( taxon.getNcbiId() != null ) {
                 queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
@@ -86,18 +90,13 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
      */
     @Override
     public Taxon findOrCreate( Taxon taxon ) {
-        if ( taxon.getScientificName() == null && taxon.getCommonName() == null && taxon.getNcbiId() == null ) {
-            log.warn( "taxon had no testable fields filled in : " + taxon );
-            return null;
-        }
-        Taxon newTaxon = find( taxon );
-        if ( newTaxon != null ) {
+        Taxon existingTaxon = find( taxon );
+        if ( existingTaxon != null ) {
             log.debug( "Found existing taxon: " + taxon );
-            return newTaxon;
+            return existingTaxon;
         }
-        log.debug( "Creating new taxon: " + taxon );
+        log.warn( "Creating new taxon: " + taxon );
         return create( taxon );
-
     }
 
 }

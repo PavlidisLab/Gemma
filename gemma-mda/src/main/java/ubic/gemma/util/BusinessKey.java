@@ -19,6 +19,8 @@
 package ubic.gemma.util;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -29,12 +31,15 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
 /**
- * Methods to test business-key-related issues on objects.
+ * Methods to test business-key-related issues on objects. The 'checkValidKey' methods can be used to check whether an
+ * object has the required business key values filled in. An exception is thrown if they don't.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class BusinessKey {
+
+    private static Log log = LogFactory.getLog( BusinessKey.class.getName() );
 
     /**
      * @param bioSequence
@@ -51,7 +56,9 @@ public class BusinessKey {
     }
 
     public static void checkValidKey( Taxon taxon ) {
-        if ( taxon == null || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) ) ) {
+        if ( taxon == null
+                || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) && StringUtils
+                        .isBlank( taxon.getScientificName() ) ) ) {
             throw new IllegalArgumentException( "Taxon " + taxon + " did not have a valid key" );
         }
     }
@@ -77,15 +84,16 @@ public class BusinessKey {
     }
 
     /**
-     * Assumes that the queryObject was created for a class with a parameter named "bioSequence", and restricts the
-     * query to the provided BioSequence.
+     * Restricts the query to the provided BioSequence.
      * 
      * @param queryObject
-     * @param string
+     * @param bioSequence The object used to create the criteria
+     * @param propertyName Often this will be 'bioSequence'
      */
     public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, bioSequence );
+        log.warn( queryObject.toString() );
     }
 
     /**
@@ -112,6 +120,8 @@ public class BusinessKey {
     }
 
     /**
+     * Assumes parameter name is 'taxon'.
+     * 
      * @param queryObject
      * @param taxon
      */

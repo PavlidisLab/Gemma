@@ -54,31 +54,11 @@ public class BibliographicReferenceDaoImplTest extends BaseTransactionalSpringCo
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         testBibRef = BibliographicReference.Factory.newInstance();
 
-        /*
-         * BibliographicReference has composition relationship with DatabaseEntry.
-         */
-        de = DatabaseEntry.Factory.newInstance();
-        de.setAccession( "foo" );
-
-        /*
-         * DatabaseEntry has a non-composition association with ExternalDatabase. Due to this, create ExternalDatabase
-         * and persist manually. If the relationship between DatabaseEntry and ExternalDatabase were composition, we
-         * would create the externalDatabase, stuff it in a databaseEntry, and persist the databaseEntry (which would in
-         * turn persist the externalDatabase).
-         */
-        ed = ExternalDatabase.Factory.newInstance();
-        ed.setLocalInstallDbName( "testDatabase" );
-        ed.setName( "database" );
-        AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) persisterHelper.persist( ad );
-        ed.setAuditTrail( ad );
-        ed = ( ExternalDatabase ) externalDatabaseDao.create( ed );
-
-        de.setExternalDatabase( ed );
+        de = this.getTestPersistentDatabaseEntry();
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );
-        ad = AuditTrail.Factory.newInstance();
+        AuditTrail ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
 
         testBibRef.setAuditTrail( ad );

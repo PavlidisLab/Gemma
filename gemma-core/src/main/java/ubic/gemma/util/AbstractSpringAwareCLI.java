@@ -114,12 +114,12 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             if ( StringUtils.isBlank( username ) ) {
                 System.err.println( "Not authenticated. Username was blank" );
                 log.debug( "Username=" + username );
-                bail( ErrorCode.AUTHENITCATION_ERROR );
+                bail( ErrorCode.AUTHENTICATION_ERROR );
             }
 
             if ( StringUtils.isBlank( password ) ) {
                 System.err.println( "Not authenticated. You didn't enter a password" );
-                bail( ErrorCode.AUTHENITCATION_ERROR );
+                bail( ErrorCode.AUTHENTICATION_ERROR );
             }
 
             ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
@@ -128,13 +128,13 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username (got " + username
                         + ") and/or password" );
-                bail( ErrorCode.AUTHENITCATION_ERROR );
+                bail( ErrorCode.AUTHENTICATION_ERROR );
             }
         } else {
 
             System.err.println( "Not authenticated. Make sure you entered a valid username (got " + username
                     + ") and/or password" );
-            bail( ErrorCode.AUTHENITCATION_ERROR );
+            bail( ErrorCode.AUTHENTICATION_ERROR );
         }
 
     }

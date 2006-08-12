@@ -26,26 +26,19 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class DatabaseEntryDaoImplTest extends BaseTransactionalSpringContextTest {
 
-    DatabaseEntry de;
-
     /*
      * @see TestCase#setUp()
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        de = DatabaseEntry.Factory.newInstance();
-        de.setAccession( "bar" );
-        ExternalDatabase ed = externalDatabaseDao.findByName( "PubMed" );
-        assert ed != null;
-        de.setExternalDatabase( ed );
-        databaseEntryDao.create( de );
     }
 
     /*
      * Class under test for DatabaseEntry findOrCreate(DatabaseEntry)
      */
     public void testFindOrCreateDatabaseEntry() {
+        DatabaseEntry de = this.getTestPersistentDatabaseEntry();
         databaseEntryDao.remove( de );
         DatabaseEntry actualReturn = databaseEntryDao.findOrCreate( de );
         assertEquals( de.getAccession(), actualReturn.getAccession() );
@@ -56,6 +49,7 @@ public class DatabaseEntryDaoImplTest extends BaseTransactionalSpringContextTest
      * find(ubic.gemma.model.common.description.DatabaseEntry)
      */
     public void testFindDatabaseEntry() {
+        DatabaseEntry de = this.getTestPersistentDatabaseEntry();
         DatabaseEntry actualReturn = databaseEntryDao.find( de );
         assertEquals( de, actualReturn );
     }

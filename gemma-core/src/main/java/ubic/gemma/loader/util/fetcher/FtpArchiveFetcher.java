@@ -21,6 +21,8 @@ package ubic.gemma.loader.util.fetcher;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -106,18 +108,11 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * @param excludePattern
      * @return
      */
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, String outputFileName,
-            String identifier, File newDir, String excludePattern ) {
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, long expectedSize,
+            String outputFileName, String identifier, File newDir, String excludePattern ) {
         assert f != null;
         Executors.newSingleThreadExecutor().execute( future );
         try {
-            long expectedSize = 0;
-
-            try {
-                expectedSize = NetUtils.ftpFileSize( f, seekFile );
-            } catch ( FileNotFoundException e ) {
-                log.warn( "Couldn't get remote file size for " + seekFile );
-            }
 
             while ( !future.isDone() ) {
                 try {
@@ -125,11 +120,15 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
                 } catch ( InterruptedException ie ) {
                     ;
                 }
-                log
-                        .info( ( new File( outputFileName ).length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+
+                if ( log.isInfoEnabled() ) {
+                    log
+                            .info( ( new File( outputFileName ).length()
+                                    + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+                }
             }
             if ( future.get().booleanValue() ) {
-                log.info( "Unpacking " + outputFileName );
+                if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFileName );
                 unPack( newDir, outputFileName );
                 cleanUp( outputFileName );
                 return listFiles( identifier, newDir, excludePattern );
@@ -215,6 +214,22 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
             // log.info( FileTools.listDirectoryFiles( newDir ).size() - 1 + " files unpacked " );
             log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
         }
+    }
+
+    protected long getExpectedSize( final String seekFile ) throws IOException, SocketException {
+        long expectedSize = 0;
+    
+        try {
+            expectedSize = NetUtils.ftpFileSize( f, seekFile );
+        } catch ( FileNotFoundException e ) {
+            // when this happens we need to reconnect.
+            log.error( e );
+            log.warn( "Couldn't get remote file size for " + seekFile );
+            InetAddress ad = f.getRemoteAddress();
+            f.disconnect();
+            f.connect( ad );
+        }
+        return expectedSize;
     }
 
 }

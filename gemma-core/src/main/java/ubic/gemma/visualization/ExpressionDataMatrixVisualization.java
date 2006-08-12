@@ -20,6 +20,7 @@ package ubic.gemma.visualization;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -200,19 +201,21 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      * 
      * @param outfile
      */
-    public void saveImage( String outfile ) {
+    public void saveImage( String outfile ) throws IOException {
         if ( outfile != null ) this.outfile = outfile;
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
-        try {
-            // display.setLabelsVisible( true );
-            display.setCellSize( new Dimension( 16, 16 ) );
-            display.saveImage( outfile );
-            // rowNameYCoords = display.getRowNameYCoords();
-            // rowNameXCoord = display.getRowNameXCoord();
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
+
+        display.setCellSize( new Dimension( 16, 16 ) );
+        display.saveImage( outfile );
+    }
+
+    /**
+     * @param outFile
+     * @throws IOException
+     */
+    public void saveImage( File outFile ) throws IOException {
+        this.saveImage( outFile.getAbsolutePath() );
     }
 
     /**

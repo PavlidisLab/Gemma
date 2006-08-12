@@ -73,8 +73,10 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 f.disconnect(); // important to do this!
                 return null;
             }
+            long expectedSize = this.getExpectedSize( seekFile );
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = doTask( future, seekFile, outputFileName, identifier, newDir, ".tar" );
+            Collection<LocalFile> result = doTask( future, seekFile, expectedSize, outputFileName, identifier, newDir,
+                    ".tar" );
             f.disconnect();
             return result;
         } catch ( SocketException e ) {

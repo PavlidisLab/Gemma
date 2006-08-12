@@ -20,6 +20,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -29,7 +31,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @version $Id$
  */
 public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
-    String testSequence = "AAAAACGCATTAA";
+    String testSequence = RandomStringUtils.random( 100, "ATCG" );
 
     /*
      * (non-Javadoc)
