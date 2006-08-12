@@ -139,7 +139,7 @@ public class ExpressionDataMatrixTest extends TestCase {
 
         // vizualizationData.printData();
 
-        ExpressionDataMatrixVisualization visualizer = new ExpressionDataMatrixVisualization();
+        ExpressionDataMatrixVisualizer visualizer = new ExpressionDataMatrixVisualizer();
 
         // visualizer.setColLabels( Arrays.asList( colNames ) );
         // visualizer.setRowLabels( Arrays.asList( rowNames ) );

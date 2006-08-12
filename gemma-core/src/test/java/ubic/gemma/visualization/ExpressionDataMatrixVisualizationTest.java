@@ -32,7 +32,7 @@ import junit.framework.TestCase;
  */
 public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
-    ExpressionDataMatrixVisualization matrixVisualizer = null;
+    ExpressionDataMatrixVisualizer matrixVisualizer = null;
 
     /*
      * (non-Javadoc)
@@ -43,7 +43,7 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        matrixVisualizer = new ExpressionDataMatrixVisualization();
+        matrixVisualizer = new ExpressionDataMatrixVisualizer();
     }
 
     /*

@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,7 +48,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @author keshav
  * @version $Id$
  */
-public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Serializable {
+public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Serializable {
     private Log log = LogFactory.getLog( this.getClass() );
 
     private static final long serialVersionUID = -5075323948059345296L;
@@ -64,15 +63,14 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
 
     private List<String> colLabels = null;
 
-    private Color[] colorMap = ColorMap.REDGREEN_COLORMAP; // TODO add support for color map
-
-    private int rowNameXCoord = 0;
-    private Map<String, Integer> rowNameYCoords = null;
-
     private boolean suppressVisualizations;
 
-    /**
-     * Create visualization for the implicit expressionDataMatrix
+    private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization()
      */
     public void createVisualization() {
         createVisualization( this.expressionDataMatrix );
@@ -132,29 +130,19 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
         colorMatrix = new ColorMatrix( matrix );
     }
 
-    /**
-     * @return ExpressionDataMatrix
-     */
-    public ExpressionDataMatrix getExpressionDataMatrix() {
-        return expressionDataMatrix;
-    }
-
-    /**
-     * @param expressionDataMatrix
-     */
-    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
-        this.expressionDataMatrix = expressionDataMatrix;
-    }
-
-    /**
-     * @return String
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#getOutfile()
      */
     public String getOutfile() {
         return outfile;
     }
 
-    /**
-     * @param outfile
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#setOutfile(java.lang.String)
      */
     public void setOutfile( String outfile ) {
         this.outfile = outfile;
@@ -163,19 +151,59 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setColLabels(java.util.List)
+     * @see ubic.gemma.visualization.MatrixVisualizer#saveImage(java.io.File)
      */
-    public void setColLabels( List<String> colNames ) {
-        this.colLabels = colNames;
+    public void saveImage( File outFile ) throws IOException {
+        this.saveImage( outFile.getAbsolutePath() );
+    }
+
+    /**
+     * @param outfile
+     * @throws IOException
+     */
+    private void saveImage( String outfile ) throws IOException {
+        if ( outfile != null ) this.outfile = outfile;
+
+        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
+
+        display.setCellSize( new Dimension( 16, 16 ) );
+        display.saveImage( outfile );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setRowLabels(java.util.List)
+     * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
      */
-    public void setRowLabels( List<String> rowLabels ) {
-        this.rowLabels = rowLabels;
+    public ExpressionDataMatrix getExpressionDataMatrix() {
+        return expressionDataMatrix;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#setExpressionDataMatrix(ubic.gemma.visualization.ExpressionDataMatrix)
+     */
+    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+        this.expressionDataMatrix = expressionDataMatrix;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#isSuppressVisualizations()
+     */
+    public boolean isSuppressVisualizations() {
+        return suppressVisualizations;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#setSuppressVisualizations(boolean)
+     */
+    public void setSuppressVisualizations( boolean suppressVisualizations ) {
+        this.suppressVisualizations = suppressVisualizations;
     }
 
     /*
@@ -190,32 +218,46 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#setRowLabels(java.util.List)
+     */
+    public void setRowLabels( List<String> rowLabels ) {
+        this.rowLabels = rowLabels;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#getColLabels()
+     */
+    public List<String> getColLabels() {
+        return colLabels;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#setColLabels(java.util.List)
+     */
+    public void setColLabels( List<String> colNames ) {
+        this.colLabels = colNames;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#getColorMap()
+     */
+    public Color[] getColorMap() {
+        return colorMap;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.visualization.MatrixVisualizer#setColorMap(null[])
      */
     public void setColorMap( Color[] colorMap ) {
         this.colorMap = colorMap;
-    }
-
-    /**
-     * Saves the image to outfile
-     * 
-     * @param outfile
-     */
-    public void saveImage( String outfile ) throws IOException {
-        if ( outfile != null ) this.outfile = outfile;
-
-        JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
-
-        display.setCellSize( new Dimension( 16, 16 ) );
-        display.saveImage( outfile );
-    }
-
-    /**
-     * @param outFile
-     * @throws IOException
-     */
-    public void saveImage( File outFile ) throws IOException {
-        this.saveImage( outFile.getAbsolutePath() );
     }
 
     /**
@@ -226,6 +268,7 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      * @throws IOException
      */
     public String drawDynamicImage( OutputStream stream ) throws IOException {
+        // TODO move me to another implementation of MatrixVisualizer
         log.warn( "drawing dynamic image" );
 
         ExpressionDataMatrixProducerImpl producer = new ExpressionDataMatrixProducerImpl();
@@ -236,7 +279,6 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
         log.debug( "returning content type " + type );
 
         return type;
-
     }
 
     /**
@@ -244,33 +286,5 @@ public class ExpressionDataMatrixVisualization implements MatrixVisualizer, Seri
      */
     public ColorMatrix getColorMatrix() {
         return colorMatrix;
-    }
-
-    /**
-     * @return int
-     */
-    public int getRowNameXCoord() {
-        return rowNameXCoord;
-    }
-
-    /**
-     * @return Map
-     */
-    public Map<String, Integer> getRowNameYCoords() {
-        return rowNameYCoords;
-    }
-
-    /**
-     * @param suppressVisualizations
-     */
-    public void setSuppressVisualizations( boolean suppressVisualizations ) {
-        this.suppressVisualizations = suppressVisualizations;
-    }
-
-    /**
-     * @return Returns the suppressVisualizations.
-     */
-    public boolean isSuppressVisualizations() {
-        return suppressVisualizations;
     }
 }
