@@ -48,7 +48,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.visualization.ExpressionDataMatrix;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
+import ubic.gemma.visualization.MatrixVisualizer;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -77,8 +78,6 @@ public class ExpressionExperimentSearchController extends BaseFormController {
     private CompositeSequenceService compositeSequenceService = null;
     private Map<DesignElement, Collection<Gene>> designElementToGeneMap = null;
     private List<DesignElement> compositeSequences = null;
-
-    // private final String messagePrefix = "Expression experiment with id";
 
     public ExpressionExperimentSearchController() {
         /*
@@ -236,15 +235,15 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
 
         ExpressionDataMatrix expressionDataMatrix = null;
-        ExpressionDataMatrixVisualization matrixVisualization = null;
+        MatrixVisualizer matrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
             expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
 
-            matrixVisualization = new ExpressionDataMatrixVisualization();
-            matrixVisualization.setExpressionDataMatrix( expressionDataMatrix );
-            matrixVisualization.setOutfile( imageFile.getAbsolutePath() );
-            matrixVisualization.setSuppressVisualizations( suppressVisualizations );
+            matrixVisualizer = new ExpressionDataMatrixVisualizer();
+            matrixVisualizer.setExpressionDataMatrix( expressionDataMatrix );
+            matrixVisualizer.setOutfile( imageFile.getAbsolutePath() );
+            matrixVisualizer.setSuppressVisualizations( suppressVisualizations );
 
         } else {
             log.debug( "search by official gene symbol" );
@@ -252,7 +251,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         }
 
         return new ModelAndView( getSuccessView() )
-                .addObject( "expressionDataMatrixVisualization", matrixVisualization );
+                .addObject( "matrixVisualizer", matrixVisualizer );
     }
 
     /**

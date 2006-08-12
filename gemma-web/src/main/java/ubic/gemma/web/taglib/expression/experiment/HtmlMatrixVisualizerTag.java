@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -30,10 +31,10 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.visualization.ExpressionDataMatrix;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualization;
+import ubic.gemma.visualization.MatrixVisualizer;
 
 /**
- * @jsp.tag name="expressionDataMatrixVisualization" body-content="empty"
+ * @jsp.tag name="matrixVisualizer" body-content="empty"
  * @author keshav
  * @version $Id$
  */
@@ -54,15 +55,14 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
     // here:http://www.phptr.com/articles/article.asp?p=30946&seqNum=9&rl=1.
     // private String expressionDataMatrixVisualizationName = null;
 
-    private ExpressionDataMatrixVisualization expressionDataMatrixVisualization = null;
+    private MatrixVisualizer matrixVisualizer = null;
 
     /**
-     * @jsp.attribute description="The expressionDataMatrixVisualization object" required="true" rtexprvalue="true"
-     * @param expressionDataMatrixVisualization
+     * @jsp.attribute description="The visualizer object" required="true" rtexprvalue="true"
+     * @param matrixVisualizer
      */
-    public void setExpressionDataMatrixVisualization(
-            ExpressionDataMatrixVisualization expressionDataMatrixVisualization ) {
-        this.expressionDataMatrixVisualization = expressionDataMatrixVisualization;
+    public void setMatrixVisualizer( MatrixVisualizer matrixVisualizer ) {
+        this.matrixVisualizer = matrixVisualizer;
     }
 
     /*
@@ -75,17 +75,17 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
         log.debug( "start tag" );
         try {
-            /* get metadata from ExpressionDataMatrixVisualization */
-            ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
-            String outfile = expressionDataMatrixVisualization.getOutfile();
+            /* get metadata from MatrixVisualizer */
+            ExpressionDataMatrix expressionDataMatrix = matrixVisualizer.getExpressionDataMatrix();
+            String outfile = matrixVisualizer.getOutfile();
 
             Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
-            expressionDataMatrixVisualization.createVisualization();
+            matrixVisualizer.createVisualization();
 
-            List<String> designElementNames = expressionDataMatrixVisualization.getRowLabels();
+            List<String> designElementNames = matrixVisualizer.getRowLabels();
 
-            expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
+            matrixVisualizer.saveImage( new File( outfile ) );/* remove me when using dynamic images */
 
             /* Cannot use \ in non internet explorer browsers. Using / instead. */
             outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
@@ -97,7 +97,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
             StringBuilder buf = new StringBuilder();
 
-            if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
+            if ( matrixVisualizer.isSuppressVisualizations() ) {
                 buf.append( "Visualizations suppressed." );
             } else if ( expressionDataMatrix == null || m.size() == 0 ) {
                 buf.append( "No data to display" );
