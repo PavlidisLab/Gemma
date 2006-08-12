@@ -19,6 +19,7 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 
@@ -34,17 +35,19 @@ public class NCBIGeneParserTest extends TestCase {
     protected static final Log log = LogFactory.getLog( NCBIGeneParserTest.class );
 
     public void testParseGeneInfo() throws Exception {
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/geneinfo.txt" );
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/genome/gene/gene_info.sample.gz" ) );
         NcbiGeneInfoParser ngip = new NcbiGeneInfoParser();
         ngip.parse( is );
-        assertTrue( ngip.getResults().size() == 20 );
+        assertEquals( 100, ngip.getResults().size() );
     }
 
     public void testParseGene2Accession() throws Exception {
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/gene2accession.txt" );
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/genome/gene/gene2accession.sample.gz" ) );
         NcbiGene2AccessionParser ngip = new NcbiGene2AccessionParser();
         ngip.parse( is );
-        assertTrue( ngip.getResults().size() == 20 );
+        assertEquals( 100, ngip.getResults().size() );
     }
 
     protected void setUp() throws Exception {

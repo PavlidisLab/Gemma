@@ -54,8 +54,6 @@ public class Gene2GOAssociationMappings {
 
     private final int GO_ID = conf.getInt( "gene2go.go_id" );
 
-    Map<Integer, Taxon> taxaMap = null;
-
     Collection<String> evidenceCodes = null;
 
     ExternalDatabase goDb;
@@ -92,6 +90,15 @@ public class Gene2GOAssociationMappings {
         dbe.setAccession( values[GENE_ID] );
         dbe.setExternalDatabase( ncbiDb );
         gene.getAccessions().add( dbe );
+
+        Taxon t = Taxon.Factory.newInstance();
+        try {
+            t.setNcbiId( Integer.parseInt( values[TAX_ID] ) );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( e );
+        }
+
+        gene.setTaxon( t );
 
         OntologyEntry oe = OntologyEntry.Factory.newInstance();
         oe.setAccession( values[GO_ID] );

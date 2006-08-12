@@ -18,20 +18,26 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
-import junit.framework.TestCase;
+import ubic.gemma.apps.AbstractCLITestCase;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedSearcherTest extends TestCase {
+public class PubMedSearcherTest extends AbstractCLITestCase {
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
 
     /**
      * Test method for {@link ubic.gemma.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
      */
     public final void testMain() throws Exception {
         PubMedSearcher p = new PubMedSearcher();
-        p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-testing", "hippocampus", "diazepam", "juvenile" } );
+        Exception result = p.doWork( new String[] {"-v", "5", "-u", "pavlidis", "-p", "toast", "-testing", "hippocampus", "diazepam",
+                "juvenile" } );
+        if ( result != null ) {
+            fail( result.getMessage() );
+        }
     }
-
 }

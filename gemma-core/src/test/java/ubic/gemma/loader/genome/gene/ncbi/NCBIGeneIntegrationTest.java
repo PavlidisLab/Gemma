@@ -38,8 +38,8 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
         try {
 
-            String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/gene_info.sample.gz";
-            String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/gene2accession.sample.gz";
+            String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
+            String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
 
             String basePath = config.getString( "gemma.home" );
 
