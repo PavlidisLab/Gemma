@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.genome;
 
+import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneIntegrationTest;
+import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -34,6 +36,8 @@ public class AllGenomeTests {
         // $JUnit-BEGIN$
         suite.addTestSuite( BlatResultParserTest.class );
         suite.addTestSuite( FastaParserTest.class );
+        suite.addTestSuite( NCBIGeneIntegrationTest.class );
+        suite.addTestSuite( NCBIGeneParserTest.class );
         // $JUnit-END$
         return suite;
     }
