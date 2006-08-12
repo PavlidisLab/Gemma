@@ -46,6 +46,8 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactDao;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -76,6 +78,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
+import ubic.gemma.util.StringUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
@@ -98,11 +101,14 @@ import uk.ltd.getahead.dwr.create.SpringCreator;
  */
 abstract public class BaseTransactionalSpringContextTest extends AbstractTransactionalSpringContextTests {
 
+    protected static String testUserName = "test";
+    protected static String testPassword = "test";
+
     protected static final int RANDOM_STRING_LENGTH = 10;
+    protected static final int TEST_ELEMENT_COLLECTION_SIZE = 20;
     protected CompositeConfiguration config;
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
-    protected static final int TEST_ELEMENT_COLLECTION_SIZE = 20;
 
     protected ExternalDatabaseDao externalDatabaseDao;
 
@@ -136,133 +142,100 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     private Taxon testTaxon = null;
 
+    private UserDao userDao;
+
     /**
-     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     * 
+     * 
+     */
+    public BaseTransactionalSpringContextTest() {
+        super();
+
+        setAutowireMode( AutowireCapableBeanFactory.AUTOWIRE_BY_NAME );
+
+        // Since a ResourceBundle is not required for each class, just
+        // do a simple check to see if one exists
+        String className = this.getClass().getName();
+
+        try {
+            config = new CompositeConfiguration();
+            config.addConfiguration( new SystemConfiguration() );
+            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+            resourceBundle = ResourceBundle.getBundle( className ); // will look for <className>.properties
+        } catch ( MissingResourceException mre ) {
+            // log.warn("No resource bundle found for: " + className);
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Force the hibernate session to flush and clear.
+     */
+    public void flushAndClearSession() {
+        try {
+            flushSession();
+            ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().clear();
+        } catch ( HibernateException e ) {
+            throw new RuntimeException( "While trying to flush the session", e );
+        }
+    }
+
+    /**
+     * Force the hibernate session to flush.
+     */
+    public void flushSession() {
+        try {
+            ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().flush();
+        } catch ( HibernateException e ) {
+            throw new RuntimeException( "While trying to flush the session", e );
+        }
+    }
+
+    /**
+     * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
+     * tests by injection instead.
+     * 
+     * @param name
+     * @return
+     */
+    protected Object getBean( String name ) {
+        if ( isTestEnvDisabled() ) return getContext( getStandardLocations() ).getBean( name );
+        return getContext( getConfigLocations() ).getBean( name );
+    }
+
+    /**
+     * Returns config locations needed for test environment.
+     * 
+     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#getConfigLocations()
+     */
+    @Override
+    protected String[] getConfigLocations() {
+        return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
+                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
+    }
+
+    /**
+     * Use these locations when overriding the test config locations.
      * 
      * @return
      */
-    protected BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
-        BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-        ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        ba = ( BioAssay ) bioAssayDao.create( ba );
-        BioMaterial bm = this.getTestPersistentBioMaterial(); // might make this a parameter passed in.
-        ba.getSamplesUsed().add( bm );
-        if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
-        return ba;
-    }
-
-    protected BioMaterial getTestPersistentBioMaterial() {
-        BioMaterial bm = BioMaterial.Factory.newInstance();
-        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        bm.setExternalAccession( this.getTestPersistentDatabaseEntry() );
-        bm = ( BioMaterial ) bioMaterialDao.create( bm );
-        return bm;
-    }
-
-    protected BioSequence getTestPersistentBioSequence() {
-        BioSequence bs = BioSequence.Factory.newInstance();
-        bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
-        bs.setTaxon( getTestPersistentTaxon() );
-        return ( BioSequence ) bioSequenceDao.create( bs );
+    private Object getStandardLocations() {
+        // ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
+        // String daoType = db.getString( "dao.type" );
+        // String servletContext = db.getString( "servlet.name.0" );
+        return new String[] { "classpath:ubic/gemma/localDataSource.xml",
+                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
     }
 
     /**
      * @return
      */
-    private Taxon getTestPersistentTaxon() {
-        if ( testTaxon == null ) {
-            Taxon t = Taxon.Factory.newInstance();
-            t.setCommonName( "elephant" );
-            t.setScientificName( "Loxodonta" );
-            testTaxon = taxonDao.create( t );
-            assert testTaxon != null;
-        }
-        return testTaxon;
-    }
-
-    protected BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
-        BlatResult br = BlatResult.Factory.newInstance();
-        br.setQuerySequence( querySequence );
-        return ( BlatResult ) this.blatResultDao.create( br );
-    }
-
     protected Gene getTestPeristentGene() {
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         gene.setOfficialName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         return ( Gene ) this.geneDao.create( gene );
-    }
-
-    protected GeneProduct getTestPersistentGeneProduct( Gene gene ) {
-        GeneProduct gp = GeneProduct.Factory.newInstance();
-
-        return ( GeneProduct ) this.geneProductDao.create( gp );
-    }
-
-    /**
-     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
-     * The accession and ExternalDatabase name are set to random strings.
-     * 
-     * @return
-     */
-    protected DatabaseEntry getTestPersistentDatabaseEntry() {
-        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
-
-        /* set the accession of database entry to the pubmed id. */
-        result.setAccession( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testdb" );
-
-        ed = ( ExternalDatabase ) externalDatabaseDao.create( ed );
-
-        result.setExternalDatabase( ed );
-        result = databaseEntryDao.create( result );
-        return result;
-    }
-
-    /**
-     * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
-     * 
-     * @return
-     */
-    protected Contact getTestPersistentContact() {
-        Contact c = Contact.Factory.newInstance();
-        c.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        c = ( Contact ) contactDao.create( c );
-        return c;
-    }
-
-    /**
-     * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
-     * objects.
-     * 
-     * @return
-     */
-    protected QuantitationType getTestPersistentQuantitationType() {
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        qt.setIsBackground( false );
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
-        qt.setScale( ScaleType.LINEAR );
-        qt = ( QuantitationType ) quantitationTypeDao.create( qt );
-        return qt;
-    }
-
-    /**
-     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
-     * objects.
-     * 
-     * @return
-     */
-    protected ExpressionExperiment getTestPersistentExpressionExperiment() {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        ee = ( ExpressionExperiment ) expressionExperimentDao.create( ee );
-        return ee;
     }
 
     /**
@@ -298,63 +271,165 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
-     * Force the hibernate session to flush.
-     */
-    public void flushSession() {
-        try {
-            ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().flush();
-        } catch ( HibernateException e ) {
-            throw new RuntimeException( "While trying to flush the session", e );
-        }
-    }
-
-    /**
-     * Force the hibernate session to flush and clear.
-     */
-    public void flushAndClearSession() {
-        try {
-            flushSession();
-            ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().clear();
-        } catch ( HibernateException e ) {
-            throw new RuntimeException( "While trying to flush the session", e );
-        }
-    }
-
-    /**
+     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * 
-     * 
-     */
-    public BaseTransactionalSpringContextTest() {
-        super();
-
-        setAutowireMode( AutowireCapableBeanFactory.AUTOWIRE_BY_NAME );
-
-        // Since a ResourceBundle is not required for each class, just
-        // do a simple check to see if one exists
-        String className = this.getClass().getName();
-
-        try {
-            config = new CompositeConfiguration();
-            config.addConfiguration( new SystemConfiguration() );
-            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
-            resourceBundle = ResourceBundle.getBundle( className ); // will look for <className>.properties
-        } catch ( MissingResourceException mre ) {
-            // log.warn("No resource bundle found for: " + className);
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
-     * tests by injection instead.
-     * 
-     * @param name
      * @return
      */
-    protected Object getBean( String name ) {
-        if ( isTestEnvDisabled() ) return getContext( getStandardLocations() ).getBean( name );
-        return getContext( getConfigLocations() ).getBean( name );
+    protected BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
+        BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
+        ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        ba = ( BioAssay ) bioAssayDao.create( ba );
+        BioMaterial bm = this.getTestPersistentBioMaterial(); // might make this a parameter passed in.
+        ba.getSamplesUsed().add( bm );
+        if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
+        return ba;
+    }
+
+    /**
+     * @return
+     */
+    protected BioMaterial getTestPersistentBioMaterial() {
+        BioMaterial bm = BioMaterial.Factory.newInstance();
+        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        bm.setExternalAccession( this.getTestPersistentDatabaseEntry() );
+        bm = ( BioMaterial ) bioMaterialDao.create( bm );
+        return bm;
+    }
+
+    /**
+     * @return
+     */
+    protected BioSequence getTestPersistentBioSequence() {
+        BioSequence bs = BioSequence.Factory.newInstance();
+        bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
+        bs.setTaxon( getTestPersistentTaxon() );
+        return ( BioSequence ) bioSequenceDao.create( bs );
+    }
+
+    /**
+     * @param querySequence
+     * @return
+     */
+    protected BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
+        BlatResult br = BlatResult.Factory.newInstance();
+        br.setQuerySequence( querySequence );
+        return ( BlatResult ) this.blatResultDao.create( br );
+    }
+
+    /**
+     * Convenience method to provide a Contact that can be used to fill non-nullable associations in test objects.
+     * 
+     * @return
+     */
+    protected Contact getTestPersistentContact() {
+        Contact c = Contact.Factory.newInstance();
+        c.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        c = ( Contact ) contactDao.create( c );
+        return c;
+    }
+
+    /**
+     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     * The accession and ExternalDatabase name are set to random strings.
+     * 
+     * @return
+     */
+    protected DatabaseEntry getTestPersistentDatabaseEntry() {
+        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
+
+        /* set the accession of database entry to the pubmed id. */
+        result.setAccession( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+
+        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+        ed.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testdb" );
+
+        ed = ( ExternalDatabase ) externalDatabaseDao.create( ed );
+
+        result.setExternalDatabase( ed );
+        result = databaseEntryDao.create( result );
+        return result;
+    }
+
+    /**
+     * Convenience method to provide an ExpressionExperiment that can be used to fill non-nullable associations in test
+     * objects.
+     * 
+     * @return
+     */
+    protected ExpressionExperiment getTestPersistentExpressionExperiment() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        ee = ( ExpressionExperiment ) expressionExperimentDao.create( ee );
+        return ee;
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    protected GeneProduct getTestPersistentGeneProduct( Gene gene ) {
+        GeneProduct gp = GeneProduct.Factory.newInstance();
+
+        return ( GeneProduct ) this.geneProductDao.create( gp );
+    }
+
+    /**
+     * Convenience method to provide a QuantitationType that can be used to fill non-nullable associations in test
+     * objects.
+     * 
+     * @return
+     */
+    protected QuantitationType getTestPersistentQuantitationType() {
+        QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsBackground( false );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
+        qt.setScale( ScaleType.LINEAR );
+        qt = ( QuantitationType ) quantitationTypeDao.create( qt );
+        return qt;
+    }
+
+    /**
+     * @return
+     */
+    private Taxon getTestPersistentTaxon() {
+        if ( testTaxon == null ) {
+            Taxon t = Taxon.Factory.newInstance();
+            t.setCommonName( "elephant" );
+            t.setScientificName( "Loxodonta" );
+            testTaxon = taxonDao.create( t );
+            assert testTaxon != null;
+        }
+        return testTaxon;
+    }
+
+    /**
+     * @return
+     */
+    protected User getTestPersistentUser() {
+        User testUser = User.Factory.newInstance();
+        testUser.setEmail( "foo@bar" );
+        testUser.setFirstName( "Foo" );
+        testUser.setLastName( "Bar" );
+        testUser.setMiddleName( "" );
+        testUser.setEnabled( Boolean.TRUE );
+        testUser.setUserName( testUserName );
+        testUser.setPassword( StringUtil.encodePassword( testPassword, "SHA" ) );
+        testUser.setConfirmPassword( StringUtil.encodePassword( testPassword, "SHA" ) );
+        testUser.setPasswordHint( "I am an idiot" );
+
+        User user = userDao.findByUserName( testUserName );
+
+        if ( user == null ) {
+            return ( User ) userDao.create( testUser );
+        }
+
+        assert user.getUserName() != null;
+
+        return user;
     }
 
     /**
@@ -377,27 +452,10 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
-     * Returns config locations needed for test environment.
-     * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#getConfigLocations()
-     */
-    @Override
-    protected String[] getConfigLocations() {
-        return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
-    }
-
-    /**
-     * Use these locations when overriding the test config locations.
-     * 
      * @return
      */
-    private Object getStandardLocations() {
-        // ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        // String daoType = db.getString( "dao.type" );
-        // String servletContext = db.getString( "servlet.name.0" );
-        return new String[] { "classpath:ubic/gemma/localDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
+    public boolean isTestEnvDisabled() {
+        return testEnvDisabled;
     }
 
     /*
@@ -452,77 +510,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         // flushSession();
     }
 
-    /**
-     * Call this method near the start of your test to avoid "Stale data" errors ("Cannot synchronize session with
-     * persistent store..."). FlushMode.COMMIT means that the cache will never be flushed before queries, only at the
-     * end of the transaction. If you are getting errors when "find" methods are used, this could help.
-     * <p>
-     * It can also improve performance during tests, at the possible cost of a big hit at the end.
-     * <p>
-     * Use this carefully -- if your test is going to 'find' data that hasn't been flushed yet, you'll have problems.
-     */
-    protected void setFlushModeCommit() {
-        ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().setFlushMode( FlushMode.COMMIT );
-    }
-
-    /**
-     * Option to override use of the test environment.
-     * 
-     * @param disableTestEnv
-     */
-    public void setDisableTestEnv( boolean testEnvDisabled ) {
-        this.testEnvDisabled = testEnvDisabled;
-    }
-
-    /**
-     * @param databaseEntryDao The databaseEntryDao to set.
-     */
-    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
-    }
-
-    /**
-     * @param externalDatabaseDao The externalDatabaseDao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * @param contactDao The contactDao to set.
-     */
-    public void setContactDao( ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * @param taxonDao The taxonDao to set.
-     */
-    public void setTaxonDao( TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
-    }
-
-    /**
-     * @return
-     */
-    public boolean isTestEnvDisabled() {
-        return testEnvDisabled;
-    }
-
     public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
-    }
-
-    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
-        this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
-        this.compositeSequenceDao = compositeSequenceDao;
     }
 
     public void setBioAssayDao( BioAssayDao bioAssayDao ) {
@@ -550,6 +539,57 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         this.blatResultDao = blatResultDao;
     }
 
+    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
+        this.compositeSequenceDao = compositeSequenceDao;
+    }
+
+    /**
+     * @param contactDao The contactDao to set.
+     */
+    public void setContactDao( ContactDao contactDao ) {
+        this.contactDao = contactDao;
+    }
+
+    /**
+     * @param databaseEntryDao The databaseEntryDao to set.
+     */
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
+    }
+
+    /**
+     * Option to override use of the test environment.
+     * 
+     * @param disableTestEnv
+     */
+    public void setDisableTestEnv( boolean testEnvDisabled ) {
+        this.testEnvDisabled = testEnvDisabled;
+    }
+
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    /**
+     * @param externalDatabaseDao The externalDatabaseDao to set.
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    /**
+     * Call this method near the start of your test to avoid "Stale data" errors ("Cannot synchronize session with
+     * persistent store..."). FlushMode.COMMIT means that the cache will never be flushed before queries, only at the
+     * end of the transaction. If you are getting errors when "find" methods are used, this could help.
+     * <p>
+     * It can also improve performance during tests, at the possible cost of a big hit at the end.
+     * <p>
+     * Use this carefully -- if your test is going to 'find' data that hasn't been flushed yet, you'll have problems.
+     */
+    protected void setFlushModeCommit() {
+        ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().setFlushMode( FlushMode.COMMIT );
+    }
+
     /**
      * @param geneDao the geneDao to set
      */
@@ -562,5 +602,23 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public void setGeneProductDao( GeneProductDao geneProductDao ) {
         this.geneProductDao = geneProductDao;
+    }
+
+    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
+    }
+
+    /**
+     * @param taxonDao The taxonDao to set.
+     */
+    public void setTaxonDao( TaxonDao taxonDao ) {
+        this.taxonDao = taxonDao;
+    }
+
+    /**
+     * @param userDao The userDao to set.
+     */
+    public void setUserDao( UserDao userDao ) {
+        this.userDao = userDao;
     }
 }

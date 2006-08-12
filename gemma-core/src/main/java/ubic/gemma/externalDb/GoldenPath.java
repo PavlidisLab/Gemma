@@ -285,10 +285,6 @@ public class GoldenPath {
         // starting with refgene means we can get the correct transcript name etc.
         Collection<GeneProduct> geneProducts = findRefGenesByLocation( chromosome, queryStart, queryEnd, strand );
 
-        if ( geneProducts == null ) {
-            geneProducts = new HashSet<GeneProduct>();
-        }
-
         // get known genes as well, in case all we got was an intron.
         geneProducts.addAll( findKnownGenesByLocation( chromosome, queryStart, queryEnd, strand ) );
 
@@ -456,6 +452,7 @@ public class GoldenPath {
 
                         Gene gene = Gene.Factory.newInstance();
                         gene.setOfficialSymbol( rs.getString( 2 ) );
+                        gene.setName( gene.getOfficialSymbol() ); // doesn't hurt.
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
                         pl.setNucleotide( rs.getLong( 3 ) );
@@ -469,6 +466,8 @@ public class GoldenPath {
                         // note that we aren't setting the chromosome here; we already know that.
                         gene.setPhysicalLocation( pl );
 
+                        product.setName( rs.getString( 1 ) );
+                        product.setDescription( "Product of " + gene.getOfficialSymbol() );
                         product.setPhysicalLocation( pl );
                         product.setGene( gene );
 

@@ -40,7 +40,6 @@ public class BibliographicReferenceDaoImplTest extends BaseTransactionalSpringCo
 
     private BibliographicReferenceDao bibliographicReferenceDao = null;
     private DatabaseEntry de = null;
-    private ExternalDatabaseDao externalDatabaseDao = null;
     private SessionFactory sessionFactory = null;
     private BibliographicReference testBibRef = null;
     private PersisterHelper persisterHelper;
@@ -92,13 +91,6 @@ public class BibliographicReferenceDaoImplTest extends BaseTransactionalSpringCo
      */
     public void setBibliographicReferenceDao( BibliographicReferenceDao dao ) {
         this.bibliographicReferenceDao = dao;
-    }
-
-    /**
-     * @param exdbdao The exdbdao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao exdbdao ) {
-        this.externalDatabaseDao = exdbdao;
     }
 
     /**

@@ -26,15 +26,12 @@ import org.acegisecurity.AccessDeniedException;
 import ubic.gemma.Constants;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
-import ubic.gemma.util.StringUtil;
 
 /**
  * Use this to test acegi functionality.
@@ -45,12 +42,9 @@ import ubic.gemma.util.StringUtil;
  */
 public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest {
 
-    private static String testUserName = "testUser";
-    private static String testPassword = "toast";
-
     private ManualAuthenticationProcessing manualAuthenticationProcessing;
     private ArrayDesignService arrayDesignService;
-    private UserDao userDao;
+
     private UserService userService;
     ArrayDesign notYourArrayDesign;
 
@@ -73,17 +67,7 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
 
         super.onSetUpInTransaction(); // so we have authority to add a user.
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        User testUser = User.Factory.newInstance();
-        testUser.setEmail( "foo@bar" );
-        testUser.setFirstName( "Foo" );
-        testUser.setLastName( "Bar" );
-        testUser.setMiddleName( "" );
-        testUser.setEnabled( Boolean.TRUE );
-        testUser.setUserName( testUserName );
-        testUser.setPassword( StringUtil.encodePassword( testPassword, "SHA" ) );
-        testUser.setConfirmPassword( testPassword );
-        testUser.setPasswordHint( "I am an idiot" );
-        testUser = ( User ) userDao.create( testUser );
+        User testUser = getTestPersistentUser();
         userService.addRole( testUser, Constants.USER_ROLE );
         notYourArrayDesign = ArrayDesign.Factory.newInstance();
         notYourArrayDesign.setName( "deleteme" );
@@ -180,10 +164,4 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
         this.manualAuthenticationProcessing = manualAuthenticationProcessing;
     }
 
-    /**
-     * @param userDao The userDao to set.
-     */
-    public void setUserDao( UserDao userDao ) {
-        this.userDao = userDao;
-    }
 }

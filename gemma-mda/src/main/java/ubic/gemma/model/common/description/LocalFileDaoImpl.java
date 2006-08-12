@@ -26,6 +26,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -41,6 +42,9 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
     @Override
     public LocalFile find( ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
+
+            BusinessKey.checkValidKey( localFile );
+
             Criteria queryObject = super.getSession( false ).createCriteria( LocalFile.class );
 
             queryObject.add( Restrictions.eq( "localURI", localFile.getLocalURI() ) );
@@ -76,15 +80,12 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
     @Override
     public ubic.gemma.model.common.description.LocalFile findOrCreate(
             ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null || localFile.getLocalURI() == null
-                || ( localFile.getRemoteURI() == null && localFile.getSize() == 0 ) ) {
-            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
-        }
-        LocalFile newlocalFile = find( localFile );
-        if ( newlocalFile != null ) {
-            log.debug( "Found existing localFile: " + newlocalFile.getLocalURI() );
-            BeanPropertyCompleter.complete( newlocalFile, localFile );
-            return newlocalFile;
+
+        LocalFile existingLocalFile = find( localFile );
+        if ( existingLocalFile != null ) {
+            log.debug( "Found existing localFile: " + existingLocalFile.getLocalURI() );
+            BeanPropertyCompleter.complete( existingLocalFile, localFile );
+            return existingLocalFile;
         }
         log.debug( "Creating new localFile: " + localFile.getLocalURI() );
         return create( localFile );

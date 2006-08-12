@@ -136,4 +136,11 @@ public class BusinessKey {
         return queryObject;
     }
 
+    public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
+        if ( localFile == null || localFile.getLocalURI() == null
+                || ( localFile.getRemoteURI() == null && localFile.getSize() == 0 ) ) {
+            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
+        }
+    }
+
 }
