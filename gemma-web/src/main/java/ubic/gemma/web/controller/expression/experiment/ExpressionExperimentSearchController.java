@@ -39,7 +39,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.basecode.io.File.FileUtils;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -230,7 +230,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         boolean suppressVisualizations = ( ( ExpressionExperimentSearchCommand ) command ).isSuppressVisualizations();
 
         File imageFile = File.createTempFile( request.getRemoteUser() + request.getSession( true ).getId()
-                + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileUtils
+                + RandomStringUtils.randomAlphabetic( 5 ), ".png", FileTools
                 .createDir( "../webapps/ROOT/visualization/" ) );
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );

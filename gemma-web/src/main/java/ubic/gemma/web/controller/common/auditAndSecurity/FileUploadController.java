@@ -33,7 +33,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.basecode.io.File.FileUtils;
+import ubic.basecode.util.FileTools;
 import ubic.gemma.Constants;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.util.upload.CommonsMultipartFile;
@@ -77,7 +77,7 @@ public class FileUploadController extends BaseFormController {
         String uploadDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
 
         // Create the directory if it doesn't exist
-        File dirPath = FileUtils.createDir( uploadDir );
+        File dirPath = FileTools.createDir( uploadDir );
 
         // retrieve the file data
         InputStream stream = file.getInputStream();
