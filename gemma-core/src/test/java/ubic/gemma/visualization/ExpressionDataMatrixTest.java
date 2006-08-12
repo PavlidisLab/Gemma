@@ -98,13 +98,12 @@ public class ExpressionDataMatrixTest extends TestCase {
      * @see junit.framework.TestCase#setUp()
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected void setUp() throws Exception {
         byte[][] data = readTabFile( this.getClass().getResourceAsStream( "/data/visualization/testData_100.txt" ) );
 
         assert data != null;
 
-        Collection<DesignElement> designElements = new HashSet();
+        Collection<DesignElement> designElements = new HashSet<DesignElement>();
         for ( int i = 0; i < rowNames.length; i++ ) {
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( rowNames[i] );
@@ -113,8 +112,7 @@ public class ExpressionDataMatrixTest extends TestCase {
             vector.setData( data[i] );
             vector.setDesignElement( cs );
 
-            // cs.setDesignElementDataVector( vector );
-            Collection<DesignElementDataVector> vectors = new HashSet();
+            Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
             vectors.add( vector );
             cs.setDesignElementDataVectors( vectors );
             designElements.add( cs );
@@ -137,10 +135,6 @@ public class ExpressionDataMatrixTest extends TestCase {
         matrixData = null;
     }
 
-    /**
-     * 
-     *
-     */
     public void testMatrixVisualizationData() throws Exception {
 
         // vizualizationData.printData();
@@ -152,7 +146,17 @@ public class ExpressionDataMatrixTest extends TestCase {
 
         // visualizer.setColorMap( ColorMap.GREENRED_COLORMAP );
         visualizer.createVisualization( matrixData );
-        visualizer.saveImage( "gemma-core/src/test/java/ubic/gemma/visualization/outImage1.png" );
 
+        File tmp = File.createTempFile( "testOut", ".png" );
+
+        visualizer.saveImage( tmp );
+
+        tmp.deleteOnExit();
+
+        FileInputStream fis = new FileInputStream( tmp );
+
+        assertNotNull( fis );
+        assertTrue( tmp.length() > 0 );
+        fis.close();
     }
 }

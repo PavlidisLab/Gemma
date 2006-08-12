@@ -74,62 +74,61 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
     public int doStartTag() throws JspException {
 
         log.debug( "start tag" );
-
-        /* get metadata from ExpressionDataMatrixVisualization */
-        ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
-        String outfile = expressionDataMatrixVisualization.getOutfile();
-
-        Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
-
-        expressionDataMatrixVisualization.createVisualization();
-
-        List<String> designElementNames = expressionDataMatrixVisualization.getRowLabels();
-
-        expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
-
-        /* Cannot use \ in non internet explorer browsers. Using / instead. */
-        outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
-
-        outfile = StringUtils.replace( outfile, StringUtils.splitByWholeSeparator( outfile, "visualization" )[0],
-                "http://localhost:8080/" );// FIXME get the protocol, server, and port from request
-
-        log.debug( "setting compatibility for non-IE browsers " + outfile );
-
-        StringBuilder buf = new StringBuilder();
-
-        if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
-            buf.append( "Visualizations suppressed." );
-        } else if ( expressionDataMatrix == null || m.size() == 0 ) {
-            buf.append( "No data to display" );
-        } else {
-
-            log.debug( "wrapping with html" );
-
-            buf.append( "<table border=\"0\">" );
-            buf.append( "<tr>" );
-            buf.append( "<td>&nbsp;</td>" );
-            buf.append( "<td align=\"left\">Probe Set<br/><br/></td>" );
-            buf.append( "</tr>" );
-
-            buf.append( "<tr>" );
-            buf.append( "<td border=\"0\" rowspan=\"5\">" );
-            buf.append( "<img src=\"" + outfile + "\">" );
-            buf.append( "</td>" );
-            buf.append( "<td align=\"left\">" );
-            for ( String name : designElementNames ) {
-                buf.append( "<font size=\"-1\">" );
-                buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term=" + name
-                        + "\">" + name + "</a>" );
-                buf.append( "</font>" );
-                buf.append( "<br/>" );
-            }
-            buf.append( "</td>" );
-
-            buf.append( "</tr>" );
-            buf.append( "</table>" );
-        }
-
         try {
+            /* get metadata from ExpressionDataMatrixVisualization */
+            ExpressionDataMatrix expressionDataMatrix = expressionDataMatrixVisualization.getExpressionDataMatrix();
+            String outfile = expressionDataMatrixVisualization.getOutfile();
+
+            Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
+
+            expressionDataMatrixVisualization.createVisualization();
+
+            List<String> designElementNames = expressionDataMatrixVisualization.getRowLabels();
+
+            expressionDataMatrixVisualization.saveImage( outfile );/* remove me when using dynamic images */
+
+            /* Cannot use \ in non internet explorer browsers. Using / instead. */
+            outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
+
+            outfile = StringUtils.replace( outfile, StringUtils.splitByWholeSeparator( outfile, "visualization" )[0],
+                    "http://localhost:8080/" );// FIXME get the protocol, server, and port from request
+
+            log.debug( "setting compatibility for non-IE browsers " + outfile );
+
+            StringBuilder buf = new StringBuilder();
+
+            if ( expressionDataMatrixVisualization.isSuppressVisualizations() ) {
+                buf.append( "Visualizations suppressed." );
+            } else if ( expressionDataMatrix == null || m.size() == 0 ) {
+                buf.append( "No data to display" );
+            } else {
+
+                log.debug( "wrapping with html" );
+
+                buf.append( "<table border=\"0\">" );
+                buf.append( "<tr>" );
+                buf.append( "<td>&nbsp;</td>" );
+                buf.append( "<td align=\"left\">Probe Set<br/><br/></td>" );
+                buf.append( "</tr>" );
+
+                buf.append( "<tr>" );
+                buf.append( "<td border=\"0\" rowspan=\"5\">" );
+                buf.append( "<img src=\"" + outfile + "\">" );
+                buf.append( "</td>" );
+                buf.append( "<td align=\"left\">" );
+                for ( String name : designElementNames ) {
+                    buf.append( "<font size=\"-1\">" );
+                    buf.append( "<a href=\"http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=search&term="
+                            + name + "\">" + name + "</a>" );
+                    buf.append( "</font>" );
+                    buf.append( "<br/>" );
+                }
+                buf.append( "</td>" );
+
+                buf.append( "</tr>" );
+                buf.append( "</table>" );
+            }
+
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
             throw new JspException( "HtmlMatrixVisualizationTag: " + ex.getMessage() );
