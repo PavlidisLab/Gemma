@@ -76,12 +76,11 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
         if ( !manualAuthenticationProcessing.validateRequest( testUserName, testPassword ) ) {
             throw new RuntimeException( "Failed to authenticate" );
         }
-
     }
 
     /**
-     * Test removing an arrayDesign without having the correct authorization privileges. You should get an
-     * unsuccessfulAuthentication.
+     * Test removing an arrayDesign with the correct authorization privileges. The security interceptor should be called
+     * on this method, as should the AddOrRemoveFromACLInterceptor.
      * 
      * @throws Exception
      */
@@ -94,8 +93,8 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     }
 
     /**
-     * Test removing an arrayDesign with correct authorization. The security interceptor should be called on this
-     * method, as should the AddOrRemoveFromACLInterceptor.
+     * Test removing an arrayDesign without the correct authorization. The security interceptor should be called on this
+     * method, as should the AddOrRemoveFromACLInterceptor. You should get an AccessDeniedException.
      * 
      * @throws Exception
      */
@@ -105,7 +104,7 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
             arrayDesignService.remove( notYourArrayDesign );
             fail( "Should have gotten an AccessDeniedException" );
         } catch ( AccessDeniedException okay ) {
-            // 
+            //
         }
     }
 
