@@ -35,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionDataMatrix"
  */
 public class ExpressionDataMatrix {
     private Log log = LogFactory.getLog( this.getClass() );
@@ -45,15 +44,6 @@ public class ExpressionDataMatrix {
     private Collection<DesignElement> designElements = null;
 
     private Map<String, DesignElementDataVector> dataMap = new HashMap<String, DesignElementDataVector>();
-
-    /**
-     * 
-     *
-     */
-    public ExpressionDataMatrix() {
-        // spring looks for this on application startup
-        // FIXME this will brek the api ... remove it
-    }
 
     /**
      * @param expressionExperiment
