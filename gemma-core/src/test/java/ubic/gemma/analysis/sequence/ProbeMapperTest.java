@@ -61,7 +61,7 @@ public class ProbeMapperTest extends TestCase {
         ProbeMapper pm = new ProbeMapper();
 
         try {
-            GoldenPath gp = new GoldenPath( 3306, "mm8", "localhost", "root", "toast" );
+            GoldenPath gp = new GoldenPath( 3306, "mm8", "localhost", "testuser", "toast" );
             if ( gp == null ) {
                 log.warn( "Could not get Goldenpath database connection, skipping test" );
                 return;

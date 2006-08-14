@@ -35,7 +35,7 @@ public class ExternalDatabaseTest extends BaseTransactionalSpringContextTest {
 
     /**
      * Get the bean name of the appropriate dao object. These dao objects will be replaced by the "table name + Dao" for
-     * the database in question. For the moment, I have only set this up for the hg17 database as the other 3 will work
+     * the database in question. For the moment, I have only set this up for the hg18 database as the other 3 will work
      * in the same manner.
      * 
      * @throws ConfigurationException
