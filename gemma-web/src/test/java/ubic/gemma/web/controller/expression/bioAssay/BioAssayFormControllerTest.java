@@ -94,14 +94,6 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
     /**
      * @throws Exception
      */
-    public void testSave() throws Exception {
-        log.debug( "testing save" );
-
-    }
-
-    /**
-     * @throws Exception
-     */
     public void testEdit() throws Exception {
         log.debug( "testing edit" );
 

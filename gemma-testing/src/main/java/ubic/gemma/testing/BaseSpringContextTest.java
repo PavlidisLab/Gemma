@@ -128,7 +128,7 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
     @Override
     protected String[] getConfigLocations() {
         return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
+                "classpath*:ubic/gemma/applicationContext-*.xml", "classpath*:*-servlet.xml" };
     }
 
     /*

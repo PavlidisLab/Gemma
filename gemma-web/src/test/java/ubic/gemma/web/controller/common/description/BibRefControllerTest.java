@@ -48,6 +48,7 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
     /**
      * Add a bibliographic reference to the database for testing purposes.
      */
+    @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 

@@ -211,7 +211,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected String[] getConfigLocations() {
         return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
+                "classpath*:ubic/gemma/applicationContext-*.xml", "classpath*:*-servlet.xml" };
     }
 
     /**
@@ -224,7 +224,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         // String daoType = db.getString( "dao.type" );
         // String servletContext = db.getString( "servlet.name.0" );
         return new String[] { "classpath:ubic/gemma/localDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "*-servlet.xml" };
+                "classpath*:ubic/gemma/applicationContext-*.xml", "classpath*:*-servlet.xml" };
     }
 
     /**
