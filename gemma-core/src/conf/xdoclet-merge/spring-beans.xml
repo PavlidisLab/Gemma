@@ -86,7 +86,7 @@
         <value>toast</value>
     </property>
     <property name="url">
-        <value>jdbc:mysql://localhost:3306/hg17</value>
+        <value>jdbc:mysql://localhost:3306/hg18</value>
     </property>
 </bean>
 
