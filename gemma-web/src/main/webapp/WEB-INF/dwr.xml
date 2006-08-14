@@ -18,7 +18,7 @@
         </create>
         
         <create creator="new" javascript="ProgressMonitor">
-            <param name="class" value="ubic.gemma.web.util.progress.ProgressMonitor"/>
+            <param name="class" value="ubic.gemma.web.util.progress.HttpProgressMonitor"/>
         </create>
          
     </allow>

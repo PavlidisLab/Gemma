@@ -29,9 +29,7 @@ import java.io.Serializable;
 
 public class ProgressData implements Serializable {
 
-    /** The serial version UID of this class. Needed for serialization. */
-    private static final long serialVersionUID = -1618654342446645213L; // TODO: This needs to be generated... currently
-                                                                        // just one number off off UserRoleImpl.
+    private static final long serialVersionUID = -4303625064082352461L;
 
     private int percent;
     private String description;

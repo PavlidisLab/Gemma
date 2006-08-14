@@ -27,10 +27,6 @@ package ubic.gemma.web.util.progress;
  */
 public class ProgressJobImpl implements ProgressJob {
 
-    public static final int DOWNLOAD_PROGRESS = 0;
-    public static final int COMPUTATIONAL_PROGRESS = 1;
-    public static final int DATABASE_PROGRESS = 2;
-    public static final int PARSING_PROGRESS = 3;
 
     protected ProgressData pData;
     protected boolean runningStatus;
@@ -110,5 +106,15 @@ public class ProgressJobImpl implements ProgressJob {
         setProgressData( pd );
         ProgressManager.notify( this );
     }
+    
+    /**
+     * Upates the current progress of the job to the desired percent.  doesn't change anything else.
+     * @param newPercent
+     */
+    public void updateProgress(int newPercent) {
+        pData.setPercent( newPercent );
+        ProgressManager.notify( this );
+    }
+
 
 }

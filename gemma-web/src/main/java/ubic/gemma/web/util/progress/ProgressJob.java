@@ -28,6 +28,11 @@ package ubic.gemma.web.util.progress;
  */
 public interface ProgressJob {
 
+    public static final int DOWNLOAD_PROGRESS = 0;
+    public static final int COMPUTATIONAL_PROGRESS = 1;
+    public static final int DATABASE_PROGRESS = 2;
+    public static final int PARSING_PROGRESS = 3;
+    
     /**
      * @return Returns the pData.
      */
@@ -64,6 +69,12 @@ public interface ProgressJob {
      * Updates the current progress of the job. Simple increments the progress percent by 1.
      */
     public abstract void updateProgress();
+    
+    /**
+     * Upates the current progress of the job to the desired percent.  doesn't change anything else.
+     * @param newPercent
+     */
+    public abstract void updateProgress(int newPercent);
 
     /**
      * Updates the progress job by a complete progressData. In case a few things need to be updated
