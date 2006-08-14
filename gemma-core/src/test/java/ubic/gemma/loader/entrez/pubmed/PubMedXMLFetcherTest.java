@@ -54,7 +54,10 @@ public class PubMedXMLFetcherTest extends TestCase {
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
             assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
         } catch ( java.net.ConnectException e ) {
-            log.warn( "Test skipped due to connection exception", e );
+            log.warn( "Test skipped due to connection exception" );
+            return;
+        } catch ( java.net.UnknownHostException e ) {
+            log.warn( "Test skipped due to unknown host exception" );
             return;
         }
     }
@@ -66,7 +69,9 @@ public class PubMedXMLFetcherTest extends TestCase {
         } catch ( java.net.ConnectException e ) {
             log.warn( "Test skipped due to connection exception", e );
             return;
+        } catch ( java.net.UnknownHostException e ) {
+            log.warn( "Test skipped due to unknown host exception" );
+            return;
         }
     }
-
 }

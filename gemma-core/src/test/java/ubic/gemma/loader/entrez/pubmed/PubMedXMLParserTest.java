@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.TestCase;
 import ubic.gemma.model.common.description.BibliographicReference;
 
@@ -30,6 +33,8 @@ import ubic.gemma.model.common.description.BibliographicReference;
  * @version $Id$
  */
 public class PubMedXMLParserTest extends TestCase {
+
+    private static Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
 
     InputStream testStream;
     PubMedXMLParser testParser;
@@ -48,13 +53,18 @@ public class PubMedXMLParserTest extends TestCase {
     }
 
     public void testParse() throws Exception {
-        Collection<BibliographicReference> brl = testParser.parse( testStream );
-        BibliographicReference br = brl.iterator().next();
-        assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
-        assertEquals( "Genome Res", br.getPublication() );
-        assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
+        try {
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertEquals( "Lee, Homin K; Hsu, Amy K; Sajdak, Jon; Qin, Jie; Pavlidis, Paul", br.getAuthorList() );
+            assertEquals( "Genome Res", br.getPublication() );
+            assertEquals( "Coexpression analysis of human genes across many microarray data sets.", br.getTitle() );
 
-        SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
-        assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
+            SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy" );
+            assertEquals( "00/05/06/03/2004", f.format( br.getPublicationDate() ) );
+        } catch ( java.net.UnknownHostException e ) {
+            log.warn( "Test skipped due to unknown host exception" );
+            return;
+        }
     }
 }

@@ -19,11 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import java.io.File;
-import java.net.URI;
 import java.net.URISyntaxException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * @author pavlidis
@@ -31,8 +27,6 @@ import org.apache.commons.logging.LogFactory;
  * @see ubic.gemma.model.common.description.LocalFile
  */
 public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile {
-
-    private static Log log = LogFactory.getLog( LocalFileImpl.class.getName() );
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -45,16 +39,13 @@ public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile
      * @see ubic.gemma.model.common.description.LocalFile#asFile()
      */
     public java.io.File asFile() {
-        URI u;
+
         try {
-            u = new URI( this.getLocalURI() );
+            return new File( this.getLocalURL().toURI() );
         } catch ( URISyntaxException e ) {
-            log.warn( this.getLocalURI() + " could not be converted into a URI, treating as plain path." );
-            // maybe it's just a regular file.
-            return new File( this.getLocalURI() );
-            // throw new RuntimeException( e );
+            throw new RuntimeException( e );
         }
-        return new File( u.getPath() );
+
     }
 
     /**

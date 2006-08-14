@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.flow.bibref;
 
+import java.io.File;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.DataBinder;
@@ -106,7 +108,7 @@ public class PubMedAttachPdfAction extends AbstractFlowFormAction {
         assert pdfFormat != null;
 
         pdf.setFormat( pdfFormat );
-        pdf.setLocalURI( ( String ) context.getSourceEvent().getAttribute( "pdfFile" ) );
+        pdf.setLocalURL( new File( ( String ) context.getSourceEvent().getAttribute( "pdfFile" ) ).toURI().toURL() );
 
         log.info( "ic reference " + bibRef.getPubAccession().getAccession() );
 

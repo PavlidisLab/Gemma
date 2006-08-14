@@ -104,6 +104,8 @@ public class ExpressionDataMatrixTest extends TestCase {
         byte[][] data = readTabFile( this.getClass().getResourceAsStream( "/data/visualization/testData_100.txt" ) );
 
         assert data != null;
+        assert data[0] != null;
+        assert data[0].length > 0;
 
         Collection<DesignElement> designElements = new HashSet<DesignElement>();
         for ( int i = 0; i < rowNames.length; i++ ) {

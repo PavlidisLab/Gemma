@@ -18,7 +18,12 @@
  */
 package ubic.gemma.loader.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import junit.framework.TestCase;
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
@@ -30,13 +35,26 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public class HttpFetcherTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
+
     /*
      * Test method for 'ubic.gemma.loader.loaderutils.HttpFetcher.fetch(String)'
      */
-    public void testFetch() {
+    public void testFetch() throws Exception {
         HttpFetcher hf = new HttpFetcher();
-        Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );
-        results.iterator().next();
+        try {
+            hf.setForce( true );
+            Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );
+            assertTrue( results != null && results.size() > 0 && results.iterator().next().getLocalURL() != null );
+            File f = new File( results.iterator().next().getLocalURL().toURI() );
+            f.deleteOnExit();
+            assertTrue( f.length() > 0 );
+            f.delete();
+        } catch ( Exception e ) {
+            if ( e.getCause() instanceof IOException ) {
+                log.error( "Got IOException, skipping test" );
+                return;
+            }
+        }
     }
-
 }

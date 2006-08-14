@@ -20,12 +20,15 @@ package ubic.gemma.model;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoTest;
+import ubic.gemma.model.common.auditAndSecurity.UserDaoImplTest;
 import ubic.gemma.model.common.description.BibliographicReferenceDaoImplTest;
 import ubic.gemma.model.common.description.DatabaseEntryDaoImplTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImplTest;
 import ubic.gemma.model.expression.bioAssay.BioAssayDaoImplTest;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoImplTest;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDaoImplTest;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImplTest;
 import ubic.gemma.model.genome.QtlDaoImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoImplTest;
@@ -40,19 +43,24 @@ public class AllModelTests {
     public static Test suite() {
         TestSuite suite = new TestSuite( "Model-related tests for gemma-core" );
 
-        suite.addTestSuite( ArrayDesignDaoImplTest.class );
-        suite.addTestSuite( BioMaterialDaoImplTest.class );
-        suite.addTestSuite( CandidateGeneListDaoImplTest.class );
-        suite.addTestSuite( QtlDaoImplTest.class );
+        suite.addTestSuite( AuditTrailDaoTest.class );
+        suite.addTestSuite( UserDaoImplTest.class );
 
         suite.addTestSuite( BibliographicReferenceDaoImplTest.class );
         suite.addTestSuite( DatabaseEntryDaoImplTest.class );
 
+        suite.addTestSuite( ArrayDesignDaoImplTest.class );
         suite.addTestSuite( BioAssayDaoImplTest.class );
         suite.addTestSuite( BioAssayDimensionDaoImplTest.class );
+        suite.addTestSuite( BioMaterialDaoImplTest.class );
+        suite.addTestSuite( CandidateGeneListDaoImplTest.class );
+
         suite.addTestSuite( BlatAssociationDaoImplTest.class );
         suite.addTestSuite( BlatResultDaoImplTest.class );
 
+        suite.addTestSuite( ExpressionExperimentDaoImplTest.class );
+
+        suite.addTestSuite( QtlDaoImplTest.class );
         return suite;
     }
 }

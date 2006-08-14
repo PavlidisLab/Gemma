@@ -28,7 +28,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 
 /**
  * Tests the expressionExperimentSearchController functionality. For this to work, data must be left in the database,
@@ -44,8 +43,6 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
      */
     @SuppressWarnings("unchecked")
     public void testOnSubmit() throws Exception {
-
-        onSetUpInTransaction();// set up in a transaction
         ExpressionExperiment ee = this.setExpressionExperimentDependencies();
 
         ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this

@@ -73,11 +73,12 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
      * @return
      */
     public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath ) {
-        log.info( "Fetching..." );
-        try {
-            URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURL();
-            URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURL();
 
+        try {
+            URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURI().toURL();
+            URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURI().toURL();
+
+            log.info( "Fetching..." );
             NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
             LocalFile geneInfoFile = fetcher.fetch( geneInfoUrl ).iterator().next();
             LocalFile gene2AccessionFile = fetcher.fetch( gene2AccesionUrl ).iterator().next();
@@ -90,7 +91,9 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
     }
 
     private Collection<NCBIGene2Accession> processLocalFiles( LocalFile geneInfoFile, LocalFile gene2AccessionFile ) {
-        log.info( "Parsing" );
+        log.info( "Parsing geneinfo=" + geneInfoFile.asFile().getAbsolutePath() + " and gene2accession="
+                + gene2AccessionFile.asFile().getAbsolutePath() );
+        ;
         NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
         NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
 

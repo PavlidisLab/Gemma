@@ -23,8 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
@@ -91,6 +89,10 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
         }
     }
 
+    /**
+     * @param file
+     * @return
+     */
     public Collection<LocalFile> fetch( URL file ) {
         if ( file == null ) {
             throw new IllegalArgumentException();
@@ -100,7 +102,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
         assert chunks.length > 1;
         String identifier = FileTools.chompExtension( chunks[chunks.length - 1] );
 
-        log.info( "Seeking Ncbi " + file.toExternalForm() + " file, using identifier " + identifier );
+        log.info( "Seeking Ncbi " + file.toString() + " file, using identifier " + identifier );
 
         try {
 
@@ -115,13 +117,13 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
             OutputStream out = new FileOutputStream( new File( outputFileName ) );
 
-            LocalFile f = LocalFile.Factory.newInstance();
+            LocalFile localFile = LocalFile.Factory.newInstance();
 
-            f.setLocalURI( ( new File( outputFileName ).toURI() ).toString() );
+            localFile.setLocalURL( ( new File( outputFileName ).toURI().toURL() ) );
 
             Collection<LocalFile> result = new HashSet<LocalFile>();
 
-            result.add( f );
+            result.add( localFile );
 
             // Transfer bytes from in to out
             byte[] buf = new byte[1024];
@@ -133,8 +135,8 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
             String finalOutputPath = FileTools.unGzipFile( outputFileName );
 
-            f.setLocalURI( ( new File( finalOutputPath ).toURI() ).toString() );
-            f.setSize( new File( finalOutputPath ).length() );
+            localFile.setLocalURL( ( new File( finalOutputPath ).toURI().toURL() ) );
+            localFile.setSize( new File( finalOutputPath ).length() );
 
             return result;
 

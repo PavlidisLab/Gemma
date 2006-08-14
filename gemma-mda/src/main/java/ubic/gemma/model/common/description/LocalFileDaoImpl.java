@@ -47,14 +47,14 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
 
             Criteria queryObject = super.getSession( false ).createCriteria( LocalFile.class );
 
-            queryObject.add( Restrictions.eq( "localURI", localFile.getLocalURI() ) );
+            queryObject.add( Restrictions.eq( "localURL", localFile.getLocalURL() ) );
 
-            assert localFile != null;
-            if ( localFile.getSize() != null && localFile.getSize() != 0 )
-                queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
-
-            if ( localFile.getRemoteURI() != null )
-                queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURI() ) );
+            // assert localFile != null;
+            // if ( localFile.getSize() != null && localFile.getSize() != 0 )
+            // queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
+            //
+            // if ( localFile.getRemoteURL() != null )
+            // queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURL() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -80,14 +80,14 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
     @Override
     public ubic.gemma.model.common.description.LocalFile findOrCreate(
             ubic.gemma.model.common.description.LocalFile localFile ) {
-
+        if ( localFile == null ) return null;
         LocalFile existingLocalFile = find( localFile );
         if ( existingLocalFile != null ) {
-            log.debug( "Found existing localFile: " + existingLocalFile.getLocalURI() );
+            log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
             BeanPropertyCompleter.complete( existingLocalFile, localFile );
             return existingLocalFile;
         }
-        log.debug( "Creating new localFile: " + localFile.getLocalURI() );
+        log.debug( "Creating new localFile: " + localFile.getLocalURL() );
         return create( localFile );
     }
 

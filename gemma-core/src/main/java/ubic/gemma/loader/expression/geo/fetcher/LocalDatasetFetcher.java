@@ -19,9 +19,7 @@
 package ubic.gemma.loader.expression.geo.fetcher;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -29,7 +27,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
- * TODO - DOCUMENT ME
+ * Used for testing, but might have other uses, to fetch GEO data from local files instead of the GEO website.
  * 
  * @author pavlidis
  * @version $Id$
@@ -69,18 +67,6 @@ public class LocalDatasetFetcher extends DatasetFetcher {
         }
 
         throw new RuntimeException( "Failed to find " + seekFileName );
-    }
-
-    /**
-     * @param seekFile
-     * @return
-     */
-    protected LocalFile fetchedFile( String seekFile ) {
-        LocalFile file = LocalFile.Factory.newInstance();
-        file.setVersion( new SimpleDateFormat().format( new Date() ) );
-        file.setRemoteURI( seekFile );
-        file.setLocalURI( "file://" + seekFile );
-        return file;
     }
 
 }

@@ -19,7 +19,11 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import java.io.InputStream;
+import java.net.UnknownHostException;
 import java.util.Collection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import junit.framework.TestCase;
 
@@ -29,16 +33,22 @@ import junit.framework.TestCase;
  */
 public class ESearchXMLParserTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( ESearchXMLParserTest.class.getName() );
+
     /*
      * Test method for 'ubic.gemma.loader.entrez.pubmed.ESearchXMLParser.parse(InputStream)'
      */
     public void testParse() throws Exception {
-        InputStream stream = ESearchXMLParserTest.class.getResourceAsStream( "/data/esearchresult.xml" );
-        assert stream != null;
-        ESearchXMLParser parser = new ESearchXMLParser();
-        Collection<String> ids = parser.parse( stream );
-        assertTrue( ids.size() == 4 );
-        assertTrue( ids.contains( "15963425" ) );
+        try {
+            InputStream stream = ESearchXMLParserTest.class.getResourceAsStream( "/data/esearchresult.xml" );
+            assert stream != null;
+            ESearchXMLParser parser = new ESearchXMLParser();
+            Collection<String> ids = parser.parse( stream );
+            assertTrue( ids.size() == 4 );
+            assertTrue( ids.contains( "15963425" ) );
+        } catch ( UnknownHostException e ) {
+            log.warn( "Test skipped due to unknown host exception" );
+            return;
+        }
     }
-
 }

@@ -188,7 +188,7 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
 
         LocalFile pdf = LocalFile.Factory.newInstance();
         pdf.setSize( file.getSize() );
-        pdf.setLocalURI( saveToFile.toURI().toString() );
+        pdf.setLocalURL( saveToFile.toURI().toURL() );
 
         pdf = localFileService.findOrCreate( pdf );
 

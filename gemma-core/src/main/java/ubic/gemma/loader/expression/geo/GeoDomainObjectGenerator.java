@@ -19,8 +19,6 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -171,11 +169,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
         LocalFile platformFile = ( platforms.iterator() ).next();
         String platformPath;
-        try {
-            platformPath = ( new URI( platformFile.getLocalURI() ) ).getPath();
-        } catch ( URISyntaxException e ) {
-            throw new IllegalStateException( e );
-        }
+
+        platformPath = platformFile.getLocalURL().getPath();
+
         gfp.setProcessPlatformsOnly( true );
         try {
             gfp.parse( platformPath );
@@ -207,11 +203,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
         LocalFile seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath;
-        try {
-            seriesPath = ( new URI( seriesFile.getLocalURI() ) ).getPath();
-        } catch ( URISyntaxException e ) {
-            throw new IllegalStateException( e );
-        }
+
+        seriesPath = seriesFile.getLocalURL().getPath();
+
         gfp.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {
             gfp.parse( seriesPath );
@@ -247,11 +241,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
         LocalFile seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath;
-        try {
-            seriesPath = ( new URI( seriesFile.getLocalURI() ) ).getPath();
-        } catch ( URISyntaxException e ) {
-            throw new IllegalStateException( e );
-        }
+
+        seriesPath = seriesFile.getLocalURL().getPath();
+
         gfp.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {
             gfp.parse( seriesPath );
@@ -303,11 +295,9 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         LocalFile dataSetFile = ( result.iterator() ).next();
         String dataSetPath;
-        try {
-            dataSetPath = ( new URI( dataSetFile.getLocalURI() ) ).getPath();
-        } catch ( URISyntaxException e ) {
-            throw new IllegalStateException( e );
-        }
+
+        dataSetPath = dataSetFile.getLocalURL().getPath();
+
         return dataSetPath;
     }
 

@@ -82,6 +82,7 @@ public abstract class AbstractCLI {
     protected String password;
     private static int DEFAULT_VERBOSITY = 2;
     private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
+    private Level originalLoggingLevel;
 
     public AbstractCLI() {
         this.buildStandardOptions();
@@ -175,7 +176,20 @@ public abstract class AbstractCLI {
     protected void bail( ErrorCode errorCode ) {
         // do something, but not System.exit.
         log.debug( "Bailing with error code " + errorCode );
+        resetLogging();
         throw new IllegalStateException( errorCode.toString() );
+    }
+
+    /**
+     * This is needed for CLIs that run in tests, so the logging settings get reset.
+     */
+    public void resetLogging() {
+        String loggerName = "ubic.gemma";
+        Logger log4jLogger = LogManager.exists( loggerName );
+
+        assert log4jLogger != null : "No logger of name '" + loggerName + "'";
+
+        log4jLogger.setLevel( this.originalLoggingLevel );
     }
 
     /**
@@ -225,6 +239,8 @@ public abstract class AbstractCLI {
         Logger log4jLogger = LogManager.exists( loggerName );
 
         assert log4jLogger != null : "No logger of name '" + loggerName + "'";
+
+        this.originalLoggingLevel = log4jLogger.getLevel();
 
         switch ( verbosity ) {
             case 0:

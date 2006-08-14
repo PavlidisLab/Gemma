@@ -33,6 +33,7 @@ import ubic.gemma.loader.expression.geo.AllGeoTests;
 import ubic.gemma.loader.expression.mage.AllMageTests;
 import ubic.gemma.loader.expression.smd.AllSmdTests;
 import ubic.gemma.loader.genome.AllGenomeTests;
+import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.model.AllModelTests;
 import ubic.gemma.security.SecurityIntegrationTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
@@ -61,6 +62,8 @@ public class AllCoreTests {
         suite.addTest( AllGenomeTests.suite() );
         suite.addTest( AllModelTests.suite() );
 
+        suite.addTestSuite( HttpFetcherTest.class );
+
         suite.addTestSuite( ProbeMapperTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
@@ -77,6 +80,9 @@ public class AllCoreTests {
 
         suite.addTestSuite( ExpressionDataMatrixTest.class );
         suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
+
+        System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
+                + " Tests to run\n----------------------\n" );
 
         return suite;
     }

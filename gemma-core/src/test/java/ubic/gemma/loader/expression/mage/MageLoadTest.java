@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.mage;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -60,6 +61,9 @@ public class MageLoadTest extends AbstractMageTest {
 
         xslSetup( mlp, MAGE_DATA_RESOURCE_PATH + "E-AFMX-13/E-AFMX-13.xml" );
 
+        mageMLConverter.addLocalExternalDataPath( config.getString( "gemma.home" ) + File.separatorChar
+                + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-AFMX-13" );
+
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-AFMX-13/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
@@ -91,6 +95,10 @@ public class MageLoadTest extends AbstractMageTest {
 
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-WMIT-4.xml" );
+
+        mageMLConverter.addLocalExternalDataPath( config.getString( "gemma.home" ) + File.separatorChar
+                + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-WMIT-4" );
+
         mlp.parse( istMageExamples );
         Collection<Object> parseResult = mlp.getResults();
 

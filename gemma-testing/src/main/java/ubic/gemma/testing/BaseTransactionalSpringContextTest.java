@@ -69,7 +69,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.Taxon;
@@ -262,7 +261,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
         // use service to get acl
         ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        ad = ( ArrayDesign ) arrayDesignService.create( ad );
+        ad = arrayDesignService.create( ad );
 
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             cs.setArrayDesign( ad );

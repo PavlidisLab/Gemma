@@ -200,13 +200,10 @@ public class DatasetCombiner {
             }
             is.close();
         } catch ( MalformedURLException e ) {
-            log.error( e, e );
             throw new RuntimeException( "Invalid URL " + url, e );
         } catch ( UnknownHostException e ) {
-            log.error( e, e );
             throw new RuntimeException( "Could not connect to remote server", e );
         } catch ( IOException e ) {
-            log.error( e, e );
             throw new RuntimeException( "Could not get data from remote server", e );
         }
 

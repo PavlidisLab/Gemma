@@ -185,7 +185,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private void fillInBioAssayAssociations( BioAssay assay ) {
 
         for ( ArrayDesign arrayDesign : assay.getArrayDesignsUsed() ) {
-            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId());
+            arrayDesign.setId( persistArrayDesign( arrayDesign ).getId() );
         }
 
         for ( FactorValue factorValue : assay.getFactorValues() ) {
@@ -203,7 +203,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             bioMaterial.setId( persistBioMaterial( bioMaterial ).getId() );
         }
 
-        assay.setRawDataFile( persistLocalFile( assay.getRawDataFile() ) );
+        if ( assay.getRawDataFile() != null ) {
+            assay.setRawDataFile( persistLocalFile( assay.getRawDataFile() ) );
+        }
 
         for ( LocalFile file : assay.getDerivedDataFiles() ) {
             file.setId( persistLocalFile( file ).getId() );

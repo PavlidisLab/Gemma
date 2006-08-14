@@ -25,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.util.BusinessKey;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -46,10 +48,9 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             if ( factorValue.getValue() != null ) {
                 queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
             } else if ( factorValue.getOntologyEntry() != null ) {
-                queryObject.add( Restrictions.eq( "ontologyEntry", factorValue.getOntologyEntry() ) );
+                BusinessKey.attachCriteria( queryObject, factorValue.getOntologyEntry(), "ontologyEntry" );
             } else if ( factorValue.getMeasurement() != null ) {
                 queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
-                // FIXME, this isn't that simple.
             }
 
             java.util.List results = queryObject.list();
@@ -81,7 +82,9 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             FactorValue fv = ( FactorValue ) object;
             sb.append( "\tID=" + fv.getId() + " Value=" + fv.getValue() );
             if ( fv.getMeasurement() != null ) sb.append( " Measurement=" + fv.getMeasurement().getValue() );
-            if ( fv.getOntologyEntry() != null ) sb.append( " OntologyEntry=" + fv.getOntologyEntry().getValue() );
+            if ( fv.getOntologyEntry() != null )
+                sb.append( " OntologyEntry=" + fv.getOntologyEntry().getCategory() + " : "
+                        + fv.getOntologyEntry().getValue() );
             sb.append( "\n" );
         }
         log.error( sb.toString() );

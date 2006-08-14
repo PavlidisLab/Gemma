@@ -82,7 +82,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      */
     public LocalFile getMageMlFile( Collection<LocalFile> files ) {
         for ( LocalFile file : files ) {
-            if ( file.getLocalURI().endsWith( ".xml" ) ) {
+            if ( file.getLocalURL().toString().endsWith( ".xml" ) ) {
                 return file;
             }
         }

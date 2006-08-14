@@ -21,8 +21,7 @@ package ubic.gemma.loader.expression.mage;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -286,9 +285,22 @@ public class MageMLConverterHelper {
                 log.error( "Cannot read from " + path );
             }
             localExternalDataPaths.add( path );
+
+            // add temp file location.
+            localExternalDataPaths.add( System.getProperty( "java.io.tmpdir" ) );
+
         } catch ( ConfigurationException e ) {
             throw new RuntimeException( "Failed to load configuration", e );
         }
+    }
+
+    /**
+     * This is provided for tests.
+     * 
+     * @param path
+     */
+    protected void addLocalExternalDataPath( String path ) {
+        localExternalDataPaths.add( path );
     }
 
     /**
@@ -501,6 +513,8 @@ public class MageMLConverterHelper {
 
         BioDataValues data = mageObj.getBioDataValues();
         LocalFile result = LocalFile.Factory.newInstance();
+        result.setRemoteURL( null );
+        result.setLocalURL( null );
 
         if ( data instanceof BioDataCube ) {
             DataExternal dataExternal = ( ( BioDataCube ) data ).getDataExternal();
@@ -508,18 +522,16 @@ public class MageMLConverterHelper {
                 log.warn( "BioDataCube with no external data" );
                 return null;
             }
-            URI localURI = findLocalMageExternalDataFile( dataExternal.getFilenameURI() );
 
-            if ( localURI == null ) { // FIXME NEED TO GET ACTUAL FILE (or fill in later)
-                result.setLocalURI( dataExternal.getFilenameURI() );
-            } else {
-                log.warn( "Local file not found, filling in " + dataExternal.getFilenameURI() );
-                result.setLocalURI( localURI.toString() );
+            URL localURL = findLocalMageExternalDataFile( dataExternal.getFilenameURI() );
+            if ( localURL == null ) {
+                log.warn( "External data file " + dataExternal.getFilenameURI()
+                        + " not found; Data derived from MAGE BioAssayData " + mageObj.getName()
+                        + " will not have reachable external data." );
+                return null;
             }
 
-            // this is not really the remote uri - just
-            // whatever is in the mage document.
-            result.setRemoteURI( dataExternal.getFilenameURI() );
+            result.setLocalURL( localURL );
 
         } else if ( data instanceof BioDataTuples ) {
             log.error( "Not ready to deal with BioDataTuples from Mage" );
@@ -534,24 +546,29 @@ public class MageMLConverterHelper {
 
     /**
      * Given a URI, try to find the corresponding local file. The only part of the URI that is looked at is the file
-     * name. We then look in known local directory paths that are used to store MAGE-ML derived files.
-     * <p>
-     * FIXME this is broken, need to do much smarter path search....just the idea for now.
+     * name. We then look in known local directory paths that are used to store MAGE-ML derived files. The search path
+     * can be modified by using addLocalExternaldataPath
      * 
      * @param seekURI
-     * @return
+     * @return URL matching the file.
+     * @see addLocalExternaldataPath
      */
-    private URI findLocalMageExternalDataFile( String seekURI ) {
-        String fileName = seekURI.substring( seekURI.lastIndexOf( "/" ) + 1 );
+    private URL findLocalMageExternalDataFile( String rawFileName ) {
+        String fileName = rawFileName;
+        if ( fileName.lastIndexOf( File.separatorChar ) >= 0 ) {
+            fileName = rawFileName.substring( rawFileName.lastIndexOf( File.separatorChar ) + 1 );
+        }
+
         log.debug( "Seeking external data file " + fileName );
         for ( String path : this.localExternalDataPaths ) {
-            File f = new File( path + "/" + fileName );
+            File f = new File( path + File.separatorChar + fileName );
             log.debug( "Looking in " + f.getAbsolutePath() );
             if ( f.exists() ) {
+                log.debug( "Found it! In " + f.getAbsolutePath() );
                 try {
-                    return new URI( "file", "", path, "" );
-                } catch ( URISyntaxException e ) {
-                    log.error( e, e );
+                    return f.toURI().toURL();
+                } catch ( MalformedURLException e ) {
+                    throw new RuntimeException( e );
                 }
             }
         }

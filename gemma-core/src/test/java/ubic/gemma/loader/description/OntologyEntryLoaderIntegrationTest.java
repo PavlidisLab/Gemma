@@ -22,6 +22,7 @@ import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -64,14 +65,14 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
         ed.setAuditTrail( at );
 
         LocalFile lf = LocalFile.Factory.newInstance();
-        lf.setLocalURI( "Remote file.  See remote uri for details." );
-        lf.setRemoteURI( url );
+        lf.setLocalURL( null );
+        lf.setRemoteURL( new URL( url ) );
         lf.setSize( 1656000L );
 
         // add a second local file
         LocalFile lf2 = LocalFile.Factory.newInstance();
-        lf2.setLocalURI( "2nd local file local uri." );
-        lf2.setRemoteURI( "2nd local file remote uri." );
+        lf2.setLocalURL( new URL( "file:///2nd/local/file/local/uri." ) );
+        lf2.setRemoteURL( new URL( "http://2nd/local/file/remote/uri." ) );
         lf2.setSize( 1656000L );
 
         Object[] dependencies = new Object[3];

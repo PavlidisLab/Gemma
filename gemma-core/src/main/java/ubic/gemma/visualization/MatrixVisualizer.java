@@ -31,10 +31,10 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
  */
 public interface MatrixVisualizer {
 
-    /**
-     * Create the visualization object.
-     */
-    public void createVisualization();
+    // /**
+    // * Create the visualization object.
+    // */
+    // public void createVisualization();
 
     /**
      * @param matrixVisualizationData
@@ -53,33 +53,33 @@ public interface MatrixVisualizer {
      */
     public void saveImage( File outfile ) throws IOException;
 
-    /**
-     * Returns the outfile.
-     * 
-     * @return String
-     */
-    public String getOutfile();
+    // /**
+    // * Returns the outfile.
+    // *
+    // * @return String
+    // */
+    // public String getOutfile();
+    //
+    // /**
+    // * Sets the outfile.
+    // *
+    // * @param outfile
+    // */
+    //    public void setOutfile( String outfile );
 
-    /**
-     * Sets the outfile.
-     * 
-     * @param outfile
-     */
-    public void setOutfile( String outfile );
+//    /**
+//     * Returns the data matrix to be visualized.
+//     * 
+//     * @return ExpressionDataMatrix
+//     */
+//    public ExpressionDataMatrix getExpressionDataMatrix();
 
-    /**
-     * Returns the data matrix to be visualized.
-     * 
-     * @return ExpressionDataMatrix
-     */
-    public ExpressionDataMatrix getExpressionDataMatrix();
-
-    /**
-     * Sets the data matrix to be visualized.
-     * 
-     * @param expressionDataMatrix
-     */
-    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix );
+    // /**
+    // * Sets the data matrix to be visualized.
+    // *
+    // * @param expressionDataMatrix
+    // */
+    // public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix );
 
     /**
      * Returns the suppressVisualizations.

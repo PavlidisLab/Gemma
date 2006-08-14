@@ -76,7 +76,7 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
         } catch ( ParserConfigurationException e ) {
             e.printStackTrace();
         }
-
+        resetLogging();
         return null;
     }
 

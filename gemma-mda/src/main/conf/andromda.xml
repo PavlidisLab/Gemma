@@ -27,12 +27,15 @@
 			</models>
 		</repository>
 	</repositories>
+	<mappingsSearchLocations>
+		<location patterns="*.xml">${project.basedir}/src/main/conf/</location>
+	</mappingsSearchLocations>
 	<namespaces>
 		<namespace name="default">
 			<properties>
 				<property name="languageMappingsUri">Java</property>
 				<property name="wrapperMappingsUri">JavaWrapper</property>
-				<property name="sqlMappingsUri">MySQL</property>
+				<property name="sqlMappingsUri">file:${project.basedir}/src/main/conf/MySQLMappings.xml</property>
 				<property name="jdbcMappingsUri">JDBC</property>
 				<property name="maxSqlNameLength">60</property>
 				<property name="hibernateVersion">3</property>
@@ -138,7 +141,7 @@
 				<property name="hibernateDialect">
 					org.hibernate.dialect.MySQLMyISAMDialect
 				</property>
-				<property name="hibernateTypeMappingsUri">Hibernate</property>
+				<property name="hibernateTypeMappingsUri">file:${project.basedir}/src/main/conf/HibernateTypeMappings.xml</property>
 				<property name="hibernateInheritanceStrategy">
 					${hibernate.inheritance.strategy}
 				</property>
@@ -184,8 +187,6 @@
 				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
 			</properties>
 		</namespace>
-
-
 	</namespaces>
 </andromda>
 

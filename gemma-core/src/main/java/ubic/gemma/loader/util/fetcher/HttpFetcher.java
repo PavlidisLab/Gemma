@@ -159,8 +159,8 @@ public class HttpFetcher extends AbstractFetcher {
         File file = new File( outputFileName );
         log.info( "\t" + file.getCanonicalPath() );
         LocalFile newFile = LocalFile.Factory.newInstance();
-        newFile.setLocalURI( file.getPath() );
-        newFile.setRemoteURI( seekFile );
+        newFile.setLocalURL( file.toURI().toURL() );
+        newFile.setRemoteURL( new URL( seekFile ) );
         newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
         result.add( newFile );
         return result;

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.mage;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -122,6 +123,9 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
          */
         mageMLConverter.setSimplifiedXml( simplifiedXml );
 
+        mageMLConverter.addLocalExternalDataPath( config.getString( "gemma.home" ) + File.separatorChar
+                + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-AFMX-13" );
+
         ExpressionExperiment expressionExperiment = null;
         Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
         log.debug( "number of GDOs: " + gemmaObjects.size() );
@@ -138,10 +142,6 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
         }
 
         assert expressionExperiment != null && numExpExp == 1;
-
-        // PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-
-        // persisterHelper.persist( expressionExperiment );
 
         /* CONVERTING */
         log.info( "***** PREPROCESSING ***** " );

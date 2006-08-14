@@ -25,6 +25,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -42,24 +43,40 @@ public class BusinessKey {
     private static Log log = LogFactory.getLog( BusinessKey.class.getName() );
 
     /**
+     * Restricts the query to the provided BioSequence.
+     * 
+     * @param queryObject
+     * @param bioSequence The object used to create the criteria
+     * @param propertyName Often this will be 'bioSequence'
+     */
+    public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, bioSequence );
+        log.warn( queryObject.toString() );
+    }
+
+    /**
+     * Restricts the query to the provided OntologyEntry.
+     * 
+     * @param queryObject
+     * @param ontologyEntry The object used to create the criteria
+     * @param propertyName Often this will be 'ontologyEntry'
+     */
+    public static void attachCriteria( Criteria queryObject, OntologyEntry ontologyEntry, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, ontologyEntry );
+        log.debug( queryObject.toString() );
+    }
+
+    /**
      * @param bioSequence
-     * @return
      */
     public static void checkValidKey( BioSequence bioSequence ) {
         if ( bioSequence == null
+                || bioSequence.getTaxon() == null
                 || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
                         .getSequenceDatabaseEntry() == null ) ) {
             throw new IllegalArgumentException( "Biosequence did not have a valid key" );
-        }
-
-        // FIXME: add check for non-null taxon, even though it should not be nullable.
-    }
-
-    public static void checkValidKey( Taxon taxon ) {
-        if ( taxon == null
-                || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) && StringUtils
-                        .isBlank( taxon.getScientificName() ) ) ) {
-            throw new IllegalArgumentException( "Taxon " + taxon + " did not have a valid key" );
         }
     }
 
@@ -67,9 +84,13 @@ public class BusinessKey {
      * @param gene
      */
     public static void checkValidKey( Gene gene ) {
+        // FIXME make key.
         return;
     }
 
+    /**
+     * @param geneProduct
+     */
     public static void checkValidKey( GeneProduct geneProduct ) {
         boolean ok = true;
 
@@ -84,54 +105,25 @@ public class BusinessKey {
     }
 
     /**
-     * Restricts the query to the provided BioSequence.
-     * 
-     * @param queryObject
-     * @param bioSequence The object used to create the criteria
-     * @param propertyName Often this will be 'bioSequence'
-     */
-    public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        addRestrictions( innerQuery, bioSequence );
-        log.warn( queryObject.toString() );
-    }
-
-    /**
-     * @param innerQuery
-     * @param bioSequence
-     */
-    private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
-        if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-            queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
-
-            addTaxonRestriction( queryObject, bioSequence.getTaxon() );
-        }
-
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
-            queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
-                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
-        }
-
-        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-
-            addTaxonRestriction( queryObject, bioSequence.getTaxon() );
-        }
-    }
-
-    /**
-     * Assumes parameter name is 'taxon'.
-     * 
-     * @param queryObject
      * @param taxon
      */
-    private static void addTaxonRestriction( Criteria queryObject, Taxon taxon ) {
-        checkValidKey( taxon );
+    public static void checkValidKey( Taxon taxon ) {
+        if ( taxon == null
+                || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) && StringUtils
+                        .isBlank( taxon.getScientificName() ) ) ) {
+            throw new IllegalArgumentException( "Taxon " + taxon + " did not have a valid key" );
+        }
+    }
 
-        if ( taxon.getNcbiId() != null ) {
-            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
-        } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
-            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
+    /**
+     * @param localFile
+     */
+    public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
+        if ( localFile == null || localFile.getLocalURL() == null ) {
+            if ( localFile != null )
+                log.error( "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL="
+                        + localFile.getRemoteURL() + " size=" + localFile.getSize() );
+            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
         }
     }
 
@@ -146,10 +138,67 @@ public class BusinessKey {
         return queryObject;
     }
 
-    public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null || localFile.getLocalURI() == null
-                || ( localFile.getRemoteURI() == null && localFile.getSize() == 0 ) ) {
-            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
+    /**
+     * @param session
+     * @param ontologyEntry
+     * @return
+     */
+    public static Criteria createQueryObject( Session session, OntologyEntry ontologyEntry ) {
+        Criteria queryObject = session.createCriteria( OntologyEntry.class );
+        addRestrictions( queryObject, ontologyEntry );
+        return queryObject;
+    }
+
+    /**
+     * @param innerQuery
+     * @param bioSequence
+     */
+    private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
+        if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
+            queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
+
+            addRestrictions( queryObject, bioSequence.getTaxon() );
+        }
+
+        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
+            queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
+                    Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
+        }
+
+        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
+            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
+
+            addRestrictions( queryObject, bioSequence.getTaxon() );
+        }
+    }
+
+    /**
+     * @param queryObject
+     * @param ontologyEntry
+     */
+    private static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
+            queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
+                    "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
+        } else {
+            queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
+                    Restrictions.ilike( "value", ontologyEntry.getValue() ) );
+        }
+    }
+
+    /**
+     * Assumes parameter name is 'taxon'.
+     * 
+     * @param queryObject
+     * @param taxon
+     */
+    private static void addRestrictions( Criteria queryObject, Taxon taxon ) {
+        checkValidKey( taxon );
+
+        if ( taxon.getNcbiId() != null ) {
+            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
+            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
         }
     }
 

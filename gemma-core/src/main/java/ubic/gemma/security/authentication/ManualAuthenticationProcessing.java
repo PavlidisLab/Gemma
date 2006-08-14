@@ -21,7 +21,6 @@ package ubic.gemma.security.authentication;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.AuthenticationManager;
-import org.acegisecurity.BadCredentialsException;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.event.authentication.InteractiveAuthenticationSuccessEvent;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;

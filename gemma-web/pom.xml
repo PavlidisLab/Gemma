@@ -496,7 +496,7 @@
                     <reportsDirectory>target/surefire-reports</reportsDirectory>
                     <excludes>
                         <!--  FIXME for now we exclude all tests until we get the system running -->
-                        <exclude>**/*Test*,**/Test*,**/All*Tests</exclude>
+                        <exclude>**/*Test*,**/Test,**/All*Tests</exclude>
                     </excludes>
                 </configuration>
             </plugin>

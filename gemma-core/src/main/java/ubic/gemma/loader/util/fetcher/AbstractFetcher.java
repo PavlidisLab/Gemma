@@ -20,6 +20,9 @@ package ubic.gemma.loader.util.fetcher;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -29,10 +32,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -93,15 +92,28 @@ public abstract class AbstractFetcher implements Fetcher {
 
     /**
      * @param seekFile
+     * @return
+     */
+    protected LocalFile fetchedFile( String seekFile ) {
+        return this.fetchedFile( seekFile, seekFile );
+    }
+
+    /**
+     * @param seekFile
      * @param outputFileName
      * @return
      */
     protected LocalFile fetchedFile( String seekFile, String outputFileName ) {
         LocalFile file = LocalFile.Factory.newInstance();
         file.setVersion( new SimpleDateFormat().format( new Date() ) );
-        file.setRemoteURI( seekFile );
-        file.setLocalURI( "file://" + outputFileName.replaceAll( "\\\\", "/" ) );
-        // file.setSize( outputFile.length() );
+        try {
+            file.setRemoteURL( ( new File( seekFile ) ).toURI().toURL() );
+            file.setLocalURL( ( new URI( "file://" + outputFileName ) ).toURL() );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        } catch ( URISyntaxException e ) {
+            throw new RuntimeException( e );
+        }
         return file;
     }
 

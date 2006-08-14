@@ -115,6 +115,7 @@ public abstract class BasicLineMapParser implements LineParser {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
+        log.info( "Parsing " + file.getAbsolutePath() );
         FileInputStream stream = new FileInputStream( file );
         parse( stream );
         stream.close();

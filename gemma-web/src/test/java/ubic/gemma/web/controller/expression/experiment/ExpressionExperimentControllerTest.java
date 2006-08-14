@@ -18,14 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 
@@ -38,7 +33,7 @@ import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 public class ExpressionExperimentControllerTest extends AbstractExpressionExperimentTest {
     private static Log log = LogFactory.getLog( ExpressionExperimentControllerTest.class.getName() );
 
-  //  ExpressionExperimentController expressionExperimentController;
+    // ExpressionExperimentController expressionExperimentController;
 
     /**
      * @throws Exception
@@ -67,7 +62,7 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
 
         /* uncomment to persist and leave data in database */
         setComplete();
-        
+
         // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
         this.setExpressionExperimentDependencies();
 
@@ -83,17 +78,16 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
         // Map m = mav.getModel();
         //
         // assertNotNull( m.get( "expressionExperiments" ) );
-        //        assertEquals( mav.getViewName(), "expressionExperiments" );
+        // assertEquals( mav.getViewName(), "expressionExperiments" );
 
-       
     }
 
-//    /**
-//     * @param expressionExperimentController the expressionExperimentController to set
-//     */
-//    public void setExpressionExperimentController( ExpressionExperimentController expressionExperimentController ) {
-//        this.expressionExperimentController = expressionExperimentController;
-//    }
+    // /**
+    // * @param expressionExperimentController the expressionExperimentController to set
+    // */
+    // public void setExpressionExperimentController( ExpressionExperimentController expressionExperimentController ) {
+    // this.expressionExperimentController = expressionExperimentController;
+    // }
 
     /**
      * @throws Exception

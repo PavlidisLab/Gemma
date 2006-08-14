@@ -20,10 +20,7 @@ package ubic.gemma.loader.util.fetcher;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
@@ -35,7 +32,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -187,8 +183,8 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;
             log.info( "\t" + file.getCanonicalPath() );
             LocalFile newFile = LocalFile.Factory.newInstance();
-            newFile.setLocalURI( file.getPath() );
-            newFile.setRemoteURI( formRemoteFilePath( identifier ) );
+            newFile.setLocalURL( file.toURI().toURL() );
+            newFile.setRemoteURL( new File( formRemoteFilePath( identifier ) ).toURI().toURL() );
             newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
             result.add( newFile );
         }

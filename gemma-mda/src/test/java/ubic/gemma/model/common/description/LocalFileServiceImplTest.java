@@ -64,7 +64,7 @@ public class LocalFileServiceImplTest extends TestCase {
         OutputStream out = new FileOutputStream( f );
         out.write( "fiibly".getBytes(), 0, "fiibly".getBytes().length );
         out.close();
-        lf.setLocalURI( f.toURI().toString() );
+        lf.setLocalURL( f.toURI().toURL() );
 
         mockLFDao.remove( lf );
         expectLastCall().once();
@@ -83,7 +83,7 @@ public class LocalFileServiceImplTest extends TestCase {
     public void testHandleCopyFile() throws Exception {
         LocalFile src = LocalFile.Factory.newInstance();
         File srcf = File.createTempFile( "copyMe", ".txt" );
-        src.setLocalURI( srcf.toURI().toString() );
+        src.setLocalURL( srcf.toURI().toURL() );
 
         OutputStream out = new FileOutputStream( srcf );
         out.write( "fiibly".getBytes(), 0, "fiibly".getBytes().length );
@@ -91,7 +91,7 @@ public class LocalFileServiceImplTest extends TestCase {
 
         LocalFile dst = LocalFile.Factory.newInstance();
         File dstf = File.createTempFile( "copyToMe", ".txt" );
-        dst.setLocalURI( dstf.toURI().toString() );
+        dst.setLocalURL( dstf.toURI().toURL() );
 
         mockLFDao.create( dst );
         expectLastCall().andReturn( dst );
@@ -113,7 +113,7 @@ public class LocalFileServiceImplTest extends TestCase {
     // OutputStream out = new FileOutputStream( f );
     // out.write( "fiibly".getBytes(), 0, "fiibly".getBytes().length );
     // out.close();
-    // lf.setLocalURI( f.toURI().toString() );
+    // lf.setLocalURL( f.toURI().toString() );
     //
     // mockLFDao.find( lf );
     // expectLastCall().andReturn( lf );
@@ -131,7 +131,7 @@ public class LocalFileServiceImplTest extends TestCase {
         OutputStream out = new FileOutputStream( f );
         out.write( "fiibly".getBytes(), 0, "fiibly".getBytes().length );
         out.close();
-        lf.setLocalURI( f.toURI().toString() );
+        lf.setLocalURL( f.toURI().toURL() );
 
         mockLFDao.find( lf );
         expectLastCall().andReturn( lf );
@@ -148,7 +148,7 @@ public class LocalFileServiceImplTest extends TestCase {
         OutputStream out = new FileOutputStream( f );
         out.write( "fiibly".getBytes(), 0, "fiibly".getBytes().length );
         out.close();
-        lf.setLocalURI( f.toURI().toString() );
+        lf.setLocalURL( f.toURI().toURL() );
 
         mockLFDao.findOrCreate( lf );
         expectLastCall().andReturn( lf );

@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcherTest;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetServiceIntegrationTest;
+import ubic.gemma.loader.expression.geo.service.GeoPlatformServiceTest;
 
 /**
  * Test for ubic.gemma.loader.expression.geo
@@ -39,6 +40,7 @@ public class AllGeoTests {
         suite.addTestSuite( GeoConverterTest.class );
         suite.addTestSuite( GeoDatasetServiceIntegrationTest.class );
         suite.addTestSuite( RawDataFetcherTest.class );
+        suite.addTestSuite( GeoPlatformServiceTest.class );
         // $JUnit-END$
         return suite;
     }

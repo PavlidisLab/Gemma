@@ -64,17 +64,17 @@ public class ExpressionDataMatrix {
             DesignElementDataVector vector = ( DesignElementDataVector ) iter.next();
 
             dataMap.put( key, vector );
-
-            printData();
         }
     }
 
     /**
      * Log the data values
      */
-    private void printData() {
+    @Override
+    public String toString() {
         assert designElements != null : "Design Elements not initialized";
-
+        StringBuilder b = new StringBuilder();
+        int rowsDone = 0;
         for ( DesignElement designElement : designElements ) {
             ByteArrayConverter converter = new ByteArrayConverter();
             // FIXME quantitation type
@@ -88,11 +88,21 @@ public class ExpressionDataMatrix {
             byte[] byteData = vector.getData();
             double[] data = converter.byteArrayToDoubles( byteData );
 
-            log.debug( key );
-            for ( int j = 0; j < data.length; j++ ) {
-                log.debug( "data: " + data[j] );
+            b.append( key );
+            for ( int j = 0; j < Math.min( data.length, 10 ); j++ ) {
+                b.append( " " + data[j] );
+            }
+            if ( data.length < 10 ) {
+                b.append( "..." );
+            }
+            b.append( "\n" );
+            rowsDone++;
+            if ( rowsDone > 10 ) {
+                b.append( "..." );
+                break;
             }
         }
+        return b.toString();
     }
 
     /**

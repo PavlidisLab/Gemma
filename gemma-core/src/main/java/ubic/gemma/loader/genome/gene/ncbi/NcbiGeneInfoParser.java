@@ -28,6 +28,7 @@ import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
+import ubic.gemma.loader.util.parser.FileFormatException;
 
 /**
  * Class to parse the gene_info file from NCBI Gene. See {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details
@@ -54,10 +55,9 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != NCBI_GENEINFO_FIELDS_PER_ROW ) {
-            throw new IllegalArgumentException( "Line is not in the right format: has " + fields.length
+            throw new FileFormatException( "Line is not in the right format: has " + fields.length
                     + " fields, expected " + NCBI_GENEINFO_FIELDS_PER_ROW );
         }
-
         NCBIGeneInfo geneInfo = new NCBIGeneInfo();
         try {
             geneInfo.setTaxId( Integer.parseInt( fields[0] ) );
@@ -74,7 +74,9 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
                 for ( int i = 0; i < dbXRefs.length; i++ ) {
                     String dbXr = dbXRefs[i];
                     String[] dbF = StringUtils.split( dbXr, ':' );
-                    assert dbF.length == 2 : "Expected 2 fields, got " + dbF.length + " from " + dbXr;
+                    if ( dbF.length != 2 ) {
+                        throw new FileFormatException( "Expected 2 fields, got " + dbF.length + " from '" + dbXr + "'" );
+                    }
                     geneInfo.addToDbXRefs( dbF[0], dbF[1] );
                 }
             }
@@ -89,7 +91,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
                     .equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
 
         } catch ( NumberFormatException e ) {
-            throw new RuntimeException( e );
+            throw new FileFormatException( e );
         }
         return geneInfo;
     }

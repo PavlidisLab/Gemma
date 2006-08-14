@@ -24,6 +24,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * <hr>
@@ -42,17 +43,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
 
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( OntologyEntry.class );
-
-            if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
-                queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
-                        "externalDatabase" ).add(
-                        Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
-            } else {
-                queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
-                        Restrictions.ilike( "value", ontologyEntry.getValue() ) );
-            }
-
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSession( false ), ontologyEntry );
             java.util.List results = queryObject.list();
             Object result = null;
             if ( results != null ) {

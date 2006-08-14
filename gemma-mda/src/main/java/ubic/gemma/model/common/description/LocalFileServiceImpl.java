@@ -100,7 +100,7 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
     protected LocalFile handleFindByPath( String path ) throws Exception {
         File f = new File( path );
         LocalFile seek = LocalFile.Factory.newInstance();
-        seek.setLocalURI( f.toURI().toString() );
+        seek.setLocalURL( f.toURI().toURL() );
         return this.getLocalFileDao().find( seek );
     }
 

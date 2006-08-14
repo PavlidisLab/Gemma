@@ -61,6 +61,15 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
         this.mageConverterHelper = new MageMLConverterHelper();
     }
 
+    /**
+     * This is provided for tests.
+     * 
+     * @param path
+     */
+    protected void addLocalExternalDataPath( String path ) {
+        mageConverterHelper.addLocalExternalDataPath( path );
+    }
+
     /*
      * (non-Javadoc)
      * 

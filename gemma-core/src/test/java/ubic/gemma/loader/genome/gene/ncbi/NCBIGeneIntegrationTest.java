@@ -20,7 +20,6 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.concurrent.ExecutionException;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.util.persister.PersisterHelper;
@@ -36,39 +35,31 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
     @SuppressWarnings("unchecked")
     public void testFetchAndLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
-        try {
 
-            String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
-            String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
+        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
+        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
 
-            String basePath = config.getString( "gemma.home" );
+        String basePath = config.getString( "gemma.home" );
 
-            Collection<NCBIGene2Accession> results = sdog.generateLocal( basePath + geneInfoTestFile, basePath
-                    + gene2AccTestFile );
+        Collection<NCBIGene2Accession> results = sdog.generateLocal( basePath + geneInfoTestFile, basePath
+                + gene2AccTestFile );
 
-            log.info( "Trimming for test..." );
-            Collection<NCBIGene2Accession> smallSample = new HashSet<NCBIGene2Accession>();
-            int i = 0;
-            for ( NCBIGene2Accession gene : results ) {
-                smallSample.add( gene );
-                i++;
-                if ( i > 10 ) break;
-            }
-            results = null;
-
-            NcbiGeneConverter ngc = new NcbiGeneConverter();
-            log.info( "Converting..." );
-            Collection<Gene> gemmaObj = ( Collection<Gene> ) ngc.convert( smallSample );
-
-            PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-
-            persisterHelper.persist( gemmaObj );
-        } catch ( Exception e ) {
-            if ( e.getCause() instanceof ExecutionException ) {
-                log.warn( "Failed to get file -- skipping rest of test" );
-                return;
-            }
-            throw ( e );
+        Collection<NCBIGene2Accession> smallSample = new HashSet<NCBIGene2Accession>();
+        int i = 0;
+        for ( NCBIGene2Accession gene : results ) {
+            smallSample.add( gene );
+            i++;
+            if ( i > 10 ) break;
         }
+        results = null;
+
+        NcbiGeneConverter ngc = new NcbiGeneConverter();
+        log.info( "Converting..." );
+        Collection<Gene> gemmaObj = ( Collection<Gene> ) ngc.convert( smallSample );
+
+        PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+
+        persisterHelper.persist( gemmaObj );
+
     }
 }

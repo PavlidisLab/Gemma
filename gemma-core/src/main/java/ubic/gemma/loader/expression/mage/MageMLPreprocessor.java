@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -149,7 +150,11 @@ public class MageMLPreprocessor implements Preprocessor {
         lf.setVersion( new SimpleDateFormat().format( new Date() ) );
         lf.setSourceFiles( sourceFiles );
         lf.setSize( size.longValue() );
-        lf.setLocalURI( "file://" + outputFile.getAbsolutePath().replaceAll( "\\\\", "/" ) );
+        try {
+            lf.setLocalURL( outputFile.toURI().toURL() );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
         return lf;
     }
 

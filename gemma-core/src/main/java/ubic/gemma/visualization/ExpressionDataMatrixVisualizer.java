@@ -54,9 +54,9 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
 
     private static final long serialVersionUID = -5075323948059345296L;
 
-    private ExpressionDataMatrix expressionDataMatrix = null;
+    // private ExpressionDataMatrix expressionDataMatrix = null;
 
-    private String outfile = "visualization.png";
+    // private String outfile = "visualization.png";
 
     private ColorMatrix colorMatrix = null;
 
@@ -68,22 +68,25 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
 
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization()
-     */
-    public void createVisualization() {
-        createVisualization( this.expressionDataMatrix );
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization()
+    // */
+    // public void createVisualization() {
+    // createVisualization( this.expressionDataMatrix );
+    // }
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData)
      */
-    @SuppressWarnings("unchecked")
     public void createVisualization( ExpressionDataMatrix expressionDataMatrix ) {
+
+        if ( expressionDataMatrix == null || expressionDataMatrix.getDesignElements() == null ) {
+            throw new IllegalArgumentException( "ExpressionDataMatrix apparently has no data" );
+        }
 
         Collection<DesignElement> deCol = expressionDataMatrix.getDesignElements();
 
@@ -99,17 +102,17 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
             data[i] = byteArrayConverter.byteArrayToDoubles( vector.getData() );
 
             if ( rowLabels == null ) {
-                System.out.println( "Setting row names" );
-                rowLabels = new ArrayList();
+                log.debug( "Setting row names" );
+                rowLabels = new ArrayList<String>();
             }
-            log.debug( designElement.getName() );
+            // log.debug( designElement.getName() );
             rowLabels.add( designElement.getName() );
             i++;
         }
 
         if ( colLabels == null ) {
-            System.out.println( "Column labels not set.  Using defaults" );
-            colLabels = new ArrayList();
+            log.warn( "Column labels not set.  Using defaults" );
+            colLabels = new ArrayList<String>();
             for ( int j = 0; j < data[0].length; j++ ) {
                 colLabels.add( String.valueOf( j ) );
             }
@@ -131,23 +134,24 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
         colorMatrix = new ColorMatrix( matrix );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#getOutfile()
-     */
-    public String getOutfile() {
-        return outfile;
-    }
+    //
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.visualization.MatrixVisualizer#getOutfile()
+    // */
+    // public String getOutfile() {
+    // return outfile;
+    // }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setOutfile(java.lang.String)
-     */
-    public void setOutfile( String outfile ) {
-        this.outfile = outfile;
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.visualization.MatrixVisualizer#setOutfile(java.lang.String)
+    // */
+    // public void setOutfile( String outfile ) {
+    // this.outfile = outfile;
+    // }
 
     /*
      * (non-Javadoc)
@@ -163,7 +167,7 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
      * @throws IOException
      */
     private void saveImage( String outfile ) throws IOException {
-        if ( outfile != null ) this.outfile = outfile;
+        // if ( outfile != null ) this.outfile = outfile;
 
         JMatrixDisplay display = new JMatrixDisplay( colorMatrix );
 
@@ -171,23 +175,24 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
         display.saveImage( outfile );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
-     */
-    public ExpressionDataMatrix getExpressionDataMatrix() {
-        return expressionDataMatrix;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setExpressionDataMatrix(ubic.gemma.visualization.ExpressionDataMatrix)
-     */
-    public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
-        this.expressionDataMatrix = expressionDataMatrix;
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
+    // */
+    // public ExpressionDataMatrix getExpressionDataMatrix() {
+    // return expressionDataMatrix;
+    // }
+    //
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see
+    // ubic.gemma.visualization.MatrixVisualizer#setExpressionDataMatrix(ubic.gemma.visualization.ExpressionDataMatrix)
+    // */
+    // public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
+    // this.expressionDataMatrix = expressionDataMatrix;
+    // }
 
     /*
      * (non-Javadoc)

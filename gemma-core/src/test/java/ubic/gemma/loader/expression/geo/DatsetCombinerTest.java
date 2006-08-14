@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 
@@ -31,6 +34,7 @@ import ubic.gemma.loader.expression.geo.model.GeoDataset;
  */
 public class DatsetCombinerTest extends TestCase {
 
+    private static Log log = LogFactory.getLog( DatsetCombinerTest.class.getName() );
     Collection<GeoDataset> gds;
 
     /*
@@ -51,8 +55,16 @@ public class DatsetCombinerTest extends TestCase {
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGDSGrouping(String)'
      */
     public void testFindGDSGrouping() throws Exception {
-        Collection result = DatasetCombiner.findGDSforGSE( "GSE674" );
-        assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
+        try {
+            Collection result = DatasetCombiner.findGDSforGSE( "GSE674" );
+            assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            }
+            throw e;
+        }
     }
 
     /*
