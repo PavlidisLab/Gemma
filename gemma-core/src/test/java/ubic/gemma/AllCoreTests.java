@@ -65,8 +65,6 @@ public class AllCoreTests {
 
         suite.addTestSuite( HttpFetcherTest.class );
 
-        suite.addTestSuite( ProbeMapperCliTest.class );
-
         suite.addTestSuite( ExternalDatabaseTest.class );
 
         suite.addTestSuite( AuditInterceptorTest.class );

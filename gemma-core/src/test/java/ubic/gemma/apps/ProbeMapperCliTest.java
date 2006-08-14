@@ -46,7 +46,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     }
 
     public final void testMainBadPort() throws Exception {
-        Exception result = p.doWork( new String[] { "-v", "3", "-P", "c", "-u", "pavlidis", "-p", "toast", "-o",
+        Exception result = p.doWork( new String[] { "-v", "3", "-P", "c", "-u", "root", "-p", "toast", "-o",
                 tempFile.getAbsolutePath() } );
         // should result in an exception
         assertTrue( result.getMessage(), result != null );
@@ -61,7 +61,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         assert ( new File( blatFile ) ).canRead();
 
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "pavlidis", "-p", "toast", "-o",
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", "root", "-p", "toast", "-o",
                 tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
         if ( result != null ) {
             fail( result.getMessage() );
@@ -77,7 +77,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         assert ( new File( gbFile ) ).canRead();
 
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "pavlidis", "-p", "toast", "-o",
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", "root", "-p", "toast", "-o",
                 tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg18" } );
         if ( result != null ) {
             fail( result.getMessage() );
@@ -85,7 +85,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     }
 
     public void testSingleGb() throws Exception {
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "pavlidis", "-p", "toast", "-o",
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", "root", "-p", "toast", "-o",
                 tempFile.getAbsolutePath(), "-d", "hg18", "AF015731", "BX473803" } );
         if ( result != null ) {
             result.printStackTrace();
@@ -99,7 +99,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         String blatFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.doesntexist.noheader.txt";
 
-        Exception result = p.doWork( new String[] { "-u", "pavlidis", "-p", "toast", "-o", tempFile.getAbsolutePath(),
+        Exception result = p.doWork( new String[] { "-u", "root", "-p", "toast", "-o", tempFile.getAbsolutePath(),
                 "-b", blatFile, "-d", "hg18" } );
         assertTrue( result.getMessage(), result != null );
     }
