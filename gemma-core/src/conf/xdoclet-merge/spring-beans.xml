@@ -80,7 +80,7 @@
         <value>com.mysql.jdbc.Driver</value>
     </property>
     <property name="username">
-        <value>pavlidis</value>
+        <value>testuser</value>
     </property>
     <property name="password">
         <value>toast</value>
