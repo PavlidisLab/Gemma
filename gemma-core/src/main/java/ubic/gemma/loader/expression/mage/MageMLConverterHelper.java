@@ -510,7 +510,7 @@ public class MageMLConverterHelper {
      * @see specialConvertBioAssayBioAssayDataAssociations
      */
     public LocalFile convertBioAssayData( BioAssayData mageObj ) {
-
+        convertBioAssayDataAssociations( mageObj );
         BioDataValues data = mageObj.getBioDataValues();
         LocalFile result = LocalFile.Factory.newInstance();
         result.setRemoteURL( null );
@@ -540,7 +540,6 @@ public class MageMLConverterHelper {
             throw new IllegalArgumentException( "Unkonwn BioDataValue class" );
         }
 
-        convertBioAssayDataAssociations( mageObj );
         return result;
     }
 
