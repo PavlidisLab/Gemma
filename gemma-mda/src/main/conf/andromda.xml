@@ -1,5 +1,6 @@
-<!--  $Id$ -->
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <andromda>
+<!--  $Id$ -->
 	<properties>
 		<property name="modelValidation">${modelValidation}</property>
 		<property name="cartridgeFilter">${filter}</property>
@@ -28,7 +29,7 @@
 		</repository>
 	</repositories>
 	<mappingsSearchLocations>
-		<location patterns="*.xml">${project.basedir}/src/main/conf/</location>
+		<location patterns="*Mappings.xml">${project.basedir}/src/main/conf/</location>
 	</mappingsSearchLocations>
 	<namespaces>
 		<namespace name="default">
