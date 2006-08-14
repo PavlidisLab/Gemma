@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -63,13 +64,17 @@ public class ExperimentalDesignControllerTest extends BaseTransactionalSpringCon
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
                 "/experimentalDesign/showExperimentalDesign.html" );
 
+        ExperimentalDesign ed = null;
         if ( experimentalDesignService.findByName( "Experimental Design 0" ) == null ) {
-            ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+            ed = ExperimentalDesign.Factory.newInstance();
             ed.setName( "Experimental Design 0" );
-            experimentalDesignService.create( ed );
+            // set ed = experimentalDesignService.create gives me the persistent instance
+            ed = experimentalDesignService.create( ed );
         }
 
         req.addParameter( "name", "Experimental Design 0" );
+
+        req.addParameter( "id", String.valueOf( ed.getId() ) );
 
         req.setRequestURI( "/experimentalDesign/showExperimentalDesign.html" );
 
