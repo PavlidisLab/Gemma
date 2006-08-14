@@ -31,6 +31,8 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
+import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.MatrixVisualizer;
 
 /**
@@ -90,8 +92,11 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
             /* Cannot use \ in non internet explorer browsers. Using / instead. */
             outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
 
+            String urlPrefix = ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getProtocol() + "://"
+                    + ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getServer() + ":"
+                    + ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getPort() + "/";
             outfile = StringUtils.replace( outfile, StringUtils.splitByWholeSeparator( outfile, "visualization" )[0],
-                    "http://localhost:8080/" );// FIXME get the protocol, server, and port from request
+                    urlPrefix );
 
             log.debug( "setting compatibility for non-IE browsers " + outfile );
 
