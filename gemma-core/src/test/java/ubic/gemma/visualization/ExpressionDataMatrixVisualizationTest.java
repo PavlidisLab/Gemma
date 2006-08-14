@@ -21,9 +21,17 @@ package ubic.gemma.visualization;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import junit.framework.TestCase;
+import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author keshav
@@ -32,7 +40,13 @@ import junit.framework.TestCase;
  */
 public class ExpressionDataMatrixVisualizationTest extends TestCase {
 
-    ExpressionDataMatrixVisualizer matrixVisualizer = null;
+    private ExpressionDataMatrixVisualizer matrixVisualizer = null;
+
+    private ExpressionDataMatrix expressionDataMatrix = null;
+
+    double[][] data = null;
+
+    private File tmp = null;
 
     /*
      * (non-Javadoc)
@@ -43,7 +57,58 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
 
-        matrixVisualizer = new ExpressionDataMatrixVisualizer();
+        String[] rowLabels = { "a", "b", "c", "d", "e" };
+        List<String> rowLabelsList = new ArrayList<String>();
+        for ( int i = 0; i < rowLabels.length; i++ ) {
+            rowLabelsList.add( i, rowLabels[i] );
+        }
+
+        data = new double[5][5];
+        double d0[] = { 1, 2, 3, 4, 5 };
+        double d1[] = { 5, 4, 3, 2, 1 };
+        double d2[] = { 1, 2, 1, 2, 1 };
+        double d3[] = { 9, 5, 12, 3, 8 };
+        double d4[] = { 7, 22, 0.02, 3.4, 1.9 };
+
+        data[0] = d0;
+        data[1] = d1;
+        data[2] = d2;
+        data[3] = d3;
+        data[4] = d4;
+
+        List<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
+        List<String> colLabelsList = new ArrayList<String>();
+        ByteArrayConverter converter = new ByteArrayConverter();
+
+        for ( int i = 0; i < data[0].length; i++ ) {
+            colLabelsList.add( i, String.valueOf( i ) );
+
+            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+            vector.setData( converter.doubleArrayToBytes( data[i] ) );
+            vectors.add( i, vector );
+        }
+
+        tmp = File.createTempFile( "visualizationTest", ".png" );
+
+        /* Create the expression experiment. */
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setDesignElementDataVectors( vectors );
+
+        /* Only creating one design element for this test. */
+        DesignElement de1 = CompositeSequence.Factory.newInstance();
+        de1.setDesignElementDataVectors( vectors );
+        Collection<DesignElement> designElements = new HashSet<DesignElement>();
+        designElements.add( de1 );
+
+        /* The expression data matrix */
+
+        expressionDataMatrix = new ExpressionDataMatrix( ExpressionExperiment.Factory.newInstance(), designElements );
+
+        matrixVisualizer = new ExpressionDataMatrixVisualizer( expressionDataMatrix, tmp.getAbsolutePath() );
+
+        matrixVisualizer.setRowLabels( rowLabelsList );
+        matrixVisualizer.setColLabels( colLabelsList );
+
     }
 
     /*
@@ -56,57 +121,20 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
         super.tearDown();
 
         matrixVisualizer = null;
+        expressionDataMatrix = null;
+        data = null;
+        tmp.deleteOnExit();
     }
 
     public void testCreateVisualization() {
-        double[][] data = new double[5][5];
 
-        double d0[] = { 1, 2, 3, 4, 5 };
-        double d1[] = { 5, 4, 3, 2, 1 };
-        double d2[] = { 1, 2, 1, 2, 1 };
-        double d3[] = { 9, 5, 12, 3, 8 };
-        double d4[] = { 7, 22, 0.02, 3.4, 1.9 };
-
-        data[0] = d0;
-        data[1] = d1;
-        data[2] = d2;
-        data[3] = d3;
-        data[4] = d4;
-
-        String[] rowLabels = { "a", "b", "c", "d", "e" };
-        List<String> rowLabelsList = new ArrayList<String>();
-        for ( int i = 0; i < rowLabels.length; i++ ) {
-            rowLabelsList.add( i, rowLabels[i] );
-        }
-
-        List<String> colLabelsList = new ArrayList<String>();
-        for ( int i = 0; i < data[0].length; i++ ) {
-            colLabelsList.add( i, String.valueOf( i ) );
-        }
-
-        matrixVisualizer.setRowLabels( rowLabelsList );
-        matrixVisualizer.setColLabels( colLabelsList );
-
-        matrixVisualizer.createVisualization( data );
+        matrixVisualizer.createVisualization( expressionDataMatrix );
 
         assertNotNull( matrixVisualizer.getColorMatrix() );
 
     }
 
     public void testSaveImage() throws Exception {
-        double[][] data = new double[5][5];
-
-        double d0[] = { 1, 2, 3, 4, 5 };
-        double d1[] = { 5, 4, 3, 2, 1 };
-        double d2[] = { 1, 2, 1, 2, 1 };
-        double d3[] = { 9, 5, 12, 3, 8 };
-        double d4[] = { 7, 22, 0.02, 3.4, 1.9 };
-
-        data[0] = d0;
-        data[1] = d1;
-        data[2] = d2;
-        data[3] = d3;
-        data[4] = d4;
 
         String[] rowLabels = { "a", "b", "c", "d", "e" };
         List<String> rowLabelsList = new ArrayList<String>();
@@ -122,10 +150,8 @@ public class ExpressionDataMatrixVisualizationTest extends TestCase {
         matrixVisualizer.setRowLabels( rowLabelsList );
         matrixVisualizer.setColLabels( colLabelsList );
 
-        matrixVisualizer.createVisualization( data );
+        matrixVisualizer.createVisualization( expressionDataMatrix );
 
-        File tmp = File.createTempFile( "visualizationTest", ".png" );
-        tmp.deleteOnExit();
         matrixVisualizer.saveImage( tmp );
         FileInputStream fis = new FileInputStream( tmp );
 

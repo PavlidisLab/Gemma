@@ -50,6 +50,8 @@ public class ExpressionDataMatrix {
      * @param designElements
      */
     public ExpressionDataMatrix( ExpressionExperiment expressionExperiment, Collection<DesignElement> designElements ) {
+        if ( expressionExperiment == null || designElements == null )
+            throw new RuntimeException( "Either expression experiment or collection of design elements does not exist." );
 
         this.expressionExperiment = expressionExperiment;
         this.designElements = designElements;

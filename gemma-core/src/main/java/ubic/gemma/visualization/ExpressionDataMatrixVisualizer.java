@@ -54,9 +54,9 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
 
     private static final long serialVersionUID = -5075323948059345296L;
 
-    // private ExpressionDataMatrix expressionDataMatrix = null;
+    private ExpressionDataMatrix expressionDataMatrix = null;
 
-    // private String outfile = "visualization.png";
+    private String imageFile = "Image file not set";
 
     private ColorMatrix colorMatrix = null;
 
@@ -68,19 +68,28 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
 
     private Color[] colorMap = ColorMap.REDGREEN_COLORMAP;
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization()
-    // */
-    // public void createVisualization() {
-    // createVisualization( this.expressionDataMatrix );
-    // }
+    /**
+     * Do not instantiate. This is to be "inpected" by java constructs that require an official java bean. When we say
+     * inspected, we mean it is never actually invoked but the signature checked using a string comparison. Invocation
+     * will result in a RuntimeException
+     */
+    public ExpressionDataMatrixVisualizer() {
+        throw new RuntimeException( "cannot instantiate using no-arg constructor" );
+    }
+
+    /**
+     * @param expressionDataMatrix
+     * @param imageFile
+     */
+    public ExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
+        this.imageFile = imageFile;
+        this.expressionDataMatrix = expressionDataMatrix;
+    }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.visualization.MatrixVisualizationData)
+     * @see ubic.gemma.visualization.MatrixVisualizer#createVisualization(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
     public void createVisualization( ExpressionDataMatrix expressionDataMatrix ) {
 
@@ -134,24 +143,14 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
         colorMatrix = new ColorMatrix( matrix );
     }
 
-    //
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.visualization.MatrixVisualizer#getOutfile()
-    // */
-    // public String getOutfile() {
-    // return outfile;
-    // }
-
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.visualization.MatrixVisualizer#setOutfile(java.lang.String)
-    // */
-    // public void setOutfile( String outfile ) {
-    // this.outfile = outfile;
-    // }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#getImageFile()
+     */
+    public String getImageFile() {
+        return imageFile;
+    }
 
     /*
      * (non-Javadoc)
@@ -175,24 +174,14 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
         display.saveImage( outfile );
     }
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
-    // */
-    // public ExpressionDataMatrix getExpressionDataMatrix() {
-    // return expressionDataMatrix;
-    // }
-    //
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // ubic.gemma.visualization.MatrixVisualizer#setExpressionDataMatrix(ubic.gemma.visualization.ExpressionDataMatrix)
-    // */
-    // public void setExpressionDataMatrix( ExpressionDataMatrix expressionDataMatrix ) {
-    // this.expressionDataMatrix = expressionDataMatrix;
-    // }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.visualization.MatrixVisualizer#getExpressionDataMatrix()
+     */
+    public ExpressionDataMatrix getExpressionDataMatrix() {
+        return expressionDataMatrix;
+    }
 
     /*
      * (non-Javadoc)
@@ -260,7 +249,7 @@ public class ExpressionDataMatrixVisualizer implements MatrixVisualizer, Seriali
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.visualization.MatrixVisualizer#setColorMap(null[])
+     * @see ubic.gemma.visualization.MatrixVisualizer#setColorMap(java.awt.Color[])
      */
     public void setColorMap( Color[] colorMap ) {
         this.colorMap = colorMap;

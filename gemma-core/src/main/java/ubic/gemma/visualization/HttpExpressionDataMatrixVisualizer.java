@@ -18,6 +18,8 @@
  */
 package ubic.gemma.visualization;
 
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+
 /**
  * Provides information to visualize the ExpressionDataMatrix over http. This class is useful when using the
  * HtmlMatrixVisualizerTag to render the matrix in the browser.
@@ -36,11 +38,21 @@ public class HttpExpressionDataMatrixVisualizer extends ExpressionDataMatrixVisu
     private int port = 8080;
 
     /**
-     * 
-     *
+     * Do not instantiate. This is to be "inpected" by java constructs that require an official java bean. When we say
+     * inspected, we mean it is never actually invoked but the signature checked using a string comparison. Invocation
+     * will result in a RuntimeException
      */
     public HttpExpressionDataMatrixVisualizer() {
         super();
+        throw new RuntimeException( "cannot instantiate using no-arg constructor" );
+    }
+
+    /**
+     * @param expressionDataMatrix
+     * @param imageFile
+     */
+    public HttpExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String imageFile ) {
+        super( expressionDataMatrix, imageFile );
     }
 
     /**
@@ -48,8 +60,10 @@ public class HttpExpressionDataMatrixVisualizer extends ExpressionDataMatrixVisu
      * @param server
      * @param port
      */
-    public HttpExpressionDataMatrixVisualizer( String protocol, String server, int port ) {
-        super();
+    public HttpExpressionDataMatrixVisualizer( ExpressionDataMatrix expressionDataMatrix, String protocol,
+            String server, int port, String imageFile ) {
+        super( expressionDataMatrix, imageFile );
+
         this.protocol = protocol;
         this.server = server;
         this.port = port;

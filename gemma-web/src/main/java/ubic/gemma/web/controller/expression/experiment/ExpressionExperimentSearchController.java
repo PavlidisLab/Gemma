@@ -240,17 +240,15 @@ public class ExpressionExperimentSearchController extends BaseFormController {
             ExpressionExperiment ee = expressionExperimentService.findById( eesc.getExpressionExperimentId() );
             expressionDataMatrix = new ExpressionDataMatrix( ee, compositeSequences );
 
-            matrixVisualizer = new HttpExpressionDataMatrixVisualizer();
-            matrixVisualizer.setExpressionDataMatrix( expressionDataMatrix );
-            matrixVisualizer.setOutfile( imageFile.getAbsolutePath() );
+            matrixVisualizer = new HttpExpressionDataMatrixVisualizer( expressionDataMatrix, "http", request
+                    .getServerName(), request.getServerPort(), imageFile.getAbsolutePath() );
             matrixVisualizer.setSuppressVisualizations( suppressVisualizations );
-            ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).setServer( request.getServerName() );
-            ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).setPort( request.getServerPort() );
         } else {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
         }
-
+        
+        log.debug("here");
         return new ModelAndView( getSuccessView() ).addObject( "matrixVisualizer", matrixVisualizer );
     }
 

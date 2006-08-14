@@ -143,11 +143,11 @@ public class ExpressionDataMatrixTest extends TestCase {
 
         // vizualizationData.printData();
 
-        MatrixVisualizer visualizer = new ExpressionDataMatrixVisualizer();
+        File tmp = File.createTempFile( "testOut", ".png" );
+
+        MatrixVisualizer visualizer = new ExpressionDataMatrixVisualizer( matrixData, tmp.getAbsolutePath() );
 
         visualizer.createVisualization( matrixData );
-
-        File tmp = File.createTempFile( "testOut", ".png" );
 
         visualizer.saveImage( tmp );
 

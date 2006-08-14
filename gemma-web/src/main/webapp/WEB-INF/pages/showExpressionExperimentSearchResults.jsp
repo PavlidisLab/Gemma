@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <jsp:useBean id="matrixVisualizer" scope="request"
-    class="ubic.gemma.visualization.ExpressionDataMatrixVisualizer" />
+    class="ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer" />
 <html>
     <body>
         <h2>

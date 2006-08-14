@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.visualization.ExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.HttpExpressionDataMatrixVisualizer;
 import ubic.gemma.visualization.MatrixVisualizer;
 
@@ -79,26 +78,26 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
         try {
             /* get metadata from MatrixVisualizer */
             ExpressionDataMatrix expressionDataMatrix = matrixVisualizer.getExpressionDataMatrix();
-            String outfile = matrixVisualizer.getOutfile();
+            String imageFile = matrixVisualizer.getImageFile();
 
             Map<String, DesignElementDataVector> m = expressionDataMatrix.getDataMap();
 
-            matrixVisualizer.createVisualization();
+            matrixVisualizer.createVisualization( expressionDataMatrix );
 
             List<String> designElementNames = matrixVisualizer.getRowLabels();
 
-            matrixVisualizer.saveImage( new File( outfile ) );/* remove me when using dynamic images */
+            matrixVisualizer.saveImage( new File( imageFile ) );/* remove me when using dynamic images */
 
             /* Cannot use \ in non internet explorer browsers. Using / instead. */
-            outfile = StringUtils.replace( outfile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
+            imageFile = StringUtils.replace( imageFile, IE_IMG_PATH_SEPARATOR, ALL_IMG_PATH_SEPARATOR );
 
             String urlPrefix = ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getProtocol() + "://"
                     + ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getServer() + ":"
                     + ( ( HttpExpressionDataMatrixVisualizer ) matrixVisualizer ).getPort() + "/";
-            outfile = StringUtils.replace( outfile, StringUtils.splitByWholeSeparator( outfile, "visualization" )[0],
-                    urlPrefix );
+            imageFile = StringUtils.replace( imageFile,
+                    StringUtils.splitByWholeSeparator( imageFile, "visualization" )[0], urlPrefix );
 
-            log.debug( "setting compatibility for non-IE browsers " + outfile );
+            log.debug( "setting compatibility for non-IE browsers " + imageFile );
 
             StringBuilder buf = new StringBuilder();
 
@@ -118,7 +117,7 @@ public class HtmlMatrixVisualizerTag extends TagSupport {
 
                 buf.append( "<tr>" );
                 buf.append( "<td border=\"0\" rowspan=\"5\">" );
-                buf.append( "<img src=\"" + outfile + "\">" );
+                buf.append( "<img src=\"" + imageFile + "\">" );
                 buf.append( "</td>" );
                 buf.append( "<td align=\"left\">" );
                 for ( String name : designElementNames ) {
