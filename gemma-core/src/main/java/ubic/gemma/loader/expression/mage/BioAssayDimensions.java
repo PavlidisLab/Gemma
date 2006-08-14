@@ -46,8 +46,8 @@ public class BioAssayDimensions {
     public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getQuantitationTypeDimension(
             ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
         List<ubic.gemma.model.common.quantitationtype.QuantitationType> result = new ArrayList<ubic.gemma.model.common.quantitationtype.QuantitationType>();
-        Map<String, ubic.gemma.model.common.quantitationtype.QuantitationType> qts = quantitationTypeDimensions
-                .get( ba.getName() );
+        Map<String, ubic.gemma.model.common.quantitationtype.QuantitationType> qts = quantitationTypeDimensions.get( ba
+                .getName() );
         for ( String key : qts.keySet() ) {
             result.add( qts.get( key ) );
         }
@@ -82,6 +82,12 @@ public class BioAssayDimensions {
         List<ubic.gemma.model.expression.designElement.DesignElement> result = new ArrayList<ubic.gemma.model.expression.designElement.DesignElement>();
         Map<String, ubic.gemma.model.expression.designElement.DesignElement> dts = designElementDimensions.get( ba
                 .getName() );
+
+        if ( dts == null ) {
+            throw new RuntimeException( ba.getName() + " was not found in designElementDimensions ("
+                    + designElementDimensions.size() + " dimensions available)" );
+        }
+
         for ( String key : dts.keySet() ) {
             result.add( dts.get( key ) );
         }
