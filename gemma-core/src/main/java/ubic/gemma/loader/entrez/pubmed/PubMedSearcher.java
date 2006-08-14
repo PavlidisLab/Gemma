@@ -23,7 +23,6 @@ import java.util.Collection;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -36,7 +35,6 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @version $Id$
  */
 public class PubMedSearcher extends AbstractSpringAwareCLI {
-    protected static BeanFactory ctx = null;
     static PubMedSearch pms = new PubMedSearch();
 
     public PubMedSearcher() {
@@ -70,11 +68,11 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
             }
 
         } catch ( IOException e ) {
-            e.printStackTrace();
+            return e;
         } catch ( SAXException e ) {
-            e.printStackTrace();
+            return e;
         } catch ( ParserConfigurationException e ) {
-            e.printStackTrace();
+            return e;
         }
         resetLogging();
         return null;
