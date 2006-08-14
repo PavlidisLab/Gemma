@@ -64,13 +64,15 @@ public class ExperimentalDesignControllerTest extends BaseTransactionalSpringCon
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
                 "/experimentalDesign/showExperimentalDesign.html" );
 
-        ExperimentalDesign ed = null;
-        if ( experimentalDesignService.findByName( "Experimental Design 0" ) == null ) {
+        ExperimentalDesign ed = experimentalDesignService.findByName( "Experimental Design 0" );
+        if ( ed == null ) {
             ed = ExperimentalDesign.Factory.newInstance();
             ed.setName( "Experimental Design 0" );
             // set ed = experimentalDesignService.create gives me the persistent instance
             ed = experimentalDesignService.create( ed );
         }
+
+        assertTrue( ed != null );
 
         req.addParameter( "name", "Experimental Design 0" );
 
