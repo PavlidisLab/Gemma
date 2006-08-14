@@ -59,19 +59,31 @@ public class ProbeMapperTest extends TestCase {
 
     public void testProcessBlatResults() throws Exception {
         ProbeMapper pm = new ProbeMapper();
-        GoldenPath gp = new GoldenPath( 3306, "mm8", "localhost", "pavlidis", "toast" );
 
-        if ( gp == null ) {
-            log.warn( "Could not get Goldenpath database connection, skipping test" );
-            return;
+        try {
+            GoldenPath gp = new GoldenPath( 3306, "mm8", "localhost", "root", "toast" );
+            if ( gp == null ) {
+                log.warn( "Could not get Goldenpath database connection, skipping test" );
+                return;
+            }
+
+            Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( gp, blatres );
+
+            // This test will fail if the database changes :)
+            assertTrue( "No results", res.values().size() > 0 );
+            assertTrue( "No results", res.values().iterator().next().size() > 0 );
+            assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
+                    .getOfficialSymbol() );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                log.warn( "Test skipped due to missing mm8 database" );
+                return;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                log.warn( "Test skipped due to database authetnication problem - check username and password in test" );
+                return;
+            }
+            throw e;
         }
 
-        Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( gp, blatres );
-
-        // This test will fail if the database changes :)
-        assertTrue( "No results", res.values().size() > 0 );
-        assertTrue( "No results", res.values().iterator().next().size() > 0 );
-        assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
-                .getOfficialSymbol() );
     }
 }

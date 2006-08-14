@@ -21,7 +21,8 @@ package ubic.gemma;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import ubic.gemma.analysis.preprocess.AllPreProcessTests;
-import ubic.gemma.apps.ProbeMapperTest;
+import ubic.gemma.analysis.sequence.ProbeMapperTest;
+import ubic.gemma.apps.ProbeMapperCliTest;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixTest;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
 import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
@@ -64,7 +65,7 @@ public class AllCoreTests {
 
         suite.addTestSuite( HttpFetcherTest.class );
 
-        suite.addTestSuite( ProbeMapperTest.class );
+        suite.addTestSuite( ProbeMapperCliTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
 
@@ -72,6 +73,7 @@ public class AllCoreTests {
         suite.addTestSuite( PersistAclInterceptorTest.class );
         suite.addTestSuite( SecurityIntegrationTest.class );
 
+        suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
 
         suite.addTestSuite( Gene2GOAssociationParserTest.class );

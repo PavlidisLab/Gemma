@@ -24,7 +24,7 @@ import java.io.File;
  * @author pavlidis
  * @version $Id$
  */
-public class ProbeMapperTest extends AbstractCLITestCase {
+public class ProbeMapperCliTest extends AbstractCLITestCase {
 
     File tempFile;
 
