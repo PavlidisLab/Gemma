@@ -40,6 +40,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MonitoredDiskFileItem extends DiskFileItem {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 769886623757245271L;
+
     private static Log log = LogFactory.getLog( MonitoredDiskFileItem.class.getName() );
 
     private MonitoredOutputStream mos = null;
