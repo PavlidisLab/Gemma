@@ -79,6 +79,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
+import ubic.gemma.util.SpringContextUtil;
 import ubic.gemma.util.StringUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
@@ -204,14 +205,21 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
-     * Returns config locations needed for test environment.
+     * Guess if this is a test that needs the action-servlet.xml
      * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#getConfigLocations()
+     * @return
      */
+    private boolean isWebapp() {
+        boolean result = this.getClass().getPackage().getName().contains( ".web." );
+        if ( result ) {
+            log.info( this.getClass().getPackage().getName() + " needs action-servlet.xml" );
+        }
+        return result;
+    }
+
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "classpath*:*-servlet.xml" };
+        return SpringContextUtil.getConfigLocations( true, this.isWebapp() );
     }
 
     /**
@@ -220,11 +228,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     private Object getStandardLocations() {
-        // ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        // String daoType = db.getString( "dao.type" );
-        // String servletContext = db.getString( "servlet.name.0" );
-        return new String[] { "classpath:ubic/gemma/localDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "classpath*:*-servlet.xml" };
+        return SpringContextUtil.getConfigLocations( false, this.isWebapp() );
     }
 
     /**

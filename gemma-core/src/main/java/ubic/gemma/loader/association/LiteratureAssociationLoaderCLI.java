@@ -98,15 +98,15 @@ public class LiteratureAssociationLoaderCLI {
             if ( cl.hasOption( 't' ) ) {
                 boolean isTest = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
                 if ( isTest )
-                    ctx = SpringContextUtil.getApplicationContext( true );
+                    ctx = SpringContextUtil.getApplicationContext( true, false );
                 else
-                    ctx = SpringContextUtil.getApplicationContext( false );
+                    ctx = SpringContextUtil.getApplicationContext( false, false );
 
                 cli = new LiteratureAssociationLoaderCLI();
             }
             // if no ctx is set, default to test environment.
             else {
-                ctx = SpringContextUtil.getApplicationContext( true );
+                ctx = SpringContextUtil.getApplicationContext( true, false );
                 cli = new LiteratureAssociationLoaderCLI();
             }
 
@@ -149,7 +149,7 @@ public class LiteratureAssociationLoaderCLI {
     }
 
     public LiteratureAssociationLoaderCLI() {
-        ctx = SpringContextUtil.getApplicationContext( false );
+        ctx = SpringContextUtil.getApplicationContext( false, false );
         // mPersister = new PersisterHelper();
         geneDao = ( GeneDao ) ctx.getBean( "geneDao" );
         laDao = ( LiteratureAssociationDao ) ctx.getBean( "literatureAssociationDao" );

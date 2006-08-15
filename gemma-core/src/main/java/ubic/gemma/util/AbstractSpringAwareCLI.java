@@ -22,29 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
-import ubic.gemma.model.common.auditAndSecurity.ContactService;
-import ubic.gemma.model.common.auditAndSecurity.PersonService;
-import ubic.gemma.model.common.description.DatabaseEntryService;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.model.common.description.LocalFileService;
-import ubic.gemma.model.common.description.OntologyEntryService;
-import ubic.gemma.model.common.protocol.HardwareService;
-import ubic.gemma.model.common.protocol.ProtocolService;
-import ubic.gemma.model.common.protocol.SoftwareService;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.biomaterial.CompoundService;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.ReporterService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
-import ubic.gemma.util.SpringContextUtil;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
@@ -55,7 +33,7 @@ import ubic.gemma.util.SpringContextUtil;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
-    protected static BeanFactory ctx = null;
+    protected BeanFactory ctx = null;
     PersisterHelper ph = null;
 
     @Override
@@ -77,31 +55,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
 
         assert ctx != null : "Spring context was not initialized";
-        ph = new PersisterHelper();
-        ph.setBioMaterialService( ( BioMaterialService ) ctx.getBean( "bioMaterialService" ) );
-        ph
-                .setExpressionExperimentService( ( ExpressionExperimentService ) ctx
-                        .getBean( "expressionExperimentService" ) );
-        ph.setPersonService( ( PersonService ) ctx.getBean( "personService" ) );
-        ph.setOntologyEntryService( ( OntologyEntryService ) ctx.getBean( "ontologyEntryService" ) );
-        ph.setArrayDesignService( ( ArrayDesignService ) ctx.getBean( "arrayDesignService" ) );
-        ph.setExternalDatabaseService( ( ExternalDatabaseService ) ctx.getBean( "externalDatabaseService" ) );
-        ph.setReporterService( ( ReporterService ) ctx.getBean( "reporterService" ) );
-        ph.setCompositeSequenceService( ( CompositeSequenceService ) ctx.getBean( "compositeSequenceService" ) );
-        ph.setProtocolService( ( ProtocolService ) ctx.getBean( "protocolService" ) );
-        ph.setHardwareService( ( HardwareService ) ctx.getBean( "hardwareService" ) );
-        ph.setSoftwareService( ( SoftwareService ) ctx.getBean( "softwareService" ) );
-        ph.setTaxonService( ( TaxonService ) ctx.getBean( "taxonService" ) );
-        ph.setBioAssayService( ( BioAssayService ) ctx.getBean( "bioAssayService" ) );
-        ph.setQuantitationTypeService( ( QuantitationTypeService ) ctx.getBean( "quantitationTypeService" ) );
-        ph.setLocalFileService( ( LocalFileService ) ctx.getBean( "localFileService" ) );
-        ph.setCompoundService( ( CompoundService ) ctx.getBean( "compoundService" ) );
-        ph.setDatabaseEntryService( ( DatabaseEntryService ) ctx.getBean( "databaseEntryService" ) );
-        ph.setContactService( ( ContactService ) ctx.getBean( "contactService" ) );
-        ph.setBioSequenceService( ( BioSequenceService ) ctx.getBean( "bioSequenceService" ) );
-        ph.setFactorValueService( ( FactorValueService ) ctx.getBean( "factorValueService" ) );
-        ph.setGeneService( ( GeneService ) ctx.getBean( "geneService" ) );
-        return ph;
+        return ( PersisterHelper ) ctx.getBean( "persisterHelper" );
+
     }
 
     /** check username and password. */
@@ -142,11 +97,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /** check if using test or production context */
     void createSpringContext() {
         if ( hasOption( "testing" ) ) {
-            ctx = SpringContextUtil.getApplicationContext( true );
+            ctx = SpringContextUtil.getApplicationContext( true, false );
         } else {
-            ctx = SpringContextUtil.getApplicationContext( false );
+            ctx = SpringContextUtil.getApplicationContext( false, false );
         }
+    }
 
+    public void setCtx( BeanFactory ctx ) {
+        this.ctx = ctx;
     }
 
     @Override

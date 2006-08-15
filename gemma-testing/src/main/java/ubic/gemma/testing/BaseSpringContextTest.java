@@ -40,6 +40,7 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.AbstractDependencyInjectionSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
+import ubic.gemma.util.SpringContextUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
@@ -127,8 +128,20 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
      */
     @Override
     protected String[] getConfigLocations() {
-        return new String[] { "classpath*:ubic/gemma/localTestDataSource.xml",
-                "classpath*:ubic/gemma/applicationContext-*.xml", "classpath*:*-servlet.xml" };
+        return SpringContextUtil.getConfigLocations( true, this.isWebapp() );
+    }
+
+    /**
+     * Guess if this is a test that needs the action-servlet.xml
+     * 
+     * @return
+     */
+    private boolean isWebapp() {
+        boolean result = this.getClass().getPackage().getName().contains( ".web." );
+        if ( result ) {
+            log.info( this.getClass().getPackage().getName() + " needs action-servlet.xml" );
+        }
+        return result;
     }
 
     /*

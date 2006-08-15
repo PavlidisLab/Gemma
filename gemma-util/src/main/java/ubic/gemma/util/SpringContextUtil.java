@@ -18,8 +18,15 @@
  */
 package ubic.gemma.util;
 
-import java.util.ResourceBundle;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -39,9 +46,9 @@ public class SpringContextUtil {
      * @param testing If true, it will get a test configured-BeanFactory
      * @return BeanFactory
      */
-    public static BeanFactory getApplicationContext( boolean testing ) {
+    public static BeanFactory getApplicationContext( boolean testing, boolean isWebApp ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations( testing );
+            String[] paths = getConfigLocations( testing, isWebApp );
             ctx = new ClassPathXmlApplicationContext( paths );
             if ( ctx != null ) {
                 log.info( "Got context" );
@@ -58,7 +65,7 @@ public class SpringContextUtil {
      * @return
      */
     public static String[] getConfigLocations() {
-        return getConfigLocations( false );
+        return getConfigLocations( false, true );
     }
 
     /**
@@ -67,27 +74,66 @@ public class SpringContextUtil {
      * @param testing - if true, it will use the test configuration.
      * @return
      */
-    public static String[] getConfigLocations( boolean testing ) {
-        ResourceBundle db = ResourceBundle.getBundle( "Gemma" );
-        String daoType = db.getString( "dao.type" );
-        String servletContext = db.getString( "servlet.name.0" );
+    public static String[] getConfigLocations( boolean testing, boolean isWebapp ) {
         if ( testing ) {
-            log.warn( "************** Using test configuration ***************" );
-            return new String[] { "classpath*:/ubic/gemma/localTestDataSource.xml",
-                    "classpath*:/ubic/gemma/applicationContext-" + daoType + ".xml",
-                    "classpath*:/ubic/gemma/applicationContext-security.xml",
-                 //   "classpath*:" + servletContext + "-servlet.xml",
-                    "classpath*:/ubic/gemma/applicationContext-validation.xml",
-                    "classpath*:/ubic/gemma/applicationContext-serviceBeans.xml" };
+            return getTestConfigLocations( isWebapp );
         }
-        return new String[] { "classpath*:/ubic/gemma/applicationContext-resources.xml",
-                "classpath*:/ubic/gemma/localDataSource.xml",
-                "classpath*:/ubic/gemma/applicationContext-" + daoType + ".xml",
-                "classpath*:/ubic/gemma/applicationContext-security.xml",
-                "classpath*:" + servletContext + "-servlet.xml",
-                "classpath*:/ubic/gemma/applicationContext-validation.xml",
-                "classpath*:/ubic/gemma/applicationContext-serviceBeans.xml" };
+        return getStandardConfigLocations( isWebapp );
 
+    }
+
+    protected static CompositeConfiguration config;
+
+    static {
+        try {
+            config = new CompositeConfiguration();
+            config.addConfiguration( new SystemConfiguration() );
+            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    private static String getGemmaHomeProperty() {
+        String gemmaHome = config.getString( "gemma.home" );
+        if ( gemmaHome == null ) {
+            throw new RuntimeException( "You must set 'gemma.home' in your build.properties" );
+        }
+        return gemmaHome;
+    }
+
+    private static String[] getStandardConfigLocations( boolean isWebapp ) {
+        List<String> paths = new ArrayList<String>();
+
+        paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
+        File f = new File( getGemmaHomeProperty() );
+        try {
+            if ( isWebapp ) {
+                paths.add( f.toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
+            }
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
+        }
+
+        return paths.toArray( new String[] {} );
+    }
+
+    private static String[] getTestConfigLocations( boolean isWebapp ) {
+        List<String> paths = new ArrayList<String>();
+
+        paths.add( "classpath*:ubic/gemma/localTestDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
+        File f = new File( getGemmaHomeProperty() );
+        try {
+            if ( isWebapp ) {
+                paths.add( f.toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
+            }
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
+        }
+
+        return paths.toArray( new String[] {} );
     }
 
 }

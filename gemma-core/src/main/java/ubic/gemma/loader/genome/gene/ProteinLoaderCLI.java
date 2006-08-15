@@ -125,15 +125,15 @@ public class ProteinLoaderCLI {
             if ( cl.hasOption( 't' ) ) {
                 boolean isTest = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
                 if ( isTest )
-                    ctx = SpringContextUtil.getApplicationContext( true );
+                    ctx = SpringContextUtil.getApplicationContext( true, false );
                 else
-                    ctx = SpringContextUtil.getApplicationContext( false );
+                    ctx = SpringContextUtil.getApplicationContext( false, false );
 
                 cli = new ProteinLoaderCLI();
             }
             // if no ctx is set, default to test environment.
             else {
-                ctx = SpringContextUtil.getApplicationContext( true );
+                ctx = SpringContextUtil.getApplicationContext( true, false );
                 cli = new ProteinLoaderCLI();
             }
 
@@ -176,7 +176,7 @@ public class ProteinLoaderCLI {
     }
 
     public ProteinLoaderCLI() {
-        ctx = SpringContextUtil.getApplicationContext( false );
+        ctx = SpringContextUtil.getApplicationContext( false, false );
         geneDao = ( GeneDao ) ctx.getBean( "geneDao" );
         gpDao = ( GeneProductDao ) ctx.getBean( "geneProductDao" );
         // dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;
