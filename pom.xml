@@ -200,7 +200,7 @@
 		<site>
 			<id>website</id>
 			<url>
-				scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/Gemma
+				scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/gemma-dev
 			</url>
 		</site>
 	</distributionManagement>
