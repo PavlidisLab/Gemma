@@ -114,7 +114,7 @@
 								target/generated-sources
 							</buildSourceDirectory>
 							<configurationUri>
-								${project.basedir}/src/main/conf/andromda.xml
+								file:${project.basedir}/src/main/conf/andromda.xml
 							</configurationUri>
 							<lastModifiedCheck>true</lastModifiedCheck>
 						</configuration>
@@ -242,11 +242,6 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<plugin><!--  fixme does this work or do we have to build from source -->
-				<groupId>org.andromda.maven.plugins</groupId>
-				<artifactId>andromda-maven-plugin</artifactId>
-				<version>3.2-SNAPSHOT</version>
-			</plugin>
 			<plugin>
 				<groupId>org.andromda.maven.plugins</groupId>
 				<artifactId>andromda-multi-source-plugin</artifactId>
@@ -293,7 +288,9 @@
 						<taskdef
 							resource="net/sf/antcontrib/antcontrib.properties" />
 						<if>
-							<isset property="testdb.build" />
+							<not>
+								<isset property="test.db.skip" />
+							</not>
 							<then>
 								<echo
 									message="*******  Building Test db  *******" />
@@ -350,6 +347,14 @@
 
 					</tasks>
 				</configuration>
+				<executions>
+					<execution>
+						<phase>generate-test-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
 				<dependencies>
 					<dependency>
 						<groupId>org.hibernate</groupId>
