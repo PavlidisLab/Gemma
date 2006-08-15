@@ -99,19 +99,17 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param seekFile
-     * @param outputFileName
+     * @param seekFilePath Absolute path to the file for download
+     * @param outputFilePath Absolute path to the download location.
      * @return
      */
-    protected LocalFile fetchedFile( String seekFile, String outputFileName ) {
+    protected LocalFile fetchedFile( String seekFilePath, String outputFilePath ) {
         LocalFile file = LocalFile.Factory.newInstance();
         file.setVersion( new SimpleDateFormat().format( new Date() ) );
         try {
-            file.setRemoteURL( ( new File( seekFile ) ).toURI().toURL() );
-            file.setLocalURL( ( new URI( "file://" + outputFileName ) ).toURL() );
+            file.setRemoteURL( ( new File( seekFilePath ) ).toURI().toURL() );
+            file.setLocalURL( ( new File( outputFilePath ).toURI().toURL() ) );
         } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        } catch ( URISyntaxException e ) {
             throw new RuntimeException( e );
         }
         return file;
