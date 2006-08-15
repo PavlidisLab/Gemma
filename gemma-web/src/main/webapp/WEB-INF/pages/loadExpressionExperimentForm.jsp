@@ -1,12 +1,27 @@
 <%@ include file="/common/taglibs.jsp"%>
+<jsp:useBean id="command" scope="request"
+   class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
 
+
+<html>
+    <head>
 <title><fmt:message key="expressionExperiment.load.title" /></title>
 <content tag="heading">
 <fmt:message key="expressionExperiment.load.title" />
 </content>
 
-<jsp:useBean id="command" scope="request"
-    class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand" />
+
+
+        <script type='text/javascript' src='dwr/engine.js'></script>
+        <script type='text/javascript' src='dwr/util.js'></script>
+        <script type='text/javascript' src='dwr/interface/ProgressMonitor'></script>
+        <script type='text/javascript' src="<c:url value="scripts/progress.js"/>"></script>
+        <style type="text/css">
+#progressBar { padding-top: 5px; }
+#progressBarBox { width: 350px; height: 20px; border: 1px inset; background: #EEEEEE;}
+#progressBarBoxContent { width: 0; height: 20px; border-right: 1px solid #444444; background: #9ACB34; }
+</style>
+    </head>
 
 <spring:bind path="command.*">
     <c:if test="${not empty status.errorMessages}">
@@ -24,7 +39,7 @@
 <fmt:message key="expressionExperiment.load.message" />
 
 <form method="post" id="loadExpressionExperimentForm" action="<c:url value="/loadExpressionExperiment.html"/>"
-    onsubmit="return onFormSubmit(this)">
+    onsubmit="startProgress()">
 
 
     <table class="detail">
@@ -66,11 +81,24 @@
     </table>
 </form>
 
+	<div id="progressBar" style="display: none;">
+
+            <div id="theMeter">
+                <div id="progressBarText"></div>
+
+                <div id="progressBarBox">
+                    <div id="progressBarBoxContent"></div>
+                </div>
+            </div>
+        </div>
 <script type="text/javascript">
 <!--
 highlightFormElements();
 // -->
 </script>
+  </body>
+</html>
+
 
 <validate:javascript formName="expressionExperimentLoadCommand" staticJavascript="false" />
 <script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
