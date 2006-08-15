@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="Gemma">
-    <bannerLeft>
-        <name>Gemma</name>
-    </bannerLeft>
-    <bannerRight>
-        <src>images/gemmaSmall.gif</src>
-    </bannerRight>
-    <body>
-     
-        ${reports}
+	<bannerLeft>
+		<name>Gemma</name>
+	</bannerLeft>
+	<bannerRight>
+		<src>images/gemmaSmall.gif</src>
+	</bannerRight>
+	<body>
 
-    </body>
+		<links>
+			<item name="Apache" href="http://www.apache.org/" />
+			<item name="Maven 2" href="http://maven.apache.org/maven2/" />
+		</links>
+
+		<menu name="Maven 2.0">
+			<item name="Introduction" href="index.html" />
+			<item name="Download" href="download.html" />
+			<item name="Release Notes" href="release-notes.html" />
+			<item name="General Information" href="about.html" />
+			<item name="Road Map" href="roadmap.html" />
+		</menu>
+
+		${reports}
+
+	</body>
 </project>

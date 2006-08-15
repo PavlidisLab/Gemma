@@ -1,130 +1,207 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <name>Gemma</name>
-    <groupId>gemma</groupId>
-    <artifactId>gemma</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <inceptionYear>2005</inceptionYear>
-    <description>The Gemma Project for meta-analysis of genomics data</description>
-    <organization>
-        <name>UBC Bioinformatics Centre</name>
-        <url>http://bioinformatics.ubc.ca/</url>
-    </organization>
-    <modules>
-    	<module>gemma-util</module>
-    	<module>gemma-mda</module>
-        <module>gemma-core</module>
-        <module>gemma-testing</module>
-        <module>gemma-web</module>
-    </modules>
-    <packaging>pom</packaging>
-    <scm>
-        <connection>scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma</connection>
-        <developerConnection>
-            scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
-        </developerConnection>
-        <url>http://luria.cmmt.ubc.ca:8080/viewrep/Pavlidis/Gemma</url>
-    </scm>
-    <issueManagement>
-        <system>Bugzilla</system>
-        <url>http://benzer.ubic.ca/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__</url>
-    </issueManagement>
-    <ciManagement>
-        <system>continuum</system>
-        <url>http://benzer.ubic.ca:8081/continuum/</url>
-        <notifiers>
-            <notifier>
-                <type>mail</type>
-                <sendOnError>true</sendOnError>
-                <sendOnFailure>true</sendOnFailure>
-                <sendOnSuccess>true</sendOnSuccess>
-                <sendOnWarning>true</sendOnWarning>
-                <configuration>
-                    <address>paul@bioinformatics.ubc.ca</address>
-                </configuration>
-            </notifier>
-        </notifiers>
-    </ciManagement>
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-    <developers>
-        <developer>
-            <name>Paul Pavlidis</name>
-            <id>pavlidis</id>
-            <email>paul@bioinformatics.ubc.ca</email>
-            <organization>University of British Columbia</organization>
-        </developer>
-        <developer>
-            <name>Kiran Keshav</name>
-            <id>keshav</id>
-            <email>keshav@cu-genome.org</email>
-            <organization>University of British Columbia</organization>
-        </developer>
-    </developers>
-    <reporting>
-        <outputDirectory>target/site</outputDirectory>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <links>
-                        <link>http://java.sun.com/j2ee/1.4/docs/api</link>
-                        <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-                        <link>
-                            http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
-                        </link>
-                        <link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-                        <link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
-                        <link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
-                        <link>http://jakarta.apache.org/commons/logging/api/</link>
-                        <link>http://jakarta.apache.org/commons/pool/apidocs/</link>
-                        <link>http://www.junit.org/junit/javadoc/</link>
-                        <link>http://logging.apache.org/log4j/docs/api/</link>
-                        <link>http://jakarta.apache.org/regexp/apidocs/</link>
-                        <link>http://jakarta.apache.org/velocity/api/</link>
-                        <link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
-                    </links>
-                </configuration>
-            </plugin>
-            <!--            <plugin>
-                <artifactId>maven-clover-plugin</artifactId>
-                <configuration>
-                <licenseFile>${project.basedir}/etc/licenses/clover.license</licenseFile>
-                </configuration> 
-                </plugin>-->
-            <!--     <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-changes-plugin</artifactId>
-                </plugin> -->
-            <!--  <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-changelog-plugin</artifactId>
-                </plugin> -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jxr-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>taglist-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </reporting>
-    <distributionManagement>
-        <site>
-            <id>website</id>
-            <url>scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/Gemma</url>
-        </site>
-    </distributionManagement>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<name>Gemma</name>
+	<groupId>gemma</groupId>
+	<artifactId>gemma</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<inceptionYear>2005</inceptionYear>
+	<description>
+		The Gemma Project for meta-analysis of genomics data
+	</description>
+	<organization>
+		<name>UBC Bioinformatics Centre</name>
+		<url>http://bioinformatics.ubc.ca/</url>
+	</organization>
+	<modules>
+		<module>gemma-util</module>
+		<module>gemma-mda</module>
+		<module>gemma-core</module>
+		<module>gemma-testing</module>
+		<module>gemma-web</module>
+	</modules>
+	<packaging>pom</packaging>
+	<scm>
+		<connection>
+			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
+		</connection>
+		<developerConnection>
+			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
+		</developerConnection>
+		<url>http://luria.cmmt.ubc.ca:8080/viewrep/Pavlidis/Gemma</url>
+	</scm>
+	<issueManagement>
+		<system>Bugzilla</system>
+		<url>
+			http://benzer.ubic.ca/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__
+		</url>
+	</issueManagement>
+	<ciManagement>
+		<system>continuum</system>
+		<url>http://benzer.ubic.ca/continuum/</url>
+		<notifiers>
+			<notifier>
+				<type>mail</type>
+				<sendOnError>true</sendOnError>
+				<sendOnFailure>true</sendOnFailure>
+				<sendOnSuccess>true</sendOnSuccess>
+				<sendOnWarning>true</sendOnWarning>
+				<configuration>
+					<address>paul@bioinformatics.ubc.ca</address>
+				</configuration>
+			</notifier>
+		</notifiers>
+	</ciManagement>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Paul Pavlidis</name>
+			<id>pavlidis</id>
+			<email>paul@bioinformatics.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
+		<developer>
+			<name>Kiran Keshav</name>
+			<id>keshav</id>
+			<email>keshav@cu-genome.org</email>
+			<organization>University of British Columbia</organization>
+		</developer>
+		<developer>
+			<name>Kelsey Hamer</name>
+			<id>kelsey</id>
+			<email>kesley@bioinformatics.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
+		<developer>
+			<name>Joseph Roy Santos</name>
+			<id>joseph</id>
+			<email>joseph@bioinformatics.ubc.ca</email>
+			<organization>University of British Columbia</organization>
+		</developer>
+	</developers>
+	<reporting>
+		<outputDirectory>target/site</outputDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>
+					maven-project-info-reports-plugin
+				</artifactId>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<links>
+						<link>
+							http://java.sun.com/j2ee/1.4/docs/api
+						</link>
+						<link>
+							http://java.sun.com/j2se/1.5.0/docs/api
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/dbcp/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/fileupload/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/httpclient/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/logging/api/
+						</link>
+						<link>
+							http://jakarta.apache.org/commons/pool/apidocs/
+						</link>
+						<link>http://www.junit.org/junit/javadoc/</link>
+						<link>
+							http://logging.apache.org/log4j/docs/api/
+						</link>
+						<link>
+							http://jakarta.apache.org/regexp/apidocs/
+						</link>
+						<link>
+							http://jakarta.apache.org/velocity/api/
+						</link>
+						<link>
+							http://dsd.lbl.gov/~hoschek/colt/api/
+						</link>
+					</links>
+				</configuration>
+			</plugin>
+			<!--            <plugin>
+				<artifactId>maven-clover-plugin</artifactId>
+				<configuration>
+				<licenseFile>${project.basedir}/etc/licenses/clover.license</licenseFile>
+				</configuration> 
+				</plugin>-->
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jxr-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>taglist-maven-plugin</artifactId>
+			</plugin>
+			<!--  <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-changelog-plugin</artifactId>
+				</plugin>-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<configuration>
+					<targetJdk>1.5</targetJdk>
+				</configuration>
+			</plugin>
+			<!--  <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<configuration>
+				<configLocation>checkstyle.xml</configLocation>
+				</configuration>
+				</plugin>-->
+
+		</plugins>
+	</reporting>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<distributionManagement>
+		<site>
+			<id>website</id>
+			<url>
+				scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/Gemma
+			</url>
+		</site>
+	</distributionManagement>
 </project>
