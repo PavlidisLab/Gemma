@@ -20,6 +20,11 @@ package ubic.gemma.apps;
 
 import java.io.File;
 
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -29,6 +34,9 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     File tempFile;
 
     ProbeMapperCli p;
+    private String databaseHost;
+    private String databaseUser;
+    private String databasePassword;
 
     /*
      * (non-Javadoc)
@@ -39,6 +47,19 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         super.setUp();
         tempFile = File.createTempFile( "cli", ".txt" );
         p = new ProbeMapperCli();
+
+        // fixme - factor this out so it can be reused.
+        try {
+            config = new CompositeConfiguration();
+            config.addConfiguration( new SystemConfiguration() );
+            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+
+        databaseHost = config.getString( "gemma.testdb.host" );
+        databaseUser = config.getString( "gemma.testdb.user" );
+        databasePassword = config.getString( "gemma.testdb.password" );
     }
 
     protected void tearDown() throws Exception {
@@ -46,9 +67,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     }
 
     public final void testMainBadPort() throws Exception {
-        Exception result = p.doWork( new String[] { "-v", "3", "-P", "c", "-u", "testuser", "-p", "toast", "-o",
-                tempFile.getAbsolutePath() } );
-        // should result in an exception
+        Exception result = p.doWork( new String[] { "-v", "3", "-P", "c", "-u", databaseUser, "-p", databasePassword,
+                "-H", databaseHost, "-o", tempFile.getAbsolutePath() } ); // should result in an exception
         assertTrue( result.getMessage(), result != null );
     }
 
@@ -61,8 +81,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         assert ( new File( blatFile ) ).canRead();
 
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "testuser", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
+                databaseHost, "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
         if ( result != null ) {
             fail( result.getMessage() );
         }
@@ -77,8 +97,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         assert ( new File( gbFile ) ).canRead();
 
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "testuser", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg18" } );
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
+                databaseHost, "-o", tempFile.getAbsolutePath(), "-g", gbFile, "-d", "hg18" } );
         if ( result != null ) {
             fail( result.getMessage() );
         }
@@ -99,11 +119,10 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         String blatFile = basePath + System.getProperty( "file.separator" )
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.doesntexist.noheader.txt";
 
-        Exception result = p.doWork( new String[] { "-u", "testuser", "-p", "toast", "-o", tempFile.getAbsolutePath(),
-                "-b", blatFile, "-d", "hg18" } );
+        Exception result = p.doWork( new String[] { "-u", databaseUser, "-p", databasePassword, "-H", databaseHost,
+                "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
         assertTrue( result.getMessage(), result != null );
     }
-
     // This test requires a running gfServer with java client. Only works under linux.
     // public void testSequenceHandling() throws Exception {
     // String basePath = this.getTestFileBasePath();

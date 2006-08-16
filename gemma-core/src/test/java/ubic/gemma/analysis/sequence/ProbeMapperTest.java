@@ -22,6 +22,10 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -36,9 +40,12 @@ import junit.framework.TestCase;
  * @version $Id$
  */
 public class ProbeMapperTest extends TestCase {
-
+    private CompositeConfiguration config;
     private static Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
     Collection<BlatResult> blatres;
+    private String databaseHost;
+    private String databaseUser;
+    private String databasePassword;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -46,6 +53,19 @@ public class ProbeMapperTest extends TestCase {
         BlatResultParser brp = new BlatResultParser();
         brp.parse( is );
         blatres = brp.getResults();
+
+        // fixme - factor this out so it can be reused.
+        try {
+            config = new CompositeConfiguration();
+            config.addConfiguration( new SystemConfiguration() );
+            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+
+        databaseHost = config.getString( "gemma.testdb.host" );
+        databaseUser = config.getString( "gemma.testdb.user" );
+        databasePassword = config.getString( "gemma.testdb.password" );
 
     }
 
@@ -61,7 +81,7 @@ public class ProbeMapperTest extends TestCase {
         ProbeMapper pm = new ProbeMapper();
 
         try {
-            GoldenPath gp = new GoldenPath( 3306, "mm8", "localhost", "testuser", "toast" );
+            GoldenPath gp = new GoldenPath( 3306, "mm8", databaseHost, databaseUser, databasePassword );
             if ( gp == null ) {
                 log.warn( "Could not get Goldenpath database connection, skipping test" );
                 return;
@@ -79,7 +99,7 @@ public class ProbeMapperTest extends TestCase {
                 log.warn( "Test skipped due to missing mm8 database" );
                 return;
             } else if ( e.getMessage().contains( "Access denied" ) ) {
-                log.warn( "Test skipped due to database authetnication problem - check username and password in test" );
+                log.warn( "Test skipped due to database authentication problem - check username and password in test" );
                 return;
             }
             throw e;
