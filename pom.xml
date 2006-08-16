@@ -91,29 +91,29 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
+			<!-- 	<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
-					<links>
-						<link>http://java.sun.com/j2ee/1.4/docs/api</link>
-						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-						<link>
-							http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
-						</link>
-						<link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
-						<link>http://jakarta.apache.org/commons/logging/api/</link>
-						<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
-						<link>http://www.junit.org/junit/javadoc/</link>
-						<link>http://logging.apache.org/log4j/docs/api/</link>
-						<link>http://jakarta.apache.org/regexp/apidocs/</link>
-						<link>http://jakarta.apache.org/velocity/api/</link>
-						<link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
-					</links>
-					<aggregate>true</aggregate>
+				<links>
+				<link>http://java.sun.com/j2ee/1.4/docs/api</link>
+				<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+				<link>
+				http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
+				</link>
+				<link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
+				<link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
+				<link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
+				<link>http://jakarta.apache.org/commons/logging/api/</link>
+				<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
+				<link>http://www.junit.org/junit/javadoc/</link>
+				<link>http://logging.apache.org/log4j/docs/api/</link>
+				<link>http://jakarta.apache.org/regexp/apidocs/</link>
+				<link>http://jakarta.apache.org/velocity/api/</link>
+				<link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
+				</links>
+				<aggregate>true</aggregate>
 				</configuration>
-			</plugin>
+				</plugin>-->
 			<!--            <plugin>
 				<artifactId>maven-clover-plugin</artifactId>
 				<configuration>
@@ -124,36 +124,33 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
-				<configuration>
-					<aggregate>true</aggregate>
-				</configuration>
 			</plugin>
-			<plugin>
+			<!--	<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jxr-maven-plugin</artifactId>
 				<configuration>
-					<aggregate>true</aggregate>
+				<aggregate>true</aggregate>
 				</configuration>
-			</plugin>
-			<plugin>
+				</plugin>
+				<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>taglist-maven-plugin</artifactId>
 				<configuration>
-					<aggregate>true</aggregate>
+				<aggregate>true</aggregate>
 				</configuration>
-			</plugin>
-			<!--  <plugin>
+				</plugin>
+				<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-changelog-plugin</artifactId>
-				</plugin>-->
-			<plugin>
+				</plugin>
+				<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<configuration>
-					<aggregate>true</aggregate>
-					<targetJdk>1.5</targetJdk>
+				<aggregate>true</aggregate>
+				<targetJdk>1.5</targetJdk>
 				</configuration>
-			</plugin>
+				</plugin>-->
 			<!--  <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -163,9 +160,15 @@
 				</plugin>-->
 
 		</plugins>
+
 	</reporting>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>2.0-SNAPSHOT</version>
+			</plugin>
 			<!--   	<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
