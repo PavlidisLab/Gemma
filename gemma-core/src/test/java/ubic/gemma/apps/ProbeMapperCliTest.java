@@ -108,8 +108,8 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
     }
 
     public void testSingleGb() throws Exception {
-        Exception result = p.doWork( new String[] { "-v", "3", "-u", "testuser", "-p", "toast", "-o",
-                tempFile.getAbsolutePath(), "-d", "hg18", "AF015731", "BX473803" } );
+        Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
+                databaseHost, "-o", tempFile.getAbsolutePath(), "-d", "hg18", "AF015731", "BX473803" } );
         if ( result != null ) {
             result.printStackTrace();
             fail( result.getMessage() );

@@ -151,6 +151,8 @@ public class ProbeMapperCli extends AbstractCLI {
             Writer resultsOut = getWriterForBestResults( outputFileName );
             Writer bestResultsOut = getWriterForBestResults( bestOutputFileName );
 
+            log.info( "DatabaseHost = " + this.host + " User=" + this.username );
+
             if ( blatFileName != null ) {
                 File f = new File( blatFileName );
                 if ( !f.canRead() ) throw new IOException( "Can't read file " + blatFileName );
