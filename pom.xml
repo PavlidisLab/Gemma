@@ -183,7 +183,7 @@
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>scp://benzer.ubic.ca/disk2/WWW/proj/pavlidis/projectpages/gemma-dev</url>
+			<url>file:///disk2/WWW/proj/pavlidis/projectpages/gemma-dev</url>
 		</site>
 	</distributionManagement>
 </project>
