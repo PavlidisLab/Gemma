@@ -60,6 +60,9 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         databaseHost = config.getString( "gemma.testdb.host" );
         databaseUser = config.getString( "gemma.testdb.user" );
         databasePassword = config.getString( "gemma.testdb.password" );
+
+        log.info( " databaseHost = " + databaseHost );
+
     }
 
     protected void tearDown() throws Exception {
