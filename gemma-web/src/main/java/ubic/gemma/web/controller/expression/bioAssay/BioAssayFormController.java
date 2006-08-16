@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
@@ -136,10 +137,17 @@ public class BioAssayFormController extends BaseFormController {
         log.debug( "entering processFormSubmission" );
 
         String accession = request.getParameter( "bioAssayImpl.accession.accession" );
-
+        
         if ( accession == null ) {
             // do nothing
         } else {
+            if ( request.getParameter( "cancel" ) != null ) {
+/*                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath()
+                    + "/bioAssay/showBioAssay.html?id=" + id.toString() ) );*/
+                return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", command );
+            }
+            
             /* database entry */
             ( ( BioAssay ) command ).getAccession().setAccession( accession );
 
