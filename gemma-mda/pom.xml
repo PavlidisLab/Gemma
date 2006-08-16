@@ -312,6 +312,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>sql-maven-plugin</artifactId>
+						<version>1.0-beta-2-SNAPSHOT</version>
 						<dependencies>
 							<dependency>
 								<groupId>mysql</groupId>
@@ -374,6 +375,7 @@
 										</srcFile>
 										<srcFile>src/test/resources/sql/init-script.sql</srcFile>
 									</srcFiles>
+									<onError>continue</onError>
 								</configuration>
 							</execution>
 						</executions>
