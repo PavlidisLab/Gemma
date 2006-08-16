@@ -35,10 +35,24 @@ public class ProgressData implements Serializable {
     private String description;
     private boolean done;
 
+    /**
+     * @param per int value of percent
+     * @param descrip string a description of the progress
+     * @param finished
+     */
     public ProgressData( int per, String descrip, boolean finished ) {
+        super();
         percent = per;
         description = descrip;
         done = finished;
+    }
+
+    /**
+     * @param percent int
+     * @param description String
+     */
+    public ProgressData( int per, String descrip ) {
+        this( per, descrip, false );
     }
 
     public String getDescription() {
@@ -53,6 +67,9 @@ public class ProgressData implements Serializable {
         this.done = done;
     }
 
+    /**
+     * @param description string a description of the progress
+     */
     public void setDescription( String description ) {
         this.description = description;
     }
@@ -61,6 +78,9 @@ public class ProgressData implements Serializable {
         return percent;
     }
 
+    /**
+     * @param per int value of percent
+     */
     public void setPercent( int percent ) {
         this.percent = percent;
     }

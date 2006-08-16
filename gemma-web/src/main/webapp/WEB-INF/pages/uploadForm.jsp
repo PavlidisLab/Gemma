@@ -7,7 +7,7 @@
         <content tag="heading">
         <fmt:message key="upload.heading" />
         </content>
-        <script type='text/javascript' src='dwr/interface/UploadMonitor.js'></script>
+        <script type='text/javascript' src='dwr/interface/HttpProgressMonitor.js'></script>
         <script type='text/javascript' src='dwr/engine.js'></script>
         <script type='text/javascript' src='dwr/util.js'></script>
         <script type='text/javascript' src="<c:url value="scripts/upload.js"/>"></script>

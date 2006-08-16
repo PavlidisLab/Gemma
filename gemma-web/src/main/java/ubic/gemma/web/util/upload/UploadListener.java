@@ -25,35 +25,40 @@ package ubic.gemma.web.util.upload;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.web.util.progress.ProgressData;
+import ubic.gemma.web.util.progress.ProgressJob;
+import ubic.gemma.web.util.progress.ProgressManager;
 
 /**
  * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson $ on $Date: 2006/01/05
  *         10:09:38
  * @author pavlidis*
- * @version  $Id$
+ * @version $Id$
  */
 public class UploadListener implements OutputStreamListener {
 
     private static Log log = LogFactory.getLog( UploadListener.class.getName() );
 
-    private HttpServletRequest request;
     private long delay = 0;
-    private long startTime = 0;
+
     private int totalToRead = 0;
     private int totalBytesRead = 0;
     private int totalFiles = -1;
-
+    private ProgressJob pJob;
+  
     /**
      * @param request
      * @param debugDelay
      */
     public UploadListener( HttpServletRequest request, long debugDelay ) {
-        this.request = request;
+
         this.delay = debugDelay;
         totalToRead = request.getContentLength();
-        this.startTime = System.currentTimeMillis();
+
     }
 
     /*
@@ -63,7 +68,10 @@ public class UploadListener implements OutputStreamListener {
      */
     public void start() {
         totalFiles++;
-        updateUploadInfo( "start" );
+        pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName(),
+                "File Upload" );
+        pJob.updateProgress( new ProgressData( 0, "Uploading File started" ) );
+        // updateUploadInfo( "start" );
     }
 
     /*
@@ -72,8 +80,14 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
+        int oldPercent = 0;
+
         totalBytesRead = totalBytesRead + bytesRead;
-        updateUploadInfo( "progress" );
+
+        if ( ( totalBytesRead / totalToRead ) > oldPercent ) {
+            pJob.updateProgress();
+            oldPercent = ( totalBytesRead / totalToRead );
+        }
 
         try {
             Thread.sleep( delay );
@@ -89,7 +103,8 @@ public class UploadListener implements OutputStreamListener {
      */
     @SuppressWarnings("unused")
     public void error( String message ) {
-        updateUploadInfo( "error" );
+        pJob.updateProgress( new ProgressData( (totalBytesRead / totalToRead) , "Failed to upload", true ) );
+        log.error( "There was an error in uploading a file in " + this );
     }
 
     /*
@@ -98,20 +113,7 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
      */
     public void done() {
-        updateUploadInfo( "done" );
+        pJob.updateProgress( new ProgressData( 100, "Finished Uploading", true ) );
     }
 
-    // private long getDelta() {
-    // return ( System.currentTimeMillis() - startTime ) / 1000;
-    // }
-
-    private void updateUploadInfo( String status ) {
-        assert request != null;
-        long delta = ( System.currentTimeMillis() - startTime ) / 1000;
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Updating info: Status=" + status + ", " + totalBytesRead + " bytes read" );
-        }
-        request.getSession().setAttribute( "uploadInfo",
-                new UploadInfo( totalFiles, totalToRead, totalBytesRead, delta, status ) );
-    }
 }
