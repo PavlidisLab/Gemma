@@ -7,30 +7,34 @@
 */
 
 function refreshProgress() {
-    UploadMonitor.getUploadInfo(updateProgress);
+    updateProgress( HttpProgressMonitor.getProgressStatus() );
 }
-function updateProgress(uploadInfo) {
-    if (uploadInfo.inProgress) {
+
+function updateProgress(progressData) {
+
+ 
+    if (!progressData.isDone) {
         document.getElementById("uploadbutton").disabled = true;
         document.getElementById("file").disabled = true;
-        var fileIndex = uploadInfo.fileIndex;
-        var progressPercent = Math.ceil((uploadInfo.bytesRead / uploadInfo.totalSize) * 100);
-        document.getElementById("progressBarText").innerHTML = "Upload in progress: " + progressPercent + "%";
-        document.getElementById("progressBarBoxContent").style.width = parseInt(progressPercent * 3.5) + "px";
+        document.getElementById("progressBarText").innerHTML =  progressData.getDescription() + " : " + progressData.getPercent() + "% ";
+        document.getElementById("progressBarBoxContent").style.width = parseInt(progressData.getPercent() * 3.5) + "px";
         window.setTimeout("refreshProgress()", 1000);
     } else {
         document.getElementById("uploadbutton").disabled = false;
         document.getElementById("file").disabled = false;
+        document.getElementById("progressBarText").innerHTML =  progressData.getDescription() + " : " + progressData.getPercent() + "% ";
+        document.getElementById("progressBarBoxContent").style.width = parseInt(progressData.getPercent() * 3.5) + "px";
+       
     }
     return true;
 }
 function startProgress() {
     document.getElementById("progressBar").style.display = "block";
-    document.getElementById("progressBarText").innerHTML = "Upload in progress: 0%";
+    document.getElementById("progressBarText").innerHTML = "Progress: 0%";
     document.getElementById("uploadbutton").disabled = true;
 
     // wait a little while to make sure the upload has started ..
-    window.setTimeout("refreshProgress()", 1500);
+    window.setTimeout("refreshProgress()", 1200);
     return true;
 }
 
