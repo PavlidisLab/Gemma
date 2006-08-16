@@ -80,6 +80,15 @@
 				</includes>
 				<filtering>false</filtering>
 			</testResource>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<includes>
+					<include>**/data/*.txt</include>
+					<include>**/data/*.xml</include>
+					<include>**/data/*.csv</include>
+				</includes>
+				<filtering>false</filtering>
+			</testResource>
 		</testResources>
 		<plugins>
 			<plugin>

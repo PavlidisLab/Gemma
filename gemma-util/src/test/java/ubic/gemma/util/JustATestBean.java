@@ -18,24 +18,28 @@
  */
 package ubic.gemma.util;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 /**
- * Test for gemma-util
+ * Just handy
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class AllUtilTests {
+public class JustATestBean {
 
-    public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.util" );
-        // $JUnit-BEGIN$
-        suite.addTestSuite( BeanPropertyCompleterTest.class );
-        suite.addTestSuite( CommonsConfigurationPropertyPlaceholderConfigurer.class );
-        // $JUnit-END$
-        return suite;
+    String myValue;
+
+    /**
+     * @param myValue the myValue to set
+     */
+    public void setMyValue( String myValue ) {
+        this.myValue = myValue;
+    }
+
+    /**
+     * @return
+     */
+    public String getMyValue() {
+        return myValue;
     }
 
 }

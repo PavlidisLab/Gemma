@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry output="build/Gemma/WEB-INF/classes" kind="src" path="gemma-core/src/main/java"/>
+	<classpathentry output="test-build" kind="src" path="gemma-util/src/test/resources"/>
 	<classpathentry output="build/Gemma" kind="src" path="gemma-web/src/main/applets"/>
 	<classpathentry including="**/*.jar" excluding="**/*.class|**/*.xml|**/gemma*.jar" output="build/Gemma" kind="src" path="gemma-web/target/Gemma"/>
 	<classpathentry output="build/Gemma/" kind="src" path="generated-sources/Gemma"/>
@@ -31,7 +32,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-net/commons-net/1.3.0/commons-net-1.3.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.1/commons-configuration-1.1.jar"/>
+	<classpathentry sourcepath="/JAR_SOURCE/commons-configuration-1.1/src/java" kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.1/commons-configuration-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-validator/commons-validator/1.1.4/commons-validator-1.1.4.jar"/>

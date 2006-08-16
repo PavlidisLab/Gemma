@@ -6,25 +6,52 @@
 
 <beans>
 
-    <!-- ========================= DATASOURCE DEFINITION ========================= -->
+	<!-- ========================= DATASOURCE DEFINITION ========================= -->
 
-    <!-- Local DataSource that works in any environment -->
-    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
-        <property name="driverClassName"><value>com.mysql.jdbc.Driver</value></property>
-        <property name="username"><value>pavlidis</value></property>
-        <property name="password"><value>toast</value></property>
-        <property name="url"><value>jdbc:mysql://localhost:3306/gemdtest</value></property>
-    </bean>
+	<!-- Local DataSource that works in any environment -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName">
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property name="username">
+			<value>${gemma.testdb.user}</value>
+		</property>
+		<property name="password">
+			<value>${gemma.testdb.password}</value>
+		</property>
+		<property name="url">
+			<value>${gemma.testdb.url}</value>
+		</property>
+	</bean>
 
-    <!-- ====================== End of DATASOURCE DEFINITION ====================== -->
+	<!-- ====================== End of DATASOURCE DEFINITION ====================== -->
 
-    <!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
+	<!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
 
-    <!-- (local) Transaction Manager -->
-    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
-        <property name="sessionFactory"><ref bean="sessionFactory"/></property>
-    </bean>
+	<!-- (local) Transaction Manager -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
 
-    <!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
+	<!-- ===================== TRANSACTION MANAGER DEFINITION ========================= -->
 
 </beans>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
