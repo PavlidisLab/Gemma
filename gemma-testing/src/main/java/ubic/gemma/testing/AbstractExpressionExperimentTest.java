@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.experiment;
+package ubic.gemma.testing;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,7 +25,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -36,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * A utility to load expression experiment test data.
@@ -192,13 +190,7 @@ public abstract class AbstractExpressionExperimentTest extends BaseTransactional
         log.debug( "expression experiment => design element data vectors" );
         ee.setDesignElementDataVectors( getDesignElementDataVectors( ee, ad ) );
 
-        log.debug( "Loading test expression experiment." );
-
-        PersisterHelper ph = ( PersisterHelper ) getBean( "persisterHelper" );
-
-        assert ph != null;
-
-        return ( ExpressionExperiment ) ph.persist( ee );
+        return ee;
     }
 
 }

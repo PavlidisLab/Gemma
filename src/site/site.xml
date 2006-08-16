@@ -3,25 +3,27 @@
 	<bannerLeft>
 		<name>Gemma</name>
 	</bannerLeft>
-	<bannerRight>
-		<src>images/gemmaSmall.gif</src>
-	</bannerRight>
-	<body>
+ <bannerRight>
+    <src>http://maven.apache.org/images/maven-small.gif</src>
+  </bannerRight>
+  <body>
+    <links>
+      <item name="Apache" href="http://www.apache.org/" />
+      <item name="Maven 2" href="http://maven.apache.org/maven2/"/>
+      <item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab"/>
+    </links>
 
-		<links>
-			<item name="Apache" href="http://www.apache.org/" />
-			<item name="Maven 2" href="http://maven.apache.org/maven2/" />
-		</links>
+    <menu name="Gemma">
+      <item name="Introduction" href="index.html"/>
+      <item name="Download" href="download.html"/>
+      <item name="Release Notes" href="release-notes.html" />
+      <item name="General Information" href="about.html"/>
+      <item name="Road Map" href="roadmap.html" />
+    </menu>
+    
+    <menu ref="modules" />
 
-		<menu name="Maven 2.0">
-			<item name="Introduction" href="index.html" />
-			<item name="Download" href="download.html" />
-			<item name="Release Notes" href="release-notes.html" />
-			<item name="General Information" href="about.html" />
-			<item name="Road Map" href="roadmap.html" />
-		</menu>
+    ${reports}
 
-		${reports}
-
-	</body>
+  </body>
 </project>

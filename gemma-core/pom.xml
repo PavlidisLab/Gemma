@@ -3,6 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma Core</name>
+	<description>Module containing core gemma functionality.</description>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-core</artifactId>
 	<version>1.0-SNAPSHOT</version>
@@ -344,9 +345,7 @@
 				</includes>
 			</resource>
 			<resource>
-				<directory>
-					target/generated-sources/resources
-				</directory>
+				<directory>target/generated-sources/resources</directory>
 				<includes>
 					<include>**/*</include>
 				</includes>
@@ -403,13 +402,11 @@
 								<springdoclet
 									destdir="${project.build.directory}/generated-sources/resources/ubic/gemma"
 									validating="false" force="false">
-									<fileset
-										dir="${basedir}/src/main/java" includes="**/*.java" />
+									<fileset dir="${basedir}/src/main/java" includes="**/*.java" />
 									<springxml
 										destDir="${project.build.directory}/generated-sources/resources/ubic/gemma"
 										mergeDir="${basedir}/src/conf/xdoclet-merge"
-										destinationFile="applicationContext-serviceBeans.xml"
-										useIds="true" />
+										destinationFile="applicationContext-serviceBeans.xml" useIds="true" />
 								</springdoclet>
 							</tasks>
 						</configuration>

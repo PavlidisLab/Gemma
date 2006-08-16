@@ -22,7 +22,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
+import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**
  * Tests the ExpressionExperimentController.
@@ -64,7 +66,9 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
         setComplete();
 
         // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
-        this.setExpressionExperimentDependencies();
+        ExpressionExperiment ee = this.setExpressionExperimentDependencies();
+
+        ee = ( ExpressionExperiment ) ( ( PersisterHelper ) this.getBean( "persisterHelper" ) ).persist( ee );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",
                 "/expressionExperiment/showAllExpressionExperiments.html" );

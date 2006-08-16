@@ -29,10 +29,10 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**
  * Tests of ACL management.
@@ -80,6 +80,9 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
      */
     public void testCascadeCreateAndDelete() throws Exception {
         ExpressionExperiment ee = this.setExpressionExperimentDependencies();
+
+        PersisterHelper p = ( PersisterHelper ) this.getBean( "persisterHelper" );
+        ee = ( ExpressionExperiment ) p.persist( ee );
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );

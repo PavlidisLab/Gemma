@@ -7,9 +7,7 @@
 	<artifactId>gemma</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
-	<description>
-		The Gemma Project for meta-analysis of genomics data
-	</description>
+	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<organization>
 		<name>UBC Bioinformatics Centre</name>
 		<url>http://bioinformatics.ubc.ca/</url>
@@ -23,9 +21,7 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>
-			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
-		</connection>
+		<connection>scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma</connection>
 		<developerConnection>
 			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
 		</developerConnection>
@@ -33,9 +29,7 @@
 	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
-		<url>
-			http://benzer.ubic.ca/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__
-		</url>
+		<url>http://benzer.ubic.ca/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__</url>
 	</issueManagement>
 	<ciManagement>
 		<system>continuum</system>
@@ -91,53 +85,33 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>
-					maven-project-info-reports-plugin
-				</artifactId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
 			</plugin>
 
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
 					<links>
-						<link>
-							http://java.sun.com/j2ee/1.4/docs/api
-						</link>
-						<link>
-							http://java.sun.com/j2se/1.5.0/docs/api
-						</link>
+						<link>http://java.sun.com/j2ee/1.4/docs/api</link>
+						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
 						<link>
 							http://jakarta.apache.org/commons/collections/apidocs-COLLECTIONS_3_0/
 						</link>
-						<link>
-							http://jakarta.apache.org/commons/dbcp/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/fileupload/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/httpclient/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/logging/api/
-						</link>
-						<link>
-							http://jakarta.apache.org/commons/pool/apidocs/
-						</link>
+						<link>http://jakarta.apache.org/commons/dbcp/apidocs/</link>
+						<link>http://jakarta.apache.org/commons/fileupload/apidocs/</link>
+						<link>http://jakarta.apache.org/commons/httpclient/apidocs/</link>
+						<link>http://jakarta.apache.org/commons/logging/api/</link>
+						<link>http://jakarta.apache.org/commons/pool/apidocs/</link>
 						<link>http://www.junit.org/junit/javadoc/</link>
-						<link>
-							http://logging.apache.org/log4j/docs/api/
-						</link>
-						<link>
-							http://jakarta.apache.org/regexp/apidocs/
-						</link>
-						<link>
-							http://jakarta.apache.org/velocity/api/
-						</link>
-						<link>
-							http://dsd.lbl.gov/~hoschek/colt/api/
-						</link>
+						<link>http://logging.apache.org/log4j/docs/api/</link>
+						<link>http://jakarta.apache.org/regexp/apidocs/</link>
+						<link>http://jakarta.apache.org/velocity/api/</link>
+						<link>http://dsd.lbl.gov/~hoschek/colt/api/</link>
 					</links>
+					<aggregate>true</aggregate>
 				</configuration>
 			</plugin>
 			<!--            <plugin>
@@ -150,14 +124,23 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jxr-maven-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>taglist-maven-plugin</artifactId>
+				<configuration>
+					<aggregate>true</aggregate>
+				</configuration>
 			</plugin>
 			<!--  <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -167,6 +150,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<configuration>
+					<aggregate>true</aggregate>
 					<targetJdk>1.5</targetJdk>
 				</configuration>
 			</plugin>
@@ -182,26 +166,24 @@
 	</reporting>
 	<build>
 		<plugins>
-			<plugin>
+			<!--   	<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
 				<executions>
-					<execution>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
+				<execution>
+				<phase>test</phase>
+				<goals>
+				<goal>report</goal>
+				</goals>
+				</execution>
 				</executions>
-			</plugin>
+				</plugin>-->
 		</plugins>
 	</build>
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>
-				scp://benzer.cmmt.ubc.ca/disk2/WWW/proj/pavlidis/projectpages/gemma-dev
-			</url>
+			<url>scp://benzer.ubic.ca/disk2/WWW/proj/pavlidis/projectpages/gemma-dev</url>
 		</site>
 	</distributionManagement>
 </project>

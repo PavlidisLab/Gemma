@@ -26,8 +26,9 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.expression.experiment.AbstractExpressionExperimentTest;
+import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**
  * Tests the expressionExperimentSearchController functionality. For this to work, data must be left in the database,
@@ -44,6 +45,10 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
     @SuppressWarnings("unchecked")
     public void testOnSubmit() throws Exception {
         ExpressionExperiment ee = this.setExpressionExperimentDependencies();
+
+        PersisterHelper ph = ( PersisterHelper ) this.getBean( "persisterHelper" );
+
+        ee = ( ExpressionExperiment ) ph.persist( ee );
 
         ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this
                 .getBean( "expressionExperimentSearchController" );
