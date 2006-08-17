@@ -24,4 +24,5 @@
 			<value>${testProperty}</value>
 		</property>
 	</bean>
+	
 </beans>
