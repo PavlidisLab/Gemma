@@ -272,6 +272,12 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
+			<groupId>javax.transaction</groupId>
+			<artifactId>jta</artifactId>
+			<version>1.0.1B</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
 			<groupId>taglibs</groupId>
 			<artifactId>request</artifactId>
 			<version>1.0.1</version>
