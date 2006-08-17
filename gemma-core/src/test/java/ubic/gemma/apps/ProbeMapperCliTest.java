@@ -19,12 +19,6 @@
 package ubic.gemma.apps;
 
 import java.io.File;
-
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
-
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -72,10 +66,10 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
 
         String basePath = this.getTestFileBasePath();
 
-        String blatFile = basePath + System.getProperty( "file.separator" )
+        String blatFile = basePath + File.separatorChar
                 + "/gemma-core/src/test/resources/data/loader/genome/blatresult.noheader.txt";
 
-        assert ( new File( blatFile ) ).canRead();
+        assert ( new File( blatFile ) ).canRead() : "Input blat result file not readable from " + blatFile;
 
         Exception result = p.doWork( new String[] { "-v", "3", "-u", databaseUser, "-p", databasePassword, "-H",
                 databaseHost, "-o", tempFile.getAbsolutePath(), "-b", blatFile, "-d", "hg18" } );
