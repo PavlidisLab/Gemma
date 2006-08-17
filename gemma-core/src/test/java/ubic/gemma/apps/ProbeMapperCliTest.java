@@ -67,7 +67,7 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         String basePath = this.getTestFileBasePath();
 
         String blatFile = basePath + File.separatorChar
-                + "/gemma-core/src/test/resources/data/loader/genome/blatresult.noheader.txt";
+                + "/gemma-core/src/test/resources/data/loader/genome/blatResult.noheader.txt";
 
         assert ( new File( blatFile ) ).canRead() : "Input blat result file not readable from " + blatFile;
 
