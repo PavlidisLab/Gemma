@@ -187,7 +187,10 @@ public abstract class AbstractCLI {
         String loggerName = "ubic.gemma";
         Logger log4jLogger = LogManager.exists( loggerName );
 
-        assert log4jLogger != null : "No logger of name '" + loggerName + "'";
+        if ( log4jLogger == null ) {
+            log.warn( "No logger of name '" + loggerName + "'" );
+            return;
+        }
 
         log4jLogger.setLevel( this.originalLoggingLevel );
     }
@@ -238,7 +241,10 @@ public abstract class AbstractCLI {
         String loggerName = "ubic.gemma";
         Logger log4jLogger = LogManager.exists( loggerName );
 
-        assert log4jLogger != null : "No logger of name '" + loggerName + "'";
+        if ( log4jLogger == null ) {
+            log.warn( "No logger of name '" + loggerName + "'" );
+            return;
+        }
 
         this.originalLoggingLevel = log4jLogger.getLevel();
 

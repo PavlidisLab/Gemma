@@ -22,10 +22,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -33,6 +29,7 @@ import ubic.gemma.externalDb.GoldenPath;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.ConfigUtils;
 import junit.framework.TestCase;
 
 /**
@@ -40,7 +37,7 @@ import junit.framework.TestCase;
  * @version $Id$
  */
 public class ProbeMapperTest extends TestCase {
-    private CompositeConfiguration config;
+
     private static Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
     Collection<BlatResult> blatres;
     private String databaseHost;
@@ -54,18 +51,11 @@ public class ProbeMapperTest extends TestCase {
         brp.parse( is );
         blatres = brp.getResults();
 
-        // fixme - factor this out so it can be reused.
-        try {
-            config = new CompositeConfiguration();
-            config.addConfiguration( new SystemConfiguration() );
-            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        assert blatres != null && blatres.size() > 0;
 
-        databaseHost = config.getString( "gemma.testdb.host" );
-        databaseUser = config.getString( "gemma.testdb.user" );
-        databasePassword = config.getString( "gemma.testdb.password" );
+        databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
+        databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
+        databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
 
     }
 
