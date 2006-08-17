@@ -67,7 +67,8 @@ public class ConfigUtils {
         try {
             config.addConfiguration( new PropertiesConfiguration( GEMMA_PROPERTIES ) );
         } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
+            // that's okay, but warn
+            log.warn( "Gemma.properties not found" ); // this is not here for all modules.
         }
     }
 
