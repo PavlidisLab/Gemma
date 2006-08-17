@@ -14234,7 +14234,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 29 c1 72hrao_031128_JM 29 C1 72hrAO_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 29 c1 72hrao_031128_JM 29 C1 72hrAO_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14260,7 +14260,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 37 c2 72hrao_031201_JM 37 C2 72hrAO_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 37 c2 72hrao_031201_JM 37 C2 72hrAO_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14286,7 +14286,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 45 c3 72hrao_031205_JM 45 C3 72hrAO_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 45 c3 72hrao_031205_JM 45 C3 72hrAO_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14312,7 +14312,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 32 d1 72hrdes_031128_JM 32 D1 72hrDES_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 32 d1 72hrdes_031128_JM 32 D1 72hrDES_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14338,7 +14338,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 40 d2 72hrdes_031201_JM 40 D2 72hrDES_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 40 d2 72hrdes_031201_JM 40 D2 72hrDES_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14364,7 +14364,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 48 d3 72hrdes_031205_JM 48 D3 72hrDES_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 48 d3 72hrdes_031205_JM 48 D3 72hrDES_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14390,7 +14390,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 31 e1 72hre2_031128_JM 31 E1 72hrE2_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 31 e1 72hre2_031128_JM 31 E1 72hrE2_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14416,7 +14416,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 39 e2 72hre2_031201_JM 39 E2 72hrE2_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 39 e2 72hre2_031201_JM 39 E2 72hrE2_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14442,7 +14442,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 47 e3 72hre2_031205_JM 47 E3 72hrE2_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 47 e3 72hre2_031205_JM 47 E3 72hrE2_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14469,7 +14469,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 30 g1 72hrgen_031128_JM 30 G1 72hrGEN_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031128_jm 30 g1 72hrgen_031128_JM 30 G1 72hrGEN_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14495,7 +14495,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 38 g2 72hrgen_031201_JM 38 G2 72hrGEN_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031201_jm 38 g2 72hrgen_031201_JM 38 G2 72hrGEN_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
@@ -14521,7 +14521,7 @@
 			<BioDataValues_assn>
 				<BioDataCube>
 					<DataExternal_assn>
-						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 46 g3 72hrgen_031205_JM 46 G3 72hrGEN_CEL_externaldata.txt"/>
+						<DataExternal dataFormat="whitespace delimited" filenameURI="031205_jm 46 g3 72hrgen_031205_JM 46 G3 72hrGEN_CEL_externaldata.txt.short"/>
 					</DataExternal_assn>
 				</BioDataCube>
 			</BioDataValues_assn>
