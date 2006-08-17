@@ -20,6 +20,7 @@
         <create creator="new" javascript="ProgressMonitor">
             <param name="class" value="ubic.gemma.web.util.progress.HttpProgressMonitor"/>
         </create>
+        <convert converter="bean" match="ubic.gemma.web.util.progress.ProgressData"/>
          
     </allow>
 </dwr>

@@ -7,23 +7,23 @@
 */
 
 function refreshProgress() {
-    updateProgress( HttpProgressMonitor.getProgressStatus() );
+    ProgressMonitor.getProgressStatus(updateProgress);
 }
 
 function updateProgress(progressData) {
 
  
-    if (!progressData.isDone) {
+    if (!progressData.done) {
         document.getElementById("uploadbutton").disabled = true;
         document.getElementById("file").disabled = true;
-        document.getElementById("progressBarText").innerHTML =  progressData.getDescription() + " : " + progressData.getPercent() + "% ";
-        document.getElementById("progressBarBoxContent").style.width = parseInt(progressData.getPercent() * 3.5) + "px";
+        document.getElementById("progressBarText").innerHTML =  progressData.description + " : " + progressData.percent + "% ";
+        document.getElementById("progressBarBoxContent").style.width = parseInt(progressData.percent * 3.5) + "px";
         window.setTimeout("refreshProgress()", 1000);
     } else {
         document.getElementById("uploadbutton").disabled = false;
         document.getElementById("file").disabled = false;
-        document.getElementById("progressBarText").innerHTML =  progressData.getDescription() + " : " + progressData.getPercent() + "% ";
-        document.getElementById("progressBarBoxContent").style.width = parseInt(progressData.getPercent() * 3.5) + "px";
+        document.getElementById("progressBarText").innerHTML =  progressData.description + " : " + progressData.percent + "% ";
+        document.getElementById("progressBarBoxContent").style.width = parseInt(progressData.percent * 3.5) + "px";
        
     }
     return true;

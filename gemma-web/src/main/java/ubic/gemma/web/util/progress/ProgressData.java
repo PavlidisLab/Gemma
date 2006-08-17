@@ -16,7 +16,6 @@
 
 package ubic.gemma.web.util.progress;
 
-import java.io.Serializable;
 
 /**
  * <hr>
@@ -27,9 +26,9 @@ import java.io.Serializable;
  * @version $Id$
  */
 
-public class ProgressData implements Serializable {
+public class ProgressData /* implements Serializable */{
 
-    private static final long serialVersionUID = -4303625064082352461L;
+    //private static final long serialVersionUID = -4303625064082352461L;
 
     private int percent;
     private String description;
@@ -55,6 +54,12 @@ public class ProgressData implements Serializable {
         this( per, descrip, false );
     }
 
+    //dwr doesn't work right without blank constructor
+    public ProgressData() {
+                
+    }
+    
+    
     public String getDescription() {
         return description;
     }

@@ -45,11 +45,11 @@ public class UploadListener implements OutputStreamListener {
 
     private long delay = 0;
 
-    private int totalToRead = 0;
-    private int totalBytesRead = 0;
+    private double totalToRead = 0;
+    private double totalBytesRead = 0;
     private int totalFiles = -1;
     private ProgressJob pJob;
-  
+
     /**
      * @param request
      * @param debugDelay
@@ -80,13 +80,14 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
-        int oldPercent = 0;
+        int oldPercent = pJob.getProgressData().getPercent();
 
         totalBytesRead = totalBytesRead + bytesRead;
+        Double newPercent = ( totalBytesRead / totalToRead ) * 100 ;
 
-        if ( ( totalBytesRead / totalToRead ) > oldPercent ) {
+        if ( newPercent.intValue() > oldPercent ) {
             pJob.updateProgress();
-            oldPercent = ( totalBytesRead / totalToRead );
+            oldPercent =  newPercent.intValue();
         }
 
         try {
@@ -103,7 +104,7 @@ public class UploadListener implements OutputStreamListener {
      */
     @SuppressWarnings("unused")
     public void error( String message ) {
-        pJob.updateProgress( new ProgressData( (totalBytesRead / totalToRead) , "Failed to upload", true ) );
+        //pJob.updateProgress( new ProgressData( ( totalBytesRead / totalToRead ) * 100, "Failed to upload", true ) );
         log.error( "There was an error in uploading a file in " + this );
     }
 
