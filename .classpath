@@ -84,11 +84,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/mage/mage/1.1/mage-1.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.0/acegi-security-1.0.0.jar">
-		<attributes>
-			<attribute value="http://acegisecurity.org/multiproject/acegi-security/apidocs/" name="javadoc_location"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.1/acegi-security-1.0.1.jar"/>
 	<classpathentry sourcepath="/JAR_SOURCE/apache-ant-1.6.5/src/main" kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar">
 		<attributes>
 			<attribute value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/" name="javadoc_location"/>
