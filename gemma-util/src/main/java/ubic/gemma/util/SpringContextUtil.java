@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
@@ -82,20 +79,8 @@ public class SpringContextUtil {
 
     }
 
-    protected static CompositeConfiguration config;
-
-    static {
-        try {
-            config = new CompositeConfiguration();
-            config.addConfiguration( new SystemConfiguration() );
-            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     private static String getGemmaHomeProperty() {
-        String gemmaHome = config.getString( "gemma.home" );
+        String gemmaHome = ConfigUtils.getString( "gemma.home" );
         if ( gemmaHome == null ) {
             throw new RuntimeException( "You must set 'gemma.home' in your build.properties" );
         }

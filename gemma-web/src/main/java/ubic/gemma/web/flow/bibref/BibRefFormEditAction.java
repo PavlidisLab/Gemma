@@ -155,7 +155,7 @@ public class BibRefFormEditAction extends AbstractFlowFormAction {
             throw new IOException( "File was null" );
         }
 
-        String baseOutputPath = ConfigUtils.getProperty( "local.userfile.basepath" );
+        String baseOutputPath = ConfigUtils.getString( "local.userfile.basepath" );
         String user = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getRemoteUser();
         String uploadDir = baseOutputPath + user + "/";
 

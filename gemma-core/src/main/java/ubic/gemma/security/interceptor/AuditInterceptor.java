@@ -79,10 +79,10 @@ public class AuditInterceptor implements MethodInterceptor {
     public AuditInterceptor() {
         super();
         this.crudUtils = new CrudInterceptorUtils();
-        AUDIT_READ = Boolean.parseBoolean( ConfigUtils.getProperty( "audit.read" ) );
-        AUDIT_CREATE = Boolean.parseBoolean( ConfigUtils.getProperty( "audit.create" ) );
-        AUDIT_UPDATE = Boolean.parseBoolean( ConfigUtils.getProperty( "audit.update" ) );
-        AUDIT_DELETE = Boolean.parseBoolean( ConfigUtils.getProperty( "audit.delete" ) );
+        AUDIT_READ = ConfigUtils.getBoolean( "audit.read" );
+        AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" );
+        AUDIT_UPDATE = ConfigUtils.getBoolean( "audit.update" );
+        AUDIT_DELETE = ConfigUtils.getBoolean( "audit.delete" );
     }
 
     /**

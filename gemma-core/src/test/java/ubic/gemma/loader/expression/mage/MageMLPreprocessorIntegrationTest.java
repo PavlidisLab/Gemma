@@ -35,6 +35,7 @@ import org.dom4j.Document;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Integration test of MageML: Parser, Converter and Preprocessor
@@ -123,7 +124,7 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
          */
         mageMLConverter.setSimplifiedXml( simplifiedXml );
 
-        mageMLConverter.addLocalExternalDataPath( config.getString( "gemma.home" ) + File.separatorChar
+        mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
                 + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-AFMX-13" );
 
         ExpressionExperiment expressionExperiment = null;

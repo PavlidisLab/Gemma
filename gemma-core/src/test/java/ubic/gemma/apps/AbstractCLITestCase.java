@@ -22,11 +22,10 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Base class for CLI tests.
@@ -38,21 +37,6 @@ public class AbstractCLITestCase extends TestCase {
 
     protected static Log log = LogFactory.getLog( AbstractCLITestCase.class.getName() );
 
-    protected CompositeConfiguration config;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        config = new CompositeConfiguration();
-        config.addConfiguration( new SystemConfiguration() );
-        config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
-    }
-
     /**
      * Get the location of the Gemma home; used to create absolute paths to files so that command line tools can be
      * tested.
@@ -61,7 +45,7 @@ public class AbstractCLITestCase extends TestCase {
      * @throws IOException
      */
     protected final String getTestFileBasePath() throws IOException {
-        String path = config.getString( "gemma.home" );
+        String path = ConfigUtils.getString( "gemma.home" );
         if ( path == null ) {
             throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
         }

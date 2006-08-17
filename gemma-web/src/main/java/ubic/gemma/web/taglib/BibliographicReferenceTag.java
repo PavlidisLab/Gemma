@@ -96,8 +96,8 @@ public class BibliographicReferenceTag extends TagSupport {
 
             if ( bibliographicReference.getFullTextPDF() != null ) {
 
-                String baseUrl = ConfigUtils.getProperty( "local.userfile.baseurl" );
-                String basePath = ConfigUtils.getProperty( "local.userfile.basepath" );
+                String baseUrl = ConfigUtils.getString( "local.userfile.baseurl" );
+                String basePath = ConfigUtils.getString( "local.userfile.basepath" );
                 String localUriPath = bibliographicReference.getFullTextPDF().getLocalURL().toString();
                 String relativeUrl = StringUtils.remove( localUriPath, "file:/" + basePath );
                 String absoluteUrl = baseUrl + relativeUrl;

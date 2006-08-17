@@ -25,6 +25,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 
+import ubic.gemma.util.ConfigUtils;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -48,18 +50,9 @@ public class ProbeMapperCliTest extends AbstractCLITestCase {
         tempFile = File.createTempFile( "cli", ".txt" );
         p = new ProbeMapperCli();
 
-        // fixme - factor this out so it can be reused.
-        try {
-            config = new CompositeConfiguration();
-            config.addConfiguration( new SystemConfiguration() );
-            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
-
-        databaseHost = config.getString( "gemma.testdb.host" );
-        databaseUser = config.getString( "gemma.testdb.user" );
-        databasePassword = config.getString( "gemma.testdb.password" );
+        databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
+        databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
+        databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
 
         log.info( " databaseHost = " + databaseHost );
 

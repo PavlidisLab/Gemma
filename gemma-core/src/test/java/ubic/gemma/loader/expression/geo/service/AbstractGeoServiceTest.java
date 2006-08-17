@@ -24,6 +24,7 @@ import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -47,7 +48,7 @@ public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
     }
 
     protected String getTestFileBasePath() throws IOException {
-        String path = config.getString( "gemma.home" );
+        String path = ConfigUtils.getString( "gemma.home" );
         if ( path == null ) {
             throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
         }

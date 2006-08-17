@@ -147,7 +147,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * Original reason for test: yields audit trail errors.
      */
     public void testFetchAndLoadGDS775() throws Exception {
-        assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds775short" ) );
         geoService.fetchAndLoad( "GDS775" );
@@ -158,7 +157,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * problem case GDS22 - has lots of missing values and number format issues.
      */
     public void testFetchAndLoadGDS22() throws Exception {
-        assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds22Short" ) );
         geoService.fetchAndLoad( "GDS22" );
@@ -170,7 +168,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * org.hibernate.TransientObjectException: edu.columbia.gemma.expression.arrayDesign.ArrayDesignImpl
      */
     public void testFetchAndLoadGDS994() throws Exception {
-        assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds994Short" ) );
         geoService.fetchAndLoad( "GDS994" );
@@ -183,7 +180,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         // this.setFlushModeCommit();
         // this.setComplete();
-        assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "shortTest" ) );
 
@@ -245,7 +241,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * @throws Exception
      */
     public void testConversionGDS825Family() throws Exception {
-        assert config != null;
         String path = getTestFileBasePath();
         geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "complexShortTest" ) );
         ExpressionExperiment newee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS825" );

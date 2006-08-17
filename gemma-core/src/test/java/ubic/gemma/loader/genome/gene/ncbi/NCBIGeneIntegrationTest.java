@@ -25,6 +25,7 @@ import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -39,7 +40,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
 
-        String basePath = config.getString( "gemma.home" );
+        String basePath = ConfigUtils.getString( "gemma.home" );
 
         Collection<NCBIGene2Accession> results = sdog.generateLocal( basePath + geneInfoTestFile, basePath
                 + gene2AccTestFile );

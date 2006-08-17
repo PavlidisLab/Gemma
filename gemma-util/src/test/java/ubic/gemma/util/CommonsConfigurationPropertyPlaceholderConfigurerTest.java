@@ -53,7 +53,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestC
         CompositeConfiguration config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
         config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
-        String home = config.getString( "gemma.home" );
+        String home = ConfigUtils.getString( "gemma.home" );
 
         // InputStream doesn't work for maven...get 'don't read twice' error.
         Resource testConfig = new FileSystemResource( home + File.separatorChar
@@ -76,7 +76,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurerTest extends TestC
 
         assert cc != null;
         cc.postProcessBeanFactory( bf ); // when does this normally get called? Maybe an XmlWebApplicationContext
-                                            // thing.
+        // thing.
 
         JustATestBean o = ( JustATestBean ) bf.getBean( "testConfigured" );
         assertEquals( "foo", o.getMyValue() );

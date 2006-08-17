@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.TabDelimParser;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
@@ -102,8 +103,8 @@ public class NCluster {
             throw new RuntimeException( e );
         }
 
-        baseDir = ( String ) config.getProperty( "gemma.home" );
-        String localBasePath = ( String ) config.getProperty( "cluster.dll.path" );
+        baseDir = ConfigUtils.getString( "gemma.home" );
+        String localBasePath = ConfigUtils.getString( "cluster.dll.path" );
         System.load( baseDir + localBasePath );
     }
 

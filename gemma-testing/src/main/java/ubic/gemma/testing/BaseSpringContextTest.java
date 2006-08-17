@@ -28,10 +28,6 @@ import org.acegisecurity.context.SecurityContextImpl;
 import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.TestingAuthenticationProvider;
 import org.acegisecurity.providers.TestingAuthenticationToken;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -51,7 +47,6 @@ import uk.ltd.getahead.dwr.create.SpringCreator;
  */
 abstract public class BaseSpringContextTest extends AbstractDependencyInjectionSpringContextTests {
 
-    protected CompositeConfiguration config;
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
 
@@ -78,14 +73,10 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
         String className = this.getClass().getName();
 
         try {
-            config = new CompositeConfiguration();
-            config.addConfiguration( new SystemConfiguration() );
-            config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
+
             resourceBundle = ResourceBundle.getBundle( className ); // will look for <className>.properties
         } catch ( MissingResourceException mre ) {
             // log.warn("No resource bundle found for: " + className);
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
         }
     }
 

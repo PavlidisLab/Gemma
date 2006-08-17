@@ -64,7 +64,7 @@ public class MageMLPreprocessor implements Preprocessor {
 
     public MageMLPreprocessor( String experimentName ) {
         this.experimentName = experimentName.replaceAll( "\\W+", "_" );
-        this.localMatrixFilepath = ConfigUtils.getProperty( "local.rawData.matrix.basepath" );
+        this.localMatrixFilepath = ConfigUtils.getString( "local.rawData.matrix.basepath" );
     }
 
     /*
