@@ -19,11 +19,13 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import java.io.InputStream;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -61,7 +63,14 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
         assert is != null : "Resource /data/loader/expression/arrayDesign/array.txt not available";
 
         arrayDesignParser.parse( is );
-        persisterHelper.persist( arrayDesignParser.getResults() );
+        assertTrue( arrayDesignParser.getResults().size() > 0 );
+
+        Collection<?> result = persisterHelper.persist( arrayDesignParser.getResults() );
+        assertTrue( result.size() > 0 );
+        for ( Object object : result ) {
+            assertTrue( object instanceof ArrayDesign );
+            assertTrue( ( ( ArrayDesign ) object ).getId() != null );
+        }
     }
 
 }
