@@ -57,6 +57,9 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
      */
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arraydesign/array.txt" );
+
+        assert is != null : "Resource array.txt not available";
+
         arrayDesignParser.parse( is );
         persisterHelper.persist( arrayDesignParser.getResults() );
     }
