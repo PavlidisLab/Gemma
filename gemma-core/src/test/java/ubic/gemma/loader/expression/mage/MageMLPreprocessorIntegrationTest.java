@@ -169,7 +169,7 @@ public class MageMLPreprocessorIntegrationTest extends AbstractMageTest {
             for ( int j = 0; j < bioAssays.size(); j++ ) {
                 // of course we can't count on the file names matching anything we already know...
                 String assayNameForFile = bioAssays.get( j ).getName().toLowerCase() + "_"
-                        + bioAssays.get( j ).getName().toUpperCase();
+                        + bioAssays.get( j ).getName();
                 String fileName = "E-AFMX-13/" + assayNameForFile + "_CEL_externaldata.txt.short";
                 is[j] = this.getClass().getResourceAsStream( MAGE_DATA_RESOURCE_PATH + fileName );
                 assert is[j] != null : "Failed to open stream for " + fileName;
