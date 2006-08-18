@@ -1,0 +1,100 @@
+Q0010		S0007257	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZX9
+Q0010		S0007257	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZX9
+Q0010		S0007257	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZX9
+Q0017		S0007258	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZX8
+Q0017		S0007258	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZX8
+Q0017		S0007258	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZX8
+Q0032		S0007259	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZX7
+Q0032		S0007259	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZX7
+Q0032		S0007259	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZX7
+Q0045	COX1	S0007260	C	respiratory chain complex IV (sensu Eukarya)	5751	N	IPI	17675	1331058	SwissProt:Q9ZZX6
+Q0045	COX1	S0007260	F	cytochrome c oxidase activity	4129	N	IDA	17675	1331058	SwissProt:Q9ZZX6
+Q0045	COX1	S0007260	P	aerobic respiration	9060	N	IMP	15737	9724417	SwissProt:Q9ZZX6
+Q0050	AI1	S0007261	C	mitochondrion	5739	N	TAS	28894	1648225	SwissProt:Q9ZZX5
+Q0050	AI1	S0007261	F	endonuclease activity	4519	N	TAS	28895	9118229	SwissProt:Q9ZZX5
+Q0050	AI1	S0007261	F	nucleic acid binding	3676	N	TAS	5457	9126836	SwissProt:Q9ZZX5
+Q0050	AI1	S0007261	P	cellular respiration	45333	N	IMP	5457	9126836	SwissProt:Q9ZZX5
+Q0050	AI1	S0007261	P	homing of group II introns	6315	N	IDA	32161	11687644	SwissProt:Q9ZZX5
+Q0050	AI1	S0007261	P	mRNA processing	6397	N	IDA	32161	11687644	SwissProt:Q9ZZX5
+Q0055	AI2	S0007262	C	mitochondrion	5739	N	TAS	28894	1648225	SwissProt:Q9ZZX4
+Q0055	AI2	S0007262	F	RNA binding	3723	N	TAS	28896	10356323	SwissProt:Q9ZZX4
+Q0055	AI2	S0007262	F	RNA-directed DNA polymerase activity	3964	N	TAS	28896	10356323	SwissProt:Q9ZZX4
+Q0055	AI2	S0007262	F	endonuclease activity	4519	N	TAS	28895	9118229	SwissProt:Q9ZZX4
+Q0055	AI2	S0007262	F	nucleic acid binding	3676	N	TAS	5457	9126836	SwissProt:Q9ZZX4
+Q0055	AI2	S0007262	P	RNA splicing	8380	N	TAS	28896	10356323	SwissProt:Q9ZZX4
+Q0060	AI3	S0007263	C	mitochondrion	5739	N	TAS	10707	7797552	SwissProt:Q9ZZX3
+Q0060	AI3	S0007263	F	endonuclease activity	4519	N	IDA	10707	7797552	SwissProt:Q9ZZX3
+Q0060	AI3	S0007263	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZX3
+Q0065	AI4	S0007264	C	mitochondrion	5739	N	TAS	16062	7588637	SwissProt:Q9ZZX2
+Q0065	AI4	S0007264	F	endonuclease activity	4519	N	IDA	16062	7588637	SwissProt:Q9ZZX2
+Q0065	AI4	S0007264	P	RNA splicing	8380	N	IDA	16062	7588637	SwissProt:Q9ZZX2
+Q0070	AI5_ALPHA	S0007265	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZX1
+Q0070	AI5_ALPHA	S0007265	F	endonuclease activity	4519	N	IMP	9849	1314207	SwissProt:Q9ZZX1
+Q0070	AI5_ALPHA	S0007265	P	movement of group I intron	6316	N	IMP	9849	1314207	SwissProt:Q9ZZX1
+Q0075	AI5_BETA	S0007266	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZX0
+Q0075	AI5_BETA	S0007266	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZX0
+Q0075	AI5_BETA	S0007266	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZX0
+Q0080	AAP1	S0007267	C	proton-transporting ATP synthase complex, coupling factor F(o) (sensu Eukarya)	276	N	TAS	10588	8662204	SwissProt:P00856
+Q0080	AAP1	S0007267	F	hydrogen-transporting ATP synthase activity, rotational mechanism	46933	N	TAS	10588	8662204	SwissProt:P00856
+Q0080	AAP1	S0007267	P	ATP synthesis coupled proton transport	15986	N	TAS	10588	8662204	SwissProt:P00856
+Q0085	ATP6	S0007268	C	proton-transporting ATP synthase complex, coupling factor F(o) (sensu Eukarya)	276	N	TAS	19738	10838056	SwissProt:Q95A27
+Q0085	ATP6	S0007268	F	hydrogen-transporting ATP synthase activity, rotational mechanism	46933	N	TAS	19738	10838056	SwissProt:Q95A27
+Q0085	ATP6	S0007268	F	structural molecule activity	5198	N	TAS	19738	10838056	SwissProt:Q95A27
+Q0085	ATP6	S0007268	P	ATP synthesis coupled proton transport	15986	N	TAS	19738	10838056	SwissProt:Q95A27
+Q0085	ATP6	S0007268	P	protein complex assembly	6461	N	TAS	19738	10838056	SwissProt:Q95A27
+Q0092		S0007269	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q35811
+Q0092		S0007269	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q35811
+Q0092		S0007269	P	biological_process unknown	4	N	ND	32926		SwissProt:Q35811
+Q0105	COB	S0007270	C	respiratory chain complex III (sensu Eukarya)	5750	N	IDA	11501	391561	SwissProt:Q9ZZW9
+Q0105	COB	S0007270	C	respiratory chain complex III (sensu Eukarya)	5750	N	IDA	7403	10873857	SwissProt:Q9ZZW9
+Q0105	COB	S0007270	F	ubiquinol-cytochrome c reductase activity	8121	N	IDA	11501	391561	SwissProt:Q9ZZW9
+Q0105	COB	S0007270	P	aerobic respiration	9060	N	IMP	11501	391561	SwissProt:Q9ZZW9
+Q0105	COB	S0007270	P	mitochondrial electron transport, ubiquinol to cytochrome c	6122	N	IMP	11501	391561	SwissProt:Q9ZZW9
+Q0110	BI2	S0007271	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW8
+Q0110	BI2	S0007271	F	nuclease activity	4518	N	IDA	14305	8670880	SwissProt:Q9ZZW8
+Q0110	BI2	S0007271	P	RNA splicing	8380	N	IDA	14305	8670880	SwissProt:Q9ZZW8
+Q0115	BI3	S0007272	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW7
+Q0115	BI3	S0007272	F	RNA binding	3723	N	IDA	32210	11773622	SwissProt:Q9ZZW7
+Q0115	BI3	S0007272	P	Group I intron splicing	372	N	IDA	32210	11773622	SwissProt:Q9ZZW7
+Q0120	BI4	S0007273	C	mitochondrion	5739	N	IDA	817	2875797	SwissProt:Q9ZZW6
+Q0120	BI4	S0007273	F	RNA binding	3723	N	IDA	21315	11142386	SwissProt:Q9ZZW6
+Q0120	BI4	S0007273	P	Group I intron splicing	372	N	IDA	21315	11142386	SwissProt:Q9ZZW6
+Q0120	BI4	S0007273	P	Group I intron splicing	372	N	IMP	21315	11142386	SwissProt:Q9ZZW6
+Q0130	OLI1	S0007274	C	proton-transporting ATP synthase complex, coupling factor F(o) (sensu Eukarya)	276	N	TAS	19738	10838056	SwissProt:P00841
+Q0130	OLI1	S0007274	F	hydrogen ion transporter activity	15078	N	TAS	19738	10838056	SwissProt:P00841
+Q0130	OLI1	S0007274	F	hydrogen-transporting ATP synthase activity, rotational mechanism	46933	N	TAS	19738	10838056	SwissProt:P00841
+Q0130	OLI1	S0007274	F	structural molecule activity	5198	N	TAS	19738	10838056	SwissProt:P00841
+Q0130	OLI1	S0007274	P	ATP synthesis coupled proton transport	15986	N	TAS	19738	10838056	SwissProt:P00841
+Q0130	OLI1	S0007274	P	protein complex assembly	6461	N	TAS	19738	10838056	SwissProt:P00841
+Q0140	VAR1	S0007275	C	mitochondrial small ribosomal subunit	5763	N	IDA	22581	11278769	SwissProt:Q9ZZW5
+Q0140	VAR1	S0007275	C	mitochondrial small ribosomal subunit	5763	N	TAS	19551	9445368	SwissProt:Q9ZZW5
+Q0140	VAR1	S0007275	F	structural constituent of ribosome	3735	N	IDA	22581	11278769	SwissProt:Q9ZZW5
+Q0140	VAR1	S0007275	F	structural constituent of ribosome	3735	N	TAS	19551	9445368	SwissProt:Q9ZZW5
+Q0140	VAR1	S0007275	P	protein biosynthesis	6412	N	IDA	22581	11278769	SwissProt:Q9ZZW5
+Q0140	VAR1	S0007275	P	protein biosynthesis	6412	N	TAS	19551	9445368	SwissProt:Q9ZZW5
+Q0140	VAR1	S0007275	P	ribosomal small subunit assembly and maintenance	28	N	IMP	19551	9445368	SwissProt:Q9ZZW5
+Q0142		S0007276	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW4
+Q0142		S0007276	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZW4
+Q0142		S0007276	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZW4
+Q0143		S0007277	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW3
+Q0143		S0007277	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZW3
+Q0143		S0007277	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZW3
+Q0144		S0007278	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW2
+Q0144		S0007278	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZW2
+Q0144		S0007278	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZW2
+Q0160	SCEI	S0007279	C	mitochondrion	5739	N	TAS	14884	10357855	SwissProt:P03882
+Q0160	SCEI	S0007279	F	endonuclease activity	4519	N	TAS	14884	10357855	SwissProt:P03882
+Q0160	SCEI	S0007279	P	intron homing	6314	N	TAS	14884	10357855	SwissProt:P03882
+Q0182		S0007280	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW1
+Q0182		S0007280	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZW1
+Q0182		S0007280	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZW1
+Q0250	COX2	S0007281	C	respiratory chain complex IV (sensu Eukarya)	5751	N	IPI	17675	1331058	SwissProt:P00410
+Q0250	COX2	S0007281	F	cytochrome c oxidase activity	4129	N	IDA	17675	1331058	SwissProt:P00410
+Q0250	COX2	S0007281	P	aerobic respiration	9060	N	IMP	25323	224191	SwissProt:P00410
+Q0255		S0007282	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZW0
+Q0255		S0007282	F	molecular_function unknown	5554	N	ND	32926		SwissProt:Q9ZZW0
+Q0255		S0007282	P	biological_process unknown	4	N	ND	32926		SwissProt:Q9ZZW0
+Q0275	COX3	S0007283	C	respiratory chain complex IV (sensu Eukarya)	5751	N	IPI	17675	1331058	SwissProt:Q9ZZV9
+Q0275	COX3	S0007283	F	cytochrome c oxidase activity	4129	N	IDA	17675	1331058	SwissProt:Q9ZZV9
+Q0275	COX3	S0007283	P	aerobic respiration	9060	N	IMP	25311	11171120	SwissProt:Q9ZZV9
+Q0297		S0007284	C	mitochondrion	5739	N	TAS	19731	9872396	SwissProt:Q9ZZV8
