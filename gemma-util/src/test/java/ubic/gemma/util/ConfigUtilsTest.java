@@ -18,25 +18,25 @@
  */
 package ubic.gemma.util;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.TestCase;
 
 /**
- * Test for gemma-util
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class AllUtilTests {
+public class ConfigUtilsTest extends TestCase {
 
-    public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.util" );
-        // $JUnit-BEGIN$
-        suite.addTestSuite( BeanPropertyCompleterTest.class );
-        suite.addTestSuite( CommonsConfigurationPropertyPlaceholderConfigurer.class );
-        suite.addTestSuite( ConfigUtilsTest.class );
-        // $JUnit-END$
-        return suite;
+    /**
+     * This has to exist in Gemma.properties for this test to work.
+     */
+    private static final String TEST_VARIABLE = "local.rawData.matrix.basepath";
+
+    /**
+     * This tests whether the 'include' is working.
+     */
+    public final void testInclude() throws Exception {
+        String actualResult = ConfigUtils.getString( TEST_VARIABLE );
+        assertFalse( actualResult.contains( "$" ) );
     }
 
 }
