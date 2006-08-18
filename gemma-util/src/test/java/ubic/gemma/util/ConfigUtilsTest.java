@@ -29,7 +29,7 @@ public class ConfigUtilsTest extends TestCase {
     /**
      * This has to exist in Gemma.properties for this test to work.
      */
-    private static final String TEST_VARIABLE = "local.rawData.matrix.basepath";
+    private static final String TEST_VARIABLE = "testProperty";
 
     /**
      * This tests whether the 'include' is working.
