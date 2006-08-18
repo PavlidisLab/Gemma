@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<faqs title="Gemma FAQ">
+
+	<part id="about">
+		<faq>
+			<question>This is a very frequent question</question>
+			<answer>
+				<p>Thank you for asking that question, here is the answer...</p>
+			</answer>
+		</faq>
+
+		<faq>
+			<question>Here is another question?</question>
+			<answer>
+				<p>This is the answer to this question...</p>
+			</answer>
+		</faq>
+	</part>
+</faqs>
