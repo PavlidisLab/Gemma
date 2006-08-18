@@ -18,15 +18,17 @@
  */
 package ubic.gemma.search.io.file;
 
-import org.apache.lucene.index.IndexWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.FileReader;
-import java.util.Date;
+import org.apache.lucene.index.IndexWriter;
 
 /**
  * Indexes .txt files in the directory tree.
@@ -36,6 +38,8 @@ import java.util.Date;
  * @version $Id$
  */
 public class Indexer {
+    private static Log log = LogFactory.getLog( Indexer.class );
+
     // FIXME - this is really a file indexer ... create an Indexer interface and implement with FileIndexer,
     // DataSourceIndexer, etc.
 
@@ -54,7 +58,7 @@ public class Indexer {
         int numIndexed = index( indexDir, dataDir );
         long end = new Date().getTime();
 
-        System.out.println( "Indexing " + numIndexed + " files took " + ( end - start ) + " milliseconds" );
+        log.info( "Indexing " + numIndexed + " files took " + ( end - start ) + " milliseconds" );
     }
 
     /**
@@ -110,7 +114,7 @@ public class Indexer {
             return;
         }
 
-        System.out.println( "Indexing " + f.getCanonicalPath() );
+        log.info( "Indexing " + f.getCanonicalPath() );
 
         Document doc = new Document();
         doc.add( Field.Text( "contents", new FileReader( f ) ) );
