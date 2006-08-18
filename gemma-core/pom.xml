@@ -334,6 +334,12 @@
 			<version>RE817</version>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+			<groupId>lucene</groupId>
+			<artifactId>lucene</artifactId>
+			<version>1.4.3</version>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 	<build>
 		<directory>target</directory>
