@@ -109,12 +109,12 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             pArrayDesign = arrayDesign;
         }
 
-        log.info( "Loading array design elements for " + arrayDesign );
+        log.debug( "Loading array design elements for " + arrayDesign );
 
         Collection<DesignElement> compositeSequences = arrayDesignService.loadCompositeSequences( pArrayDesign );
         int csNum = arrayDesignService.getCompositeSequenceCount( pArrayDesign );
         if ( compositeSequences != null && csNum > 0 ) {
-            log.info( "Filling cache with " + csNum + " compositeSequences" );
+            log.debug( "Filling cache with " + csNum + " compositeSequences" );
         }
 
         String adName = " " + arrayDesign.getName();
@@ -126,7 +126,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         Collection<DesignElement> reporters = arrayDesignService.loadReporters( pArrayDesign );
         int repNum = arrayDesignService.getReporterCount( pArrayDesign );
         if ( reporters != null && repNum > 0 ) {
-            log.info( "Filling cache with " + repNum + " reporters " );
+            log.debug( "Filling cache with " + repNum + " reporters " );
         }
         adName = " " + arrayDesign.getName();
         for ( DesignElement element : reporters ) {
@@ -134,7 +134,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             designElementCache.put( element.getName() + adName, element );
         }
 
-        log.info( "Filled cache" );
+        log.debug( "Filled cache" );
     }
 
     /**

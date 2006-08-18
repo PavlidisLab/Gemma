@@ -23,14 +23,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Retrieve GEO GDS files from the NCBI FTP server.
@@ -47,11 +45,9 @@ public class DatasetFetcher extends GeoFetcher {
     /**
      * @throws ConfigurationException
      */
-    public DatasetFetcher() throws ConfigurationException {
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-
-        this.localBasePath = ( String ) config.getProperty( "geo.local.datafile.basepath" );
-        this.baseDir = ( String ) config.getProperty( "geo.remote.datasetDir" );
+    public DatasetFetcher() {
+        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
+        this.baseDir = ConfigUtils.getString( "geo.remote.datasetDir" );
     }
 
     /**
@@ -65,7 +61,7 @@ public class DatasetFetcher extends GeoFetcher {
             String seekFile = baseDir + "/" + accession + SOFT_GZ;
             File newDir = mkdir( accession );
             File outputFile = new File( newDir, accession + SOFT_GZ );
-            success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
+            boolean success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
             f.disconnect();
 
             if ( success ) {

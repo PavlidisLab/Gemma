@@ -28,15 +28,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Class to download files for NCBI gene. Pass the name of the file (without the .gz) to the fetch method: for example,
@@ -48,17 +47,13 @@ import ubic.gemma.model.common.description.LocalFile;
 public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
     public void initConfig() {
-        Configuration config;
-        try {
-            config = new PropertiesConfiguration( "Gemma.properties" );
-            this.localBasePath = ( String ) config.getProperty( "ncbi.local.datafile.basepath" );
-            this.baseDir = ( String ) config.getProperty( "ncbi.remote.gene.basedir" );
+        this.localBasePath = ConfigUtils.getString( "ncbi.local.datafile.basepath" );
+        this.baseDir = ConfigUtils.getString( "ncbi.remote.gene.basedir" );
 
-            if ( baseDir == null ) throw new ConfigurationException( "Failed to get basedir" );
-            if ( localBasePath == null ) throw new ConfigurationException( "Failed to get localBasePath" );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        if ( baseDir == null ) throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
+        if ( localBasePath == null )
+            throw new RuntimeException( new ConfigurationException( "Failed to get localBasePath" ) );
+
     }
 
     public NCBIGeneFileFetcher() {
@@ -83,7 +78,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
             long expectedSize = this.getExpectedSize( seekFile );
-            return this.doTask( future, seekFile, expectedSize, outputFileName, identifier, newDir, ".gz" );
+            return this.doTask( future, expectedSize, outputFileName, identifier, newDir, ".gz" );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -105,15 +100,11 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
         log.info( "Seeking Ncbi " + file.toString() + " file, using identifier " + identifier );
 
         try {
-
-            // FIXME - clean this up.
-
             File newDir = mkdir( identifier );
 
-            InputStream is = file.openStream();
             String outputFileName = newDir + File.separator + identifier + ".gz";
 
-            log.info( "output file name is " + outputFileName );
+            log.warn( "output file name is " + outputFileName );
 
             OutputStream out = new FileOutputStream( new File( outputFileName ) );
 
@@ -125,7 +116,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
             result.add( localFile );
 
-            // Transfer bytes from in to out
+            InputStream is = file.openStream();
             byte[] buf = new byte[1024];
             int len;
             while ( ( len = is.read( buf ) ) > 0 ) {

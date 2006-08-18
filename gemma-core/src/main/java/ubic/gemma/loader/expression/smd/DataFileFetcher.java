@@ -108,7 +108,7 @@ public class DataFileFetcher extends FtpFetcher {
                 throw new IllegalStateException( "Could not find remote directory for assay number " + assayId );
             }
 
-            String outputFileName = newDir + "/" + assayId + ".xls.gz";
+            String outputFileName = newDir.getAbsolutePath() + File.separatorChar + assayId + ".xls.gz";
 
             String seekFile = baseDir + group + "/" + assayId + ".xls.gz";
 

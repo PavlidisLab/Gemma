@@ -20,18 +20,16 @@ package ubic.gemma.loader.expression.arrayExpress;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.Collection;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
 import ubic.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * ArrayExpress stores files in an FTP site as tarred-gzipped archives. Each tar file contains the MAGE file and the
@@ -68,7 +66,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
             long expectedSize = getExpectedSize( seekFile );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, seekFile, expectedSize, outputFileName, identifier, newDir, ".mageml.tgz" );
+            return this.doTask( future, expectedSize, outputFileName, identifier, newDir, ".mageml.tgz" );
 
         } catch ( IOException e ) {
             throw new RuntimeException( "Couldn't fetch file for " + identifier, e );
@@ -113,20 +111,14 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @throws ConfigurationException
      */
     protected void initConfig() {
-        Configuration config;
-        try {
-            config = new PropertiesConfiguration( "Gemma.properties" );
 
-            localBasePath = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
-            baseDir = ( String ) config.getProperty( "arrayExpress.experiments.baseDir" );
+        localBasePath = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
+        baseDir = ConfigUtils.getString( "arrayExpress.experiments.baseDir" );
 
-            if ( localBasePath == null || localBasePath.length() == 0 )
-                throw new ConfigurationException( "localBasePath was null or empty" );
-            if ( baseDir == null || baseDir.length() == 0 )
-                throw new ConfigurationException( "baseDir was null or empty" );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        if ( localBasePath == null || localBasePath.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
+        if ( baseDir == null || baseDir.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
+
     }
-
 }

@@ -133,6 +133,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
@@ -276,22 +277,17 @@ public class MageMLConverterHelper {
      */
     private void initLocalExternalDataPaths() {
         localExternalDataPaths = new HashSet<String>();
-        try {
-            // Eventually there may be more configuration locations.
-            Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-            String path = ( String ) config.getProperty( "arrayExpress.local.datafile.basepath" );
-            File p = new File( path );
-            if ( !p.canRead() ) {
-                log.error( "Cannot read from " + path );
-            }
-            localExternalDataPaths.add( path );
 
-            // add temp file location.
-            localExternalDataPaths.add( System.getProperty( "java.io.tmpdir" ) );
-
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( "Failed to load configuration", e );
+        String path = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
+        File p = new File( path );
+        if ( !p.canRead() ) {
+            log.error( "Cannot read from " + path );
         }
+        localExternalDataPaths.add( path );
+
+        // add temp file location.
+        localExternalDataPaths.add( System.getProperty( "java.io.tmpdir" ) );
+
     }
 
     /**

@@ -24,7 +24,6 @@ import ubic.gemma.model.common.description.LocalFile;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -77,7 +76,7 @@ public class PublicationFetcher extends FtpFetcher {
 
                         SMDPublication newPub = new SMDPublication();
                         newPub.read( is );
-                        success = f.completePendingCommand();
+                        boolean success = f.completePendingCommand();
                         is.close();
 
                         if ( !success ) {

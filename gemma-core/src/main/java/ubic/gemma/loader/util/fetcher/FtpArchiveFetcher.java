@@ -109,8 +109,8 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * @param excludePattern
      * @return
      */
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, long expectedSize,
-            String outputFileName, String identifier, File newDir, String excludePattern ) {
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String outputFileName,
+            String identifier, File newDir, String excludePattern ) {
         assert f != null;
         Executors.newSingleThreadExecutor().execute( future );
         try {

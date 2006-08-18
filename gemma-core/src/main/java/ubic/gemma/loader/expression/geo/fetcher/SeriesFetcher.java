@@ -23,25 +23,22 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 public class SeriesFetcher extends FtpFetcher {
 
     /**
      * 
      */
-    public SeriesFetcher() throws ConfigurationException {
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-        this.localBasePath = ( String ) config.getProperty( "geo.local.datafile.basepath" );
-        this.baseDir = ( String ) config.getProperty( "geo.remote.seriesDir" );
+    public SeriesFetcher() {
+        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
+        this.baseDir = ConfigUtils.getString( "geo.remote.seriesDir" );
     }
 
     /**
@@ -61,7 +58,7 @@ public class SeriesFetcher extends FtpFetcher {
 
             // String seekFile = baseDir + "/" + accession + "_family.soft.gz";
             String seekFile = baseDir + accession + "/" + accession + "_family.soft.gz";
-            success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
+            boolean success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
 
             if ( success ) {
                 LocalFile file = fetchedFile( seekFile, outputFileName );

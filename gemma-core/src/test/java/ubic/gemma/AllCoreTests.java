@@ -35,6 +35,7 @@ import ubic.gemma.loader.expression.mage.AllMageTests;
 import ubic.gemma.loader.expression.smd.AllSmdTests;
 import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
+import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
 import ubic.gemma.security.SecurityIntegrationTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
@@ -64,6 +65,7 @@ public class AllCoreTests {
         suite.addTest( AllModelTests.suite() );
 
         suite.addTestSuite( HttpFetcherTest.class );
+        suite.addTestSuite( AbstractFetcherTest.class );
 
         suite.addTestSuite( ExternalDatabaseTest.class );
 

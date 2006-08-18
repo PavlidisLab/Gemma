@@ -21,8 +21,6 @@ package ubic.gemma.loader.util.fetcher;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -40,7 +38,6 @@ public abstract class AbstractFetcher implements Fetcher {
     protected static Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
     protected String localBasePath = null;
     protected String baseDir = null;
-    protected boolean success = false;
     protected boolean force = false;
 
     /**
@@ -53,8 +50,8 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * Create a directory according to the current accession number and set path information. If the path cannot be
-     * used, we use a temporary directory.
+     * Create a directory according to the current accession number and set path information, including any nonexisting
+     * parent directories. If the path cannot be used, we use a temporary directory.
      * 
      * @param accession
      * @return new directory
@@ -65,22 +62,31 @@ public abstract class AbstractFetcher implements Fetcher {
         File targetPath = null;
 
         if ( localBasePath != null ) {
+
             targetPath = new File( localBasePath );
+
+            if ( !( targetPath.exists() && targetPath.canRead() ) ) {
+                log.warn( "Attempting to create directory '" + localBasePath + "'" );
+                targetPath.mkdirs();
+            } else {
+                log.debug( targetPath + " exists, proceeding" );
+                return targetPath;
+            }
             newDir = new File( targetPath + File.separator + accession );
         }
 
         if ( localBasePath == null || !targetPath.canRead() ) {
-            File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + accession );
             log.warn( "Could not create output directory " + newDir );
-            log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
 
+            File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + accession );
+            log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
             newDir = tmpDir;
         }
 
         if ( newDir == null ) {
             throw new IOException( "Could not create target directory, was null" );
         }
-        if ( !newDir.exists() && !newDir.mkdir() ) {
+        if ( !newDir.exists() && !newDir.mkdirs() ) {
             throw new IOException( "Could not create target directory " + newDir.getAbsolutePath() );
         }
         if ( !newDir.canWrite() ) {

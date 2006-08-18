@@ -23,7 +23,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.RCommand;
 
-
 /**
  * Encapsulates a connection to the RServer.
  * 
@@ -31,6 +30,8 @@ import ubic.basecode.util.RCommand;
  * @version $Id$
  */
 public abstract class RCommander {
+
+    private static final int TIMEOUT_MILLI_SECONDS = 1000;
 
     protected static Log log = LogFactory.getLog( RCommander.class.getName() );
 
@@ -46,11 +47,16 @@ public abstract class RCommander {
     public RCommander( RCommand connection ) {
         if ( connection != null && connection.isConnected() ) {
             this.rc = connection;
+        } else {
+            throw new IllegalArgumentException( "connection was invalid" );
         }
     }
 
     protected void init() {
-        rc = RCommand.newInstance();
+        rc = RCommand.newInstance( TIMEOUT_MILLI_SECONDS );
+        if ( rc == null ) {
+            throw new RuntimeException( "Error during getting RServer instance" );
+        }
     }
 
     /**
@@ -58,7 +64,10 @@ public abstract class RCommander {
      * badness can occur.
      */
     public void cleanup() {
-        assert ( rc != null );
+        if ( rc == null ) {
+            log.warn( "Cleanup called, but no connection" );
+            return;
+        }
         rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.
         log.debug( "Disconnecting from RServer..." );
         rc.disconnect();
