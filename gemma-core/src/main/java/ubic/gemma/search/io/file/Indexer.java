@@ -36,7 +36,7 @@ import java.util.Date;
  * @version $Id$
  */
 public class Indexer {
-    // FIXME - this is really a file indexer ... create and Indexer interface and implement with FileIndexer,
+    // FIXME - this is really a file indexer ... create an Indexer interface and implement with FileIndexer,
     // DataSourceIndexer, etc.
 
     /**
