@@ -63,13 +63,13 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
         assert is != null : "Resource /data/loader/expression/arrayDesign/array.txt not available";
 
         arrayDesignParser.parse( is );
-        assertTrue( arrayDesignParser.getResults().size() > 0 );
+        assertTrue( "No results", arrayDesignParser.getResults().size() > 0 );
 
         Collection<?> result = persisterHelper.persist( arrayDesignParser.getResults() );
         assertTrue( result.size() > 0 );
         for ( Object object : result ) {
             assertTrue( object instanceof ArrayDesign );
-            assertTrue( ( ( ArrayDesign ) object ).getId() != null );
+            assertTrue( object + " did not have and id", ( ( ArrayDesign ) object ).getId() != null );
         }
     }
 
