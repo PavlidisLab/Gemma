@@ -243,6 +243,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
+        ad.setName( RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
+
         for ( int i = 0; i < numCompositeSequences; i++ ) {
             CompositeSequence de = CompositeSequence.Factory.newInstance();
             if ( randomNames ) {
