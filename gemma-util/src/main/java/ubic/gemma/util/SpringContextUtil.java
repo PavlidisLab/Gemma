@@ -88,8 +88,16 @@ public class SpringContextUtil {
 
     private static String[] getStandardConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
-
         paths.add( "classpath*:ubic/gemma/localDataSource.xml" );
+        addCommonConfig( isWebapp, paths );
+        return paths.toArray( new String[] {} );
+    }
+
+    /**
+     * @param isWebapp
+     * @param paths
+     */
+    private static void addCommonConfig( boolean isWebapp, List<String> paths ) {
         paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
         File f = new File( getGemmaHomeProperty() );
         try {
@@ -99,24 +107,12 @@ public class SpringContextUtil {
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
         }
-
-        return paths.toArray( new String[] {} );
     }
 
     private static String[] getTestConfigLocations( boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
-
         paths.add( "classpath*:ubic/gemma/localTestDataSource.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
-        File f = new File( getGemmaHomeProperty() );
-        try {
-            if ( isWebapp ) {
-                paths.add( f.toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
-            }
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( "Could not form valid URL for " + f.getAbsolutePath(), e );
-        }
-
+        addCommonConfig( isWebapp, paths );
         return paths.toArray( new String[] {} );
     }
 
