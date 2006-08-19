@@ -31,7 +31,11 @@
 			<attribute value="http://jakarta.apache.org/commons/logging/commons-logging-1.1/apidocs/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/commons-net/commons-net/1.3.0/commons-net-1.3.0.jar"/>
+	<classpathentry sourcepath="/JAR_SOURCE/commons-net-1.4.1/src/java" kind="var" path="M2_REPO/commons-net/commons-net/1.4.1/commons-net-1.4.1.jar">
+		<attributes>
+			<attribute value="http://jakarta.apache.org/commons/net/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/JAR_SOURCE/commons-configuration-1.1/src/java" kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.1/commons-configuration-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar"/>
@@ -122,5 +126,6 @@
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.4.0/xercesImpl-2.4.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene/1.4.3/lucene-1.4.3.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
