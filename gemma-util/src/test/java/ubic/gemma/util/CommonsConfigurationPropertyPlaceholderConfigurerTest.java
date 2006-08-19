@@ -19,7 +19,6 @@
 package ubic.gemma.util;
 
 import java.io.File;
-import java.io.InputStream;
 
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -33,8 +32,6 @@ import org.springframework.core.io.Resource;
 import junit.framework.TestCase;
 
 /**
- * TODO - DOCUMENT ME
- * 
  * @author pavlidis
  * @version $Id$
  */

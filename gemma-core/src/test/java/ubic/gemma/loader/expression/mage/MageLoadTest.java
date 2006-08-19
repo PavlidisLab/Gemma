@@ -46,6 +46,7 @@ public class MageLoadTest extends AbstractMageTest {
      */
     @Override
     protected void onSetUp() throws Exception {
+        super.onSetUp();
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
     }

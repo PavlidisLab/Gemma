@@ -246,7 +246,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             arrayDesignService.update( existing );
         }
 
-        if ( numExistingReporters < numReportersInNew ) {
+        if ( numExistingReporters < numReportersInNew && log.isDebugEnabled() ) {
             log.debug( "Update to array design needed: " + arrayDesign + " exists but reporters are to be updated ("
                     + numExistingReporters + " reporters in existing design, updated one has " + numReportersInNew
                     + ")" );
@@ -292,7 +292,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         arrayDesign.setCompositeSequences( null ); // temporarily.
 
         List<BioSequence> persistedBioSequences = new ArrayList<BioSequence>();
-        log.info( "Persisting biosequences" );
+        log.debug( "Persisting biosequences" );
         for ( BioSequence sequence : biosequences ) {
 
             // if the biosequence is already persistent, don't bother checking.
@@ -311,7 +311,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
 
         }
-        log.info( "Persisted biosequences" );
+        log.debug( "Persisted biosequences" );
 
         Iterator<BioSequence> itr = persistedBioSequences.iterator();
         for ( CompositeSequence cs : listedCompositeSequences ) {
@@ -320,7 +320,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
         arrayDesign.setCompositeSequences( new HashSet<CompositeSequence>( listedCompositeSequences ) );
 
-        log.info( "Refreshed BiologicalCharacteristic" );
+        log.debug( "Refreshed BiologicalCharacteristic" );
 
         // batch it.
         arrayDesign.setCompositeSequences( compositeSequenceService.create( arrayDesign.getCompositeSequences() ) );
@@ -413,7 +413,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         if ( arrayDesign == null ) return null;
 
-        log.info( "Persisting new array design " + arrayDesign.getName() );
+        log.debug( "Persisting new array design " + arrayDesign.getName() );
 
         arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
 
@@ -424,19 +424,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
         }
 
-        // bare-bones - we don't persist the probes by composition.
-        // arrayDesign.setId( arrayDesignService.create( arrayDesign ).getId() );
         arrayDesign = arrayDesignService.create( arrayDesign );
-
-        // arrayDesign.setId( persistArrayDesignReporterAssociations( arrayDesign ).getId() );
         persistArrayDesignReporterAssociations( arrayDesign );
-
-        // arrayDesign.setId( persistArrayDesignCompositeSequenceAssociations( arrayDesign ).getId() );
         persistArrayDesignCompositeSequenceAssociations( arrayDesign );
-
-        // arrayDesignService.update( arrayDesign );
-
-        // arrayDesign.setId( arrayDesign.getId() );
 
         return arrayDesign;
     }

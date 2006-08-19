@@ -103,7 +103,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected static String testPassword = "test";
 
     protected static final int RANDOM_STRING_LENGTH = 10;
-    protected static final int TEST_ELEMENT_COLLECTION_SIZE = 20;
+    protected static final int TEST_ELEMENT_COLLECTION_SIZE = 5;
 
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );

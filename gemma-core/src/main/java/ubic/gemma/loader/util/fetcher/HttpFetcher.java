@@ -55,7 +55,7 @@ public class HttpFetcher extends AbstractFetcher {
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
     public Collection<LocalFile> fetch( String identifier ) {
-        log.info( "Seeking Ncbi " + identifier + " file " );
+        log.info( "Seeking " + identifier + " file " );
 
         try {
 

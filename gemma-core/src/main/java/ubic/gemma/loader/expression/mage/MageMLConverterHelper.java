@@ -521,9 +521,17 @@ public class MageMLConverterHelper {
 
             URL localURL = findLocalMageExternalDataFile( dataExternal.getFilenameURI() );
             if ( localURL == null ) {
-                log.warn( "External data file " + dataExternal.getFilenameURI()
-                        + " not found; Data derived from MAGE BioAssayData " + mageObj.getName()
-                        + " will not have reachable external data." );
+
+                // keep from getting warned multiple times.
+                if ( log.isWarnEnabled() && !missingFiles.contains( dataExternal.getFilenameURI() ) ) {
+                    log.warn( "External data file " + dataExternal.getFilenameURI()
+                            + " not found; Data derived from MAGE BioAssayData " + mageObj.getName()
+                            + " will not have reachable external data." );
+                    missingFiles.add( dataExternal.getFilenameURI() );
+
+                }
+
+                // key part...local file is null.
                 return null;
             }
 
@@ -538,6 +546,8 @@ public class MageMLConverterHelper {
 
         return result;
     }
+
+    Set<String> missingFiles = new HashSet<String>();
 
     /**
      * Given a URI, try to find the corresponding local file. The only part of the URI that is looked at is the file
