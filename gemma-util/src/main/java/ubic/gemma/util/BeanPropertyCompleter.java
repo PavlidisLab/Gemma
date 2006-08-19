@@ -58,38 +58,18 @@ public class BeanPropertyCompleter {
      * @param update
      */
     public static void complete( Object targetObject, Object sourceObject, boolean update ) {
-        if ( targetObject == null || sourceObject == null )
-            throw new IllegalArgumentException( "Args must be non-null" );
-
-        if ( targetObject.getClass() != sourceObject.getClass() )
-            throw new IllegalArgumentException( "Args must be of the same type" );
-
-        PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors( targetObject );
-        for ( int i = 0; i < props.length; i++ ) {
-            PropertyDescriptor descriptor = props[i];
-            Method setter = descriptor.getWriteMethod();
-            if ( setter == null ) continue;
-            Method getter = descriptor.getReadMethod();
-
-            try {
-                Object sourceValue = getter.invoke( sourceObject, new Object[] {} );
-                if ( sourceValue == null ) continue;
-
-                Object persistedValue = getter.invoke( targetObject, new Object[] {} );
-
-                if ( persistedValue == null || update ) {
-                    setter.invoke( targetObject, new Object[] { sourceValue } );
-                }
-
-            } catch ( IllegalArgumentException e ) {
-                throw new RuntimeException( e );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            } catch ( InvocationTargetException e ) {
-                throw new RuntimeException( e );
-            }
-
-        }
-
+        return;
+        /*
+         * if ( targetObject == null || sourceObject == null ) throw new IllegalArgumentException( "Args must be
+         * non-null" ); if ( targetObject.getClass() != sourceObject.getClass() ) throw new IllegalArgumentException(
+         * "Args must be of the same type" ); PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors(
+         * targetObject ); for ( int i = 0; i < props.length; i++ ) { PropertyDescriptor descriptor = props[i]; Method
+         * setter = descriptor.getWriteMethod(); if ( setter == null ) continue; Method getter =
+         * descriptor.getReadMethod(); try { Object sourceValue = getter.invoke( sourceObject, new Object[] {} ); if (
+         * sourceValue == null ) continue; Object persistedValue = getter.invoke( targetObject, new Object[] {} ); if (
+         * persistedValue == null || update ) { setter.invoke( targetObject, new Object[] { sourceValue } ); } } catch (
+         * IllegalArgumentException e ) { throw new RuntimeException( e ); } catch ( IllegalAccessException e ) { throw
+         * new RuntimeException( e ); } catch ( InvocationTargetException e ) { throw new RuntimeException( e ); } }
+         */
     }
 }
