@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<project name="Gemma">
-	<bannerLeft>
-		<name>Gemma</name>
-	</bannerLeft>
-	<bannerRight>
-		<src>http://maven.apache.org/images/maven-small.gif</src>
-	</bannerRight>
+<project name="gemma-web">
 	<skin>
 		<groupId>org.apache.maven.skins</groupId>
 		<artifactId>maven-stylus-skin</artifactId>
 		<version>1.1-SNAPSHOT</version>
 	</skin>
+	<bannerLeft>
+		<name>Gemma web module</name>
+	</bannerLeft>
+	<bannerRight>
+		<src>http://www.bioinformatics.ubc.ca/pavlidis/lab/graphics/logo_gemma.gif</src>
+	</bannerRight>
+
 	<body>
 		<links>
+			<item name="Gemma" href="/gemma" />
+			<item name="Gemma dev" href="/gemma-dev" />
+			<item name="Confluence" href="/confluence/display/PavLab/Home" />
 			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
 			<item name="Apache" href="http://www.apache.org/" />
 			<item name="Maven 2" href="http://maven.apache.org/maven2/" />
-
 		</links>
 
 		${parentProject}
