@@ -193,7 +193,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
 
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
-
+        
         if ( existing == null ) {
             log.debug( "Array Design " + arrayDesign + " is new, processing..." );
             return persistNewArrayDesign( arrayDesign );
@@ -425,8 +425,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         arrayDesign = arrayDesignService.create( arrayDesign );
-        persistArrayDesignReporterAssociations( arrayDesign );
-        persistArrayDesignCompositeSequenceAssociations( arrayDesign );
+        arrayDesign = persistArrayDesignReporterAssociations( arrayDesign );
+        arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
         return arrayDesign;
     }

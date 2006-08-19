@@ -23,15 +23,9 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-
-import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.util.BusinessKey;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
@@ -48,13 +42,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     public ArrayDesign find( ArrayDesign arrayDesign ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( ArrayDesign.class );
-            queryObject.add( Restrictions.eq( "name", arrayDesign.getName() ) );
 
-            if ( arrayDesign.getDesignProvider() != null && arrayDesign.getDesignProvider().getName() != null ) {
-                queryObject.createCriteria( "designProvider" ).add(
-                        Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
-            }
+            BusinessKey.checkValidKey( arrayDesign );
+            Criteria queryObject = super.getSession( false ).createCriteria( ArrayDesign.class );
+            BusinessKey.addRestrictions( queryObject, arrayDesign );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -82,13 +73,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getName() == null ) {
-            log.debug( "Array design must have a name to use as comparison key" );
-            return null;
+            throw new IllegalArgumentException( "Array design must have a name to use as comparison key" );
         }
-        ArrayDesign newArrayDesign = this.find( arrayDesign );
-        if ( newArrayDesign != null ) {
-            BeanPropertyCompleter.complete( newArrayDesign, arrayDesign );
-            return newArrayDesign;
+        ArrayDesign existingArrayDesign = this.find( arrayDesign );
+        if ( existingArrayDesign != null ) {
+            assert existingArrayDesign.getId() != null;
+            return existingArrayDesign;
         }
         log.debug( "Creating new arrayDesign: " + arrayDesign.getName() );
         return ( ArrayDesign ) create( arrayDesign );

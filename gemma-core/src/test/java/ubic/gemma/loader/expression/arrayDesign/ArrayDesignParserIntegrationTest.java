@@ -69,7 +69,8 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
         assertTrue( result.size() > 0 );
         for ( Object object : result ) {
             assertTrue( object instanceof ArrayDesign );
-            assertTrue( object + " did not have and id", ( ( ArrayDesign ) object ).getId() != null );
+            assertTrue( object + " did not have an id", ( ( ArrayDesign ) object ).getId() != null );
+            log.debug( object );
         }
     }
 

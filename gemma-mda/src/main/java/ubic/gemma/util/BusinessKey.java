@@ -25,7 +25,9 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -86,6 +88,12 @@ public class BusinessKey {
     public static void checkValidKey( Gene gene ) {
         // FIXME make key.
         return;
+    }
+
+    public static void checkValidKey( ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
+            throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
+        }
     }
 
     /**
@@ -150,12 +158,41 @@ public class BusinessKey {
     }
 
     /**
+     * @param session
+     * @param ontologyEntry
+     * @return
+     */
+    public static Criteria createQueryObject( Session session, ArrayDesign arrayDesign ) {
+        Criteria queryObject = session.createCriteria( ArrayDesign.class );
+        addRestrictions( queryObject, arrayDesign );
+        return queryObject;
+    }
+
+    public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
+        addNameRestriction( queryObject, arrayDesign );
+
+        if ( arrayDesign.getDesignProvider() != null
+                && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
+            queryObject.createCriteria( "designProvider" ).add(
+                    Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
+        }
+    }
+
+    /**
+     * @param queryObject
+     * @param arrayDesign
+     */
+    private static void addNameRestriction( Criteria queryObject, Describable arrayDesign ) {
+        queryObject.add( Restrictions.eq( "name", arrayDesign.getName() ) );
+    }
+
+    /**
      * @param innerQuery
      * @param bioSequence
      */
     private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
         if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
-            queryObject.add( Restrictions.eq( "name", bioSequence.getName() ) );
+            addNameRestriction( queryObject, bioSequence );
 
             addRestrictions( queryObject, bioSequence.getTaxon() );
         }
