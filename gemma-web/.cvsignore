@@ -1,4 +1,4 @@
 target
-surefire.properties
+surefire*
 surefire-classloader.properties
 
