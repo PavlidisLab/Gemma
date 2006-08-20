@@ -14,15 +14,15 @@
 
 	<body>
 		<links>
-			<item name="Gemma" href="/gemma" />
-			<item name="Gemma dev" href="/gemma-dev" />
+			<item name="Gemma" href="/gemma/" />
+			<item name="Gemma dev" href="/gemma-dev/" />
 			<item name="Confluence" href="/confluence/display/PavLab/Home" />
 			<item name="Pavlidis lab" href="http://bioinformatics.ubc.ca/pavlidis/lab" />
 			<item name="Apache" href="http://www.apache.org/" />
 			<item name="Maven 2" href="http://maven.apache.org/maven2/" />
 		</links>
 
-		${parentProject}
+		${modules}
 
 		${reports}
 
