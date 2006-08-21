@@ -78,8 +78,9 @@ public class FileIndexerTest extends BaseTransactionalSpringContextTest {
         boolean fail = false;
         try {
             int indexed = FileIndexer.index( indexDir, dataDir );
+            FileSearcher.search( indexDir, "YOL109W" );
             log.warn( "Indexed items: " + indexed );
-        } catch ( IOException e ) {
+        } catch ( Exception e ) {
             fail = true;
             log.error( "Test failure.  Stacktrace is: " );
             e.printStackTrace();
