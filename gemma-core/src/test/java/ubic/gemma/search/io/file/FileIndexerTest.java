@@ -51,7 +51,8 @@ public class FileIndexerTest extends BaseTransactionalSpringContextTest {
 
         indexDir = FileTools.createDir( ConfigUtils.getString( "gemma.download.dir" ) + sep + "index" );
 
-        dataDir = new File( "gemma-core/src/test/resources/data/search/io/file/" );
+        dataDir = new File( ConfigUtils.getString( "gemma.home" ) + sep
+                + "gemma-core/src/test/resources/data/search/io/file/" );
 
     }
 
