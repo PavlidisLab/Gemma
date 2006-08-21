@@ -70,19 +70,14 @@ public class BioMaterialDaoImplTest extends BaseTransactionalSpringContextTest {
         BioMaterial found = this.bioMaterialDao.find( bm );
         assertTrue( found != null );
     }
-    
+
     /**
      * @throws Exception
      */
     public void testSetExternalAccession() throws Exception {
 
         /* set to avoid using stale data (data from previous tests */
-        setFlushModeCommit();
-
-        /* uncomment to use prod environment as opposed to the test environment */
-        // this.setDisableTestEnv( true );
-        onSetUpInTransaction();
-
+        // setFlushModeCommit();
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( "Test Biomaterial" );
 
@@ -99,8 +94,12 @@ public class BioMaterialDaoImplTest extends BaseTransactionalSpringContextTest {
         bm.setExternalAccession( de );
 
         BioMaterialDao bmDao = ( BioMaterialDao ) this.getBean( "bioMaterialDao" );
+
         // bmDao.findOrCreate( bm ); - FIXME use this
-        bmDao.create( bm );
+
+        bm = ( BioMaterial ) bmDao.create( bm );
+
+        assertTrue( bm.getId() != null );
 
         // setComplete();
     }

@@ -30,7 +30,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.Persister;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Utilities to be used by parsers and loaders.

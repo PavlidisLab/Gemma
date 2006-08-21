@@ -24,13 +24,13 @@ import java.util.HashSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.Persister;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.Persister;
+import ubic.gemma.persistence.PersisterHelper;
 
 /**
  * @author keshav

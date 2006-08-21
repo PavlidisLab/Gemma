@@ -22,8 +22,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
@@ -39,7 +37,7 @@ public class LocalSeriesFetcher extends SeriesFetcher {
     /**
      * @throws ConfigurationException
      */
-    public LocalSeriesFetcher( String localPath ) throws ConfigurationException {
+    public LocalSeriesFetcher( String localPath ) {
         super();
         this.localPath = localPath;
     }

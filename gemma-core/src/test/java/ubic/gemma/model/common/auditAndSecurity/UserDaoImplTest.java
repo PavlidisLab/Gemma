@@ -23,7 +23,7 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -38,8 +38,7 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
     private final Log log = LogFactory.getLog( UserDaoImplTest.class );
     private User testUser;
     private UserRole ur;
-    private PersisterHelper persisterHelper;
-    
+
     public final void testCreateUser() throws Exception {
         assert testUser != null;
         userDao.create( testUser );
@@ -48,7 +47,6 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
     @SuppressWarnings("unchecked")
     @Override
     protected void onSetUpInTransaction() throws Exception {
-        persisterHelper = ( PersisterHelper )this.getBean( "persisterHelper" );
         super.onSetUpInTransaction();
 
         // User Object

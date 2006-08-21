@@ -38,23 +38,12 @@
 	</property>
 </bean>
 
-<!-- ==================================================== -->
-<!--    RESOURCES, namely the propertyConfigurer          -->
-<!--    propertyConfigurer allows you to read variables   -->
-<!--    stored in a .properties file from an xml file.    -->
-<!--    Looks like:  ${mail.host}                         -->
-<!-- ==================================================== -->
-<bean id="propertyConfigurer"
-	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-	<property name="locations">
-		<list>
-			<value>classpath:mail.properties</value>
-		</list>
-	</property>
-	<property name="ignoreUnresolvablePlaceholders" value="true" />
-	<property name="ignoreResourceNotFound" value="true" />
-</bean>
-
+<!-- 
+	==================================================== 
+	configurationPropertyConfigurer allows you to use variables like ${mail.host} in the spring bean definitions.
+	Variables are listed in a resource. If the resource is in your classpath, list in in 'locations'.
+	Other config files can be added by defining PropertiesConfiguration instances  
+	==================================================== -->
 <bean id="buildProperties" class="org.apache.commons.configuration.PropertiesConfiguration"
 	dependency-check="none">
 	<constructor-arg index="0">
@@ -66,6 +55,11 @@
 	class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer">
 	<property name="configuration">
 		<ref local="buildProperties" />
+	</property>
+	<property name="locations">
+		<list>
+			<value>classpath:mail.properties</value>
+		</list>
 	</property>
 	<property name="ignoreUnresolvablePlaceholders" value="false" />
 	<property name="ignoreResourceNotFound" value="false" />

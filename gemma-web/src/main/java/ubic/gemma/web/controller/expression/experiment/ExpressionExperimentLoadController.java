@@ -36,9 +36,9 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**

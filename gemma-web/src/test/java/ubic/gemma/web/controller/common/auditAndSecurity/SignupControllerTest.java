@@ -24,11 +24,11 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -47,7 +47,6 @@ public class SignupControllerTest extends BaseTransactionalSpringContextTest {
     User testUser;
     UserRole userRole;
     UserService userService;
-    PersisterHelper persisterHelper;
 
     /**
      * @throws Exception
@@ -58,7 +57,6 @@ public class SignupControllerTest extends BaseTransactionalSpringContextTest {
         response = new MockHttpServletResponse();
 
         signupController = ( SignupController ) getBean( "signupController" );
-        persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" );
         testUser = User.Factory.newInstance();
         userRole = UserRole.Factory.newInstance();
         userService = ( UserService ) getBean( "userService" );

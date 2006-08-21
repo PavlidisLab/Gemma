@@ -20,7 +20,7 @@ package ubic.gemma.loader.expression.smd;
 
 import java.util.Collection;
 
-import ubic.gemma.loader.util.persister.Persister;
+import ubic.gemma.persistence.Persister;
 
 /**
  * <hr>

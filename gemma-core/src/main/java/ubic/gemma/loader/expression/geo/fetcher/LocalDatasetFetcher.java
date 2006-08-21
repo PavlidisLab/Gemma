@@ -39,7 +39,7 @@ public class LocalDatasetFetcher extends DatasetFetcher {
     /**
      * @throws ConfigurationException
      */
-    public LocalDatasetFetcher( String localPath ) throws ConfigurationException {
+    public LocalDatasetFetcher( String localPath ) {
         super();
         this.localPath = localPath;
     }

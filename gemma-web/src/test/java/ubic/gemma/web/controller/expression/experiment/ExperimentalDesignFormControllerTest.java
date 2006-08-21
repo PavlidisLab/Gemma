@@ -83,9 +83,7 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
     public void testEdit() throws Exception {
         log.debug( "testing edit" );
 
-        setFlushModeCommit();
-        onSetUpInTransaction();
-
+        // setFlushModeCommit();
         ExperimentalDesignFormController c = ( ExperimentalDesignFormController ) getBean( "experimentalDesignFormController" );
 
         request = new MockHttpServletRequest( "GET", "/experimentalDesign/editExperimentalDesign.html" );

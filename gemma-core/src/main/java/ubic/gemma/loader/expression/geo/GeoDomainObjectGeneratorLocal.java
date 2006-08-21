@@ -40,13 +40,10 @@ public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
 
     @Override
     public void intialize() {
-        try {
-            datasetFetcher = new LocalDatasetFetcher( fileLocation );
-            seriesFetcher = new LocalSeriesFetcher( fileLocation );
-            platformFetcher = new LocalSeriesFetcher( fileLocation );
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        datasetFetcher = new LocalDatasetFetcher( fileLocation );
+        seriesFetcher = new LocalSeriesFetcher( fileLocation );
+        platformFetcher = new LocalSeriesFetcher( fileLocation );
+
         this.gfp = new GeoFamilyParser();
     }
 

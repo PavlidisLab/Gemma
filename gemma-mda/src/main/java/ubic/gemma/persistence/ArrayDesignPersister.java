@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util.persister;
+package ubic.gemma.persistence;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -193,7 +193,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
 
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
-        
+
         if ( existing == null ) {
             log.debug( "Array Design " + arrayDesign + " is new, processing..." );
             return persistNewArrayDesign( arrayDesign );
@@ -262,7 +262,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 rep = ( Reporter ) persistDesignElement( rep );
 
                 if ( ++count % SESSION_BATCH_SIZE == 0 ) {
-                    this.flushAndClearSession();
+                  //  this.flushAndClearSession();
                 }
             }
 
@@ -270,6 +270,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             arrayDesignService.update( existing );
         }
         arrayDesign = arrayDesignService.findOrCreate( existing );
+        assert arrayDesign.getId() != null;
         return arrayDesign;
     }
 
@@ -304,7 +305,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             // flush a batch of inserts and release memory:
             if ( ++count % SESSION_BATCH_SIZE == 0 ) {
-                this.flushAndClearSession();
+            //    this.flushAndClearSession();
             }
             if ( count % 500 == 0 ) {
                 log.info( count + " biosequences created or updated for " + arrayDesign );

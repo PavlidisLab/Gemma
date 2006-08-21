@@ -25,10 +25,10 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.genome.TaxonDao;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -47,7 +47,6 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
     Collection<Gene2GOAssociation> gene2GOCol = null;
 
     TaxonDao taxonDao = null;
-    private PersisterHelper persisterHelper;
 
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since its dependencies are
@@ -63,7 +62,9 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
 
         gene2GOCol = gene2GOAssParser.getResults();
 
-        gene2GOAssLoader.persist( gene2GOCol );
+        Collection<Object> results = gene2GOAssLoader.persist( gene2GOCol );
+
+        assertEquals( 21, results.size() );
 
     }
 
@@ -73,7 +74,6 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
      */
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         gene2GOAssParser = new Gene2GOAssociationParser();
 
         gene2GOAssLoader = new Gene2GOAssociationLoaderImpl();

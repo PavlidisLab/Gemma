@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util.persister;
+package ubic.gemma.persistence;
 
 import java.util.Collection;
 import java.util.HashMap;

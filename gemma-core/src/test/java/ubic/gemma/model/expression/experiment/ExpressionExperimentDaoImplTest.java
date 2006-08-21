@@ -28,7 +28,10 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringContextTest {
 
-    ExpressionExperimentDao eeDao = null;
+    /**
+     * 
+     */
+    private static final String EE_NAME = "Expression Experiment with Contact";
     ContactService cs = null;
     ExpressionExperiment ee = null;
 
@@ -40,7 +43,7 @@ public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringCont
         super.onSetUpInTransaction();
 
         ee = ExpressionExperiment.Factory.newInstance();
-        ee.setName( "Expression Experiment with Contact" );
+        ee.setName( EE_NAME );
 
         Contact c = Contact.Factory.newInstance();
         c.setName( "Foobar Barfoo" );
@@ -49,9 +52,7 @@ public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringCont
         c = cs.findOrCreate( c );
         ee.setOwner( c );
 
-        eeDao = ( ExpressionExperimentDao ) getBean( "expressionExperimentDao" );
-
-        ee = eeDao.findOrCreate( ee );
+        ee = expressionExperimentDao.findOrCreate( ee );
         // setComplete();
 
     }
@@ -61,7 +62,8 @@ public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringCont
      */
     public void testGetOwner() throws Exception {
         // FIXME not a good test?
-        ExpressionExperiment expressionExperiment = eeDao.findByName( "Expression Experiment with Contact" );
+        ExpressionExperiment expressionExperiment = expressionExperimentDao.findByName( EE_NAME );
+        assertNotNull( expressionExperiment );
         log.debug( "Contact: " + expressionExperiment.getOwner() );
 
     }

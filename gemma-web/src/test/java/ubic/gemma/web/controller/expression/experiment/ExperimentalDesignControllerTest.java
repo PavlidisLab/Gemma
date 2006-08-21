@@ -53,12 +53,10 @@ public class ExperimentalDesignControllerTest extends BaseTransactionalSpringCon
      */
     public void testShowExperimentalDesign() throws Exception {
 
-        setFlushModeCommit();
+        // setFlushModeCommit();
 
         /* uncomment to use prod environment as opposed to the test environment */
         // this.setDisableTestEnv( true );
-        onSetUpInTransaction();
-
         ExperimentalDesignController c = ( ExperimentalDesignController ) getBean( "experimentalDesignController" );
 
         MockHttpServletRequest req = new MockHttpServletRequest( "GET",

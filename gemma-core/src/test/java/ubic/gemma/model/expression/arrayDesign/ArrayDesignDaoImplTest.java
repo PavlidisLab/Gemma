@@ -20,7 +20,6 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -31,8 +30,6 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     ArrayDesign ad;
-    ArrayDesignDao arrayDesignDao;
-    PersisterHelper persisterHelper;
 
     /*
      * @see TestCase#setUp()
@@ -40,7 +37,8 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        persisterHelper = ( PersisterHelper )this.getBean( "persisterHelper" );
+
+        // FIXME for some reason the getTestPersistentArrayDesign method doesn't work - get empty collections.
         ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "foobly" );
@@ -64,13 +62,8 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
 
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
-    }
+        // ad = this.getTestPersistentArrayDesign( 2, true );
 
-    /**
-     * @param persisterHelper The persisterHelper to set.
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
     /*

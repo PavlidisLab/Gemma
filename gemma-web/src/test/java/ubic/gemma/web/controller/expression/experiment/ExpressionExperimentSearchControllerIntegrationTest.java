@@ -26,8 +26,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**

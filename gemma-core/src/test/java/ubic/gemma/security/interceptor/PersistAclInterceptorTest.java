@@ -21,7 +21,6 @@ package ubic.gemma.security.interceptor;
 import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.protocol.Hardware;
 import ubic.gemma.model.common.protocol.HardwareService;
@@ -32,6 +31,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**

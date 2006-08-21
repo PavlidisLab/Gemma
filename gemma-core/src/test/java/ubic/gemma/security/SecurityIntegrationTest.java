@@ -24,12 +24,12 @@ import java.util.HashSet;
 import org.acegisecurity.AccessDeniedException;
 
 import ubic.gemma.Constants;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -48,8 +48,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     private UserService userService;
     ArrayDesign notYourArrayDesign;
 
-    private PersisterHelper persisterHelper;
-
     /**
      * @param userService The userService to set.
      */
@@ -66,7 +64,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     protected void onSetUpInTransaction() throws Exception {
 
         super.onSetUpInTransaction(); // so we have authority to add a user.
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         User testUser = getTestPersistentUser();
         userService.addRole( testUser, Constants.USER_ROLE );
         notYourArrayDesign = ArrayDesign.Factory.newInstance();

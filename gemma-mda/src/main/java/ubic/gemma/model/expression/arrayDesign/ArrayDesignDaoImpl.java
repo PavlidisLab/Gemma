@@ -72,9 +72,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getName() == null ) {
-            throw new IllegalArgumentException( "Array design must have a name to use as comparison key" );
-        }
         ArrayDesign existingArrayDesign = this.find( arrayDesign );
         if ( existingArrayDesign != null ) {
             assert existingArrayDesign.getId() != null;

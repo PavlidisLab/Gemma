@@ -24,7 +24,6 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -39,7 +38,6 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
     protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 
     private ArrayDesignParser arrayDesignParser = null;
-    private PersisterHelper persisterHelper;
 
     /**
      * set up
@@ -47,7 +45,6 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         arrayDesignParser = new ArrayDesignParser();
     }
 

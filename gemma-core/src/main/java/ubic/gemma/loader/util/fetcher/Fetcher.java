@@ -1,6 +1,5 @@
 package ubic.gemma.loader.util.fetcher;
 
-import java.net.URL;
 import java.util.Collection;
 
 import ubic.gemma.model.common.description.LocalFile;

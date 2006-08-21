@@ -24,11 +24,11 @@ import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -63,6 +63,7 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
         t = ( Taxon ) persisterHelper.persist( t );
 
         ad = AuditTrail.Factory.newInstance();
+
         g = Gene.Factory.newInstance();
         g.setName( "testmygene" );
         g.setOfficialSymbol( "foo" );

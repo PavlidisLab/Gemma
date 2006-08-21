@@ -199,7 +199,7 @@ public class ProbeMapper {
      * @return
      */
     public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPath goldenPathDb,
-            Collection<String[]> genbankIds ) throws IOException {
+            Collection<String[]> genbankIds ) {
         Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
         int count = 0;
         int skipped = 0;
@@ -282,11 +282,9 @@ public class ProbeMapper {
      */
     private Collection<BlatAssociation> processBlatResult( GoldenPath goldenPathDb, BlatResult blatResult ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
-         Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
+        Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
                 .getTargetChromosome().getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult
                 .getTargetStarts(), blatResult.getBlockSizes(), blatResult.getStrand(), threeprimeMethod );
-
-        
 
         if ( blatAssociations == null ) return null;
 

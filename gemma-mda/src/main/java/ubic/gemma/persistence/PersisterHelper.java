@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.util.persister;
+package ubic.gemma.persistence;
 
 import ubic.gemma.model.common.Auditable;
 

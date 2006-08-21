@@ -24,7 +24,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -48,7 +47,6 @@ public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
     private static final String TAXON = "thingy";
     private static final int LEFT_TEST_MARKER = 2;
     private static final int RIGHT_TEST_MARKER = 5;
-    PersisterHelper persisterHelper;
     PhysicalMarker[] pms = new PhysicalMarker[NUM_LOCS];
     PhysicalLocation[] pls = new PhysicalLocation[NUM_LOCS];
     Qtl[] qtls = new Qtl[NUM_LOCS / 2];
@@ -56,7 +54,6 @@ public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         sf = ( SessionFactory ) getBean( "sessionFactory" );
 
         Taxon tx = Taxon.Factory.newInstance();
@@ -111,7 +108,7 @@ public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
                 + " :start and qtl.endMarker.physicalLocation.nucleotide <= :end";
 
         Session sess = sf.openSession();
-//        Transaction trans = sess.beginTransaction(); // we're already in a transaction in this type of test.
+        // Transaction trans = sess.beginTransaction(); // we're already in a transaction in this type of test.
 
         Query q = sess.createQuery( query );
 
@@ -141,7 +138,7 @@ public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
                 + " :start and qtl.endMarker.physicalLocation <= :end";
 
         Session sess = sf.openSession();
-       // Transaction trans = sess.beginTransaction();
+        // Transaction trans = sess.beginTransaction();
 
         Query q = sess.createQuery( query );
 
@@ -153,9 +150,9 @@ public class QtlDaoImplTest extends BaseTransactionalSpringContextTest {
             log.debug( "Qtl found: " + qtl.getName() + " with start location "
                     + qtl.getStartMarker().getPhysicalLocation().getNucleotide() );
         }
-      //  sess.flush();
-      //  trans.commit();
-      //  sess.close();
+        // sess.flush();
+        // trans.commit();
+        // sess.close();
 
     }
 

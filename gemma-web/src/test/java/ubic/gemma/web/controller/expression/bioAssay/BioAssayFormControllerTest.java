@@ -78,7 +78,6 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
         log.debug( "testing formBackingObject" );
 
         setFlushModeCommit();
-        onSetUpInTransaction();
 
         BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
 
@@ -98,7 +97,6 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
         log.debug( "testing edit" );
 
         setFlushModeCommit();
-        onSetUpInTransaction();
 
         BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
 

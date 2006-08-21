@@ -23,9 +23,9 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.util.persister.Persister;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.common.description.OntologyEntry;
+import ubic.gemma.persistence.Persister;
+import ubic.gemma.persistence.PersisterHelper;
 
 /**
  * A service to load OntologyEntries.

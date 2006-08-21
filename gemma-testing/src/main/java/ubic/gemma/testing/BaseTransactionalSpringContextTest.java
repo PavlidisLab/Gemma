@@ -63,6 +63,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
+import ubic.gemma.model.expression.designElement.Reporter;
+import ubic.gemma.model.expression.designElement.ReporterDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.genome.Gene;
@@ -75,6 +77,7 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.SpringContextUtil;
 import ubic.gemma.util.StringUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
@@ -141,6 +144,10 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     private Taxon testTaxon = null;
 
     protected UserDao userDao;
+
+    protected ReporterDao reporterDao;
+
+    protected PersisterHelper persisterHelper;
 
     /**
      * 
@@ -234,7 +241,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
     /**
      * Convenience method to provide an ArrayDesign that can be used to fill non-nullable associations in test objects.
-     * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired.
+     * The ArrayDesign is provided with some CompositeSequenece DesignElements if desired. If composite seequences are
+     * created, they are each associated with a single generated Reporter.
      * 
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
      * @param randomNames If true, probe names will be random strings; otherwise they will be 0_at....N_at
@@ -246,14 +254,27 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         ad.setName( RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
-            CompositeSequence de = CompositeSequence.Factory.newInstance();
+
+            Reporter reporter = Reporter.Factory.newInstance();
             if ( randomNames ) {
-                de.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+                reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
             } else {
-                de.setName( i + "_at" );
+                reporter.setName( i + "_at" );
             }
-            de = ( CompositeSequence ) compositeSequenceDao.create( de );
-            ad.getCompositeSequences().add( de );
+            reporter = ( Reporter ) reporterDao.create( reporter );
+            ad.getReporters().add( reporter );
+
+            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
+            if ( randomNames ) {
+                compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+            } else {
+                compositeSequence.setName( "probe_" + i );
+            }
+
+            compositeSequence.getComponentReporters().add( reporter );
+
+            compositeSequence = ( CompositeSequence ) compositeSequenceDao.create( compositeSequence );
+            ad.getCompositeSequences().add( compositeSequence );
         }
 
         // use service to get acl
@@ -264,7 +285,11 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
             cs.setArrayDesign( ad );
         }
 
-        flushSession();
+        // flushSession();
+
+        assert ( ad.getCompositeSequences().size() == numCompositeSequences );
+        assert ( ad.getReporters().size() == numCompositeSequences );
+
         return ad;
     }
 
@@ -618,6 +643,20 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public void setUserDao( UserDao userDao ) {
         this.userDao = userDao;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param reporterDao the reporterDao to set
+     */
+    public void setReporterDao( ReporterDao reporterDao ) {
+        this.reporterDao = reporterDao;
     }
 
 }

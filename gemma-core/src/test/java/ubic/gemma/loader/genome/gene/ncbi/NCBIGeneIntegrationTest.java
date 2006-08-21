@@ -22,8 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
-import ubic.gemma.loader.util.persister.PersisterHelper;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -58,9 +58,11 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         log.info( "Converting..." );
         Collection<Gene> gemmaObj = ( Collection<Gene> ) ngc.convert( smallSample );
 
-        PersisterHelper persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+        Collection<Gene> persistedObj = ( Collection<Gene> ) persisterHelper.persist( gemmaObj );
 
-        persisterHelper.persist( gemmaObj );
+        for ( Gene gene : persistedObj ) {
+            assertTrue( gene.getId() != null );
+        }
 
     }
 }
