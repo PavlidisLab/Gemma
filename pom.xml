@@ -99,6 +99,8 @@
 							<report>issue-tracking</report>
 							<report>license</report>
 							<report>scm</report>
+							<report>summary</report>
+							<report>dependency-coverage</report>
 						</reports>
 					</reportSet>
 				</reportSets>
