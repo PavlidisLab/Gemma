@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Tests the functionality of a Lucene Indexer.
@@ -30,7 +31,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class IndexerTest extends BaseTransactionalSpringContextTest {
+public class FileIndexerTest extends BaseTransactionalSpringContextTest {
 
     /* directories to index and out index results */
     private String sep = null;
@@ -48,11 +49,9 @@ public class IndexerTest extends BaseTransactionalSpringContextTest {
 
         sep = System.getProperty( "file.separator" );
 
-        indexDir = FileTools.createDir( "gemma-core" + sep + "src" + sep + "test" + sep + "resources" + sep + "data"
-                + sep + "search" + sep + "io" + sep + "file" + sep + "index" );
+        indexDir = FileTools.createDir( ConfigUtils.getString( "gemma.download.dir" ) + sep + "index" );
 
-        dataDir = new File( "gemma-core" + sep + "src" + sep + "test" + sep + "resources" + sep + "data" + sep
-                + "search" + sep + "io" + sep + "file" );
+        dataDir = new File( "gemma-core/src/test/resources/data/search/io/file/" );
 
     }
 
@@ -66,7 +65,7 @@ public class IndexerTest extends BaseTransactionalSpringContextTest {
         super.onTearDownInTransaction();
 
         log.warn( "cleaning up ... removing index directory" );
-        indexDir.getAbsoluteFile().deleteOnExit();// FIXME does not delete the directory
+        indexDir.getAbsoluteFile().delete();// FIXME does not delete the directory
 
     }
 
@@ -77,7 +76,7 @@ public class IndexerTest extends BaseTransactionalSpringContextTest {
 
         boolean fail = false;
         try {
-            int indexed = Indexer.index( indexDir, dataDir );
+            int indexed = FileIndexer.index( indexDir, dataDir );
             log.warn( "Indexed items: " + indexed );
         } catch ( IOException e ) {
             fail = true;
