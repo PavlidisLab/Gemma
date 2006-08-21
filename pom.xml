@@ -22,7 +22,7 @@
 	<packaging>pom</packaging>
 	<scm>
 		<connection>
-			scm:cvs:pserver:anonymous@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
+			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
 		</connection>
 		<developerConnection>
 			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
