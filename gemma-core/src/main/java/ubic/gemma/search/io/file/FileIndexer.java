@@ -37,8 +37,8 @@ import org.apache.lucene.index.IndexWriter;
  * @author Erik Hatcher
  * @version $Id$
  */
-public class Indexer {
-    private static Log log = LogFactory.getLog( Indexer.class );
+public class FileIndexer {
+    private static Log log = LogFactory.getLog( FileIndexer.class );
 
     // FIXME - this is really a file indexer ... create an Indexer interface and implement with FileIndexer,
     // DataSourceIndexer, etc.
@@ -49,7 +49,7 @@ public class Indexer {
      */
     public static void main( String[] args ) throws Exception {
         if ( args.length != 2 ) {
-            throw new Exception( "Usage: java " + Indexer.class.getName() + " <index dir> <data dir>" );
+            throw new Exception( "Usage: java " + FileIndexer.class.getName() + " <index dir> <data dir>" );
         }
         File indexDir = new File( args[0] );
         File dataDir = new File( args[1] );
