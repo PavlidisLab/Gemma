@@ -29,6 +29,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.store.RAMDirectory;
 
 /**
  * Indexes .txt files in the directory tree.
@@ -74,6 +75,7 @@ public class FileIndexer {
         }
 
         IndexWriter writer = new IndexWriter( indexDir, new StandardAnalyzer(), true );
+        // IndexWriter writer = new IndexWriter( new RAMDirectory( indexDir ), new StandardAnalyzer(), true );
         writer.setUseCompoundFile( false );
 
         indexDirectory( writer, dataDir );

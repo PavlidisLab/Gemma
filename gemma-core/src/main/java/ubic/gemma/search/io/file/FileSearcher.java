@@ -39,8 +39,8 @@ import org.apache.lucene.store.FSDirectory;
  * @author Erik Hatcher
  * @version $Id$
  */
-public class Searcher {
-    private static Log log = LogFactory.getLog( Searcher.class );
+public class FileSearcher {
+    private static Log log = LogFactory.getLog( FileSearcher.class );
 
     /**
      * @param args
@@ -48,7 +48,7 @@ public class Searcher {
      */
     public static void main( String[] args ) throws Exception {
         if ( args.length != 2 ) {
-            throw new Exception( "Usage: java " + Searcher.class.getName() + " <index dir> <query>" );
+            throw new Exception( "Usage: java " + FileSearcher.class.getName() + " <index dir> <query>" );
         }
 
         File indexDir = new File( args[0] );
