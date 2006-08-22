@@ -16,26 +16,30 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.search.io.file;
+package ubic.gemma.search.io.expression.experiment;
 
 import java.io.File;
+import java.util.Collection;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Tests the functionality of a Lucene Indexer.
+ * Tests the functionality of Lucene indexing Gemma expression experiments.
  * 
  * @author keshav
  * @version $Id$
  */
-public class FileIndexerTest extends BaseTransactionalSpringContextTest {
+public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringContextTest {
 
     /* directories to index and out index results */
     private String sep = null;
     private File indexDir = null;
-    private File dataDir = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private Collection<ExpressionExperiment> expressionExperiments = null;
 
     /*
      * (non-Javadoc)
@@ -50,8 +54,8 @@ public class FileIndexerTest extends BaseTransactionalSpringContextTest {
 
         indexDir = FileTools.createDir( ConfigUtils.getString( "gemma.download.dir" ) + sep + "index" );
 
-        dataDir = new File( ConfigUtils.getString( "gemma.home" ) + sep
-                + "gemma-core/src/test/resources/data/search/io/file/" );
+        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        expressionExperiments = expressionExperimentService.loadAll();
 
     }
 
@@ -77,9 +81,10 @@ public class FileIndexerTest extends BaseTransactionalSpringContextTest {
 
         boolean fail = false;
         try {
-            int indexed = FileIndexer.index( indexDir, dataDir );
-            FileSearcher.search( indexDir, "YOL109W" );
+            int indexed = ExpressionExperimentIndexer.index( indexDir, expressionExperiments );
             log.warn( "Indexed items: " + indexed );
+
+            ExpressionExperimentSearcher.search( indexDir, "0655710712" );
         } catch ( Exception e ) {
             fail = true;
             log.error( "Test failure.  Stacktrace is: " );
