@@ -1,0 +1,73 @@
+/* Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package ubic.gemma.web.util.progress;
+
+import java.io.Serializable;
+
+import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+/**
+ * <hr
+ * <p>
+ * This class is intended to be stored in the web session for a given user. Receives updates for progressJobs
+ * and stores the current progressData.
+ * 
+ * @author klc
+ * @version $Id$
+ */
+
+public class HttpProgressObserver implements ProgressObserver, Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1346814251664733438L;
+
+    protected static final Log logger = LogFactory.getLog( HttpProgressObserver.class );
+
+    protected ProgressData pData;
+
+    public HttpProgressObserver() {
+
+        pData = new ProgressData( 0, "Initilizing", false );
+        // Not sure the best way to do this. Perpaps subclassing for different types of monitors...
+        // SecurityContextHolder.getContext().getAuthentication.getName();
+        ProgressManager.addToNotification( SecurityContextHolder.getContext().getAuthentication().getName(), this );
+        // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
+    }
+
+    /**
+     * Implementation for the progress Observer class
+     */
+    public void progressUpdate( ProgressData pd ) {
+
+        this.pData = pd;
+
+    }
+
+    public ProgressData getProgressData() {
+        return pData;
+    }
+
+    public void finished() {
+
+        // todo add code for cleaning up cleaning up notification references. IE stop observering...
+
+    }
+}

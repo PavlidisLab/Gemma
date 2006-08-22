@@ -13,14 +13,21 @@
             <include method="getUser" />
             <include method="getUsers" />
         </create>
+        
        <create creator="new" javascript="UploadMonitor">
             <param name="class" value="ubic.gemma.web.util.upload.UploadMonitor"/>
         </create>
         
-        <create creator="new" javascript="ProgressMonitor">
+        <create creator="new" javascript="HttpProgressMonitor">
             <param name="class" value="ubic.gemma.web.util.progress.HttpProgressMonitor"/>
+            <param name="force" value="true"/>
+            <include method="getProgressStatus" />
         </create>
-        <convert converter="bean" match="ubic.gemma.web.util.progress.ProgressData"/>
+        
+        <convert converter="bean" match="ubic.gemma.web.util.progress.ProgressData">
+			  <param name="force" value="true"/>
+		  </convert>
+        
          
     </allow>
 </dwr>

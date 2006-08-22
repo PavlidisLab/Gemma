@@ -1,33 +1,28 @@
-/*
-*
-*   Original code from  Pierre-Alexandre Losson -- http://www.telio.be/blog
-*   email : plosson@users.sourceforge.net
-* 
-* $Id$
-*/
 
 function refreshProgress() {
-    progressMonitor.getUploadInfo(updateProgress);
+    HttpProgressMonitor.getProgressStatus(updateProgress);
 }
-function updateProgress(ProgressData data) {
-    if (data.isDone) {
+function updateProgress( data ) {
+
+    document.getElementById("progressBarText").innerHTML = data.description + "  :" + data.percent + "%"; 
+    document.getElementById("progressBarBoxContent").style.width = parseInt(data.percent * 3.5) + "px";	
+
+    if (data.done) {
       document.getElementById("uploadbutton").disabled = false;
-      document.getElementById("progressBarText").innerHTML = data.getDescription(); 	
      }
-     else
+     else{
         document.getElementById("uploadbutton").disabled = true;
-        document.getElementById("progressBarText").innerHTML = "Upload in progress: " + data.getPercent() + "%";
-        document.getElementById("progressBarBoxContent").style.width = parseInt(percent * 3.5) + "px";
-        window.setTimeout("refreshProgress()", 1000);
-    
+        window.setTimeout("refreshProgress()", 600);
+    }
     return true;
 }
+
 function startProgress() {
     document.getElementById("progressBar").style.display = "block";
-    document.getElementById("progressBarText").innerHTML = "Job in progress: 0%";
+    document.getElementById("progressBarText").innerHTML = "In progress...";
     document.getElementById("uploadbutton").disabled = true;
 
     // wait a little while to make sure the upload has started ..
-    window.setTimeout("refreshProgress()", 1500);
+    window.setTimeout("refreshProgress()", 1000);
     return true;
 }

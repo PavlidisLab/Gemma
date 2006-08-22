@@ -7,10 +7,11 @@
         <content tag="heading">
         <fmt:message key="upload.heading" />
         </content>
-        <script type='text/javascript' src='dwr/interface/ProgressMonitor.js'></script>
-        <script type='text/javascript' src='dwr/engine.js'></script>
-        <script type='text/javascript' src='dwr/util.js'></script>
-        <script type='text/javascript' src="<c:url value="scripts/upload.js"/>"></script>
+        
+        <script type='text/javascript' src='/Gemma/dwr/interface/HttpProgressMonitor.js'></script>
+        <script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+        <script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+        <script type='text/javascript' src="<c:url value="scripts/progress.js"/>"></script>
         <style type="text/css">
 #progressBar { padding-top: 5px; }
 #progressBarBox { width: 350px; height: 20px; border: 1px inset; background: #EEEEEE;}

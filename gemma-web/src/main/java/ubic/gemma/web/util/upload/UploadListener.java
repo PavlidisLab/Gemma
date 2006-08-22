@@ -112,9 +112,12 @@ public class UploadListener implements OutputStreamListener {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
+     * TODO remove progress job from  Progress Manager
      */
+    
     public void done() {
         pJob.updateProgress( new ProgressData( 100, "Finished Uploading", true ) );
+        
     }
 
 }

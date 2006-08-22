@@ -17,9 +17,9 @@
 package ubic.gemma.web.util.progress;
 
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,10 +38,17 @@ public class ProgressManager {
 
     protected static final Log logger = LogFactory.getLog( ProgressManager.class );
 
-    protected static Map<ProgressJob, Collection<ProgressObserver>> notificationListByJob = new Hashtable<ProgressJob, Collection<ProgressObserver>>();
-    protected static Map<String, Collection<ProgressObserver>> notificationListByUser = new Hashtable<String, Collection<ProgressObserver>>();
-    protected static Map<String, Collection<ProgressJob>> progressJobs = new Hashtable<String, Collection<ProgressJob>>();
+    /*
+     * Must use the getter methods to use these static hashmaps so that i can gaurantee syncronization amongst different
+     * threads using the maps.
+     */
+    private static Map<ProgressJob, Collection<ProgressObserver>> notificationListByJob = new ConcurrentHashMap<ProgressJob, Collection<ProgressObserver>>();
+    private static Map<String, Collection<ProgressObserver>> notificationListByUser = new ConcurrentHashMap<String, Collection<ProgressObserver>>();
+    private static Map<String, Collection<ProgressJob>> progressJobs = new ConcurrentHashMap<String, Collection<ProgressJob>>();
 
+//    protected static synchronized  Map<ProgressJob, Collection<ProgressObserver>> getNotificationListByJob() {return notificationListByJob};
+//    protected static synchronized  Map<String, Collection<ProgressObserver>> getnotificationListByUser() {return notificationListByUser};
+//    protected static synchronized  Map<String, Collection<ProgressJob>> getprogressJobs() {return progressJobs};
     /**
      * @param pj
      * @param po
@@ -51,7 +58,7 @@ public class ProgressManager {
      *         same time and being able to distinguish which job would like to be observed. this needs to be flushed out
      *         and this functionality needs to be added correctly.
      */
-    public static boolean addToNotification( ProgressJob pj, ProgressObserver po ) {
+    public static synchronized boolean addToNotification( ProgressJob pj, ProgressObserver po ) {
 
         if ( !progressJobs.containsKey( pj.getUser() ) ) return false; // No such job exists
 
@@ -74,9 +81,10 @@ public class ProgressManager {
      * @return currently the best way for observers to add themselves to watching a given job. There are issues with an
      *         owner having multiple jobs.
      */
-    public static boolean addToNotification( String username, ProgressObserver po ) {
+    public static synchronized boolean addToNotification( String username, ProgressObserver po ) {
+        logger.error( "Attempting to add an observer to notification list:  " + username + "  " + po );
 
-        if ( !progressJobs.containsKey( username ) ) return false; // No such job exists
+        if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
 
         if ( !notificationListByUser.containsKey( username ) ) {
             Collection<ProgressObserver> newList = new Vector<ProgressObserver>();
@@ -85,8 +93,12 @@ public class ProgressManager {
 
         } else {
             Collection<ProgressObserver> poList = notificationListByUser.get( username );
-            if ( !poList.contains( po ) ) poList.add( po );
+            if ( !poList.contains( po ) ) {
+                poList.add( po );
+                logger.error( "Added observer to notification list:  " + username + "  " + po );
+            }
         }
+
         return true;
     }
 
@@ -95,7 +107,7 @@ public class ProgressManager {
      * @param description (description of the job)
      * @return Use this static method for creating ProgressJobs.
      */
-    public static ProgressJob createProgressJob( String userName, String description ) {
+    public static synchronized ProgressJob createProgressJob( String userName, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
@@ -108,14 +120,17 @@ public class ProgressManager {
         newJob = new ProgressJobImpl( userName, description );
         usersJobs.add( newJob );
 
+        logger.error( "Created new ProgressJob: " + newJob );
+
         return newJob;
     }
 
     /**
      * @param ajob Removes ProgressJob form lists and provides clean up. This is a package level service used for
      *        maintaing progress jobs.
+     *        TODO removal of a job shouldn't remove the user as a user may have more than 1 job.
      */
-    static boolean destroyProgressJob( ProgressJob ajob ) {
+    static synchronized boolean  destroyProgressJob( ProgressJob ajob ) {
 
         if ( notificationListByJob.containsKey( ajob ) ) notificationListByJob.remove( ajob );
 
@@ -134,7 +149,7 @@ public class ProgressManager {
      * @return Another packgage level serverice for notifying the observers that there has been changes in the
      *         ProgressJob that they have registered to watch.
      */
-    static boolean notify( ProgressJob pj ) {
+    static synchronized boolean  notify( ProgressJob pj ) {
 
         if ( notificationListByJob.containsKey( pj ) ) {
 
@@ -149,6 +164,8 @@ public class ProgressManager {
 
             for ( ProgressObserver observer : notificationListByUser.get( pj.getUser() ) ) {
                 observer.progressUpdate( pj.getProgressData() );
+                logger.error( "Notifying observer:  " + pj.getUser() + "  " + pj.getProgressData().getPercent()
+                        + "%  :" + pj.getProgressData().getDescription() );
             }
 
             return true;

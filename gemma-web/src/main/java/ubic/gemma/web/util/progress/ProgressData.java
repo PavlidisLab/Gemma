@@ -16,6 +16,8 @@
 
 package ubic.gemma.web.util.progress;
 
+import java.io.Serializable;
+
 
 /**
  * <hr>
@@ -26,13 +28,13 @@ package ubic.gemma.web.util.progress;
  * @version $Id$
  */
 
-public class ProgressData /* implements Serializable */{
+public class ProgressData implements Serializable {
 
-    //private static final long serialVersionUID = -4303625064082352461L;
+    private static final long serialVersionUID = -4303625064082352461L;
 
-    private int percent;
-    private String description;
-    private boolean done;
+    private int percent = 0;
+    private String description = "Default";
+    private boolean done = false;
 
     /**
      * @param per int value of percent
@@ -40,7 +42,6 @@ public class ProgressData /* implements Serializable */{
      * @param finished
      */
     public ProgressData( int per, String descrip, boolean finished ) {
-        super();
         percent = per;
         description = descrip;
         done = finished;
