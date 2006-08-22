@@ -69,7 +69,7 @@ public class ExpressionExperimentSearcher {
         Directory fsDir = FSDirectory.getDirectory( indexDir, false );
         IndexSearcher is = new IndexSearcher( fsDir );
 
-        Query query = QueryParser.parse( q, "contents", new StandardAnalyzer() );
+        Query query = QueryParser.parse( q, "row", new StandardAnalyzer() );
         long start = new Date().getTime();
         Hits hits = is.search( query );
         long end = new Date().getTime();
@@ -79,7 +79,7 @@ public class ExpressionExperimentSearcher {
 
         for ( int i = 0; i < hits.length(); i++ ) {
             Document doc = hits.doc( i );
-            log.info( doc.get( "name" ) );
+            log.warn( doc.get( "row" ) );
         }
     }
 }

@@ -95,8 +95,11 @@ public class ExpressionExperimentIndexer {
         // for (java.lang.reflect.Field field: fields){
         // doc.add( Field.Keyword( field.getName(), field.get(expressionExperiment) ) );
         // }
-        doc.add( Field.Keyword( "name", expressionExperiment.getName() ) );
-        doc.add( Field.Keyword( "description", expressionExperiment.getDescription() ) );
+
+        doc.add( Field.Text( "row", expressionExperiment.getName() ) );
+        doc.add( Field.Text( "row", expressionExperiment.getDescription() ) );
+        // doc.add(Field.Text("row", expressionExperiment.getAuditTrail()));
+        doc.add( Field.UnIndexed( "row", expressionExperiment.getId().toString() ) );
         writer.addDocument( doc );
     }
 }
