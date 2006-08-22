@@ -68,8 +68,6 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
 
-        log.warn( "cleaning up ... removing index directory" );
-
         FileTools.deleteDir( indexDir );
 
     }
@@ -84,7 +82,7 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
             int indexed = ExpressionExperimentIndexer.index( indexDir, expressionExperiments );
             log.warn( "Indexed items: " + indexed );
 
-            ExpressionExperimentSearcher.search( indexDir, "0655710712" );
+            ExpressionExperimentSearcher.search( indexDir, "second" );
         } catch ( Exception e ) {
             fail = true;
             log.error( "Test failure.  Stacktrace is: " );
