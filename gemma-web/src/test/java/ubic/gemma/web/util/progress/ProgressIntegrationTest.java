@@ -17,7 +17,7 @@
 
 package ubic.gemma.web.util.progress;
 
-import ubic.gemma.testing.BaseSpringContextTest;
+import junit.framework.TestCase;
 
 /**
  * 
@@ -37,10 +37,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 
-public class ProgressIntegrationTest extends BaseSpringContextTest {
+public class ProgressIntegrationTest extends TestCase {
 
     private ProgressJob pJob;
-    private HttpProgressMonitor pObserver;
+    private HttpProgressObserver pObserver;
 
     /*
      * Test method for 'ubic.gemma.web.util.progress.ProgressManager.CreateProgressJob(String, String)'
@@ -55,15 +55,15 @@ public class ProgressIntegrationTest extends BaseSpringContextTest {
      * Test method for 'ubic.gemma.web.util.progress.ProgressManager.Notify(ProgressJob)'
      */
     public void testNotify() {
-        pObserver = new HttpProgressMonitor();
+        pObserver = new HttpProgressObserver("TestUser");
         pJob = ProgressManager.createProgressJob( "TestUser", "Testing the Progress Manager" );
 
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
         pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
         // ProgressManager.notify( pJob );
-        assertEquals( pObserver.getProgressStatus().getPercent(), 88 );
-        assertEquals( pObserver.getProgressStatus().getDescription(), "Another test" );
-        assert ( pObserver.getProgressStatus().isDone() );
+        assertEquals( pObserver.getProgressData().getPercent(), 88 );
+        assertEquals( pObserver.getProgressData().getDescription(), "Another test" );
+        assert ( pObserver.getProgressData().isDone() );
 
     }
 

@@ -70,8 +70,7 @@ public class UploadListener implements OutputStreamListener {
         totalFiles++;
         pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName(),
                 "File Upload" );
-        pJob.updateProgress( new ProgressData( 0, "Uploading File started" ) );
-        // updateUploadInfo( "start" );
+        pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }
 
     /*
@@ -112,11 +111,11 @@ public class UploadListener implements OutputStreamListener {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
-     * TODO remove progress job from  Progress Manager
      */
     
     public void done() {
-        pJob.updateProgress( new ProgressData( 100, "Finished Uploading", true ) );
+        pJob.updateProgress( new ProgressData( 100, "Finished Uploading. Processing File...", true ) );
+        ProgressManager.destroyProgressJob( pJob );
         
     }
 

@@ -25,8 +25,8 @@ import org.apache.commons.logging.LogFactory;
 /**
  * <hr
  * <p>
- * This class is intended to be stored in the web session for a given user. Receives updates for progressJobs
- * and stores the current progressData.
+ * This class is intended to be stored in the web session for a given user. Receives updates for progressJobs and stores
+ * the current progressData.
  * 
  * @author klc
  * @version $Id$
@@ -34,15 +34,15 @@ import org.apache.commons.logging.LogFactory;
 
 public class HttpProgressObserver implements ProgressObserver, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -1346814251664733438L;
-
     protected static final Log logger = LogFactory.getLog( HttpProgressObserver.class );
 
     protected ProgressData pData;
 
+    /**
+     * Generaly use constructor. Will automatically register for observer the current users progress jobs. todo add
+     * support for users with multiple progress jobs
+     */
     public HttpProgressObserver() {
 
         pData = new ProgressData( 0, "Initilizing", false );
@@ -50,6 +50,16 @@ public class HttpProgressObserver implements ProgressObserver, Serializable {
         // SecurityContextHolder.getContext().getAuthentication.getName();
         ProgressManager.addToNotification( SecurityContextHolder.getContext().getAuthentication().getName(), this );
         // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
+    }
+
+    /**
+     * A secondary constructor that can be used for testing purposes or when it is desierable to monitor another users
+     * processes.
+     */
+    public HttpProgressObserver( String userName ) {
+        pData = new ProgressData( 0, "Initilizing", false );
+        ProgressManager.addToNotification( userName, this );
+
     }
 
     /**
@@ -65,9 +75,12 @@ public class HttpProgressObserver implements ProgressObserver, Serializable {
         return pData;
     }
 
+    /**
+     * Tells the observer to stop observering. Remove it self from observations lists. Should be called when the
+     * observer is not needed anymore. // todo add code for cleaning up cleaning up notification references. IE stop
+     * observering...
+     */
     public void finished() {
-
-        // todo add code for cleaning up cleaning up notification references. IE stop observering...
 
     }
 }

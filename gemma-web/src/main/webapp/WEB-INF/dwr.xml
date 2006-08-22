@@ -12,11 +12,7 @@
             <param name="beanName" value="userService" />
             <include method="getUser" />
             <include method="getUsers" />
-        </create>
-        
-       <create creator="new" javascript="UploadMonitor">
-            <param name="class" value="ubic.gemma.web.util.upload.UploadMonitor"/>
-        </create>
+        </create>        
         
         <create creator="new" javascript="HttpProgressMonitor">
             <param name="class" value="ubic.gemma.web.util.progress.HttpProgressMonitor"/>
