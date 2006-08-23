@@ -79,7 +79,9 @@ public class MageLoadTest extends AbstractMageTest {
 
         for ( Object object : result ) {
             if ( object instanceof ExpressionExperiment ) {
-                persisterHelper.persist( object );
+                ExpressionExperiment ee = ( ExpressionExperiment ) persisterHelper.persist( object );
+                assertNotNull( ee.getId() );
+                assertEquals( 12, ee.getBioAssays().size() );
             }
         }
     }
@@ -113,7 +115,9 @@ public class MageLoadTest extends AbstractMageTest {
 
         for ( Object object : result ) {
             if ( object instanceof ExpressionExperiment ) {
-                persisterHelper.persist( object );
+                ExpressionExperiment ee = ( ExpressionExperiment ) persisterHelper.persist( object );
+                assertNotNull( ee.getId() );
+                assertEquals( 12, ee.getBioAssays().size() );
             }
         }
 
