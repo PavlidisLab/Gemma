@@ -19,6 +19,7 @@
 package ubic.gemma.search.io.expression.experiment;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 
 import ubic.basecode.util.FileTools;
@@ -52,7 +53,8 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
 
         sep = System.getProperty( "file.separator" );
 
-        indexDir = FileTools.createDir( ConfigUtils.getString( "gemma.download.dir" ) + sep + "index" );
+        indexDir = FileTools.createDir( ConfigUtils.getString( "gemma.download.dir" ) + sep
+                + "expression/experiment/index" );
 
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         expressionExperiments = expressionExperimentService.loadAll();
@@ -68,6 +70,7 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
 
+        FileTools.deleteFiles( Arrays.asList( indexDir.listFiles() ) );
         FileTools.deleteDir( indexDir );
 
     }
@@ -76,6 +79,11 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
      * Test the indexer of the Indexer class.
      */
     public void testIndex() {
+
+        if ( expressionExperiments == null ) {
+            assertNull( "Expression Experiments do not exist.  Skipping test execution.", expressionExperiments );
+            return;
+        }
 
         boolean fail = false;
         try {

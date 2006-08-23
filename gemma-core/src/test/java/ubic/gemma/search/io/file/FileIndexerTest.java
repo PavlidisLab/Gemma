@@ -19,6 +19,7 @@
 package ubic.gemma.search.io.file;
 
 import java.io.File;
+import java.util.Arrays;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -64,10 +65,8 @@ public class FileIndexerTest extends BaseTransactionalSpringContextTest {
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
 
-        log.warn( "cleaning up ... removing index directory" );
-
+        FileTools.deleteFiles( Arrays.asList( indexDir.listFiles() ) );
         FileTools.deleteDir( indexDir );
-
     }
 
     /**
