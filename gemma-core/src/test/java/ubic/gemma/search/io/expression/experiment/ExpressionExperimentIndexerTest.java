@@ -80,8 +80,9 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
      */
     public void testIndex() {
 
-        if ( expressionExperiments == null ) {
-            assertNull( "Expression Experiments do not exist.  Skipping test execution.", expressionExperiments );
+        if ( expressionExperiments.size() == 0 ) {
+            log.warn( "Expression Experiments do not exist.  Skipping test execution." );
+            assertEquals( 0, expressionExperiments.size() );
             return;
         }
 
@@ -98,7 +99,5 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
         } finally {
             assertFalse( fail );
         }
-
     }
-
 }
