@@ -26,7 +26,6 @@ import java.util.Comparator;
  * elements which have a label to be displayed to the user, and a corresponding value to be returned to the server. One
  * example is the <code>&lt;html:options&gt;</code> tag. <p/> <p/> Note: this class has a natural ordering that is
  * inconsistent with equals.
- * </p>
  * 
  * @see org.apache.struts.util.LabelValueBean
  */

@@ -29,9 +29,6 @@ import org.apache.commons.lang.StringUtils;
 /**
  * This class is converts a java.util.Date to a String and a String to a java.util.Date. It is used by BeanUtils when
  * copying properties. Registered for use in BaseAction.
- * <p>
- * <a href="DateConverter.java.html"><i>View Source</i></a>
- * </p>
  * 
  * @author pavlidis
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>

@@ -42,9 +42,6 @@ import org.apache.commons.logging.LogFactory;
  * http://www.javaworld.com/javaworld/jw-02-2002/jw-0215-ssl.html</a>
  * <p>
  * From Appfuse.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author pavlidis
  * @version $Id$

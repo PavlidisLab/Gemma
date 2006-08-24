@@ -35,9 +35,6 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Utility class to convert one object to another.
- * <p>
- * <a href="ConvertUtil.java.html"><i>View Source</i></a>
- * </p>
  * 
  * @author Matt Raible
  * @author pavlidis (java 1.5)

@@ -35,9 +35,6 @@ import ubic.gemma.Constants;
  * http://www.javaworld.com/javaworld/jw-02-2002/jw-0215-ssl.html</a>
  * <p>
  * From appfuse.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @version $Id$
  */
