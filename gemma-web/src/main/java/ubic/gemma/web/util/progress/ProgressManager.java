@@ -17,7 +17,9 @@
 package ubic.gemma.web.util.progress;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,63 +44,98 @@ public class ProgressManager {
      * Must use the getter methods to use these static hashmaps so that i can gaurantee syncronization amongst different
      * threads using the maps.
      */
-    private static Map<ProgressJob, Collection<ProgressObserver>> notificationListByJob = new ConcurrentHashMap<ProgressJob, Collection<ProgressObserver>>();
-    private static Map<String, Collection<ProgressObserver>> notificationListByUser = new ConcurrentHashMap<String, Collection<ProgressObserver>>();
-    private static Map<String, Collection<ProgressJob>> progressJobs = new ConcurrentHashMap<String, Collection<ProgressJob>>();
+    private static Map<String, List<ProgressJob>> progressJobs = new ConcurrentHashMap<String, List<ProgressJob>>();
 
-    // protected static synchronized Map<ProgressJob, Collection<ProgressObserver>> getNotificationListByJob() {return
-    // notificationListByJob};
-    // protected static synchronized Map<String, Collection<ProgressObserver>> getnotificationListByUser() {return
-    // notificationListByUser};
-    // protected static synchronized Map<String, Collection<ProgressJob>> getprogressJobs() {return progressJobs};
     /**
-     * @param pj
-     * @param po
-     * @return FIXME: Don't Use. Adding notification by ProgressJob doesn't make sense as it genearlly turns out to be
-     *         the situation that the observer doesn't have an instance of the progressJob that they would like to
-     *         observe. But there seams to be no other way to deal with an owner having multiple jobs running at the
-     *         same time and being able to distinguish which job would like to be observed. this needs to be flushed out
-     *         and this functionality needs to be added correctly.
+     * @param ProgresJob
+     * @param Observer
+     * @return the Simple case. Have a progressJob and want to add themselves for notifications. Could have been done
+     *         directly.
      */
-    public static synchronized boolean addToNotification( ProgressJob pj, ProgressObserver po ) {
+    public static synchronized boolean addToNotification( ProgressJob pj, Observer po ) {
 
-        if ( !progressJobs.containsKey( pj.getUser() ) ) return false; // No such job exists
-
-        if ( !notificationListByJob.containsKey( pj ) ) {
-            Collection<ProgressObserver> newList = new Vector<ProgressObserver>();
-            newList.add( po );
-            notificationListByJob.put( pj, newList );
-
-        } else {
-            Collection<ProgressObserver> poList = notificationListByJob.get( pj );
-            if ( !poList.contains( po ) ) poList.add( po );
-        }
+        pj.addObserver( po );
         return true;
-
     }
 
     /**
      * @param username
      * @param po
-     * @return currently the best way for observers to add themselves to watching a given job. There are issues with an
-     *         owner having multiple jobs.
+     * @return Be careful. This method will add the given observer to receive updates from every progress job for the
+     *         given user
      */
-    public static synchronized boolean addToNotification( String username, ProgressObserver po ) {
+    public static synchronized boolean addToNotification( String username, Observer po ) {
 
         if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
 
-        if ( !notificationListByUser.containsKey( username ) ) {
-            Collection<ProgressObserver> newList = new Vector<ProgressObserver>();
-            newList.add( po );
-            notificationListByUser.put( username, newList );
-
-        } else {
-            Collection<ProgressObserver> poList = notificationListByUser.get( username );
-            if ( !poList.contains( po ) ) poList.add( po );
-
+        Collection<ProgressJob> pJobs = progressJobs.get( username );
+        for ( ProgressJob obs : pJobs ) {
+            obs.addObserver( po );
         }
 
         return true;
+    }
+
+    /**
+     * @param username
+     * @param type
+     * @param po
+     * @return This adds the observer to only the most recently created progress job of the specified type for the given
+     *         user.
+     */
+    public static synchronized boolean addToNotification( String username, int progressType, Observer po ) {
+
+        if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
+
+        Collection<ProgressJob> pJobs = progressJobs.get( username );
+        for ( ProgressJob obs : pJobs ) {
+            if ( obs.getProgressType() == progressType ) obs.addObserver( po );
+        }
+
+        return true;
+    }
+
+    /**
+     * @param username
+     * @param type
+     * @param po
+     * @return This adds the observer to only the most recently created progress job for the given user.
+     */
+    public static synchronized boolean addToRecentNotification( String username, Observer po ) {
+
+        if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
+
+        Vector<ProgressJob> pJobs = ( Vector ) progressJobs.get( username );
+        pJobs.lastElement().addObserver( po );
+        
+        return true;
+    }
+
+    /**
+     * @param username
+     * @param type
+     * @param po
+     * @return This adds the observer to all of a given users progress jobs that are of a given type. types are defined
+     *         in the ProgressJob interface
+     */
+    public static synchronized boolean addToRecentNotification( String username, int progressType, Observer po ) {
+
+        if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
+
+        Collection<ProgressJob> pJobs = progressJobs.get( username );
+
+        // need to iterate backwards through the list to get the most recently added of a given type.
+        ProgressJob[] arrayOfPJs = pJobs.toArray( new ProgressJob[pJobs.size()] );
+        int i = pJobs.size();
+        while ( i >= 0 ) {
+            i--;
+            if ( arrayOfPJs[i].getProgressType() == progressType ) {
+                arrayOfPJs[i].addObserver( po );
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -106,7 +143,7 @@ public class ProgressManager {
      * @param description (description of the job)
      * @return Use this static method for creating ProgressJobs.
      */
-    public static synchronized ProgressJob createProgressJob( String userName, String description ) {
+    public static synchronized ProgressJob createProgressJob( String userName, int progressType, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
@@ -116,7 +153,7 @@ public class ProgressManager {
         }
 
         usersJobs = progressJobs.get( userName );
-        newJob = new ProgressJobImpl( userName, description );
+        newJob = new ProgressJobImpl( userName, description, progressType );
         usersJobs.add( newJob );
 
         return newJob;
@@ -124,49 +161,17 @@ public class ProgressManager {
 
     /**
      * @param ajob Removes ProgressJob from notification lists and provides general clean up. EveryJob that is created
-     *        should be destroyed. TODO removal of a job shouldn't remove the user as a user may have more than 1 job.
+     *        should be destroyed.
      */
     public static synchronized boolean destroyProgressJob( ProgressJob ajob ) {
-
-        if ( notificationListByJob.containsKey( ajob ) ) notificationListByJob.remove( ajob );
-
-        if ( notificationListByUser.containsKey( ajob.getUser() ) ) notificationListByUser.remove( ajob.getUser() );
 
         if ( progressJobs.containsKey( ajob.getUser() ) ) {
             Collection jobs = progressJobs.get( ajob.getUser() );
             jobs.remove( ajob );
+            if ( jobs.isEmpty() ) progressJobs.remove( ajob.getUser() );
         }
 
         return true;
-    }
-
-    /**
-     * @param pj
-     * @return Another packgage level serverice for notifying the observers that there has been changes in the
-     *         ProgressJob that they have registered to watch.
-     */
-    static synchronized boolean notify( ProgressJob pj ) {
-
-        if ( notificationListByJob.containsKey( pj ) ) {
-
-            for ( ProgressObserver observer : notificationListByJob.get( pj ) ) {
-                observer.progressUpdate( pj.getProgressData() );
-            }
-
-            // return true;
-        }
-
-        if ( notificationListByUser.containsKey( pj.getUser() ) ) {
-
-            for ( ProgressObserver observer : notificationListByUser.get( pj.getUser() ) ) {
-                observer.progressUpdate( pj.getProgressData() );
-            }
-
-            return true;
-        }
-
-        return false;
-
     }
 
 }

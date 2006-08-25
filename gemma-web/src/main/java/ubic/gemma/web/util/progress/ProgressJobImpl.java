@@ -16,6 +16,8 @@
 
 package ubic.gemma.web.util.progress;
 
+import java.util.Observable;
+
 /**
  * <hr>
  * Implementation of the ProgressJob interface. Used by the client to add hooks for providing feedback to any users
@@ -25,7 +27,7 @@ package ubic.gemma.web.util.progress;
  * @author klc
  * @version $Id$
  */
-public class ProgressJobImpl implements ProgressJob {
+public class ProgressJobImpl extends Observable implements ProgressJob {
 
 
     protected ProgressData pData;
@@ -40,9 +42,11 @@ public class ProgressJobImpl implements ProgressJob {
      * @param ownerId
      * @param description
      */
-    ProgressJobImpl( String ownerId, String description ) {
+    ProgressJobImpl( String ownerId, String description, int jobType ) {
         this.ownerId = ownerId;
+        this.progressType = jobType;
         this.pData = new ProgressData( 0, description, false );
+        this.runningStatus = true;
     }
 
     /**
@@ -94,7 +98,8 @@ public class ProgressJobImpl implements ProgressJob {
      */
     public void updateProgress() {
         pData.setPercent( pData.getPercent() + 1 );
-        ProgressManager.notify( this );
+        setChanged();
+        notifyObservers( pData );
     }
 
     /**
@@ -104,7 +109,8 @@ public class ProgressJobImpl implements ProgressJob {
      */
     public void updateProgress( ProgressData pd ) {
         setProgressData( pd );
-        ProgressManager.notify( this );
+        setChanged();
+        notifyObservers( pData );
     }
     
     /**
@@ -113,7 +119,8 @@ public class ProgressJobImpl implements ProgressJob {
      */
     public void updateProgress(int newPercent) {
         pData.setPercent( newPercent );
-        ProgressManager.notify( this );
+        setChanged();
+        notifyObservers( pData );
     }
 
 

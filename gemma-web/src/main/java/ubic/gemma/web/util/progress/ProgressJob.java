@@ -16,6 +16,8 @@
 
 package ubic.gemma.web.util.progress;
 
+import java.util.Observer;
+
 /**
  * <hr>
  * All progressJobs must implement the following functionality. ProgressJobs are used by the client to provide hooks for
@@ -33,6 +35,8 @@ public interface ProgressJob {
     public static final int DATABASE_PROGRESS = 2;
     public static final int PARSING_PROGRESS = 3;
     
+    
+   
     /**
      * @return Returns the pData.
      */
@@ -82,5 +86,7 @@ public interface ProgressJob {
      * @param pd
      */
     public abstract void updateProgress( ProgressData pd );
+    
+    public abstract void addObserver ( Observer O );
 
 }

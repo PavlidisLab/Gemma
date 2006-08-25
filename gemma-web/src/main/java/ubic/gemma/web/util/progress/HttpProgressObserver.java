@@ -17,6 +17,8 @@
 package ubic.gemma.web.util.progress;
 
 import java.io.Serializable;
+import java.util.Observable;
+import java.util.Observer;
 
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
@@ -32,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Id$
  */
 
-public class HttpProgressObserver implements ProgressObserver, Serializable {
+public class HttpProgressObserver implements Observer, Serializable {
 
     private static final long serialVersionUID = -1346814251664733438L;
     protected static final Log logger = LogFactory.getLog( HttpProgressObserver.class );
@@ -48,7 +50,7 @@ public class HttpProgressObserver implements ProgressObserver, Serializable {
         pData = new ProgressData( 0, "Initilizing", false );
         // Not sure the best way to do this. Perpaps subclassing for different types of monitors...
         // SecurityContextHolder.getContext().getAuthentication.getName();
-        ProgressManager.addToNotification( SecurityContextHolder.getContext().getAuthentication().getName(), this );
+        ProgressManager.addToRecentNotification( SecurityContextHolder.getContext().getAuthentication().getName(), this );
         // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
     }
 
@@ -62,19 +64,18 @@ public class HttpProgressObserver implements ProgressObserver, Serializable {
 
     }
 
-    /**
-     * Implementation for the progress Observer class
-     */
-    public void progressUpdate( ProgressData pd ) {
-
-        this.pData = pd;
-
-    }
+   
 
     public ProgressData getProgressData() {
         return pData;
     }
 
+    @SuppressWarnings("unused")
+    public void update(Observable o, Object pd)
+    {
+        this.pData = (ProgressData) pd;
+    }
+    
     /**
      * Tells the observer to stop observering. Remove it self from observations lists. Should be called when the
      * observer is not needed anymore. // todo add code for cleaning up cleaning up notification references. IE stop

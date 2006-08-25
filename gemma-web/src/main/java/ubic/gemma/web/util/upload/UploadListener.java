@@ -68,7 +68,7 @@ public class UploadListener implements OutputStreamListener {
      */
     public void start() {
         totalFiles++;
-        pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName(),
+        pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName() , ProgressJob.DOWNLOAD_PROGRESS,
                 "File Upload" );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }

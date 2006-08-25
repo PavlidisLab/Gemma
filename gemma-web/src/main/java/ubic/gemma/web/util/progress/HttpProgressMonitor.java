@@ -58,6 +58,7 @@ public class HttpProgressMonitor {
             session.removeAttribute( PROGRESS_ATTRIBUTE );
         }
 
+       
         return pd;
 
     }
