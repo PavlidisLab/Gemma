@@ -45,6 +45,8 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
     private BibliographicReference br = null;
     private MockHttpServletRequest req = null;
 
+    boolean ready = false;
+
     /**
      * Add a bibliographic reference to the database for testing purposes.
      */
@@ -54,16 +56,28 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
 
         BibliographicReferenceService brs = ( BibliographicReferenceService ) getBean( "bibliographicReferenceService" );
 
+        assert brs != null;
+
         PubMedXMLParser pmp = new PubMedXMLParser();
-        Collection<BibliographicReference> brl = pmp.parse( getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
-        br = brl.iterator().next();
 
-        /* set the bib ref's pubmed accession number to the database entry. */
-        br.setPubAccession( this.getTestPersistentDatabaseEntry() );
+        try {
+            Collection<BibliographicReference> brl = pmp.parse( getClass()
+                    .getResourceAsStream( "/data/pubmed-test.xml" ) );
+            br = brl.iterator().next();
 
-        /* bibref is now set. Call service to persist to database. */
-        br = brs.findOrCreate( br );
+            /* set the bib ref's pubmed accession number to the database entry. */
+            br.setPubAccession( this.getTestPersistentDatabaseEntry() );
 
+            /* bibref is now set. Call service to persist to database. */
+            br = brs.findOrCreate( br );
+
+            assert br.getId() != null;
+        } catch ( java.net.UnknownHostException e ) {
+            ready = false;
+            return;
+        }
+
+        ready = true;
     }
 
     /**
@@ -72,6 +86,10 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
      * @throws Exception
      */
     public void testDelete() throws Exception {
+        if ( !ready ) {
+            log.error( "Test skipped due to failure to connect to NIH" );
+            return;
+        }
         BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
         log.debug( "testing delete" );
 
@@ -90,6 +108,10 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public void testDeleteOfNonExistingEntry() throws Exception {
+        if ( !ready ) {
+            log.error( "Test skipped due to failure to connect to NIH" );
+            return;
+        }
         /* set pubMedId to a non-existent id in gemdtest. */
         req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
         req.addParameter( "_eventId", "delete" );
@@ -114,6 +136,10 @@ public class BibRefControllerTest extends BaseTransactionalSpringContextTest {
      * @throws Exception
      */
     public void testGetAllBibliographicReferences() throws Exception {
+        if ( !ready ) {
+            log.error( "Test skipped due to failure to connect to NIH" );
+            return;
+        }
         BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
         req = new MockHttpServletRequest( "GET", "/bibRef/showAllBibRef.html" );
