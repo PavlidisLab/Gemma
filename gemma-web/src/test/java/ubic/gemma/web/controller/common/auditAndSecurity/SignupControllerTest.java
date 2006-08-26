@@ -28,7 +28,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
