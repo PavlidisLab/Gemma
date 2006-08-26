@@ -57,10 +57,17 @@ public class HttpFetcher extends AbstractFetcher {
     public Collection<LocalFile> fetch( String identifier ) {
         log.info( "Seeking " + identifier + " file " );
 
+        this.localBasePath = System.getProperty( "java.io.tmpdir" );
+
         try {
 
             String host = ( new URL( identifier ) ).getHost();
             String filePath = ( new URL( identifier ) ).getPath();
+
+            if ( StringUtils.isBlank( host ) ) {
+                throw new IllegalArgumentException( identifier + " was not parsed into a valid URL" );
+            }
+
             if ( StringUtils.isBlank( filePath ) ) {
                 filePath = "index.html";
             }
