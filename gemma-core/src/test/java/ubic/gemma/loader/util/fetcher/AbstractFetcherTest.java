@@ -39,7 +39,7 @@ public class AbstractFetcherTest extends TestCase {
      */
     public final void testMkdirMakeTemp() throws Exception {
         TestFetcher tf = new TestFetcher();
-        tf.setLocalDataPath( "there is no way this path exists \\/[]" );
+        tf.setLocalDataPath( null );
         f = tf.mkdir( RandomStringUtils.randomAlphabetic( 4 ) );
         assertTrue( f.canRead() );
     }
