@@ -22,6 +22,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -37,7 +39,6 @@ import ubic.gemma.util.ConfigUtils;
 public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringContextTest {
 
     /* directories to index and out index results */
-    private String sep = null;
     private File indexDir = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private Collection<ExpressionExperiment> expressionExperiments = null;
@@ -47,14 +48,15 @@ public class ExpressionExperimentIndexerTest extends BaseTransactionalSpringCont
      * 
      * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        sep = System.getProperty( "file.separator" );
+        String downloadDir = ConfigUtils.getString( "gemma.download.dir" );
+        assert StringUtils.isNotBlank( downloadDir ) : "You must define gemma.download.dir in your build.properties";
 
-        indexDir = FileTools.createDir( ConfigUtils.getString( "gemma.download.dir" ) + sep
-                + "expression/experiment/index" );
+        indexDir = FileTools.createDir( downloadDir + File.separatorChar + "expression/experiment/index" );
 
         expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         expressionExperiments = expressionExperimentService.loadAll();
