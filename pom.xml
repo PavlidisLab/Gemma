@@ -98,7 +98,7 @@
 							<report>license</report>
 							<report>scm</report>
 							<report>summary</report>
-							<report>dependency-coverage</report>
+							<report>dependency-convergence</report>
 						</reports>
 					</reportSet>
 				</reportSets>
@@ -152,6 +152,10 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jdepend-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</reporting>

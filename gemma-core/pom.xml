@@ -174,7 +174,8 @@
 		<dependency>
 			<groupId>org.easymock</groupId>
 			<artifactId>easymock</artifactId>
-			<version>2.0</version>
+			<version>2.2</version>
+			<scope>test</scope>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -197,15 +198,15 @@
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework</groupId>
-					<artifactId>spring-jdbc</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework</groupId>
-					<artifactId>spring-mock</artifactId>
+					<artifactId>spring-remoting</artifactId>
 				</exclusion>
 				<exclusion>
 					<groupId>org.springframework</groupId>
 					<artifactId>spring-support</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-jdbc</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -334,7 +335,7 @@
 		<dependency>
 			<groupId>dwr</groupId>
 			<artifactId>dwr</artifactId>
-			<version>1.0</version>
+			<version>1.1.3</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
