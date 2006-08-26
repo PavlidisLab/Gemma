@@ -30,6 +30,7 @@
 			<artifactId>gemma-testing</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<type>jar</type>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>hibernate</groupId>
@@ -193,6 +194,20 @@
 			<artifactId>acegi-security</artifactId>
 			<version>1.0.1</version>
 			<type>jar</type>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-jdbc</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-mock</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-support</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>odmg</groupId>
@@ -381,16 +396,6 @@
 			</testResource>
 		</testResources>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-					<verbose>false</verbose>
-					<fork>false</fork>
-				</configuration>
-			</plugin>
 			<plugin>
 				<artifactId>xdoclet-maven-plugin</artifactId>
 				<groupId>org.codehaus.mojo</groupId>
