@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry output="build/Gemma/WEB-INF/classes" kind="src" path="gemma-core/src/main/java"/>
+	<classpathentry output="test-build" kind="src" path="gemma-web/src/it/java"/>
 	<classpathentry output="test-build" kind="src" path="gemma-util/src/test/resources"/>
 	<classpathentry output="build/Gemma" kind="src" path="gemma-web/src/main/applets"/>
 	<classpathentry including="**/*.jar" excluding="**/*.class|**/*.xml|**/gemma*.jar" output="build/Gemma" kind="src" path="gemma-web/target/Gemma"/>
@@ -88,7 +89,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/mage/mage/1.1/mage-1.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.1/acegi-security-1.0.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/acegisecurity/acegi-security/1.0.1/acegi-security-1.0.1.jar">
+		<attributes>
+			<attribute value="http://acegisecurity.org/multiproject/acegi-security/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/JAR_SOURCE/apache-ant-1.6.5/src/main" kind="var" path="M2_REPO/ant/ant/1.6.5/ant-1.6.5.jar">
 		<attributes>
 			<attribute value="http://www.jajakarta.org/ant/ant-1.6.1/docs/ja/manual/api/" name="javadoc_location"/>
@@ -127,5 +132,35 @@
 	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.4.0/xercesImpl-2.4.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene/1.4.3/lucene-1.4.3.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/cargo/cargo-core-api-container/0.8/cargo-core-api-container-0.8.jar">
+		<attributes>
+			<attribute value="http://cargo.codehaus.org/maven-site/cargo-core/cargo-core-api/cargo-core-api-container/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/cargo/cargo-core-api-generic/0.8/cargo-core-api-generic-0.8.jar">
+		<attributes>
+			<attribute value="http://cargo.codehaus.org/maven-site/cargo-core/cargo-core-api/cargo-core-api-generic/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/cargo/cargo-core-api-module/0.8/cargo-core-api-module-0.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/cargo/cargo-core-api-util/0.8/cargo-core-api-util-0.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sourceforge/jwebunit/jwebunit-htmlunit-plugin/1.3/jwebunit-htmlunit-plugin-1.3.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/cargo/cargo-core-container-tomcat/0.8/cargo-core-container-tomcat-0.8.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sourceforge/jwebunit/jwebunit-core/1.3/jwebunit-core-1.3.jar">
+		<attributes>
+			<attribute value="http://jwebunit.sourceforge.net/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/htmlunit/htmlunit/1.9/htmlunit-1.9.jar">
+		<attributes>
+			<attribute value="http://htmlunit.sourceforge.net/apidocs/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/rhino/js/1.6R2/js-1.6R2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/nekohtml/nekohtml/0.9.5/nekohtml-0.9.5.jar">
+		<attributes>
+			<attribute value="http://people.apache.org/~andyc/neko/doc/html/javadoc/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
