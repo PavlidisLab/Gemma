@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -59,11 +60,14 @@ public class AuditInterceptor implements MethodInterceptor {
     private boolean AUDIT_DELETE = true;
 
     private boolean AUDIT_READ = false;
+    
     private boolean AUDIT_UPDATE = true;
+    
     /**
      * Cache of users. FIXME this is too primitive.
      */
     private Map<String, User> currentUsers = new HashMap<String, User>();
+    
     AuditTrailDao auditTrailDao;
 
     UserDao userDao;
@@ -79,10 +83,15 @@ public class AuditInterceptor implements MethodInterceptor {
     public AuditInterceptor() {
         super();
         this.crudUtils = new CrudInterceptorUtils();
-        AUDIT_READ = ConfigUtils.getBoolean( "audit.read" );
-        AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" );
-        AUDIT_UPDATE = ConfigUtils.getBoolean( "audit.update" );
-        AUDIT_DELETE = ConfigUtils.getBoolean( "audit.delete" );
+
+        try {
+            AUDIT_READ = ConfigUtils.getBoolean( "audit.read" );
+            AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" );
+            AUDIT_UPDATE = ConfigUtils.getBoolean( "audit.update" );
+            AUDIT_DELETE = ConfigUtils.getBoolean( "audit.delete" );
+        } catch ( NoSuchElementException e ) {
+            log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
+        }
     }
 
     /**

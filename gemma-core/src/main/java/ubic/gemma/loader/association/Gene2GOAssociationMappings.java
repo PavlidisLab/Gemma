@@ -19,11 +19,7 @@
 package ubic.gemma.loader.association;
 
 import java.util.Collection;
-import java.util.Map;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,6 +33,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
@@ -44,22 +41,21 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class Gene2GOAssociationMappings {
     protected static final Log log = LogFactory.getLog( Gene2GOAssociationMappings.class );
-    Configuration conf = new PropertiesConfiguration( "Gemma.properties" );
 
-    private final int TAX_ID = conf.getInt( "gene2go.tax_id" );
+    private final int TAX_ID = ConfigUtils.getInt( "gene2go.tax_id" );
 
-    private final int EVIDENCE_CODE = conf.getInt( "gene2go.evidence_code" );
+    private final int EVIDENCE_CODE = ConfigUtils.getInt( "gene2go.evidence_code" );
 
-    private final int GENE_ID = conf.getInt( "gene2go.gene_id" );
+    private final int GENE_ID = ConfigUtils.getInt( "gene2go.gene_id" );
 
-    private final int GO_ID = conf.getInt( "gene2go.go_id" );
+    private final int GO_ID = ConfigUtils.getInt( "gene2go.go_id" );
 
     Collection<String> evidenceCodes = null;
 
     ExternalDatabase goDb;
     ExternalDatabase ncbiDb;
 
-    public Gene2GOAssociationMappings() throws ConfigurationException {
+    public Gene2GOAssociationMappings() {
         initializeEvidenceCodes();
         goDb = ExternalDatabase.Factory.newInstance();
         goDb.setName( "GO" );
