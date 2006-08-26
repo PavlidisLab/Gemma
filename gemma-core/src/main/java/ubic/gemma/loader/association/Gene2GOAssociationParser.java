@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,11 +49,7 @@ public class Gene2GOAssociationParser extends BasicLineParser {
     int i = 0;
 
     public Gene2GOAssociationParser() {
-        try {
-            gene2GOAssociationMappings = new Gene2GOAssociationMappings();
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        gene2GOAssociationMappings = new Gene2GOAssociationMappings();
     }
 
     /**
