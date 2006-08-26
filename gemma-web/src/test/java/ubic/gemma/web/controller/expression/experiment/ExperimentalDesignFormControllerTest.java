@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -53,7 +54,7 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         ed = ExperimentalDesign.Factory.newInstance();
-        ed.setName( "Experimental Design Bot" );
+        ed.setName( RandomStringUtils.randomAlphanumeric( 10 ) );
         ed.setDescription( "An experimental design created from the ExperimentalDesignFormControllerTest." );
 
         Collection<ExperimentalFactor> efCol = new HashSet();
@@ -66,7 +67,8 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
         ed.setExperimentalFactors( efCol );
 
         ExperimentalDesignService eds = ( ExperimentalDesignService ) getBean( "experimentalDesignService" );
-        eds.findOrCreate( ed );
+        ed = eds.findOrCreate( ed );
+        assert ed.getId() != null;
     }
 
     /**
@@ -74,7 +76,7 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
      */
     public void testSave() throws Exception {
         log.debug( "testing save" );
-
+        // FIXME - implement this.
     }
 
     /**
@@ -83,7 +85,6 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
     public void testEdit() throws Exception {
         log.debug( "testing edit" );
 
-        // setFlushModeCommit();
         ExperimentalDesignFormController c = ( ExperimentalDesignFormController ) getBean( "experimentalDesignFormController" );
 
         request = new MockHttpServletRequest( "GET", "/experimentalDesign/editExperimentalDesign.html" );
@@ -92,15 +93,13 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
 
         assertEquals( "experimentalDesign.edit", mav.getViewName() );
-
-        // setComplete();
     }
 
     /**
      * @throws Exception
      */
     public void testDelete() throws Exception {
-        log.debug( "testing delete" );
+        log.debug( "testing delete" ); // FIXME - implement this.
     }
 
 }
