@@ -23,8 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -80,7 +78,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         ExpressionExperiment newExpressionExperiment = this.find( expressionExperiment );
         if ( newExpressionExperiment != null ) {
-            BeanPropertyCompleter.complete( newExpressionExperiment, expressionExperiment );
             return newExpressionExperiment;
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );

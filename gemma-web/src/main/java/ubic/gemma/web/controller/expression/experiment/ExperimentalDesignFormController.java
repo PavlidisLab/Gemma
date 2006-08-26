@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,9 +29,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * <hr>
- * <p>
- * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="experimentalDesignFormController" name="/experimentalDesign/editExperimentalDesign.html"
@@ -44,7 +40,7 @@ import ubic.gemma.web.controller.BaseFormController;
 public class ExperimentalDesignFormController extends BaseFormController {
     private ExperimentalDesignService experimentalDesignService = null;
     private final String messagePrefix = "ExperimentalDesign with id";
-    
+
     /**
      * 
      *
@@ -56,7 +52,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
         setSessionForm( true );
         setCommandClass( ExperimentalDesign.class );
     }
-    
+
     /**
      * @param request
      * @return Object
@@ -64,24 +60,27 @@ public class ExperimentalDesignFormController extends BaseFormController {
      */
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+        try {
 
-        ExperimentalDesign ed = null;
+            ExperimentalDesign ed = null;
 
-        log.debug( id );
+            if ( request.getParameter( "id" ) != null ) {
+                Long id = Long.parseLong( request.getParameter( "id" ) );
+                ed = experimentalDesignService.findById( id );
+            } else {
+                ed = ExperimentalDesign.Factory.newInstance();
+            }
 
-        if ( !"".equals( id ) )
-            ed = experimentalDesignService.findById( id );
+            // FIXME this is somewhat broken: ed.getId() will return null if request id was null.
+            saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ed.getId() }, request
+                    .getLocale() ) );
 
-        else
-            ed = ExperimentalDesign.Factory.newInstance();
-
-        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ed.getId() }, request
-                .getLocale() ) );
-
-        return ed;
+            return ed;
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Id was not parsable as long integer", e );
+        }
     }
-    
+
     /**
      * @param request
      * @param response
@@ -97,7 +96,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
 
         return super.processFormSubmission( request, response, command, errors );
     }
-    
+
     /**
      * @param request
      * @param response
@@ -120,7 +119,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
 
         return new ModelAndView( getSuccessView() );
     }
-    
+
     /**
      * @return
      */
@@ -134,7 +133,5 @@ public class ExperimentalDesignFormController extends BaseFormController {
     public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
         this.experimentalDesignService = experimentalDesignService;
     }
-
-    
 
 }
