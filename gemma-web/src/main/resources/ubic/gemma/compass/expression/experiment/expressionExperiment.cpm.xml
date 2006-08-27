@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE compass-core-mapping PUBLIC
+    "-//Compass/Compass Core Mapping DTD 1.0//EN"
+    "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
+
+<compass-core-mapping package="ubic.gemma.model">
+<class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment">
+
+    <id name="id" />
+    
+    <property name="name">
+      <meta-data>name</meta-data>
+      <meta-data>expressionExperimentName</meta-data>
+    </property>
+    
+    <property name="description">
+      <meta-data>description</meta-data>
+      <meta-data>expressionExperimentDescription</meta-data>
+    </property>
+    
+    <component name="bioAssays" ref-alias="bioAssay" />
+
+    <!-- can be a reference instead of component
+    <reference name="books" ref-alias="book" />
+    -->
+    
+</class>    
+
+<class name="expression.bioAssay.BioAssay" alias="bioAssay">
+	
+	 <id name="id" />
+	 
+    <component name="arrayDesignsUsed" ref-alias="arrayDesign" />
+
+</class>
+
+<class name="expression.arrayDesign.ArrayDesign" alias="arrayDesign">
+	
+	 <id name="id" />
+	 
+    <component name="designProvider" ref-alias="contact" />
+
+</class>
+
+<class name="common.auditAndSecurity.Contact" alias="contact">
+	
+	 <id name="id" />
+	 
+    <property name="name">
+      <meta-data>name</meta-data>
+      <meta-data>contactName</meta-data>
+    </property>
+    
+    <property name="description">
+      <meta-data>description</meta-data>
+      <meta-data>contactDescription</meta-data>
+    </property>
+    
+    <property name="email">
+      <meta-data>email</meta-data>
+      <meta-data>contactEmail</meta-data>
+    </property>
+
+</class>
+
+</compass-core-mapping>
