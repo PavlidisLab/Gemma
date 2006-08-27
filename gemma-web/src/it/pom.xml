@@ -70,7 +70,7 @@
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.jwebunit</groupId>
-			<artifactId>jwebunit-htmlunit-plugin</artifactId>
+			<artifactId>jwebunit-htmlunit-plugin</artifactId>	
 			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
@@ -81,6 +81,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
