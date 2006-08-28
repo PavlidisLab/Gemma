@@ -12,6 +12,7 @@ defined in the Compass::Gps configuration context.
 	</spring:bind>
     <INPUT type="submit" value="Index"/>
 </FORM>
+
 <c:if test="${! empty indexResults}">
 	<p>Indexing took: <c:out value="${indexResults.indexTime}" />ms.
 </c:if>
