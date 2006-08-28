@@ -97,9 +97,11 @@
 		<property name="searchResultsView"><value>searchResultsView</value></property>
 		<property name="pageSize"><value>10</value></property>
 	</bean>
-	<bean id="indexController" class="org.compass.spring.web.mvc.CompassIndexController">
+	
+	<bean id="indexController" name="/indexer.html" class="org.compass.spring.web.mvc.CompassIndexController">
 		<property name="compassGps"><ref bean="compassGps"/></property>
-		<property name="indexView"><value>indexView</value></property>
+		<!-- <property name="indexView"><value>indexView</value></property>-->
+		<property name="indexView"><value>indexer</value></property>
 		<property name="indexResultsView"><value>indexResultsView</value></property>
 	</bean>
 	 
