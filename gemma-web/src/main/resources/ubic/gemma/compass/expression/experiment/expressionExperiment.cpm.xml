@@ -4,7 +4,8 @@
     "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
 
 <compass-core-mapping package="ubic.gemma.model">
-<class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment">
+<!-- 
+<class name="expression.experiment.ExpressionExperimentImpl" alias="expressionExperiment">
 
     <id name="id" />
     
@@ -19,11 +20,10 @@
     </property>
     
     <component name="bioAssays" ref-alias="bioAssay" />
-
+-->
     <!-- can be a reference instead of component
-    <reference name="books" ref-alias="book" />
-    -->
-    
+    <reference name="books" ref-alias="book" />-->
+<!--    
 </class>    
 
 <class name="expression.bioAssay.BioAssay" alias="bioAssay">
@@ -62,5 +62,5 @@
     </property>
 
 </class>
-
+-->
 </compass-core-mapping>
