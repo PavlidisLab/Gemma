@@ -30,8 +30,10 @@
 							titleKey="arrayDesign.description" />
 						<display:column title="Design Elements" sortable="true"
 							href="../designElement/showAllDesignElements.html" paramId="name"
-							paramProperty="name">
-							<c:out value="${fn:length(designElements)}" />
+							paramProperty="name"
+							property="advertisedNumberOfDesignElements"
+							titleKey="arrayDesign.advertisedNumberOfDesignElements">
+							
 						</display:column>
 						<display:setProperty name="basic.empty.showtable" value="true" />
 					</display:table>
