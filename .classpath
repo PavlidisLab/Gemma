@@ -131,7 +131,6 @@
 	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.6/antlr-2.7.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xerces/xercesImpl/2.4.0/xercesImpl-2.4.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene/1.4.3/lucene-1.4.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/codehaus/cargo/cargo-core-api-container/0.8/cargo-core-api-container-0.8.jar">
 		<attributes>
 			<attribute value="http://cargo.codehaus.org/maven-site/cargo-core/cargo-core-api/cargo-core-api-container/apidocs/" name="javadoc_location"/>
@@ -162,5 +161,7 @@
 			<attribute value="http://people.apache.org/~andyc/neko/doc/html/javadoc/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/compass/compass/1.0.0/compass-1.0.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/lucene/lucene/1.4.3/lucene-1.4.3.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
