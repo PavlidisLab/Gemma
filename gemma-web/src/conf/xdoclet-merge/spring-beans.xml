@@ -103,7 +103,7 @@
 		<!-- <property name="indexView"><value>indexView</value></property>-->
 		<property name="indexView"><value>indexer</value></property>
 		<!-- <property name="indexResultsView"><value>indexResultsView</value></property>-->
-		<property name="indexResultsView"><value>indexResults</value></property>
+		<property name="indexResultsView"><value>indexer</value></property>
 	</bean>
 	 
 	 <!-- COMPASS HIBERNATE DEFINITIONS -->
