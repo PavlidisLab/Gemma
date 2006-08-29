@@ -2,6 +2,16 @@
 <!DOCTYPE compass-core-mapping PUBLIC
     "-//Compass/Compass Core Mapping DTD 1.0//EN"
     "http://www.opensymphony.com/compass/dtd/compass-core-mapping.dtd">
+    
+<!--
+    This document is a Compass mapping file for expression experiments,
+    allowing the ExpressionExperiment object to be indexed and searched.
+    All "searchable" expression experiment attributes should be 
+    included here.
+    
+    author: keshav
+    version: $Id$
+-->    
 
 <compass-core-mapping package="ubic.gemma.model">
 
@@ -11,29 +21,29 @@
    
     <property name="name">
       <meta-data>name</meta-data>
-      <meta-data>expressionExperimentName</meta-data>
+      <!-- <meta-data>expressionExperimentName</meta-data> -->
     </property>
    
     <property name="description">
-      <meta-data>description</meta-data>
-      <meta-data>expressionExperimentDescription</meta-data>
+      <!-- <meta-data>description</meta-data> -->
+      <!-- <meta-data>expressionExperimentDescription</meta-data> -->
     </property>
       
-    <component name="bioAssays" ref-alias="bioAssay" />
+    <!-- <component name="bioAssays" ref-alias="bioAssay" /> -->
 
     <!-- can be a reference instead of component
-    <reference name="books" ref-alias="book" />-->
+    <reference name="books" ref-alias="book" /> -->
    
 </class>    
-
+<!-- 
 <class name="expression.bioAssay.BioAssay" alias="bioAssay">
 	
 	 <id name="id" />
-	 <!-- 
+	 
     <component name="arrayDesignsUsed" ref-alias="arrayDesign" />
-	-->
+	
 </class>
-<!-- 
+
 <class name="expression.arrayDesign.ArrayDesign" alias="arrayDesign">
 	
 	 <id name="id" />
