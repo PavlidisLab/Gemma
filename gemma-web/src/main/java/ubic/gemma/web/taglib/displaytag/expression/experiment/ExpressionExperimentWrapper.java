@@ -63,9 +63,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDetailsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getAccession() != null ) {
-            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
-                    + object.getAccession().getExternalDatabase().getName() + " - "
-                    + object.getAccession().getAccession() + "</a>";
+//            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
+//                    + object.getAccession().getExternalDatabase().getName() + " - "
+//                    + object.getAccession().getAccession() + "</a>";
+            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">"
+            + object.getAccession().getExternalDatabase().getName() + " - "
+            + object.getAccession().getAccession() + "</a>";
         }
         return "No accession";
     }
@@ -76,8 +79,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getAssaysLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getBioAssays() != null ) {
-            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
-                    + object.getBioAssays().size() + "</a>";
+//            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
+//                    + object.getBioAssays().size() + "</a>";
+            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">"
+            + object.getBioAssays().size() + "</a>";
         }
         return "No bioassays";
     }
