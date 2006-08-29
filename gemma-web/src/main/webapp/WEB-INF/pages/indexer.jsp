@@ -17,6 +17,10 @@ defined in the Compass::Gps configuration context.
 
 <c:if test="${! empty indexResults}">
 	<p>Indexing took: <c:out value="${indexResults.indexTime}" />ms.
+	<p>
+	<a href="<c:url value="/searcher.html"/>">
+    	<fmt:message key="menu.compassSearcher"/>
+    </a>
 </c:if>
 <p>
 <br>
