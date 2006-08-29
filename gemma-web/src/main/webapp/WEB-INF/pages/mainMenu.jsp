@@ -18,6 +18,11 @@
         </a>
     </li>
     <li>
+        <a href="<c:url value="/searcher.html"/>">
+            <fmt:message key="menu.compassSearcher"/>
+        </a>
+    </li>
+    <li>
         <!--    Paul, uncomment to use webflow implementation    
 		<a href="<c:url value="/flowController.html?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
 		-->

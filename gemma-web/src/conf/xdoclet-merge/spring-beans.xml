@@ -91,10 +91,10 @@
  <!-- ========================= COMPASS START ========================= -->
 	 
 	 <!-- COMPASS CONTROLLER DEFINITIONS -->
-	<bean id="searchController" class="org.compass.spring.web.mvc.CompassSearchController">
+	<bean id="searchController" name="/searcher.html" class="org.compass.spring.web.mvc.CompassSearchController">
 		<property name="compass"><ref bean="compass"/></property>
-		<property name="searchView"><value>searchView</value></property>
-		<property name="searchResultsView"><value>searchResultsView</value></property>
+		<property name="searchView"><value>searcher</value></property>
+		<property name="searchResultsView"><value>searcher</value></property>
 		<property name="pageSize"><value>10</value></property>
 	</bean>
 	
