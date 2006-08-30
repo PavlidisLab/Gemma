@@ -549,10 +549,6 @@
 			<id>eclipse build</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
-				<property>
-					<name>eclipse.build</name>
-					<value>true</value>
-				</property>
 			</activation>
 			<build>
 				<plugins>
@@ -562,7 +558,7 @@
 						<executions>
 							<execution>
 								<id>Copy generated WEB-INF files for eclipse</id>
-								<phase>generate-sources</phase>
+								<phase>process-resources</phase>
 								<goals>
 									<goal>run</goal>
 								</goals>
