@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
- 
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -113,7 +113,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         eesc.setExpressionExperimentId( ee.getId() );
         eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
-        eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
+        eesc.setSearchString( "probe_0, probe_1, probe_2, probe_3, probe_4" );
         eesc.setStringency( 1 );
 
         return eesc;
@@ -177,9 +177,10 @@ public class ExpressionExperimentSearchController extends BaseFormController {
             for ( ArrayDesign design : arrayDesigns ) {
 
                 for ( int i = 0; i < searchIds.length; i++ ) {
-                    log.debug( "searching for " + searchIds[i] );
+                    String searchId = StringUtils.trim( searchIds[i] );
+                    log.debug( "searching for " + searchId );
 
-                    CompositeSequence cs = compositeSequenceService.findByName( design, searchIds[i] );
+                    CompositeSequence cs = compositeSequenceService.findByName( design, searchId );
 
                     if ( cs != null ) {
                         compositeSequences.add( cs );
@@ -246,8 +247,8 @@ public class ExpressionExperimentSearchController extends BaseFormController {
             log.debug( "search by official gene symbol" );
             // call service which produces expression data image based on gene symbol search criteria
         }
-        
-        log.debug("here");
+
+        log.debug( "here" );
         return new ModelAndView( getSuccessView() ).addObject( "matrixVisualizer", matrixVisualizer );
     }
 
