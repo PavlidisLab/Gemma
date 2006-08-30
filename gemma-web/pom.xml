@@ -551,6 +551,7 @@
 				<activeByDefault>false</activeByDefault>
 				<property>
 					<name>eclipse.build</name>
+					<value>true</value>
 				</property>
 			</activation>
 			<build>
