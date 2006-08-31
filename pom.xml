@@ -29,7 +29,7 @@
 	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
-		<url>http://benzer.ubic.ca/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__</url>
+		<url>http://www.bioinformatics.ubc.ca/pavlidis/lab/bugzilla/buglist.cgi?product=Gemma&amp;bug_status=__open__</url>
 	</issueManagement>
 	<ciManagement>
 		<system>continuum</system>
@@ -187,7 +187,7 @@
 	<distributionManagement>
 		<site>
 			<id>website</id>
-			<url>file:///disk2/WWW/proj/pavlidis/projectpages/gemma-dev</url>
+			<url>file:///www/projects/gemma-dev</url>
 		</site>
 	</distributionManagement>
 </project>
