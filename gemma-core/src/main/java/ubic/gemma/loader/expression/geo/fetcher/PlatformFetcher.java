@@ -64,7 +64,7 @@ public class PlatformFetcher extends GeoFetcher {
 
         try {
             if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
-            String seekFile = baseDir + "/" + accession + "_family" + SOFT_GZ;
+            String seekFile = baseDir + accession + "/" + accession + "_family" + SOFT_GZ;
             File newDir = mkdir( accession );
             File outputFile = new File( newDir, accession + SOFT_GZ );
             boolean success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
