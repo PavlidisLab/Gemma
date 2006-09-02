@@ -42,6 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.ReflectionUtil;
 
@@ -60,14 +61,14 @@ public class AuditInterceptor implements MethodInterceptor {
     private boolean AUDIT_DELETE = true;
 
     private boolean AUDIT_READ = false;
-    
+
     private boolean AUDIT_UPDATE = true;
-    
+
     /**
      * Cache of users. FIXME this is too primitive.
      */
     private Map<String, User> currentUsers = new HashMap<String, User>();
-    
+
     AuditTrailDao auditTrailDao;
 
     UserDao userDao;
@@ -193,7 +194,7 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
-     * @param Auditable
+     * @param Auditablet
      */
     private void addLoadOrCreateAuditEvent( Auditable auditable ) {
         if ( AUDIT_READ && auditable.getAuditTrail() != null && auditable.getAuditTrail().getCreationEvent() != null ) {
@@ -249,10 +250,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @return
      */
     private User getCurrentUser() {
-        // FIXME make this independent of the ACL
-        // interceptor.
-
-        String userName = AddOrRemoveFromACLInterceptor.getUsername();
+        String userName = UserDetailsServiceImpl.getCurrentUsername();
         if ( currentUsers.get( userName ) == null ) {
             currentUsers.put( userName, userDao.findByUserName( userName ) );
         }

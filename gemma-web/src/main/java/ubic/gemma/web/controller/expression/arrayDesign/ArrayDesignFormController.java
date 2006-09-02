@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,9 +32,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * <hr>
- * <p>
- * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="arrayDesignFormController" name="/arrayDesign/editArrayDesign.html"

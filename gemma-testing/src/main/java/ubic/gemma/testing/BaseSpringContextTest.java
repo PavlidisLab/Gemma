@@ -21,13 +21,6 @@ package ubic.gemma.testing;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.GrantedAuthorityImpl;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.context.SecurityContextImpl;
-import org.acegisecurity.providers.ProviderManager;
-import org.acegisecurity.providers.TestingAuthenticationProvider;
-import org.acegisecurity.providers.TestingAuthenticationToken;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -58,7 +51,7 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
-        this.grantAuthority();
+        SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
     }
 
     /**
@@ -89,25 +82,6 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
      */
     protected Object getBean( String name ) {
         return getContext( getConfigLocations() ).getBean( name );
-    }
-
-    /**
-     *
-     */
-    @SuppressWarnings("unchecked")
-    private void grantAuthority() {
-
-        ProviderManager providerManager = ( ProviderManager ) getBean( "authenticationManager" );
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
-
-        // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "pavlab", "pavlab", new GrantedAuthority[] {
-                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );
-
-        // Create and store the Acegi SecureContext into the ContextHolder.
-        SecurityContextImpl secureContext = new SecurityContextImpl();
-        secureContext.setAuthentication( token );
-        SecurityContextHolder.setContext( secureContext );
     }
 
     /**

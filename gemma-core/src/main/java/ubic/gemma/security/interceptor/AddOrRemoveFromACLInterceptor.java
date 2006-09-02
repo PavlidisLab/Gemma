@@ -32,7 +32,6 @@ import org.acegisecurity.acl.basic.BasicAclExtendedDao;
 import org.acegisecurity.acl.basic.NamedEntityObjectIdentity;
 import org.acegisecurity.acl.basic.SimpleAclEntry;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.userdetails.UserDetails;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.engine.CascadeStyle;
@@ -54,6 +53,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
@@ -138,7 +138,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         try {
             basicAclExtendedDao.create( simpleAclEntry );
             if ( log.isDebugEnabled() ) {
-                log.debug( "Added permission " + getAuthority() + " for recipient " + getUsername() + " on " + object );
+                log.debug( "Added permission " + getAuthority() + " for recipient "
+                        + UserDetailsServiceImpl.getCurrentUsername() + " on " + object );
             }
         } catch ( DataIntegrityViolationException ignored ) {
 
@@ -197,7 +198,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     public void deletePermission( Object object ) throws DataAccessException, IllegalArgumentException {
         basicAclExtendedDao.delete( makeObjectIdentity( object ) );
         if ( log.isDebugEnabled() ) {
-            log.debug( "Deleted object " + object + " ACL permissions for recipient " + getUsername() );
+            log.debug( "Deleted object " + object + " ACL permissions for recipient "
+                    + UserDetailsServiceImpl.getCurrentUsername() );
         }
     }
 
@@ -324,7 +326,7 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         SimpleAclEntry simpleAclEntry = new SimpleAclEntry();
         simpleAclEntry.setAclObjectIdentity( makeObjectIdentity( object ) );
         simpleAclEntry.setMask( getAuthority() );
-        simpleAclEntry.setRecipient( getUsername() );
+        simpleAclEntry.setRecipient( UserDetailsServiceImpl.getCurrentUsername() );
         return simpleAclEntry;
     }
 
@@ -388,22 +390,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         }
         // if ( log.isDebugEnabled() ) log.debug( "Granting READ_WRITE privileges" );
         return SimpleAclEntry.READ_WRITE;
-    }
-
-    /**
-     * Returns a String username (the principal).
-     * 
-     * @return
-     */
-    protected static String getUsername() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        assert auth != null;
-
-        if ( auth.getPrincipal() instanceof UserDetails ) {
-            return ( ( UserDetails ) auth.getPrincipal() ).getUsername();
-        }
-        return auth.getPrincipal().toString();
-
     }
 
 }

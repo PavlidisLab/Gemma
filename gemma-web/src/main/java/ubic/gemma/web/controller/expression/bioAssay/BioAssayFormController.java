@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -31,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
@@ -42,9 +40,6 @@ import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.validation.expression.bioAssay.BioAssayValidator;
 
 /**
- * <hr>
- * <p>
- * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="bioAssayFormController" name="/bioAssay/editBioAssay.html"
@@ -99,7 +94,7 @@ public class BioAssayFormController extends BaseFormController {
         Long id = Long.parseLong( id_param );
 
         if ( !id.equals( null ) )
-            ba = bioAssayService.findById( id ); 
+            ba = bioAssayService.findById( id );
         else
             ba = BioAssay.Factory.newInstance();
 
@@ -137,17 +132,19 @@ public class BioAssayFormController extends BaseFormController {
         log.debug( "entering processFormSubmission" );
 
         String accession = request.getParameter( "bioAssayImpl.accession.accession" );
-        
+
         if ( accession == null ) {
             // do nothing
         } else {
             if ( request.getParameter( "cancel" ) != null ) {
-/*                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath()
-                    + "/bioAssay/showBioAssay.html?id=" + id.toString() ) );*/
+                /*
+                 * return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" +
+                 * request.getServerPort() + request.getContextPath() + "/bioAssay/showBioAssay.html?id=" +
+                 * id.toString() ) );
+                 */
                 return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", command );
             }
-            
+
             /* database entry */
             ( ( BioAssay ) command ).getAccession().setAccession( accession );
 
@@ -174,7 +171,7 @@ public class BioAssayFormController extends BaseFormController {
         log.debug( "entering onSubmit" );
 
         BioAssay ba = ( BioAssay ) command;
-        bioAssayService.update( ba ); 
+        bioAssayService.update( ba );
 
         saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ba.getId() }, request.getLocale() ) );
 

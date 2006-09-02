@@ -31,7 +31,6 @@ import javax.servlet.ServletContextListener;
 
 import org.acegisecurity.providers.AuthenticationProvider;
 import org.acegisecurity.providers.ProviderManager;
-import org.acegisecurity.providers.encoding.Md5PasswordEncoder;
 import org.acegisecurity.providers.rememberme.RememberMeAuthenticationProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -96,7 +95,6 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
 
-        boolean encryptPassword = false;
         try {
             ProviderManager provider = ( ProviderManager ) ctx.getBean( "authenticationManager" );
             for ( Iterator it = provider.getProviders().iterator(); it.hasNext(); ) {
@@ -107,15 +105,6 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
                 }
             }
 
-            if ( ctx.containsBean( "passwordEncoder" ) ) {
-                encryptPassword = true;
-                config.put( Constants.ENCRYPT_PASSWORD, Boolean.TRUE );
-                String algorithm = "SHA";
-                if ( ctx.getBean( "passwordEncoder" ) instanceof Md5PasswordEncoder ) {
-                    algorithm = "MD5";
-                }
-                config.put( Constants.ENC_ALGORITHM, algorithm );
-            }
         } catch ( NoSuchBeanDefinitionException n ) {
             // ignore, should only happen when testing
         }
@@ -125,10 +114,6 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         // output the retrieved values for the Init and Context Parameters
         if ( log.isDebugEnabled() ) {
             log.debug( "Remember Me Enabled? " + config.get( "rememberMeEnabled" ) );
-            log.debug( "Encrypt Passwords? " + encryptPassword );
-            if ( encryptPassword ) {
-                log.debug( "Encryption Algorithm: " + config.get( Constants.ENC_ALGORITHM ) );
-            }
         }
 
         setupContext( context );

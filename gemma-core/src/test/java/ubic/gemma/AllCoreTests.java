@@ -40,6 +40,7 @@ import ubic.gemma.model.AllModelTests;
 import ubic.gemma.security.SecurityIntegrationTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
 import ubic.gemma.security.interceptor.PersistAclInterceptorTest;
+import ubic.gemma.security.principal.PrincipalTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
 
 /**
@@ -72,6 +73,7 @@ public class AllCoreTests {
         suite.addTestSuite( AuditInterceptorTest.class );
         suite.addTestSuite( PersistAclInterceptorTest.class );
         suite.addTestSuite( SecurityIntegrationTest.class );
+        suite.addTestSuite( PrincipalTest.class );
 
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );

@@ -40,7 +40,7 @@ public class PubMedSearcherTest extends AbstractCLITestCase {
      */
     public final void testMain() throws Exception {
         try {
-            Exception result = p.doWork( new String[] { "-v", "3", "-u", "pavlidis", "-p", "pavlab", "-testing",
+            Exception result = p.doWork( new String[] { "-v", "3", "-u", "test", "-p", "test", "-testing",
                     "hippocampus", "diazepam", "juvenile" } );
             if ( result != null ) {
                 if ( result instanceof java.net.UnknownHostException ) {

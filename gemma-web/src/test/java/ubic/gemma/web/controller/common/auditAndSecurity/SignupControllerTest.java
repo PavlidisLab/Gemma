@@ -40,7 +40,7 @@ import com.dumbster.smtp.SimpleSmtpServer;
  */
 public class SignupControllerTest extends BaseTransactionalSpringWebTest {
 
-    SignupController signupController;
+    UserAuthenticatingController signupController;
 
     User testUser;
     UserRole userRole;
@@ -52,7 +52,7 @@ public class SignupControllerTest extends BaseTransactionalSpringWebTest {
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        signupController = ( SignupController ) getBean( "signupController" );
+        signupController = ( UserAuthenticatingController ) getBean( "signupController" );
         testUser = User.Factory.newInstance();
         userRole = UserRole.Factory.newInstance();
         userService = ( UserService ) getBean( "userService" );

@@ -33,18 +33,6 @@ public class Constants {
     /** The name of the ResourceBundle used in this application */
     public static final String BUNDLE_KEY = "messages";
 
-    /**
-     * The application scoped attribute for persistence engine and class that implements it
-     */
-    public static final String DAO_TYPE = "daoType";
-    public static final String DAO_TYPE_HIBERNATE = "hibernate";
-
-    /** The encryption algorithm key to be used for passwords */
-    public static final String ENC_ALGORITHM = "algorithm";
-
-    /** A flag to indicate if passwords should be encrypted */
-    public static final String ENCRYPT_PASSWORD = "encryptPassword";
-
     /** File separator from System properties */
     public static final String FILE_SEP = System.getProperty( "file.separator" );
 
@@ -68,6 +56,8 @@ public class Constants {
 
     /**
      * The request scope attribute for indicating a newly-registered user
+     * 
+     * @deprecated - Don't think this is needed.
      */
     public static final String REGISTERED = "registered";
 
@@ -90,11 +80,6 @@ public class Constants {
      * The name of the available roles list, a request-scoped attribute when adding/editing a user.
      */
     public static final String AVAILABLE_ROLES = "availableRoles";
-
-    /**
-     * Name of cookie for "Remember Me" functionality.
-     */
-    public static final String LOGIN_COOKIE = "sessionId";
 
     /**
      * The name of the configuration hashmap stored in application scope.

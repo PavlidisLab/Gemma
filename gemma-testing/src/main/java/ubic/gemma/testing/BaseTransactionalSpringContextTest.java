@@ -21,13 +21,6 @@ package ubic.gemma.testing;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.acegisecurity.GrantedAuthority;
-import org.acegisecurity.GrantedAuthorityImpl;
-import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.context.SecurityContextImpl;
-import org.acegisecurity.providers.ProviderManager;
-import org.acegisecurity.providers.TestingAuthenticationProvider;
-import org.acegisecurity.providers.TestingAuthenticationToken;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,7 +72,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.SpringContextUtil;
-import ubic.gemma.util.StringUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
@@ -440,8 +432,9 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         testUser.setMiddleName( "" );
         testUser.setEnabled( Boolean.TRUE );
         testUser.setUserName( testUserName );
-        testUser.setPassword( StringUtil.encodePassword( testPassword, "SHA" ) );
-        testUser.setConfirmPassword( StringUtil.encodePassword( testPassword, "SHA" ) );
+        String password = RandomStringUtils.randomAlphanumeric( 64 );
+        testUser.setPassword( password );
+        testUser.setConfirmPassword( password );
         testUser.setPasswordHint( "I am an idiot" );
 
         User user = userDao.findByUserName( testUserName );
@@ -453,25 +446,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         assert user.getUserName() != null;
 
         return user;
-    }
-
-    /**
-     * Call this method in setUpDuringTransaction to grant permissions to your test.
-     */
-    @SuppressWarnings("unchecked")
-    private void grantAuthority() {
-
-        ProviderManager providerManager = ( ProviderManager ) getBean( "authenticationManager" );
-        providerManager.getProviders().add( new TestingAuthenticationProvider() );
-
-        // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "pavlab", "pavlab", new GrantedAuthority[] {
-                new GrantedAuthorityImpl( "user" ), new GrantedAuthorityImpl( "admin" ) } );
-
-        // Create and store the Acegi SecureContext into the ContextHolder.
-        SecurityContextImpl secureContext = new SecurityContextImpl();
-        secureContext.setAuthentication( token );
-        SecurityContextHolder.setContext( secureContext );
     }
 
     /**
@@ -519,7 +493,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        grantAuthority();
+        SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
     }
 
     /*

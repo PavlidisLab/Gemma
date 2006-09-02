@@ -131,6 +131,8 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
+     * Put a message into the request. These can be displayed to the user.
+     * 
      * @param request
      * @param msg
      */

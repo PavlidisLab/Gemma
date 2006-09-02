@@ -47,8 +47,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void testCreateProgressJob() {
 
-        pJob = ProgressManager.createProgressJob( "pavlab", "Testing the Progress Manager" );
-        assertEquals( pJob.getUser(), "pavlab" );
+        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
+        assertEquals( pJob.getUser(), testUserName );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager" );
 
         ProgressManager.destroyProgressJob( pJob ); // clean up so this test won't affect next tests
@@ -61,15 +61,15 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
 
     public void testDestroyProgressJob() {
-        pObserver = new HttpProgressObserver( "pavlab" );
-        pJob = ProgressManager.createProgressJob( "pavlab", "Testing the Progress Manager" );
+        pObserver = new HttpProgressObserver( testUserName );
+        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
 
         // single case
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
         pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
 
         ProgressManager.destroyProgressJob( pJob );
-        assertEquals( ProgressManager.addToNotification( "pavlab", pObserver ), false );
+        assertEquals( ProgressManager.addToNotification( testUserName, pObserver ), false );
 
         pJob = null;
     }
@@ -80,8 +80,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
 
     public void testAddToNotificationStringObserver() {
 
-        pObserver = new HttpProgressObserver( "pavlab" );
-        pJob = ProgressManager.createProgressJob( "pavlab", "Testing the Progress Manager" );
+        pObserver = new HttpProgressObserver( testUserName );
+        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
 
         // single case
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
@@ -94,11 +94,11 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         pJob = null;
 
         // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( "pavlab", "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( "pavlab", "Test2 of Notify" );
+        ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, "Test1 of Notify" );
+        ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, "Test2 of Notify" );
 
         MockClient mClient = new MockClient();
-        ProgressManager.addToNotification( "pavlab", mClient );
+        ProgressManager.addToNotification( testUserName, mClient );
         pJob1.updateProgress();
         assertEquals( mClient.upDateTimes(), 1 );
         pJob2.updateProgress();
@@ -117,8 +117,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     // public void testAddToNotificationStringIntObserver() {
     //
-    // pObserver = new HttpProgressObserver( "pavlab" );
-    // pJob = ProgressManager.createProgressJob( "pavlab", "Testing the Progress Manager" );
+    // pObserver = new HttpProgressObserver( testUserName );
+    // pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
     //
     // // single case
     // ProgressManager.addToNotification( pJob.getUser(), pObserver );
@@ -131,25 +131,25 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     // pJob = null;
     //
     // // multiple case
-    // ProgressJob pJob1 = ProgressManager.createProgressJob( "pavlab", ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
     // "Test1 of Notify" );
-    // ProgressJob pJob2 = ProgressManager.createProgressJob( "pavlab", ProgressJob.DOWNLOAD_PROGRESS,
+    // ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, ProgressJob.DOWNLOAD_PROGRESS,
     // "Test2 of Notify" );
     //
     // MockClient mClient = new MockClient();
-    // ProgressManager.addToNotification( "pavlab", ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
     // pJob1.updateProgress();
     // assertEquals( mClient.upDateTimes(), 1 );
     // pJob2.updateProgress();
     // assertEquals( mClient.upDateTimes(), 1 );
     // assertEquals( mClient.getProgressData().size(), 1 );
     //
-    // ProgressJob pJob3 = ProgressManager.createProgressJob( "pavlab", ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob3 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
     // "Test3 of Notify" );
-    // ProgressJob pJob4 = ProgressManager.createProgressJob( "pavlab", ProgressJob.PARSING_PROGRESS,
+    // ProgressJob pJob4 = ProgressManager.createProgressJob( testUserName, ProgressJob.PARSING_PROGRESS,
     // "Test4 of Notify" );
     //
-    // ProgressManager.addToNotification( "pavlab", ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
     // pJob3.updateProgress();
     // assertEquals( mClient.upDateTimes(), 2 );
     // pJob4.updateProgress();
@@ -167,8 +167,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void testAddToRecentNotificationStringObserver() {
 
-        pObserver = new HttpProgressObserver( "pavlab" );
-        pJob = ProgressManager.createProgressJob( "pavlab", "Testing the Progress Manager" );
+        pObserver = new HttpProgressObserver( testUserName );
+        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
 
         // single case
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
@@ -181,13 +181,13 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         pJob = null;
 
         // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( "pavlab", "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( "pavlab", "Test2 of Notify" );
-        ProgressJob pJob3 = ProgressManager.createProgressJob( "pavlab", "Test3 of Notify" );
-        ProgressJob pJob4 = ProgressManager.createProgressJob( "pavlab", "Test4 of Notify" );
+        ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, "Test1 of Notify" );
+        ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, "Test2 of Notify" );
+        ProgressJob pJob3 = ProgressManager.createProgressJob( testUserName, "Test3 of Notify" );
+        ProgressJob pJob4 = ProgressManager.createProgressJob( testUserName, "Test4 of Notify" );
 
         MockClient mClient = new MockClient();
-        ProgressManager.addToRecentNotification( "pavlab", mClient );
+        ProgressManager.addToRecentNotification( testUserName, mClient );
         pJob1.updateProgress();
         assertEquals( mClient.upDateTimes(), 1 );
         pJob2.updateProgress();
@@ -213,8 +213,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     // public void testAddToRecentNotificationStringIntObserver() {
     //
-    // pObserver = new HttpProgressObserver( "pavlab" );
-    // pJob = ProgressManager.createProgressJob( "pavlab", ProgressJob.DOWNLOAD_PROGRESS,
+    // pObserver = new HttpProgressObserver( testUserName );
+    // pJob = ProgressManager.createProgressJob( testUserName, ProgressJob.DOWNLOAD_PROGRESS,
     // "Testing the Progress Manager" );
     //
     // // single case
@@ -228,13 +228,13 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     // pJob = null;
     //
     // // multiple case
-    // ProgressJob pJob1 = ProgressManager.createProgressJob( "pavlab", ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
     // "Test1 of Notify" );
-    // ProgressJob pJob2 = ProgressManager.createProgressJob( "pavlab", ProgressJob.DOWNLOAD_PROGRESS,
+    // ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, ProgressJob.DOWNLOAD_PROGRESS,
     // "Test2 of Notify" );
     //
     // MockClient mClient = new MockClient();
-    // ProgressManager.addToRecentNotification( "pavlab", ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToRecentNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
     // pJob1.updateProgress();
     // assertEquals( mClient.upDateTimes(), 1 );
     // pJob2.updateProgress();
@@ -242,12 +242,12 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     // assertEquals( mClient.getProgressData().size(), 1 );
     //
     // mClient = new MockClient();
-    // ProgressJob pJob3 = ProgressManager.createProgressJob( "pavlab", ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob3 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
     // "Test3 of Notify" );
-    // ProgressJob pJob4 = ProgressManager.createProgressJob( "pavlab", ProgressJob.PARSING_PROGRESS,
+    // ProgressJob pJob4 = ProgressManager.createProgressJob( testUserName, ProgressJob.PARSING_PROGRESS,
     // "Test4 of Notify" );
     //
-    // ProgressManager.addToRecentNotification( "pavlab", ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToRecentNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
     //
     // pJob1.updateProgress();
     // assertEquals( mClient.upDateTimes(), 0 );
@@ -270,9 +270,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void testSingleUse() {
 
-        MockProcess mp = new MockProcess( "pavlab", "A run of tests" );
+        MockProcess mp = new MockProcess( testUserName, "A run of tests" );
         MockClient mc = new MockClient();
-        ProgressManager.addToNotification( "pavlab", mc );
+        ProgressManager.addToNotification( testUserName, mc );
         mp.run();
 
         try {

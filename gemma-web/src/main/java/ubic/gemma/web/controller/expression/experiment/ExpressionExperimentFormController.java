@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,9 +39,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * <hr>
- * <p>
- * 
  * @author keshav
  * @version $Id$
  * @spring.bean id="expressionExperimentFormController" name="/expressionExperiment/editExpressionExperiment.html"
@@ -120,14 +116,14 @@ public class ExpressionExperimentFormController extends BaseFormController {
         log.debug( "entering processFormSubmission" );
 
         id = ( ( ExpressionExperiment ) command ).getId();
-        
+
         if ( request.getParameter( "cancel" ) != null ) {
             if ( id != null ) {
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath()
-                    + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                        + request.getServerPort() + request.getContextPath()
+                        + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
             }
-            
+
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
             return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
                     + request.getServerPort() + request.getContextPath()

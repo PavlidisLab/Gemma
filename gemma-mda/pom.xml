@@ -456,27 +456,50 @@
 							<username>${gemma.db.build.user}</username>
 							<password>${gemma.db.build.password}</password>
 						</configuration>
-						<executions>
-							<execution>
-								<id>load-db-schema</id>
-								<phase>package</phase>
-								<goals>
-									<goal>execute</goal>
-								</goals>
-								<configuration>
-									<url>${gemma.db.build.url}</url>
-									<autocommit>false</autocommit>
-									<srcFiles>
-										<srcFile>target/schema/gemma-ddl.sql</srcFile>
-										<srcFile>
-											src/test/resources/sql/mysql-acegi-acl.sql
-										</srcFile>
-										<srcFile>src/test/resources/sql/init-script.sql</srcFile>
-									</srcFiles>
-									<onError>continue</onError>
-								</configuration>
-							</execution>
-						</executions>
+                        <executions>
+                            <execution>
+                                <id>drop-db</id>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>execute</goal>
+                                </goals>
+                                <configuration>
+                                    <url>${bootstrap.db.url}</url>
+                                    <autocommit>false</autocommit>
+                                    <sqlCommand> <![CDATA[drop database if exists gemd]]>
+                                    </sqlCommand>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>create-db</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>execute</goal>
+                                </goals>
+                                <configuration>
+                                    <url>${bootstrap.db.url}</url>
+                                    <sqlCommand> <![CDATA[create database gemd]]>
+                                    </sqlCommand>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>load-db-schema</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>execute</goal>
+                                </goals>
+                                <configuration>
+                                    <url>${gemma.db.build.url}</url>
+                                    <autocommit>false</autocommit>
+                                    <srcFiles>
+                                        <srcFile>target/schema/gemma-ddl.sql</srcFile>
+                                        <srcFile> src/test/resources/sql/mysql-acegi-acl.sql </srcFile>
+                                        <srcFile>src/test/resources/sql/init-script.sql</srcFile>
+                                    </srcFiles>
+                                    <onError>continue</onError>
+                                </configuration>
+                            </execution>
+                        </executions>
 					</plugin>
 				</plugins>
 			</build>

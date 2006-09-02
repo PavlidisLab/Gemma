@@ -22,16 +22,9 @@ import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
-import ubic.gemma.util.RequestUtil;
-import ubic.gemma.util.StringUtil;
-import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * Implementation of <strong>SimpleFormController</strong> that interacts with the {@link UserService} adn
- * {@link UserRoleService} to retrieve/persist values to the database.
- * <p>
- * Based on Appfuse code.
- * <hr>
+ * For editing users.
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
@@ -49,14 +42,11 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="message" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
  */
-public class UserFormController extends BaseFormController {
+public class UserFormController extends UserAuthenticatingController {
 
     private UserRoleService userRoleService;
 
-    public UserFormController() {
-        // setCommandName( "user" );
-        // setCommandClass( User.class );
-    }
+   
 
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -74,21 +64,9 @@ public class UserFormController extends BaseFormController {
             saveMessage( request, getText( "user.deleted", user.getFullName(), locale ) );
             return new ModelAndView( getSuccessView() );
         }
-        Boolean encrypt = ( Boolean ) getConfiguration().get( Constants.ENCRYPT_PASSWORD );
 
-        if ( StringUtils.equals( request.getParameter( "encryptPass" ), "true" )
-                && ( encrypt != null && encrypt.booleanValue() ) ) {
-
-            String algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
-
-            if ( algorithm == null ) { // should only happen for test case
-                if ( log.isDebugEnabled() ) {
-                    log.debug( "Assuming testcase, setting algorithm to 'SHA'" );
-                }
-                algorithm = "SHA";
-            }
-            user.setPassword( StringUtil.encodePassword( user.getPassword(), algorithm ) );
-        }
+        String unencryptedPassword = user.getPassword();
+        super.encryptPassword( user, request );
 
         updateRoles( request, user );
 
@@ -101,7 +79,8 @@ public class UserFormController extends BaseFormController {
                     new Object[] { user.getUserName(), user.getEmail() }, "duplicate user" );
 
             // redisplay the unencrypted passwords
-            user.setPassword( user.getConfirmPassword() );
+            user.setPassword( unencryptedPassword );
+            user.setConfirmPassword( unencryptedPassword );
 
             return showForm( request, response, errors );
         }
@@ -116,13 +95,9 @@ public class UserFormController extends BaseFormController {
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );
         }
         if ( StringUtils.isBlank( request.getParameter( "version" ) ) ) {
+            signInUser( request, user, unencryptedPassword );
+            super.sendConfirmationEmail( request, user, locale );
             saveMessage( request, getText( "user.added", user.getFullName(), locale ) );
-
-            // Send an account information e-mail
-            message.setSubject( getText( "signup.email.subject", locale ) );
-            sendEmail( user, getText( "newuser.email.message", user.getFullName(), locale ), RequestUtil
-                    .getAppURL( request ) );
-
             return showNewForm( request, response );
         }
         saveMessage( request, getText( "user.updated.byAdmin", user.getFullName(), locale ) );
@@ -136,8 +111,8 @@ public class UserFormController extends BaseFormController {
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
             if ( !StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
-                return new ModelAndView( new RedirectView( "mainMenu.html" ) ); // FIXME this should be a cancel
-                // message.
+                saveMessage( request, getText( "errors.cancel",   request.getLocale() ) );
+                return new ModelAndView( new RedirectView( "mainMenu.html" ) );
             }
             return new ModelAndView( getSuccessView() );
         }
@@ -218,43 +193,6 @@ public class UserFormController extends BaseFormController {
         user.setConfirmPassword( user.getPassword() );
         return user;
 
-        //        
-        //        
-        //        
-        //        
-        //        
-        //        
-        //        
-        //        
-        //        
-        // String username = request.getParameter( "userName" );
-        //
-        // if ( request.getSession().getAttribute( "cookieLogin" ) != null ) {
-        // saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
-        // }
-        //
-        // User user = null;
-        //
-        // if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
-        // user = userService.getUser( getUser( request ).getUserName() );
-        // } else if ( !StringUtils.isBlank( username ) /* && !"".equals( request.getParameter( "version" ) ) */) { //
-        // we
-        // // don't
-        // // have
-        // // 'version'.
-        // user = userService.getUser( username );
-        // } else {
-        // user = User.Factory.newInstance();
-        // UserRole newRole = UserRole.Factory.newInstance();
-        // user.setUserName( username );
-        // newRole.setName( Constants.USER_ROLE );
-        // newRole.setUserName( username );
-        // userService.addRole( user, newRole );
-        // }
-        //
-        // user.setConfirmPassword( user.getPassword() );
-        //
-        // return user;
     }
 
     @Override

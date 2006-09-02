@@ -29,6 +29,16 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
     ExpressionExperimentService expressionExperimentService;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
+     */
+    @Override
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
+    }
+
     public void testSimpleAuditAddition() throws Exception {
 
         // FIXME, this isn't a very good test...

@@ -83,7 +83,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
             return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-        } catch ( org.springframework.dao.InvalidDataAccessResourceUsageException e) {
+        } catch ( org.springframework.dao.InvalidDataAccessResourceUsageException e ) {
             // FIXME shouldn't happen if we don't have duplicates in the first place...
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
@@ -97,63 +97,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     protected void handleRemoveUser( java.lang.String userName ) throws java.lang.Exception {
 
         this.getUserDao().remove( this.getUserDao().findByUserName( userName ) );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#checkLoginCookie(java.lang.String)
-     */
-    @Override
-    protected String handleCheckLoginCookie( java.lang.String value ) throws java.lang.Exception {
-        // value = StringUtil.decodeString( value );
-        //
-        // String[] values = StringUtils.split( value, "|" );
-        //
-        // // in case of empty username in cookie, return null
-        // if ( values.length == 1 ) {
-        // return null;
-        // }
-        //
-        // if ( log.isDebugEnabled() ) {
-        // log.debug( "looking up cookieId: " + values[1] );
-        // }
-        //
-        // UserSession cookie = UserSession.Factory.newInstance();
-        // cookie = this.getUserSessionDao().findUserSession( values[0], values[1] );
-        //
-        // if ( cookie != null ) {
-        // if ( log.isDebugEnabled() ) {
-        // log.debug( "cookieId lookup succeeded, generating new cookieId" );
-        // }
-        //
-        // return saveLoginCookie( cookie );
-        // }
-        // log.debug( "cookieId lookup failed, returning null" );
-        return null;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#createLoginCookie(java.lang.String)
-     */
-    @Override
-    protected String handleCreateLoginCookie( java.lang.String userName ) throws java.lang.Exception {
-        // UserSession cookie = UserSession.Factory.newInstance();
-        //
-        // User user = this.getUserDao().findByUserName( userName );
-        // cookie.setUser( user );
-        // return saveLoginCookie( cookie );
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleRemoveLoginCookies(java.lang.String)
-     */
-    @Override
-    protected void handleRemoveLoginCookies( String userName ) throws Exception {
-        // User user = this.getUserDao().findByUserName( userName );
-        // user.setUserSessions( null );
-        // this.getUserDao().update( user );
     }
 
     @SuppressWarnings("unchecked")
@@ -175,21 +118,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         roles.add( newRole );
         user.setRoles( roles );
         this.getUserDao().update( user );
-    }
-
-    /**
-     * Convenience method to set a unique cookie id and save to database
-     * 
-     * @param cookie
-     * @return
-     */
-    private String saveLoginCookie( UserSession cookie ) {
-        // cookie.setCookie( new RandomGUID().toString() );
-        // cookie.setCreateDate( new Date() );
-        // this.getUserSessionDao().create( cookie );
-        //
-        // return StringUtil.encodeString( cookie.getUser().getUserName() + "|" + cookie.getCookie() );
-        return null;
     }
 
     /*
