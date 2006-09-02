@@ -19,7 +19,7 @@ insert into AUDIT_TRAIL VALUES ();
 insert into CONTACT (CLASS, NAME, LAST_NAME, FIRST_NAME, MIDDLE_NAME, USER_NAME, PASSWORD, CONFIRM_PASSWORD, ENABLED, AUDIT_TRAIL_FK) values ("UserImpl", "nobody", "nobody", "nobody", "nobody", "administrator", "cec6877e42b179b133c2a6c1285488755aefc071", "cec6877e42b179b133c2a6c1285488755aefc071", 1, 1);
 insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("admin", "administrator", 1 );
 
-insert into CONTACT (CLASS, NAME, EMAIL, AUDIT_TRAIL_FK) values ("ubic.gemma.model.common.auditAndSecurity.ContactImpl", "admin", "admin@gemma.org", 4);
+insert into CONTACT (CLASS, NAME, EMAIL, AUDIT_TRAIL_FK) values ("ContactImpl", "admin", "admin@gemma.org", 4);
 
 
 --Users
