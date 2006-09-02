@@ -29,9 +29,9 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.web.util.progress.ProgressData;
-import ubic.gemma.web.util.progress.ProgressJob;
-import ubic.gemma.web.util.progress.ProgressManager;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * @author Original : plosson on 05-janv.-2006 10:46:33 - Last modified by Author: plosson $ on $Date: 2006/01/05
@@ -68,8 +68,7 @@ public class UploadListener implements OutputStreamListener {
      */
     public void start() {
         totalFiles++;
-        pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName() , ProgressJob.DOWNLOAD_PROGRESS,
-                "File Upload" );
+        pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication().getName() , "File Upload" );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
     }
 

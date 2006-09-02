@@ -14,9 +14,11 @@
  *
  */
 
-package ubic.gemma.web.util.progress;
+package ubic.gemma.util.progress;
 
 import java.util.Observer;
+
+import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
 /**
  * <hr>
@@ -30,13 +32,6 @@ import java.util.Observer;
  */
 public interface ProgressJob {
 
-    public static final int DOWNLOAD_PROGRESS = 0;
-    public static final int COMPUTATIONAL_PROGRESS = 1;
-    public static final int DATABASE_PROGRESS = 2;
-    public static final int PARSING_PROGRESS = 3;
-    
-    
-   
     /**
      * @return Returns the pData.
      */
@@ -57,28 +52,20 @@ public interface ProgressJob {
      */
     public abstract void setRunningStatus( boolean runningStatus );
 
-    /**
-     * @return Returns the progressType.
-     */
-    public abstract int getProgressType();
-
-    /**
-     * @param progressType The progressType to set.
-     */
-    public abstract void setProgressType( int progressType );
-
+  
     public abstract String getUser();
 
     /**
      * Updates the current progress of the job. Simple increments the progress percent by 1.
      */
     public abstract void updateProgress();
-    
+
     /**
-     * Upates the current progress of the job to the desired percent.  doesn't change anything else.
+     * Upates the current progress of the job to the desired percent. doesn't change anything else.
+     * 
      * @param newPercent
      */
-    public abstract void updateProgress(int newPercent);
+    public abstract void updateProgress( int newPercent );
 
     /**
      * Updates the progress job by a complete progressData. In case a few things need to be updated
@@ -86,7 +73,23 @@ public interface ProgressJob {
      * @param pd
      */
     public abstract void updateProgress( ProgressData pd );
+
+    public abstract void addObserver( Observer O );
     
-    public abstract void addObserver ( Observer O );
+    public abstract Long getId();
+    
+    public abstract void done();
+    
+    public abstract int getPhase();
+    
+    public abstract void setPhase(int phase);
+    
+    public abstract void setDescription(String description);
+    
+    public abstract String getDescription();
+    
+    public abstract JobInfo getJobInfo();
+    
+    
 
 }

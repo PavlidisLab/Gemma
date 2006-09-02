@@ -14,13 +14,13 @@
 			<value>com.mysql.jdbc.Driver</value>
 		</property>
 		<property name="username">
-			<value>${gemma.testdb.user}</value>
+			<value>pavlidis</value>
 		</property>
 		<property name="password">
-			<value>${gemma.testdb.password}</value>
+			<value>toast</value>
 		</property>
 		<property name="url">
-			<value>${gemma.testdb.url}</value>
+			<value>jdbc:mysql://localhost:3306/gemdtest</value>
 		</property>
 	</bean>
 

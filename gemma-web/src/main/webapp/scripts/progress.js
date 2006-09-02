@@ -26,3 +26,9 @@ function startProgress() {
     window.setTimeout("refreshProgress()", 1000);
     return true;
 }
+
+function createProgressBar() {
+
+ document.write( '<div id="progressBar" style="display: none;"> <div id="theMeter">  <div id="progressBarText"></div>   <div id="progressBarBox">  <div id="progressBarBoxContent"></div>  </div>  </div>  </div>');
+        
+}

@@ -96,13 +96,13 @@
 		<value>com.mysql.jdbc.Driver</value>
 	</property>
 	<property name="username">
-		<value>${gemma.db.user}</value>
+		<value>pavlidis</value>
 	</property>
 	<property name="password">
-		<value>${gemma.db.password}</value>
+		<value>toast</value>
 	</property>
 	<property name="url">
-		<value>jdbc:mysql://${gemma.db.host}:3306/hg18</value>
+		<value>jdbc:mysql://localhost:3306/hg18</value>
 	</property>
 </bean>
 

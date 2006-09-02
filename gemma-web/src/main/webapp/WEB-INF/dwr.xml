@@ -15,12 +15,12 @@
         </create>        
         
         <create creator="new" javascript="HttpProgressMonitor">
-            <param name="class" value="ubic.gemma.web.util.progress.HttpProgressMonitor"/>
+            <param name="class" value="ubic.gemma.util.progress.HttpProgressMonitor"/>
             <param name="force" value="true"/>
             <include method="getProgressStatus" />
         </create>
         
-        <convert converter="bean" match="ubic.gemma.web.util.progress.ProgressData">
+        <convert converter="bean" match="ubic.gemma.util.progress.ProgressData">
 			  <param name="force" value="true"/>
 		  </convert>
         

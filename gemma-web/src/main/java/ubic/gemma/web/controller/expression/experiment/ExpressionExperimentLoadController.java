@@ -48,7 +48,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
  * @spring.property name="commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
- * @spring.property name="validator" ref="genericBeanValidator"                 
+ * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
  * @spring.property name="successView" value="loadExpressionExperimentFormResult"
  * @spring.property name="persisterHelper" ref="persisterHelper"
@@ -85,8 +85,8 @@ public class ExpressionExperimentLoadController extends BaseFormController {
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         log.debug( "authentication object: " + auth );
-        Thread t = new Thread( new Runnable() {
-            public void run() { // Do your real processing here
+//        Thread t = new Thread( new Runnable() {
+//            public void run() { // Do your real processing here
                 // once validated.. TODO put this in its own thread and update use with progress.
                 SecurityContextHolder.getContext().setAuthentication( auth );
                 log.info( "Loading " + eeLoadCommand.getAccession() );
@@ -112,10 +112,10 @@ public class ExpressionExperimentLoadController extends BaseFormController {
                 // place the data into the request for retrieval on next page
 
                 session.setAttribute( "stillProcessing", Boolean.FALSE );
-            }
-        } );
-        t.start();
-        response.sendRedirect( response.encodeRedirectURL( "processing.html" ) );
+//            }
+//        } );
+//        t.start();
+//        response.sendRedirect( response.encodeRedirectURL( "loadExpressionExperimentProgress.html" ) );
 
         return new ModelAndView( getSuccessView() );
     }

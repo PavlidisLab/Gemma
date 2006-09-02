@@ -14,9 +14,13 @@
  *
  */
 
-package ubic.gemma.web.util.progress;
+package ubic.gemma.util.progress;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Observable;
+
+import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 
 /**
  * <hr>
@@ -29,12 +33,9 @@ import java.util.Observable;
  */
 public class ProgressJobImpl extends Observable implements ProgressJob {
 
-
     protected ProgressData pData;
-    protected boolean runningStatus;
-    protected int progressType;
-    protected String failedMessage;
-    protected String ownerId;
+    protected JobInfo jInfo;
+    protected int currentPhase;
 
     /**
      * The factory create method in ProgressManager is the advised way to create a ProgressJob
@@ -42,11 +43,9 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @param ownerId
      * @param description
      */
-    ProgressJobImpl( String ownerId, String description, int jobType ) {
-        this.ownerId = ownerId;
-        this.progressType = jobType;
+    ProgressJobImpl( JobInfo info, String description ) {
         this.pData = new ProgressData( 0, description, false );
-        this.runningStatus = true;
+        this.jInfo = info;
     }
 
     /**
@@ -67,30 +66,19 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      * @return Returns the runningStatus.
      */
     public boolean isRunningStatus() {
-        return runningStatus;
+        return jInfo.getRunningStatus();
     }
 
     /**
      * @param runningStatus The runningStatus to set.
      */
     public void setRunningStatus( boolean runningStatus ) {
-        this.runningStatus = runningStatus;
-        if ( this.runningStatus && pData.isDone() ) this.pData.setDone( false );
-    }
-
-    /**
-     * @return Returns the progressType.
-     */
-    public int getProgressType() {
-        return progressType;
-    }
-
-    public void setProgressType( int progressType ) {
-        this.progressType = progressType;
+        jInfo.setRunningStatus( runningStatus );
+        if ( !jInfo.getRunningStatus() ) this.pData.setDone( false );
     }
 
     public String getUser() {
-        return this.ownerId;
+        return jInfo.getUser().getName();
     }
 
     /**
@@ -104,24 +92,67 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
 
     /**
      * Updates the progress job by a complete progressData. Used if more than the percent needs to be updates.
+     * Updating the entire datapack causes the underlying dao to update its database entry for desciption only
      * 
      * @param pd
      */
     public void updateProgress( ProgressData pd ) {
         setProgressData( pd );
+        this.jInfo.setDescription( pd.getDescription() );
         setChanged();
         notifyObservers( pData );
     }
-    
+
     /**
-     * Upates the current progress of the job to the desired percent.  doesn't change anything else.
+     * Upates the current progress of the job to the desired percent. doesn't change anything else.
+     * 
      * @param newPercent
      */
-    public void updateProgress(int newPercent) {
+    public void updateProgress( int newPercent ) {
         pData.setPercent( newPercent );
         setChanged();
         notifyObservers( pData );
     }
 
+    /**
+     * returns the id of the current job
+     */
+    public Long getId() {
+        return jInfo.getId();
+    }
 
+    public void done() {
+        
+       Calendar cal = new GregorianCalendar(); 
+       jInfo.setEndTime( cal.getTime() );            
+            
+    }
+
+    public int getPhase() {
+        return currentPhase;
+
+    }
+
+    public void setPhase( int phase ) {
+        if ( phase < 0 ) return;
+
+        if ( phase > jInfo.getPhases()) jInfo.setPhases( phase );
+
+        currentPhase = phase;
+    }
+    
+    public void setDescription(String description) {
+        this.pData.setDescription( description );
+        this.jInfo.setDescription( description );
+    }
+    
+    public String getDescription() {
+        return this.pData.getDescription();
+    }
+    
+    public JobInfo getJobInfo()
+    {
+        return this.jInfo;
+    }
+    
 }

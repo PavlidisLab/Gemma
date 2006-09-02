@@ -1,5 +1,6 @@
 package ubic.gemma.web.util.progress;
 
+import ubic.gemma.util.progress.ProgressData;
 import junit.framework.TestCase;
 
 public class ProgressDataTest extends TestCase {

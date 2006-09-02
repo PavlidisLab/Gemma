@@ -14,7 +14,7 @@
  *
  */
 
-package ubic.gemma.web.util.progress;
+package ubic.gemma.util.progress;
 
 import javax.servlet.http.HttpSession;
 
@@ -44,7 +44,7 @@ public class HttpProgressMonitor {
         HttpSession session = WebContextFactory.get().getSession();
         HttpProgressObserver po = ( HttpProgressObserver ) session.getAttribute( PROGRESS_ATTRIBUTE );
 
-        //if observer not in the session means 1st time through.  Add to session and move on. 
+        // if observer not in the session means 1st time through. Add to session and move on.
         if ( po == null ) {
             po = new HttpProgressObserver();
             session.setAttribute( PROGRESS_ATTRIBUTE, po );
@@ -52,13 +52,13 @@ public class HttpProgressMonitor {
 
         ProgressData pd = po.getProgressData();
 
-        //if progress has finished need to remove observer from session and get make sure observer cleans up after itself.
+        // if progress has finished need to remove observer from session and get make sure observer cleans up after
+        // itself.
         if ( pd.isDone() ) {
             po.finished();
             session.removeAttribute( PROGRESS_ATTRIBUTE );
         }
 
-       
         return pd;
 
     }

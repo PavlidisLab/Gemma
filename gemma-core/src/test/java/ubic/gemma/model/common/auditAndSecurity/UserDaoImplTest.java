@@ -23,12 +23,11 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * Tests the Contact, Person, User interitance hierarchy and the association between User and UserRole.
- * 
+ * fixme are there meaningfull tests in here?
  * @author keshav
  * @version $Id$
  */

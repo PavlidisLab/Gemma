@@ -14,7 +14,8 @@
  *
  */
 
-package ubic.gemma.web.util.progress;
+package ubic.gemma.util.progress;
+
 
 /**
  * <hr>

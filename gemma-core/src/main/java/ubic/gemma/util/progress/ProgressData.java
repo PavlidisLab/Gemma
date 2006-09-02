@@ -14,7 +14,7 @@
  *
  */
 
-package ubic.gemma.web.util.progress;
+package ubic.gemma.util.progress;
 
 import java.io.Serializable;
 
