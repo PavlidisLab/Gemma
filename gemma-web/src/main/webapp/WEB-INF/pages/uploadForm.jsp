@@ -77,16 +77,9 @@
         </form>
         <br />
 
-        <div id="progressBar" style="display: none;">
-
-            <div id="theMeter">
-                <div id="progressBarText"></div>
-
-                <div id="progressBarBox">
-                    <div id="progressBarBoxContent"></div>
-                </div>
-            </div>
-        </div>
+ <script type="text/javascript">
+	createProgressBar();
+</script>
 
         <script type="text/javascript">
 <!--
