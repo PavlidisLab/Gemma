@@ -1,28 +1,29 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<P>
+<p>
 <content tag="heading">
 <fmt:message key="menu.compassSearcher"/>
 </content>
 
-<FORM method="GET">
+<form method="GET">
 	<spring:bind path="command.query">
-	 <INPUT type="text" size="20" name="query" value="<c:out value="${status.value}"/>" />
+	 <input type="text" size="20" name="query" value="<c:out value="${status.value}"/>" />
 	</spring:bind>
-  <INPUT type = "submit" value="Search"/>
-</FORM>
-<%--
+  <input type = "submit" value="Search"/>
+</form>
+
 <c:if test="${! empty searchResults}">
 
   Search took <c:out value="${searchResults.searchTime}" />ms
 
   <c:forEach var="hit" items="${searchResults.hits}">
    <c:choose>
-     <c:when test="${hit.alias == 'pet'}">
+     <c:when test="${hit.alias == 'expressionExperiment'}">
        <P>
-         <a href="<c:url value="/editPet.htm?petId=${hit.data.id}"/>">
-           <c:out value="${hit.data.name}" /> (Pet)
+         <a href="<c:url value="/expressionExperiment/editExpressionExperiment.html?id=${hit.data.id}"/>">
+           <c:out value="${hit.data.name}" /> (ExpressionExperiment)
          </a>
+         <%-- 
          <BR>Birthdate: <fmt:formatDate value="${hit.data.birthDate}" pattern="yyyy-MM-dd"/>, 
          Type: <c:out value="${hit.data.type.name}" />
          <BR>Visits:
@@ -32,13 +33,15 @@
           <c:if test="${empty hit.data.visits}">
             none
           </c:if>
+          --%>
      </c:when>
-
-     <c:when test="${hit.alias == 'owner'}">
+     
+     <c:when test="${hit.alias == 'bioAssay'}">
        <P>
-         <a href="<c:url value="/editOwner.htm?ownerId=${hit.data.id}"/>">
-           <c:out value="${hit.data.firstName}" /> <c:out value="${hit.data.lastName}" /> (Owner)
+         <a href="<c:url value="/bioAssay/editBioAssay.html?id=${hit.data.id}"/>">
+           <c:out value="${hit.data.name}" /> (BioAssay)
          </a>
+         <%--
          <BR>Name: <c:out value="${hit.data.firstName}" /> <c:out value="${hit.data.lastName}" />,
          Address: <c:out value="${hit.data.address}" />, City: <c:out value="${hit.data.city}" />,
          Telephone: <c:out value="${hit.data.telephone}" />
@@ -51,40 +54,45 @@
           <c:if test="${empty hit.data.pets}">
             none
           </c:if>
+          --%>
      </c:when>
 
-     <c:when test="${hit.alias == 'vet'}">
+     <c:when test="${hit.alias == 'arrayDesign'}">
        <P>
-         <a href="#">
-           <c:out value="${hit.data.firstName}" /> <c:out value="${hit.data.lastName}" /> (Vet)
+         <a href="<c:url value="/arrayDesign/editArrayDesign.html?id=${hit.data.id}"/>">
+           <c:out value="${hit.data.name}" /> (ArrayDesign)
          </a>
+         <%--
          <BR>Name: <c:out value="${hit.data.firstName}" /> <c:out value="${hit.data.lastName}" />,
          Address: <c:out value="${hit.data.address}" />, City: <c:out value="${hit.data.city}" />,
          Telephone: <c:out value="${hit.data.telephone}" />
-         <BR>Specialities:
-          <c:forEach var="specialty" items="${hit.data.specialties}">
-            <c:out value="${specialty.name}"/>, 
+         <BR>Pets:
+          <c:forEach var="pet" items="${hit.data.pets}">
+            <a href="<c:url value="/editPet.htm?petId=${pet.id}"/>">
+                <c:out value="${pet.name}" />
+            </a> 
           </c:forEach>
-          <c:if test="${hit.data.nrOfSpecialties == 0}">
+          <c:if test="${empty hit.data.pets}">
             none
           </c:if>
+          --%>
      </c:when>
 
-     <c:when test="${hit.alias == 'visit'}">
-       <P>
+     <c:when test="${hit.alias == 'contact'}">
+       <p>
          <a href="#">
-           <c:out value="${hit.data.date}" /> (Visit)
+           <c:out value="${hit.data.name}" />
          </a>
-         <BR>Description: <c:out value="${hit.data.description}" />
-         <BR>Pet: <a href="<c:url value="/editPet.htm?petId=${hit.data.pet.id}"/>">
-           <c:out value="${hit.data.pet.name}" />
-         </a>
+         <br>
+         Address: <c:out value="${hit.data.address}" /><br>
+         Phone: <c:out value="${hit.data.phone}" /><br>
+         Email: <c:out value="${hit.data.email}" /><br>
      </c:when>
 
    </c:choose>
 
   </c:forEach>
-
+<%--
   <c:if test="${! empty searchResults.pages}">
 
     <BR><BR><BR>
@@ -112,9 +120,8 @@
     </tr></table>
 
   </c:if>
-
+--%>
 </c:if>
 
-<P>
-<BR>
---%>
+<p>
+<br>
