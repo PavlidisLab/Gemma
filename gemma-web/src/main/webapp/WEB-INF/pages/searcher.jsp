@@ -23,17 +23,6 @@
          <a href="<c:url value="/expressionExperiment/editExpressionExperiment.html?id=${hit.data.id}"/>">
            <c:out value="${hit.data.name}" /> (ExpressionExperiment)
          </a>
-         <%-- 
-         <BR>Birthdate: <fmt:formatDate value="${hit.data.birthDate}" pattern="yyyy-MM-dd"/>, 
-         Type: <c:out value="${hit.data.type.name}" />
-         <BR>Visits:
-          <c:forEach var="visit" items="${hit.data.visits}">
-            <c:out value="${visit.date}"/> (<c:out value="${visit.description}"/>), 
-          </c:forEach>
-          <c:if test="${empty hit.data.visits}">
-            none
-          </c:if>
-          --%>
      </c:when>
      
      <c:when test="${hit.alias == 'bioAssay'}">
@@ -41,20 +30,6 @@
          <a href="<c:url value="/bioAssay/editBioAssay.html?id=${hit.data.id}"/>">
            <c:out value="${hit.data.name}" /> (BioAssay)
          </a>
-         <%--
-         <BR>Name: <c:out value="${hit.data.firstName}" /> <c:out value="${hit.data.lastName}" />,
-         Address: <c:out value="${hit.data.address}" />, City: <c:out value="${hit.data.city}" />,
-         Telephone: <c:out value="${hit.data.telephone}" />
-         <BR>Pets:
-          <c:forEach var="pet" items="${hit.data.pets}">
-            <a href="<c:url value="/editPet.htm?petId=${pet.id}"/>">
-                <c:out value="${pet.name}" />
-            </a> 
-          </c:forEach>
-          <c:if test="${empty hit.data.pets}">
-            none
-          </c:if>
-          --%>
      </c:when>
 
      <c:when test="${hit.alias == 'arrayDesign'}">
@@ -62,20 +37,6 @@
          <a href="<c:url value="/arrayDesign/editArrayDesign.html?id=${hit.data.id}"/>">
            <c:out value="${hit.data.name}" /> (ArrayDesign)
          </a>
-         <%--
-         <BR>Name: <c:out value="${hit.data.firstName}" /> <c:out value="${hit.data.lastName}" />,
-         Address: <c:out value="${hit.data.address}" />, City: <c:out value="${hit.data.city}" />,
-         Telephone: <c:out value="${hit.data.telephone}" />
-         <BR>Pets:
-          <c:forEach var="pet" items="${hit.data.pets}">
-            <a href="<c:url value="/editPet.htm?petId=${pet.id}"/>">
-                <c:out value="${pet.name}" />
-            </a> 
-          </c:forEach>
-          <c:if test="${empty hit.data.pets}">
-            none
-          </c:if>
-          --%>
      </c:when>
 
      <c:when test="${hit.alias == 'contact'}">
@@ -95,7 +56,7 @@
 <%--
   <c:if test="${! empty searchResults.pages}">
 
-    <BR><BR><BR>
+    <br><br><br>
     <table><tr>
     <c:forEach var="page" items="${searchResults.pages}" varStatus="pagesStatus">
       <td>
@@ -104,15 +65,15 @@
           <c:out value="${page.from}" />-<c:out value="${page.to}" />
         </c:when>
         <c:otherwise>
-          <FORM method="GET">
+          <form method="GET">
             <spring:bind path="command.query">
-               <INPUT type="hidden" name="query" value="<c:out value="${status.value}"/>" />
+               <input type="hidden" name="query" value="<c:out value="${status.value}"/>" />
             </spring:bind>
             <spring:bind path="command.page">
-               <INPUT type="hidden" name="page" value="<c:out value="${pagesStatus.index}"/>" />
+               <input type="hidden" name="page" value="<c:out value="${pagesStatus.index}"/>" />
             </spring:bind>
-            <INPUT type = "submit" value="<c:out value="${page.from}" />-<c:out value="${page.to}" />"/>
-          </FORM>
+            <input type = "submit" value="<c:out value="${page.from}" />-<c:out value="${page.to}" />"/>
+          </form>
         </c:otherwise>
       </c:choose>
       </td>
