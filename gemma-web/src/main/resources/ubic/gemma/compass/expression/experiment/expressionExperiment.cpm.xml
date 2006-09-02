@@ -6,8 +6,8 @@
 <!--
     This document is a Compass mapping file for expression experiments,
     allowing the ExpressionExperiment object to be indexed and searched.
-    All "searchable" expression experiment attributes should be 
-    included here.
+    All "searchable" expression experiment attributes (as well as associations) 
+    should be included here.
     
     author: keshav
     version: $Id$
@@ -15,7 +15,7 @@
 
 <compass-core-mapping package="ubic.gemma.model">
 
-<class name="expression.experiment.ExpressionExperiment" alias="expressionExperiment">
+<class name="expression.experiment.ExpressionExperimentImpl" alias="expressionExperiment" root="true">
 
     <id name="id" />
    
@@ -25,52 +25,63 @@
     </property>
    
     <property name="description">
-      <!-- <meta-data>description</meta-data> -->
+      <meta-data>description</meta-data>
       <!-- <meta-data>expressionExperimentDescription</meta-data> -->
     </property>
       
-    <!-- <component name="bioAssays" ref-alias="bioAssay" /> -->
+    <component name="bioAssays" ref-alias="bioAssay" />
 
     <!-- can be a reference instead of component
     <reference name="books" ref-alias="book" /> -->
    
 </class>    
-<!-- 
-<class name="expression.bioAssay.BioAssay" alias="bioAssay">
+
+<class name="expression.bioAssay.BioAssayImpl" alias="bioAssay">
 	
 	 <id name="id" />
+	 
+	 <property name="name">
+      <meta-data>name</meta-data> 
+     </property>
 	 
     <component name="arrayDesignsUsed" ref-alias="arrayDesign" />
 	
 </class>
 
-<class name="expression.arrayDesign.ArrayDesign" alias="arrayDesign">
+<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign">
 	
 	 <id name="id" />
 	 
-    <component name="designProvider" ref-alias="contact" />
+	 <property name="name">
+      <meta-data>name</meta-data>
+     </property>
+	 
+    <!-- <component name="designProvider" ref-alias="contact" />-->
 
 </class>
 
-<class name="common.auditAndSecurity.Contact" alias="contact">
+<class name="common.auditAndSecurity.ContactImpl" alias="contact">
 	
 	 <id name="id" />
 	 
     <property name="name">
       <meta-data>name</meta-data>
-      <meta-data>contactName</meta-data>
+      <meta-data>username</meta-data>
     </property>
     
-    <property name="description">
-      <meta-data>description</meta-data>
-      <meta-data>contactDescription</meta-data>
+    <property name="address">
+      <meta-data>address</meta-data>
+    </property>
+    
+    <property name="phone">
+      <meta-data>phone</meta-data> 	
+      <meta-data>telephone</meta-data>
     </property>
     
     <property name="email">
       <meta-data>email</meta-data>
-      <meta-data>contactEmail</meta-data>
     </property>
 
 </class>
--->
+
 </compass-core-mapping>
