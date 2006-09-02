@@ -91,77 +91,58 @@
 </bean>
 
 <!-- ========================= COMPASS START ========================= -->
+	 
+	 <!-- COMPASS CONTROLLER DEFINITIONS -->
+	<bean id="searchController" name="/searcher.html" class="org.compass.spring.web.mvc.CompassSearchController">
+		<property name="compass"><ref bean="compass"/></property>
+		<property name="searchView"><value>searcher</value></property>
+		<property name="searchResultsView"><value>searcher</value></property>
+		<property name="pageSize"><value>10</value></property>
+	</bean>
+	
+	<bean id="indexController" name="/indexer.html" class="org.compass.spring.web.mvc.CompassIndexController">
+		<property name="compassGps"><ref bean="compassGps"/></property>
+		<!-- <property name="indexView"><value>indexView</value></property>-->
+		<property name="indexView"><value>indexer</value></property>
+		<!-- <property name="indexResultsView"><value>indexResultsView</value></property>-->
+		<property name="indexResultsView"><value>indexer</value></property>
+	</bean>
+	 
+	 <!-- COMPASS HIBERNATE DEFINITIONS -->
+	 <bean id="compass" class="org.compass.spring.LocalCompassBean">
+        <property name="resourceLocations">
+            <list>
+                <!-- <value>classpath:org/compass/sample/petclinic/petclinic.cmd.xml</value>-->
+                <value>classpath:ubic/gemma/compass/expression/experiment/expressionExperiment.cpm.xml</value>
+            </list>   
+        </property>
+        <property name="compassSettings">
+            <props>
+                <!-- <prop key="compass.engine.connection">file://${user.home}/compass/petclinic</prop>-->
+                <prop key="compass.engine.connection">file://${user.home}/compass/gemma</prop>
+                <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
+            </props>
+        </property>
+        <property name="transactionManager">
+            <ref bean="transactionManager" />
+        </property>
+    </bean>
+	 <bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
+	   <property name="name"><value>hibernateDevice</value></property>
+	   <property name="sessionFactory"><ref bean="sessionFactory" /></property>
+	 </bean>
+	 <bean id="compassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	   <property name="compass"><ref bean="compass" /></property>
+	   <property name="gpsDevices">
+	     <list>
+             <bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+                 <property name="gpsDevice" ref="hibernateGpsDevice" />
+             </bean>
+	     </list>
+	   </property>
+	 </bean>
+ <!-- COMPASS END -->
 
-<!-- COMPASS CONTROLLER DEFINITIONS -->
-<bean id="searchController" name="/searcher.html" class="org.compass.spring.web.mvc.CompassSearchController">
-	<property name="compass">
-		<ref bean="compass" />
-	</property>
-	<property name="searchView">
-		<value>searcher</value>
-	</property>
-	<property name="searchResultsView">
-		<value>searcher</value>
-	</property>
-	<property name="pageSize">
-		<value>10</value>
-	</property>
-</bean>
-
-<bean id="indexController" name="/indexer.html" class="org.compass.spring.web.mvc.CompassIndexController">
-	<property name="compassGps">
-		<ref bean="compassGps" />
-	</property>
-	<!-- <property name="indexView"><value>indexView</value></property>-->
-	<property name="indexView">
-		<value>indexer</value>
-	</property>
-	<!-- <property name="indexResultsView"><value>indexResultsView</value></property>-->
-	<property name="indexResultsView">
-		<value>indexer</value>
-	</property>
-</bean>
-
-<!-- COMPASS HIBERNATE DEFINITIONS -->
-<bean id="compass" class="org.compass.spring.LocalCompassBean">
-	<property name="resourceLocations">
-		<list>
-			<!-- <value>classpath:org/compass/sample/petclinic/petclinic.cmd.xml</value>-->
-			<value>classpath:ubic/gemma/compass/expression/experiment/expressionExperiment.cpm.xml</value>
-		</list>
-	</property>
-	<property name="compassSettings">
-		<props>
-			<!-- <prop key="compass.engine.connection">file://${user.home}/compass/petclinic</prop>-->
-			<prop key="compass.engine.connection">file://${user.home}/compass/gemma</prop>
-			<prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
-		</props>
-	</property>
-	<property name="transactionManager">
-		<ref bean="transactionManager" />
-	</property>
-</bean>
-<bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
-	<property name="name">
-		<value>hibernateDevice</value>
-	</property>
-	<property name="sessionFactory">
-		<ref bean="sessionFactory" />
-	</property>
-</bean>
-<bean id="compassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
-	<property name="compass">
-		<ref bean="compass" />
-	</property>
-	<property name="gpsDevices">
-		<list>
-			<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-				<property name="gpsDevice" ref="hibernateGpsDevice" />
-			</bean>
-		</list>
-	</property>
-</bean>
-<!-- COMPASS END -->
 
 <!-- ==================================================== -->
 <!-- Action resolvers for MultiActionControllers -->
