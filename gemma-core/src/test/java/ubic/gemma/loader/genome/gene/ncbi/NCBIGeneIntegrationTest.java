@@ -23,7 +23,6 @@ import java.util.HashSet;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 

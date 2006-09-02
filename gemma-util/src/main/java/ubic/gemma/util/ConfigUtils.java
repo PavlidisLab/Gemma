@@ -18,6 +18,7 @@
  */
 package ubic.gemma.util;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
@@ -65,11 +66,37 @@ public class ConfigUtils {
         }
 
         try {
+            config.addConfiguration( new PropertiesConfiguration( "version.properties" ) );
+        } catch ( ConfigurationException e ) {
+            // that's okay too.
+            log.warn( "version.properties not found" );
+        }
+
+        try {
             config.addConfiguration( new PropertiesConfiguration( GEMMA_PROPERTIES ) );
         } catch ( ConfigurationException e ) {
             // that's okay, but warn
             log.warn( "Gemma.properties not found" ); // this is not here for all modules.
         }
+    }
+
+    /**
+     * Attempt to get the version information about the application.
+     * 
+     * @return
+     */
+    public static String getAppVersion() {
+        return getString( "gemma.version" );
+    }
+
+    /**
+     * @return The local directory where files downloaded/uploaded are stored. It will end in a file separator ("/" on
+     *         unix).
+     */
+    public static String getDownloadPath() {
+        String val = getString( "gemma.download.path" );
+        if ( val.endsWith( File.separator ) ) return val;
+        return val + File.separatorChar;
     }
 
     /**

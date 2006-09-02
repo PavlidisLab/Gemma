@@ -113,7 +113,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         eesc.setExpressionExperimentId( ee.getId() );
         eesc.setDescription( ee.getDescription() );
         eesc.setName( ee.getName() );
-        eesc.setSearchString( "probe_0, probe_1, probe_2, probe_3, probe_4" );
+        eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
         eesc.setStringency( 1 );
 
         return eesc;

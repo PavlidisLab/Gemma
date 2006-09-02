@@ -18,12 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
-
-import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
  * @author pavlidis
@@ -31,8 +27,6 @@ import ubic.gemma.util.BeanPropertyCompleter;
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
 public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.ContactDaoBase {
-
-    private static Log log = LogFactory.getLog( ContactDaoImpl.class.getName() );
 
     @Override
     public Contact find( Contact contact ) {
@@ -75,7 +69,6 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         }
         Contact newContact = find( contact );
         if ( newContact != null ) {
-            BeanPropertyCompleter.complete( newContact, contact );
             return newContact;
         }
         return ( Contact ) create( contact );

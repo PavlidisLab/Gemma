@@ -23,13 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
@@ -83,16 +77,14 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     @Override
     public BioMaterial findOrCreate( BioMaterial bioMaterial ) {
         if ( bioMaterial.getName() == null && bioMaterial.getExternalAccession() == null ) {
-            log.debug( "BioMaterial must have a name or accession to use as comparison key" );
-            return null;
+            throw new IllegalArgumentException( "BioMaterial must have a name or accession to use as comparison key" );
         }
         BioMaterial newBioMaterial = this.find( bioMaterial );
         if ( newBioMaterial != null ) {
-            log.debug( "Found existing bioMaterial: " + newBioMaterial );
-            BeanPropertyCompleter.complete( newBioMaterial, bioMaterial );
+            if ( log.isDebugEnabled() ) log.debug( "Found existing bioMaterial: " + newBioMaterial );
             return newBioMaterial;
         }
-        log.debug( "Creating new bioMaterial: " + bioMaterial.getName() );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new bioMaterial: " + bioMaterial.getName() );
         return ( BioMaterial ) create( bioMaterial );
     }
 

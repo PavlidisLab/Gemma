@@ -23,13 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.Compound
@@ -74,13 +68,12 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
      */
     @Override
     public Compound findOrCreate( Compound compound ) {
-        if ( compound.getName() == null ) {
-            log.debug( "Compound must have a name to use as comparison key" );
-            return null;
+        if ( compound == null || compound.getName() == null ) {
+            throw new IllegalArgumentException(
+                    "Compound must not be null and must have a name to use as comparison key" );
         }
         Compound newCompound = this.find( compound );
         if ( newCompound != null ) {
-            BeanPropertyCompleter.complete( newCompound, compound );
             return newCompound;
         }
         log.debug( "Creating new compound: " + compound.getName() );

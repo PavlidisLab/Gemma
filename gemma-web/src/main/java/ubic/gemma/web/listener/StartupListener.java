@@ -17,7 +17,7 @@
  *
  */
 package ubic.gemma.web.listener;
- 
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,16 +43,24 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleDao;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.LabelValue;
 
 /**
- * StartupListener class used to initialize and database settings and populate any application-wide drop-downs.
+ * StartupListener class used to initialize the spring context and make it available to the servlet context, so filters
+ * that need the spring context can be configured. It also fills in parameters used by the application:
+ * <ul>
+ * <li>Theme (for styling pages)
+ * <li>The version number of the application
+ * <li>Whether 'remember me' functionality is enabled
+ * <li>Whether and how to encrypt passwords
+ * <li>Static information used to populate drop-downs, e.g., the list of user roles
+ * </ul>
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @web.listener
  */
 public class StartupListener extends ContextLoaderListener implements ServletContextListener {
     private static final Log log = LogFactory.getLog( StartupListener.class );
@@ -78,6 +86,14 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
             config = new HashMap<String, Object>();
         }
 
+        if ( context.getInitParameter( "theme" ) != null ) {
+            log.info( "Found theme " + context.getInitParameter( "theme" ) );
+            config.put( "theme", context.getInitParameter( "theme" ) );
+        }
+
+        log.debug( "Version is " + ConfigUtils.getAppVersion() );
+        config.put( "version", ConfigUtils.getAppVersion() );
+
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
 
         boolean encryptPassword = false;
@@ -87,6 +103,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
                 AuthenticationProvider p = ( AuthenticationProvider ) it.next();
                 if ( p instanceof RememberMeAuthenticationProvider ) {
                     config.put( "rememberMeEnabled", Boolean.TRUE );
+                    break;
                 }
             }
 
@@ -112,7 +129,6 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
             if ( encryptPassword ) {
                 log.debug( "Encryption Algorithm: " + config.get( Constants.ENC_ALGORITHM ) );
             }
-            log.debug( "Populating drop-downs..." );
         }
 
         setupContext( context );
@@ -120,6 +136,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
     @SuppressWarnings("unchecked")
     public static void setupContext( ServletContext context ) {
+        log.debug( "Populating drop-downs..." );
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
 
         // mimic the functionality of the LookupManager in Appfuse.

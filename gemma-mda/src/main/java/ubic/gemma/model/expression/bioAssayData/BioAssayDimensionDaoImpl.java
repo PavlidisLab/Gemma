@@ -28,7 +28,6 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
  * @author pavlidis
@@ -57,8 +56,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                 queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
             }
 
-            queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays()
-                    .size() ) );
+            queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
             // this will not work with detached bioassays.
             // queryObject.add( Restrictions.in( "bioAssays", bioAssayDimension.getBioAssays() ) );
@@ -83,13 +81,13 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      */
     @Override
     public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null ) return null;
-        BioAssayDimension newBioAssayDimension = find( bioAssayDimension );
-        if ( newBioAssayDimension != null ) {
-            BeanPropertyCompleter.complete( newBioAssayDimension, bioAssayDimension );
-            return newBioAssayDimension;
+        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
+            throw new IllegalArgumentException();
+        BioAssayDimension existingBioAssayDimension = find( bioAssayDimension );
+        if ( existingBioAssayDimension != null ) {
+            return existingBioAssayDimension;
         }
-        log.debug( "Creating new " + bioAssayDimension );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioAssayDimension );
         return ( BioAssayDimension ) create( bioAssayDimension );
     }
 }

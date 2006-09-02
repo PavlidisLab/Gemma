@@ -3,23 +3,26 @@
     "http://www.springframework.org/dtd/spring-beans.dtd">
 
 <!-- 
-	author: keshav    
+	author: keshav   
 	$Id$ 
 -->
 
 <beans>
 
-	<!-- ======================== FILTER CHAIN ======================= -->
+	<!--
+         ======================== FILTER CHAIN ======================= 
+        The order of filters is as described at http://www.acegisecurity.org/docbook/acegi.html#filters
+        -->
 	<bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">
-		<property name="filterInvocationDefinitionSource">
-			<value><!--  CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON  -->
-				<![CDATA[
+        <property name="filterInvocationDefinitionSource">
+            <value><!--  CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON  -->
+                <![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
-                  /**=httpSessionContextIntegrationFilter,authenticationProcessingFilter,remoteUserFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
+                  /**=channelProcessingFilter,httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,remoteUserFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
             ]]>
-			</value>
-			<!-- Put channelProcessingFilter before remoteUserFilter to turn on SSL switching -->
-		</property>
+            </value>
+            <!-- Put channelProcessingFilter first to turn on SSL switching -->
+        </property>
 	</bean>
 
 
@@ -34,12 +37,21 @@
 		</property>
 	</bean>
 
+	<bean id="logoutFilter" class="org.acegisecurity.ui.logout.LogoutFilter">
+		<constructor-arg value="/index.jsp" /><!-- URL redirected to after logout -->
+		<constructor-arg>
+			<list>
+				<ref bean="rememberMeServices" />
+				<bean class="org.acegisecurity.ui.logout.SecurityContextLogoutHandler" />
+			</list>
+		</constructor-arg>
+		<property name="filterProcessesUrl"  value="/logout.html" />
+	</bean>
 
-	<bean id="remoteUserFilter"
-		class="org.acegisecurity.wrapper.SecurityContextHolderAwareRequestFilter" />
 
-	<bean id="anonymousProcessingFilter"
-		class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
+	<bean id="remoteUserFilter" class="org.acegisecurity.wrapper.SecurityContextHolderAwareRequestFilter" />
+
+	<bean id="anonymousProcessingFilter" class="org.acegisecurity.providers.anonymous.AnonymousProcessingFilter">
 		<property name="key">
 			<value>anonymous</value>
 		</property>
@@ -50,8 +62,7 @@
 
 	<!-- ======================== AUTHENTICATION FILTER ======================= -->
 
-	<bean id="authenticationProcessingFilter"
-		class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
+	<bean id="authenticationProcessingFilter" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilter">
 		<property name="authenticationManager">
 			<ref local="authenticationManager" />
 		</property>
@@ -88,8 +99,7 @@
 	<!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
 	<bean id="loggerListener" class="org.acegisecurity.event.authentication.LoggerListener" />
 
-	<bean id="daoAuthenticationProvider"
-		class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
+	<bean id="daoAuthenticationProvider" class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
 		<property name="userDetailsService" ref="jdbcDaoImpl" />
 		<property name="userCache" ref="userCache" />
 		<property name="passwordEncoder" ref="passwordEncoder" />
@@ -135,14 +145,12 @@
 	</bean>
 
 	<!-- ===================== REMEMBER ME ==================== -->
-	<bean id="rememberMeProcessingFilter"
-		class="org.acegisecurity.ui.rememberme.RememberMeProcessingFilter">
+	<bean id="rememberMeProcessingFilter" class="org.acegisecurity.ui.rememberme.RememberMeProcessingFilter">
 		<property name="rememberMeServices" ref="rememberMeServices" />
 		<property name="authenticationManager" ref="authenticationManager" />
 	</bean>
 
-	<bean id="rememberMeServices"
-		class="org.acegisecurity.ui.rememberme.TokenBasedRememberMeServices">
+	<bean id="rememberMeServices" class="org.acegisecurity.ui.rememberme.TokenBasedRememberMeServices">
 		<property name="userDetailsService" ref="jdbcDaoImpl" />
 		<property name="key" value="gemmapleaserememberme" />
 		<property name="parameter" value="rememberMe" />
@@ -164,8 +172,7 @@
 	<!-- Note the order that entries are placed against the objectDefinitionSource is critical.
 		The FilterSecurityInterceptor will work from the top of the list down to the FIRST pattern that matches the request URL.
 		Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
-	<bean id="filterInvocationInterceptor"
-		class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
+	<bean id="filterInvocationInterceptor" class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
 		<property name="authenticationManager">
 			<ref local="authenticationManager" />
 		</property>
@@ -198,9 +205,8 @@
 		</property>
 	</bean>
 
-	<!-- ===================== SSL SWITCHING ==================== -->
-	<bean id="channelProcessingFilter"
-		class="org.acegisecurity.securechannel.ChannelProcessingFilter">
+	<!-- ===================== SSL SWITCHING - add to filterchainproxy to turn on ==================== -->
+	<bean id="channelProcessingFilter" class="org.acegisecurity.securechannel.ChannelProcessingFilter">
 		<property name="channelDecisionManager" ref="channelDecisionManager" />
 		<property name="filterInvocationDefinitionSource">
 			<value>
@@ -218,8 +224,7 @@
 		</property>
 	</bean>
 
-	<bean id="channelDecisionManager"
-		class="org.acegisecurity.securechannel.ChannelDecisionManagerImpl">
+	<bean id="channelDecisionManager" class="org.acegisecurity.securechannel.ChannelDecisionManagerImpl">
 		<property name="channelProcessors">
 			<list>
 				<bean class="org.acegisecurity.securechannel.SecureChannelProcessor" />
@@ -482,8 +487,7 @@
 
 	<!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
 
-	<bean id="afterInvocationManager"
-		class="org.acegisecurity.afterinvocation.AfterInvocationProviderManager">
+	<bean id="afterInvocationManager" class="org.acegisecurity.afterinvocation.AfterInvocationProviderManager">
 		<property name="providers">
 			<list>
 				<ref local="afterAclRead" />
@@ -494,8 +498,7 @@
 	</bean>
 
 	<!-- Processes AFTER_ACL_READ configuration settings -->
-	<bean id="afterAclRead"
-		class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
+	<bean id="afterAclRead" class="org.acegisecurity.afterinvocation.BasicAclEntryAfterInvocationProvider">
 		<property name="aclManager">
 			<ref local="aclManager" />
 		</property>
@@ -572,29 +575,25 @@
 		</property>
 	</bean>
 
-	<bean id="SimpleAclEntry.READ_WRITE"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+	<bean id="SimpleAclEntry.READ_WRITE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
 		<property name="staticField">
 			<value>org.acegisecurity.acl.basic.SimpleAclEntry.READ_WRITE</value>
 		</property>
 	</bean>
 
-	<bean id="SimpleAclEntry.READ"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+	<bean id="SimpleAclEntry.READ" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
 		<property name="staticField">
 			<value>org.acegisecurity.acl.basic.SimpleAclEntry.READ</value>
 		</property>
 	</bean>
 
-	<bean id="SimpleAclEntry.CREATE"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+	<bean id="SimpleAclEntry.CREATE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
 		<property name="staticField">
 			<value>org.acegisecurity.acl.basic.SimpleAclEntry.CREATE</value>
 		</property>
 	</bean>
 
-	<bean id="SimpleAclEntry.DELETE"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+	<bean id="SimpleAclEntry.DELETE" class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
 		<property name="staticField">
 			<value>org.acegisecurity.acl.basic.SimpleAclEntry.DELETE</value>
 		</property>
@@ -603,8 +602,7 @@
 	<!-- ================================================================== -->
 
 	<!--  Interceptor to persist ACL objects -->
-	<bean id="addOrRemoveFromACLInterceptor"
-		class="org.springframework.aop.support.DefaultPointcutAdvisor">
+	<bean id="addOrRemoveFromACLInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
 		<property name="advice">
 			<ref local="aclAdvice" />
 		</property>
@@ -649,11 +647,10 @@
 
 
 	<!-- This interceptor insures that that users can only update themselves, not other users -->
-	<bean id="userSecurityInterceptor"
-		class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
-		<property name="advice" ref="userSecurityAdvice" />
-		<property name="patterns" value=".*saveUser" />
-	</bean>
+    <bean id="userSecurityInterceptor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+        <property name="advice" ref="userSecurityAdvice"/>
+        <property name="patterns" value=".*saveUser"/>
+    </bean>
 
 	<bean id="userSecurityAdvice" class="ubic.gemma.security.interceptor.UserSecurityAdvice" />
 

@@ -48,7 +48,6 @@ public class StringUtil {
      * @param password Password or other credentials to use in authenticating this username
      * @param algorithm Algorithm used to do the digest
      * @return encypted password based on the algorithm.
-     * @deprecated
      */
     public static String encodePassword( String password, String algorithm ) {
         byte[] unencodedPassword = password.getBytes();
@@ -106,16 +105,6 @@ public class StringUtil {
 
     public static String decodeString( String str ) {
         return String.valueOf( Base64.decodeBase64( str.getBytes() ) );
-    }
-
-    /**
-     * @param str
-     * @return
-     * @deprecated
-     */
-    public static int relaxedParseInt( String str ) {
-        str = StringUtils.strip( str );
-        return Integer.parseInt( str );
     }
 
 }

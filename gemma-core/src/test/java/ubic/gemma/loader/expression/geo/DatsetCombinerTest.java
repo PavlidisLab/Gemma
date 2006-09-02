@@ -74,6 +74,7 @@ public class DatsetCombinerTest extends TestCase {
         GeoFamilyParser parser = new GeoFamilyParser();
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/twoDatasets/GDS472.soft.gz" ) );
+        assert is != null;
         parser.parse( is );
         is.close();
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -110,16 +111,19 @@ public class DatsetCombinerTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS242.soft.gz" ) );
         parser.parse( is );
+        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS243.soft.gz" ) );
         parser.parse( is );
+        assert is != null;
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/threeDatasets/GDS244.soft.gz" ) );
         parser.parse( is );
+        assert is != null;
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );

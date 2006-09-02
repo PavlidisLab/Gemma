@@ -73,6 +73,8 @@ public class SignupController extends BaseFormController {
         Locale locale = request.getLocale();
 
         Boolean encrypt = ( Boolean ) getConfiguration().get( Constants.ENCRYPT_PASSWORD );
+        
+        log.debug( "Encryption is active" );
 
         if ( encrypt != null && encrypt.booleanValue() ) {
             String algorithm = ( String ) getConfiguration().get( Constants.ENC_ALGORITHM );
@@ -94,11 +96,12 @@ public class SignupController extends BaseFormController {
 
         try {
             log.info( "Signing up " + user + " " + user.getUserName() );
-            this.userService.saveUser( user );
+            User savedUser = this.userService.saveUser( user );
+            assert savedUser != null;
         } catch ( UserExistsException e ) {
             log.warn( e.getMessage() );
 
-            errors.rejectValue( "username", "errors.existing.user",
+            errors.rejectValue( "userName", "errors.existing.user",
                     new Object[] { user.getUserName(), user.getEmail() }, "duplicate user" );
 
             // redisplay the unencrypted passwords
@@ -107,16 +110,20 @@ public class SignupController extends BaseFormController {
         }
 
         saveMessage( request, getText( "user.registered", user.getUserName(), locale ) );
-        request.getSession().setAttribute( Constants.REGISTERED, Boolean.TRUE );
+       
 
         // log user in automatically
+        assert user.getUserName() != null;
         Authentication auth = new UsernamePasswordAuthenticationToken( user.getUserName(), user.getConfirmPassword() );
         try {
             ApplicationContext ctx = WebApplicationContextUtils.getWebApplicationContext( request.getSession()
                     .getServletContext() );
             if ( ctx != null ) {
                 ProviderManager authenticationManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
-                SecurityContextHolder.getContext().setAuthentication( authenticationManager.doAuthentication( auth ) );
+                Authentication authentication = authenticationManager.doAuthentication( auth );
+                assert authentication.isAuthenticated() : "New user " + user.getUserName()
+                        + " wasn't authenticated with password " + user.getPassword() + ".";
+                SecurityContextHolder.getContext().setAuthentication( authentication );
             }
         } catch ( NoSuchBeanDefinitionException n ) {
             // ignore, should only happen when testing
@@ -124,13 +131,14 @@ public class SignupController extends BaseFormController {
 
         // Send user an e-mail
         if ( log.isDebugEnabled() ) {
-            log.debug( "Sending user '" + user.getName() + "' an account information e-mail" );
+            log.debug( "Sending user '" + user.getUserName() + "' an account information e-mail" );
         }
 
         // Send an account information e-mail
         message.setSubject( getText( "signup.email.subject", locale ) );
         sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
 
+        request.getSession().setAttribute( Constants.REGISTERED, Boolean.TRUE );
         return new ModelAndView( getSuccessView() );
     }
 

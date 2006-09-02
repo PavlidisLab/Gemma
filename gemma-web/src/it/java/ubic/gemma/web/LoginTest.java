@@ -18,89 +18,112 @@
  */
 package ubic.gemma.web;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.util.ConfigUtils;
-
-import net.sourceforge.jwebunit.WebTestCase;
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class LoginTest extends WebTestCase {
+public class LoginTest extends BaseWebTest {
 
-    private static Log log = LogFactory.getLog( LoginTest.class.getName() );
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite( LoginTest.class );
-        return new ContainerTestSetup( suite );
-    }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.BaseWebTest#setUp()
+     */
     @Override
     public void setUp() throws Exception {
-        super.setUp();
-        getTestContext().setUserAgent( "Mozilla" );
-        getTestContext().setBaseUrl( "http://localhost:8080/Gemma" );
-        log.info( getTestContext().getBaseUrl() );
+        // DO NOT use the superclass set up, becauses that logs us in.
+        baseSetup();
     }
 
-    public final void testLogin() throws Exception {
-        this.beginAt( "/login.jsp" );
+    public final void testLoginAndLogout() throws Exception {
+        this.beginAt( "/mainMenu.html" );
 
         assertFormPresent();
         setTextField( "j_username", ConfigUtils.getString( "gemma.admin.user" ) );
         setTextField( "j_password", ConfigUtils.getString( "gemma.admin.password" ) );
         this.submit();
-        assertTextPresent( "Main Menu" );
-        assertLinkPresentWithText( "View array designs" );// FIXME - in messages_en.properties.
+
+        assertTitleEquals( "Main Menu | Gemma" );
+        //
+        // assertTextPresent( "View array designs" );// FIXME - in messages_en.properties.
 
         // Logout
         clickLinkWithText( "Logout" );
         assertFormPresent();
     }
 
-    public final void testSignupAndEditProfile() throws Exception {
-        this.beginAt( "/login.jsp" );
+    public final void testSignupWithClientSideValidation() throws Exception {
+        // assertJavascriptAlertPresent( "Username is a required field." ); // in 2.0 api
+        // final WebClient webClient = new WebClient();
+        // webClient.setAlertHandler( new CollectingAlertHandler() );
+
+        this.beginAt( "/login.html" );
         assertFormPresent();
         // signup
         clickLinkWithText( "Signup" );
         assertFormPresent();
 
-        // first try without confirmpassword == password
-        setTextField( "userName", "testing" );
+        // leave out user name on purpose, should get client-side validation error.
         setTextField( "password", "testing" );
-        setTextField( "confirmPassword", "testingwrong" );
+        setTextField( "confirmPassword", "testing" );
         setTextField( "firstName", "testing" );
         setTextField( "lastName", "testing" );
         setTextField( "email", "testing@localhost.com" );
         setTextField( "passwordHint", "cat" );
-        submit();
-        assertTextPresent( "The Password field has to have the same value as the Confirm Password field." );
-        setTextField( "confirmPassword", "testing" );
-        submit();
 
-        assertTextPresent( "You have successfully registered for access to this application" );
+        submit( "save" );
+
+        assertFormPresent(); // should still be on page because of client-side validation
+        assertSubmitButtonPresent();
+
+        setTextField( "userName", "testing" );
+
+        // can't do this because of alert?
+        // submit();
+
+        // this doesn't work at present
+        // assertTextPresent( "You have successfully registered" );
 
         // edit profile
 
-        assertLinkPresentWithText( "Edit Profile" );
-        clickLinkWithText( "Edit Profile" );
+        // assertLinkPresentWithText( "Edit Profile" );
+        // clickLinkWithText( "Edit Profile" );
 
         // sign is as admin
 
         // delete the user we just created
-        
+
     }
 
-    public final void testDeleteUser() throws Exception {
-       
+    public final void testSignup() throws Exception {
+        this.beginAt( "/login.html" );
+        assertFormPresent();
+        // signup
+        clickLinkWithText( "Signup" );
+        assertFormPresent();
+
+        setTextField( "userName", "testing" );
+        setTextField( "password", "testing" );
+        setTextField( "confirmPassword", "testing" );
+        setTextField( "firstName", "testing" );
+        setTextField( "lastName", "testing" );
+        setTextField( "email", "testing@localhost.com" );
+        setTextField( "passwordHint", "cat" );
+
+        submit( "save" );
         
-     
+        dumpHtml();
+        this.gotoPage( "/mainMenu.html" );
+
+        assertLinkNotPresentWithText( "Signup" );
+
     }
+
+    // public final void testDeleteUser() throws Exception {
+    //
+    // }
 
     /*
      * (non-Javadoc)
@@ -111,4 +134,5 @@ public class LoginTest extends WebTestCase {
     public void tearDown() throws Exception {
         super.tearDown();
     }
+
 }

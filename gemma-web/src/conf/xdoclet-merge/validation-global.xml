@@ -16,157 +16,102 @@
 <formset>
     <form name="databaseEntry">
         <field property="accession" depends="required">
-            <arg0 key="databaseEntry.accession" />
+            <arg0 key="databaseEntry.accession"/>
         </field>
     </form>
     
     <form name="bioAssay">
         <field property="name" depends="required">
-            <arg0 key="bioAssay.name" />
+            <arg0 key="bioAssay.name"/>
         </field>
         <field property="description" depends="required">
-            <arg0 key="bioAssay.description" />
+            <arg0 key="bioAssay.description"/>
         </field>
     </form>
     
     <form name="expressionExperiment">
         <field property="name" depends="required">
-            <arg0 key="expressionExperiment.name" />
+            <arg0 key="expressionExperiment.name"/>
         </field>
         <field property="description" depends="required">
-            <arg0 key="expressionExperiment.description" />
+            <arg0 key="expressionExperiment.description"/>
         </field>
         <field property="source" depends="required">
-            <arg0 key="expressionExperiment.source" />
+            <arg0 key="expressionExperiment.source"/>
         </field>
     </form>
     
     <form name="expressionExperimentSearchCommand">
         <field property="searchString" depends="required">
-            <arg0 key="expressionExperimentSearchCommand.searchString" />
+            <arg0 key="expressionExperimentSearchCommand.searchString"/>
         </field>
         <field property="stringency" depends="required">
-            <arg0 key="expressionExperimentSearchCommand.stringency" />
+            <arg0 key="expressionExperimentSearchCommand.stringency"/>
+        </field>
+    </form>
+    
+    <form name="arrayDesign">
+        <field property="name" depends="required">
+            <arg0 key="arrayDesign.name"/>
+        </field>
+          <field property="description" depends="required">
+            <arg0 key="arrayDesign.description"/>
         </field>
     </form>
     
     <form name="user">
-        <field property="userName" depends="required,minlength">
-
-            <arg0 key="user.username" />
-            <arg1 name="minlength" key="${var:minlength}" resource="false" />
-
+        <field property="userName" depends="required,lengthRange">
+            
+            <arg0 key="user.username"/>
+            <arg1 name="minlength" key="${var:minlength}" resource="false"/>
+            <arg2 name="maxlength" key="${var:maxlength}" resource="false"/>
             <var>
                 <var-name>minlength</var-name>
                 <var-value>4</var-value>
             </var>
-
-        </field>
-
-        <field property="userName" depends="required,maxlength">
-
-            <arg0 key="user.username" />
-            <arg1 name="maxlength" key="${var:maxlength}" resource="false" />
-
+            
             <var>
                 <var-name>maxlength</var-name>
-                <var-value>14</var-value>
+                <var-value>25</var-value>
             </var>
-
         </field>
-
-        <field property="password" depends="required,twofields">
-            <msg name="twofields" key="errors.twofields" />
-
-            <arg0 key="user.password" />
-            <arg1 key="user.confirmPassword" />
+        
+        <field property="password" depends="required,twofields,lengthRange">
+            <msg name="twofields.lengthrange" key="errors.twofields.lengthrange"/>
+            
+            <arg0 key="user.password"/>
+            <arg1 key="user.confirmPassword"/>
+            <arg2 name="minlength" key="${var:minlength}" resource="false"/>
+            <arg3 name="maxlength" key="${var:maxlength}" resource="false"/>
             <var>
                 <var-name>secondProperty</var-name>
                 <var-value>confirmPassword</var-value>
             </var>
-        </field>
-        <field property="password" depends="required,minlength">
-
-            <arg0 key="user.password" />
-            <arg1 name="minlength" key="${var:minlength}" resource="false" />
-
             <var>
                 <var-name>minlength</var-name>
                 <var-value>5</var-value>
             </var>
-        </field>
-
-        <field property="password" depends="required,maxlength">
-
-            <arg0 key="user.password" />
-            <arg1 name="maxlength" key="${var:maxlength}" resource="false" />
-
             <var>
                 <var-name>maxlength</var-name>
-                <var-value>12</var-value>
+                <var-value>20</var-value>
             </var>
         </field>
-
+        
         <field property="confirmPassword" depends="required">
-
-            <arg0 key="user.confirmPassword" />
+            <arg0 key="user.confirmPassword"/>
         </field>
         <field property="firstName" depends="required">
-
-            <arg0 key="user.firstName" />
+            
+            <arg0 key="user.firstName"/>
         </field>
         <field property="lastName" depends="required">
-
-            <arg0 key="user.lastName" />
+            <arg0 key="user.lastName"/>
         </field>
-        <!-- 
-            <field property="address.city"
-            depends="required">
-            
-            <arg0 key="user.address.city"/>
-            </field>
-            <field property="address.country"
-            depends="required">
-            
-            <arg0 key="user.address.country"/>
-            </field>
-            <field property="address.postalCode"
-            depends="required,mask">
-            <msg
-            name="mask"
-            key="errors.zip"/>
-            
-            <arg0 key="user.address.postalCode"/>
-            <var>
-            <var-name>mask</var-name>
-            <var-value>${zip}</var-value>
-            </var>
-            </field>
-            <field property="address.province"
-            depends="required">
-            
-            <arg0 key="user.address.province"/>
-            </field>-->
         <field property="email" depends="required,email">
-
-            <arg0 key="user.email" />
+            <arg0 key="user.email"/>
         </field>
         <field property="passwordHint" depends="required">
-
-            <arg0 key="user.passwordHint" />
+            <arg0 key="user.passwordHint"/>
         </field>
-        <!-- 
-            <field property="phoneNumber"
-            depends="mask">
-            <msg
-            name="mask"
-            key="errors.phone"/>
-            
-            <arg0 key="user.phoneNumber"/>
-            <var>
-            <var-name>mask</var-name>
-            <var-value>${phone}</var-value>
-            </var>
-            </field>-->
     </form>
 </formset>

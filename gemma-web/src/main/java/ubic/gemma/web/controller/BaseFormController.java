@@ -54,7 +54,7 @@ import ubic.gemma.util.MailEngine;
  * @version $Id$
  */
 public abstract class BaseFormController extends SimpleFormController {
-    protected final transient Log log = LogFactory.getLog( getClass() );
+    protected Log log = LogFactory.getLog( getClass() );
     protected MailEngine mailEngine = null;
     protected SimpleMailMessage message = null;
     protected String templateName = null;
@@ -76,8 +76,10 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * Convenience method for getting a i18n key's value. Calling getMessageSourceAccessor() is used because the
-     * RequestContext variable is not set in unit tests b/c there's no DispatchServlet Request.
+     * Convenience method for getting a i18n key's value.
+     * <p>
+     * Implementation note: Calling getMessageSourceAccessor() is used because the RequestContext variable is not set in
+     * unit tests b/c there's no DispatchServlet Request.
      * 
      * @param msgKey
      * @param locale the current locale
@@ -94,6 +96,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param args
      * @param locale the current locale
      * @return
+     * @see getText( String msgKey, Locale locale )
      */
     public String getText( String msgKey, Object[] args, Locale locale ) {
         return getMessageSourceAccessor().getMessage( msgKey, args, locale );
@@ -127,6 +130,10 @@ public abstract class BaseFormController extends SimpleFormController {
         return super.processFormSubmission( request, response, command, errors );
     }
 
+    /**
+     * @param request
+     * @param msg
+     */
     @SuppressWarnings("unchecked")
     public void saveMessage( HttpServletRequest request, String msg ) {
         List<String> messages = ( List<String> ) request.getSession().getAttribute( "messages" );
@@ -139,18 +146,30 @@ public abstract class BaseFormController extends SimpleFormController {
         request.getSession().setAttribute( "messages", messages );
     }
 
+    /**
+     * @param mailEngine
+     */
     public void setMailEngine( MailEngine mailEngine ) {
         this.mailEngine = mailEngine;
     }
 
+    /**
+     * @param message
+     */
     public void setMessage( SimpleMailMessage message ) {
         this.message = message;
     }
 
+    /**
+     * @param templateName
+     */
     public void setTemplateName( String templateName ) {
         this.templateName = templateName;
     }
 
+    /**
+     * @param userService
+     */
     public void setUserService( UserService userService ) {
         this.userService = userService;
     }
@@ -166,7 +185,8 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * Set up a custom property editor for converting form inputs to real objects
+     * Set up a custom property editor for converting form inputs to real objects. Override this to add additional
+     * custom editors (call super.initBinder() in your implemenation)
      */
     @SuppressWarnings("unused")
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {

@@ -23,13 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.Protocol
@@ -68,16 +62,14 @@ public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDa
     @Override
     public Protocol findOrCreate( Protocol protocol ) {
         if ( protocol == null || protocol.getName() == null ) {
-            log.warn( "Protocol was null or had no name : " + protocol );
-            return null;
+            throw new IllegalArgumentException( "Protocol was null or had no name : " + protocol );
         }
         Protocol newProtocol = find( protocol );
         if ( newProtocol != null ) {
-            log.debug( "Found existing protocol: " + newProtocol );
-            BeanPropertyCompleter.complete( newProtocol, protocol );
+            if ( log.isDebugEnabled() ) log.debug( "Found existing protocol: " + newProtocol );
             return newProtocol;
         }
-        log.debug( "Creating new protocol: " + protocol );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new protocol: " + protocol );
         return ( Protocol ) create( protocol );
     }
 

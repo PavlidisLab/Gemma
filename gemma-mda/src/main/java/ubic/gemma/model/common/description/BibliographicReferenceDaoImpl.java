@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -44,6 +44,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Override
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
         try {
+            BusinessKey.checkKey( bibliographicReference );
             Criteria queryObject = super.getSession( false ).createCriteria( BibliographicReference.class );
 
             /*
@@ -82,18 +83,14 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
      */
     @Override
     public BibliographicReference findOrCreate( BibliographicReference bibliographicReference ) {
-        if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
-                || bibliographicReference.getPubAccession().getAccession() == null ) {
-            throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
-                    + bibliographicReference );
+
+        BibliographicReference existingBibliographicReference = find( bibliographicReference );
+        if ( existingBibliographicReference != null ) {
+            if ( log.isDebugEnabled() )
+                log.debug( "Found existing bibliographicReference: " + existingBibliographicReference );
+            return existingBibliographicReference;
         }
-        BibliographicReference newBibliographicReference = find( bibliographicReference );
-        if ( newBibliographicReference != null ) {
-            log.debug( "Found existing bibliographicReference: " + newBibliographicReference );
-            BeanPropertyCompleter.complete( newBibliographicReference, bibliographicReference );
-            return newBibliographicReference;
-        }
-        log.debug( "Creating new bibliographicReference: " + bibliographicReference );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new bibliographicReference: " + bibliographicReference );
         return ( BibliographicReference ) create( bibliographicReference );
     }
 }

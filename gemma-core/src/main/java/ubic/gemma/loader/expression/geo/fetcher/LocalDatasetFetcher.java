@@ -22,8 +22,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.model.common.description.LocalFile;
 
 /**

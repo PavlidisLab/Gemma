@@ -16,13 +16,9 @@ import org.apache.commons.logging.LogFactory;
 import org.displaytag.tags.TableTagParameters;
 
 /**
- * Filter that compresses output with gzip (assuming that browser supports gzip). Code from <a
- * href="http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html">
- * http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html</a>. &copy; 2003 Jayson Falkner You may freely use the
+ * Filter that compresses output with gzip (assuming that browser supports gzip). Code from {@link
+ *  http://www.onjava.com/pub/a/onjava/2003/11/19/filters.html} &copy; 2003 Jayson Falkner You may freely use the
  * code both commercially and non-commercially.
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @author Matt Raible
  * @author keshav

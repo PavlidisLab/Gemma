@@ -20,19 +20,26 @@ package ubic.gemma.util;
 
 import java.util.Map;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.VelocityException;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.ui.velocity.VelocityEngineUtils;
 
 /**
  * From Appfuse.
  * 
  * @author pavlidis
+ * @author Matt Raible
  * @version $Id$
  */
 public class MailEngine {
@@ -81,6 +88,34 @@ public class MailEngine {
         } catch ( MailException ex ) {
             // log it and go on
             log.error( ex.getMessage() );
+            log.debug( ex, ex );
         }
+    }
+
+    /**
+     * Convenience method for sending messages with attachments.
+     * 
+     * @param emailAddresses
+     * @param resource to be attached
+     * @param bodyText
+     * @param subject
+     * @param attachmentName
+     * @throws MessagingException
+     * @author Ben Gill
+     */
+    public void sendMessage( String[] emailAddresses, ClassPathResource resource, String bodyText, String subject,
+            String attachmentName ) throws MessagingException {
+        MimeMessage message = ( ( JavaMailSenderImpl ) mailSender ).createMimeMessage();
+
+        // use the true flag to indicate you need a multipart message
+        MimeMessageHelper helper = new MimeMessageHelper( message, true );
+
+        helper.setTo( emailAddresses );
+        helper.setText( bodyText );
+        helper.setSubject( subject );
+
+        helper.addAttachment( attachmentName, resource );
+
+        ( ( JavaMailSenderImpl ) mailSender ).send( message );
     }
 }

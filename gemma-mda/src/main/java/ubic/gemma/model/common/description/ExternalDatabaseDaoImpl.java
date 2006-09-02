@@ -25,8 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -67,10 +65,9 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
         }
         ExternalDatabase existingExternalDatabase = find( externalDatabase );
         if ( existingExternalDatabase != null ) {
-            BeanPropertyCompleter.complete( existingExternalDatabase, externalDatabase );
             return existingExternalDatabase;
         }
-        log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
         return ( ExternalDatabase ) create( externalDatabase );
     }
 }

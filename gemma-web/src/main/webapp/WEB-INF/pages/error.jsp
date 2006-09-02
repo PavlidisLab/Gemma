@@ -1,39 +1,47 @@
-<%@ page language="java" isErrorPage="true" %>
 <%@ include file="/common/taglibs.jsp"%>
+<%@ page language="java" isErrorPage="true"%>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html>
-<head>
-    <title><fmt:message key="errorPage.title"/></title>
-    <link rel="stylesheet" type="text/css" media="all" 
-        href="<c:url value="/styles/default.css"/>" /> 
-</head>
+	<head>
+		<title><fmt:message key="errorPage.title" />
+		</title>
+		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
+	</head>
 
-<body>
-
-<div id="screen">
-    <div id="content">
-    <h2><fmt:message key="errorPage.heading"/></h2>
-    <p><a href="mainMenu.html" onclick="history.back();return false">&#171;
-Back</a></p>
-    <%@ include file="/common/messages.jsp" %>
- <% if (request.getAttribute("exception") != null) { %>
-    <p><%=((Exception)request.getAttribute("exception")).getLocalizedMessage() %></p>
-    <h3>Stack Trace:</h3>
-    <pre><% ((Exception)request.getAttribute("exception")).printStackTrace(new java.io.PrintWriter(out)); %></pre>
- <% } else if (exception != null) { %>
-    <pre><% exception.printStackTrace(new java.io.PrintWriter(out)); %></pre>
- <% } else if ((Exception)request.getAttribute("javax.servlet.error.exception") != null) { %>
-    <pre><% ((Exception)request.getAttribute("javax.servlet.error.exception"))
-                           .printStackTrace(new java.io.PrintWriter(out)); %></pre>
- <% } else { %>
-    <p>The error information could not be obtained.</p>
- <% } %>
-    </div>
-    <a href="mainMenu.html" onclick="history.back();return false">&#171;
-Back</a>
-    
-</body>
+	<body id="error">
+		<div id="page">
+			<div id="content" class="clearfix">
+				<div id="main">
+					<h1>
+						<fmt:message key="errorPage.heading" />
+					</h1>
+					<%@ include file="/common/messages.jsp"%>
+					<%
+					if ( exception != null ) {
+					%>
+					<pre>
+						<%
+						exception.printStackTrace( new java.io.PrintWriter( out ) );
+						%>
+					</pre>
+					<%
+					} else if ( ( Exception ) request.getAttribute( "javax.servlet.error.exception" ) != null ) {
+					%>
+					<pre>
+						<%
+						                        ( ( Exception ) request.getAttribute( "javax.servlet.error.exception" ) )
+						                        .printStackTrace( new java.io.PrintWriter( out ) );
+						%>
+					</pre>
+					<%
+					} else { %> Error cause was not recovered.  <% }
+					%>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
+

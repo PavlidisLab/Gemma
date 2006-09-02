@@ -69,6 +69,8 @@ public class UserServiceImplTest extends TestCase {
     }
 
     public void testHandleSaveUser() throws Exception {
+        userDaoMock.findByUserName( "foobar" );
+        expectLastCall().andReturn( null );
         userDaoMock.create( testUser );
         expectLastCall().andReturn( testUser );
         replay( userDaoMock );

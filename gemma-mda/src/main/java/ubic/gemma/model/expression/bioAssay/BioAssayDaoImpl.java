@@ -23,8 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -69,16 +67,14 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
     @Override
     public BioAssay findOrCreate( BioAssay bioAssay ) {
         if ( bioAssay == null || bioAssay.getName() == null ) {
-            log.warn( "BioAssay was null or had no name : " + bioAssay );
-            return null;
+            throw new IllegalArgumentException( "BioAssay was null or had no name : " + bioAssay );
         }
         BioAssay newBioAssay = find( bioAssay );
         if ( newBioAssay != null ) {
-            log.debug( "Found existing bioAssay: " + newBioAssay );
-            BeanPropertyCompleter.complete( newBioAssay, bioAssay );
+            if ( log.isDebugEnabled() ) log.debug( "Found existing bioAssay: " + newBioAssay );
             return newBioAssay;
         }
-        log.debug( "Creating new bioAssay: " + bioAssay );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new bioAssay: " + bioAssay );
         return ( BioAssay ) create( bioAssay );
     }
 

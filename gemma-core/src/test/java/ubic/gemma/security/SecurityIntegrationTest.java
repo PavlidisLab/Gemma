@@ -29,7 +29,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -139,7 +138,9 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
 
         arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
 
-        // FIXME - this test always passes unless exception.
+        assertNotNull(arrayDesign.getId());
+        
+        //  
         // col = compositeSequenceService.getAllCompositeSequences();
         // if ( col.size() == 0 ) {
         // fail( "User not authorized for to access at least one of the objects in the graph" );

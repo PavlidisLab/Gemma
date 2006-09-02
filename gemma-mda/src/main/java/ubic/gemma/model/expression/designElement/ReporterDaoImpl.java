@@ -23,8 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -83,14 +81,12 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
     @Override
     public Reporter findOrCreate( Reporter reporter ) {
         if ( reporter.getName() == null || reporter.getArrayDesign() == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "reporter must have name and arrayDesign." );
-            return null;
+            throw new IllegalArgumentException( "reporter must have name and arrayDesign." );
         }
 
         Reporter newReporter = this.find( reporter );
         if ( newReporter != null ) {
             if ( log.isDebugEnabled() ) log.debug( "Found existing reporter: " + newReporter );
-            BeanPropertyCompleter.complete( newReporter, reporter );
             return newReporter;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new reporter: " + reporter.getName() );

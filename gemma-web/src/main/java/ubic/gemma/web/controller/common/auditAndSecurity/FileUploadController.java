@@ -18,25 +18,17 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.basecode.util.FileTools;
-import ubic.gemma.Constants;
 import ubic.gemma.web.controller.BaseFormController;
-import ubic.gemma.web.util.upload.CommonsMultipartFile;
+import ubic.gemma.web.util.upload.FileUploadUtil;
 
 /**
  * Controller class to upload Files. This demonstrates the technique, but isn't all that useful as is.
@@ -70,43 +62,7 @@ public class FileUploadController extends BaseFormController {
             return showForm( request, response, errors );
         }
 
-        MultipartHttpServletRequest multipartRequest = ( MultipartHttpServletRequest ) request;
-        CommonsMultipartFile file = ( CommonsMultipartFile ) multipartRequest.getFile( "file" );
-
-        // the directory to upload to
-        String uploadDir = getServletContext().getRealPath( "/resources" ) + "/" + request.getRemoteUser() + "/";
-
-        // Create the directory if it doesn't exist
-        File dirPath = FileTools.createDir( uploadDir );
-
-        // retrieve the file data
-        InputStream stream = file.getInputStream();
-
-        // write the file to the file specified
-        OutputStream bos = new FileOutputStream( uploadDir + file.getOriginalFilename() );
-        int bytesRead = 0;
-        byte[] buffer = new byte[8192];
-
-        while ( ( bytesRead = stream.read( buffer, 0, 8192 ) ) != -1 ) {
-            bos.write( buffer, 0, bytesRead );
-        }
-
-        bos.close();
-
-        // close the stream
-        stream.close();
-
-        // place the data into the request for retrieval on next page
-        request.setAttribute( "friendlyName", fileUpload.getName() );
-        request.setAttribute( "fileName", file.getOriginalFilename() );
-        request.setAttribute( "contentType", file.getContentType() );
-        request.setAttribute( "size", file.getSize() + " bytes" );
-        request.setAttribute( "location", dirPath.getAbsolutePath() + Constants.FILE_SEP + file.getOriginalFilename() );
-
-        String link = request.getContextPath() + "/resources" + "/" + request.getRemoteUser() + "/";
-
-        request.setAttribute( "link", link + file.getOriginalFilename() );
-
+        FileUploadUtil.uploadFile( request, fileUpload, "file" );
         log.info( "Uploaded file!" );
 
         return new ModelAndView( getSuccessView() );

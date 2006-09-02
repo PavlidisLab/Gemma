@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.genome.TaxonDao;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -72,6 +71,7 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
      * Configure parser and loader. Provide "tomcat-esque" functionality by injecting the parser and loader with their
      * dependencies.
      */
+    @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         gene2GOAssParser = new Gene2GOAssociationParser();

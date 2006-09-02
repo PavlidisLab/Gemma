@@ -68,14 +68,23 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         return fileItem;
     }
 
+    /**
+     * 
+     */
     public String getName() {
         return this.fileItem.getFieldName();
     }
 
+    /**
+     * 
+     */
     public boolean isEmpty() {
         return ( this.size == 0 );
     }
 
+    /**
+     * 
+     */
     public String getOriginalFilename() {
         if ( this.fileItem.getName() == null ) {
             return null;
@@ -95,14 +104,23 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
 
     }
 
+    /**
+     * 
+     */
     public String getContentType() {
         return this.fileItem.getContentType();
     }
 
+    /**
+     * 
+     */
     public long getSize() {
         return size;
     }
 
+    /**
+     * 
+     */
     public byte[] getBytes() {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has been moved - cannot be read again" );
@@ -111,6 +129,9 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         return ( bytes != null ? bytes : new byte[0] );
     }
 
+    /**
+     * 
+     */
     public InputStream getInputStream() throws IOException {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has been moved - cannot be read again" );
@@ -119,6 +140,9 @@ public class CommonsMultipartFile implements MultipartFile, Serializable {
         return ( inputStream != null ? inputStream : new ByteArrayInputStream( new byte[0] ) );
     }
 
+    /**
+     * 
+     */
     public void transferTo( File dest ) throws IOException, IllegalStateException {
         if ( !isAvailable() ) {
             throw new IllegalStateException( "File has already been moved - cannot be transferred again" );

@@ -23,8 +23,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -76,7 +74,6 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
         }
         Person newPerson = find( person );
         if ( newPerson != null ) {
-            BeanPropertyCompleter.complete( newPerson, person );
             return newPerson;
         }
         return ( Person ) create( person );

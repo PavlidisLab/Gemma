@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -80,14 +79,13 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
     @Override
     public ubic.gemma.model.common.description.LocalFile findOrCreate(
             ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null ) return null;
+        if ( localFile == null ) throw new IllegalArgumentException();
         LocalFile existingLocalFile = find( localFile );
         if ( existingLocalFile != null ) {
-            log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
-            BeanPropertyCompleter.complete( existingLocalFile, localFile );
+            if ( log.isDebugEnabled() ) log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
             return existingLocalFile;
         }
-        log.debug( "Creating new localFile: " + localFile.getLocalURL() );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new localFile: " + localFile.getLocalURL() );
         return create( localFile );
     }
 

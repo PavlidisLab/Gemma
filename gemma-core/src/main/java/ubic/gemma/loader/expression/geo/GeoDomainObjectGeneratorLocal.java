@@ -18,8 +18,6 @@
  */
 package ubic.gemma.loader.expression.geo;
 
-import org.apache.commons.configuration.ConfigurationException;
-
 import ubic.gemma.loader.expression.geo.fetcher.LocalDatasetFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.LocalSeriesFetcher;
 

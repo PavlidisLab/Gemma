@@ -21,17 +21,10 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import ubic.gemma.Constants;
-import ubic.gemma.util.RandomGUID;
-import ubic.gemma.util.StringUtil;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserService
@@ -39,7 +32,6 @@ import ubic.gemma.util.StringUtil;
  * @version $Id$
  */
 public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.UserServiceBase {
-    private final transient Log log = LogFactory.getLog( UserServiceImpl.class );
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUser(java.lang.String)
@@ -72,15 +64,27 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     @Override
     protected User handleSaveUser( ubic.gemma.model.common.auditAndSecurity.User user ) throws UserExistsException {
 
+        if ( user.getUserName() == null ) {
+            throw new IllegalArgumentException( "UserName cannot be null" );
+        }
+
         // defensive programming...
         for ( UserRole role : user.getRoles() ) {
             role.setUserName( user.getUserName() );
         }
 
+        if ( this.getUserDao().findByUserName( user.getUserName() ) != null ) {
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        }
+
+        // FIXME make email address unique too, so users can't sign up more than once.
         try {
             user.setConfirmPassword( user.getPassword() );
             return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
+            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
+        } catch ( org.springframework.dao.InvalidDataAccessResourceUsageException e) {
+            // FIXME shouldn't happen if we don't have duplicates in the first place...
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
 
@@ -100,30 +104,30 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      */
     @Override
     protected String handleCheckLoginCookie( java.lang.String value ) throws java.lang.Exception {
-        value = StringUtil.decodeString( value );
-
-        String[] values = StringUtils.split( value, "|" );
-
-        // in case of empty username in cookie, return null
-        if ( values.length == 1 ) {
-            return null;
-        }
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "looking up cookieId: " + values[1] );
-        }
-
-        UserSession cookie = UserSession.Factory.newInstance();
-        cookie = this.getUserSessionDao().findUserSession( values[0], values[1] );
-
-        if ( cookie != null ) {
-            if ( log.isDebugEnabled() ) {
-                log.debug( "cookieId lookup succeeded, generating new cookieId" );
-            }
-
-            return saveLoginCookie( cookie );
-        }
-        log.debug( "cookieId lookup failed, returning null" );
+        // value = StringUtil.decodeString( value );
+        //
+        // String[] values = StringUtils.split( value, "|" );
+        //
+        // // in case of empty username in cookie, return null
+        // if ( values.length == 1 ) {
+        // return null;
+        // }
+        //
+        // if ( log.isDebugEnabled() ) {
+        // log.debug( "looking up cookieId: " + values[1] );
+        // }
+        //
+        // UserSession cookie = UserSession.Factory.newInstance();
+        // cookie = this.getUserSessionDao().findUserSession( values[0], values[1] );
+        //
+        // if ( cookie != null ) {
+        // if ( log.isDebugEnabled() ) {
+        // log.debug( "cookieId lookup succeeded, generating new cookieId" );
+        // }
+        //
+        // return saveLoginCookie( cookie );
+        // }
+        // log.debug( "cookieId lookup failed, returning null" );
         return null;
     }
 
@@ -132,11 +136,12 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      */
     @Override
     protected String handleCreateLoginCookie( java.lang.String userName ) throws java.lang.Exception {
-        UserSession cookie = UserSession.Factory.newInstance();
-
-        User user = this.getUserDao().findByUserName( userName );
-        cookie.setUser( user );
-        return saveLoginCookie( cookie );
+        // UserSession cookie = UserSession.Factory.newInstance();
+        //
+        // User user = this.getUserDao().findByUserName( userName );
+        // cookie.setUser( user );
+        // return saveLoginCookie( cookie );
+        return null;
     }
 
     /*
@@ -146,9 +151,9 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      */
     @Override
     protected void handleRemoveLoginCookies( String userName ) throws Exception {
-        User user = this.getUserDao().findByUserName( userName );
-        user.setUserSessions( null );
-        this.getUserDao().update( user );
+        // User user = this.getUserDao().findByUserName( userName );
+        // user.setUserSessions( null );
+        // this.getUserDao().update( user );
     }
 
     @SuppressWarnings("unchecked")
@@ -179,11 +184,12 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      * @return
      */
     private String saveLoginCookie( UserSession cookie ) {
-        cookie.setCookie( new RandomGUID().toString() );
-        cookie.setCreateDate( new Date() );
-        this.getUserSessionDao().create( cookie );
-
-        return StringUtil.encodeString( cookie.getUser().getUserName() + "|" + cookie.getCookie() );
+        // cookie.setCookie( new RandomGUID().toString() );
+        // cookie.setCreateDate( new Date() );
+        // this.getUserSessionDao().create( cookie );
+        //
+        // return StringUtil.encodeString( cookie.getUser().getUserName() + "|" + cookie.getCookie() );
+        return null;
     }
 
     /*

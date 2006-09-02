@@ -24,8 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -85,11 +83,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             throw new IllegalArgumentException( "compositeSequence must have name and arrayDesign." );
         }
 
-        CompositeSequence newcompositeSequence = this.find( compositeSequence );
-        if ( newcompositeSequence != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing compositeSequence: " + newcompositeSequence );
-            BeanPropertyCompleter.complete( newcompositeSequence, compositeSequence );
-            return newcompositeSequence;
+        CompositeSequence existingCompositeSequence = this.find( compositeSequence );
+        if ( existingCompositeSequence != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing compositeSequence: " + existingCompositeSequence );
+            return existingCompositeSequence;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence );
         return ( CompositeSequence ) create( compositeSequence );

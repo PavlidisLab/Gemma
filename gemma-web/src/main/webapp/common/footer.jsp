@@ -1,34 +1,29 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<div id="validators">
-	<%--
-	 <a href="http://www.springframework.org/"
-		title="Spring - java/j2ee Application Framework"><img
-		src="<c:url value="/images/powered-by-spring_large.png"/>"
-			width="125" height="66" border="0" alt="Spring Framework"></a>
-            --%>
-	<!--		 
-    <a href="http://jigsaw.w3.org/css-validator/check/referer"><img 
-        src="<c:url value="/images/vcss.png"/>" 
-            alt="Valid CSS!" class="badge" /></a> 
-    <a href="http://validator.w3.org/check/referer"><img
-        src="<c:url value="/images/valid-xhtml10.png"/>"
-            alt="Valid XHTML 1.0!" class="badge" /></a>
-    -->
+<div id="divider">
+	<div></div>
 </div>
 
-Version 0.1 &middot; Copyright &copy; 2004 - 2006 &middot;
-<a href="http://ubic.ubc.ca/Gemma">Gemma</a>
-<br />
 
-<%-- Currently causes problems with httpunit - www.google-analytics.com is not directly reachable--%>
-<%--<script src="http://www.google-analytics.com/urchin.js"
-	type="text/javascript">
+<span class="left"> Version ${appConfig["version"]} &middot; Copyright &copy; 2004 - 2006 &middot; <a
+	href="<c:url value="/"/>">Gemma</a> </span>
+<c:if test="${pageContext.request.remoteUser != null}">
+	<span class="right"> | <fmt:message key="user.status" /> <authz:authentication operation="username" /> | <a
+		href="<c:url value="/logout.html"/>"> <fmt:message key="user.logout" /> </a> </span>
+</c:if>
+<c:if test="${applicationScope.userCounter != null}">
+	<span class="right"> <authz:authorize ifAllGranted="admin">
+			<a href="<c:url value="/activeUsers.html"/>"><fmt:message key="mainMenu.activeUsers" /> </a>:
+    </authz:authorize> <authz:authorize ifNotGranted="admin">
+			<fmt:message key="mainMenu.activeUsers" />:
+    </authz:authorize> <c:if test="${userCounter >= 0}">
+			<c:out value="${userCounter}" />
+		</c:if> &nbsp; </span>
+</c:if>
+<%-- Currently www.google-analytics.com/urchin.js causes problems with httpunit - www.google-analytics.com is not directly reachable--%>
+<script src="<c:url value="/scripts/urchin.js"/>" type="text/javascript">
 </script>
 <script type="text/javascript">
 _uacct = "UA-255601-1";
 urchinTracker();
-</script>--%>
-
-
-
+</script>

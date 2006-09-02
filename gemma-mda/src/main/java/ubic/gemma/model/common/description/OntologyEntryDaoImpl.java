@@ -21,16 +21,10 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.util.BusinessKey;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.description.OntologyEntry
@@ -41,6 +35,8 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
 
     @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
+
+        BusinessKey.checkKey( ontologyEntry );
 
         try {
             Criteria queryObject = BusinessKey.createQueryObject( super.getSession( false ), ontologyEntry );
@@ -66,22 +62,17 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
     @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
 
-        if ( ( ontologyEntry.getAccession() == null || ontologyEntry.getExternalDatabase() == null )
-                && ( ontologyEntry.getCategory() == null || ontologyEntry.getValue() == null ) ) {
-            throw new IllegalArgumentException( "Either accession, or category+value must be filled in." );
-        }
-        OntologyEntry newOntologyEntry = find( ontologyEntry );
-        if ( newOntologyEntry != null ) {
+        OntologyEntry existingOntologyEntry = find( ontologyEntry );
+        if ( existingOntologyEntry != null ) {
             if ( log.isDebugEnabled() )
                 log.debug( "Found existing ontologyEntry: "
-                        + newOntologyEntry
+                        + existingOntologyEntry
                         + " externalDatabase="
-                        + newOntologyEntry.getExternalDatabase()
+                        + existingOntologyEntry.getExternalDatabase()
                         + ", Database Id="
                         + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
                                 .getId() ) );
-            BeanPropertyCompleter.complete( newOntologyEntry, ontologyEntry );
-            return newOntologyEntry;
+            return existingOntologyEntry;
         }
         if ( log.isDebugEnabled() )
             log.debug( "Creating new ontologyEntry: "

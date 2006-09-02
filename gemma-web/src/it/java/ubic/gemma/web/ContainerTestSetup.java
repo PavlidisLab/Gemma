@@ -40,11 +40,14 @@ import ubic.gemma.util.ConfigUtils;
 
 /**
  * Base TestSetup for running tests that need a Tomcat 5.x web container, using Cargo (see
- * {@link http://cargo.codehaus.org/Functional+testing}). To use with jWebUnit see
- * {@link http://jwebunit.sourceforge.net/quickstart.html}).
+ * {@link http://cargo.codehaus.org/Functional+testing}). If you are using maven to start the container, you don't need
+ * to use this class.
+ * <p>
+ * To use with jWebUnit see {@link http://jwebunit.sourceforge.net/quickstart.html}).
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated Start the container manually or with maven instead.
  */
 public final class ContainerTestSetup extends TestSetup {
 

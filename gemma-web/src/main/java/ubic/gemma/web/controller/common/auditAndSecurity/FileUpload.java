@@ -22,16 +22,18 @@ import java.io.Serializable;
 
 /**
  * Command class to handle uploading of a file. (From Appfuse)
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
  */
 public class FileUpload implements Serializable {
+
+    /**
+     * Optional friendly name for the file.
+     */
     private String name;
+
     private byte[] file;
 
     /**
@@ -61,8 +63,9 @@ public class FileUpload implements Serializable {
 
     /**
      * @param name The name to set.
-     * @spring.validator type="required"
-     * @spring.validator-args arg0resource="uploadForm.name"
+     * @spring.validator type="minlength"
+     * @spring.validator-args arg1value="var:length"
+     * @spring.validator-var name="length" value="6"
      */
     public void setName( String name ) {
         this.name = name;

@@ -21,8 +21,6 @@ package ubic.gemma.model.common.protocol;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -71,7 +69,6 @@ public class HardwareDaoImpl extends ubic.gemma.model.common.protocol.HardwareDa
         }
         Hardware newHardware = find( hardware );
         if ( newHardware != null ) {
-            BeanPropertyCompleter.complete( newHardware, hardware );
             return newHardware;
         }
         return ( Hardware ) create( hardware );

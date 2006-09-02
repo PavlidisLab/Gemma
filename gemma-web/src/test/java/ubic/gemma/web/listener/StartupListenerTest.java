@@ -52,7 +52,7 @@ public class StartupListenerTest extends TestCase {
 
         sc = new MockServletContext( "" );
         sc.addInitParameter( "daoType", "hibernate" );
-        // sc.addInitParameter( "theme", "simplicity" );
+        sc.addInitParameter( "theme", "simplicity" );
 
         // initialize Spring
         String pkg = ClassUtils.classPackageAsResourcePath( Constants.class );
@@ -74,7 +74,7 @@ public class StartupListenerTest extends TestCase {
         log.warn( sc.getAttribute( Constants.CONFIG ) );
         assertTrue( sc.getAttribute( Constants.CONFIG ) != null );
         Map config = ( Map ) sc.getAttribute( Constants.CONFIG );
-        // assertEquals( config.get( "theme" ), "simplicity" );
+        assertNotNull( config.get( "theme" ) );
 
         log.warn( sc.getAttribute( WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE ) );
         assertTrue( sc.getAttribute( WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE ) != null );

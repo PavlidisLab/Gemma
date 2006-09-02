@@ -21,13 +21,7 @@ package ubic.gemma.model.common.protocol;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.Software
@@ -64,10 +58,9 @@ public class SoftwareDaoImpl extends ubic.gemma.model.common.protocol.SoftwareDa
 
     @Override
     public Software findOrCreate( Software software ) {
-        if ( software == null || software.getName() == null ) return null;
+        if ( software == null || software.getName() == null ) throw new IllegalArgumentException();
         Software newSoftware = find( software );
         if ( newSoftware != null ) {
-            BeanPropertyCompleter.complete( newSoftware, software );
             return newSoftware;
         }
         return ( Software ) create( software );

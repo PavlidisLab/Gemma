@@ -206,8 +206,7 @@
        
    
 </form>
-<%-- TODO
-<validate:javascript formName="expressionExperimentForm" staticJavascript="false"/>
+
+<validate:javascript formName="expressionExperiment" staticJavascript="false"/>
 <script type="text/javascript"
       src="<c:url value="/scripts/validator.jsp"/>"></script>
---%>

@@ -23,8 +23,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  * @author pavlidis
@@ -86,11 +84,11 @@ public class DesignElementDataVectorDaoImpl extends
         }
         DesignElementDataVector newDesignElementDataVector = find( designElementDataVector );
         if ( newDesignElementDataVector != null ) {
-            log.debug( "Found existing designElementDataVector: " + newDesignElementDataVector );
-            BeanPropertyCompleter.complete( newDesignElementDataVector, designElementDataVector );
+            if ( log.isDebugEnabled() )
+                log.debug( "Found existing designElementDataVector: " + newDesignElementDataVector );
             return newDesignElementDataVector;
         }
-        log.debug( "Creating new designElementDataVector: " + designElementDataVector );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new designElementDataVector: " + designElementDataVector );
         return ( DesignElementDataVector ) create( designElementDataVector );
     }
 

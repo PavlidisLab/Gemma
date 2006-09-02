@@ -25,8 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -79,15 +77,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Gene findOrCreate( Gene gene ) {
         if ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getNcbiId() == null ) {
-            log.error( "Gene must have official symbol and taxon, or ncbiId" );
-            return null;
+            throw new IllegalArgumentException( "Gene must have official symbol and taxon, or ncbiId" );
         }
         Gene newGene = this.find( gene );
         if ( newGene != null ) {
-            BeanPropertyCompleter.complete( newGene, gene );
             return newGene;
         }
-        log.debug( "Creating new gene: " + gene.getName() );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new gene: " + gene.getName() );
         return ( Gene ) create( gene );
     }
 

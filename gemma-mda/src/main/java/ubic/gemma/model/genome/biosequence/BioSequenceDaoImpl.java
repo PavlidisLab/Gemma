@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
-import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -81,10 +80,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     public BioSequence findOrCreate( BioSequence bioSequence ) {
         BioSequence existingBioSequence = this.find( bioSequence );
         if ( existingBioSequence != null ) {
-            BeanPropertyCompleter.complete( existingBioSequence, bioSequence );
             return existingBioSequence;
         }
-        log.debug( "Creating new: " + bioSequence );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
         return ( BioSequence ) create( bioSequence );
     }
 

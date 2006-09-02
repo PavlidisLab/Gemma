@@ -31,23 +31,13 @@ public class Constants {
     // ~ Static fields/initializers =============================================
 
     /** The name of the ResourceBundle used in this application */
-    public static final String BUNDLE_KEY = "ApplicationResources";
+    public static final String BUNDLE_KEY = "messages";
 
     /**
      * The application scoped attribute for persistence engine and class that implements it
      */
     public static final String DAO_TYPE = "daoType";
     public static final String DAO_TYPE_HIBERNATE = "hibernate";
-
-    /** Application scoped attribute for authentication url */
-    public static final String AUTH_URL = "authURL";
-
-    /** Application scoped attributes for SSL Switching */
-    public static final String HTTP_PORT = "httpPort";
-    public static final String HTTPS_PORT = "httpsPort";
-
-    /** The application scoped attribute for indicating a secure login */
-    public static final String SECURE_LOGIN = "secureLogin";
 
     /** The encryption algorithm key to be used for passwords */
     public static final String ENC_ALGORITHM = "algorithm";
@@ -60,11 +50,6 @@ public class Constants {
 
     /** User home from System properties */
     public static final String USER_HOME = System.getProperty( "user.home" ) + FILE_SEP;
-
-    /**
-     * The session scope attribute under which the breadcrumb ArrayStack is stored
-     */
-    public static final String BREADCRUMB = "breadcrumbs";
 
     /**
      * The session scope attribute under which the User object for the currently logged in user is stored.

@@ -26,6 +26,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
@@ -43,6 +44,16 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 public class BusinessKey {
 
     private static Log log = LogFactory.getLog( BusinessKey.class.getName() );
+
+    public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
+        addNameRestriction( queryObject, arrayDesign );
+
+        if ( arrayDesign.getDesignProvider() != null
+                && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
+            queryObject.createCriteria( "designProvider" ).add(
+                    Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
+        }
+    }
 
     /**
      * Restricts the query to the provided BioSequence.
@@ -71,6 +82,22 @@ public class BusinessKey {
     }
 
     /**
+     * @param ontologyEntry
+     */
+    public static void checkKey( OntologyEntry ontologyEntry ) {
+        if ( ( ontologyEntry.getAccession() == null || ontologyEntry.getExternalDatabase() == null )
+                && ( ontologyEntry.getCategory() == null || ontologyEntry.getValue() == null ) ) {
+            throw new IllegalArgumentException( "Either accession, or category+value must be filled in." );
+        }
+    }
+
+    public static void checkValidKey( ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
+            throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
+        }
+    }
+
+    /**
      * @param bioSequence
      */
     public static void checkValidKey( BioSequence bioSequence ) {
@@ -88,12 +115,6 @@ public class BusinessKey {
     public static void checkValidKey( Gene gene ) {
         // FIXME make key.
         return;
-    }
-
-    public static void checkValidKey( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
-            throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
-        }
     }
 
     /**
@@ -137,6 +158,17 @@ public class BusinessKey {
 
     /**
      * @param session
+     * @param ontologyEntry
+     * @return
+     */
+    public static Criteria createQueryObject( Session session, ArrayDesign arrayDesign ) {
+        Criteria queryObject = session.createCriteria( ArrayDesign.class );
+        addRestrictions( queryObject, arrayDesign );
+        return queryObject;
+    }
+
+    /**
+     * @param session
      * @param bioSequence
      * @return
      */
@@ -155,27 +187,6 @@ public class BusinessKey {
         Criteria queryObject = session.createCriteria( OntologyEntry.class );
         addRestrictions( queryObject, ontologyEntry );
         return queryObject;
-    }
-
-    /**
-     * @param session
-     * @param ontologyEntry
-     * @return
-     */
-    public static Criteria createQueryObject( Session session, ArrayDesign arrayDesign ) {
-        Criteria queryObject = session.createCriteria( ArrayDesign.class );
-        addRestrictions( queryObject, arrayDesign );
-        return queryObject;
-    }
-
-    public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
-        addNameRestriction( queryObject, arrayDesign );
-
-        if ( arrayDesign.getDesignProvider() != null
-                && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
-            queryObject.createCriteria( "designProvider" ).add(
-                    Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
-        }
     }
 
     /**
@@ -236,6 +247,17 @@ public class BusinessKey {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
+        }
+    }
+
+    /**
+     * @param bibliographicReference
+     */
+    public static void checkKey( BibliographicReference bibliographicReference ) {
+        if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
+                || bibliographicReference.getPubAccession().getAccession() == null ) {
+            throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
+                    + bibliographicReference );
         }
     }
 

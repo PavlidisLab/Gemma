@@ -18,17 +18,19 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.Date;
-
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
+import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
-import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+
+import com.dumbster.smtp.SimpleSmtpServer;
 
 /**
  * Tests the SignupController.
@@ -36,10 +38,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class SignupControllerTest extends BaseTransactionalSpringContextTest {
-
-    private MockHttpServletRequest request;
-    private MockHttpServletResponse response;
+public class SignupControllerTest extends BaseTransactionalSpringWebTest {
 
     SignupController signupController;
 
@@ -52,8 +51,6 @@ public class SignupControllerTest extends BaseTransactionalSpringContextTest {
      */
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        request = new MockHttpServletRequest();
-        response = new MockHttpServletResponse();
 
         signupController = ( SignupController ) getBean( "signupController" );
         testUser = User.Factory.newInstance();
@@ -68,40 +65,35 @@ public class SignupControllerTest extends BaseTransactionalSpringContextTest {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    public void testOnSubmit() throws Exception {
+    public void testSignup() throws Exception {
 
-        request.setContextPath( "/Gemma" );
-        request.setServletPath( "/test.signup.html" );
-        request.setLocalName( "en_US" );
+        SimpleSmtpServer server = SimpleSmtpServer.start( MAIL_PORT );
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockHttpServletRequest request = newPost( "/signup.html" );
+        request.addParameter( "userName", "testname" );
+        request.addParameter( "password", "testpassword" );
+        request.addParameter( "confirmPassword", "testpassword" );
+        request.addParameter( "firstName", "First" );
+        request.addParameter( "lastName", "Last" );
+        request.addParameter( "email", "test@gemma.org" );
+        request.addParameter( "passwordHint", "guess" );
 
-        String rand = ( new Date() ).toString();
+        ModelAndView mv = signupController.handleRequest( request, response );
+        Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
+        assertTrue( "Errors returned in model: " + errors, errors == null );
 
-        String adminName = "admin";
-        String userName = "user";
-        User checkUser = userService.getUser( adminName );
+        server.stop();
+        assertEquals( "Wrong number of emails recieved", 1, server.getReceivedEmailSize() );
 
-        if ( ( checkUser == null ) ) {
-            testUser.setUserName( adminName );
-            userRole.setUserName( adminName );
-            userRole.setName( adminName );
-
-        } else {
-            testUser.setUserName( rand );
-            userRole.setUserName( rand );
-            userRole.setName( userName );
-        }
-
-        testUser.setPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
-        testUser.setConfirmPassword( "dc76e9f0c0006e8f919e0c515c66dbba3982f785" );
-        testUser.setPasswordHint( "test hint" );
-
-        AuditTrail ad = AuditTrail.Factory.newInstance();
-        ad = ( AuditTrail ) persisterHelper.persist( ad );
-        testUser.setAuditTrail( ad );
-
-        signupController.onSubmit( request, response, testUser, ( BindException ) null );
-
-        // FIXME this test has no fail condition.
+        // verify that success messages are in the request
+        assertNotNull( request.getSession().getAttribute( "messages" ) );
+        assertNotNull( request.getSession().getAttribute( Constants.REGISTERED ) );
     }
 
+    public void testDisplayForm() throws Exception {
+        MockHttpServletRequest request = newGet( "/signup.html" );
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        ModelAndView mv = signupController.handleRequest( request, response );
+        assertTrue( "returned correct view name", mv.getViewName().equals( "signup" ) );
+    }
 }

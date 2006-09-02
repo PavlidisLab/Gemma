@@ -8,7 +8,7 @@
             <c:out value="${error}" escapeXml="false"/><br />
         </c:forEach>
     </div>
-    <c:remove var="errors"/>
+    <c:remove var="errors" scope="session"/>
 </c:if>
 
 <%-- Success Messages --%>
@@ -20,5 +20,5 @@
             <c:out value="${msg}" escapeXml="false"/><br />
         </c:forEach>
     </div>
-    <c:remove var="messages"/>
+    <c:remove var="messages" scope="session" />
 </c:if>

@@ -29,7 +29,6 @@ import javax.servlet.http.HttpSessionBindingEvent;
 
 import org.acegisecurity.context.HttpSessionContextIntegrationFilter;
 import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.userdetails.User;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -132,9 +131,13 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         if ( event.getName().equals( EVENT_KEY ) ) {
             SecurityContext securityContext = ( SecurityContext ) event.getValue();
             /*
-             * The user returned here is not a Gemma User, but a acegi userdetails object. In Appfuse it is supposedly a
-             * Appfuse user.
+             * The user returned here is not a Gemma User, not a acegi userdetails object, but a String.
              */
+
+            if ( securityContext == null || securityContext.getAuthentication() == null ) {
+                log.warn( "No security context or no authentication object" );
+                return;
+            }
             Object user = securityContext.getAuthentication().getPrincipal();
 
             addUsername( user );
@@ -149,7 +152,11 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
     public void attributeRemoved( HttpSessionBindingEvent event ) {
         if ( event.getName().equals( EVENT_KEY ) ) {
             SecurityContext securityContext = ( SecurityContext ) event.getValue();
-            User user = ( User ) securityContext.getAuthentication().getPrincipal();
+            if ( securityContext == null || securityContext.getAuthentication() == null ) {
+                log.warn( "No security context or no authentication object" );
+                return;
+            }
+            Object user = securityContext.getAuthentication().getPrincipal();
             removeUsername( user );
         }
     }

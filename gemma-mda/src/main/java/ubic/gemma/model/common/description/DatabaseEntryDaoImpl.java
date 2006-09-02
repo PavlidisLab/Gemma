@@ -23,8 +23,6 @@ package ubic.gemma.model.common.description;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @author pavlidis
  * @version $Id$
@@ -66,7 +64,6 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         }
         DatabaseEntry newDatabaseEntry = find( databaseEntry );
         if ( newDatabaseEntry != null ) {
-            BeanPropertyCompleter.complete( newDatabaseEntry, databaseEntry );
             return newDatabaseEntry;
         }
         return create( databaseEntry );

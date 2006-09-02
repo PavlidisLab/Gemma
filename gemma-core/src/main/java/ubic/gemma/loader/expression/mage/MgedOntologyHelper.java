@@ -710,15 +710,7 @@ public class MgedOntologyHelper {
 
     }
 
-    /**
-     * <hr>
-     * <p>
-     * Copyright (c) 2004-2006 University of British Columbia
-     * 
-     * @author pavlidis
-     * @version $Id$
-     */
-    private class InstanceInformation {
+    class InstanceInformation {
         public ClassInformation classInfo;
         public String className;
         public String name;
@@ -728,7 +720,7 @@ public class MgedOntologyHelper {
         }
     }
 
-    private class OntologyDAMLHandler implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
+    class OntologyDAMLHandler implements org.xml.sax.ContentHandler, org.xml.sax.ErrorHandler {
         private ClassInformation currentClass = null;
         private String currentClassName = null;
         private InstanceInformation currentInstance = null;
@@ -877,7 +869,7 @@ public class MgedOntologyHelper {
         }
     }
 
-    private class PathStack {
+    class PathStack {
         private List<String> list = new ArrayList<String>();
 
         public boolean endsWith( String ending ) {
@@ -928,7 +920,7 @@ public class MgedOntologyHelper {
         }
     }
 
-    private class PropertyInformation {
+    class PropertyInformation {
         public Collection<String> enumValues;
         public boolean isPrimitive = false;
         public String name;

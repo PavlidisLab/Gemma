@@ -27,8 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
-import ubic.gemma.util.BeanPropertyCompleter;
-
 /**
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
  */
@@ -78,16 +76,14 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
     @Override
     public QuantitationType findOrCreate( QuantitationType quantitationType ) {
         if ( quantitationType == null || quantitationType.getName() == null ) {
-            log.warn( "QuantitationType was null or had no name : " + quantitationType );
-            return null;
+            throw new IllegalArgumentException( "QuantitationType was null or had no name : " + quantitationType );
         }
         QuantitationType newQuantitationType = find( quantitationType );
         if ( newQuantitationType != null ) {
-            log.debug( "Found existing quantitationType: " + newQuantitationType );
-            BeanPropertyCompleter.complete( newQuantitationType, quantitationType );
+            if ( log.isDebugEnabled() ) log.debug( "Found existing quantitationType: " + newQuantitationType );
             return newQuantitationType;
         }
-        log.debug( "Creating new quantitationType: " + quantitationType );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new quantitationType: " + quantitationType );
         return ( QuantitationType ) create( quantitationType );
     }
 
