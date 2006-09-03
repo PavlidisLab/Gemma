@@ -123,8 +123,7 @@ public class LiteratureAssociationLoaderCLI {
                 log.error( "Not authenticated.  Make sure you entered a valid username and/or password" );
                 System.exit( 0 );
             }
-            LitAssociationFileParser assocParser = new LitAssociationFileParser(
-                    LitAssociationFileParser.PERSIST_CONCURRENTLY, cli.geneDao, cli.laDao, cli.dbDao );
+            LitAssociationFileParser assocParser = new LitAssociationFileParser( cli.geneDao, cli.laDao, cli.dbDao );
 
             // interrogation stage
             if ( cl.hasOption( 'l' ) ) {

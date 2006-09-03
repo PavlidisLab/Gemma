@@ -35,7 +35,7 @@ import ubic.gemma.model.genome.GeneDao;
  * Class to parse a file of literature associations. Format: (read whole row)
  * 
  * <pre>
- *                 g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
+ *                  g1_dbase\t    gl_name\t   g1_ncbiid\t g2_dbase\t    g2_name\t   g2_ncbiid\t  action\t    count\t database
  * </pre>
  * 
  * @author anshu
@@ -51,14 +51,11 @@ public class LitAssociationFileParser extends BasicLineParser {
     public static final int DO_NOT_PERSIST_CONCURRENTLY = 0;
     public static final int PERSIST_DEFAULT = 0;
 
-    private int mPersist = PERSIST_DEFAULT;
     private GeneDao geneDao;
     private LiteratureAssociationDao laDao;
     private ExternalDatabaseDao dbDao;
 
-    public LitAssociationFileParser( int persistType, GeneDao gdao, LiteratureAssociationDao ldao,
-            ExternalDatabaseDao dDao ) {
-        this.mPersist = persistType;
+    public LitAssociationFileParser( GeneDao gdao, LiteratureAssociationDao ldao, ExternalDatabaseDao dDao ) {
         this.geneDao = gdao;
         this.laDao = ldao;
         this.dbDao = dDao;
