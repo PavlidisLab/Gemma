@@ -27,7 +27,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
  * Tests the Contact, Person, User interitance hierarchy and the association between User and UserRole.
- * fixme are there meaningfull tests in here?
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -40,7 +40,17 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
 
     public final void testCreateUser() throws Exception {
         assert testUser != null;
+        User f = ( User ) userDao.create( testUser );
+        assertNotNull( f );
+        assertNotNull( f.getId() );
+    }
+
+    public final void testFindByEmail() throws Exception {
         userDao.create( testUser );
+        Contact u = userDao.findByEmail( "foo@bar.com" );
+        assertNotNull( u );
+        assertEquals( "foo@bar.com", u.getEmail() );
+        assertTrue( u instanceof User );
     }
 
     @SuppressWarnings("unchecked")
@@ -75,6 +85,7 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
         testUser.setPassword( "root" );
         testUser.setConfirmPassword( "root" );
         testUser.setPasswordHint( "test hint" );
+        testUser.setEmail( "foo@bar.com" );
         AuditTrail ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         testUser.setAuditTrail( ad );

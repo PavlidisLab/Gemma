@@ -12,7 +12,7 @@
 <p>
     <fmt:message key="403.message">
         <fmt:param>
-            <c:url value="/" />
+            <c:url value="/mainMenu.html" />
         </fmt:param>
     </fmt:message>
 </p>

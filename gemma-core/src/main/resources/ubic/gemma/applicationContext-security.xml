@@ -173,13 +173,14 @@
         <property name="objectDefinitionSource">
             <value>
                 <![CDATA[
-                CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON 
                 PATTERN_TYPE_APACHE_ANT 
                 /signup.html=ROLE_ANONYMOUS,admin,user
                 /passwordhint.html*=ROLE_ANONYMOUS,admin,user
-                /clickstreams.jsp=admin
+                /users.html*=admin
+                /clickstreams.jsp*=admin
+                /flushCache.*=admin
+                /reload.*=admin
                 /**/*.html*=admin,user 
-                /**/*.htm*=admin,user 
              ]]>
             </value>
         </property>
@@ -204,6 +205,7 @@
                 PATTERN_TYPE_APACHE_ANT
                 /admin/**=REQUIRES_SECURE_CHANNEL
                 /login*=REQUIRES_SECURE_CHANNEL
+                /activeUsers.html*=REQUIRES_SECURE_CHANNEL
                 /j_security_check*=REQUIRES_SECURE_CHANNEL
                 /editProfile.html*=REQUIRES_SECURE_CHANNEL
                 /signup.html*=REQUIRES_SECURE_CHANNEL

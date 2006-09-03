@@ -77,7 +77,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
 
         ServletContext context = event.getServletContext();
 
-        // Orion starts Servlets before Listeners, so check if the config
+        // Check if the config
         // object already exists
         Map<String, Object> config = ( Map<String, Object> ) context.getAttribute( Constants.CONFIG );
 
@@ -128,7 +128,7 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         UserRoleDao mgr = ( UserRoleDao ) ctx.getBean( "userRoleDao" );
         Set<LabelValue> roleList = new HashSet<LabelValue>();
 
-        // get list of possible roles
+        // get list of possible roles, used to populate admin tool where roles can be altered.
         Collection<UserRole> roles = mgr.loadAll();
         for ( UserRole role : roles ) {
             roleList.add( new LabelValue( role.getName(), role.getName() ) );
@@ -139,5 +139,8 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         if ( log.isDebugEnabled() ) {
             log.debug( "Drop-down initialization complete [OK]" );
         }
+
+        assert ( context.getAttribute( Constants.AVAILABLE_ROLES ) != null );
+
     }
 }

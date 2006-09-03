@@ -83,6 +83,6 @@ public class BaseWebTest extends WebTestCase {
         this.submit();
         assertTextPresent( "Main Menu" );
 
-        log.debug( "Logged in as " + ConfigUtils.getString( "gemma.admin.user" ) + ", ready for tests" );
+        log.info( "Logged in as " + ConfigUtils.getString( "gemma.admin.user" ) + ", ready for tests" );
     }
 }

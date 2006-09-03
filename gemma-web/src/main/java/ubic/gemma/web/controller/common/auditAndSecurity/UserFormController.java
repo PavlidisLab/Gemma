@@ -19,12 +19,12 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
-import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
 
 /**
- * For editing users.
+ * For editing users, or showing lists of users (for admins). Regular users clicking on "edit profile" get to here as do
+ * admins clicking on 'edit user' in the table view.
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
@@ -36,6 +36,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
  * @spring.property name="validator" ref="userValidator"
  * @spring.property name="formView" value="userProfile"
  * @spring.property name="successView" value="redirect:users.html"
+ * @spring.property name="cancelView" value="redirect:mainMenu.html"
  * @spring.property name="userRoleService" ref="userRoleService"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
@@ -45,8 +46,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
 public class UserFormController extends UserAuthenticatingController {
 
     private UserRoleService userRoleService;
-
-   
 
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -109,10 +108,15 @@ public class UserFormController extends UserAuthenticatingController {
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
+
+        /*
+         * For regular users, clicking cancel should take them to the main menu. For admins who were viewing the list,
+         * it should go back to the list.
+         */
         if ( request.getParameter( "cancel" ) != null ) {
+            saveMessage( request, getText( "errors.cancel", request.getLocale() ) );
             if ( !StringUtils.equals( request.getParameter( "from" ), "list" ) ) {
-                saveMessage( request, getText( "errors.cancel",   request.getLocale() ) );
-                return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+                return new ModelAndView( getCancelView() );
             }
             return new ModelAndView( getSuccessView() );
         }
@@ -151,48 +155,46 @@ public class UserFormController extends UserAuthenticatingController {
 
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        String username = request.getParameter( "userName" );
+        if ( !isFormSubmission( request ) ) {
+            String username = request.getParameter( "userName" );
 
-        // if user logged in with remember me, display a warning that they can't change passwords
-        log.debug( "checking for remember me login..." );
+            // if user logged in with remember me, display a warning that they can't change passwords
+            log.debug( "checking for remember me login..." );
 
-        AuthenticationTrustResolver resolver = new AuthenticationTrustResolverImpl();
-        SecurityContext ctx = SecurityContextHolder.getContext();
+            AuthenticationTrustResolver resolver = new AuthenticationTrustResolverImpl();
+            SecurityContext ctx = SecurityContextHolder.getContext();
 
-        if ( ctx.getAuthentication() != null ) {
-            Authentication auth = ctx.getAuthentication();
+            if ( ctx.getAuthentication() != null ) {
+                Authentication auth = ctx.getAuthentication();
 
-            if ( resolver.isRememberMe( auth ) ) {
-                request.getSession().setAttribute( "cookieLogin", "true" );
+                if ( resolver.isRememberMe( auth ) ) {
+                    request.getSession().setAttribute( "cookieLogin", "true" );
 
-                // add warning message
-                saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
+                    // add warning message
+                    saveMessage( request, getText( "userProfile.cookieLogin", request.getLocale() ) );
+                }
             }
+
+            User user = null;
+
+            if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
+                user = this.getUserService().getUser( request.getRemoteUser() );
+            } else if ( !StringUtils.isBlank( username ) ) {
+                user = this.getUserService().getUser( username );
+            } else {
+                user = User.Factory.newInstance();
+                UserRole role = UserRole.Factory.newInstance();
+                role.setName( Constants.USER_ROLE );
+                role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+                user.getRoles().add( role );
+            }
+
+            assert user != null;
+            assert user.getRoles() != null && user.getRoles().size() > 0;
+            user.setConfirmPassword( user.getPassword() );
+            return user;
         }
-
-        // We use UserImpl so we expose the roleList() method.
-        UserImpl user = null;
-
-        if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
-            user = ( UserImpl ) this.getUserService().getUser( request.getRemoteUser() );
-        } else if ( !StringUtils.isBlank( username ) && !"".equals( request.getParameter( "version" ) ) ) {
-            user = ( UserImpl ) this.getUserService().getUser( username );
-        }
-
-        if ( user == null ) {
-            log.info( "User " + username + " does not exist, creating anew" );
-            // Creating new user.
-            user = ( UserImpl ) User.Factory.newInstance();
-            UserRole role = UserRole.Factory.newInstance();
-            role.setName( Constants.USER_ROLE );
-            role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
-            user.getRoles().add( role );
-        }
-
-        assert user != null;
-        user.setConfirmPassword( user.getPassword() );
-        return user;
-
+        return super.formBackingObject( request );
     }
 
     @Override

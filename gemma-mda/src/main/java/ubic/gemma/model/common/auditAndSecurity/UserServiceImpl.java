@@ -77,14 +77,17 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
 
-        // FIXME make email address unique too, so users can't sign up more than once.
+        if ( this.findByEmail( user.getEmail() ) != null ) {
+            throw new UserExistsException( "A user with email address " + user.getEmail() + " already exists." );
+        }
+
         try {
             user.setConfirmPassword( user.getPassword() );
             return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         } catch ( org.springframework.dao.InvalidDataAccessResourceUsageException e ) {
-            // FIXME shouldn't happen if we don't have duplicates in the first place...
+            // shouldn't happen if we don't have duplicates in the first place...but just in case.
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
 
@@ -130,4 +133,25 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         return this.getUserDao().findByUserName( userName );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleFindByEmail(java.lang.String)
+     */
+    @Override
+    protected User handleFindByEmail( String email ) throws Exception {
+        Contact c = this.getUserDao().findByEmail( email );
+        if ( c instanceof User ) return ( User ) c;
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.UserServiceBase#handleUpdate(ubic.gemma.model.common.auditAndSecurity.User)
+     */
+    @Override
+    protected void handleUpdate( User user ) throws Exception {
+        this.getUserDao().update( user );
+    }
 }

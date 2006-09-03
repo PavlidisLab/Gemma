@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
@@ -59,6 +60,16 @@ public abstract class BaseFormController extends SimpleFormController {
     protected SimpleMailMessage message = null;
     protected String templateName = null;
     protected UserService userService = null;
+    protected String cancelView;
+
+    public final String getCancelView() {
+        // Default to successView if cancelView is invalid
+        // FIXME this is dangerous, because programming errors can send users to restricted pages.
+        if ( StringUtils.isBlank( cancelView ) ) {
+            return getSuccessView();
+        }
+        return this.cancelView;
+    }
 
     /**
      * Convenience method to get the Configuration HashMap from the servlet context.
@@ -149,6 +160,13 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
+     * @param cancelView the cancelView to set
+     */
+    public void setCancelView( String cancelView ) {
+        this.cancelView = cancelView;
+    }
+
+    /**
      * @param mailEngine
      */
     public void setMailEngine( MailEngine mailEngine ) {
@@ -215,4 +233,5 @@ public abstract class BaseFormController extends SimpleFormController {
         model.put( "applicationURL", url );
         mailEngine.sendMessage( message, templateName, model );
     }
+
 }
