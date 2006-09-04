@@ -21,12 +21,12 @@
    
     <property name="name">
       <meta-data>name</meta-data>
-      <!-- <meta-data>expressionExperimentName</meta-data> -->
+      <meta-data>expression experiment name</meta-data>
     </property>
    
     <property name="description">
       <meta-data>description</meta-data>
-      <!-- <meta-data>expressionExperimentDescription</meta-data> -->
+      <meta-data>expression experiment description</meta-data>
     </property>
       
     <component name="bioAssays" ref-alias="bioAssay" />
@@ -43,11 +43,16 @@
 	 <property name="name">
       <meta-data>name</meta-data> 
      </property>
+     
+     <property name="description">
+      <meta-data>description</meta-data>
+      <meta-data>bioassay description</meta-data>
+    </property>
 	 
-    <component name="arrayDesignsUsed" ref-alias="arrayDesign" />
+    <!-- <component name="arrayDesignsUsed" ref-alias="arrayDesign" /> -->
 	
 </class>
-
+<!-- 
 <class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign">
 	
 	 <id name="id" />
@@ -56,7 +61,7 @@
       <meta-data>name</meta-data>
      </property>
 	 
-    <!-- <component name="designProvider" ref-alias="contact" />-->
+    <component name="designProvider" ref-alias="contact" />
 
 </class>
 
@@ -83,5 +88,5 @@
     </property>
 
 </class>
-
+-->
 </compass-core-mapping>

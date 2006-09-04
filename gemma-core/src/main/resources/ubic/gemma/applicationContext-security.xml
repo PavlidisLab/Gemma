@@ -19,7 +19,7 @@
             	<!-- Put channelProcessingFilter first in this list to turn on SSL switching -->
                 <![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
-                  /**=channelProcessingFilter,httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,remoteUserFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
+                  /**=httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,remoteUserFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
             ]]>
             </value>
         </property>
