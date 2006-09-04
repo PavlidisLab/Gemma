@@ -106,7 +106,41 @@
 	</property>
 </bean>
 
+<!-- ========================= COMPASS START ========================= -->
 
+	 <!-- COMPASS HIBERNATE DEFINITIONS -->
+	 <bean id="compass" class="org.compass.spring.LocalCompassBean">
+        <property name="resourceLocations">
+            <list>
+                <!-- <value>classpath:org/compass/expression/experiment/expressionExperiment.cmd.xml</value>-->
+                <value>classpath:ubic/gemma/compass/expression/experiment/expressionExperiment.cpm.xml</value>
+            </list>   
+        </property>
+        <property name="compassSettings">
+            <props>
+                <prop key="compass.engine.connection">file://${user.home}/compass/gemma</prop>
+                <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
+            </props>
+        </property>
+        <property name="transactionManager">
+            <ref bean="transactionManager" />
+        </property>
+    </bean>
+	 <bean id="hibernateGpsDevice" class="org.compass.spring.device.hibernate.SpringHibernate3GpsDevice">
+	   <property name="name"><value>hibernateDevice</value></property>
+	   <property name="sessionFactory"><ref bean="sessionFactory" /></property>
+	 </bean>
+	 <bean id="compassGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
+	   <property name="compass"><ref bean="compass" /></property>
+	   <property name="gpsDevices">
+	     <list>
+             <bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
+                 <property name="gpsDevice" ref="hibernateGpsDevice" />
+             </bean>
+	     </list>
+	   </property>
+	 </bean>
+     <!-- COMPASS END -->
 
 <!--  ============================================== -->
 <!-- A type conversion service, a more flexible/threadsafe/lightweight alternative to the PropertyEditor! -->
