@@ -96,8 +96,7 @@ public class GeneController extends BaseCommandController {
         if ( action.equals( "addcitation" ) ) {
             String pubmedID = request.getParameter( "pubmedID" );
             BibliographicReference br = this.getBibliographicReferenceService().findByExternalId( pubmedID, "PUBMED" );
-            if ( br == null )
-                br = this.getBibliographicReferenceService().saveBibliographicReferenceByLookup( pubmedID, "PUBMED" );
+            // if ( br == null ) br = this.getBibliographicReferenceService().create( pubmedID, "PUBMED" );
 
             if ( br != null ) {
                 Collection<BibliographicReference> cites = g.getCitations();

@@ -101,4 +101,31 @@ public class ValidationUtil extends FieldChecks {
 
         return true;
     }
+
+    /**
+     * Check that a value is an integer greater than zero.
+     * 
+     * @param bean
+     * @param va
+     * @param field
+     * @param errors
+     * @return
+     */
+    public static boolean validatePositiveNonZeroInteger( Object bean, ValidatorAction va, Field field, Errors errors ) {
+        String value = ValidatorUtils.getValueAsString( bean, field.getProperty() );
+
+        try {
+            int v = Integer.parseInt( value );
+            if ( v <= 0 ) {
+                FieldChecks.rejectValue( errors, field, va );
+                return false;
+            }
+        } catch ( Exception e ) {
+            FieldChecks.rejectValue( errors, field, va );
+            return false;
+        }
+
+        return true;
+    }
+
 }

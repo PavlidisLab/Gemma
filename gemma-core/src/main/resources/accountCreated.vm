@@ -1,6 +1,6 @@
 ${message}
 
 Username: ${user.userName}
-Password: ${user.confirmPassword}
+Password: ${user.confirmNewPassword}
 
 Login at: ${applicationURL}

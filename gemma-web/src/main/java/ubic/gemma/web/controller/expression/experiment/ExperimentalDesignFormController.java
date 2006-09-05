@@ -39,7 +39,6 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class ExperimentalDesignFormController extends BaseFormController {
     private ExperimentalDesignService experimentalDesignService = null;
-    private final String messagePrefix = "ExperimentalDesign with id";
 
     /**
      * 
@@ -72,8 +71,8 @@ public class ExperimentalDesignFormController extends BaseFormController {
             }
 
             // FIXME this is somewhat broken: ed.getId() will return null if request id was null.
-            saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ed.getId() }, request
-                    .getLocale() ) );
+            saveMessage( request, "object.editing", new Object[] { ed.getClass().getSimpleName(), ed.getId() },
+                    "Editing" );
 
             return ed;
         } catch ( NumberFormatException e ) {
@@ -115,7 +114,7 @@ public class ExperimentalDesignFormController extends BaseFormController {
 
         experimentalDesignService.update( ed );
 
-        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ed.getId() }, request.getLocale() ) );
+        saveMessage( request, "object.saved", new Object[] { ed.getClass().getSimpleName(), ed.getId() }, "Saved" );
 
         return new ModelAndView( getSuccessView() );
     }

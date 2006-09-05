@@ -18,14 +18,21 @@
  */
 package ubic.gemma.web;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.PrintStream;
+
+import net.sourceforge.jwebunit.WebTestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.tidy.Tidy;
 
 import ubic.gemma.util.ConfigUtils;
-
-import net.sourceforge.jwebunit.WebTestCase;
 
 /**
  * Base functional test case that sets up the environment and logs you in. (don't override if you are testing login
@@ -73,16 +80,38 @@ public class BaseWebTest extends WebTestCase {
     /**
      * 
      */
-    private void logIn() {
+    protected void logIn() {
         log.debug( "Logging in" );
-        this.beginAt( "/login.jsp" );
+        this.beginAt( "/mainMenu.html" );
 
         assertFormPresent();
         setTextField( "j_username", ConfigUtils.getString( "gemma.admin.user" ) );
         setTextField( "j_password", ConfigUtils.getString( "gemma.admin.password" ) );
         this.submit();
-        assertTextPresent( "Main Menu" );
 
+        assertTitleEquals( "Main Menu | Gemma" );
         log.info( "Logged in as " + ConfigUtils.getString( "gemma.admin.user" ) + ", ready for tests" );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see net.sourceforge.jwebunit.WebTestCase#dumpHtml()
+     */
+    @Override
+    protected void dumpHtml() {
+        Tidy tidy = new Tidy();
+        tidy.setIndentContent( true );
+
+        ByteArrayOutputStream b = new ByteArrayOutputStream( 1024 );
+        PrintStream f = new PrintStream( b );
+        super.dumpHtml( f );
+        f.close();
+
+        String s = b.toString();
+        ByteArrayInputStream bi = new ByteArrayInputStream( s.getBytes() );
+        tidy.parse( bi, System.out );
+
+    }
+
 }

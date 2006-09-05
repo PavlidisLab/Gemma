@@ -2,66 +2,15 @@
 <!DOCTYPE form-validation PUBLIC
     "-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.0//EN"
     "http://jakarta.apache.org/commons/dtds/validator_1_0.dtd">
-<!--  $Id -->
+<!--  
+    
+    Javascript methods used for client-side validation, to supplement those in validator-rules.xml
+    
+    $Id$ 
+    
+    -->
 <form-validation>
 	<global>
-
-		<validator name="twofields" classname="ubic.gemma.web.util.ValidationUtil" method="validateTwoFields"
-			methodParams="java.lang.Object,
-                       org.apache.commons.validator.ValidatorAction,
-                       org.apache.commons.validator.Field,
-                       org.springframework.validation.Errors"
-			depends="required" msg="errors.twofields">
-			<javascript>
-				<![CDATA[
-            function validateTwoFields(form) {
-                var bValid = true;
-                var focusField = null;
-                var i = 0;
-                var fields = new Array();
-                oTwoFields = new twofields();
-                for (x in oTwoFields) {
-                    var field = form[oTwoFields[x][0]];
-                    var secondField = form[oTwoFields[x][2]("secondProperty")];
-                    
-                    if (field.type == 'text' ||
-                        field.type == 'textarea' ||
-                        field.type == 'select-one' ||
-                        field.type == 'radio' ||
-                        field.type == 'password') {
-                        
-                        var value;
-                        var secondValue;
-                        // get field's value
-                        if (field.type == "select-one") {
-                            var si = field.selectedIndex;
-                            value = field.options[si].value;
-                            secondValue = secondField.options[si].value;
-                        } else {
-                            value = field.value;
-                            secondValue = secondField.value;
-                        }
-                        
-                        if (value != secondValue) {
-                        
-                            if (i == 0) {
-                                focusField = field;
-                            }
-                            fields[i++] = oTwoFields[x][1];
-                            bValid = false;
-                        }
-                    }
-                }
-                if (fields.length > 0) {
-                   focusField.focus();
-                   alert(fields.join('\n'));
-                }
-                return bValid;
-
-            }]]>
-			</javascript>
-		</validator>
-
 		<validator name="lengthRange" classname="ubic.gemma.web.util.ValidationUtil" method="validateLengthRange"
 			methodParams="java.lang.Object,
                        org.apache.commons.validator.ValidatorAction,
@@ -69,62 +18,109 @@
                        org.springframework.validation.Errors"
 			depends="required" msg="errors.lengthRange">
 
-			<javascript>
-				<![CDATA[
+            <javascript>
+                <![CDATA[
             function validateLengthRange(form) {
                 var isValid = true;
                 var focusField = null;
                 var i = 0;
                 var fields = new Array();
                 
-                oMinLength = new minlength();
-                for (x in oMinLength) {
-                    var field = form[oMinLength[x][0]];
+                oRange = new lengthRange();
+                for (x in oRange) {
+                    var field = form[oRange[x][0]];
                     
-                    if (field.type == 'text' ||
-                        field.type == 'textarea') {
+                    if ((field.type == 'text' ||
+                         field.type == 'textarea') &&
+                        (field.value.length > 0)) {
                         
-                        var iMin = parseInt(oMinLength[x][2]("minlength"));
-                        if ((trim(field.value).length > 0) && (field.value.length < iMin)) {
+                        var iMin = parseInt(oRange[x][2]("minLength"));
+                        var iMax = parseInt(oRange[x][2]("maxLength"));
+                    
+                        if ( (trim(field.value).length < iMin) || (trim(field.value).length > iMax)) {
                             if (i == 0) {
                                 focusField = field;
                             }
-                            fields[i++] = oMinLength[x][1];
+                            fields[i++] = oRange[x][1];
                             isValid = false;
                         }
                     }
                 }
-                
-                
-                i = 0;
-                oMaxLength = new maxlength();
-                for (x in oMaxLength) {
-                  var field = form[oMaxLength[x][0]];
-                    
-                  if (field.type == 'text' ||
-                      field.type == 'textarea') {
-                        
-                      var iMax = parseInt(oMaxLength[x][2]("maxlength"));
-                      if (field.value.length > iMax) {
-                          if (i == 0) {
-                              focusField = field;
-                          }
-                          fields[i++] = oMaxLength[x][1];
-                          isValid = false;
-                      }
-                  }
-              }
-                
-              if (fields.length > 0) {
-                 focusField.focus();
-                 alert(fields.join('\n'));
-              }
-              return isValid;
+                if (fields.length > 0) {
+                    focusField.focus();
+                    alert(fields.join('\n'));
+                }
+                return isValid;
           }]]>
-			</javascript>
+            </javascript>
 
 		</validator>
 
+        <validator name="positiveNonZeroInteger" classname="ubic.gemma.web.util.ValidationUtil" method="validatePositiveNonZeroInteger"
+            methodParams="java.lang.Object,
+                       org.apache.commons.validator.ValidatorAction,
+                       org.apache.commons.validator.Field,
+                       org.springframework.validation.Errors"
+            depends="required" msg="errors.positiveNonZeroInteger" jsFunctionName="IntegerValidations">
+            
+            <javascript>
+                <![CDATA[
+             function validatePositiveNonZeroInteger(form) {
+                var bValid = true;
+                var focusField = null;
+                var i = 0;
+                var fields = new Array();
+                oInteger = new IntegerValidations();
+                for (x in oInteger) {
+                	var field = form[oInteger[x][0]];
+
+                    if (field.type == 'text' ||
+                        field.type == 'textarea' ||
+                        field.type == 'select-one' ||
+                        field.type == 'radio') {
+                        
+                        var value = '';
+						// get field's value
+						if (field.type == "select-one") {
+							var si = field.selectedIndex;
+						    if (si >= 0) {
+							    value = field.options[si].value;
+						    }
+						} else {
+							value = field.value;
+						}
+                        
+                        if (value.length > 0) {
+                        
+                            if (!isAllDigits(value)) {
+                                bValid = false;
+                                if (i == 0) {
+	                                focusField = field;
+	                            }
+						        fields[i++] = oInteger[x][1];
+						        
+                            } else {
+	                            var iValue = parseInt(value);
+	                            if (isNaN(iValue) || !(iValue > 0 && iValue <= 2147483647)) {
+	                                if (i == 0) {
+	                                    focusField = field;
+	                                }
+	                                fields[i++] = oInteger[x][1];
+	                                bValid = false;
+	                           }
+                           }
+                       }
+                    }
+                }
+                if (fields.length > 0) {
+                   focusField.focus();
+                   alert(fields.join('\n'));
+                }
+                return bValid;
+            }
+                    ]]>
+            </javascript>
+        </validator>
 
 	</global>
 </form-validation>

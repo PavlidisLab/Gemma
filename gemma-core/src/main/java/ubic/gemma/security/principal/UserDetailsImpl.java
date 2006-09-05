@@ -18,6 +18,8 @@
  */
 package ubic.gemma.security.principal;
 
+import java.io.Serializable;
+
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.userdetails.UserDetails;
 
@@ -31,7 +33,12 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class UserDetailsImpl extends User implements UserDetails {
+public class UserDetailsImpl extends User implements UserDetails, Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4192775711819256567L;
 
     /**
      * This constructor is only to be used by the UserDetailsService.
@@ -49,8 +56,6 @@ public class UserDetailsImpl extends User implements UserDetails {
         // none of this other stuff matters...
         this.setAffiliations( user.getAffiliations() );
         this.setName( user.getName() );
-        this.setConfirmPassword( user.getConfirmPassword() );
-
     }
 
     public String salt() {

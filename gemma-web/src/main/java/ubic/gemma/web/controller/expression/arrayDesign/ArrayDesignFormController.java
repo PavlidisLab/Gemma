@@ -42,7 +42,6 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class ArrayDesignFormController extends BaseFormController {
     private static Log log = LogFactory.getLog( ArrayDesignFormController.class.getName() );
-    private final String messagePrefix = "Array design with name ";
 
     ArrayDesignService arrayDesignService = null;
 
@@ -110,8 +109,7 @@ public class ArrayDesignFormController extends BaseFormController {
         ArrayDesign ad = ( ArrayDesign ) command;
         arrayDesignService.update( ad );
 
-        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ad.getName() }, request
-                .getLocale() ) );
+        saveMessage( request, "object.saved", new Object[] { ad.getClass().getSimpleName(), ad.getName() }, "Saved" );
 
         return new ModelAndView( getSuccessView() );
     }

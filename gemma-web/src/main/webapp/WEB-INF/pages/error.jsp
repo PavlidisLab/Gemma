@@ -6,8 +6,7 @@
 
 <html>
 	<head>
-		<title><fmt:message key="errorPage.title" />
-		</title>
+		<title><fmt:message key="errorPage.title" /></title>
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	</head>
 
@@ -22,22 +21,23 @@
 					<%
 					if ( exception != null ) {
 					%>
-					<pre>
-						<%
-						exception.printStackTrace( new java.io.PrintWriter( out ) );
-						%>
-					</pre>
+					<Gemma:exception exception="${pageContext.request.exception}" />
 					<%
 					} else if ( ( Exception ) request.getAttribute( "javax.servlet.error.exception" ) != null ) {
 					%>
-					<pre>
-						<%
-						                        ( ( Exception ) request.getAttribute( "javax.servlet.error.exception" ) )
-						                        .printStackTrace( new java.io.PrintWriter( out ) );
-						%>
-					</pre>
+					<Gemma:exception exception="${pageContext.request.attribute['javax.servlet.error.exception']}" />
 					<%
-					} else { %> Error cause was not recovered.  <% }
+					} else if ( ( Exception ) request.getAttribute( "exception" ) != null ) {
+					%>
+					<Gemma:exception exception="${pageContext.request.attribute['exception']}" />
+					<%
+					} else {
+					%>
+					<p>
+						<fmt:message key="errorPage.info.missing" />
+					</p>
+					<%
+					}
 					%>
 				</div>
 			</div>

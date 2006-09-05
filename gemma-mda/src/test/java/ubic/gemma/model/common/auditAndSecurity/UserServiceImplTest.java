@@ -46,7 +46,6 @@ public class UserServiceImplTest extends TestCase {
         testUser.setMiddleName( "" );
         testUser.setUserName( "foobar" );
         testUser.setPassword( "aija" );
-        testUser.setConfirmPassword( "aija" );
         testUser.setPasswordHint( "I am an idiot" );
     }
 

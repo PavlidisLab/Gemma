@@ -21,6 +21,7 @@ package ubic.gemma.testing;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,10 +34,14 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.AbstractTransactionalSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
+import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.model.common.auditAndSecurity.UserRole;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -71,6 +76,7 @@ import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
@@ -93,10 +99,7 @@ import uk.ltd.getahead.dwr.create.SpringCreator;
  * @version $Id$
  */
 abstract public class BaseTransactionalSpringContextTest extends AbstractTransactionalSpringContextTests {
-
-    protected static String testUserName = "test";
-    protected static String testPassword = "test";
-
+ 
     protected static final int RANDOM_STRING_LENGTH = 10;
     protected static final int TEST_ELEMENT_COLLECTION_SIZE = 5;
 
@@ -122,6 +125,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected BioAssayDao bioAssayDao;
 
     protected BioMaterialDao bioMaterialDao;
+
+    protected BibliographicReferenceDao bibliographicReferenceDao;
 
     protected BlatResultDao blatResultDao;
 
@@ -300,6 +305,12 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         return ba;
     }
 
+    protected BibliographicReference getTestPersistentBibliographicReference( String accession ) {
+        BibliographicReference br = BibliographicReference.Factory.newInstance();
+        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession ) );
+        return ( BibliographicReference ) this.bibliographicReferenceDao.create( br );
+    }
+
     /**
      * @return
      */
@@ -351,10 +362,23 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry() {
+        return getTestPersistentDatabaseEntry( null );
+    }
+
+    /**
+     * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
+     * The accession and ExternalDatabase name are set to random strings.
+     * 
+     * @return
+     */
+    protected DatabaseEntry getTestPersistentDatabaseEntry( String accession ) {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
 
-        /* set the accession of database entry to the pubmed id. */
-        result.setAccession( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        if ( accession == null ) {
+            result.setAccession( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
+        } else {
+            result.setAccession( accession );
+        }
 
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testdb" );
@@ -424,28 +448,33 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     /**
      * @return
      */
-    protected User getTestPersistentUser() {
+    protected User getTestPersistentUser( String username, String password ) {
         User testUser = User.Factory.newInstance();
-        testUser.setEmail( "foo@bar" );
+
         testUser.setFirstName( "Foo" );
         testUser.setLastName( "Bar" );
         testUser.setMiddleName( "" );
         testUser.setEnabled( Boolean.TRUE );
-        testUser.setUserName( testUserName );
-        String password = RandomStringUtils.randomAlphanumeric( 64 );
-        testUser.setPassword( password );
-        testUser.setConfirmPassword( password );
+        testUser.setUserName( username );
+        testUser.setEmail( RandomStringUtils.randomAlphabetic( 6 ).toLowerCase() + "@gemma.org" );
+
+        ShaPasswordEncoder encoder = new ShaPasswordEncoder();
+        String encryptedPassword = encoder.encodePassword( password, ConfigUtils.getProperty( "gemma.salt" ) );
+
+        UserRole ur = UserRole.Factory.newInstance( username, Constants.USER_ROLE, "regular user" );
+
+        testUser.getRoles().add( ur );
+        testUser.setPassword( encryptedPassword );
         testUser.setPasswordHint( "I am an idiot" );
+        
+        
 
-        User user = userDao.findByUserName( testUserName );
+        return ( User ) userDao.create( testUser );
 
-        if ( user == null ) {
-            return ( User ) userDao.create( testUser );
-        }
+    }
 
-        assert user.getUserName() != null;
-
-        return user;
+    protected User getTestPersistentUser() {
+        return getTestPersistentUser( RandomStringUtils.randomAlphabetic( 6 ), ConfigUtils.getString( "gemma.admin.password" ) );
     }
 
     /**
@@ -631,6 +660,13 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public void setReporterDao( ReporterDao reporterDao ) {
         this.reporterDao = reporterDao;
+    }
+
+    /**
+     * @param bibliographicReferenceDao the bibliographicReferenceDao to set
+     */
+    public void setBibliographicReferenceDao( BibliographicReferenceDao bibliographicReferenceDao ) {
+        this.bibliographicReferenceDao = bibliographicReferenceDao;
     }
 
 }

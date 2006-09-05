@@ -82,7 +82,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         }
 
         try {
-            user.setConfirmPassword( user.getPassword() );
             return ( User ) this.getUserDao().create( user );
         } catch ( DataIntegrityViolationException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );

@@ -31,33 +31,35 @@ public class FileUploadTest extends BaseWebTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-
     }
 
     public final void testFileUpload() throws Exception {
-        this.beginAt( "/uploadFile.jsp" );
+        this.gotoPage( "/uploadFile.html" );
         assertFormPresent();
         this.setTextField( "name", "just a test" );
         this.setTextField( "file", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-web/src/test/resources/data/pubmed-test.xml".replace( '/', File.separatorChar ) );
         this.submit();
+        // assert...
     }
 
     public final void testNonExistentFileUpload() throws Exception {
-        this.beginAt( "/uploadFile.jsp" );
+        this.gotoPage( "/uploadFile.html" );
         assertFormPresent();
         this.setTextField( "name", "just a test" );
         this.setTextField( "file", ConfigUtils.getString( "gemma.home" )
                 + "/gemma-web/src/test/resources/data/does not exist".replace( '/', File.separatorChar ) );
         this.submit();
+        // assert...
     }
 
     public final void testNoFile() throws Exception {
-        this.beginAt( "/uploadFile.jsp" );
+        this.gotoPage( "/uploadFile.html" );
         assertFormPresent();
         this.setTextField( "name", "just a test" );
         this.setTextField( "file", "" );
         this.submit();
+        // assert...
     }
 
 }

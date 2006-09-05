@@ -27,12 +27,10 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceImpl;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryImpl;
+import ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand;
 
 /**
  * Validating object for BibliographicReference
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
  * 
  * @spring.bean id="pubMedAccessionValidator"
  * @author keshav
@@ -50,7 +48,7 @@ public class PubMedAccessionValidator implements Validator {
      */
     @SuppressWarnings("unchecked")
     public boolean supports( Class clazz ) {
-        return clazz.isAssignableFrom( DatabaseEntryImpl.class ) || clazz.isAssignableFrom( BibliographicReferenceImpl.class ) ;
+        return clazz.isAssignableFrom( PubMedSearchCommand.class );
     }
 
     /*
@@ -59,30 +57,14 @@ public class PubMedAccessionValidator implements Validator {
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
     public void validate( Object obj, Errors errors ) {
-        log.debug( "Validating: " + obj.toString() );
-        
-        String accession = null;
-        if (obj.getClass().isAssignableFrom(DatabaseEntryImpl.class)) {
-            DatabaseEntry databaseEntry = ( DatabaseEntry ) obj;
-            accession = databaseEntry.getAccession();
-        } else if ( obj.getClass().isAssignableFrom(BibliographicReferenceImpl.class)) {
-            BibliographicReference bibRef = (BibliographicReference)obj;
-            accession = bibRef.getPubAccession().getAccession();
-        } else {
-            throw new IllegalStateException("Can't validate a " + obj.getClass().getName()); 
-        }
-        
-       
-        if ( accession == null ) {
-            errors.reject( "error.noCriteria", "Accession cannot be empty" );
-            return;
-        }
+        log.debug( "Validating: " + obj );
+
+        PubMedSearchCommand p = ( PubMedSearchCommand ) obj;
 
         try {
-            Integer.parseInt( accession );
+            Integer.parseInt( p.getAccession() );
         } catch ( NumberFormatException e ) {
-            errors.reject( "error.integerFormat", new Object[] { accession },
-                    "Accession must be an integer." );
+            errors.reject( "error.integerFormat", new Object[] { p.getAccession() }, "Accession must be an integer." );
         }
     }
 }

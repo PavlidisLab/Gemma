@@ -30,10 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Wraps Response for GZipFilter
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+ * Wraps Response for GZipFilter*
  * 
  * @author Matt Raible, cmurphy@intechtual.com
  * @author keshav

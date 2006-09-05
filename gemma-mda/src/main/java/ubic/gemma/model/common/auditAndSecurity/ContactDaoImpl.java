@@ -31,6 +31,13 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
     @Override
     public Contact find( Contact contact ) {
         try {
+
+            if ( contact == null
+                    || ( contact.getName() == null && contact.getAddress() == null && contact.getEmail() == null && contact
+                            .getPhone() == null ) ) {
+                throw new IllegalArgumentException( "Contact must have at least some information filled in!" );
+            }
+
             Criteria queryObject = super.getSession( false ).createCriteria( Contact.class );
 
             if ( contact.getName() != null ) queryObject.add( Restrictions.eq( "name", contact.getName() ) );
@@ -62,11 +69,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
 
     @Override
     public Contact findOrCreate( Contact contact ) {
-        if ( contact == null
-                || ( contact.getName() == null && contact.getAddress() == null && contact.getEmail() == null && contact
-                        .getPhone() == null ) ) {
-            throw new IllegalArgumentException( "User must have at least some information filled in!" );
-        }
+
         Contact newContact = find( contact );
         if ( newContact != null ) {
             return newContact;

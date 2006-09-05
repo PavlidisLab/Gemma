@@ -56,8 +56,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
     ExpressionExperimentService expressionExperimentService = null;
     ContactService contactService = null;
 
-    private final String messagePrefix = "Expression experiment with id";
-
     private Long id = null;
 
     private ExternalDatabaseDao externalDatabaseDao = null;
@@ -96,8 +94,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         else
             ee = ExpressionExperiment.Factory.newInstance();
 
-        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ee.getId() }, request
-                .getLocale() ) );
+        saveMessage( request, "object.editing", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Editing" );
 
         return ee;
     }
@@ -165,7 +162,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         expressionExperimentService.update( ee );
 
-        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ee.getId() }, request.getLocale() ) );
+        saveMessage( request, "object.saved", new Object[] { ee.getClass().getSimpleName(), ee.getId() }, "Saved" );
 
         return new ModelAndView( getSuccessView() );
     }
@@ -174,11 +171,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @param request
      * @return Map
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( { "unused", "unchecked" })
     protected Map referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseDao.loadAll();
-        Map edMap = new HashMap();
-        edMap.put( "externalDatabases", edCol );// FIXME - parameterize the map
+        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
+        edMap.put( "externalDatabases", edCol );
         return edMap;
     }
 

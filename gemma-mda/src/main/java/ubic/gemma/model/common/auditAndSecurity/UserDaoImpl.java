@@ -24,9 +24,51 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+
+import ubic.gemma.util.BusinessKey;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User
  */
 public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDaoBase {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
+     */
+    @Override
+    public User find( Contact contact ) {
+        try {
+            assert contact instanceof User;
+
+            User user = ( User ) contact;
+
+            BusinessKey.checkKey( user );
+
+            Criteria queryObject = super.getSession( false ).createCriteria( User.class );
+
+            queryObject.add( Restrictions.eq( "userName", user.getUserName() ) );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '"
+                                    + ubic.gemma.model.common.auditAndSecurity.User.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( User ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+
+        }
+    }
 }

@@ -48,7 +48,6 @@ import ubic.gemma.util.MailEngine;
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
  * example, getting the current user and saving messages/errors. This class is intended to be a base class for all Form
  * controllers.
- * <p>
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
@@ -57,14 +56,25 @@ import ubic.gemma.util.MailEngine;
 public abstract class BaseFormController extends SimpleFormController {
     protected Log log = LogFactory.getLog( getClass() );
     protected MailEngine mailEngine = null;
-    protected SimpleMailMessage message = null;
+    protected SimpleMailMessage mailMessage = null;
     protected String templateName = null;
     protected UserService userService = null;
+
+    /**
+     * Define a cancel view to use.
+     */
     protected String cancelView;
 
-    public final String getCancelView() {
+    /**
+     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
+     * no cancel view defined; otherwise, get the cancel view.
+     * 
+     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
+     * @return the name of the cancel view to use.
+     */
+    @SuppressWarnings("unused")
+    protected String getCancelView( HttpServletRequest request ) {
         // Default to successView if cancelView is invalid
-        // FIXME this is dangerous, because programming errors can send users to restricted pages.
         if ( StringUtils.isBlank( cancelView ) ) {
             return getSuccessView();
         }
@@ -132,23 +142,28 @@ public abstract class BaseFormController extends SimpleFormController {
     /**
      * Default behavior for FormControllers - redirect to the successView when the cancel button has been pressed.
      */
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+    @Override
+    protected ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( getSuccessView() );
+            saveMessage( request, "errors.cancel", "Cancelled" );
+            return new ModelAndView( getCancelView( request ) );
         }
 
         return super.processFormSubmission( request, response, command, errors );
     }
 
     /**
-     * Put a message into the request. These can be displayed to the user.
+     * Put a message into the session. These can be displayed to the user.
+     * <p>
+     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
+     * session.
      * 
      * @param request
      * @param msg
      */
     @SuppressWarnings("unchecked")
-    public void saveMessage( HttpServletRequest request, String msg ) {
+    private void saveMessage( HttpServletRequest request, String msg ) {
         List<String> messages = ( List<String> ) request.getSession().getAttribute( "messages" );
 
         if ( messages == null ) {
@@ -157,6 +172,54 @@ public abstract class BaseFormController extends SimpleFormController {
 
         messages.add( msg );
         request.getSession().setAttribute( "messages", messages );
+    }
+
+    /**
+     * Put a message into the session. These can be displayed to the user.
+     * <p>
+     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
+     * session. *
+     * 
+     * @param request
+     * @param parameter Array of parameters to be filled into the message.
+     * @param defaultMessage
+     */
+    public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
+        String newMessage = getText( key, parameters, request.getLocale() );
+        if ( newMessage == null ) newMessage = defaultMessage;
+        saveMessage( request, newMessage );
+    }
+
+    /**
+     * Put a message into the session. These can be displayed to the user.
+     * <p>
+     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
+     * session.
+     * 
+     * @param request
+     * @param parameter A single parameter to be filled into the message.
+     * @param defaultMessage
+     */
+    public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
+        String newMessage = getText( key, new Object[] { parameter }, request.getLocale() );
+        if ( newMessage == null ) newMessage = defaultMessage;
+        saveMessage( request, newMessage );
+    }
+
+    /**
+     * Put a message into the session. These can be displayed to the user.
+     * <p>
+     * Messages accumulate in a list until they are viewed in messages.jsp - at which point they are removed from the
+     * session.
+     * 
+     * @param request
+     * @param key
+     * @param defaultMessage
+     */
+    public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
+        String newMessage = getText( key, new Object[] {}, request.getLocale() );
+        if ( newMessage == null ) newMessage = defaultMessage;
+        saveMessage( request, newMessage );
     }
 
     /**
@@ -176,8 +239,8 @@ public abstract class BaseFormController extends SimpleFormController {
     /**
      * @param message
      */
-    public void setMessage( SimpleMailMessage message ) {
-        this.message = message;
+    public void setMailMessage( SimpleMailMessage message ) {
+        this.mailMessage = message;
     }
 
     /**
@@ -225,13 +288,13 @@ public abstract class BaseFormController extends SimpleFormController {
      */
     protected void sendEmail( User user, String msg, String url ) {
         log.debug( "sending e-mail to user [" + user.getEmail() + "]..." );
-        message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
+        mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
 
         Map<String, Object> model = new HashMap<String, Object>();
         model.put( "user", user );
         model.put( "message", msg );
         model.put( "applicationURL", url );
-        mailEngine.sendMessage( message, templateName, model );
+        mailEngine.sendMessage( mailMessage, templateName, model );
     }
 
 }

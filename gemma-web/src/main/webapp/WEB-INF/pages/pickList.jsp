@@ -45,8 +45,9 @@ $Id$
 		<select name="<c:out value="${param.rightId}"/>" multiple="multiple" id="<c:out value="${param.rightId}"/>" size="5">
 			<c:if test="${rightList != null}">
 				<c:forEach var="list" items="${rightList}" varStatus="status">
-					<option value="<c:out value="${list.value}"/>">
-						<c:out value="${list.label}" escapeXml="false" />
+					<%-- FIXME this is hacked to work with our role objects. It was previously setup exactly like the leftList above --%>
+					<option value="<c:out value="${list.name}"/>">
+						<c:out value="${list.name}" escapeXml="false" />
 					</option>
 				</c:forEach>
 			</c:if>

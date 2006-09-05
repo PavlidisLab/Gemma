@@ -21,13 +21,10 @@ package ubic.gemma.security;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -39,18 +36,10 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest {
 
-    private ManualAuthenticationProcessing manualAuthenticationProcessing;
     private ArrayDesignService arrayDesignService;
 
-    private UserService userService;
     ArrayDesign notYourArrayDesign;
-
-    /**
-     * @param userService The userService to set.
-     */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
-    }
+    User testUser;
 
     /*
      * (non-Javadoc)
@@ -61,15 +50,16 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     protected void onSetUpInTransaction() throws Exception {
 
         super.onSetUpInTransaction(); // so we have authority to add a user.
-        User testUser = getTestPersistentUser();
-        userService.addRole( testUser, Constants.USER_ROLE );
+
         notYourArrayDesign = ArrayDesign.Factory.newInstance();
         notYourArrayDesign.setName( "deleteme" );
         notYourArrayDesign = ( ArrayDesign ) persisterHelper.persist( notYourArrayDesign );
 
-        if ( !manualAuthenticationProcessing.validateRequest( testUserName, testPassword ) ) {
-            throw new RuntimeException( "Failed to authenticate" );
-        }
+        // // log in as a user who has limited permissions.
+        // testUser = getTestPersistentUser( "foobly", "doobly" );
+        // if ( this. ) {
+        // throw new RuntimeException( "Failed to authenticate" );
+        // }
     }
 
     /**
@@ -93,16 +83,15 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      * @throws Exception
      */
     // FIXME - the superclass onSetUpInTransaction grants admin rights to the user.
-//    public void testRemoveArrayDesignNotAuthorized() throws Exception {
-//
-//        try {
-//            arrayDesignService.remove( notYourArrayDesign );
-//            fail( "Should have gotten an AccessDeniedException" );
-//        } catch ( AccessDeniedException okay ) {
-//            //
-//        }
-//    }
-
+    // public void testRemoveArrayDesignNotAuthorized() throws Exception {
+    //
+    // try {
+    // arrayDesignService.remove( notYourArrayDesign );
+    // fail( "Should have gotten an AccessDeniedException" );
+    // } catch ( AccessDeniedException okay ) {
+    // //
+    // }
+    // }
     /**
      * Save an array design.
      * 
@@ -137,8 +126,8 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
 
         arrayDesign = arrayDesignService.findOrCreate( arrayDesign );
 
-        assertNotNull(arrayDesign.getId());
-        
+        assertNotNull( arrayDesign.getId() );
+
         //  
         // col = compositeSequenceService.getAllCompositeSequences();
         // if ( col.size() == 0 ) {
@@ -151,13 +140,6 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param manualAuthenticationProcessing The manualAuthenticationProcessing to set.
-     */
-    public void setManualAuthenticationProcessing( ManualAuthenticationProcessing manualAuthenticationProcessing ) {
-        this.manualAuthenticationProcessing = manualAuthenticationProcessing;
     }
 
 }

@@ -208,6 +208,7 @@
                 /activeUsers.html*=REQUIRES_SECURE_CHANNEL
                 /j_security_check*=REQUIRES_SECURE_CHANNEL
                 /editProfile.html*=REQUIRES_SECURE_CHANNEL
+                /editUser.html*=REQUIRES_SECURE_CHANNEL
                 /signup.html*=REQUIRES_SECURE_CHANNEL
                 /saveUser.html*=REQUIRES_SECURE_CHANNEL
                 /**=REQUIRES_INSECURE_CHANNEL
@@ -296,9 +297,9 @@
                 ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=user,admin
                 ubic.gemma.model.common.description.BibliographicReferenceService.find=user,admin
-                ubic.gemma.model.common.description.BibliographicReferenceService.getBibliographicReferenceByTitle=user,admin
-                ubic.gemma.model.common.description.BibliographicReferenceService.saveBibliographicReferenceByLookup=user,admin
-                ubic.gemma.model.common.description.BibliographicReferenceService.updateBibliographicReference=ACL_SECURABLE_EDIT
+                ubic.gemma.model.common.description.BibliographicReferenceService.findByTitle=user,admin
+                ubic.gemma.model.common.description.BibliographicReferenceService.create=ACL_SECURABLE_EDIT,user,admin
+                ubic.gemma.model.common.description.BibliographicReferenceService.update=ACL_SECURABLE_EDIT
                 ubic.gemma.model.common.description.BibliographicReferenceService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.common.description.BibliographicReferenceService.addPDF=user,admin 
                 ubic.gemma.model.common.description.ExternalDatabaseService.find=user,admin

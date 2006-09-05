@@ -26,6 +26,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -261,4 +262,12 @@ public class BusinessKey {
         }
     }
 
+    /**
+     * @param user
+     */
+    public static void checkKey( User user ) {
+        if ( user == null || StringUtils.isBlank( user.getUserName() ) ) {
+            throw new IllegalArgumentException( "User was null or had no userName defined" );
+        }
+    }
 }

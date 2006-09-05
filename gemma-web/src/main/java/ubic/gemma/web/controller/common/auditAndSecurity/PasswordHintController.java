@@ -21,10 +21,7 @@ import ubic.gemma.util.MailEngine;
 import ubic.gemma.util.RequestUtil;
 
 /**
- * Simple class to retrieve and send a password hint to users by email.
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
+ * Retrieve and send a password hint to users by email.
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis

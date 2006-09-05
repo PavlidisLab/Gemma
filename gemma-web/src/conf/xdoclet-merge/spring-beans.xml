@@ -47,9 +47,6 @@
 <!-- ==================================================== -->
 <bean name="openSessionInViewInterceptor"
 	class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
-	<property name="flushMode">
-		<value>2</value>
-	</property>
 	<property name="sessionFactory">
 		<ref bean="sessionFactory" />
 	</property>
@@ -105,8 +102,9 @@
 		<property name="indexView"><value>indexer</value></property>
 		<property name="indexResultsView"><value>indexer</value></property>
 	</bean>
-	<!-- COMPASS END -->
-	
+ <!-- COMPASS END -->
+
+
 <!-- ==================================================== -->
 <!-- Action resolvers for MultiActionControllers -->
 <!-- ==================================================== -->
@@ -204,18 +202,18 @@
 </bean>
 
 
-<!-- ==================================================== -->
-<!-- 	Used by the fileUploadController 				  -->
-<!-- ==================================================== -->
+<!-- ====================================================  
+  	Used by the fileUploadController 				  
+  ==================================================== -->
 <bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
 	<property name="maxUploadSize">
 		<value>2097152</value>
 	</property>
 </bean>
 
-<!-- ==================================================== -->
-<!-- View Resolver for JSPs -->
-<!-- ==================================================== -->
+<!-- ====================================================  
+  View Resolver for JSPs. This means that a jsp named "myform.jsp" can be referred to as "myform" in your controller bean declarations.
+  ==================================================== -->
 <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 	<property name="requestContextAttribute">
 		<value>rc</value>
@@ -229,7 +227,16 @@
 	<property name="suffix">
 		<value>.jsp</value>
 	</property>
+</bean> 
+
+<!-- ====================================================  
+    Resolver that can manage arbitrary mappings between resources and view names.
+    ==================================================== -->
+<bean id="xmlViewResolver" class="org.springframework.web.servlet.view.XmlViewResolver">
+  <property name="order" value="1"/>
+  <property name="location" value="/WEB-INF/views.xml"/>
 </bean>
+
 
 <!-- ==================================================== -->
 <!--  Validation settings. The validator factory is defined in applicationContext-validation.xml -->
@@ -242,7 +249,8 @@
 	</property>
 </bean>
 
-<!-- Use this type of validator if you use a data model object as the command object -->
+<!-- Use this type of validator if you use a data model object as the command object. Each of these
+    corresonds to a form declared in validation-global.xml (which gets merged into validation.xml) -->
 <bean id="userValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
 	<property name="validatorFactory">
 		<ref bean="validatorFactory" />
@@ -299,49 +307,3 @@
 <bean id="thread.cleanupBroadcaster" class="org.springframework.binding.thread.support.DefaultThreadCleanupBroadcaster" />
 
 <!--  add more NamedBeanValidators here -->
-
-
-<!--  ============================================================= -->
-<!--  ===========         SPRING WEBFLOWS       =================== -->
-<!--  ============================================================= -->
-
-<!-- Controller used by all webflows in this application.  This can be parameterized by adding the  
-	_flowId to the client view (ie. jsp).  If this is not specified, you must specify
-	a ServletFlowExecutionManager.  I have added the _flowId to the jsp's, but have also specified the ServletFlowExecutionManager.
--->
-<bean id="frontController" name="/flowController.html" class="org.springframework.webflow.mvc.FlowController">
-	<property name="cacheSeconds" value="5" />
-	<property name="flowExecutionManager" ref="flowExecutionManager" />
-</bean>
-
-<!--
-	Custom configuration of the HTTP request flow execution manager.
--->
-<bean name="flowExecutionManager" id="flowExecutionManager"
-	class="org.springframework.webflow.execution.servlet.ServletFlowExecutionManager">
-	<property name="storage">
-		<bean class="org.springframework.webflow.execution.servlet.HttpSessionContinuationFlowExecutionStorage" />
-	</property>
-	<property name="listener">
-		<bean class="ubic.gemma.web.flow.FlowExecutionListenerImpl" />
-	</property>
-</bean>
-
-<!-- 
-	Add one bean here for each flow. The actions are defined using XDoclet tags in the Action classes.   
--->
-
-<bean id="pubMed.Search" class="org.springframework.webflow.config.XmlFlowFactoryBean">
-	<property name="location" value="classpath:ubic/gemma/web/flow/bibref/pubMedSearch-flow.xml" />
-</bean>
-
-<bean id="pubMed.Edit" class="org.springframework.webflow.config.XmlFlowFactoryBean">
-	<property name="location" value="classpath:ubic/gemma/web/flow/bibref/pubMedEdit-flow.xml" />
-</bean>
-
-<bean id="fileUploader" class="org.springframework.webflow.config.XmlFlowFactoryBean">
-	<property name="location" value="classpath:ubic/gemma/web/flow/fileUpload-flow.xml" />
-</bean>
-
-
-

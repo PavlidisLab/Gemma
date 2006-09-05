@@ -20,10 +20,10 @@
 			<c:out value="${userCounter}" />
 		</c:if> &nbsp; </span>
 </c:if>
-<%-- Currently www.google-analytics.com/urchin.js causes problems with httpunit - www.google-analytics.com is not directly reachable--%>
-<script src="<c:url value="/scripts/urchin.js"/>" type="text/javascript">
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
 </script>
 <script type="text/javascript">
 _uacct = "UA-255601-1";
 urchinTracker();
 </script>
+

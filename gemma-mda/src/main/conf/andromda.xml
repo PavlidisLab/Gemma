@@ -94,7 +94,7 @@
 				<property name="service-impls">${maven.andromda.core.manual.dir}</property>
 				<property name="service-interfaces">${maven.andromda.core.generated.dir}</property>
 				<property name="spring-configuration">${maven.andromda.spring.configuration.dir}</property>
-				<property name="open-session-in-view">${maven.andromda.core.generated.dir}</property>
+			<!--	<property name="open-session-in-view">${maven.andromda.core.generated.dir}</property>-->
 				<property name="parameterRequiredCheck">false</property>
 				<!--  	
 					<property name="acegiServiceSecurity">

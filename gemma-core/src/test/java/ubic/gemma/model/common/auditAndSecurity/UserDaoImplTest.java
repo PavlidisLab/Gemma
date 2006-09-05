@@ -83,7 +83,6 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
         }
 
         testUser.setPassword( "root" );
-        testUser.setConfirmPassword( "root" );
         testUser.setPasswordHint( "test hint" );
         testUser.setEmail( "foo@bar.com" );
         AuditTrail ad = AuditTrail.Factory.newInstance();

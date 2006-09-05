@@ -221,12 +221,6 @@
 		</dependency>
 		<dependency>
 			<groupId>spring</groupId>
-			<artifactId>spring-webflow</artifactId>
-			<version>pr5</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>spring</groupId>
 			<artifactId>spring-binding</artifactId>
 			<version>1.0-dev-20050727232106</version>
 			<type>jar</type>

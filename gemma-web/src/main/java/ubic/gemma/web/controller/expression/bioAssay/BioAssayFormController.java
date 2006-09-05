@@ -32,7 +32,7 @@ import org.springframework.web.bind.RequestUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseDao;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -47,24 +47,16 @@ import ubic.gemma.web.validation.expression.bioAssay.BioAssayValidator;
  * @spring.property name = "formView" value="bioAssay.edit"
  * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
  * @spring.property name = "bioAssayService" ref="bioAssayService"
- * @spring.property name = "externalDatabaseDao" ref="externalDatabaseDao"
+ * @spring.property name = "externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name = "validator" ref="bioAssayValidator"
  */
 public class BioAssayFormController extends BaseFormController {
 
     private Log log = LogFactory.getLog( this.getClass() );
-    private final String messagePrefix = "Bioassay with id ";
 
     BioAssayService bioAssayService = null;
 
-    ExternalDatabaseDao externalDatabaseDao = null; // FIXME Use Service. Methods have been put in model for
-
-    // service
-    // but when I use them I get NonUniqueObjectException. This seems to be documented here:
-    // http://saloon.javaranch.com/cgi-bin/ubb/ultimatebb.cgi?ubb=get_topic&f=78&t=000475.
-    // It works if you call the dao layer directly from your controller (I know we are not supposed to do this, but it
-    // works).
-    // Will fix this later.
+    ExternalDatabaseService externalDatabaseService = null;
 
     BioAssayValidator bioAssayValidator = null;
 
@@ -98,8 +90,7 @@ public class BioAssayFormController extends BaseFormController {
         else
             ba = BioAssay.Factory.newInstance();
 
-        saveMessage( request, getText( "object.editing", new Object[] { messagePrefix, ba.getId() }, request
-                .getLocale() ) );
+        saveMessage( request, "object.editing", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Editing" );
 
         return ba;
     }
@@ -110,7 +101,7 @@ public class BioAssayFormController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     protected Map referenceData( HttpServletRequest request ) {
-        Collection<ExternalDatabase> edCol = externalDatabaseDao.loadAll();
+        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
         Map edMap = new HashMap();
         edMap.put( "externalDatabases", edCol );// FIXME - parameterize the map
         return edMap;
@@ -150,7 +141,7 @@ public class BioAssayFormController extends BaseFormController {
 
             /* external database */
             ExternalDatabase ed = ( ( ( BioAssay ) command ).getAccession().getExternalDatabase() );
-            ed = externalDatabaseDao.findOrCreate( ed );
+            ed = externalDatabaseService.findOrCreate( ed );
             ( ( BioAssay ) command ).getAccession().setExternalDatabase( ed );
         }
         return super.processFormSubmission( request, response, command, errors );
@@ -173,7 +164,7 @@ public class BioAssayFormController extends BaseFormController {
         BioAssay ba = ( BioAssay ) command;
         bioAssayService.update( ba );
 
-        saveMessage( request, getText( "object.saved", new Object[] { messagePrefix, ba.getId() }, request.getLocale() ) );
+        saveMessage( request, "object.saved", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Saved" );
 
         return new ModelAndView( getSuccessView() );
     }
@@ -195,8 +186,8 @@ public class BioAssayFormController extends BaseFormController {
     /**
      * @param externalDatabaseDao
      */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
     }
 
 }

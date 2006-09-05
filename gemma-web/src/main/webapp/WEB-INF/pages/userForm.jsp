@@ -1,7 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <head>
-	<title><fmt:message key="userProfile.title" /></title>
+	<title><fmt:message key="userProfile.title" />
+	</title>
 	<content tag="heading">
 	<fmt:message key="userProfile.heading" />
 	</content>
@@ -21,20 +22,22 @@
 	</c:if>
 </spring:bind>
 
+<authz:authorize ifAnyGranted="admin">
+	<p class="left">
+		Go to the
+		<a href="<c:url value="/activeUsers.html" />">User list</a>
+	</p>
+</authz:authorize>
+
 <form method="post" action="<c:url value="/editUser.html"/>" id="userForm" onsubmit="return onFormSubmit(this)">
 	<spring:bind path="user.id">
 		<input type="hidden" name="id" value="<c:out value="${status.value}"/>" />
 	</spring:bind>
 	<input type="hidden" name="from" value="<c:out value="${param.from}"/>" />
 
-	<c:if test="${cookieLogin == 'true'}">
-		<spring:bind path="user.password">
-			<input type="hidden" name="password" value="<c:out value="${status.value}"/>" />
-		</spring:bind>
-		<spring:bind path="user.confirmPassword">
-			<input type="hidden" name="confirmPassword" value="<c:out value="${status.value}"/>" />
-		</spring:bind>
-	</c:if>
+	<spring:bind path="user.password">
+		<input type="hidden" name="password" value="<c:out value="${status.value}"/>" />
+	</spring:bind>
 
 	<c:if test="${empty user.userName}">
 		<input type="hidden" name="encryptPass" value="true" />
@@ -46,7 +49,7 @@
 				<input type="submit" class="button" name="save" onclick="bCancel=false" value="<fmt:message key="button.save"/>" />
 
 				<c:if test="${param.from == 'list' and param.method != 'Add'}">
-					<input type="submit" class="button" name="delete" onclick="bCancel=true;return confirmDelete('user')"
+					<input type="submit" class="button" name="delete" onclick="bCancel=false;return confirmDelete('user')"
 						value="<fmt:message key="button.delete"/>" />
 				</c:if>
 
@@ -71,47 +74,18 @@
 		<li>
 			<Gemma:label styleClass="desc" key="user.userName" />
 			<spring:bind path="user.userName">
-				<c:choose>
-					<c:when test="${empty user.userName}">
-						<input type="text" name="userName" value="<c:out value="${status.value}"/>" id="userName" />
-						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-					</c:when>
-					<c:otherwise>
-						<c:out value="${user.userName}" />
-						<input type="hidden" name="userName" value="<c:out value="${status.value}"/>" id="userName" />
-					</c:otherwise>
-				</c:choose>
+				<input type="text" name="userName" value="<c:out value="${status.value}"/>" id="userName" class="text large" />
+				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</li>
-		<c:if test="${cookieLogin != 'true'}">
-			<li>
-				<div>
-					<div class="left">
-						<Gemma:label styleClass="desc" key="user.password" />
 
-						<spring:bind path="user.password">
-							<input type="password" id="password" name="password" size="40" value="<c:out value="${status.value}"/>"
-								onchange="passwordChanged(this)" />
-							<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						</spring:bind>
-					</div>
-					<div>
-						<Gemma:label key="user.confirmPassword" />
-						<spring:bind path="user.confirmPassword">
-							<span class="fieldError"><c:out value="${status.errorMessage}" /> </span>
-							<input type="password" name="confirmPassword" id="confirmPassword" value="<c:out value="${status.value}"/>"
-								class="text medium" />
-						</spring:bind>
-					</div>
-				</div>
-			</li>
-		</c:if>
 
 		<li>
 			<Gemma:label styleClass="desc" key="user.firstName" />
 
 			<spring:bind path="user.firstName">
-				<input type="text" name="firstName" value="<c:out value="${status.value}"/>" id="firstName" />
+				<input type="text" name="firstName" value="<c:out value="${status.value}"/>" id="firstName" maxlength="50"
+					class="text large" />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</li>
@@ -119,28 +93,62 @@
 			<Gemma:label styleClass="desc" key="user.lastName" />
 
 			<spring:bind path="user.lastName">
-				<input type="text" name="lastName" value="<c:out value="${status.value}"/>" id="lastName" />
+				<input type="text" name="lastName" value="<c:out value="${status.value}"/>" id="lastName" maxlength="50"
+					class="text large" />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</li>
 		<li>
+
 			<Gemma:label styleClass="desc" key="user.email" />
 
 			<spring:bind path="user.email">
-				<input type="text" name="email" value="<c:out value="${status.value}"/>" id="email" size="50" />
+				<input type="text" name="email" value="<c:out value="${status.value}"/>" id="email" class="text large" />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
+
 		</li>
 		<li>
 			<Gemma:label styleClass="desc" key="user.passwordHint" />
 
 			<spring:bind path="user.passwordHint">
-				<input type="text" name="passwordHint" value="<c:out value="${status.value}"/>" id="passwordHint" size="50" />
+				<input type="text" name="passwordHint" value="<c:out value="${status.value}"/>" id="passwordHint" class="text large" />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
 		</li>
+
+		<c:if test="${cookieLogin != 'true'}">
+			<li>
+				<div>
+					<p>
+						To change password, fill in the next two fields
+					</p>
+					<div class="left">
+						<Gemma:label styleClass="desc" key="user.newpassword" />
+
+						<spring:bind path="user.newPassword">
+							<input type="password" id="newPassword" name="newPassword" class="text medium"
+								value="<c:out value="${status.value}"/>" onchange="passwordChanged(this)" />
+							<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+						</spring:bind>
+					</div>
+
+					<div>
+						<Gemma:label key="user.confirmPassword" />
+						<spring:bind path="user.confirmNewPassword">
+							<span class="fieldError"><c:out value="${status.errorMessage}" /> </span>
+							<input type="password" name="confirmNewPassword" id="confirmNewPassword" value="<c:out value="${status.value}"/>"
+								class="text medium" />
+						</spring:bind>
+					</div>
+				</div>
+			</li>
+		</c:if>
+
+
 		<c:choose>
 			<c:when test="${param.from == 'list' or param.method == 'Add'}">
+				<%-- Administrative tool only --%>
 				<li>
 					<fieldset>
 						<legend>
@@ -152,7 +160,7 @@
 							<input type="checkbox" name="<c:out value="${status.expression}"/>"
 								<c:if test="${status.value}">checked="checked"</c:if> />
 						</spring:bind>
-						<label for="enabled">
+						<label for="enabled" class="choice">
 							<fmt:message key="user.enabled" />
 						</label>
 					</fieldset>
@@ -173,25 +181,25 @@
 									<Gemma:label key="user.roles" colon="false" styleClass="required" />
 								</th>
 							</tr>
-							<%-- the 'availableRoles' should be in the context. user.roles is filled in by the controller --%>
-							<%-- <c:set var="leftList" value="${availableRoles}" scope="request" /> --%>
+							<c:set var="leftList" value="${availableRoles}" scope="request" />
 							<c:set var="rightList" value="${user.roles}" scope="request" />
 							<c:import url="/WEB-INF/pages/pickList.jsp">
 								<c:param name="listCount" value="1" />
 								<c:param name="leftId" value="availableRoles" />
-								<c:param name="rightId" value="userRoles" />
+								<c:param name="rightId" value="roles" />
 							</c:import>
 						</table>
 					</fieldset>
 				</li>
 			</c:when>
 			<c:when test="${not empty user.userName}">
+				<%-- Show the roles and status for this user --%>
 				<li>
-					<Gemma:label key="user.roles" />
+					<strong><Gemma:label key="user.roles" /> </strong>
 					<c:forEach var="role" items="${user.roles}" varStatus="status">
 						<c:out value="${role.name}" />
 						<c:if test="${!status.last}">,</c:if>
-						<input type="hidden" name="userRoles" value="<c:out value="${role.name}"/>" />
+						<input type="hidden" name="roles" value="<c:out value="${role.name}"/>" />
 					</c:forEach>
 					<spring:bind path="user.enabled">
 						<input type="hidden" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
@@ -209,16 +217,14 @@
 </form>
 
 <script type="text/javascript">
-    Form.focusFirstElement(document.forms["userForm"]);
+      Form.focusFirstElement($('userForm'));
     highlightFormElements();
-
+ 
+ /* If the user has javascript turned off, there is a pretty big problem here */
     function passwordChanged(passwordField) {
-        var origPassword = "<c:out value="${user.password}"/>";
-        if (passwordField.value != origPassword) {
             createFormElement("input", "hidden",
-                              "encryptPass", "encryptPass",
+                              "passwordChange", "passwordChange",
                               "true", passwordField.form);
-        }
     }
 
 <!-- This is here so we can exclude the selectAll call when roles is hidden -->

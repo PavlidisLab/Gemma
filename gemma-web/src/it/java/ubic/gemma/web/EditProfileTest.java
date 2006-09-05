@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web;
 
-import ubic.gemma.util.ConfigUtils;
-
 /**
  * Test editing users and profiles.
  * 
@@ -36,30 +34,27 @@ public class EditProfileTest extends BaseWebTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        setScriptingEnabled( false );
     }
 
     public void testEditProfileCancel() throws Exception {
-        this.beginAt( "/mainMenu.html" );
-
-        assertLinkPresentWithText( "array design" );
-        clickLinkWithText( "Edit Profile" );
+        this.gotoPage( "/editProfile.html" );
         assertFormPresent();
-        this.clickButtonWithText( "Cancel" );
+        assertSubmitButtonPresent( "cancel" );
+        this.submit( "cancel" );
         assertTextPresent( "cancelled" );
         assertLinkPresentWithText( "array design" );
     }
 
     public void testEditProfile() throws Exception {
-        this.beginAt( "/mainMenu.html" );
-
-        assertLinkPresentWithText( "array design" );
-        clickLinkWithText( "Edit Profile" );
+        this.gotoPage( "/editUser.html?username=test&from=list" );
         assertFormPresent();
-        this.setTextField( "email", "foo@bar.com" );
+        assertSubmitButtonPresent( "save" );
         this.setTextField( "passwordHint", "guess" );
-        this.submit();
+        this.submit( "save" );
+        dumpHtml();
         assertTextPresent( "updated" );
-        assertLinkPresentWithText( "array design" );
+        assertLinkPresentWithText( "active" );
     }
 
 }

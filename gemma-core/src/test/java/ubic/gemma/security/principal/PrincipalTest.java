@@ -24,6 +24,7 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Test that we can log users in
@@ -39,7 +40,7 @@ public class PrincipalTest extends BaseSpringContextTest {
      * @throws Exception
      */
     public final void testLogin() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( "administrator", "test" );
+        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ),  ConfigUtils.getString( "gemma.admin.password" ) );
 
         ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
         Authentication authentication = providerManager.doAuthentication( auth );
@@ -47,7 +48,7 @@ public class PrincipalTest extends BaseSpringContextTest {
     }
 
     public final void testLoginWrongPassword() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( "administrator", "wrong password" );
+        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ), "wrong password" );
 
         ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
         try {

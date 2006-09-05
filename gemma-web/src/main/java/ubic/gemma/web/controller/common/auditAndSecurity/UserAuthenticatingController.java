@@ -28,6 +28,7 @@ import org.acegisecurity.providers.AuthenticationProvider;
 import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.acegisecurity.providers.dao.DaoAuthenticationProvider;
+import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -44,21 +45,25 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public abstract class UserAuthenticatingController extends BaseFormController {
 
-    /**
-     * @param user
-     * @param request
-     */
-    protected void encryptPassword( User user, HttpServletRequest request ) {
+    protected void encryptPassword( UserUpdateCommand user, HttpServletRequest request ) {
         ProviderManager authenticationManager = getProviderManager( request );
 
         encryptPassword( user, authenticationManager );
+
+    }
+
+    protected String encryptPassword( String password, HttpServletRequest request ) {
+        ProviderManager authenticationManager = getProviderManager( request );
+
+        return encryptPassword( authenticationManager, password );
+
     }
 
     /**
      * @param user
      * @param authenticationManager
      */
-    protected void encryptPassword( User user, ProviderManager authenticationManager ) {
+    protected void encryptPassword( UserUpdateCommand user, ProviderManager authenticationManager ) {
 
         if ( authenticationManager == null ) {
             // when testing.
@@ -66,16 +71,33 @@ public abstract class UserAuthenticatingController extends BaseFormController {
         }
 
         String unencryptedPassword = user.getPassword();
+        String encryptedPassword = null;
+        encryptedPassword = encryptPassword( authenticationManager, unencryptedPassword );
+        assert encryptedPassword != null;
+        user.setPassword( encryptedPassword );
+    }
+
+    /**
+     * @param authenticationManager
+     * @param unencryptedPassword
+     * @param encryptedPassword
+     * @return
+     */
+    protected String encryptPassword( ProviderManager authenticationManager, String unencryptedPassword ) {
+        if ( authenticationManager == null ) {
+            // this can happeng during testing. In which case we have to encrypt it by hand.
+            log.warn( "Test environment: using SHA encoder" );
+            ShaPasswordEncoder encoder = new ShaPasswordEncoder();
+            return encoder.encodePassword( unencryptedPassword, ConfigUtils.getProperty( "gemma.salt" ) );
+        }
         for ( Object provider : authenticationManager.getProviders() ) {
             if ( ( AuthenticationProvider ) provider instanceof DaoAuthenticationProvider ) {
                 DaoAuthenticationProvider daoAuthenticationProvider = ( DaoAuthenticationProvider ) provider;
-                String encryptedPassword = daoAuthenticationProvider.getPasswordEncoder().encodePassword(
-                        unencryptedPassword, ConfigUtils.getProperty( "gemma.salt" ) );
-                user.setPassword( encryptedPassword );
-                user.setConfirmPassword( encryptedPassword );
-                break;
+                return daoAuthenticationProvider.getPasswordEncoder().encodePassword( unencryptedPassword,
+                        ConfigUtils.getProperty( "gemma.salt" ) );
             }
         }
+        return null;
     }
 
     /**
@@ -120,8 +142,14 @@ public abstract class UserAuthenticatingController extends BaseFormController {
         }
 
         // Send an account information e-mail
-        message.setSubject( getText( "signup.email.subject", locale ) );
-        sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
+        mailMessage.setSubject( getText( "signup.email.subject", locale ) );
+        try {
+            sendEmail( user, getText( "signup.email.message", locale ), RequestUtil.getAppURL( request ) );
+            this.saveMessage( request, "email.sent", user.getEmail(), "Confirmation email was sent to "
+                    + user.getEmail() );
+        } catch ( Exception e ) {
+            log.error( "Couldn't send email to " + user );
+        }
     }
 
 }

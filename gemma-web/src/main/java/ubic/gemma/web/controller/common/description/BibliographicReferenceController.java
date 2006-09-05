@@ -38,12 +38,11 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * This controller is responsible for showing a list of all bibliographic references, as well sending the user to the
  * pubMed.Detail.view when they click on a specific link in that list.
- * <hr>
- * 
+ 
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="bibliographicReferenceController" name="/bibRef/*"
+ * @spring.bean id="bibliographicReferenceController" name="/bibRefList.html"
  * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="methodNameResolver" ref="bibRefActions"
  */
@@ -75,7 +74,7 @@ public class BibliographicReferenceController extends BaseMultiActionController 
 
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         request.setAttribute( "accession", pubMedId );
-        return new ModelAndView( "pubMed.Detail.view" ).addObject( "bibliographicReference", bibRef );
+        return new ModelAndView( "bibliogrpahicReferenceView" ).addObject( "bibliographicReference", bibRef );
     }
 
     /**

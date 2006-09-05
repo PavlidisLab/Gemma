@@ -22,6 +22,7 @@ import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.progress.HttpProgressObserver;
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressJob;
@@ -47,8 +48,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void testCreateProgressJob() {
 
-        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
-        assertEquals( pJob.getUser(), testUserName );
+        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Testing the Progress Manager" );
+        assertEquals( pJob.getUser(), ConfigUtils.getString( "gemma.regular.user" ) );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager" );
 
         ProgressManager.destroyProgressJob( pJob ); // clean up so this test won't affect next tests
@@ -61,15 +63,17 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
 
     public void testDestroyProgressJob() {
-        pObserver = new HttpProgressObserver( testUserName );
-        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
+        pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.regular.user" ) );
+        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Testing the Progress Manager" );
 
         // single case
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
         pJob.updateProgress( new ProgressData( 88, "Another test", true ) );
 
         ProgressManager.destroyProgressJob( pJob );
-        assertEquals( ProgressManager.addToNotification( testUserName, pObserver ), false );
+        assertEquals( ProgressManager.addToNotification( ConfigUtils.getString( "gemma.regular.user" ), pObserver ),
+                false );
 
         pJob = null;
     }
@@ -80,8 +84,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
 
     public void testAddToNotificationStringObserver() {
 
-        pObserver = new HttpProgressObserver( testUserName );
-        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
+        pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.regular.user" ) );
+        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Testing the Progress Manager" );
 
         // single case
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
@@ -94,11 +99,13 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         pJob = null;
 
         // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, "Test2 of Notify" );
+        ProgressJob pJob1 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Test1 of Notify" );
+        ProgressJob pJob2 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Test2 of Notify" );
 
         MockClient mClient = new MockClient();
-        ProgressManager.addToNotification( testUserName, mClient );
+        ProgressManager.addToNotification( ConfigUtils.getString( "gemma.regular.user" ), mClient );
         pJob1.updateProgress();
         assertEquals( mClient.upDateTimes(), 1 );
         pJob2.updateProgress();
@@ -117,8 +124,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     // public void testAddToNotificationStringIntObserver() {
     //
-    // pObserver = new HttpProgressObserver( testUserName );
-    // pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
+    // pObserver = new HttpProgressObserver( ConfigUtils.getString("gemma.regular.user") );
+    // pJob = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"), "Testing the Progress
+    // Manager" );
     //
     // // single case
     // ProgressManager.addToNotification( pJob.getUser(), pObserver );
@@ -131,25 +139,31 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     // pJob = null;
     //
     // // multiple case
-    // ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob1 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DATABASE_PROGRESS,
     // "Test1 of Notify" );
-    // ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, ProgressJob.DOWNLOAD_PROGRESS,
+    // ProgressJob pJob2 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DOWNLOAD_PROGRESS,
     // "Test2 of Notify" );
     //
     // MockClient mClient = new MockClient();
-    // ProgressManager.addToNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToNotification( ConfigUtils.getString("gemma.regular.user"), ProgressJob.DATABASE_PROGRESS,
+    // mClient );
     // pJob1.updateProgress();
     // assertEquals( mClient.upDateTimes(), 1 );
     // pJob2.updateProgress();
     // assertEquals( mClient.upDateTimes(), 1 );
     // assertEquals( mClient.getProgressData().size(), 1 );
     //
-    // ProgressJob pJob3 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob3 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DATABASE_PROGRESS,
     // "Test3 of Notify" );
-    // ProgressJob pJob4 = ProgressManager.createProgressJob( testUserName, ProgressJob.PARSING_PROGRESS,
+    // ProgressJob pJob4 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.PARSING_PROGRESS,
     // "Test4 of Notify" );
     //
-    // ProgressManager.addToNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToNotification( ConfigUtils.getString("gemma.regular.user"), ProgressJob.DATABASE_PROGRESS,
+    // mClient );
     // pJob3.updateProgress();
     // assertEquals( mClient.upDateTimes(), 2 );
     // pJob4.updateProgress();
@@ -167,8 +181,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void testAddToRecentNotificationStringObserver() {
 
-        pObserver = new HttpProgressObserver( testUserName );
-        pJob = ProgressManager.createProgressJob( testUserName, "Testing the Progress Manager" );
+        pObserver = new HttpProgressObserver( ConfigUtils.getString( "gemma.regular.user" ) );
+        pJob = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Testing the Progress Manager" );
 
         // single case
         ProgressManager.addToNotification( pJob.getUser(), pObserver );
@@ -181,13 +196,17 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         pJob = null;
 
         // multiple case
-        ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, "Test1 of Notify" );
-        ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, "Test2 of Notify" );
-        ProgressJob pJob3 = ProgressManager.createProgressJob( testUserName, "Test3 of Notify" );
-        ProgressJob pJob4 = ProgressManager.createProgressJob( testUserName, "Test4 of Notify" );
+        ProgressJob pJob1 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Test1 of Notify" );
+        ProgressJob pJob2 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Test2 of Notify" );
+        ProgressJob pJob3 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Test3 of Notify" );
+        ProgressJob pJob4 = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "Test4 of Notify" );
 
         MockClient mClient = new MockClient();
-        ProgressManager.addToRecentNotification( testUserName, mClient );
+        ProgressManager.addToRecentNotification( ConfigUtils.getString( "gemma.regular.user" ), mClient );
         pJob1.updateProgress();
         assertEquals( mClient.upDateTimes(), 1 );
         pJob2.updateProgress();
@@ -213,8 +232,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     // public void testAddToRecentNotificationStringIntObserver() {
     //
-    // pObserver = new HttpProgressObserver( testUserName );
-    // pJob = ProgressManager.createProgressJob( testUserName, ProgressJob.DOWNLOAD_PROGRESS,
+    // pObserver = new HttpProgressObserver( ConfigUtils.getString("gemma.regular.user") );
+    // pJob = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DOWNLOAD_PROGRESS,
     // "Testing the Progress Manager" );
     //
     // // single case
@@ -228,13 +248,16 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     // pJob = null;
     //
     // // multiple case
-    // ProgressJob pJob1 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob1 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DATABASE_PROGRESS,
     // "Test1 of Notify" );
-    // ProgressJob pJob2 = ProgressManager.createProgressJob( testUserName, ProgressJob.DOWNLOAD_PROGRESS,
+    // ProgressJob pJob2 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DOWNLOAD_PROGRESS,
     // "Test2 of Notify" );
     //
     // MockClient mClient = new MockClient();
-    // ProgressManager.addToRecentNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToRecentNotification( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DATABASE_PROGRESS, mClient );
     // pJob1.updateProgress();
     // assertEquals( mClient.upDateTimes(), 1 );
     // pJob2.updateProgress();
@@ -242,12 +265,15 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     // assertEquals( mClient.getProgressData().size(), 1 );
     //
     // mClient = new MockClient();
-    // ProgressJob pJob3 = ProgressManager.createProgressJob( testUserName, ProgressJob.DATABASE_PROGRESS,
+    // ProgressJob pJob3 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DATABASE_PROGRESS,
     // "Test3 of Notify" );
-    // ProgressJob pJob4 = ProgressManager.createProgressJob( testUserName, ProgressJob.PARSING_PROGRESS,
+    // ProgressJob pJob4 = ProgressManager.createProgressJob( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.PARSING_PROGRESS,
     // "Test4 of Notify" );
     //
-    // ProgressManager.addToRecentNotification( testUserName, ProgressJob.DATABASE_PROGRESS, mClient );
+    // ProgressManager.addToRecentNotification( ConfigUtils.getString("gemma.regular.user"),
+    // ProgressJob.DATABASE_PROGRESS, mClient );
     //
     // pJob1.updateProgress();
     // assertEquals( mClient.upDateTimes(), 0 );
@@ -270,9 +296,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      */
     public void testSingleUse() {
 
-        MockProcess mp = new MockProcess( testUserName, "A run of tests" );
+        MockProcess mp = new MockProcess( ConfigUtils.getString( "gemma.regular.user" ), "A run of tests" );
         MockClient mc = new MockClient();
-        ProgressManager.addToNotification( testUserName, mc );
+        ProgressManager.addToNotification( ConfigUtils.getString( "gemma.regular.user" ), mc );
         mp.run();
 
         try {

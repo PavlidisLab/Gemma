@@ -18,16 +18,13 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.Constants;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.testing.BaseTransactionalSpringWebTest;
 
 import com.dumbster.smtp.SimpleSmtpServer;
@@ -40,22 +37,16 @@ import com.dumbster.smtp.SimpleSmtpServer;
  */
 public class SignupControllerTest extends BaseTransactionalSpringWebTest {
 
-    UserAuthenticatingController signupController;
-
-    User testUser;
-    UserRole userRole;
-    UserService userService;
+    UserAuthenticatingController controller;
 
     /**
      * @throws Exception
      */
+    @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        signupController = ( UserAuthenticatingController ) getBean( "signupController" );
-        testUser = User.Factory.newInstance();
-        userRole = UserRole.Factory.newInstance();
-        userService = ( UserService ) getBean( "userService" );
+        controller = ( UserAuthenticatingController ) getBean( "signupController" );
 
     }
 
@@ -70,15 +61,15 @@ public class SignupControllerTest extends BaseTransactionalSpringWebTest {
         SimpleSmtpServer server = SimpleSmtpServer.start( MAIL_PORT );
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/signup.html" );
-        request.addParameter( "userName", "testname" );
-        request.addParameter( "password", "testpassword" );
-        request.addParameter( "confirmPassword", "testpassword" );
+        request.addParameter( "userName", RandomStringUtils.randomAlphabetic( 6 ) );
+        request.addParameter( "newPassword", "testpassword" );
+        request.addParameter( "confirmNewPassword", "testpassword" );
         request.addParameter( "firstName", "First" );
         request.addParameter( "lastName", "Last" );
-        request.addParameter( "email", "test@gemma.org" );
+        request.addParameter( "email", RandomStringUtils.randomAlphabetic( 6 ) + "@gemma.org" );
         request.addParameter( "passwordHint", "guess" );
 
-        ModelAndView mv = signupController.handleRequest( request, response );
+        ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
         assertTrue( "Errors returned in model: " + errors, errors == null );
 
@@ -87,13 +78,13 @@ public class SignupControllerTest extends BaseTransactionalSpringWebTest {
 
         // verify that success messages are in the request
         assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertNotNull( request.getSession().getAttribute( Constants.REGISTERED ) );
+
     }
 
     public void testDisplayForm() throws Exception {
         MockHttpServletRequest request = newGet( "/signup.html" );
         MockHttpServletResponse response = new MockHttpServletResponse();
-        ModelAndView mv = signupController.handleRequest( request, response );
+        ModelAndView mv = controller.handleRequest( request, response );
         assertTrue( "returned correct view name", mv.getViewName().equals( "signup" ) );
     }
 }

@@ -29,7 +29,8 @@ import java.util.Collection;
  * @version $Id$
  * @see ubic.gemma.model.common.description.BibliographicReferenceService
  */
-public class BibliographicReferenceServiceImpl extends ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
+public class BibliographicReferenceServiceImpl extends
+        ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
 
     /**
      * Check to see if the reference already exists
@@ -37,7 +38,8 @@ public class BibliographicReferenceServiceImpl extends ubic.gemma.model.common.d
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#alreadyExists(ubic.gemma.model.common.description.BibliographicReference)
      */
     protected BibliographicReference handleFind(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) throws java.lang.Exception {
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+            throws java.lang.Exception {
 
         return getBibliographicReferenceDao().find( bibliographicReference );
     }
@@ -62,28 +64,12 @@ public class BibliographicReferenceServiceImpl extends ubic.gemma.model.common.d
         return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
     }
 
-    protected BibliographicReference handleSaveBibliographicReferenceByLookup( java.lang.String id,
-            java.lang.String databaseName ) throws java.lang.Exception {
-
-        // FIXME this cannot use a fetcher and this method should probably be removed.
-        // ExternalDatabase ed = this.getExternalDatabaseDao().findByName( databaseName );
-        // DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-        // dbe.setAccession( id );
-        // dbe.setExternalDatabase( ed ); // should be saved by composition
-        // PubMedXMLFetcher fetch = new PubMedXMLFetcher();
-        // int pubmedID = new Integer( id ).intValue();
-        // BibliographicReference br = fetch.retrieveByHTTP( pubmedID );
-        // br.setPubAccession( dbe );
-        // return ( BibliographicReference ) this.getBibliographicReferenceDao().create( br );
-        throw new UnsupportedOperationException();
-    }
-
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(java.lang.String)
      */
-    protected BibliographicReference handleGetBibliographicReferenceByTitle( String title ) throws Exception {
+    protected BibliographicReference handleFindByTitle( String title ) throws Exception {
 
         return getBibliographicReferenceDao().findByTitle( title );
     }
@@ -100,16 +86,17 @@ public class BibliographicReferenceServiceImpl extends ubic.gemma.model.common.d
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
-    protected BibliographicReference handleSaveBibliographicReference(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) throws java.lang.Exception {
+    protected BibliographicReference handleCreate(
+            ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
+            throws java.lang.Exception {
         return ( BibliographicReference ) getBibliographicReferenceDao().create( bibliographicReference );
     }
 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#saveBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
      */
-    protected void handleUpdateBibliographicReference(
-            ubic.gemma.model.common.description.BibliographicReference BibliographicReference ) throws java.lang.Exception {
+    protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
+            throws java.lang.Exception {
         getBibliographicReferenceDao().update( BibliographicReference );
     }
 

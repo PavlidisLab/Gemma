@@ -44,11 +44,11 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
  * @spring.property name="validator" ref="userValidator"
  * @spring.property name="successView" value="redirect:mainMenu.html"
  * @spring.property name="commandName" value="user"
- * @spring.property name="commandClass" value="ubic.gemma.model.common.auditAndSecurity.User"
+ * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.auditAndSecurity.UserUpdateCommand"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="userRoleService" ref="userRoleService"
  * @spring.property name="mailEngine" ref="mailEngine"
- * @spring.property name="message" ref="mailMessage"
+ * @spring.property name="mailMessage" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
  */
 public class SignupController extends UserAuthenticatingController {
@@ -58,12 +58,12 @@ public class SignupController extends UserAuthenticatingController {
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        User user = ( User ) command;
+        UserUpdateCommand user = ( UserUpdateCommand ) command;
         Locale locale = request.getLocale();
 
-        assert user.getPassword().equals( user.getConfirmPassword() ); // should be checked by validation!
+        assert user.getNewPassword().equals( user.getConfirmNewPassword() ); // should be checked by validation!
 
-        String unencryptedPassword = user.getPassword();
+        String unencryptedPassword = user.getNewPassword();
         encryptPassword( user, request );
         user.setEnabled( true );
         addUserRole( user );
@@ -71,7 +71,7 @@ public class SignupController extends UserAuthenticatingController {
         try {
             log.info( "Signing up " + user + " " + user.getUserName() );
 
-            User savedUser = this.userService.saveUser( user );
+            User savedUser = this.userService.saveUser( user.asUser() );
 
             assert savedUser != null;
         } catch ( UserExistsException e ) {
@@ -80,26 +80,22 @@ public class SignupController extends UserAuthenticatingController {
             errors.rejectValue( "userName", "errors.existing.user",
                     new Object[] { user.getUserName(), user.getEmail() }, "duplicate user" );
 
-            // redisplay the unencrypted passwords
-            user.setPassword( unencryptedPassword );
-            user.setConfirmPassword( unencryptedPassword );
             return showForm( request, response, errors );
         }
 
         // log user in automatically
-        signInUser( request, user, unencryptedPassword );
+        signInUser( request, user.asUser(), unencryptedPassword );
 
-        sendConfirmationEmail( request, user, locale );
+        sendConfirmationEmail( request, user.asUser(), locale );
 
-        request.getSession().setAttribute( Constants.REGISTERED, Boolean.TRUE );
-        saveMessage( request, getText( "user.registered", user.getUserName(), locale ) );
+        saveMessage( request, "user.registered", user.getUserName(), "Registered" );
         return new ModelAndView( getSuccessView() );
     }
 
     /**
      * @param user
      */
-    private void addUserRole( User user ) {
+    private void addUserRole( UserUpdateCommand user ) {
         // Set the default user role on this new user
         UserRole role = this.userRoleService.getRole( Constants.USER_ROLE );
         assert role != null : "Role was null";
@@ -117,7 +113,7 @@ public class SignupController extends UserAuthenticatingController {
     @Override
     @SuppressWarnings("unused")
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        return User.Factory.newInstance();
+        return new UserUpdateCommand();
     }
 
 }

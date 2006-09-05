@@ -4,7 +4,7 @@
 <content tag="heading">
 <fmt:message key="signup.heading" />
 </content>
-<body id="signup"/>
+<body id="signup" />
 	<spring:bind path="user.*">
 		<c:if test="${not empty status.errorMessages}">
 			<div class="error">
@@ -17,7 +17,9 @@
 		</c:if>
 	</spring:bind>
 
-	<p><fmt:message key="signup.message" /></p>
+	<p>
+		<fmt:message key="signup.message" />
+	</p>
 
 	<div class="separator"></div>
 
@@ -29,9 +31,8 @@
 				</th>
 				<td>
 					<spring:bind path="user.userName">
-	                    <span class="fieldError"><c:out value="${status.errorMessage}"/></span>
-						<input type="text" name="userName" value="<c:out value="${status.value}"/>"
-							id="userName" class="text large" />
+						<span class="fieldError"><c:out value="${status.errorMessage}" /> </span>
+						<input type="text" name="userName" value="<c:out value="${status.value}"/>" id="userName" class="text large" />
 					</spring:bind>
 				</td>
 			</tr>
@@ -40,20 +41,22 @@
 					<Gemma:label styleClass="desc" key="user.password" />
 				</th>
 				<td>
-					<spring:bind path="user.password">
+					<spring:bind path="user.newPassword">
 						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="password" id="password" name="password" class="text medium" value="<c:out value="${status.value}"/>" />
+						<input type="password" id="newPassword" name="newPassword" class="text medium"
+							value="<c:out value="${status.value}"/>" />
 					</spring:bind>
 				</td>
 			</tr>
 			<tr>
 				<th>
-					<Gemma:label styleClass="desc" key="user.confirmPassword" />
+					<Gemma:label styleClass="desc" key="user.confirmNewPassword" />
 				</th>
 				<td>
-					<spring:bind path="user.confirmPassword">
+					<spring:bind path="user.confirmNewPassword">
 						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="password" name="confirmPassword" id="confirmPassword" value="<c:out value="${status.value}"/>" class="text medium" />
+						<input type="password" name="confirmNewPassword" id="confirmNewPassword" value="<c:out value="${status.value}"/>"
+							class="text medium" />
 
 					</spring:bind>
 				</td>
@@ -65,7 +68,8 @@
 				<td>
 					<spring:bind path="user.firstName">
 						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="text" name="firstName" value="<c:out value="${status.value}"/>" id="firstName" maxlength="50" class="text medium" />
+						<input type="text" name="firstName" value="<c:out value="${status.value}"/>" id="firstName" maxlength="50"
+							class="text medium" />
 					</spring:bind>
 				</td>
 			</tr>
@@ -87,7 +91,7 @@
 				<td>
 					<spring:bind path="user.email">
 						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="text" name="email" value="<c:out value="${status.value}"/>" id="email"  class="text medium" />
+						<input type="text" name="email" value="<c:out value="${status.value}"/>" id="email" class="text medium" />
 					</spring:bind>
 				</td>
 			</tr>
@@ -98,13 +102,14 @@
 				<td>
 					<spring:bind path="user.passwordHint">
 						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="text" name="passwordHint" value="<c:out value="${status.value}"/>" id="passwordHint" class="text medium" />
+						<input type="text" name="passwordHint" value="<c:out value="${status.value}"/>" id="passwordHint"
+							class="text medium" />
 					</spring:bind>
 				</td>
 			</tr>
 			<tr>
 				<td></td>
-				<td class="buttonBar bottom" >
+				<td class="buttonBar bottom">
 					<input type="submit" class="button" name="save" onclick="bCancel=false"
 						value="<fmt:message key="button.register"/>" />
 
@@ -115,10 +120,10 @@
 	</form>
 
 
-<script type="text/javascript">
+	<script type="text/javascript">
     Form.focusFirstElement(document.forms["signupForm"]);
     highlightFormElements();
 </script>
 
-<validate:javascript formName="user" staticJavascript="false" />
-<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>
+	<validate:javascript formName="user" staticJavascript="false" />
+	<script type="text/javascript" src="<c:url value="/scripts/validator.jsp"/>"></script>

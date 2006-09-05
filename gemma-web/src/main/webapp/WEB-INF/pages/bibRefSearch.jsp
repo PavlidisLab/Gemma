@@ -1,33 +1,53 @@
-<%-- $Id$  --%>
 <%@ include file="/common/taglibs.jsp"%>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
-<html>
 <head>
-<title>Search Gemma for a PubMed reference</title>
+	<title><fmt:message key="pubmedSearch.title" /></title>
+	<content tag="heading">
+	<fmt:message key="pubmedSearch.heading" />
+	</content>
 </head>
 
-<body>
-<h2>Search Gemma for a PubMed reference</h2>
+<h2>
+	Search for a reference
+</h2>
+<spring:hasBindErrors name="searchCriteria">
+	<div class="error">
+		There were the following error(s) with your submission:
+		<ul>
+			<c:forEach var="errMsgObj" items="${errors.allErrors}">
+				<li>
+					<spring:message code="${errMsgObj.code}" text="${errMsgObj.defaultMessage}" />
+				</li>
+			</c:forEach>
+		</ul>
+	</div>
+</spring:hasBindErrors>
+<form method="post" name="searchForm" action="bibRefSearch.html">
+	<table>
+		<tr>
+			<td>
+				<Gemma:label styleClass="desc" key="pubmed.id" />
+			</td>
 
-<%-- This is not _really_ treated as a "proper" form: we don't use spring:bind. Instead the parameter is passed
-in the URL. This makes it simple to bookmark these URLs, but it also means that some of our actions must
-know how to look for the 'accession' parameter as well as deal with a bound bibliographicReference. --%>
+			<td>
 
-<form action=<c:url value="/bibRef/searchBibRef.html"/> method="get"><input
-    type="text" name="accession"> <input type="submit"></form>
-<hr />
+				<spring:bind path="searchCriteria.accession">
+					<input type="text" name="${status.expression}" value="${status.value}">
+					<span class="fieldError" />
+				</spring:bind>
 
-<%-- This link/button takes the user to the 'view all' page (pubMed.GetAll.results.view.jsp) --%>
 
-<DIV align="left"><INPUT type="button"
-    onclick="location.href='showAllBibRef.html'"
-    value="View all references"></DIV>
-<hr />
+			</td>
 
-<%-- This link takes the user to the NCBI search flow page (pubMed.Search.criteria.view.jsp). --%>
+			<td align="left">
+				<input type="submit" name="submit" value="Submit" onclick="bCancel=false" class="button" />
+			</td>
 
-<a href="<c:url value="/flowController.html?_flowId=pubMed.Search"/>"><fmt:message
-    key="menu.flow.PubMedSearch" /></a>
-</body>
-</html>
+		</tr>
+
+	</table>
+</form>
+
+<p>
+	<a href="/bibRefList.html">View All Gemma Bibliographic References</a>
+</p>
