@@ -11,3 +11,4 @@ generated-sources
 andromda*.exc
 *.jar
 
+velocity.log.*
