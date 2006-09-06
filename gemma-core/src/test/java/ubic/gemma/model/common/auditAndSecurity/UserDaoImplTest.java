@@ -20,6 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Date;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,7 +33,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @version $Id$
  */
 public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
-
+    String email = null;
     private UserDao userDao;
     private final Log log = LogFactory.getLog( UserDaoImplTest.class );
     private User testUser;
@@ -47,9 +48,10 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
 
     public final void testFindByEmail() throws Exception {
         userDao.create( testUser );
-        Contact u = userDao.findByEmail( "foo@bar.com" );
+
+        Contact u = userDao.findByEmail( email );
         assertNotNull( u );
-        assertEquals( "foo@bar.com", u.getEmail() );
+        assertEquals( email, u.getEmail() );
         assertTrue( u instanceof User );
     }
 
@@ -57,7 +59,7 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-
+        email = RandomStringUtils.randomAlphabetic( 6 ) + "@bar.com";
         // User Object
         testUser = User.Factory.newInstance();
         // UserRole Object
@@ -84,7 +86,7 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
 
         testUser.setPassword( "root" );
         testUser.setPasswordHint( "test hint" );
-        testUser.setEmail( "foo@bar.com" );
+        testUser.setEmail( email );
         AuditTrail ad = AuditTrail.Factory.newInstance();
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         testUser.setAuditTrail( ad );
