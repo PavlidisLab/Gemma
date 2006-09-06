@@ -13,19 +13,17 @@
 
         <display:table name="expressionExperiments" class="list" requestURI="" id="expressionExperimentList"
             export="true" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-			
-			<display:column property="idLink" title="Internal Id" sortable="true" maxWords="20" />
-			
-			<display:column property="name" sortable="true" titleKey="expressionExperiment.name" />
+		
+			<display:column property="nameLink" sortable="true" titleKey="expressionExperiment.name" />
 			  
 			<display:column property="createDate" sortable="true" titleKey="auditTrail.date" />
 			            
             <display:column property="source" autolink="true" sortable="true" maxWords="20" />   
 
-            <display:column property="detailsLink" sortable="true" titleKey="expressionExperiment.id" />
+            <display:column property="details" sortable="true" titleKey="expressionExperiment.details" />
 
             <display:column property="assaysLink" sortable="true" titleKey="bioAssays.title" />
-            
+           
             <display:column property="taxon" sortable="true" titleKey="taxon.title" />
   
             <display:setProperty name="basic.empty.showtable" value="true" />      

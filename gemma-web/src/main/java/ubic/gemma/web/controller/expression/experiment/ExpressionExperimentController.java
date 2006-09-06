@@ -74,6 +74,32 @@ public class ExpressionExperimentController extends BaseMultiActionController {
         return new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
     }
+    
+    
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+
+        if ( id == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( identifierNotFound );
+        }
+
+        ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        if ( expressionExperiment == null ) {
+            throw new EntityNotFoundException( id + " not found" );
+        }
+
+        request.setAttribute( "id", id );
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays",
+                expressionExperiment.getBioAssays());
+    }
 
     /**
      * @param request

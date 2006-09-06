@@ -60,12 +60,13 @@
         <h3>
             <fmt:message key="bioAssays.title" />
         </h3>
-        <display:table name="expressionExperiment.bioAssays" class="list" requestURI="" id="bioAssayList" export="true" pagesize="10">
-         	<display:column property="id" sortable="true" href="/Gemma/bioAssay/showBioAssay.html" paramId="id" paramProperty="id"/>
-            <display:column property="name" maxWords="20" />
-            <display:column property="description" maxWords="100" />
-            <display:setProperty name="export.pdf" value="true" />
-        </display:table>
+        There are 
+        <a href = "/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%> ">
+        <% out.print(expressionExperiment.getBioAssays().size()); %> 
+        </a>
+        bioAssays for this expression experiment.
+        <br/>
+        
 
         <h3>
             <fmt:message key="experimentalDesigns.title" />
@@ -106,6 +107,7 @@
         </h3>
         <display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
             export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
         

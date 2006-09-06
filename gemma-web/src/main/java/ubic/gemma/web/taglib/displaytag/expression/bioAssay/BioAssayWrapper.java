@@ -48,4 +48,16 @@ public class BioAssayWrapper extends TableDecorator {
         }
         return "No factor values";
     }
+    
+    /**
+     * @return String
+     */
+    public String getNameLink() {
+        BioAssay object = ( BioAssay ) getCurrentRowObject();
+        if ( object.getName() != null ) {
+            return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
+                    + object.getName() + "</a>";
+        }
+        return "No name";
+    }
 }

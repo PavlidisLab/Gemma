@@ -185,6 +185,7 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
             <prop key="/expressionExperiment/showAllExpressionExperiments.html">showAll</prop>
             <prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop>
             <prop key="/expressionExperiment/showExpressionExperiment.html">show</prop>
+            <prop key="/expressionExperiment/showBioAssaysFromExpressionExperiment.html">showBioAssays</prop>
         </props>
     </property>
 </bean>

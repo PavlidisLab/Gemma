@@ -63,12 +63,21 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDetailsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getAccession() != null ) {
-//            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
-//                    + object.getAccession().getExternalDatabase().getName() + " - "
-//                    + object.getAccession().getAccession() + "</a>";
             return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">"
-            + object.getAccession().getExternalDatabase().getName() + " - "
-            + object.getAccession().getAccession() + "</a>";
+            + getDetails() + "</a>";
+        }
+        return "No accession";
+    }
+    
+    /**
+     * Return detail string for an expression experiment
+     * @return String
+     */
+    public String getDetails() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if ( object.getAccession() != null ) {
+            return object.getAccession().getExternalDatabase().getName() + " - "
+            + object.getAccession().getAccession();
         }
         return "No accession";
     }
@@ -79,9 +88,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getAssaysLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getBioAssays() != null ) {
-//            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
-//                    + object.getBioAssays().size() + "</a>";
-            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">"
+            return "<a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
             + object.getBioAssays().size() + "</a>";
         }
         return "No bioassays";
@@ -114,14 +121,15 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
         return "No design";
     }
-
+    
     /**
-     * @return
+     * link to the expression experiment view, with the name as the link view
+     * @return String
      */
-    public String getIdLink() {
+    public String getNameLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object.getExperimentalDesigns() != null ) {
-            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getId() + "</a>";
+            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getName() + "</a>";
         }
         return "No design";
     }
