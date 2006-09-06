@@ -30,8 +30,6 @@ import ubic.gemma.web.controller.expression.bioAssay.BioAssayFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchControllerIntegrationTest;
-import ubic.gemma.web.util.progress.ProgressDataTest;
-import ubic.gemma.web.util.progress.ProgressIntegrationTest;
 
 /**
  * Tests for gemma-web.
@@ -56,8 +54,6 @@ public class AllWebTests extends TestSuite {
         suite.addTestSuite( ExperimentalDesignControllerTest.class );
         suite.addTestSuite( ExpressionExperimentControllerTest.class );
         suite.addTestSuite( ExpressionExperimentSearchControllerIntegrationTest.class );
-        suite.addTestSuite( ProgressDataTest.class );
-        suite.addTestSuite( ProgressIntegrationTest.class );
         return suite;
     }
 }
