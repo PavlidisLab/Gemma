@@ -41,6 +41,8 @@ import ubic.gemma.security.SecurityIntegrationTest;
 import ubic.gemma.security.interceptor.AuditInterceptorTest;
 import ubic.gemma.security.interceptor.PersistAclInterceptorTest;
 import ubic.gemma.security.principal.PrincipalTest;
+import ubic.gemma.util.progress.ProgressDataTest;
+import ubic.gemma.util.progress.ProgressIntegrationTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
 
 /**
@@ -84,6 +86,10 @@ public class AllCoreTests {
 
         suite.addTestSuite( ExpressionDataMatrixTest.class );
         suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
+        
+        suite.addTestSuite( ProgressDataTest.class );
+        suite.addTestSuite( ProgressIntegrationTest.class );
+        
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );
