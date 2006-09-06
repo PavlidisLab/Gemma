@@ -21,9 +21,8 @@ package ubic.gemma;
 /**
  * Constant values used throughout the application.
  * <p>
- * Originally from Appfuse, to support code imported from Appfuse.
+ * Originally from Appfuse
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
  */
@@ -82,7 +81,8 @@ public class Constants {
     public static final String AVAILABLE_ROLES = "availableRoles";
 
     /**
-     * The name of the configuration hashmap stored in application scope.
+     * The name of the configuration hashmap stored in application scope. Variables placed here (in the StartupListner)
+     * are available in jsps using $appConfig['key'] synax.
      */
     public static final String CONFIG = "appConfig";
 }

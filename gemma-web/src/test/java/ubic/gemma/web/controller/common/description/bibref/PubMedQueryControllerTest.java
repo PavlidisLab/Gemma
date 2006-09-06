@@ -36,7 +36,7 @@ public class PubMedQueryControllerTest extends BaseTransactionalSpringWebTest {
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        controller = ( PubMedQueryController ) getBean( "pubmedQueryController" );
+        controller = ( PubMedQueryController ) getBean( "pubMedQueryController" );
     }
 
     /**
@@ -81,7 +81,7 @@ public class PubMedQueryControllerTest extends BaseTransactionalSpringWebTest {
         ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "searchCriteria" );
         assertTrue( "Expected an error", errors != null );
-        assertEquals( "bibRefSearchForm", mv.getViewName() );
+        assertEquals( "bibRefSearch", mv.getViewName() );
     }
 
     public final void testOnSubmitNotFound() throws Exception {
@@ -91,13 +91,13 @@ public class PubMedQueryControllerTest extends BaseTransactionalSpringWebTest {
         ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "searchCriteria" );
         assertTrue( "Expected an error", errors != null );
-        assertEquals( "bibRefSearchForm", mv.getViewName() );
+        assertEquals( "bibRefSearch", mv.getViewName() );
     }
 
     public void testDisplayForm() throws Exception {
         MockHttpServletRequest request = newGet( "/pubMedSearch.html" );
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
-        assertEquals( "bibRefSearchForm", mv.getViewName() );
+        assertEquals( "bibRefSearch", mv.getViewName() );
     }
 }

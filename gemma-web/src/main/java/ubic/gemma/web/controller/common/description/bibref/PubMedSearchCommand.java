@@ -36,6 +36,7 @@ public class PubMedSearchCommand {
 
     /**
      * @param accession the accession to set
+     * @spring.validator type="positiveNonZeroInteger"
      */
     public void setAccession( String accession ) {
         this.accession = accession;

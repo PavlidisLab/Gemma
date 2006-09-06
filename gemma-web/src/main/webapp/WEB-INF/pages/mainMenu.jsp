@@ -35,12 +35,10 @@
 		<a href="<c:url value="/candidateGeneList.html"/>"> <fmt:message key="menu.CandidateGeneList" /> </a>
 	</li>
 	<li>
-		<a href="<c:url value="/flowController.html?_flowId=pubMed.Search"/>"> <fmt:message key="menu.flow.PubMedSearch" />
+		<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" />
 		</a>
 	</li>
-	<li>
-		<a href="<c:url value="/bibRef/searchBibRef.html"/>"> <fmt:message key="menu.PubMedGemmaSearch" /> </a>
-	</li>
+ 
 	<li>
 		<a href="<c:url value="/editProfile.html"/>"> <fmt:message key="menu.user" /> </a>
 	</li>

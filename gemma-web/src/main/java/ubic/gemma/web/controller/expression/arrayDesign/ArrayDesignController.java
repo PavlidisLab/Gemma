@@ -33,7 +33,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="arrayDesignController" name="/arrayDesign/*"
+ * @spring.bean id="arrayDesignController" name="arrayDesignController"
  * @springproperty name="validator" ref="arrayDesignValidator"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="methodNameResolver" ref="arrayDesignActions"

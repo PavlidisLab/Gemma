@@ -32,14 +32,10 @@ import org.springframework.web.servlet.mvc.SimpleFormController;
 import ubic.gemma.model.genome.gene.CandidateGeneListService;
 import ubic.gemma.model.genome.gene.GeneService;
 
-/**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
+/** 
  * @author daq2101
  * @version $Id$
- * @spring.bean id="geneFinderController" name="/geneFinder.html"
+ * @spring.bean id="geneFinderController"  
  * @spring.property name="formView" value="geneFinder"
  * @spring.property name="successView" value="geneFinder"
  * @spring.property name="geneService" ref="geneService"

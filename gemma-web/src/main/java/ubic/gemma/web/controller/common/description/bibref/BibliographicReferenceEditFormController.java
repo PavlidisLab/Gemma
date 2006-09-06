@@ -37,7 +37,7 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * Supports editing of bibliographic references.
  * 
- * @spring.bean id="bibliographicReferenceEditFormController" name="/bibliographicReferenceView.html /bibRefEdit.html"
+ * @spring.bean id="bibliographicReferenceEditFormController"
  * @spring.property name="commandClass" value="ubic.gemma.model.common.description.BibliographicReference"
  * @spring.property name="commandName" value="bibRef"
  * @spring.property name="formView" value="bibRefEdit"

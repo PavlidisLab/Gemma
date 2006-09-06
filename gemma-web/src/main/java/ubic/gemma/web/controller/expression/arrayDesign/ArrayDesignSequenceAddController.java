@@ -48,12 +48,15 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="arrayDesignSequenceAddController" name="/arrayDesign/associateSequences.html"
- * @spring.property name = "commandName" value="arrayDesign"
- * @spring.property name = "formView" value="arrayDesignSequenceAdd"
- * @spring.property name = "successView" value="redirect:/arrayDesign/associateSequences.html"
- * @spring.property name = "arrayDesignService" ref="arrayDesignService"
- * @spring.property name = "bioSequenceService" ref="bioSequenceService"
+ * @spring.bean id="arrayDesignSequenceAddController"
+ * @spring.property name="commandName" value="arrayDesignSequenceAddCommand"
+ * @spring.property name="commandClass"
+ *                  value="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddCommand"
+ * @spring.property name="formView" value="arrayDesignSequenceAdd"
+ * @spring.property name="successView" value="redirect:/arrayDesign/associateSequences.html"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="validator" ref="arrayDesignSequenceAddValidator"
+ * @spring.property name="bioSequenceService" ref="bioSequenceService"
  */
 public class ArrayDesignSequenceAddController extends BaseFormController {
 

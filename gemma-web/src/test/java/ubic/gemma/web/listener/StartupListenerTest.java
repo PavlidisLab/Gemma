@@ -51,7 +51,6 @@ public class StartupListenerTest extends TestCase {
         listener = new StartupListener();
 
         sc = new MockServletContext( "" );
-        sc.addInitParameter( "daoType", "hibernate" );
         sc.addInitParameter( "theme", "simplicity" );
 
         // initialize Spring

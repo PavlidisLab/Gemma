@@ -34,7 +34,7 @@ import ubic.gemma.util.BeanPropertyCompleter;
  * @author keshav
  * @author mraible
  * @version $Id$
- * @spring.bean id="userFormController" name="/editProfile.html /editUser.html"
+ * @spring.bean id="userFormController"
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.auditAndSecurity.UserUpdateCommand"
  * @spring.property name="validator" ref="userValidator"
@@ -80,7 +80,6 @@ public class UserFormController extends UserAuthenticatingController {
             return new ModelAndView( getSuccessView() );
         }
 
-        
         String unencryptedPassword = null;
         boolean passwordChange = user.getNewPassword() != null;
         if ( passwordChange ) { // also the case if this is a new user.

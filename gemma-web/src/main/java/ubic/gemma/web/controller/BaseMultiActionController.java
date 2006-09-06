@@ -21,6 +21,8 @@ package ubic.gemma.web.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
 
@@ -31,6 +33,8 @@ import org.springframework.web.servlet.mvc.multiaction.MultiActionController;
  * @version $Id$
  */
 public abstract class BaseMultiActionController extends MultiActionController {
+
+    protected Log log = LogFactory.getLog( getClass().getName() );
 
     /**
      * @param request

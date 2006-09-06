@@ -36,10 +36,10 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
  * @version $Id$
- * @spring.bean id="fileUploadController" name="/selectFile.html /uploadFile.html"
+ * @spring.bean id="fileUploadController"
  * @spring.property name="commandName" value="fileUpload"
  * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload"
- * @spring.property name="validator" ref="genericBeanValidator"
+ * @spring.property name="validator" ref="fileUploadValidator"
  * @spring.property name="formView" value="uploadForm"
  * @spring.property name="successView" value="uploadDisplay"
  */

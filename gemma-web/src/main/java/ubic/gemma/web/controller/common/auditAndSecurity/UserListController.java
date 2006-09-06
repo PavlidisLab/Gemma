@@ -35,11 +35,11 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="userController" name="/users.html /activeUsers.html"
+ * @spring.bean id="userListController"
  * @spring.property name="userService" ref="userService"
  */
-public class UserController implements Controller {
-    private transient final Log log = LogFactory.getLog( UserController.class );
+public class UserListController implements Controller {
+    private transient final Log log = LogFactory.getLog( UserListController.class );
     private UserService userService = null;
 
     @SuppressWarnings("unused")

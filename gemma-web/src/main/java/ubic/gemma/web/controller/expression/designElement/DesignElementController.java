@@ -32,14 +32,11 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.web.controller.BaseMultiActionController;
 
-/**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
+/** 
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="designElementController" name="/designElement/*"
+ * @spring.bean id="designElementController"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="methodNameResolver" ref="designElementActions"
  */

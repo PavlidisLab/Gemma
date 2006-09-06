@@ -128,5 +128,11 @@
             </field>
             
         </form>
+        
+        <form name="arrayDesignSequenceAdd">
+            <field property="sequenceFile" depends="required"></field>
+            <field property="arrayDesign" depends="required"></field>
+            <field property="sequenceType" depends="required"></field>
+        </form>
        
     </formset> 

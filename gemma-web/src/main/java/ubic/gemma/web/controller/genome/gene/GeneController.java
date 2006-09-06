@@ -35,14 +35,10 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author daq2101
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="geneController" name="/geneDetail.html"
+ * @spring.bean id="geneController"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  */

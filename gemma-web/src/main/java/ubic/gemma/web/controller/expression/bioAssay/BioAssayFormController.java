@@ -36,13 +36,12 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.web.controller.BaseFormController;
-import ubic.gemma.web.validation.expression.bioAssay.BioAssayValidator;
+import ubic.gemma.web.controller.BaseFormController; 
 
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="bioAssayFormController" name="/bioAssay/editBioAssay.html"
+ * @spring.bean id="bioAssayFormController"
  * @spring.property name = "commandName" value="bioAssayImpl"
  * @spring.property name = "formView" value="bioAssay.edit"
  * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
@@ -58,8 +57,7 @@ public class BioAssayFormController extends BaseFormController {
 
     ExternalDatabaseService externalDatabaseService = null;
 
-    BioAssayValidator bioAssayValidator = null;
-
+   
     /**
      * 
      *
@@ -174,13 +172,6 @@ public class BioAssayFormController extends BaseFormController {
      */
     public void setBioAssayService( BioAssayService bioAssayService ) {
         this.bioAssayService = bioAssayService;
-    }
-
-    /**
-     * @param bioAssayValidator
-     */
-    public void setBioAssayValidator( BioAssayValidator bioAssayValidator ) {
-        this.bioAssayValidator = bioAssayValidator;
     }
 
     /**

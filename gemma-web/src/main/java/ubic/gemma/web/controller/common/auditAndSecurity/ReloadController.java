@@ -24,7 +24,7 @@ import ubic.gemma.web.listener.StartupListener;
  * @spring.bean id="reloadController" name="/reload.html"
  */
 public class ReloadController implements Controller {
-    private transient final Log log = LogFactory.getLog( UserController.class );
+    private transient final Log log = LogFactory.getLog( UserListController.class );
 
     public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
         if ( log.isDebugEnabled() ) {

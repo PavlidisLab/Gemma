@@ -33,7 +33,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="bioMaterialController" name="/bioMaterial/*"
+ * @spring.bean id="bioMaterialController"  
  * @spring.property name = "bioMaterialService" ref="bioMaterialService"
  * @spring.property name="methodNameResolver" ref="bioMaterialActions"
  */

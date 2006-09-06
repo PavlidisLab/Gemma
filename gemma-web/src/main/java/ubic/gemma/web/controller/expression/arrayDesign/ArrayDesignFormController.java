@@ -34,7 +34,7 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="arrayDesignFormController" name="/arrayDesign/editArrayDesign.html"
+ * @spring.bean id="arrayDesignFormController"
  * @spring.property name = "commandName" value="arrayDesign"
  * @spring.property name = "formView" value="arrayDesign.edit"
  * @spring.property name = "successView" value="redirect:/arrayDesign/showAllArrayDesigns.html"

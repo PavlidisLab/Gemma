@@ -60,7 +60,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentSearchController" name="/expressionExperiment/searchExpressionExperiment.html"
+ * @spring.bean id="expressionExperimentSearchController"  
  * @spring.property name = "commandName" value="expressionExperimentSearchCommand"
  * @spring.property name = "commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchCommand"

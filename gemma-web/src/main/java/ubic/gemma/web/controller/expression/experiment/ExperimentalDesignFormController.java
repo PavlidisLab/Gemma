@@ -31,7 +31,7 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="experimentalDesignFormController" name="/experimentalDesign/editExperimentalDesign.html"
+ * @spring.bean id="experimentalDesignFormController"
  * @spring.property name = "commandName" value="experimentalDesign"
  * @spring.property name = "formView" value="experimentalDesign.edit"
  * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"

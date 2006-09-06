@@ -21,8 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,13 +31,11 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentController" name="/expressionExperiment/*"
+ * @spring.bean id="expressionExperimentController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  */
 public class ExpressionExperimentController extends BaseMultiActionController {
-
-    private static Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
 
     private ExpressionExperimentService expressionExperimentService = null;
 

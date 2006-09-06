@@ -38,14 +38,9 @@ import ubic.gemma.model.genome.gene.CandidateGeneListService;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author daq2101
  * @version $Id$
- * @spring.bean id="candidateGeneListController" name="/candidateGeneList.html /candidateGeneListDetail.html
- *              /candidateGeneListActionComplete.html"
+ * @spring.bean id="candidateGeneListController"
  * @spring.property name="candidateGeneListService" ref="candidateGeneListService"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="userService" ref="userService"

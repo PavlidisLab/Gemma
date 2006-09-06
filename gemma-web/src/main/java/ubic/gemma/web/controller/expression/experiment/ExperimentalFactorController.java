@@ -31,7 +31,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="experimentalFactorController" name="/experimentalFactor/*"
+ * @spring.bean id="experimentalFactorController" 
  * @spring.property name = "experimentalFactorService" ref="experimentalFactorService"
  * @spring.property name="methodNameResolver" ref="experimentalFactorActions"
  */

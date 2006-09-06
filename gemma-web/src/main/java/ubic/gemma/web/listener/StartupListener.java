@@ -88,6 +88,9 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         if ( context.getInitParameter( "theme" ) != null ) {
             log.info( "Found theme " + context.getInitParameter( "theme" ) );
             config.put( "theme", context.getInitParameter( "theme" ) );
+        } else {
+            log.warn( "No theme found, using default=simplicity" );
+            config.put( "theme", "simplicity" );
         }
 
         log.debug( "Version is " + ConfigUtils.getAppVersion() );

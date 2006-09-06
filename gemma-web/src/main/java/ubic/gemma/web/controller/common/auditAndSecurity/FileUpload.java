@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import java.io.Serializable;
 
 /**
- * Command class to handle uploading of a file. (From Appfuse)
+ * Command class to handle uploading of a file
  * 
  * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
@@ -54,18 +54,11 @@ public class FileUpload implements Serializable {
      * @param name The name to set.
      */
     public void setFile( byte[] file ) {
-        /*
-         * NOTE: We did not add the xdoclet spring validation (commons validation for spring = spring-modules) tags to
-         * this because xdoclet cannot interpret the type byte[].
-         */
         this.file = file;
     }
 
     /**
      * @param name The name to set.
-     * @spring.validator type="minlength"
-     * @spring.validator-args arg1value="var:length"
-     * @spring.validator-var name="length" value="6"
      */
     public void setName( String name ) {
         this.name = name;

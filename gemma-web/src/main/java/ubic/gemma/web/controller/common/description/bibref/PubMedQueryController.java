@@ -37,12 +37,12 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="pubmedQueryController" name="/bibRefSearch.html"
+ * @spring.bean id="pubMedQueryController" name="/bibRefSearch.html"
  * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand"
  * @spring.property name="commandName" value="searchCriteria"
  * @spring.property name="formView" value="bibRefSearch"
  * @spring.property name="successView" value="bibliographicReferenceView"
- * @spring.property name="validator" ref="pubMedAccessionValidator"
+ * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="pubMedXmlFetcher" ref="pubMedXmlFetcher"
  */

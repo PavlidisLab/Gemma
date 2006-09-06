@@ -16,39 +16,33 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.validation;
+package ubic.gemma.web.validation.auditAndSecurity;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.Errors;
+import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceImpl;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryImpl;
-import ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand;
+import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
 /**
- * Validating object for BibliographicReference
+ * Validator for FileUpload. XDoclet can't handle byte[], so we need this.
  * 
- * @spring.bean id="pubMedAccessionValidator"
- * @author keshav
  * @author pavlidis
  * @version $Id$
+ * @spring.bean name="fileUploadValidator"
  */
-public class PubMedAccessionValidator implements Validator {
+public class FileUploadValidator implements Validator {
 
-    private static Log log = LogFactory.getLog( PubMedAccessionValidator.class.getName() );
+    private static final int MINFILENAMELENGTH = 5;
 
     /*
      * (non-Javadoc)
      * 
      * @see org.springframework.validation.Validator#supports(java.lang.Class)
      */
-    @SuppressWarnings("unchecked")
     public boolean supports( Class clazz ) {
-        return clazz.isAssignableFrom( PubMedSearchCommand.class );
+        return FileUpload.class.isAssignableFrom( clazz );
     }
 
     /*
@@ -57,14 +51,14 @@ public class PubMedAccessionValidator implements Validator {
      * @see org.springframework.validation.Validator#validate(java.lang.Object, org.springframework.validation.Errors)
      */
     public void validate( Object obj, Errors errors ) {
-        log.debug( "Validating: " + obj );
+        FileUpload a = ( FileUpload ) obj;
 
-        PubMedSearchCommand p = ( PubMedSearchCommand ) obj;
+        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "file", "errors.required", new Object[] {"File"}, "File is required" );
 
-        try {
-            Integer.parseInt( p.getAccession() );
-        } catch ( NumberFormatException e ) {
-            errors.reject( "error.integerFormat", new Object[] { p.getAccession() }, "Accession must be an integer." );
+        if ( StringUtils.isNotBlank( a.getName() ) && a.getName().length() < MINFILENAMELENGTH ) {
+            errors.reject( "errors.required", new Object[] {"File name"}, "File name is too short" );
         }
+
     }
+
 }

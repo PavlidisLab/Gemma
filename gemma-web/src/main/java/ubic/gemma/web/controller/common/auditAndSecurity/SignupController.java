@@ -39,7 +39,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @spring.bean id="signupController" name="/signup.html"
+ * @spring.bean id="signupController"
  * @spring.property name="formView" value="signup"
  * @spring.property name="validator" ref="userValidator"
  * @spring.property name="successView" value="redirect:mainMenu.html"

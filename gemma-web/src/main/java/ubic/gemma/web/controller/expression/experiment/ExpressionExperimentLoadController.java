@@ -44,7 +44,7 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="expressionExperimentLoadController" name="/loadExpressionExperiment.html"
+ * @spring.bean id="expressionExperimentLoadController" 
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
  * @spring.property name="commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
