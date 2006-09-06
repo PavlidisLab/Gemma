@@ -42,14 +42,12 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  * 
  * @author kelsey
  * @version $Id$
- * 
  * @spring.bean id="progressManager"
  * @spring.property name="jobInfoDao" ref="jobInfoDao"
  * @spring.property name="userService" ref="userService"
  */
 public class ProgressManager {
 
-    
     protected static final Log logger = LogFactory.getLog( ProgressManager.class );
 
     /**
@@ -66,7 +64,7 @@ public class ProgressManager {
 
     private static JobInfoDao jobInfoDao;
     private static UserService userService;
-    
+
     /**
      * @param ProgresJob
      * @param Observer
@@ -111,13 +109,14 @@ public class ProgressManager {
         return true;
     }
 
-    /**
-     * @param username
-     * @param type
-     * @param po
-     * @return This adds the observer to only the most recently created progress job of the specified type for the given
-     *         user.
-     */
+    // /**
+    // * @param username
+    // * @param type
+    // * @param po
+    // * @return This adds the observer to only the most recently created progress job of the specified type for the
+    // given
+    // * user.
+    // */
     // public static synchronized boolean addToNotification( String username, int progressType, Observer po ) {
     //
     // if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
@@ -140,18 +139,14 @@ public class ProgressManager {
         if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
 
         Vector<ProgressJob> pJobs = ( Vector<ProgressJob> ) progressJobs.get( username );
+
+        if ( pJobs.size() == 0 ) return false;
+
         pJobs.lastElement().addObserver( po );
 
         return true;
     }
 
-    /**
-     * @param username
-     * @param type
-     * @param po
-     * @return This adds the observer to all of a given users progress jobs that are of a given type. types are defined
-     *         in the ProgressJob interface
-     */
     // public static synchronized boolean addToRecentNotification( String username, int progressType, Observer po ) {
     //
     // if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
@@ -191,13 +186,14 @@ public class ProgressManager {
         // No job currently assciated with this thread.
         if ( currentJob.get() == null ) {
             Calendar cal = new GregorianCalendar();
-            JobInfo jobI = JobInfo.Factory.newInstance( );
+            JobInfo jobI = JobInfo.Factory.newInstance();
             jobI.setRunningStatus( true );
             jobI.setStartTime( cal.getTime() );
             jobI.setDescription( description );
-            jobI.setUser( userService.getUser(  SecurityContextHolder.getContext().getAuthentication().getName() ) );
+
+            jobI.setUser( userService.getUser( SecurityContextHolder.getContext().getAuthentication().getName() ) );
             JobInfo createdJobI = jobInfoDao.create( jobI );
-            
+
             newJob = new ProgressJobImpl( createdJobI, description );
             currentJob.set( createdJobI.getId() );
             newJob.setPhase( 0 );
@@ -236,13 +232,12 @@ public class ProgressManager {
         return true;
     }
 
-    public void setJobInfoDao(JobInfoDao jobDao)
-    {
+    public void setJobInfoDao( JobInfoDao jobDao ) {
         jobInfoDao = jobDao;
     }
-    
+
     public void setUserService( UserService usrService ) {
         userService = usrService;
     }
-    
+
 }
