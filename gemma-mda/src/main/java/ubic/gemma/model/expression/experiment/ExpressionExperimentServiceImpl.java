@@ -21,6 +21,9 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -34,8 +37,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  */
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
+    private Log log = LogFactory.getLog( this.getClass() );
 
-    /**
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     @Override
@@ -43,7 +49,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByInvestigator( investigator );
     }
 
-    /**
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
     @Override
@@ -51,25 +59,60 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByAccession( accession );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByName(java.lang.String)
+     */
     @Override
     protected ExpressionExperiment handleFindByName( String name ) throws Exception {
         return this.getExpressionExperimentDao().findByName( name );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindById(java.lang.Long)
+     */
     @Override
     protected ExpressionExperiment handleFindById( Long id ) throws Exception {
         return this.getExpressionExperimentDao().findById( id );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindOrCreate(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
     @Override
     protected ExpressionExperiment handleFindOrCreate( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().findOrCreate( expressionExperiment );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleUpdate(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
     @Override
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
-        this.getExpressionExperimentDao().update( expressionExperiment );
 
+        this.getExpressionExperimentDao().update( expressionExperiment );
+        loadLazyHibernateCollections( expressionExperiment );
+    }
+
+    /**
+     * Collections with lazy=true are initially not filled with values from the database. An operation such as size()
+     * will load the collection.
+     * 
+     * @param expressionExperiment
+     */
+    private void loadLazyHibernateCollections( ExpressionExperiment expressionExperiment ) {
+
+        Collection<BioAssay> bioassays = expressionExperiment.getBioAssays();
+        for ( BioAssay bioassay : bioassays ) {
+            bioassay.getArrayDesignsUsed().size();
+        }
     }
 
     /*
