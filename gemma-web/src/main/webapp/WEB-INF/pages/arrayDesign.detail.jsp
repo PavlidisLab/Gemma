@@ -91,7 +91,7 @@
                     <td COLSPAN="2">
                         <div align="left">
                             <input type="button"
-                                onclick="location.href='editArrayDesign.html?name=<%=request.getAttribute("name")%>'"
+                                onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?name=<%=request.getAttribute("name")%>'"
                                 value="Edit">
                         </div>
                     </td>

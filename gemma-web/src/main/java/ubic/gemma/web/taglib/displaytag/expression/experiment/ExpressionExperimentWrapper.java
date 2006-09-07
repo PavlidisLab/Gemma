@@ -105,7 +105,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExperimentalDesign object = ( ExperimentalDesign ) getCurrentRowObject();
 
         if ( object.getExperimentalFactors() != null ) {
-            return "<a href=\"/Gemma/experimentalDesign/showExperimentalDesign.html?name=" + object.getName() + "\">"
+            return "<a href=\"/Gemma/experimentalDesign/showExperimentalDesign.html?id=" + object.getId() + "\">"
                     + object.getExperimentalFactors().size() + "</a>";
         }
         return "No experimental factors";
