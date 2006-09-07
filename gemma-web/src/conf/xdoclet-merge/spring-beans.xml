@@ -162,9 +162,9 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
 <bean id="arrayDesignActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
     <property name="mappings">
         <props>
-            <prop key="/arrayDesign/showAllArrayDesigns.html">showAll</prop>
-            <prop key="/arrayDesign/deleteArrayDesign.html">delete</prop>
-            <prop key="/arrayDesign/showArrayDesign.html">show</prop>
+            <prop key="/arrays/showAllArrayDesigns.html">showAll</prop>
+            <prop key="/arrays/deleteArrayDesign.html">delete</prop>
+            <prop key="/arrays/showArrayDesign.html">show</prop>
         </props>
     </property>
 </bean>
