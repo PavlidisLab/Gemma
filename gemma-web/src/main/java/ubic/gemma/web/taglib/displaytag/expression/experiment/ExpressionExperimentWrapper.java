@@ -91,6 +91,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "<a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
             + object.getBioAssays().size() + "</a>";
         }
+ 
         return "No bioassays";
     }
 
@@ -109,6 +110,24 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         }
         return "No experimental factors";
     }
+    
+    /**
+     * @return String
+     */
+    public String getExperimentalDesignNameLink() {
+
+        log.debug( getCurrentRowObject() );
+
+        ExperimentalDesign object = ( ExperimentalDesign ) getCurrentRowObject();
+        String name = object.getName();
+        if ( (name == null) || (name.length() == 0) ) {
+            name = "No name";
+        }
+        return "<a href=\"/Gemma/experimentalDesign/showExperimentalDesign.html?id=" + object.getId() + "\">"
+        + name + "</a>";
+    }
+    
+    
 
     /**
      * @return String

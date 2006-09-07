@@ -21,9 +21,10 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.List; 
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -115,6 +116,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
         eesc.setName( ee.getName() );
         eesc.setSearchString( "0_at,1_at,2_at,3_at,4_at,5_at" );
         eesc.setStringency( 1 );
+        eesc.setSpecies("Human");
 
         return eesc;
 
@@ -156,6 +158,9 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.findById( id );
 
+        compositeSequences = new ArrayList<DesignElement>();
+        designElementToGeneMap = new HashMap<DesignElement, Collection<Gene>>();
+        
         if ( expressionExperiment == null ) {
             errors.addError( new ObjectError( command.toString(), null, null, "No expression experiment with id " + id
                     + " found" ) );
@@ -172,7 +177,6 @@ public class ExpressionExperimentSearchController extends BaseFormController {
 
         /* handle search by design element */
         if ( ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria().equalsIgnoreCase( "probe set id" ) ) {
-            compositeSequences = new ArrayList<DesignElement>();
             Collection<Gene> geneCol = null;
             for ( ArrayDesign design : arrayDesigns ) {
 
@@ -224,6 +228,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
             BindException errors ) throws Exception {
 
         log.debug( "entering onSubmit" );
+        
         ExpressionExperimentSearchCommand eesc = ( ( ExpressionExperimentSearchCommand ) command );
         String searchCriteria = ( ( ExpressionExperimentSearchCommand ) command ).getSearchCriteria();
         boolean suppressVisualizations = ( ( ExpressionExperimentSearchCommand ) command ).isSuppressVisualizations();
@@ -233,7 +238,7 @@ public class ExpressionExperimentSearchController extends BaseFormController {
                 .createDir( "../webapps/ROOT/visualization/" ) );
 
         log.debug( "Image to be stored in " + imageFile.getAbsolutePath() );
-
+        
         ExpressionDataMatrix expressionDataMatrix = null;
         MatrixVisualizer matrixVisualizer = null;
         if ( searchCriteria.equalsIgnoreCase( "probe set id" ) ) {
@@ -259,13 +264,23 @@ public class ExpressionExperimentSearchController extends BaseFormController {
     @SuppressWarnings("unused")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
+        // add search categories
         Collection<String> searchCategories = new HashSet<String>();
         searchCategories.add( "gene symbol" );
         searchCategories.add( "probe set id" );
 
         Map<String, Collection<String>> searchByMap = new HashMap<String, Collection<String>>();
-
+        
         searchByMap.put( "searchCategories", searchCategories );
+        
+        // add species
+        Collection<String> speciesCategories = new HashSet<String>();
+        speciesCategories.add( "Human" );
+        speciesCategories.add( "Mouse" );
+        speciesCategories.add( "Rat" );        
+        
+        searchByMap.put( "speciesCategories", speciesCategories );        
+        
         return searchByMap;
     }
 

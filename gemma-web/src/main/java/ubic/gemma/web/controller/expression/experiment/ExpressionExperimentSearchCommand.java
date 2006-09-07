@@ -45,6 +45,8 @@ public class ExpressionExperimentSearchCommand implements Serializable {
     private boolean suppressVisualizations;
 
     private String filename = null;
+    
+    private String species = null;
 
     /**
      * @return Returns the filename.
@@ -58,6 +60,20 @@ public class ExpressionExperimentSearchCommand implements Serializable {
      */
     public void setFilename( String filename ) {
         this.filename = filename;
+    }
+    
+    /**
+     * @return Returns the species.
+     */
+    public String getSpecies() {
+        return species;
+    }
+
+    /**
+     * @param filename The species to set.
+     */
+    public void setSpecies( String species ) {
+        this.species = species;
     }
 
     /**

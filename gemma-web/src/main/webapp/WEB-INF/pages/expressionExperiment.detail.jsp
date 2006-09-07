@@ -73,8 +73,7 @@
         </h3>
         <display:table name="expressionExperiment.experimentalDesigns" class="list" requestURI="" id="experimentalDesignList"
             export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:column property="id" sortable="true" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="id" paramProperty="id"/>
-            <display:column property="name" sortable="true" maxWords="20" />
+            <display:column property="experimentalDesignNameLink" sortable="true" maxWords="20" titleKey="experimentalDesign.name" />
             <display:column property="description" sortable="true" maxWords="100"  />
             <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="experimentalFactors.title"  />
             <display:setProperty name="basic.empty.showtable" value="false" />
@@ -106,8 +105,9 @@
             <fmt:message key="expressionExperimentSubsets.title" />
         </h3>
         <display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
+            <display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name"/>
+            <display:column property="description" sortable="true" maxWords="100" />
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
         

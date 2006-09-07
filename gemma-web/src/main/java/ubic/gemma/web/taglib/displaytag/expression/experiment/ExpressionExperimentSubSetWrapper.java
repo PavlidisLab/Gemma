@@ -16,13 +16,17 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.taglib.displaytag.expression.bioAssay;
+package ubic.gemma.web.taglib.displaytag.expression.experiment;
+
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
@@ -30,37 +34,23 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
  * 
- * @author keshav
+ * @author joseph
  * @version $Id$
  */
-public class BioAssayWrapper extends TableDecorator {
+public class ExpressionExperimentSubSetWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @return String
      */
-    public String getFactorValuesLink() {
-        BioAssay object = ( BioAssay ) getCurrentRowObject();
-        if ( object.getFactorValues() != null ) {
-            return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
-                    + object.getFactorValues().size() + "</a>";
-        }
-        return "No factor values";
-    }
-    
-    /**
-     * @return String
-     */
     public String getNameLink() {
-        BioAssay object = ( BioAssay ) getCurrentRowObject();
+        ExpressionExperimentSubSet object = ( ExpressionExperimentSubSet ) getCurrentRowObject();
         String name = object.getName();
-
         if ( name == null ) {
             name = "No name";
         }
-
-        return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
-        + name + "</a>";
+        return "<a href=\"showExpressionExperimentSubSet.html?id=" + object.getId() + "\"> "+ name + "</a>";
     }
+
 }
