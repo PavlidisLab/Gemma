@@ -98,7 +98,7 @@ public class ExpressionExperimentServiceImpl extends
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
 
         this.getExpressionExperimentDao().update( expressionExperiment );
-        loadLazyHibernateCollections( expressionExperiment );
+        loadLazyHibernateCollections( expressionExperiment );// TODO use lazy=false instead
     }
 
     /**
