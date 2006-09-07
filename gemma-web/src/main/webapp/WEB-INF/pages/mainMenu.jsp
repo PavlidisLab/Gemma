@@ -22,7 +22,7 @@
 		<!--    Paul, uncomment to use webflow implementation    
 		<a href="<c:url value="/flowController.html?_flowId=arrayDesign.Search"/>"><fmt:message key="menu.flow.ArrayDesignSearch"/></a>
 		-->
-		<a href="<c:url value="/arrayDesign/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
+		<a href="<c:url value="/arrays/showAllArrayDesigns.html"/>"> <fmt:message key="menu.ArrayDesignSearch" /> </a>
 	</li>
 	<li>
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>"> <fmt:message
