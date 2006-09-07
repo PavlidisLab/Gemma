@@ -49,10 +49,10 @@
       <meta-data>bioassay description</meta-data>
     </property>
 	 
-    <!-- <component name="arrayDesignsUsed" ref-alias="arrayDesign" /> -->
+    <component name="arrayDesignsUsed" ref-alias="arrayDesign" />
 	
 </class>
-<!-- 
+
 <class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign">
 	
 	 <id name="id" />
@@ -88,5 +88,5 @@
     </property>
 
 </class>
--->
+
 </compass-core-mapping>
