@@ -35,6 +35,15 @@ public class ExpressionExperimentSubSetServiceImpl extends
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getExpressionExperimentSubSetDao().loadAll();
     }
+    
+    /**
+     * Loads one subset, given an id
+     * @return ExpressionExperimentSubSet
+     */
+    @Override
+    protected ExpressionExperimentSubSet handleLoad(Long id) throws java.lang.Exception {
+        return ( ExpressionExperimentSubSet ) this.getExpressionExperimentSubSetDao().load( id );
+    }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#saveExpressionExperimentSubSet(ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet)
