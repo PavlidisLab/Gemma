@@ -19,6 +19,7 @@ Mapping URLS to controllers
 <bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
     <property name="order" value="1"/>
     <property name="interceptors">
+    <property name="alwaysUseFullPath" value="true" />
         <list>
             <ref bean="openSessionInViewInterceptor"/>
         </list>
