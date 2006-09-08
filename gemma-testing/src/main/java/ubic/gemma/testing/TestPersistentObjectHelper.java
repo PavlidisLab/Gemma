@@ -82,6 +82,8 @@ public class TestPersistentObjectHelper {
      * 
      */
     private static final int NUM_EXPERIMENTAL_FACTORS = 3;
+    private static final int NUM_QUANTITATION_TYPES = 2;
+    private static final int NUM_BIOMATERIALS = 2;
     private PersisterHelper persisterHelper;
 
     private ExternalDatabaseService externalDatabaseService;
@@ -162,12 +164,13 @@ public class TestPersistentObjectHelper {
      * 
      * @return
      */
-    public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
+    public BioAssay getTestPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ba = ( BioAssay ) persisterHelper.persist( ba );
-        BioMaterial bm = this.getTestPersistentBioMaterial(); // might make this a parameter passed in.
+     
         ba.getSamplesUsed().add( bm );
+
         if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
         return ba;
     }
@@ -380,9 +383,13 @@ public class TestPersistentObjectHelper {
      */
     public Collection<BioAssay> getBioAssays( ArrayDesign ad ) {
         Collection<BioAssay> baCol = new HashSet<BioAssay>();
-        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
-            BioAssay ba = this.getTestPersistentBioAssay( ad );
-            baCol.add( ba );
+        // one biomaterial for each set of bioassays
+        for (int j = 0; j < NUM_BIOMATERIALS; j++ ) {
+            BioMaterial bm = this.getTestPersistentBioMaterial(); 
+            for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
+                BioAssay ba = this.getTestPersistentBioAssay( ad, bm );
+                baCol.add( ba );
+            }
         }
 
         return baCol;
@@ -438,32 +445,35 @@ public class TestPersistentObjectHelper {
     public Collection<DesignElementDataVector> getDesignElementDataVectors( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
-            double[] data = new double[TEST_ELEMENT_COLLECTION_SIZE / 2];
-            for ( int j = 0; j < data.length; j++ ) {
-                data[j] = RandomUtils.nextDouble();
+        for (int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++) {
+            QuantitationType quantType= this.getTestPersistentQuantitationType();
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
+                double[] data = new double[TEST_ELEMENT_COLLECTION_SIZE / 2];
+                for ( int j = 0; j < data.length; j++ ) {
+                    data[j] = RandomUtils.nextDouble();
+                }
+                ByteArrayConverter bconverter = new ByteArrayConverter();
+                byte[] bdata = bconverter.doubleArrayToBytes( data );
+                vector.setData( bdata );
+
+                vector.setDesignElement( cs );
+
+                assert cs.getArrayDesign() != null;
+
+                vector.setExpressionExperiment( ee );
+
+                Collection<BioAssay> bioAssays = getBioAssays( ad );
+
+                BioAssayDimension bad = BioAssayDimension.Factory.newInstance( bioAssays );
+
+                vector.setQuantitationType( quantType );
+                vector.setBioAssayDimension( bad );
+
+                // we're only creating one vector here, but each design element can have more than one.
+                vectors.add( vector );
+                cs.setDesignElementDataVectors( vectors );
             }
-            ByteArrayConverter bconverter = new ByteArrayConverter();
-            byte[] bdata = bconverter.doubleArrayToBytes( data );
-            vector.setData( bdata );
-
-            vector.setDesignElement( cs );
-
-            assert cs.getArrayDesign() != null;
-
-            vector.setExpressionExperiment( ee );
-
-            Collection<BioAssay> bioAssays = getBioAssays( ad );
-
-            BioAssayDimension bad = BioAssayDimension.Factory.newInstance( bioAssays );
-
-            vector.setQuantitationType( this.getTestPersistentQuantitationType() );
-            vector.setBioAssayDimension( bad );
-
-            // we're only creating one vector here, but each design element can have more than one.
-            vectors.add( vector );
-            cs.setDesignElementDataVectors( vectors );
         }
         return vectors;
     }
