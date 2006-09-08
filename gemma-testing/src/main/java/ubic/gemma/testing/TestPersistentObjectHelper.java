@@ -175,6 +175,12 @@ public class TestPersistentObjectHelper {
         return ba;
     }
 
+    public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
+        BioMaterial bm = this.getTestPersistentBioMaterial(); 
+        return getTestPersistentBioAssay( ad, bm );
+    }
+    
+
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
         if ( pubmed == null ) {
