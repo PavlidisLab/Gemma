@@ -1,15 +1,18 @@
         
 function refreshProgress() {
-var i=0;
-var j=10;
-	for(i=0; i<10; i++) 
-		window.setTimeout("moveProgress(i)", 50);
-	
-	for(j=10; j>0; j--)	
-		window.setTimeout("moveProgress(j)", 50);
+
+  	for(i=0; i<10; i++) {
+		window.setTimeout("moveProgress(" + i + ")", 50*i);
+		}
+		
+	for(j=10; j>-1; j--){	
+		window.setTimeout("moveProgress("+ j +")", (50* (10-j)) + 500);
+		 }
+  
 		 
     HttpProgressMonitor.getProgressStatus(updateProgress);
 }
+
 function updateProgress( data ) {
 
     document.getElementById("progressBarText").innerHTML = data.description + "  :" + data.percent + "%"; 
@@ -19,7 +22,7 @@ function updateProgress( data ) {
      }
      else{
         document.getElementById("uploadbutton").disabled = true;
-        window.setTimeout("refreshProgress()", 200);
+        window.setTimeout("refreshProgress()", 1000);
     }
     return true;
 }
