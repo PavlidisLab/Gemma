@@ -34,19 +34,10 @@ import ubic.gemma.Constants;
 public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.UserServiceBase {
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUser(java.lang.String)
-     */
-    @Override
-    protected ubic.gemma.model.common.auditAndSecurity.User handleGetUser( java.lang.String userName )
-            throws java.lang.Exception {
-        return this.getUserDao().findByUserName( userName );
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
-    protected java.util.Collection handleGetUsers() throws java.lang.Exception {
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getUserDao().loadAll();
     }
 
@@ -54,7 +45,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#FindById(long)
      */
     @Override
-    protected User handleFindById( Long id ) throws java.lang.Exception {
+    protected User handleLoad( Long id ) throws java.lang.Exception {
         return ( User ) this.getUserDao().load( id );
     }
 
@@ -62,7 +53,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#saveUser(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
-    protected User handleSaveUser( ubic.gemma.model.common.auditAndSecurity.User user ) throws UserExistsException {
+    protected User handleCreate( ubic.gemma.model.common.auditAndSecurity.User user ) throws UserExistsException {
 
         if ( user.getUserName() == null ) {
             throw new IllegalArgumentException( "UserName cannot be null" );
@@ -96,7 +87,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#removeUser(java.lang.String)
      */
     @Override
-    protected void handleRemoveUser( java.lang.String userName ) throws java.lang.Exception {
+    protected void handleDelete( java.lang.String userName ) throws java.lang.Exception {
 
         this.getUserDao().remove( this.getUserDao().findByUserName( userName ) );
     }
@@ -114,7 +105,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         UserRole newRole = UserRole.Factory.newInstance();
         newRole.setName( role );
         newRole.setUserName( user.getUserName() );
-        newRole = this.getUserRoleService().saveRole( newRole );
+        newRole = ( UserRole ) this.getUserRoleDao().create( newRole ); // should cascade anyway.
         if ( user.getRoles() == null ) user.setRoles( new HashSet() );
         Collection<UserRole> roles = user.getRoles();
         roles.add( newRole );
@@ -153,4 +144,5 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     protected void handleUpdate( User user ) throws Exception {
         this.getUserDao().update( user );
     }
+
 }

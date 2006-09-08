@@ -64,7 +64,7 @@ public class PasswordHintController implements Controller {
 
         // look up the user's information
         try {
-            User user = userService.getUser( username );
+            User user = userService.findByUserName( username );
 
             StringBuffer msg = new StringBuffer();
             msg.append( "Your password hint is: " + user.getPasswordHint() );

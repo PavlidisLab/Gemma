@@ -83,12 +83,42 @@ public class BusinessKey {
     }
 
     /**
+     * @param bibliographicReference
+     */
+    public static void checkKey( BibliographicReference bibliographicReference ) {
+        if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
+                || bibliographicReference.getPubAccession().getAccession() == null ) {
+            throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
+                    + bibliographicReference );
+        }
+    }
+
+    /**
+     * @param gene
+     */
+    public static void checkKey( Gene gene ) {
+        if ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getNcbiId() == null ) {
+            throw new IllegalArgumentException( "Gene must have official symbol with taxon, or ncbiId" );
+        }
+
+    }
+
+    /**
      * @param ontologyEntry
      */
     public static void checkKey( OntologyEntry ontologyEntry ) {
         if ( ( ontologyEntry.getAccession() == null || ontologyEntry.getExternalDatabase() == null )
                 && ( ontologyEntry.getCategory() == null || ontologyEntry.getValue() == null ) ) {
             throw new IllegalArgumentException( "Either accession, or category+value must be filled in." );
+        }
+    }
+
+    /**
+     * @param user
+     */
+    public static void checkKey( User user ) {
+        if ( user == null || StringUtils.isBlank( user.getUserName() ) ) {
+            throw new IllegalArgumentException( "User was null or had no userName defined" );
         }
     }
 
@@ -158,6 +188,21 @@ public class BusinessKey {
     }
 
     /**
+     * @param queryObject
+     * @param gene
+     */
+    public static void createQueryObject( Criteria queryObject, Gene gene ) {
+        // prefeerred key is NCBI.
+        if ( gene.getNcbiId() != null ) {
+            queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+        } else if ( gene.getOfficialSymbol() != null && gene.getTaxon() != null ) {
+            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) ).add(
+                    Restrictions.eq( "taxon", gene.getTaxon() ) );
+        }
+
+    }
+
+    /**
      * @param session
      * @param ontologyEntry
      * @return
@@ -205,20 +250,17 @@ public class BusinessKey {
     private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
         if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
             addNameRestriction( queryObject, bioSequence );
-
-            addRestrictions( queryObject, bioSequence.getTaxon() );
         }
+        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
+            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
+        }
+        addRestrictions( queryObject, bioSequence.getTaxon() );
 
         if ( bioSequence.getSequenceDatabaseEntry() != null ) {
             queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
                     Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
         }
 
-        if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
-            queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
-
-            addRestrictions( queryObject, bioSequence.getTaxon() );
-        }
     }
 
     /**
@@ -252,22 +294,19 @@ public class BusinessKey {
     }
 
     /**
-     * @param bibliographicReference
+     * @param geneProduct
      */
-    public static void checkKey( BibliographicReference bibliographicReference ) {
-        if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
-                || bibliographicReference.getPubAccession().getAccession() == null ) {
-            throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
-                    + bibliographicReference );
+    public static void checkKey( GeneProduct geneProduct ) {
+        if ( geneProduct.getNcbiId() == null ) {
+            throw new IllegalArgumentException( "Gene must have ncbiId" );
         }
     }
 
     /**
-     * @param user
+     * @param queryObject
+     * @param geneProduct
      */
-    public static void checkKey( User user ) {
-        if ( user == null || StringUtils.isBlank( user.getUserName() ) ) {
-            throw new IllegalArgumentException( "User was null or had no userName defined" );
-        }
+    public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
+        queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
     }
 }

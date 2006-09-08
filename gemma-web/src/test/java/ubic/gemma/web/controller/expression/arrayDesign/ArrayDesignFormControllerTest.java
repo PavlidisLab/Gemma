@@ -88,7 +88,7 @@ public class ArrayDesignFormControllerTest extends BaseTransactionalSpringContex
 
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
-        request = new MockHttpServletRequest( "POST", "/arrayDesign/editArrayDesign.html" );
+        request = new MockHttpServletRequest( "POST", "/arrays/editArrayDesign.html" );
         request.addParameter( "name", ad.getName() );
         request.addParameter( "description", ad.getDescription() );
 
@@ -99,7 +99,7 @@ public class ArrayDesignFormControllerTest extends BaseTransactionalSpringContex
 
         assertNull( errors );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
-        assertEquals( "redirect:/arrayDesign/showAllArrayDesigns.html", mav.getViewName() );
+        assertEquals( "redirect:/arrays/showAllArrayDesigns.html", mav.getViewName() );
 
     }
 
@@ -111,7 +111,7 @@ public class ArrayDesignFormControllerTest extends BaseTransactionalSpringContex
 
         ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
 
-        request = new MockHttpServletRequest( "GET", "/arrayDesign/editArrayDesign.html" );
+        request = new MockHttpServletRequest( "GET", "/arrays/editArrayDesign.html" );
         request.addParameter( "name", ad.getName() );
 
         ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );

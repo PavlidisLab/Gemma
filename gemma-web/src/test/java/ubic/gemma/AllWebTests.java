@@ -28,8 +28,12 @@ import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTes
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormControllerTest;
 import ubic.gemma.web.controller.expression.bioAssay.BioAssayFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignControllerTest;
+import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSearchControllerIntegrationTest;
+import ubic.gemma.web.controller.testdata.TestDataAddingControllerTest;
+import ubic.gemma.web.listener.StartupListenerTest;
+import ubic.gemma.web.validation.ValidationTest;
 
 /**
  * Tests for gemma-web.
@@ -52,8 +56,14 @@ public class AllWebTests extends TestSuite {
 
         suite.addTestSuite( BioAssayFormControllerTest.class );
         suite.addTestSuite( ExperimentalDesignControllerTest.class );
+        suite.addTestSuite( ExperimentalDesignFormControllerTest.class );
         suite.addTestSuite( ExpressionExperimentControllerTest.class );
         suite.addTestSuite( ExpressionExperimentSearchControllerIntegrationTest.class );
+        suite.addTestSuite( TestDataAddingControllerTest.class );
+
+        suite.addTestSuite( StartupListenerTest.class );
+        suite.addTestSuite( ValidationTest.class );
+
         return suite;
     }
 }

@@ -64,8 +64,8 @@ public class SignupControllerTest extends BaseTransactionalSpringWebTest {
         request.addParameter( "userName", RandomStringUtils.randomAlphabetic( 6 ) );
         request.addParameter( "newPassword", "testpassword" );
         request.addParameter( "confirmNewPassword", "testpassword" );
-        request.addParameter( "firstName", "First" );
-        request.addParameter( "lastName", "Last" );
+        request.addParameter( "name", "My" );
+        request.addParameter( "lastName", "Nameis" );
         request.addParameter( "email", RandomStringUtils.randomAlphabetic( 6 ) + "@gemma.org" );
         request.addParameter( "passwordHint", "guess" );
 
@@ -79,12 +79,13 @@ public class SignupControllerTest extends BaseTransactionalSpringWebTest {
         // verify that success messages are in the request
         assertNotNull( request.getSession().getAttribute( "messages" ) );
 
+        assertEquals( "redirect:mainMenu.html", mv.getViewName() );
     }
 
     public void testDisplayForm() throws Exception {
         MockHttpServletRequest request = newGet( "/signup.html" );
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
-        assertTrue( "returned correct view name", mv.getViewName().equals( "signup" ) );
+        assertEquals( "returned incorrect view name", "signup", mv.getViewName() );
     }
 }

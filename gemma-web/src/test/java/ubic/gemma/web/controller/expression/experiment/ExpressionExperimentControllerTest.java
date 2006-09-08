@@ -66,7 +66,7 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
         setComplete();
 
         // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
-        ExpressionExperiment ee = this.setExpressionExperimentDependencies();
+        ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
 
         ee = ( ExpressionExperiment ) ( ( PersisterHelper ) this.getBean( "persisterHelper" ) ).persist( ee );
 

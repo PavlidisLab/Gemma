@@ -6,7 +6,8 @@
 
 <html>
 	<head>
-		<title><fmt:message key="errorPage.title" /></title>
+		<title><fmt:message key="errorPage.title" />
+		</title>
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	</head>
 
@@ -17,6 +18,9 @@
 					<h1>
 						<fmt:message key="errorPage.heading" />
 					</h1>
+
+					<a href="mainMenu.html" onclick="history.back();return false">&#171; Back</a>
+
 					<%@ include file="/common/messages.jsp"%>
 					<%
 					if ( exception != null ) {

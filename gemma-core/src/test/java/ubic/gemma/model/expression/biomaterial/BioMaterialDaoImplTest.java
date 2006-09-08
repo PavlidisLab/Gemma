@@ -31,9 +31,11 @@ public class BioMaterialDaoImplTest extends BaseTransactionalSpringContextTest {
 
     private String searchkeyName;
     private String searchkeyAcc;
+    BioMaterialDao bioMaterialDao;
 
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        bioMaterialDao = ( BioMaterialDao ) getBean( "bioMaterialDao" );
         BioMaterial testbm = this.getTestPersistentBioMaterial();
         searchkeyName = testbm.getName();
         searchkeyAcc = testbm.getExternalAccession().getAccession();

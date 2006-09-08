@@ -31,7 +31,10 @@ import ubic.gemma.model.common.auditAndSecurity.Organization;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryService;
@@ -71,6 +74,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
  * @spring.property name="measurementService" ref="measurementService"
  * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @author pavlidis
  * @version $Id$
  */
@@ -106,6 +110,10 @@ abstract public class CommonPersister extends AbstractPersister {
 
     protected SoftwareService softwareService;
 
+    protected BibliographicReferenceService bibliographicReferenceService;
+
+    Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
+
     /*
      * (non-Javadoc)
      * 
@@ -139,6 +147,8 @@ abstract public class CommonPersister extends AbstractPersister {
             return null;
         } else if ( entity instanceof Collection ) {
             return super.persist( ( Collection ) entity );
+        } else if ( entity instanceof BibliographicReference ) {
+            return persistBibliographicReference( ( BibliographicReference ) entity );
         }
         throw new UnsupportedOperationException( "Don't know how to persist a " + entity.getClass().getName() );
     }
@@ -235,6 +245,23 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
+     * @param userService The userService to set.
+     */
+    public void setUserService( UserService userService ) {
+        this.userService = userService;
+    }
+
+    /**
+     * @param affiliation
+     * @return
+     */
+    private Organization persistOrganization( Organization affiliation ) {
+        // FIXME This is just to get us back in the saddle.
+        log.warn( "Not persisting organization!!" );
+        return null;
+    }
+
+    /**
      * Fill in the categoryTerm and valueTerm associations of a
      * 
      * @param Characteristics Collection of Characteristics
@@ -322,7 +349,7 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     @SuppressWarnings("unchecked")
     protected void initializeDefaultOwner() {
-        Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody", "nobody" );
+        Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody" );
 
         assert matchingPersons.size() == 1 : "Found " + matchingPersons.size() + " contacts matching 'nobody'";
 
@@ -348,53 +375,20 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
+     * @param reference
+     * @return
+     */
+    protected Object persistBibliographicReference( BibliographicReference reference ) {
+        reference.setPubAccession( ( DatabaseEntry ) persist( reference.getPubAccession() ) );
+        return this.bibliographicReferenceService.findOrCreate( reference );
+    }
+
+    /**
      * @param designProvider
      */
     protected Contact persistContact( Contact contact ) {
         if ( contact == null ) return null;
         return this.contactService.findOrCreate( contact );
-    }
-
-    /**
-     * @param
-     */
-    protected Person persistPerson( Person person ) {
-        if ( person == null ) return null;
-        for ( Organization affiliation : person.getAffiliations() ) {
-            affiliation = persistOrganization( affiliation );
-        }
-        return this.personService.findOrCreate( person );
-    }
-
-    /**
-     * @param user
-     * @return
-     */
-    protected User persistUser( User user ) {
-        if ( user == null ) return null;
-
-        // never create users from scratch this way -- only find them.
-        User existingUser = this.userService.findByUserName( user.getUserName() );
-
-        if ( existingUser == null ) {
-            log.warn( "No such user '" + user.getUserName() + "' exists" );
-            return null;
-        }
-
-        for ( Organization affiliation : existingUser.getAffiliations() ) {
-            affiliation = persistOrganization( affiliation );
-        }
-        return existingUser;
-    }
-
-    /**
-     * @param affiliation
-     * @return
-     */
-    private Organization persistOrganization( Organization affiliation ) {
-        // FIXME This is just to get us back in the saddle.
-        log.warn( "Not persisting organization!!" );
-        return null;
     }
 
     /**
@@ -497,7 +491,16 @@ abstract public class CommonPersister extends AbstractPersister {
         return ontologyEntry;
     }
 
-    Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
+    /**
+     * @param
+     */
+    protected Person persistPerson( Person person ) {
+        if ( person == null ) return null;
+        for ( Organization affiliation : person.getAffiliations() ) {
+            affiliation = persistOrganization( affiliation );
+        }
+        return this.personService.findOrCreate( person );
+    }
 
     /**
      * @param entity
@@ -545,10 +548,37 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param userService The userService to set.
+     * @param user
+     * @return
      */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
+    protected User persistUser( User user ) {
+        if ( user == null ) return null;
+
+        User existingUser = this.userService.findByUserName( user.getUserName() );
+
+        if ( existingUser == null ) {
+            log.warn( "No such user '" + user.getUserName() + "' exists" );
+            for ( Organization affiliation : user.getAffiliations() ) {
+                affiliation = persistOrganization( affiliation );
+            }
+            try {
+                return userService.create( user );
+            } catch ( UserExistsException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        for ( Organization affiliation : existingUser.getAffiliations() ) {
+            affiliation = persistOrganization( affiliation );
+        }
+        return existingUser;
+    }
+
+    /**
+     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
 }

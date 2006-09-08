@@ -52,6 +52,7 @@ public class ConfigUtils {
         config = new CompositeConfiguration();
         config.addConfiguration( new SystemConfiguration() );
 
+        // the order matters - first come, first serve.
         try {
             config.addConfiguration( new PropertiesConfiguration( "build.properties" ) );
         } catch ( ConfigurationException e ) {
@@ -62,7 +63,7 @@ public class ConfigUtils {
         try {
             config.addConfiguration( new PropertiesConfiguration( "project.properties" ) );
         } catch ( ConfigurationException e ) {
-            // that's okay too.
+            // that's okay too....
         }
 
         try {

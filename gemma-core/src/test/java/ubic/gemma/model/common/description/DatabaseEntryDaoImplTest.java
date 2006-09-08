@@ -26,6 +26,15 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class DatabaseEntryDaoImplTest extends BaseTransactionalSpringContextTest {
 
+    DatabaseEntryDao databaseEntryDao;
+
+    /**
+     * @param databaseEntryDao the databaseEntryDao to set
+     */
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
+    }
+
     /*
      * @see TestCase#setUp()
      */

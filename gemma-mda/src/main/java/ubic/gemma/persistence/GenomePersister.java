@@ -31,6 +31,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService;
@@ -50,12 +51,15 @@ import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
  * @spring.property name="blastAssociationService" ref="blastAssociationService"
  * @spring.property name="blatResultService" ref="blatResultService"
  * @spring.property name="blastResultService" ref="blastResultService"
+ * @spring.property name="geneProductService" ref="geneProductService"
  * @author pavlidis
  * @version $Id$
  */
 abstract public class GenomePersister extends CommonPersister {
 
     protected GeneService geneService;
+
+    protected GeneProductService geneProductService;
 
     protected BioSequenceService bioSequenceService;
 
@@ -81,6 +85,8 @@ abstract public class GenomePersister extends CommonPersister {
     public Object persist( Object entity ) {
         if ( entity instanceof Gene ) {
             return persistGene( ( Gene ) entity );
+        } else if ( entity instanceof GeneProduct ) {
+            return persistGeneProduct( ( GeneProduct ) entity );
         } else if ( entity instanceof BioSequence ) {
             return persistBioSequence( ( BioSequence ) entity );
         } else if ( entity instanceof Taxon ) {
@@ -103,14 +109,13 @@ abstract public class GenomePersister extends CommonPersister {
 
         gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         gene.setTaxon( ( Taxon ) persistTaxon( gene.getTaxon() ) );
- 
-        
+
         gene = geneService.findOrCreate( gene );
         for ( GeneAlias alias : gene.getAliases() ) {
             alias.setGene( gene );
         }
 
-     //   gene.setGeneAlias( temp );
+        // gene.setGeneAlias( temp );
         return gene;
     }
 
@@ -210,9 +215,9 @@ abstract public class GenomePersister extends CommonPersister {
         if ( !isTransient( geneProduct ) ) return geneProduct;
 
         Gene g = geneProduct.getGene();
-        g = persistGene( g ); // should cascade to the geneproducts.
+        geneProduct.setGene( persistGene( g ) ); // should cascade to the geneproducts.
 
-        return geneProduct;
+        return geneProductService.create( geneProduct );
     }
 
     /**
@@ -305,5 +310,12 @@ abstract public class GenomePersister extends CommonPersister {
      */
     public void setBlastResultService( BlastResultService blastResultService ) {
         this.blastResultService = blastResultService;
+    }
+
+    /**
+     * @param geneProductService the geneProductService to set
+     */
+    public void setGeneProductService( GeneProductService geneProductService ) {
+        this.geneProductService = geneProductService;
     }
 }

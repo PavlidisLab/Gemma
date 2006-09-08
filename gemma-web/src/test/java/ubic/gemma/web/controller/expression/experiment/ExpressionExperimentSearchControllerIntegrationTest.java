@@ -27,7 +27,6 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.AbstractExpressionExperimentTest;
 
 /**
@@ -44,11 +43,7 @@ public class ExpressionExperimentSearchControllerIntegrationTest extends Abstrac
      */
     @SuppressWarnings("unchecked")
     public void testOnSubmit() throws Exception {
-        ExpressionExperiment ee = this.setExpressionExperimentDependencies();
-
-        PersisterHelper ph = ( PersisterHelper ) this.getBean( "persisterHelper" );
-
-        ee = ( ExpressionExperiment ) ph.persist( ee );
+        ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
 
         ExpressionExperimentSearchController searchController = ( ExpressionExperimentSearchController ) this
                 .getBean( "expressionExperimentSearchController" );

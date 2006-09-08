@@ -41,9 +41,12 @@ public class BioAssayDaoImplTest extends BaseTransactionalSpringContextTest {
 
     private BioAssay ba;
 
+    private BioAssayDao bioAssayDao;
+
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        this.bioAssayDao = ( BioAssayDao ) getBean( "bioAssayDao" );
         List<BioAssay> bas = new ArrayList<BioAssay>();
         // ExpressionExperiment ee = this.getTestPersistentExpressionExperiment();
         BioAssayDimension bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory

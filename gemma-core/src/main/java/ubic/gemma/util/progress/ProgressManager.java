@@ -191,7 +191,9 @@ public class ProgressManager {
             jobI.setStartTime( cal.getTime() );
             jobI.setDescription( description );
 
-            jobI.setUser( userService.getUser( SecurityContextHolder.getContext().getAuthentication().getName() ) );
+            jobI
+                    .setUser( userService.findByUserName( SecurityContextHolder.getContext().getAuthentication()
+                            .getName() ) );
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
             newJob = new ProgressJobImpl( createdJobI, description );

@@ -37,10 +37,7 @@ import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
-import ubic.gemma.security.SecurityIntegrationTest;
-import ubic.gemma.security.interceptor.AuditInterceptorTest;
-import ubic.gemma.security.interceptor.PersistAclInterceptorTest;
-import ubic.gemma.security.principal.PrincipalTest;
+import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.progress.ProgressDataTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
@@ -72,10 +69,7 @@ public class AllCoreTests {
 
         suite.addTestSuite( ExternalDatabaseTest.class );
 
-        suite.addTestSuite( AuditInterceptorTest.class );
-        suite.addTestSuite( PersistAclInterceptorTest.class );
-        suite.addTestSuite( SecurityIntegrationTest.class );
-        suite.addTestSuite( PrincipalTest.class );
+        suite.addTest( AllSecurityTests.suite() );
 
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
@@ -86,10 +80,9 @@ public class AllCoreTests {
 
         suite.addTestSuite( ExpressionDataMatrixTest.class );
         suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
-        
+
         suite.addTestSuite( ProgressDataTest.class );
         suite.addTestSuite( ProgressIntegrationTest.class );
-        
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );

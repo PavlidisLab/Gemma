@@ -30,7 +30,6 @@ import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
 
 /**
  * Controller to signup new users. Based on code from Appfuse.
@@ -46,13 +45,11 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
  * @spring.property name="commandName" value="user"
  * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.auditAndSecurity.UserUpdateCommand"
  * @spring.property name="userService" ref="userService"
- * @spring.property name="userRoleService" ref="userRoleService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="mailMessage" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
  */
 public class SignupController extends UserAuthenticatingController {
-    private UserRoleService userRoleService;
 
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -71,7 +68,7 @@ public class SignupController extends UserAuthenticatingController {
         try {
             log.info( "Signing up " + user + " " + user.getUserName() );
 
-            User savedUser = this.userService.saveUser( user.asUser() );
+            User savedUser = this.userService.create( user.asUser() );
 
             assert savedUser != null;
         } catch ( UserExistsException e ) {
@@ -97,17 +94,9 @@ public class SignupController extends UserAuthenticatingController {
      */
     private void addUserRole( UserUpdateCommand user ) {
         // Set the default user role on this new user
-        UserRole role = this.userRoleService.getRole( Constants.USER_ROLE );
-        assert role != null : "Role was null";
-        role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+        UserRole role = UserRole.Factory.newInstance( user.getUserName(), Constants.USER_ROLE,
+                "added by signupController" );
         user.getRoles().add( role );
-    }
-
-    /**
-     * @param roleManager The roleManager to set.
-     */
-    public void setUserRoleService( UserRoleService userRoleService ) {
-        this.userRoleService = userRoleService;
     }
 
     @Override

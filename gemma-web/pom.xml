@@ -32,7 +32,7 @@
 			<groupId>gemma</groupId>
 			<artifactId>gemma-testing</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<scope>test</scope>
+		<!--	<scope>test</scope> Needed for 'test data creation' -->
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -478,15 +478,6 @@
 						<scope>provided</scope>
 					</dependency>
 				</dependencies>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<forkMode>once</forkMode>
-					<argLine>-enableassertions -Xmx512m</argLine>
-					<reportsDirectory>target/surefire-reports</reportsDirectory>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

@@ -104,7 +104,7 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
     private boolean isWebapp() {
         boolean result = this.getClass().getPackage().getName().contains( ".web." );
         if ( result ) {
-            log.info( this.getClass().getPackage().getName() + " needs action-servlet.xml" );
+            log.debug( this.getClass().getPackage().getName() + " needs action-servlet.xml" );
         }
         return result;
     }

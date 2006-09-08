@@ -73,17 +73,6 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findByFullName(java.lang.String, java.lang.String,
-     *      java.lang.String)
-     */
-    @Override
-    protected Collection handleFindByFullName( String firstName, String middleName, String lastName ) throws Exception {
-        Collection results = this.getPersonDao().findByFullName( firstName, lastName, middleName );
-
-        return results;
-    }
-
-    /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonService#findOrCreate(java.lang.String, java.lang.String,
      *      java.lang.String)
      */
@@ -91,4 +80,48 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected Person handleFindOrCreate( Person person ) throws Exception {
         return this.getPersonDao().findOrCreate( person );
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleCreate(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    @Override
+    protected Person handleCreate( Person person ) throws Exception {
+        return ( Person ) this.getPersonDao().create( person );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleExpfindByName(java.lang.String,
+     *      java.lang.String, java.lang.String)
+     */
+
+    @Override
+    protected Collection handleFindByFullName( String name, String lastName ) throws Exception {
+        return this.getPersonDao().findByFullName( name, lastName );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleLoadAll()
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Person> handleLoadAll() throws Exception {
+        return this.getPersonDao().loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleRemove(ubic.gemma.model.common.auditAndSecurity.Person)
+     */
+    @Override
+    protected void handleRemove( Person person ) throws Exception {
+        this.getPersonDao().remove( person );
+    }
+
 }

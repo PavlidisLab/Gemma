@@ -30,6 +30,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     ArrayDesign ad;
+    ArrayDesignDao arrayDesignDao;
 
     /*
      * @see TestCase#setUp()
@@ -37,6 +38,7 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        arrayDesignDao = ( ArrayDesignDao ) getBean( "arrayDesignDao" );
 
         // FIXME for some reason the getTestPersistentArrayDesign method doesn't work - get empty collections.
         ad = ArrayDesign.Factory.newInstance();

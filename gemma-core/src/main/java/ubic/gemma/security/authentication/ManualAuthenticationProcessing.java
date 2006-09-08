@@ -21,12 +21,16 @@ package ubic.gemma.security.authentication;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.AuthenticationManager;
+import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.event.authentication.InteractiveAuthenticationSuccessEvent;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
+import org.acegisecurity.providers.anonymous.AnonymousAuthenticationToken;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
+
+import ubic.gemma.security.principal.AuthenticationUtils;
 
 /**
  * Process authentication requests that come from outside a web context. This is used for command line interfaces, for
@@ -36,7 +40,7 @@ import org.springframework.context.ApplicationContext;
  * @version $Id$
  */
 public class ManualAuthenticationProcessing {
-    private static Log logger = LogFactory.getLog( ManualAuthenticationProcessing.class.getName() );
+    private static Log log = LogFactory.getLog( ManualAuthenticationProcessing.class.getName() );
 
     private AuthenticationManager authenticationManager;
     private ApplicationContext context;
@@ -57,8 +61,13 @@ public class ManualAuthenticationProcessing {
             password = "";
         }
 
-        UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken( username, password );
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            // need this so we can check user credentials in the database.
+            AuthenticationUtils.anonymousAuthenticate( username, this.getAuthenticationManager() );
+        }
 
+        // now ready to log the user in
+        Authentication authRequest = new UsernamePasswordAuthenticationToken( username, password );
         return this.getAuthenticationManager().authenticate( authRequest );
     }
 
@@ -88,32 +97,28 @@ public class ManualAuthenticationProcessing {
 
         try {
             authResult = attemptAuthentication( username, password );
+            SecurityContextHolder.getContext().setAuthentication( authResult );
         } catch ( AuthenticationException failed ) {
             // Authentication failed
-            logger.error( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **" );
-            logger.info( failed );
+            log.info( "**  Authentication failed for user " + username + ": " + failed.getMessage() + "  **" );
+            log.debug( failed );
             unsuccessfulAuthentication( failed );
             return false;
         }
 
+        log.debug( "Updated SecurityContextHolder to contain the following Authentication: '" + authResult + "'" );
         successfulAuthentication( authResult );
         return true;
     }
 
     /**
-     * @param request
-     * @param response
      * @param authResult
      * @throws IOException
      */
     protected void successfulAuthentication( Authentication authResult ) {
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Authentication success: " + authResult.toString() );
+        if ( log.isDebugEnabled() ) {
+            log.debug( "Authentication success: " + authResult.toString() );
         }
-
-        SecurityContextHolder.getContext().setAuthentication( authResult );
-
-        logger.debug( "Updated SecurityContextHolder to contain the following Authentication: '" + authResult + "'" );
 
         // Fire event
         if ( this.context != null ) {
@@ -122,15 +127,13 @@ public class ManualAuthenticationProcessing {
     }
 
     /**
-     * @param request
-     * @param response
      * @param failed
      * @throws IOException
      */
     protected void unsuccessfulAuthentication( AuthenticationException failed ) {
-        SecurityContextHolder.getContext().setAuthentication( null );
-        logger.debug( "Updated SecurityContextHolder to contain null Authentication" );
-        logger.debug( "Authentication request failed: " + failed.toString() );
+        log.debug( "Updated SecurityContextHolder to contain null Authentication" );
+        log.debug( "Authentication request failed: " + failed.toString() );
+
     }
 
 }

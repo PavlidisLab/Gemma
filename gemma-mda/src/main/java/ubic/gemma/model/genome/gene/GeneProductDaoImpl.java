@@ -22,10 +22,63 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+
+import ubic.gemma.util.BusinessKey;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneProduct
  */
-public class GeneProductDaoImpl
-    extends ubic.gemma.model.genome.gene.GeneProductDaoBase
-{
+public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProductDaoBase {
+
+    private static Log log = LogFactory.getLog( GeneProductDaoImpl.class.getName() );
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#find(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    @Override
+    public GeneProduct find( GeneProduct geneProduct ) {
+        try {
+            Criteria queryObject = super.getSession( false ).createCriteria( GeneProduct.class );
+
+            BusinessKey.checkKey( geneProduct );
+
+            BusinessKey.createQueryObject( queryObject, geneProduct );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                            "More than one instance of '" + GeneProduct.class.getName()
+                                    + "' was found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( GeneProduct ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
+     */
+    @Override
+    public GeneProduct findOrCreate( GeneProduct geneProduct ) {
+        GeneProduct existingGeneProduct = this.find( geneProduct );
+        if ( existingGeneProduct != null ) {
+            return existingGeneProduct;
+        }
+        if ( log.isDebugEnabled() ) log.debug( "Creating new geneProduct: " + geneProduct.getName() );
+        return ( GeneProduct ) create( geneProduct );
+    }
 }

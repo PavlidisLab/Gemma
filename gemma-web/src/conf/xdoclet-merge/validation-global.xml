@@ -111,11 +111,11 @@
                 </var>
             </field>
             
-            <field property="firstName" depends="required">
-                <arg0 key="user.firstName"/>
+            <field property="name" depends="required">
+                <arg0 key="user.name"/>
             </field>
             
-            <field property="lastName" depends="required">
+             <field property="lastName" depends="required">
                 <arg0 key="user.lastName"/>
             </field>
             

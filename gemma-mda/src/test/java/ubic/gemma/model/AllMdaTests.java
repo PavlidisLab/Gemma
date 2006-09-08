@@ -20,7 +20,6 @@ package ubic.gemma.model;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import ubic.gemma.model.common.auditAndSecurity.UserRoleServiceImplTest;
 import ubic.gemma.model.common.auditAndSecurity.UserServiceImplTest;
 import ubic.gemma.model.common.description.BibliographicReferenceServiceImplTest;
 import ubic.gemma.model.common.description.ExternalDatabaseServiceImplTest;
@@ -43,7 +42,6 @@ public class AllMdaTests extends TestSuite {
 
     public static Test suite() {
         TestSuite suite = new TestSuite( "Tests for gemma-mda" );
-        suite.addTestSuite( UserRoleServiceImplTest.class );
         suite.addTestSuite( UserServiceImplTest.class );
         suite.addTestSuite( BibliographicReferenceServiceImplTest.class );
         suite.addTestSuite( ExternalDatabaseServiceImplTest.class );

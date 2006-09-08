@@ -32,6 +32,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
     String testSequence = RandomStringUtils.random( 100, "ATCG" );
+    BlatResultDao blatResultDao;
 
     /*
      * (non-Javadoc)
@@ -40,7 +41,9 @@ public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
      */
     @Override
     protected void onSetUpInTransaction() throws Exception {
+
         super.onSetUpInTransaction();
+        blatResultDao = ( BlatResultDao ) getBean( "blatResultDao" );
         for ( int i = 0; i < 20; i++ ) {
             BioSequence bs = this.getTestPersistentBioSequence();
             if ( i == 10 ) {

@@ -186,7 +186,7 @@ public class CandidateGeneListServiceImplTest extends TestCase {
 
         p = User.Factory.newInstance();
 
-        p.setFirstName( "David" );
+        p.setName( "David" );
         p.setLastName( "Quigley" );
         p.setEmail( "daq2101@columbia.edu" );
         UserDaoMock.create( p );

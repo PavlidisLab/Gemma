@@ -35,12 +35,11 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Person.class );
 
-            if ( person.getFirstName() != null )
-                queryObject.add( Restrictions.eq( "firstName", person.getFirstName() ) );
+            if ( person.getName() != null ) queryObject.add( Restrictions.eq( "name", person.getName() ) );
 
-            if ( person.getLastName() != null ) queryObject.add( Restrictions.eq( "lastName", person.getLastName() ) );
-            if ( person.getMiddleName() != null )
-                queryObject.add( Restrictions.eq( "middleName", person.getMiddleName() ) );
+            if ( person.getLastName() != null )
+                queryObject.add( Restrictions.eq( "lastName", person.getLastName() ) );
+
             if ( person.getEmail() != null ) queryObject.add( Restrictions.eq( "email", person.getEmail() ) );
             if ( person.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", person.getPhone() ) );
             if ( person.getAddress() != null ) queryObject.add( Restrictions.eq( "address", person.getAddress() ) );

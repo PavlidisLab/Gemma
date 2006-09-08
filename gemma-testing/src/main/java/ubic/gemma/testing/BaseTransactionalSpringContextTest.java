@@ -21,7 +21,6 @@ package ubic.gemma.testing;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,47 +33,21 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.AbstractTransactionalSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
-import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.ContactDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserDao;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseDao;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
-import ubic.gemma.model.expression.designElement.Reporter;
-import ubic.gemma.model.expression.designElement.ReporterDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
@@ -99,52 +72,17 @@ import uk.ltd.getahead.dwr.create.SpringCreator;
  * @version $Id$
  */
 abstract public class BaseTransactionalSpringContextTest extends AbstractTransactionalSpringContextTests {
- 
+
     protected static final int RANDOM_STRING_LENGTH = 10;
     protected static final int TEST_ELEMENT_COLLECTION_SIZE = 5;
 
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
 
-    protected ExternalDatabaseDao externalDatabaseDao;
-
-    protected DatabaseEntryDao databaseEntryDao;
-
-    protected ContactDao contactDao;
-
-    protected TaxonDao taxonDao;
-
-    protected ArrayDesignDao arrayDesignDao;
-
-    protected QuantitationTypeDao quantitationTypeDao;
-
-    protected ExpressionExperimentDao expressionExperimentDao;
-
-    protected CompositeSequenceDao compositeSequenceDao;
-
-    protected BioAssayDao bioAssayDao;
-
-    protected BioMaterialDao bioMaterialDao;
-
-    protected BibliographicReferenceDao bibliographicReferenceDao;
-
-    protected BlatResultDao blatResultDao;
-
-    protected BioSequenceDao bioSequenceDao;
-
-    protected GeneDao geneDao;
-
-    protected GeneProductDao geneProductDao;
-
-    private boolean testEnvDisabled = false;
-
-    private Taxon testTaxon = null;
-
-    protected UserDao userDao;
-
-    protected ReporterDao reporterDao;
+    protected TestPersistentObjectHelper testHelper;
 
     protected PersisterHelper persisterHelper;
+    private boolean testEnvDisabled;
 
     /**
      * 
@@ -230,10 +168,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected Gene getTestPeristentGene() {
-        Gene gene = Gene.Factory.newInstance();
-        gene.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        gene.setOfficialName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        return ( Gene ) this.geneDao.create( gene );
+        return testHelper.getTestPeristentGene();
     }
 
     /**
@@ -246,48 +181,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-
-        ad.setName( RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
-
-        for ( int i = 0; i < numCompositeSequences; i++ ) {
-
-            Reporter reporter = Reporter.Factory.newInstance();
-            if ( randomNames ) {
-                reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-            } else {
-                reporter.setName( i + "_at" );
-            }
-            reporter = ( Reporter ) reporterDao.create( reporter );
-            ad.getReporters().add( reporter );
-
-            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
-            if ( randomNames ) {
-                compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-            } else {
-                compositeSequence.setName( "probe_" + i );
-            }
-
-            compositeSequence.getComponentReporters().add( reporter );
-
-            compositeSequence = ( CompositeSequence ) compositeSequenceDao.create( compositeSequence );
-            ad.getCompositeSequences().add( compositeSequence );
-        }
-
-        // use service to get acl
-        ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        ad = arrayDesignService.create( ad );
-
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            cs.setArrayDesign( ad );
-        }
-
-        // flushSession();
-
-        assert ( ad.getCompositeSequences().size() == numCompositeSequences );
-        assert ( ad.getReporters().size() == numCompositeSequences );
-
-        return ad;
+        return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames );
     }
 
     /**
@@ -296,41 +190,25 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
-        BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
-        ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        ba = ( BioAssay ) bioAssayDao.create( ba );
-        BioMaterial bm = this.getTestPersistentBioMaterial(); // might make this a parameter passed in.
-        ba.getSamplesUsed().add( bm );
-        if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
-        return ba;
+        return testHelper.getTestPersistentBioAssay( ad );
     }
 
     protected BibliographicReference getTestPersistentBibliographicReference( String accession ) {
-        BibliographicReference br = BibliographicReference.Factory.newInstance();
-        br.setPubAccession( this.getTestPersistentDatabaseEntry( accession ) );
-        return ( BibliographicReference ) this.bibliographicReferenceDao.create( br );
+        return testHelper.getTestPersistentBibliographicReference( accession );
     }
 
     /**
      * @return
      */
     protected BioMaterial getTestPersistentBioMaterial() {
-        BioMaterial bm = BioMaterial.Factory.newInstance();
-        bm.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        bm.setExternalAccession( this.getTestPersistentDatabaseEntry() );
-        bm = ( BioMaterial ) bioMaterialDao.create( bm );
-        return bm;
+        return testHelper.getTestPersistentBioMaterial();
     }
 
     /**
      * @return
      */
     protected BioSequence getTestPersistentBioSequence() {
-        BioSequence bs = BioSequence.Factory.newInstance();
-        bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
-        bs.setTaxon( getTestPersistentTaxon() );
-        return ( BioSequence ) bioSequenceDao.create( bs );
+        return testHelper.getTestPersistentBioSequence();
     }
 
     /**
@@ -338,9 +216,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
-        BlatResult br = BlatResult.Factory.newInstance();
-        br.setQuerySequence( querySequence );
-        return ( BlatResult ) this.blatResultDao.create( br );
+        return testHelper.getTestPersistentBlatResult( querySequence );
     }
 
     /**
@@ -349,20 +225,30 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected Contact getTestPersistentContact() {
-        Contact c = Contact.Factory.newInstance();
-        c.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        c = ( Contact ) contactDao.create( c );
-        return c;
+        return testHelper.getTestPersistentContact();
     }
 
     /**
      * Convenience method to provide a DatabaseEntry that can be used to fill non-nullable associations in test objects.
      * The accession and ExternalDatabase name are set to random strings.
      * 
+     * @return
+     */
+    protected DatabaseEntry getTestPersistentDatabaseEntry( ExternalDatabase ed ) {
+        return getTestPersistentDatabaseEntry( null, ed );
+    }
+
+    protected DatabaseEntry getTestPersistentDatabaseEntry( String ed ) {
+        return getTestPersistentDatabaseEntry( null, ed );
+    }
+
+    
+    /**
+     * Get a database entry from a fictitious database.
      * @return
      */
     protected DatabaseEntry getTestPersistentDatabaseEntry() {
-        return getTestPersistentDatabaseEntry( null );
+        return getTestPersistentDatabaseEntry( null, RandomStringUtils.randomAlphabetic( 10 ) );
     }
 
     /**
@@ -371,23 +257,12 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * 
      * @return
      */
-    protected DatabaseEntry getTestPersistentDatabaseEntry( String accession ) {
-        DatabaseEntry result = DatabaseEntry.Factory.newInstance();
+    protected DatabaseEntry getTestPersistentDatabaseEntry( String accession, ExternalDatabase ed ) {
+        return testHelper.getTestPersistentDatabaseEntry( accession, ed );
+    }
 
-        if ( accession == null ) {
-            result.setAccession( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        } else {
-            result.setAccession( accession );
-        }
-
-        ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-        ed.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testdb" );
-
-        ed = ( ExternalDatabase ) externalDatabaseDao.create( ed );
-
-        result.setExternalDatabase( ed );
-        result = databaseEntryDao.create( result );
-        return result;
+    protected DatabaseEntry getTestPersistentDatabaseEntry( String accession, String ed ) {
+        return testHelper.getTestPersistentDatabaseEntry( accession, ed );
     }
 
     /**
@@ -397,10 +272,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected ExpressionExperiment getTestPersistentExpressionExperiment() {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        ee.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        ee = ( ExpressionExperiment ) expressionExperimentDao.create( ee );
-        return ee;
+        return testHelper.getTestPersistentExpressionExperiment();
     }
 
     /**
@@ -408,9 +280,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected GeneProduct getTestPersistentGeneProduct( Gene gene ) {
-        GeneProduct gp = GeneProduct.Factory.newInstance();
-
-        return ( GeneProduct ) this.geneProductDao.create( gp );
+        return testHelper.getTestPersistentGeneProduct( gene );
     }
 
     /**
@@ -420,61 +290,20 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      * @return
      */
     protected QuantitationType getTestPersistentQuantitationType() {
-        QuantitationType qt = QuantitationType.Factory.newInstance();
-        qt.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        qt.setIsBackground( false );
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.MEASUREDSIGNAL );
-        qt.setScale( ScaleType.LINEAR );
-        qt = ( QuantitationType ) quantitationTypeDao.create( qt );
-        return qt;
-    }
-
-    /**
-     * @return
-     */
-    private Taxon getTestPersistentTaxon() {
-        if ( testTaxon == null ) {
-            Taxon t = Taxon.Factory.newInstance();
-            t.setCommonName( "elephant" );
-            t.setScientificName( "Loxodonta" );
-            testTaxon = taxonDao.findOrCreate( t );
-            assert testTaxon != null;
-        }
-        return testTaxon;
+        return testHelper.getTestPersistentQuantitationType();
     }
 
     /**
      * @return
      */
     protected User getTestPersistentUser( String username, String password ) {
-        User testUser = User.Factory.newInstance();
-
-        testUser.setFirstName( "Foo" );
-        testUser.setLastName( "Bar" );
-        testUser.setMiddleName( "" );
-        testUser.setEnabled( Boolean.TRUE );
-        testUser.setUserName( username );
-        testUser.setEmail( RandomStringUtils.randomAlphabetic( 6 ).toLowerCase() + "@gemma.org" );
-
-        ShaPasswordEncoder encoder = new ShaPasswordEncoder();
-        String encryptedPassword = encoder.encodePassword( password, ConfigUtils.getProperty( "gemma.salt" ) );
-
-        UserRole ur = UserRole.Factory.newInstance( username, Constants.USER_ROLE, "regular user" );
-
-        testUser.getRoles().add( ur );
-        testUser.setPassword( encryptedPassword );
-        testUser.setPasswordHint( "I am an idiot" );
-        
-        
-
-        return ( User ) userDao.create( testUser );
+        return testHelper.getTestPersistentUser( username, password );
 
     }
 
     protected User getTestPersistentUser() {
-        return getTestPersistentUser( RandomStringUtils.randomAlphabetic( 6 ), ConfigUtils.getString( "gemma.admin.password" ) );
+        return getTestPersistentUser( RandomStringUtils.randomAlphabetic( 6 ), ConfigUtils
+                .getString( "gemma.admin.password" ) );
     }
 
     /**
@@ -523,6 +352,13 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
+        this.testHelper = new TestPersistentObjectHelper();
+
+        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
+        persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" ); // beans not injected yet, have to do
+        // explicitly?
+        testHelper.setPersisterHelper( persisterHelper );
+        testHelper.setExternalDatabaseService( externalDatabaseService );
     }
 
     /*
@@ -536,53 +372,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
         // flushSession();
     }
 
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
-        this.bioAssayDao = bioAssayDao;
-    }
-
-    /**
-     * @param bioMaterialDao the bioMaterialDao to set
-     */
-    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
-        this.bioMaterialDao = bioMaterialDao;
-    }
-
-    /**
-     * @param bioSequenceDao the bioSequenceDao to set
-     */
-    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
-        this.bioSequenceDao = bioSequenceDao;
-    }
-
-    /**
-     * @param blatResultDao the blatResultDao to set
-     */
-    public void setBlatResultDao( BlatResultDao blatResultDao ) {
-        this.blatResultDao = blatResultDao;
-    }
-
-    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
-        this.compositeSequenceDao = compositeSequenceDao;
-    }
-
-    /**
-     * @param contactDao The contactDao to set.
-     */
-    public void setContactDao( ContactDao contactDao ) {
-        this.contactDao = contactDao;
-    }
-
-    /**
-     * @param databaseEntryDao The databaseEntryDao to set.
-     */
-    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
-    }
-
     /**
      * Option to override use of the test environment.
      * 
@@ -590,17 +379,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     public void setDisableTestEnv( boolean testEnvDisabled ) {
         this.testEnvDisabled = testEnvDisabled;
-    }
-
-    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
-        this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    /**
-     * @param externalDatabaseDao The externalDatabaseDao to set.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**
@@ -617,56 +395,10 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
-     * @param geneDao the geneDao to set
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
-
-    /**
-     * @param geneProductDao the geneProductDao to set
-     */
-    public void setGeneProductDao( GeneProductDao geneProductDao ) {
-        this.geneProductDao = geneProductDao;
-    }
-
-    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
-        this.quantitationTypeDao = quantitationTypeDao;
-    }
-
-    /**
-     * @param taxonDao The taxonDao to set.
-     */
-    public void setTaxonDao( TaxonDao taxonDao ) {
-        this.taxonDao = taxonDao;
-    }
-
-    /**
-     * @param userDao The userDao to set.
-     */
-    public void setUserDao( UserDao userDao ) {
-        this.userDao = userDao;
-    }
-
-    /**
      * @param persisterHelper the persisterHelper to set
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * @param reporterDao the reporterDao to set
-     */
-    public void setReporterDao( ReporterDao reporterDao ) {
-        this.reporterDao = reporterDao;
-    }
-
-    /**
-     * @param bibliographicReferenceDao the bibliographicReferenceDao to set
-     */
-    public void setBibliographicReferenceDao( BibliographicReferenceDao bibliographicReferenceDao ) {
-        this.bibliographicReferenceDao = bibliographicReferenceDao;
     }
 
 }

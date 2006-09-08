@@ -33,9 +33,9 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class MageLoadTest extends AbstractMageTest {
+public class MageLoadIntegrationTest extends AbstractMageTest {
 
-    private static Log log = LogFactory.getLog( MageLoadTest.class.getName() );
+    private static Log log = LogFactory.getLog( MageLoadIntegrationTest.class.getName() );
     MageMLConverter mageMLConverter = null;
     PersisterHelper persisterHelper;
 

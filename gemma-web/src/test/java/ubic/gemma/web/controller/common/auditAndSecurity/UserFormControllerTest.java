@@ -28,6 +28,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.testing.BaseTransactionalSpringWebTest;
 
@@ -38,6 +39,7 @@ import ubic.gemma.testing.BaseTransactionalSpringWebTest;
 public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
 
     UserFormController controller;
+    UserDao userDao;
 
     /**
      * @throws Exception
@@ -47,7 +49,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         super.onSetUpInTransaction();
 
         controller = ( UserFormController ) getBean( "userFormController" );
-
+        userDao = ( UserDao ) getBean( "userDao" );
     }
 
     public final void testAdminCancel() throws Exception {
@@ -91,7 +93,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "userName", u.getUserName() );
         request.setParameter( "newPassword", "whatever" );
         request.setParameter( "confirmNewPassword", "whatever" );
-        request.setParameter( "firstName", u.getFirstName() );
+        request.setParameter( "name", u.getName() );
         request.setParameter( "lastName", u.getLastName() );
         request.setParameter( "passwordHint", "guess" );
         request.setParameter( "email", u.getEmail() );
@@ -121,7 +123,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "userName", u.getUserName() );
         request.setParameter( "newPassword", "whatever" );
         request.setParameter( "confirmNewPassword", "whatever" );
-        request.setParameter( "firstName", u.getFirstName() );
+        request.setParameter( "name", u.getName() );
         request.setParameter( "lastName", u.getLastName() );
         request.setParameter( "email", u.getEmail() );
 
@@ -247,7 +249,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
 
         request.setParameter( "id", u.getId().toString() );
         request.setParameter( "userName", u.getUserName() );
-        request.setParameter( "firstName", "Something new" );
+        request.setParameter( "name", "Something new" );
         request.setParameter( "lastName", u.getLastName() );
         request.setParameter( "email", u.getEmail() );
 
@@ -314,8 +316,9 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "userName", newUserName );
         request.setParameter( "password", "testpassword" );
 
-        request.setParameter( "firstName", "First" );
-        request.setParameter( "lastName", "Last" );
+        request.setParameter( "name", "Joe" );
+        request.setParameter( "lastName", "Blow" );
+        request.setParameter( "institution", "UBC" );
         request.setParameter( "email", RandomStringUtils.randomAlphabetic( 6 ) + "@gemma.org" );
         request.setParameter( "passwordHint", "guess" );
         request.addParameter( "roles", Constants.USER_ROLE );
@@ -332,8 +335,9 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "userName", u.getUserName() );
         request.setParameter( "newPassword", "whatever" );
         request.setParameter( "confirmNewPassword", "whatever" );
-        request.setParameter( "firstName", u.getFirstName() );
+        request.setParameter( "name", u.getName() );
         request.setParameter( "lastName", u.getLastName() );
+        request.setParameter( "institution", "UBC" );
         request.setParameter( "email", u.getEmail() );
         request.setParameter( "passwordHint", u.getPasswordHint() );
         for ( UserRole r : u.getRoles() ) {

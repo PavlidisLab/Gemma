@@ -112,7 +112,7 @@ public class CandidateGeneListController extends BaseCommandController {
         if ( action == null ) action = "view";
 
         // Load the user into usr, used to attribute actions and search by owner
-        User usr = userService.getUser( request.getRemoteUser() );
+        User usr = userService.findByUserName( request.getRemoteUser() );
         this.candidateGeneListService.setActor( usr );
 
         if ( target != null ) {

@@ -18,6 +18,12 @@
  */
 package ubic.gemma.security.interceptor;
 
+import org.apache.commons.lang.RandomStringUtils;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -28,26 +34,48 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
     ExpressionExperimentService expressionExperimentService;
+    private UserService userService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-    }
-
-    public void testSimpleAuditAddition() throws Exception {
-
-        // FIXME, this isn't a very good test...
-
+    public void testSimpleAuditFindOrCreate() throws Exception {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );
         ee = expressionExperimentService.findOrCreate( ee );
-        expressionExperimentService.delete( ee );
+        assertNotNull( ee.getAuditTrail() );
+        assertEquals( 1, ee.getAuditTrail().getEvents().size() );
+        flushSession(); // have to do or cascade insert doesn't happen
+        assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
+    }
+
+    public void testSimpleAuditCreateUpdateUser() throws Exception {
+        User user = User.Factory.newInstance();
+        user.setUserName( RandomStringUtils.randomAlphabetic( 20 ) );
+        user.setEmail( RandomStringUtils.randomAlphabetic( 20 ) + "@gemma.com" );
+        user.setDescription( "From test" );
+        user.setName( "Test" );
+        user = userService.create( user );
+
+        assertNotNull( user.getAuditTrail() );
+        user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+
+        userService.update( user );
+
+        flushSession(); // have to do or cascade insert doesn't happen
+
+        assertNotNull( user.getAuditTrail().getCreationEvent().getId() );
+
+        /*
+         * FIXME - this does not work in maven builds. It's fine in eclipse.
+         */
+     //   assertEquals( 2, user.getAuditTrail().getEvents().size() );
+     //   assertEquals( AuditAction.UPDATE, user.getAuditTrail().getLast().getAction() );
+
+        // third time.
+//        user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+//        userService.update( user );
+//        flushSession(); // have to do or cascade insert doesn't happen
+//        assertEquals( 3, user.getAuditTrail().getEvents().size() );
+
     }
 
     /**
@@ -55,6 +83,10 @@ public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setUserService( UserService userService ) {
+        this.userService = userService;
     }
 
     // FIXME add tests on collections and of update, create, remove...

@@ -109,14 +109,6 @@ public class UserUpdateCommand {
     }
 
     /**
-     * @param firstName
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#setFirstName(java.lang.String)
-     */
-    public void setFirstName( String firstName ) {
-        this.user.setFirstName( firstName );
-    }
-
-    /**
      * @param id
      * @see ubic.gemma.model.common.Securable#setId(java.lang.Long)
      */
@@ -128,8 +120,8 @@ public class UserUpdateCommand {
      * @param job
      * @see ubic.gemma.model.common.auditAndSecurity.User#setJob(java.util.Collection)
      */
-    public void setJob( Collection<JobInfo> job ) {
-        this.user.setJob( job );
+    public void setJobs( Collection<JobInfo> jobs ) {
+        this.user.setJobs( jobs );
     }
 
     /**
@@ -138,14 +130,6 @@ public class UserUpdateCommand {
      */
     public void setLastName( String lastName ) {
         this.user.setLastName( lastName );
-    }
-
-    /**
-     * @param middleName
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#setMiddleName(java.lang.String)
-     */
-    public void setMiddleName( String middleName ) {
-        this.user.setMiddleName( middleName );
     }
 
     /**
@@ -213,11 +197,11 @@ public class UserUpdateCommand {
     }
 
     /**
-     * @param URI
+     * @param URL
      * @see ubic.gemma.model.common.auditAndSecurity.Contact#setURI(java.lang.String)
      */
-    public void setURI( String URI ) {
-        this.user.setURI( URI );
+    public void setURL( String URL ) {
+        this.user.setURL( URL );
     }
 
     /**
@@ -239,9 +223,8 @@ public class UserUpdateCommand {
         this.setPasswordHint( user.getPasswordHint() );
         this.setEnabled( user.getEnabled() );
         this.setLastName( user.getLastName() );
-        this.setFirstName( user.getFirstName() );
-        this.setMiddleName( user.getMiddleName() );
-        this.setURI( user.getURI() );
+        this.setName( user.getName() );
+        this.setURL( user.getURL() );
         this.setAddress( user.getAddress() );
         this.setPhone( user.getPhone() );
         this.setTollFreePhone( user.getTollFreePhone() );
@@ -251,7 +234,7 @@ public class UserUpdateCommand {
         this.setDescription( user.getDescription() );
         this.setReferenceLists( user.getReferenceLists() );
         this.setRoles( user.getRoles() );
-        this.setJob( user.getJob() );
+        this.setJobs( user.getJobs() );
         this.setAffiliations( user.getAffiliations() );
         this.setPersonPublications( user.getPersonPublications() );
         this.setAuditTrail( user.getAuditTrail() );
@@ -375,14 +358,6 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#getFirstName()
-     */
-    public String getFirstName() {
-        return this.user.getFirstName();
-    }
-
-    /**
-     * @return
      * @see ubic.gemma.model.common.auditAndSecurity.PersonImpl#getFullName()
      */
     public String getFullName() {
@@ -401,8 +376,8 @@ public class UserUpdateCommand {
      * @return
      * @see ubic.gemma.model.common.auditAndSecurity.User#getJob()
      */
-    public Collection<JobInfo> getJob() {
-        return this.user.getJob();
+    public Collection<JobInfo> getJobs() {
+        return this.user.getJobs();
     }
 
     /**
@@ -411,14 +386,6 @@ public class UserUpdateCommand {
      */
     public String getLastName() {
         return this.user.getLastName();
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#getMiddleName()
-     */
-    public String getMiddleName() {
-        return this.user.getMiddleName();
     }
 
     /**
@@ -489,8 +456,8 @@ public class UserUpdateCommand {
      * @return
      * @see ubic.gemma.model.common.auditAndSecurity.Contact#getURI()
      */
-    public String getURI() {
-        return this.user.getURI();
+    public String getURL() {
+        return this.user.getURL();
     }
 
     /**

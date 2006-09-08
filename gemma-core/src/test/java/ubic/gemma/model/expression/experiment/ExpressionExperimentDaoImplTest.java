@@ -28,6 +28,8 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringContextTest {
 
+    ExpressionExperimentDao expressionExperimentDao;
+    
     /**
      * 
      */
@@ -66,6 +68,13 @@ public class ExpressionExperimentDaoImplTest extends BaseTransactionalSpringCont
         assertNotNull( expressionExperiment );
         log.debug( "Contact: " + expressionExperiment.getOwner() );
 
+    }
+
+    /**
+     * @param expressionExperimentDao the expressionExperimentDao to set
+     */
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
     }
 
 }

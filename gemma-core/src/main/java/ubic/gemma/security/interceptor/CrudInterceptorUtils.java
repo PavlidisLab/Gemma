@@ -19,8 +19,12 @@
 package ubic.gemma.security.interceptor;
 
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
@@ -34,6 +38,8 @@ import org.springframework.orm.hibernate3.HibernateInterceptor;
  * @version $Id$
  */
 public class CrudInterceptorUtils {
+
+    private static Log log = LogFactory.getLog( CrudInterceptorUtils.class.getName() );
 
     private Map metaData;
 
@@ -103,9 +109,22 @@ public class CrudInterceptorUtils {
      * @return
      */
     public static boolean methodIsCrud( Method m ) {
-        return m.getName().equals( "update" ) || m.getName().equals( "create" ) || m.getName().equals( "save" )
-                || m.getName().equals( "remove" ) || m.getName().equals( "read" ) || m.getName().startsWith( "find" )
-                || m.getName().equals( "delete" ) || m.getName().equals( "load" );
+        if ( log.isTraceEnabled() ) log.trace( "Testing " + m.getName() );
+        return crudMethods.contains( m.getName() );
+    }
+
+    private static Set<String> crudMethods;
+    static {
+        crudMethods = new HashSet<String>();
+        crudMethods.add( "update" );
+        crudMethods.add( "create" );
+        crudMethods.add( "remove" );
+        crudMethods.add( "save" );
+        crudMethods.add( "find" );
+        crudMethods.add( "findOrCreate" );
+        crudMethods.add( "delete" );
+        crudMethods.add( "load" );
+        crudMethods.add( "loadAll" );
     }
 
     /**
@@ -139,14 +158,14 @@ public class CrudInterceptorUtils {
     }
 
     /**
-     * Test whether a method loads objects
+     * Test whether a method loads objects. Patterns accepted include "read", "find", "load*" (latter for load or
+     * loadAll)
      * 
      * @param m
      * @return
      */
     public static boolean methodIsLoad( Method m ) {
-        return m.getName().equals( "read" ) || m.getName().startsWith( "find" ) || m.getName().equals( "delete" )
-                || m.getName().equals( "load" );
+        return m.getName().equals( "read" ) || m.getName().startsWith( "find" ) || m.getName().startsWith( "load" );
     }
 
 }

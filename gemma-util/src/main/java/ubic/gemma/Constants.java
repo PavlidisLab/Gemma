@@ -54,13 +54,6 @@ public class Constants {
     public static final String USER_LIST = "userList";
 
     /**
-     * The request scope attribute for indicating a newly-registered user
-     * 
-     * @deprecated - Don't think this is needed.
-     */
-    public static final String REGISTERED = "registered";
-
-    /**
      * The name of the Administrator role, as specified in web.xml
      */
     public static final String ADMIN_ROLE = "admin";

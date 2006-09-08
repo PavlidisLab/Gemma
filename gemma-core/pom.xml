@@ -29,7 +29,7 @@
 			<artifactId>gemma-testing</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<type>jar</type>
-			<scope>test</scope>
+		<!--	<scope>test</scope> -->
 		</dependency>
 		<dependency>
 			<groupId>hibernate</groupId>
@@ -412,7 +412,17 @@
 				</includes>
 			</testResource>
 		</testResources>
-		<plugins>
+		<plugins> 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*Abstract*</exclude>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 			<plugin>
 				<artifactId>xdoclet-maven-plugin</artifactId>
 				<groupId>org.codehaus.mojo</groupId>
@@ -462,4 +472,31 @@
 			</plugin>
 		</plugins>
 	</build>
+    <profiles>
+        <profile>
+            <id>Slow tests</id>
+            <activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>alltests</name>
+				</property>
+			</activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/*Abstract*</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/*IntegrationTest.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

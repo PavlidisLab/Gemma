@@ -23,27 +23,26 @@ import ubic.gemma.model.common.auditAndSecurity.PersonImpl;
 
 /**
  * <pre>
- * 
  *  
  *   
  *    
  *     
- *      !Experimenter=Douglas Ross
- *      !Contact email=dross@cmgm.stanford.edu
- *      !Contact Address1=Genetics
- *      !Contact Address2=M309
- *      !State=CA
- *      !Postal Code=94305
+ *      
+ *       !Experimenter=Douglas Ross
+ *       !Contact email=dross@cmgm.stanford.edu
+ *       !Contact Address1=Genetics
+ *       !Contact Address2=M309
+ *       !State=CA
+ *       !Postal Code=94305
+ *       
  *      
  *     
  *    
  *   
- *  
  * </pre>
  * 
  * <hr>
  * <p>
- * 
  * 
  * @author pavlidis
  * @version $Id$

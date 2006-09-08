@@ -33,7 +33,7 @@ public class AllMageTests {
         TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.expression.mage" );
         // $JUnit-BEGIN$
         suite.addTestSuite( MageMLParserTest.class );
-        suite.addTestSuite( MageLoadTest.class );
+        suite.addTestSuite( MageLoadIntegrationTest.class );
         suite.addTestSuite( MageMLPreprocessorIntegrationTest.class );
         // $JUnit-END$
         return suite;

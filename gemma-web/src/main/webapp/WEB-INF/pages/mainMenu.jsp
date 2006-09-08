@@ -1,5 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
-<title><fmt:message key="mainMenu.title" /></title>
+<title><fmt:message key="mainMenu.title" />
+</title>
 <content tag="heading">
 <fmt:message key="mainMenu.heading" />
 </content>
@@ -35,10 +36,9 @@
 		<a href="<c:url value="/candidateGeneList.html"/>"> <fmt:message key="menu.CandidateGeneList" /> </a>
 	</li>
 	<li>
-		<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" />
-		</a>
+		<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" /> </a>
 	</li>
- 
+
 	<li>
 		<a href="<c:url value="/editProfile.html"/>"> <fmt:message key="menu.user" /> </a>
 	</li>
@@ -50,4 +50,14 @@
 		</a>
 	</li>
 </ul>
-
+<authz:authorize ifAnyGranted="admin">
+	<hr />
+	<h2>
+		Administrative functions
+	</h2>
+	<ul class="glassList">
+		<li>
+			<a href="<c:url value="/addTestData.html"/>">Add test data </a>
+		</li>
+	</ul>
+</authz:authorize>

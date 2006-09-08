@@ -164,9 +164,8 @@ public class ValidationTest extends BaseSpringContextTest {
     private UserUpdateCommand getBasicValidUser() {
         User testUser = User.Factory.newInstance();
 
-        testUser.setFirstName( "Foo" );
+        testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
-        testUser.setMiddleName( "" );
         testUser.setEnabled( Boolean.TRUE );
         testUser.setUserName( "trice" );
         testUser.setEmail( RandomStringUtils.randomAlphabetic( 6 ).toLowerCase() + "@gemma.org" );

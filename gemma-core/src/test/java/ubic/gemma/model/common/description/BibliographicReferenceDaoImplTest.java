@@ -54,7 +54,7 @@ public class BibliographicReferenceDaoImplTest extends BaseTransactionalSpringCo
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         testBibRef = BibliographicReference.Factory.newInstance();
 
-        de = this.getTestPersistentDatabaseEntry();
+        de = this.getTestPersistentDatabaseEntry( "PubMed" );
 
         /* Set the DatabaseEntry. */
         testBibRef.setPubAccession( de );

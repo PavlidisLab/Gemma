@@ -20,7 +20,6 @@ import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.model.common.auditAndSecurity.UserRoleService;
 import ubic.gemma.util.BeanPropertyCompleter;
 
 /**
@@ -40,15 +39,12 @@ import ubic.gemma.util.BeanPropertyCompleter;
  * @spring.property name="validator" ref="userValidator"
  * @spring.property name="formView" value="userProfile"
  * @spring.property name="successView" value="redirect:users.html"
- * @spring.property name="userRoleService" ref="userRoleService"
  * @spring.property name="userService" ref="userService"
  * @spring.property name="mailEngine" ref="mailEngine"
  * @spring.property name="mailMessage" ref="mailMessage"
  * @spring.property name="templateName" value="accountCreated.vm"
  */
 public class UserFormController extends UserAuthenticatingController {
-
-    private UserRoleService userRoleService;
 
     @Override
     public String getCancelView( HttpServletRequest request ) {
@@ -74,7 +70,7 @@ public class UserFormController extends UserAuthenticatingController {
         Locale locale = request.getLocale();
 
         if ( request.getParameter( "delete" ) != null ) {
-            this.getUserService().removeUser( user.getUserName() );
+            this.getUserService().delete( user.getUserName() );
             saveMessage( request, "user.deleted", user.getName(), "User deleted" );
             log.debug( "Deleted " + user );
             return new ModelAndView( getSuccessView() );
@@ -97,7 +93,7 @@ public class UserFormController extends UserAuthenticatingController {
             userIsNew = true;
             try {
                 log.debug( "Creating new " + user );
-                user = new UserUpdateCommand( this.getUserService().saveUser( user.asUser() ) );
+                user = new UserUpdateCommand( this.getUserService().create( user.asUser() ) );
             } catch ( UserExistsException e ) {
                 log.warn( e.getMessage() );
 
@@ -112,7 +108,7 @@ public class UserFormController extends UserAuthenticatingController {
             // We have to get the original version from the database, and update the fields. Otherwise hibernate isn't
             // happy. Roles were updated above so should be a persistent collection. Other collections haven't been
             // touched
-            User u = this.getUserService().findById( user.getId() );
+            User u = this.getUserService().load( user.getId() );
             BeanPropertyCompleter.complete( u, user.asUser(), true );
             this.getUserService().update( u );
         }
@@ -145,13 +141,6 @@ public class UserFormController extends UserAuthenticatingController {
             return new ModelAndView( getSuccessView() );
         }
 
-    }
-
-    /**
-     * @param roleManager The roleManager to set.
-     */
-    public void setUserRoleService( UserRoleService userRoleService ) {
-        this.userRoleService = userRoleService;
     }
 
     /**
@@ -192,8 +181,8 @@ public class UserFormController extends UserAuthenticatingController {
             for ( int i = 0; i < userRoles.length; i++ ) {
                 String roleName = userRoles[i];
                 log.debug( "User has role " + roleName );
-                UserRole role = this.userRoleService.getRole( roleName );
-                role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+                UserRole role = UserRole.Factory.newInstance( user.getUserName(), roleName,
+                        "Added by userFormController" );
                 user.getRoles().add( role );
             }
         }
@@ -215,13 +204,13 @@ public class UserFormController extends UserAuthenticatingController {
             if ( request.getRequestURI().indexOf( "editProfile" ) > -1 ) {
                 // editProfile should not be called with user parameter passed in: user is editing
                 // themselves.
-                User u = this.getUserService().getUser( request.getRemoteUser() );
+                User u = this.getUserService().findByUserName( request.getRemoteUser() );
                 if ( u == null ) {
                     throw new IllegalArgumentException( "User " + request.getRemoteUser() + " not found in the system" );
                 }
                 user = new UserUpdateCommand( u );
             } else if ( !StringUtils.isBlank( username ) ) {
-                user = new UserUpdateCommand( this.getUserService().getUser( username ) );
+                user = new UserUpdateCommand( this.getUserService().findByUserName( username ) );
             } else {
                 user = new UserUpdateCommand();
                 UserRole role = UserRole.Factory.newInstance();

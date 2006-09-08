@@ -25,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.util.BusinessKey;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -44,13 +46,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( Gene.class );
 
-            if ( gene.getOfficialSymbol() != null && gene.getTaxon() != null ) {
-                queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) ).add(
-                        Restrictions.eq( "taxon", gene.getTaxon() ) );
-            }
-            if ( gene.getNcbiId() != null ) {
-                queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
-            }
+            BusinessKey.checkKey( gene );
+
+          BusinessKey.createQueryObject( queryObject, gene );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -76,9 +74,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     public Gene findOrCreate( Gene gene ) {
-        if ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getNcbiId() == null ) {
-            throw new IllegalArgumentException( "Gene must have official symbol and taxon, or ncbiId" );
-        }
         Gene newGene = this.find( gene );
         if ( newGene != null ) {
             return newGene;

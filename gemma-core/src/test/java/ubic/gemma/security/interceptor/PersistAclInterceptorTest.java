@@ -48,11 +48,6 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
     ProtocolService protocolService;
     HardwareService hardwareService;
 
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-    }
-
     /**
      * Calling the method saveArrayDesign, which should have the PersistAclInterceptor.invoke called on it after the
      * actual method invocation.
@@ -79,11 +74,7 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
      * @throws Exception
      */
     public void testCascadeCreateAndDelete() throws Exception {
-        ExpressionExperiment ee = this.setExpressionExperimentDependencies();
-
-        PersisterHelper p = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        ee = ( ExpressionExperiment ) p.persist( ee );
-
+        ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );
         }
@@ -108,7 +99,6 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
     }
 
     public void testNoCascadeDelete() throws Exception {
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         Protocol p = Protocol.Factory.newInstance();
         p.setName( "protocol" );
 

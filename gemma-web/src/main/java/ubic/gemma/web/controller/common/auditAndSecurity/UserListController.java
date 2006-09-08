@@ -48,7 +48,7 @@ public class UserListController implements Controller {
             log.debug( "entering 'handleRequest' method..." );
         }
 
-        return new ModelAndView( "userList", Constants.USER_LIST, userService.getUsers() );
+        return new ModelAndView( "userList", Constants.USER_LIST, userService.loadAll() );
     }
 
     public void setUserService( UserService userService ) {

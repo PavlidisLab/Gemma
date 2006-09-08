@@ -41,9 +41,8 @@ public class UserServiceImplTest extends TestCase {
         userDaoMock = createMock( UserDao.class );
         userService.setUserDao( userDaoMock );
         testUser.setEmail( "foo@bar" );
-        testUser.setFirstName( "Foo" );
+        testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
-        testUser.setMiddleName( "" );
         testUser.setUserName( "foobar" );
         testUser.setPassword( "aija" );
         testUser.setPasswordHint( "I am an idiot" );
@@ -60,7 +59,7 @@ public class UserServiceImplTest extends TestCase {
         userDaoMock.findByUserName( "foobar" );
         expectLastCall().andReturn( testUser );
         replay( userDaoMock );
-        userService.getUser( "foobar" );
+        userService.findByUserName( "foobar" );
         verify( userDaoMock );
     }
 
@@ -75,7 +74,7 @@ public class UserServiceImplTest extends TestCase {
         userDaoMock.create( testUser );
         expectLastCall().andReturn( testUser );
         replay( userDaoMock );
-        userService.saveUser( testUser );
+        userService.create( testUser );
         verify( userDaoMock );
     }
 
@@ -85,7 +84,7 @@ public class UserServiceImplTest extends TestCase {
         userDaoMock.findByUserName( "foobar" );
         expectLastCall().andReturn( testUser ); // this should get called to find the user to remove.
         replay( userDaoMock );
-        userService.removeUser( "foobar" );
+        userService.delete( "foobar" );
         verify( userDaoMock );
     }
 

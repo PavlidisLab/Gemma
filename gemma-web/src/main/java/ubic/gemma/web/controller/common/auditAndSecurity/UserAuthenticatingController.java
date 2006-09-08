@@ -29,6 +29,7 @@ import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.acegisecurity.providers.dao.DaoAuthenticationProvider;
 import org.acegisecurity.providers.encoding.ShaPasswordEncoder;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -70,7 +71,13 @@ public abstract class UserAuthenticatingController extends BaseFormController {
             return;
         }
 
-        String unencryptedPassword = user.getPassword();
+        String unencryptedPassword;
+        if ( user.getNewPassword() != null ) {
+            unencryptedPassword = user.getNewPassword();
+        } else {
+            unencryptedPassword = user.getPassword();
+        }
+        assert StringUtils.isNotBlank( unencryptedPassword );
         String encryptedPassword = null;
         encryptedPassword = encryptPassword( authenticationManager, unencryptedPassword );
         assert encryptedPassword != null;
@@ -131,7 +138,7 @@ public abstract class UserAuthenticatingController extends BaseFormController {
         }
         Authentication authentication = providerManager.doAuthentication( auth );
         assert authentication.isAuthenticated() : "New user " + user.getUserName()
-                + " wasn't authenticated with password " + user.getPassword() + ".";
+                + " wasn't authenticated with password.";
         SecurityContextHolder.getContext().setAuthentication( authentication );
     }
 

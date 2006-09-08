@@ -21,10 +21,6 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -36,7 +32,7 @@ public class PersonImpl extends ubic.gemma.model.common.auditAndSecurity.Person 
      * @see ubic.gemma.model.common.auditAndSecurity.Person#getFullName()
      */
     public java.lang.String getFullName() {
-        return this.getFirstName() + " " + this.getLastName();
+        return this.getName() + " " + this.getLastName();
     }
 
 }

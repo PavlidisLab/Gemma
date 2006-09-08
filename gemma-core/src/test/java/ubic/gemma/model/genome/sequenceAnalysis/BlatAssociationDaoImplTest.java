@@ -25,7 +25,9 @@ import org.apache.commons.lang.RandomStringUtils;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductDao;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -43,6 +45,10 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
 
     private BlatAssociationDao blatAssociationDao;
 
+    BlatResultDao blatResultDao;
+    BioSequenceDao bioSequenceDao;
+    GeneProductDao geneProductDao;
+
     /*
      * (non-Javadoc)
      * 
@@ -51,6 +57,10 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        blatResultDao = ( BlatResultDao ) getBean( "blatResultDao" );
+        bioSequenceDao = ( BioSequenceDao ) getBean( "bioSequenceDao" );
+        geneProductDao = ( GeneProductDao ) getBean( "geneProductDao" );
+
         for ( int i = 0; i < 20; i++ ) {
             BioSequence bs = this.getTestPersistentBioSequence();
             if ( i == 11 ) {

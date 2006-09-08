@@ -20,9 +20,13 @@ package ubic.gemma.security.principal;
 
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.userdetails.UserDetails;
 import org.acegisecurity.userdetails.UserDetailsService;
 import org.acegisecurity.userdetails.UsernameNotFoundException;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.dao.DataAccessException;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -34,9 +38,10 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  * @author pavlidis
  * @version $Id$
  */
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService, ApplicationContextAware {
 
     UserService userService;
+    private ApplicationContext applicationContext;
 
     /**
      * @param userService the userService to set
@@ -51,6 +56,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * @see org.acegisecurity.userdetails.UserDetailsService#loadUserByUsername(java.lang.String)
      */
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
+
+        /*
+         * This is needed to provide initial authentication to the session, so logging in can be attempted. Alternative:
+         * get the user without using an authenticated method. (e.g., through a
+         */
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            ProviderManager providerManager = ( ProviderManager ) applicationContext.getBean( "authenticationManager" );
+            AuthenticationUtils.anonymousAuthenticate( username, providerManager );
+        }
 
         User u = userService.findByUserName( username );
 
@@ -76,4 +90,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return auth.getPrincipal().toString();
 
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+     */
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.applicationContext = applicationContext;
+
+    }
+
 }

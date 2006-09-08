@@ -56,7 +56,7 @@ public class ExceptionTag extends TagSupport {
             buf.append( exception.getMessage() );
             buf.append( "</p>" );
             buf
-                    .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" columns=\"120\" >" );
+                    .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
             buf.append( ExceptionUtils.getFullStackTrace( exception ) );
             buf.append( "</textarea>" );
         }

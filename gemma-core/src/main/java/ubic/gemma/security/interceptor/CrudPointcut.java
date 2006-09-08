@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 
 /**
- * Pointcut to identify CRUD operations. Used for auditing.
+ * Pointcut to identify CRUD operations on Auditables. Used for auditing.
  * 
  * @author pavlidis
  * @version $Id$
@@ -35,10 +35,12 @@ public class CrudPointcut extends StaticMethodMatcherPointcut {
 
     protected static Log log = LogFactory.getLog( CrudPointcut.class.getName() );
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Checks if methods are CRUD operations. This should intercept methods called from services - any class and method
+     * that is wired to the serviceSecurityInterceptor
      * 
      * @see org.springframework.aop.MethodMatcher#matches(java.lang.reflect.Method, java.lang.Class)
+     * @see org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor
      */
     @SuppressWarnings("unused")
     public boolean matches( Method method, Class targetClass ) {
