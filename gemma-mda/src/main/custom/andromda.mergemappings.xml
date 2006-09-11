@@ -37,6 +37,8 @@
         <to>
             <![CDATA[
 <value>classpath*:/ubic/gemma/applicationContext-security.xml</value>
+<value>classpath*:/ubic/gemma/applicationContext-serviceBeans.xml</value>
+<value>classpath*:/ubic/gemma/applicationContext-persisterBeans.xml</value>
 ]]>
         </to>
     </mapping>

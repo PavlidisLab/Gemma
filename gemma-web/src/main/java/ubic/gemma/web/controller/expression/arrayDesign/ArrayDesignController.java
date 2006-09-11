@@ -84,7 +84,7 @@ public class ArrayDesignController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns", arrayDesignService.getAllArrayDesigns() );
+        return new ModelAndView( "arrayDesigns" ).addObject( "arrayDesigns", arrayDesignService.loadAll() );
     }
 
     /**

@@ -137,7 +137,7 @@ public class AffyProbeReader extends BasicLineMapParser {
 
     @Override
     public Collection<CompositeSequence> getResults() {
-        return results.values();
+        return new HashSet<CompositeSequence>( results.values() ); // make sure we don't get a HashMap$values
     }
 
     @Override

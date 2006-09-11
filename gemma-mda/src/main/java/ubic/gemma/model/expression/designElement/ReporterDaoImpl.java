@@ -51,7 +51,7 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
 
             // This allows finding without having a persistent arrayDesign. TODO make this use the full arraydesign
             // business key.
-            queryObject.createCriteria( "reporterArrayDesign" ).add(
+            queryObject.createCriteria( "arrayDesign" ).add(
                     Restrictions.eq( "name", reporter.getArrayDesign().getName() ) );
 
             java.util.List results = queryObject.list();
@@ -84,10 +84,10 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
             throw new IllegalArgumentException( "reporter must have name and arrayDesign." );
         }
 
-        Reporter newReporter = this.find( reporter );
-        if ( newReporter != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing reporter: " + newReporter );
-            return newReporter;
+        Reporter existingReporter = this.find( reporter );
+        if ( existingReporter != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing reporter: " + existingReporter );
+            return existingReporter;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new reporter: " + reporter.getName() );
         Reporter result = ( Reporter ) create( reporter );

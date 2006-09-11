@@ -35,6 +35,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.bean id="geneLoader"
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @deprecated Use the regular persisterHelper directly
  */
 public class GenePersister implements Persister {
     protected static final Log log = LogFactory.getLog( GenePersister.class );

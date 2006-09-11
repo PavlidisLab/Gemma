@@ -18,11 +18,9 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004 - 2006 University of British Columbia
- * 
  * @author keshav
  * @version $Id$
  */
@@ -61,6 +59,21 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     @Override
     protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
         return this.getTaxonDao().findOrCreate( taxon );
+    }
+
+    @Override
+    protected Taxon handleFindByScientificName( String scientificName ) throws Exception {
+        return this.getTaxonDao().findByScientificName( scientificName );
+    }
+
+    @Override
+    protected Taxon handleFindByCommonName( String commonName ) throws Exception {
+        return this.getTaxonDao().findByCommonName( commonName );
+    }
+
+    @Override
+    protected Collection<Taxon> handleLoadAll() throws Exception {
+        return this.getTaxonDao().loadAll();
     }
 
 }

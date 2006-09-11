@@ -71,11 +71,11 @@ public class TestDataAddingController extends SimpleFormController {
         TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
         helper.setPersisterHelper( this.persisterHelper );
         helper.setExternalDatabaseService( externalDatabaseService );
-
-        // ProgressJob job = ProgressManager.createProgressJob( request.getRemoteUser(),
-        // "Test data adding to the database" );
+//
+//         ProgressJob job = ProgressManager.createProgressJob( request.getRemoteUser(),
+//                "Test data adding to the database" );
         ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies();
-        // ProgressManager.destroyProgressJob( job );
+     //   ProgressManager.destroyProgressJob( job );
 
         Map<Object, Object> model = new HashMap<Object, Object>();
         model.put( "expressionExperiment", ee );

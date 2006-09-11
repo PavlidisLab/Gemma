@@ -21,8 +21,13 @@ package ubic.gemma.persistence;
 import java.util.Collection;
 
 /**
- * Interface defining the ability to create or remove domain objects in bulk or singly. The contract of this interface
- * is that all objects will be checked to make sure they satisfy all not-null constraints.
+ * Interface defining the ability to create domain objects in bulk or singly. Classes that implement this interface
+ * should expect:
+ * <ul>
+ * <li>To be passed an object graph that is valid - that is, all non-nullable properties and associations are filled
+ * in.
+ * <li>The objects passed might include objects that are already persistent in the system.
+ * </ul>
  * 
  * @author keshav
  * @author Paul Pavlidis

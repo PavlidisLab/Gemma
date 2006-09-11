@@ -33,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
-import org.springframework.orm.hibernate3.HibernateInterceptor;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -41,6 +40,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
+import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.ReflectionUtil;
@@ -50,6 +50,10 @@ import ubic.gemma.util.ReflectionUtil;
  * 
  * @author pavlidis
  * @version $Id$
+ * @spring.bean name="auditAdvice"
+ * @spring.property name="userDao" ref="userDao"
+ * @spring.property name="crudUtils" ref="crudUtils"
+ * @spring.property name="auditTrailDao" ref="auditTrailDao"
  */
 public class AuditInterceptor implements MethodInterceptor {
 
@@ -72,17 +76,14 @@ public class AuditInterceptor implements MethodInterceptor {
 
     UserDao userDao;
 
-    CrudInterceptorUtils crudUtils;
-
-    @SuppressWarnings("unused")
-    private HibernateInterceptor hibernateInterceptor;
+    CrudUtils crudUtils;
 
     /**
      * 
      */
     public AuditInterceptor() {
         super();
-        this.crudUtils = new CrudInterceptorUtils();
+        this.crudUtils = new CrudUtils();
 
         try {
             AUDIT_READ = ConfigUtils.getBoolean( "audit.read" );
@@ -102,15 +103,18 @@ public class AuditInterceptor implements MethodInterceptor {
     public void before( Method method, Object[] args, Object target ) {
         Auditable d = null;
 
-        if ( args != null ) { // like 'loadAll' methods.
+        if ( args != null ) { // some don't take args, like 'loadAll' methods.
 
             Object object = args[0];
 
-            if ( Collection.class.isAssignableFrom( object.getClass() ) ) {
+            if ( object instanceof Collection ) {
                 for ( Object object2 : ( Collection<?> ) object ) {
-                    processBefore( method, ( Auditable ) object2 );
+                    if ( object2 instanceof Auditable ) {
+                        processBefore( method, ( Auditable ) object2 );
+                    }
                 }
-            } else if ( !Auditable.class.isAssignableFrom( object.getClass() ) ) {
+                return;
+            } else if ( !( object instanceof Auditable ) ) {
                 return;
             }
 
@@ -274,6 +278,7 @@ public class AuditInterceptor implements MethodInterceptor {
         String userName = UserDetailsServiceImpl.getCurrentUsername();
         assert userName != null;
         if ( currentUsers.get( userName ) == null ) {
+            assert userDao != null;
             currentUsers.put( userName, userDao.findByUserName( userName ) );
         }
         return currentUsers.get( userName );
@@ -291,7 +296,7 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( methodName.equals( "findOrCreate" ) ) {
             addLoadOrCreateAuditEvent( returnValue );
-        } else if ( AUDIT_READ && CrudInterceptorUtils.methodIsLoad( m ) ) {
+        } else if ( AUDIT_READ && CrudUtils.methodIsLoad( m ) ) {
             if ( returnValue != null ) {
                 if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
                     for ( Object object : ( Collection<?> ) returnValue ) {
@@ -305,7 +310,7 @@ public class AuditInterceptor implements MethodInterceptor {
                 }
             }
 
-        } else if ( AUDIT_CREATE && CrudInterceptorUtils.methodIsCreate( m ) ) {
+        } else if ( AUDIT_CREATE && CrudUtils.methodIsCreate( m ) ) {
             addCreateAuditEvent( returnValue );
         }
         processAssociations( m, returnValue );
@@ -325,27 +330,38 @@ public class AuditInterceptor implements MethodInterceptor {
             for ( int j = 0; j < propertyNames.length; j++ ) {
                 CascadeStyle cs = cascadeStyles[j];
 
-                // log.debug( "Checking " + propertyNames[j] + " for cascade audit" );
+                if ( log.isTraceEnabled() ) log.trace( "Checking " + propertyNames[j] + " for cascade audit" );
 
+                /*
+                 * If the action being taken will result in a hibernate cascade, we need to update the audit information
+                 * for the child objects. This is because this interceptor is expected to be triggered by service
+                 * actions. Low-level hibernate activities (like cascading updates) are not seen.
+                 */
                 if ( !crudUtils.needCascade( m, cs ) ) {
-                    // log.debug( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
+                    if ( log.isTraceEnabled() )
+                        log.trace( "Not processing association " + propertyNames[j] + ", Cascade=" + cs );
                     continue;
                 }
 
                 PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );
+                Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
+
+                if ( associatedObject == null ) continue;
+
                 Class<?> propertyType = descriptor.getPropertyType();
 
                 if ( Auditable.class.isAssignableFrom( propertyType ) ) {
-                    Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Processing audit for " + propertyNames[j] + ", Cascade=" + cs );
+
+                    if ( log.isTraceEnabled() )
+                        log.trace( "Processing audit for " + propertyNames[j] + ", Cascade=" + cs );
                     processAfter( m, ( Auditable ) associatedObject );
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
-                    Collection associatedObjects = ( Collection ) ReflectionUtil.getProperty( object, descriptor );
+                    Collection associatedObjects = ( Collection ) associatedObject;
+
                     for ( Object object2 : associatedObjects ) {
                         if ( Auditable.class.isAssignableFrom( object2.getClass() ) ) {
-                            if ( log.isDebugEnabled() ) {
-                                log.debug( "Processing audit for member " + object2 + " of collection "
+                            if ( log.isTraceEnabled() ) {
+                                log.trace( "Processing audit for member " + object2 + " of collection "
                                         + propertyNames[j] + ", Cascade=" + cs );
                             }
                             processAfter( m, ( Auditable ) object2 );
@@ -375,13 +391,13 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( method.getName().equals( "create" ) ) {
             // Defer until afterwards.
-        } else if ( AUDIT_UPDATE && CrudInterceptorUtils.methodIsUpdate( method ) ) {
+        } else if ( AUDIT_UPDATE && CrudUtils.methodIsUpdate( method ) ) {
             addUpdateAuditEvent( d ); // no return value so we have to do it before.
-        } else if ( CrudInterceptorUtils.methodIsLoad( method ) ) {
+        } else if ( CrudUtils.methodIsLoad( method ) ) {
             // Defer until afterwards.
         } else if ( method.getName().startsWith( "find" ) ) {
             // Defer until afterwards.
-        } else if ( AUDIT_DELETE && CrudInterceptorUtils.methodIsDelete( method ) ) {
+        } else if ( AUDIT_DELETE && CrudUtils.methodIsDelete( method ) ) {
             addDeleteAuditEvent( d );
         } else {
             throw new IllegalArgumentException( "Shouldn't be getting method " + method );
@@ -390,23 +406,10 @@ public class AuditInterceptor implements MethodInterceptor {
     }
 
     /**
-     * See http://forum.hibernate.org/viewtopic.php?p=2231400
-     * 
-     * @param d
-     * @param at
-     * @deprecated
+     * @param crudUtils the crudUtils to set
      */
-    private void refreshEvents( AuditTrail at ) {
-        // Collection<AuditEvent> events = new ArrayList<AuditEvent>( at.getEvents() );
-        // at.setEvents( events );
-    }
-
-    /**
-     * @param hibernateInterceptor
-     */
-    public void setHibernateInterceptor( HibernateInterceptor hibernateInterceptor ) {
-        this.hibernateInterceptor = hibernateInterceptor;
-        crudUtils.initMetaData( hibernateInterceptor );
+    public void setCrudUtils( CrudUtils crudUtils ) {
+        this.crudUtils = crudUtils;
     }
 
 }

@@ -20,32 +20,10 @@
  */
 package ubic.gemma.model.expression.designElement;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-
 /**
  * @author pavlidis
  * @version $Id$
  */
 public class ReporterImpl extends ubic.gemma.model.expression.designElement.Reporter {
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.DesignElement#getArrayDesign()
-     */
-    @Override
-    public ArrayDesign getArrayDesign() {
-        return this.getReporterArrayDesign();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.designElement.DesignElement#setArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        setReporterArrayDesign( arrayDesign );
-    }
 
 }

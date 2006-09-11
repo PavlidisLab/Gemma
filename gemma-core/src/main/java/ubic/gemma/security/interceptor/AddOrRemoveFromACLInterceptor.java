@@ -40,7 +40,6 @@ import org.springframework.aop.AfterReturningAdvice;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.orm.hibernate3.HibernateInterceptor;
 
 import ubic.gemma.model.association.Relationship;
 import ubic.gemma.model.common.Securable;
@@ -53,6 +52,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.security.principal.UserDetailsServiceImpl;
 import ubic.gemma.util.ReflectionUtil;
 
@@ -68,13 +68,16 @@ import ubic.gemma.util.ReflectionUtil;
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.security.interceptor.AclPointcut
+ * @spring.bean name="aclAdvice"
+ * @spring.property name="crudUtils" ref="crudUtils"
+ * @spring.property name="basicAclExtendedDao" ref="basicAclExtendedDao"
  */
 public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
 
-    CrudInterceptorUtils crudUtils;
+    CrudUtils crudUtils;
 
     public AddOrRemoveFromACLInterceptor() {
-        this.crudUtils = new CrudInterceptorUtils();
+        this.crudUtils = new CrudUtils();
     }
 
     /**
@@ -116,9 +119,6 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     }
 
     private BasicAclExtendedDao basicAclExtendedDao;
-
-    @SuppressWarnings("unused")
-    private HibernateInterceptor hibernateInterceptor;
 
     /**
      * Creates the acl_permission object and the acl_object_identity object.
@@ -211,21 +211,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
     }
 
     /**
-     * @param hibernateInterceptor
-     */
-    public void setHibernateInterceptor( HibernateInterceptor hibernateInterceptor ) {
-        this.hibernateInterceptor = hibernateInterceptor;
-        crudUtils.initMetaData( hibernateInterceptor );
-    }
-
-    /**
      * @param retValue
      * @param m
      * @param args
      * @return
      */
     private Object getPersistentObject( Object retValue, Method m, Object[] args ) {
-        if ( CrudInterceptorUtils.methodIsDelete( m ) || CrudInterceptorUtils.methodIsUpdate( m ) ) {
+        if ( CrudUtils.methodIsDelete( m ) || CrudUtils.methodIsUpdate( m ) ) {
             return args[0];
         }
         // assert retValue != null : "Null return value from method " + m.getName();
@@ -251,14 +243,19 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             }
 
             PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyNames[j] );
+
+            Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
+
+            if ( associatedObject == null ) continue;
+
             Class<?> propertyType = descriptor.getPropertyType();
 
             if ( Securable.class.isAssignableFrom( propertyType ) ) {
-                Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
+
                 if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
                 processObject( m, associatedObject );
             } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
-                Collection associatedObjects = ( Collection ) ReflectionUtil.getProperty( object, descriptor );
+                Collection associatedObjects = ( Collection ) associatedObject;
                 for ( Object object2 : associatedObjects ) {
                     if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
                         if ( log.isDebugEnabled() ) {
@@ -294,10 +291,10 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         // if ( log.isDebugEnabled() ) {
         // log.debug( "Processing permissions for: " + object.getClass().getName() + " for method " + m.getName() );
         // }
-        if ( CrudInterceptorUtils.methodIsCreate( m ) ) {
+        if ( CrudUtils.methodIsCreate( m ) ) {
             addPermission( object );
             processAssociations( m, object );
-        } else if ( CrudInterceptorUtils.methodIsDelete( m ) ) {
+        } else if ( CrudUtils.methodIsDelete( m ) ) {
             deletePermission( object );
             processAssociations( m, object );
         } else {
@@ -390,6 +387,13 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         }
         // if ( log.isDebugEnabled() ) log.debug( "Granting READ_WRITE privileges" );
         return SimpleAclEntry.READ_WRITE;
+    }
+
+    /**
+     * @param crudUtils the crudUtils to set
+     */
+    public void setCrudUtils( CrudUtils crudUtils ) {
+        this.crudUtils = crudUtils;
     }
 
 }

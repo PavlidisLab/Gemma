@@ -33,9 +33,12 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessor;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.web.controller.BaseFormController;
@@ -57,8 +60,11 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="validator" ref="arrayDesignSequenceAddValidator"
  * @spring.property name="bioSequenceService" ref="bioSequenceService"
+ * @spring.property name="taxonService" ref="taxonService"
  */
 public class ArrayDesignSequenceAddController extends BaseFormController {
+
+    private TaxonService taxonService;
 
     public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
         public String getAsText() {
@@ -70,6 +76,21 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
             Object ad = arrayDesignService.findArrayDesignByName( text );
             if ( ad == null ) {
                 throw new IllegalArgumentException( "There is no array design with name=" + text );
+            }
+            this.setValue( ad );
+        }
+    }
+
+    public class TaxonPropertyEditor extends PropertyEditorSupport {
+        public String getAsText() {
+            return ( ( Taxon ) this.getValue() ).getScientificName();
+        }
+
+        public void setAsText( String text ) throws IllegalArgumentException {
+            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
+            Object ad = taxonService.findByScientificName( text );
+            if ( ad == null ) {
+                throw new IllegalArgumentException( "There is no taxon with name=" + text );
             }
             this.setValue( ad );
         }
@@ -112,8 +133,14 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
         List<String> arrayDesignNames = new ArrayList<String>();
 
-        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.getAllArrayDesigns() ) {
+        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
             arrayDesignNames.add( arrayDesign.getName() );
+        }
+
+        List<String> taxonNames = new ArrayList<String>();
+
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            taxonNames.add( taxon.getScientificName() );
         }
 
         Collections.sort( arrayDesignNames );
@@ -121,6 +148,8 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
         mapping.put( "arrayDesigns", arrayDesignNames );
 
         mapping.put( "sequenceTypes", new ArrayList<String>( SequenceType.literals() ) );
+
+        mapping.put( "taxa", taxonNames );
 
         return mapping;
 
@@ -140,6 +169,7 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
         ArrayDesign arrayDesign = commandObject.getArrayDesign();
 
+        // should be done by validaiton.
         if ( arrayDesign == null ) {
             Object[] args = new Object[] { getText( "arrayDesignSequenceAddCommand.arrayDesign", request.getLocale() ) };
             errors.rejectValue( "arrayDesign", "errors.required", args, "Array Design is required" );
@@ -153,6 +183,9 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
             errors.rejectValue( "sequenceType", "sequenceType.missing", "Sequence Type is missing" );
             return showForm( request, response, errors );
         }
+
+        Taxon taxon = commandObject.getTaxon();
+        // validate
 
         // validate array design has design elements.
         if ( sequenceType == SequenceType.AFFY_PROBE ) {
@@ -183,13 +216,19 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
         CommonsMultipartFile sequenceFile = FileUploadUtil.uploadFile( request, fileUpload, "sequenceFile.file" );
 
         // process it
-        ArrayDesignSequenceProcessor processor = new ArrayDesignSequenceProcessor();
+        ArrayDesignSequenceProcessingService processor = new ArrayDesignSequenceProcessingService();
 
-        processor.processArrayDesign( arrayDesign, sequenceFile.getInputStream(), sequenceType );
+        Collection<BioSequence> bioSequences = processor.processArrayDesign( arrayDesign,
+                sequenceFile.getInputStream(), sequenceType, taxon );
 
-        // FIXME put the number of processed sequences in the request so we can display it
+        Map<String, Object> model = new HashMap<String, Object>();
+        model.put( "numSequencesProcessed", bioSequences.size() );
 
-        return new ModelAndView( this.getSuccessView() );
+        // need to persist the bioSequences
+
+        // then update the designelements.
+
+        return new ModelAndView( this.getSuccessView(), model );
 
     }
 
@@ -209,6 +248,13 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
      */
     public void setBioSequenceService( BioSequenceService bioSequenceService ) {
         this.bioSequenceService = bioSequenceService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

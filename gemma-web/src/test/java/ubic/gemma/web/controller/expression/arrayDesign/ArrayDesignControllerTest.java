@@ -37,7 +37,7 @@ public class ArrayDesignControllerTest extends BaseTransactionalSpringContextTes
 
         // arrayDesignController = ( ArrayDesignController ) ctx.getBean( "arrayDesignController" );
 
-        testArrayDesign = ArrayDesign.Factory.newInstance();
+       
 
         // arrayDesignService = ( ArrayDesignService ) ctx.getBean( "arrayDesignService" );
 

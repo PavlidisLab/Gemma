@@ -30,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -94,6 +95,17 @@ public class BusinessKey {
     }
 
     /**
+     * @param factorValue
+     */
+    public static void checkKey( FactorValue factorValue ) {
+        if ( factorValue.getValue() == null && factorValue.getMeasurement() == null
+                && factorValue.getOntologyEntry() == null ) {
+            throw new IllegalArgumentException(
+                    "FactorValue must have a value (or associated measurement or ontology entry)." );
+        }
+    }
+
+    /**
      * @param gene
      */
     public static void checkKey( Gene gene ) {
@@ -101,6 +113,15 @@ public class BusinessKey {
             throw new IllegalArgumentException( "Gene must have official symbol with taxon, or ncbiId" );
         }
 
+    }
+
+    /**
+     * @param geneProduct
+     */
+    public static void checkKey( GeneProduct geneProduct ) {
+        if ( geneProduct.getNcbiId() == null ) {
+            throw new IllegalArgumentException( "Gene must have ncbiId" );
+        }
     }
 
     /**
@@ -189,6 +210,20 @@ public class BusinessKey {
 
     /**
      * @param queryObject
+     * @param factorValue
+     */
+    public static void createQueryObject( Criteria queryObject, FactorValue factorValue ) {
+        if ( factorValue.getValue() != null ) {
+            queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
+        } else if ( factorValue.getOntologyEntry() != null ) {
+            BusinessKey.attachCriteria( queryObject, factorValue.getOntologyEntry(), "ontologyEntry" );
+        } else if ( factorValue.getMeasurement() != null ) {
+            queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
+        }
+    }
+
+    /**
+     * @param queryObject
      * @param gene
      */
     public static void createQueryObject( Criteria queryObject, Gene gene ) {
@@ -200,6 +235,14 @@ public class BusinessKey {
                     Restrictions.eq( "taxon", gene.getTaxon() ) );
         }
 
+    }
+
+    /**
+     * @param queryObject
+     * @param geneProduct
+     */
+    public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
+        queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
     }
 
     /**
@@ -291,22 +334,5 @@ public class BusinessKey {
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
         }
-    }
-
-    /**
-     * @param geneProduct
-     */
-    public static void checkKey( GeneProduct geneProduct ) {
-        if ( geneProduct.getNcbiId() == null ) {
-            throw new IllegalArgumentException( "Gene must have ncbiId" );
-        }
-    }
-
-    /**
-     * @param queryObject
-     * @param geneProduct
-     */
-    public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
-        queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
     }
 }

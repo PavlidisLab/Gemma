@@ -215,7 +215,7 @@ public class UserFormController extends UserAuthenticatingController {
                 user = new UserUpdateCommand();
                 UserRole role = UserRole.Factory.newInstance();
                 role.setName( Constants.USER_ROLE );
-                role.setUserName( user.getUserName() ); // FIXME = UserRoleService should set this.
+                role.setUserName( user.getUserName() ); 
                 user.getRoles().add( role );
             }
 

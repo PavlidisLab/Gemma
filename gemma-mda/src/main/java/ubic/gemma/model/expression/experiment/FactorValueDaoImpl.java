@@ -23,7 +23,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -33,7 +32,7 @@ import ubic.gemma.util.BusinessKey;
  */
 public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.FactorValueDaoBase {
 
-    private static Log log = LogFactory.getLog( FactorValueDaoImpl.class.getName() );
+    private Log log = LogFactory.getLog( getClass().getName() );
 
     /*
      * (non-Javadoc)
@@ -45,13 +44,9 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         try {
             Criteria queryObject = super.getSession( false ).createCriteria( FactorValue.class );
 
-            if ( factorValue.getValue() != null ) {
-                queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
-            } else if ( factorValue.getOntologyEntry() != null ) {
-                BusinessKey.attachCriteria( queryObject, factorValue.getOntologyEntry(), "ontologyEntry" );
-            } else if ( factorValue.getMeasurement() != null ) {
-                queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
-            }
+            BusinessKey.checkKey( factorValue );
+
+            BusinessKey.createQueryObject( queryObject, factorValue );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -97,16 +92,11 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
      */
     @Override
     public FactorValue findOrCreate( FactorValue factorValue ) {
-        if ( factorValue.getValue() == null && factorValue.getMeasurement() == null
-                && factorValue.getOntologyEntry() == null ) {
-            log.debug( "FactorValue must have a value (or associated measurement or ontology entry)." );
-            return null;
+        FactorValue existingFactorValue = this.find( factorValue );
+        if ( existingFactorValue != null ) {
+            return existingFactorValue;
         }
-        FactorValue newFactorValue = this.find( factorValue );
-        if ( newFactorValue != null ) {
-            return newFactorValue;
-        }
-        log.debug( "Creating new factorValue" );
+        if ( log.isDebugEnabled() ) log.debug( "Creating new factorValue" );
         return create( factorValue );
     }
 }

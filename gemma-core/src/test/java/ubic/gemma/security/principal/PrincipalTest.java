@@ -35,12 +35,11 @@ import ubic.gemma.util.ConfigUtils;
 public class PrincipalTest extends BaseSpringContextTest {
 
     /**
-     * This test will not work if the administrator password is not 'test'.
-     * 
      * @throws Exception
      */
     public final void testLogin() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ),  ConfigUtils.getString( "gemma.admin.password" ) );
+        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ),
+                ConfigUtils.getString( "gemma.admin.password" ) );
 
         ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
         Authentication authentication = providerManager.doAuthentication( auth );
@@ -48,7 +47,8 @@ public class PrincipalTest extends BaseSpringContextTest {
     }
 
     public final void testLoginWrongPassword() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ), "wrong password" );
+        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ),
+                "wrong password" );
 
         ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
         try {

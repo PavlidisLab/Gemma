@@ -25,34 +25,39 @@ import java.util.HashSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-
-import junit.framework.TestCase;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignSequenceProcessorTest extends TestCase {
+public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
     InputStream seqFile;
     InputStream probeFile;
     InputStream designElementStream;
+    Taxon taxon;
 
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    protected void onSetUp() throws Exception {
+        super.onSetUp();
 
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
 
         seqFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_target" );
 
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
+
+        taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Mus musculus" );
+        assert taxon != null;
     }
 
     public void testAssignSequencesToDesignElements() throws Exception {
-        ArrayDesignSequenceProcessor app = new ArrayDesignSequenceProcessor();
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         app.assignSequencesToDesignElements( designElements, seqFile );
         CompositeSequenceParser parser = new CompositeSequenceParser();
         parser.parse( designElementStream );
@@ -64,7 +69,7 @@ public class ArrayDesignSequenceProcessorTest extends TestCase {
     }
 
     public void testAssignSequencesToDesignElementsMissingSequence() throws Exception {
-        ArrayDesignSequenceProcessor app = new ArrayDesignSequenceProcessor();
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         CompositeSequenceParser parser = new CompositeSequenceParser();
         parser.parse( designElementStream );
@@ -101,8 +106,8 @@ public class ArrayDesignSequenceProcessorTest extends TestCase {
     }
 
     public void testProcessAffymetrixDesign() throws Exception {
-        ArrayDesignSequenceProcessor app = new ArrayDesignSequenceProcessor();
-        ArrayDesign result = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile );
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        ArrayDesign result = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile, taxon );
 
         assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
         assertEquals( "reporter count", 528, result.getReporters().size() );
@@ -114,8 +119,10 @@ public class ArrayDesignSequenceProcessorTest extends TestCase {
 
     public void testProcessNonAffyDesign() throws Exception {
 
-        ArrayDesignSequenceProcessor app = new ArrayDesignSequenceProcessor();
-        ArrayDesign arrayDesign = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile );
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        ArrayDesign arrayDesign = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile, taxon );
+
+        assertNotNull( arrayDesign.getId() );
 
         // erase the reporters and biological charactersistics
         arrayDesign.getReporters().clear();
@@ -124,7 +131,7 @@ public class ArrayDesignSequenceProcessorTest extends TestCase {
             cs.setBiologicalCharacteristic( null );
         }
 
-        app.processArrayDesign( arrayDesign, seqFile, SequenceType.EST );
+        app.processArrayDesign( arrayDesign, seqFile, SequenceType.EST, taxon );
 
         assertEquals( "composite sequence count", 33, arrayDesign.getCompositeSequences().size() );
         assertEquals( "reporter count", 33, arrayDesign.getReporters().size() );

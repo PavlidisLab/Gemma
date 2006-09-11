@@ -38,12 +38,11 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        arrayDesignDao = ( ArrayDesignDao ) getBean( "arrayDesignDao" );
 
-        // FIXME for some reason the getTestPersistentArrayDesign method doesn't work - get empty collections.
         ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "foobly" );
+        ad = ( ArrayDesign ) arrayDesignDao.create( ad );
 
         Reporter r1 = Reporter.Factory.newInstance();
         r1.setName( "rfoo" );
@@ -51,6 +50,11 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         r2.setName( "rbar" );
         Reporter r3 = Reporter.Factory.newInstance();
         r3.setName( "rfar" );
+
+        r1.setArrayDesign( ad );
+        r2.setArrayDesign( ad );
+        r3.setArrayDesign( ad );
+
         ad.getReporters().add( r1 );
         ad.getReporters().add( r2 );
         ad.getReporters().add( r3 );
@@ -59,21 +63,54 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         c1.setName( "cfoo" );
         CompositeSequence c2 = CompositeSequence.Factory.newInstance();
         c2.setName( "cbar" );
+        CompositeSequence c3 = CompositeSequence.Factory.newInstance();
+        c3.setName( "cbar" );
+
+        c1.setArrayDesign( ad );
+        c2.setArrayDesign( ad );
+        c3.setArrayDesign( ad );
+
+        c1.getComponentReporters().add( r1 );
+        c2.getComponentReporters().add( r2 );
+        c3.getComponentReporters().add( r3 );
+
         ad.getCompositeSequences().add( c1 );
         ad.getCompositeSequences().add( c2 );
+        ad.getCompositeSequences().add( c3 );
 
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+    }
 
-        // ad = this.getTestPersistentArrayDesign( 2, true );
+    public void testCascadeCreateCompositeSequences() {
+        arrayDesignDao.update( ad ); // should cascade.
+        flushSession(); // fails without this.
+        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
+        assertNotNull( cs.getId() );
+        assertNotNull( cs.getArrayDesign().getId() );
+    }
 
+    public void testCascadeDeleteOrphanCompositeSequences() {
+        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
+        ad.getCompositeSequences().remove( cs );
+        cs.setArrayDesign( null );
+        arrayDesignDao.update( ad );
+        assertEquals( 2, ad.getCompositeSequences().size() );
+    }
+
+    public void testCascadeDeleteOrphanReporters() {
+        Reporter cs = ad.getReporters().iterator().next();
+        ad.getReporters().remove( cs );
+        cs.setArrayDesign( null );
+        arrayDesignDao.update( ad );
+        assertEquals( 2, ad.getReporters().size() );
     }
 
     /*
      * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numCompositeSequences(ArrayDesign)'
      */
     public void testNumCompositeSequencesArrayDesign() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Integer actualValue = arrayDesignDao.numCompositeSequences( ad.getId() );
-        Integer expectedValue = 2;
+        Integer expectedValue = 3;
         assertEquals( expectedValue, actualValue );
     }
 
@@ -81,18 +118,21 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
      * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numReporters(ArrayDesign)'
      */
     public void testNumReportersArrayDesign() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Integer actualValue = arrayDesignDao.numReporters( ad.getId() );
         Integer expectedValue = 3;
         assertEquals( expectedValue, actualValue );
     }
 
     public void testLoadCompositeSequences() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
-        assertEquals( 2, actualValue.size() );
+        assertEquals( 3, actualValue.size() );
         assertTrue( actualValue.iterator().next() instanceof CompositeSequence );
     }
 
     public void testLoadReporters() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
         Collection actualValue = arrayDesignDao.loadReporters( ad.getId() );
         assertEquals( 3, actualValue.size() );
         assertTrue( actualValue.iterator().next() instanceof Reporter );

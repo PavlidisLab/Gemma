@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.arrayDesign;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 
@@ -36,12 +37,15 @@ public class ArrayDesignSequenceAddCommand {
 
     SequenceType sequenceType;
 
+    Taxon taxon;
+
     /**
      * 
      */
     public ArrayDesignSequenceAddCommand() {
         this.sequenceFile = new FileUpload();
         this.arrayDesign = ArrayDesign.Factory.newInstance();
+        this.taxon = Taxon.Factory.newInstance();
     }
 
     /**
@@ -84,6 +88,20 @@ public class ArrayDesignSequenceAddCommand {
      */
     public void setSequenceType( SequenceType sequenceType ) {
         this.sequenceType = sequenceType;
+    }
+
+    /**
+     * @return the taxon
+     */
+    public Taxon getTaxon() {
+        return this.taxon;
+    }
+
+    /**
+     * @param taxon the taxon to set
+     */
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 
 }

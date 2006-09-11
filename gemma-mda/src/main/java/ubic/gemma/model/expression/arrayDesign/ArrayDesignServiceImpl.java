@@ -32,7 +32,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
-    protected java.util.Collection handleGetAllArrayDesigns() throws java.lang.Exception {
+    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getArrayDesignDao().loadAll();
     }
 

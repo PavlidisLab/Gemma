@@ -77,7 +77,7 @@ public class ArrayDesignServiceImplTest extends TestCase {
          * Playback mode.
          */
         replay( arrayDesignDaoMock );
-        arrayDesignService.getAllArrayDesigns();
+        arrayDesignService.loadAll();
 
         /*
          * Verification.

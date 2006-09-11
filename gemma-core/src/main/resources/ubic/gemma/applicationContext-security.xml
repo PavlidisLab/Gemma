@@ -268,7 +268,7 @@
                 ubic.gemma.model.expression.designElement.ReporterService.findOrCreate=user,admin 
                 ubic.gemma.model.expression.designElement.ReporterService.remove=user,admin
                 ubic.gemma.model.expression.designElement.ReporterService.find=user,admin
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getAllArrayDesigns=user,admin
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll=user,admin
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findArrayDesignByName=user,admin
@@ -583,41 +583,20 @@
     <!--  Interceptor to persist ACL objects -->
     <bean id="addOrRemoveFromACLInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
         <property name="advice">
-            <ref local="aclAdvice"/>
+            <ref bean="aclAdvice"/> <!-- defined elsewhere -->
         </property>
         <property name="pointcut">
             <bean class="ubic.gemma.security.interceptor.AclPointcut"/>
         </property>
     </bean>
-    
-    <bean id="aclAdvice" class="ubic.gemma.security.interceptor.AddOrRemoveFromACLInterceptor">
-        <property name="basicAclExtendedDao">
-            <ref bean="basicAclExtendedDao"/>
-        </property>
-        <property name="hibernateInterceptor">
-            <ref bean="hibernateInterceptor"/>
-        </property>
-    </bean>
+     
     
     <!--  pointcut that identifies crud operations -->
     <bean id="crudPointcut" class="ubic.gemma.security.interceptor.AclPointcut"/>
     
-    <!--  Interceptor for audit trail -->
-    <bean id="auditAdvice" class="ubic.gemma.security.interceptor.AuditInterceptor">
-        <property name="auditTrailDao">
-            <ref bean="auditTrailDao"/>
-        </property>
-        <property name="userDao">
-            <ref bean="userDao"/>
-        </property>
-        <property name="hibernateInterceptor">
-            <ref bean="hibernateInterceptor"/>
-        </property>
-    </bean>
-    
     <bean id="auditInterceptor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
         <property name="advice">
-            <ref local="auditAdvice"/>
+            <ref bean="auditAdvice"/> <!-- defined elsewhere -->
         </property>
         <property name="pointcut">
             <ref bean="crudPointcut"/>

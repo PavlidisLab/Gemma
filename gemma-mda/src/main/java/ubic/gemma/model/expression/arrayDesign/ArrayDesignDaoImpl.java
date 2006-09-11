@@ -142,7 +142,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Integer handleNumReporters( Long id ) throws Exception {
-        final String queryString = "select count (*) from  ReporterImpl as rep inner join rep.reporterArrayDesign as ar where ar.id = :id";
+        final String queryString = "select count (*) from  ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id";
         return queryByIdReturnInteger( id, queryString );
     }
 
@@ -153,7 +153,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection handleLoadReporters( Long id ) throws Exception {
-        final String queryString = "select rep from ReporterImpl as rep inner join rep.reporterArrayDesign as ar where ar.id = :id";
+        final String queryString = "select rep from ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id";
         return queryByIdReturnCollection( id, queryString );
     }
 

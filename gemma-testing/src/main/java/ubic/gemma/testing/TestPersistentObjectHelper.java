@@ -130,7 +130,6 @@ public class TestPersistentObjectHelper {
             }
 
             reporter.setArrayDesign( ad );
-            reporter = ( Reporter ) persisterHelper.persist( reporter );// hmm, shouldn't have to do this.
             ad.getReporters().add( reporter );
 
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
@@ -142,8 +141,6 @@ public class TestPersistentObjectHelper {
 
             compositeSequence.getComponentReporters().add( reporter );
             compositeSequence.setArrayDesign( ad );
-            compositeSequence = ( CompositeSequence ) persisterHelper.persist( compositeSequence );
-
             ad.getCompositeSequences().add( compositeSequence );
         }
 
@@ -168,7 +165,7 @@ public class TestPersistentObjectHelper {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_test" );
         ba = ( BioAssay ) persisterHelper.persist( ba );
-     
+
         ba.getSamplesUsed().add( bm );
 
         if ( ad != null ) ba.getArrayDesignsUsed().add( ad );
@@ -176,10 +173,9 @@ public class TestPersistentObjectHelper {
     }
 
     public BioAssay getTestPersistentBioAssay( ArrayDesign ad ) {
-        BioMaterial bm = this.getTestPersistentBioMaterial(); 
+        BioMaterial bm = this.getTestPersistentBioMaterial();
         return getTestPersistentBioAssay( ad, bm );
     }
-    
 
     public BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         BibliographicReference br = BibliographicReference.Factory.newInstance();
@@ -390,8 +386,8 @@ public class TestPersistentObjectHelper {
     public Collection<BioAssay> getBioAssays( ArrayDesign ad ) {
         Collection<BioAssay> baCol = new HashSet<BioAssay>();
         // one biomaterial for each set of bioassays
-        for (int j = 0; j < NUM_BIOMATERIALS; j++ ) {
-            BioMaterial bm = this.getTestPersistentBioMaterial(); 
+        for ( int j = 0; j < NUM_BIOMATERIALS; j++ ) {
+            BioMaterial bm = this.getTestPersistentBioMaterial();
             for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
                 BioAssay ba = this.getTestPersistentBioAssay( ad, bm );
                 baCol.add( ba );
@@ -451,8 +447,8 @@ public class TestPersistentObjectHelper {
     public Collection<DesignElementDataVector> getDesignElementDataVectors( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<DesignElementDataVector> vectors = new HashSet<DesignElementDataVector>();
-        for (int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++) {
-            QuantitationType quantType= this.getTestPersistentQuantitationType();
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
+            QuantitationType quantType = this.getTestPersistentQuantitationType();
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
                 double[] data = new double[TEST_ELEMENT_COLLECTION_SIZE / 2];

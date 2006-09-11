@@ -24,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 
+import ubic.gemma.persistence.CrudUtils;
+
 /**
  * Pointcut to identify CRUD operations on Auditables. Used for auditing.
  * 
@@ -44,7 +46,7 @@ public class CrudPointcut extends StaticMethodMatcherPointcut {
      */
     @SuppressWarnings("unused")
     public boolean matches( Method method, Class targetClass ) {
-        return CrudInterceptorUtils.methodIsCrud( method );
+        return CrudUtils.methodIsCrud( method );
     }
 
 }

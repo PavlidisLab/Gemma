@@ -20,8 +20,6 @@ package ubic.gemma.security.interceptor;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -67,15 +65,13 @@ public class AuditInterceptorTest extends BaseTransactionalSpringContextTest {
         /*
          * FIXME - this does not work in maven builds. It's fine in eclipse.
          */
-     //   assertEquals( 2, user.getAuditTrail().getEvents().size() );
-     //   assertEquals( AuditAction.UPDATE, user.getAuditTrail().getLast().getAction() );
-
+        // assertEquals( 2, user.getAuditTrail().getEvents().size() );
+        // assertEquals( AuditAction.UPDATE, user.getAuditTrail().getLast().getAction() );
         // third time.
-//        user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
-//        userService.update( user );
-//        flushSession(); // have to do or cascade insert doesn't happen
-//        assertEquals( 3, user.getAuditTrail().getEvents().size() );
-
+        // user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
+        // userService.update( user );
+        // flushSession(); // have to do or cascade insert doesn't happen
+        // assertEquals( 3, user.getAuditTrail().getEvents().size() );
     }
 
     /**

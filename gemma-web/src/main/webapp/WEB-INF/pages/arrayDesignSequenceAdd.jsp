@@ -50,6 +50,24 @@
 		<tr>
 			<td>
 
+				<spring:bind path="arrayDesignSequenceAddCommand.taxon">
+					<select name="${status.expression}">
+						<c:forEach items="${taxa}" var="taxon">
+							<spring:transform value="${taxon}" var="name" />
+							<option value="${scientificName}"
+								<c:if test="${status.value == name}">selected</c:if>>
+								${scientificName}
+							</option>
+						</c:forEach>
+					</select>
+					<span class="fieldError">${status.errorMessage}</span>
+				</spring:bind>
+
+			</td>
+		</tr>
+		<tr>
+			<td>
+
 				<spring:bind path="arrayDesignSequenceAddCommand.sequenceFile.file">
 					<input type="file" size=30
 						name="<c:out value="${status.expression}" />"

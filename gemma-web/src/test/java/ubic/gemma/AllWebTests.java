@@ -26,6 +26,7 @@ import ubic.gemma.web.controller.common.description.BibRefControllerTest;
 import ubic.gemma.web.controller.common.description.bibref.PubMedQueryControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerTest;
 import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormControllerTest;
+import ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddControllerTest;
 import ubic.gemma.web.controller.expression.bioAssay.BioAssayFormControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignControllerTest;
 import ubic.gemma.web.controller.expression.experiment.ExperimentalDesignFormControllerTest;
@@ -53,6 +54,7 @@ public class AllWebTests extends TestSuite {
 
         suite.addTestSuite( ArrayDesignControllerTest.class );
         suite.addTestSuite( ArrayDesignFormControllerTest.class );
+        suite.addTestSuite( ArrayDesignSequenceAddControllerTest.class );
 
         suite.addTestSuite( BioAssayFormControllerTest.class );
         suite.addTestSuite( ExperimentalDesignControllerTest.class );
@@ -64,6 +66,9 @@ public class AllWebTests extends TestSuite {
         suite.addTestSuite( StartupListenerTest.class );
         suite.addTestSuite( ValidationTest.class );
 
+        System.out.print( "----------------------\nGemma Web Tests\n" + suite.countTestCases()
+                + " Tests to run\n----------------------\n" );
+        
         return suite;
     }
 }
