@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -165,6 +166,16 @@ public class ExpressionExperimentServiceImpl extends
     protected ExpressionExperiment handleFind( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().find( expressionExperiment );
     }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetQuantitationTypeCountById(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    protected Map handleGetQuantitationTypeCountById( Long Id ) throws Exception {
+        return this.getExpressionExperimentDao().getQuantitationTypeCountById( Id );
+    }    
 
     /*
      * (non-Javadoc)

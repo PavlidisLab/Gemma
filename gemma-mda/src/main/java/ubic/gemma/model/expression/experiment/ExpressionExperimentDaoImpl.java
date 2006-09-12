@@ -18,9 +18,14 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -83,4 +88,30 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
         return ( ExpressionExperiment ) create( expressionExperiment );
     }
+ 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public Map handleGetQuantitationTypeCountById( Long Id ) {
+        HashMap<String, Integer> qtCounts = new HashMap<String,Integer>();
+        
+        final String queryString = "select quantType.name,count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id GROUP BY quantType.name";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "id", Id );
+            ScrollableResults list = queryObject.scroll( );
+            while (list.next()) {
+                qtCounts.put( list.getString( 0 ), list.getInteger( 1 ) );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+        
+        return qtCounts;       
+    }
+    
 }
