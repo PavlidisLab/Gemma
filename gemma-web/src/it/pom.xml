@@ -10,7 +10,7 @@
 	<packaging>pom</packaging>
 	<parent>
 		<groupId>gemma</groupId>
-		<artifactId>gemma-web</artifactId>
+		<artifactId>gemma</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
     <dependencies>
