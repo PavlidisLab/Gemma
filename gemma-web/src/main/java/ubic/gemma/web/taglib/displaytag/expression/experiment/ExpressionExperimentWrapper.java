@@ -21,6 +21,7 @@ package ubic.gemma.web.taglib.displaytag.expression.experiment;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -168,7 +169,24 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return dateFormat.format( date );
         }
         return "Creation date unavailable";
-    }
+    }   
+    
+    /**
+     * @return View for key of the quantitation type counts.
+     */
+    public String getQtName() {
+        Map.Entry entry = (Map.Entry) getCurrentRowObject();
+        return (String) entry.getKey();
+    }   
+    
+    /**
+     * @return View for value of the quantitation type counts.
+     */
+    public Integer getQtValue() {
+        Map.Entry entry = (Map.Entry) getCurrentRowObject();
+        return (Integer) entry.getValue();
+    }  
+    
 
     /**
      * @return

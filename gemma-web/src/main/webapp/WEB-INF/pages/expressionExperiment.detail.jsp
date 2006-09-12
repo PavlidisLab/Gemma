@@ -52,7 +52,63 @@
                     }%>
                 </td>
             </tr>    
-
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="expressionExperiment.owner" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getOwner() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="owner" />
+                    <%}else{
+                    	out.print("Owner unavailable");
+                    }%>
+                </td>
+            </tr> 
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="databaseEntry.title" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getAccession() != null){
+						expressionExperiment.getAccession().getAccession();
+                    }else{
+                    	out.print("Accession unavailable");
+                    }%>
+                </td>
+            </tr>             
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="pubMed.publication" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getPrimaryPublication() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="primaryPublication" />
+                    <%}else{
+                    	out.print("Primary publication unavailable");
+                    }%>
+                </td>
+            </tr>   
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="auditTrail.date" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getAuditTrail() != null){
+                		out.print(expressionExperiment.getAuditTrail().getCreationEvent().getDate());
+                    }else{
+                    	out.print("Create date unavailable");
+                    }%>
+                </td>
+            </tr>                   
         </table>
         
         <br />
@@ -114,43 +170,18 @@
         <h3>
             <fmt:message key="designElementDataVectors.title" />
         </h3>
-        <display:table name="expressionExperiment.designElementDataVectors" class="list" requestURI="" id="dataVectorList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+        There are 
+        <b><% out.print(expressionExperiment.getDesignElementDataVectors().size()); %> </b>
+        design elements for this expression experiment.
+        
+   	   <display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" 
+  	   export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">     
+            <display:column property="qtName" sortable="true" maxWords="20" titleKey="quantitationType.name"/> 
+            <display:column property="qtValue" sortable="true" maxWords="20" titleKey="quantitationType.countVectors"/>              
             <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>
-        
-	
-		<h3>
-            <fmt:message key="expressionExperiment.owner" />
-        </h3>
-        <Gemma:contact
-            contact="<%=expressionExperiment.getOwner()%>" />
-        <br/>
-        
-        <h3>
-            <fmt:message key="databaseEntry.title" />
-        </h3>
-        <Gemma:databaseEntry
-            databaseEntry="<%=expressionExperiment.getAccession()%>" />
-        <br/>
-        
-        <h3>
-            <fmt:message key="pubMed.publication" />
-        </h3>
-        <Gemma:bibref bibliographicReference="<%=expressionExperiment.getPrimaryPublication() %>" />
-        <br />
-		
-        <h3>
-            <fmt:message key="auditTrail.title" />
-        </h3>
-        <Gemma:auditTrail
-            auditTrail="<%=expressionExperiment.getAuditTrail()%>" />
-        
-        <%--  
-        <a href="<c:url value="/expressionExperiment/searchExpressionExperiment.html?id="<%=request.getAttribute("id")%>"/>">
-            <fmt:message key="menu.searchExpressionExperiment" />
-        </a>
-        --%>
+       </display:table>
+       
+
         
         <br />
 

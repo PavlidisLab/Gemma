@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Map;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -71,8 +74,12 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 
         this.addMessage( request, "object.found", new Object[] { messagePrefix, id } );
         request.setAttribute( "id", id );
-        return new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
+        ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
+ 
+        Set s  = expressionExperimentService.getQuantitationTypeCountById(id ).entrySet();
+        mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById(id ).entrySet());
+        return mav;
     }
     
     
@@ -85,13 +92,13 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     @SuppressWarnings("unused")
     public ModelAndView showBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
-
         if ( id == null ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( identifierNotFound );
         }
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+        Map m = expressionExperimentService.getQuantitationTypeCountById( id );
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
