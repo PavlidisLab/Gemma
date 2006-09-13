@@ -196,6 +196,7 @@ public class TestPersistentObjectHelper {
             geo = externalDatabaseService.find( "GEO" );
             assert geo != null;
         }
+        bm.setSourceTaxon( getTestPersistentTaxon() );
         bm.setExternalAccession( this.getTestPersistentDatabaseEntry( geo ) );
         bm = ( BioMaterial ) persisterHelper.persist( bm );
         return bm;

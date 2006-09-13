@@ -228,39 +228,43 @@ abstract public class GenomePersister extends CommonPersister {
         if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
         if ( !isTransient( t ) ) return;
 
-        // Avoid trips to the database to get the taxon.
-        String scientificName = t.getScientificName();
-        String commonName = t.getCommonName();
-        Integer ncbiId = t.getNcbiId();
-        if ( scientificName != null && seenTaxa.get( scientificName ) != null ) {
-            bioSequence.setTaxon( seenTaxa.get( scientificName ) );
-        } else if ( commonName != null && seenTaxa.get( commonName ) != null ) {
-            bioSequence.setTaxon( seenTaxa.get( commonName ) );
-        } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
-            bioSequence.setTaxon( seenTaxa.get( ncbiId ) );
-        } else {
-            assert isTransient( t );
-            Taxon taxon = taxonService.findOrCreate( t );
-            log.warn( "Fetched taxon " + taxon.getScientificName() );
-            bioSequence.setTaxon( taxon );
-            if ( taxon.getScientificName() != null ) {
-                seenTaxa.put( taxon.getScientificName(), bioSequence.getTaxon() );
-            }
-            if ( taxon.getCommonName() != null ) {
-                seenTaxa.put( taxon.getCommonName(), bioSequence.getTaxon() );
-            }
-            if ( taxon.getNcbiId() != null ) {
-                seenTaxa.put( taxon.getNcbiId(), bioSequence.getTaxon() );
-            }
-        }
+        bioSequence.setTaxon( persistTaxon( t ) );
+
     }
 
-    // AS
     /**
      * @param taxon
      */
-    protected Object persistTaxon( Taxon taxon ) {
-        return taxonService.findOrCreate( taxon );
+    protected Taxon persistTaxon( Taxon taxon ) {
+        if (taxon == null )return null;
+        if (!isTransient(taxon)) return taxon;
+        
+        // Avoid trips to the database to get the taxon.
+        String scientificName = taxon.getScientificName();
+        String commonName = taxon.getCommonName();
+        Integer ncbiId = taxon.getNcbiId();
+        if ( scientificName != null && seenTaxa.get( scientificName ) != null ) {
+            return seenTaxa.get( scientificName );
+        } else if ( commonName != null && seenTaxa.get( commonName ) != null ) {
+            return seenTaxa.get( commonName );
+        } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
+            return seenTaxa.get( ncbiId );
+        } else {
+            assert isTransient( taxon );
+            Taxon fTaxon = taxonService.findOrCreate( taxon );
+            log.warn( "Fetched taxon " + taxon.getScientificName() );
+
+            if ( taxon.getScientificName() != null ) {
+                seenTaxa.put( taxon.getScientificName(), fTaxon );
+            }
+            if ( taxon.getCommonName() != null ) {
+                seenTaxa.put( taxon.getCommonName(), fTaxon );
+            }
+            if ( taxon.getNcbiId() != null ) {
+                seenTaxa.put( taxon.getNcbiId(), fTaxon );
+            }
+            return fTaxon;
+        }
     }
 
     /**

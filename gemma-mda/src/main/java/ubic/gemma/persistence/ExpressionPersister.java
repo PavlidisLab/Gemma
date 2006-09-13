@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @spring.property name="factorValueService" ref="factorValueService"
@@ -240,6 +241,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         entity.setExternalAccession( persistDatabaseEntry( entity.getExternalAccession() ) );
         entity.setMaterialType( persistOntologyEntry( entity.getMaterialType() ) );
+        entity.setSourceTaxon( persistTaxon( entity.getSourceTaxon() ) );
 
         for ( Treatment treatment : entity.getTreatments() ) {
 

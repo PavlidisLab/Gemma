@@ -767,7 +767,7 @@ public class GeoConverter implements Converter {
             cs.setArrayDesign( arrayDesign );
 
             if ( StringUtils.isBlank( externalRef ) ) {
-                if ( log.isDebugEnabled()  ) {
+                if ( log.isDebugEnabled() ) {
                     log.debug( "Blank external reference for biosequence for " + cs + " on " + arrayDesign
                             + ", no biological characteristic will be added." );
                 }
@@ -952,6 +952,8 @@ public class GeoConverter implements Converter {
             // bioAssay.getSamplesUsed().add( bioMaterial );
         }
 
+        Taxon lastTaxon = null;
+
         for ( GeoPlatform platform : sample.getPlatforms() ) {
             ArrayDesign arrayDesign;
             if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
@@ -959,6 +961,19 @@ public class GeoConverter implements Converter {
             } else {
                 arrayDesign = convertPlatform( platform );
             }
+
+            // Allow for possibility that platforms use different taxa.
+            Taxon taxon = convertPlatformOrganism( platform );
+            if ( lastTaxon != null && !taxon.equals( lastTaxon ) ) {
+                log
+                        .warn( "Multiple taxa found among platforms for single sample, new biomaterial will be associated with the last taxon found." );
+            }
+            lastTaxon = taxon;
+
+            if ( bioMaterial != null ) {
+                bioMaterial.setSourceTaxon( taxon );
+            }
+
             bioAssay.getArrayDesignsUsed().add( arrayDesign );
         }
 
