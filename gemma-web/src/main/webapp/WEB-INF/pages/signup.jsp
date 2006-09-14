@@ -66,9 +66,9 @@
 					<Gemma:label styleClass="desc" key="user.firstName" />
 				</th>
 				<td>
-					<spring:bind path="user.firstName">
+					<spring:bind path="user.name">
 						<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
-						<input type="text" name="firstName" value="<c:out value="${status.value}"/>" id="firstName" maxlength="50"
+						<input type="text" name="name" value="<c:out value="${status.value}"/>" id="name" maxlength="50"
 							class="text medium" />
 					</spring:bind>
 				</td>
