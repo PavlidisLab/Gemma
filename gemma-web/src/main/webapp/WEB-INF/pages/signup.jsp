@@ -63,7 +63,7 @@
 			</tr>
 			<tr>
 				<th>
-					<Gemma:label styleClass="desc" key="user.firstName" />
+					<Gemma:label styleClass="desc" key="user.name" />
 				</th>
 				<td>
 					<spring:bind path="user.name">

@@ -27,7 +27,7 @@
         titleKey="user.userName"/>
     <display:column property="name" sort="true" 
     	headerClass="sortable" width="20%"
-        titleKey="user.firstName" />
+        titleKey="user.name" />
     <display:column property="lastName" sort="true" 
     	headerClass="sortable" width="13%"
         titleKey="user.lastName"/>

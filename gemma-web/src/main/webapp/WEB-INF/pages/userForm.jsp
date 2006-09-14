@@ -81,7 +81,7 @@
 
 
 		<li>
-			<Gemma:label styleClass="desc" key="user.firstName" />
+			<Gemma:label styleClass="desc" key="user.name" />
 
 			<spring:bind path="user.name">
 				<input type="text" name="name" value="<c:out value="${status.value}"/>" id="name" maxlength="50"
