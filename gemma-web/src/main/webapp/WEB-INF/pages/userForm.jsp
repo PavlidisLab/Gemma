@@ -83,8 +83,8 @@
 		<li>
 			<Gemma:label styleClass="desc" key="user.firstName" />
 
-			<spring:bind path="user.firstName">
-				<input type="text" name="firstName" value="<c:out value="${status.value}"/>" id="firstName" maxlength="50"
+			<spring:bind path="user.name">
+				<input type="text" name="name" value="<c:out value="${status.value}"/>" id="name" maxlength="50"
 					class="text large" />
 				<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 			</spring:bind>
