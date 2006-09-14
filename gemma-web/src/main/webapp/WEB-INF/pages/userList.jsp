@@ -14,8 +14,6 @@
     </button>
 </c:set>
 
-<c:out value="${buttons}" escapeXml="false" />
-
 <%-- <display:table name="${userList}" cellspacing="0" cellpadding="0" --%>
 <display:table name="userList" cellspacing="0" cellpadding="0"
     requestURI="" defaultsort="1" id="users"
@@ -27,7 +25,7 @@
         url="/editUser.html?from=list" 
         paramId="userName" paramProperty="userName"
         titleKey="user.userName"/>
-    <display:column property="firstName" sort="true" 
+    <display:column property="name" sort="true" 
     	headerClass="sortable" width="20%"
         titleKey="user.firstName" />
     <display:column property="lastName" sort="true" 
