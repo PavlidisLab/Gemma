@@ -63,16 +63,119 @@
 	        </spring:bind>
 	    </td>
 	</tr>	
+                <tr>
+       <td valign="top">
+        	<b>
+        	<fmt:message key="databaseEntry.title" />
+            </b>
+        </td>
+        <td>
+            <spring:bind path="expressionExperiment.accession">
+        	<c:choose>
+            <c:when test="${expressionExperiment.accession == null}">
+                <input type="text" name="expressionExperiment.accession.accession" value="<c:out value="Accession unavailable"/>"/>
+            </c:when>
+            <c:otherwise>
+                <input type="text" name="expressionExperiment.accession.accession" value="<c:out value="${expressionExperiment.accession.accession}"/>"/>
+            </c:otherwise>
+        	</c:choose>      
+	        </spring:bind>
+	      
+	    </td>
+    </tr>  
+    
+        <tr>
+       <td valign="top">
+        	<b>
+        	<fmt:message key="externalDatabase.title" />
+            </b>
+        </td>
+        <td>
+                <c:if test="${expressionExperiment.accession != null}">
+       		<spring:bind path="expressionExperiment.accession.externalDatabase.name">
+       			<select name="${status.expression}">
+          			<c:forEach items="${externalDatabases}" var="externalDatabase">
+            			<option value="${externalDatabase.name}" <c:if test="${status.value == externalDatabase.name}">selected="selected"</c:if>>
+                			${externalDatabase.name}
+            			</option>
+          			</c:forEach>
+        		</select>
+        	<span class="fieldError">${status.errorMessage}</span>
+       		</spring:bind>
+       	</c:if>
+	    </td>
+    </tr>
+    
+   
+        
+
+       	
+       	
+    
+       
+    	            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="expressionExperiment.owner" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getOwner() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="owner" />
+                    <%}else{
+                    	out.print("Owner unavailable");
+                    }%>
+                </td>
+            </tr>       
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="pubMed.publication" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getPrimaryPublication() != null){%>
+                    	<jsp:getProperty name="expressionExperiment" property="primaryPublication" />
+                    <%}else{
+                    	out.print("Primary publication unavailable");
+                    }%>
+                </td>
+            </tr>   
+            
+            <tr>
+                <td valign="top">
+                    <b>
+                        <fmt:message key="auditTrail.date" />
+                    </b>
+                </td>
+                <td>
+                	<%if (expressionExperiment.getAuditTrail() != null){
+                		out.print(expressionExperiment.getAuditTrail().getCreationEvent().getDate());
+                    }else{
+                    	out.print("Create date unavailable");
+                    }%>
+                </td>
+            </tr>                
+            
+        
+      	
+
+	        
+	        
+	               
 </table>
-		<h3>
+
+        <br />
+
+        <h3>
             <fmt:message key="bioAssays.title" />
         </h3>
-        <display:table name="expressionExperiment.bioAssays" class="list" requestURI="" id="bioAssayList" export="true" pagesize="10">
-         	<display:column property="id" sortable="true" href="/Gemma/bioAssay/showBioAssay.html" paramId="id" paramProperty="id"/>
-            <display:column property="name" maxWords="20" />
-            <display:column property="description" maxWords="100" />
-            <display:setProperty name="export.pdf" value="true" />
-        </display:table>
+        There are 
+        <a href = "/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%> ">
+        <% out.print(expressionExperiment.getBioAssays().size()); %> 
+        </a>
+        bioAssays for this expression experiment.
+        <br/>
 
         <h3>
             <fmt:message key="experimentalDesigns.title" />
@@ -111,89 +214,21 @@
             <fmt:message key="expressionExperimentSubsets.title" />
         </h3>
         <display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
+            <display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name"/>
+            <display:column property="description" sortable="true" maxWords="100" />
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
         
         <h3>
             <fmt:message key="designElementDataVectors.title" />
         </h3>
-        <display:table name="expressionExperiment.designElementDataVectors" class="list" requestURI="" id="dataVectorList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>
-
-	<tr>
-		<td>	
-		<h3>
-            <fmt:message key="expressionExperiment.owner" />
-        </h3>
-        <Gemma:contact
-            contact="<%=expressionExperiment.getOwner()%>" />
-        </td>
-    </tr>        
-        <br/>
-   
-        <h3>
-            <fmt:message key="databaseEntry.title" />
-        </h3>
-        
-        <h5>
-            <fmt:message key="databaseEntry.accession.title" />
-        </h5>  
-      	
-        	<spring:bind path="expressionExperiment.accession">
-        	<c:choose>
-            <c:when test="${expressionExperiment.accession == null}">
-                <input type="text" name="expressionExperiment.accession.accession" value="<c:out value="Accession unavailable"/>"/>
-            </c:when>
-            <c:otherwise>
-                <input type="text" name="expressionExperiment.accession.accession" value="<c:out value="${expressionExperiment.accession.accession}"/>"/>
-            </c:otherwise>
-        	</c:choose>      
-	        </spring:bind>
-	   
-	
-        <h5>
-        	<b>
-        		<fmt:message key="externalDatabase.title" />
-            </b>
-        </h5>
-        
-        <c:if test="${expressionExperiment.accession != null}">
-       		<spring:bind path="expressionExperiment.accession.externalDatabase.name">
-       			<select name="${status.expression}">
-          			<c:forEach items="${externalDatabases}" var="externalDatabase">
-            			<option value="${externalDatabase.name}" <c:if test="${status.value == externalDatabase.name}">selected="selected"</c:if>>
-                			${externalDatabase.name}
-            			</option>
-          			</c:forEach>
-        		</select>
-        	<span class="fieldError">${status.errorMessage}</span>
-       		</spring:bind>
-       	</c:if>
-   	<%--
-            <input type="text" name="<c:out value="${status.expression}"/>" value="<Gemma:databaseEntry
-            databaseEntry="<%=expressionExperiment.getAccession()%>" />"/>
-        <br/>
-        --%>
-   		<br/>
-   		
-        <h3>
-            <fmt:message key="pubMed.publication" />
-        </h3>
-        <Gemma:bibref bibliographicReference="<%=expressionExperiment.getPrimaryPublication() %>" />
-        
-        
+        There are 
+        <b><% out.print(expressionExperiment.getDesignElementDataVectors().size()); %> </b>
+        design elements for this expression experiment. (Not displayed)
+  
         <br />
 		
-        <h3>
-            <fmt:message key="auditTrail.title" />
-        </h3>
-        <Gemma:auditTrail
-            auditTrail="<%=expressionExperiment.getAuditTrail()%>" />
-            
-        <br />
 			
 		<table>
 		<tr>
