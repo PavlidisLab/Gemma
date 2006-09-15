@@ -20,7 +20,7 @@
    <c:choose>
      <c:when test="${hit.alias == 'expressionExperiment'}">
        <P>
-         <a href="<c:url value="/expressionExperiment/editExpressionExperiment.html?id=${hit.data.id}"/>">
+         <a href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${hit.data.id}"/>">
            <c:out value="${hit.data.name}" /> (ExpressionExperiment)
          </a>
      </c:when>
