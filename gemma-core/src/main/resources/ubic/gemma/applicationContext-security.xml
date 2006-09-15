@@ -180,6 +180,7 @@
                 /clickstreams.jsp*=admin
                 /flushCache.*=admin
                 /reload.*=admin
+                /dwr/**/*.dwr =admin,user,ROLE_ANONYMOUS
                 /**/*.html*=admin,user 
              ]]>
             </value>

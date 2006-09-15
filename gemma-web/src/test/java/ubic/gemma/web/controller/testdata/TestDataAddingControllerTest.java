@@ -28,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -54,6 +55,7 @@ public class TestDataAddingControllerTest extends BaseTransactionalSpringWebTest
     public final void testOnSubmit() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/addTestData.html" );
+        request.setRemoteUser( ConfigUtils.getString( "gemma.regular.user" ) );
         ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
 

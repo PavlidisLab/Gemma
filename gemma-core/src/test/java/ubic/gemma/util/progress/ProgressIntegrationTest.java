@@ -317,6 +317,44 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         mProgress.run();
     }
 
+    public void updateCurrentThreadsProgressJobTest() {
+
+        ProgressManager.dump();
+        assertEquals( false, ProgressManager.updateCurrentThreadsProgressJob( null ) );
+
+        ProgressJob pj = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.regular.user" ),
+                "i luve happie tests" );
+
+        FakeProgress fProgres = new FakeProgress();
+        MockClient mc = new MockClient();
+        ProgressManager.addToNotification( ConfigUtils.getString( "gemma.regular.user" ), mc );
+        fProgres.run();
+
+        ProgressManager.destroyProgressJob( pj );
+
+        assertEquals(mc.upDateTimes(), 100);
+        
+    }
+
+    class FakeProgress implements Runnable {
+        private static final int DELAY = 30;
+
+        public void run() {
+
+            for ( int i = 0; i < 100; i++ ) {
+                assertEquals( true, ProgressManager.updateCurrentThreadsProgressJob( null ) );
+                try {
+                    Thread.sleep( DELAY );
+                } catch ( InterruptedException e ) {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+    }
+
     /**
      * <hr>
      * Just a mockProcess inner class to ease testing

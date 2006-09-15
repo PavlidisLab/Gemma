@@ -19,6 +19,7 @@ package ubic.gemma.util.progress;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Observer;
@@ -109,25 +110,6 @@ public class ProgressManager {
         return true;
     }
 
-    // /**
-    // * @param username
-    // * @param type
-    // * @param po
-    // * @return This adds the observer to only the most recently created progress job of the specified type for the
-    // given
-    // * user.
-    // */
-    // public static synchronized boolean addToNotification( String username, int progressType, Observer po ) {
-    //
-    // if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
-    //
-    // Collection<ProgressJob> pJobs = progressJobs.get( username );
-    // for ( ProgressJob obs : pJobs ) {
-    // if ( obs.getProgressType() == progressType ) obs.addObserver( po );
-    // }
-    //
-    // return true;
-    // }
     /**
      * @param username
      * @param type
@@ -147,25 +129,6 @@ public class ProgressManager {
         return true;
     }
 
-    // public static synchronized boolean addToRecentNotification( String username, int progressType, Observer po ) {
-    //
-    // if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
-    //
-    // Collection<ProgressJob> pJobs = progressJobs.get( username );
-    //
-    // // need to iterate backwards through the list to get the most recently added of a given type.
-    // ProgressJob[] arrayOfPJs = pJobs.toArray( new ProgressJob[pJobs.size()] );
-    // int i = pJobs.size();
-    // while ( i >= 0 ) {
-    // i--;
-    // if ( arrayOfPJs[i].getProgressType() == progressType ) {
-    // arrayOfPJs[i].addObserver( po );
-    // return true;
-    // }
-    // }
-    //
-    // return false;
-    // }
     /**
      * @param userName (owner of the job)
      * @param description (description of the job)
@@ -177,9 +140,7 @@ public class ProgressManager {
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
-        if ( !progressJobs.containsKey( userName ) ) {
-            progressJobs.put( userName, new Vector<ProgressJob>() );
-        }
+        if ( !progressJobs.containsKey( userName ) ) progressJobs.put( userName, new Vector<ProgressJob>() );
 
         usersJobs = progressJobs.get( userName );
 
@@ -210,7 +171,59 @@ public class ProgressManager {
             newJob.setDescription( description );
         }
 
+        // ProgressManager.dump();
+
         return newJob;
+    }
+
+    // As the progress manager is a singleton leaks and strange behavior are likely.
+    // i made this to get a peak at what was going on under the hood at runtime.
+    public static synchronized void dump() {
+        logger.info( "Dump ProgressMangagers State:" );
+
+        logger.info( "Thread Local variable: " + currentJob.get() );
+
+        logger.info( "ProgressJobs Dump:  " );
+        for ( Iterator iter = progressJobs.keySet().iterator(); iter.hasNext(); ) {
+            String name = ( String ) iter.next();
+            logger.info( "name: " + name );
+
+            for ( Iterator values = progressJobs.get( name ).iterator(); values.hasNext(); ) {
+                ProgressJob job = ( ProgressJob ) values.next();
+                logger.info( "====> progressJob: " + job );
+            }
+        }
+
+        logger.info( "ProgressJobsById Dump:  " );
+        for ( Iterator iter = progressJobsById.keySet().iterator(); iter.hasNext(); ) {
+            Long id = ( Long ) iter.next();
+            logger.info( "  Id: " + id + "  ProgressJob: " + progressJobsById.get( id ) );
+
+        }
+
+    }
+
+    /**
+     * This will send an update to the current threads progress job, if it indeed has one. Should be used for adding
+     * progress updates with minimal intrusion into objects that are long running Returns true if the thread had a
+     * progress job already and it was successful in updating it. Returns false if the thread had no progress job. If
+     * ProgressData == null then the threads progressJob's percent will be incremented by one
+     */
+    public static synchronized boolean updateCurrentThreadsProgressJob( ProgressData pData ) {
+
+        ProgressJob threadsJob = null;
+
+        if ( currentJob.get() == null ) return false;
+
+        Long id = currentJob.get();
+        threadsJob = progressJobsById.get( id );
+
+        if ( pData == null )
+            threadsJob.updateProgress();
+        else
+            threadsJob.updateProgress( pData );
+
+        return true;
     }
 
     /**
@@ -229,7 +242,6 @@ public class ProgressManager {
 
         currentJob.set( null );
         jobInfoDao.update( ajob.getJobInfo() );
-        ajob.done();
 
         return true;
     }
