@@ -21,9 +21,9 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma</connection>
+		<connection>scm:cvs:ext:continuum@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma</connection>
 		<developerConnection>
-			scm:cvs:ext:paul@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
+			scm:cvs:ext:continuum@luria.cmmt.ubc.ca:/raid/cvs/pavlidis:Gemma
 		</developerConnection>
 		<url>http://luria.cmmt.ubc.ca:8080/viewrep/Pavlidis/Gemma</url>
 	</scm>
@@ -33,7 +33,7 @@
 	</issueManagement>
 	<ciManagement>
 		<system>continuum</system>
-		<url>http://benzer.ubic.ca/continuum/</url>
+		<url>http://broca.ubic.ca/continuum/</url>
 		<notifiers>
 			<notifier>
 				<type>mail</type>
