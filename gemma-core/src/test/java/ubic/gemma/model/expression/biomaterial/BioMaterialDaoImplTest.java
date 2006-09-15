@@ -92,13 +92,16 @@ public class BioMaterialDaoImplTest extends BaseTransactionalSpringContextTest {
         de.setAccession( "Test Biomaterial Accession" );
         de.setExternalDatabase( ed );
 
+        /* set taxon  for the test to pass*/  
+ 
+        bm.setSourceTaxon( this.getTestPersistentTaxon() );
         /* testing this method */
         bm.setExternalAccession( de );
 
         BioMaterialDao bmDao = ( BioMaterialDao ) this.getBean( "bioMaterialDao" );
 
         // bmDao.findOrCreate( bm ); - FIXME use this
-
+        
         bm = ( BioMaterial ) bmDao.create( bm );
 
         assertTrue( bm.getId() != null );

@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -291,6 +292,16 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
      */
     protected QuantitationType getTestPersistentQuantitationType() {
         return testHelper.getTestPersistentQuantitationType();
+    }
+    
+    /**
+     * Convenience method to provide a Taxon that can be used to fill non-nullable associations in test
+     * objects.
+     * 
+     * @return
+     */
+    protected Taxon getTestPersistentTaxon() {
+        return testHelper.getTestPersistentTaxon();
     }
 
     /**
