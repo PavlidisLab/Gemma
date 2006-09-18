@@ -196,6 +196,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         for ( FactorValue factorValue : assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by association with the ExperimentalFactor.
             fillInFactorValueAssociations( factorValue );
+            factorValue = persistFactorValue( factorValue );
         }
 
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
