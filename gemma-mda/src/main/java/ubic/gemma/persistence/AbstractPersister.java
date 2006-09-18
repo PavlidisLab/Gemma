@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.HibernateException;
@@ -83,6 +84,37 @@ public abstract class AbstractPersister implements Persister {
     }
 
     /**
+     * Persist the elements in a collection.
+     * <p>
+     * This method is necessary because in-place persisting does not work.
+     * 
+     * @param collection
+     * @return
+     */
+    protected void persistCollectionElements( Collection collection ) {
+        if ( collection == null ) return;
+        if ( collection.size() == 0 ) return;
+
+        try {
+            // Collection<Object> persistedCollection = new HashSet<Object>();
+            for ( Object object : collection ) {
+                Object persistedObj = persist( object );
+                // persistedCollection.add( persistedObj );
+                BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
+                assert BeanUtils.getSimpleProperty( object, "id" ) != null;
+            }
+        } catch ( IllegalAccessException e ) {
+            throw new RuntimeException( e );
+        } catch ( InvocationTargetException e ) {
+            throw new RuntimeException( e );
+        } catch ( NoSuchMethodException e ) {
+            throw new RuntimeException( e );
+        }
+
+        // collection = persistedCollection;
+    }
+
+    /**
      * @param sessionFactory The sessionFactory to set.
      */
     public void setSessionFactory( SessionFactory sessionFactory ) {
@@ -90,16 +122,16 @@ public abstract class AbstractPersister implements Persister {
         // crudUtils.initMetaData( sessionFactory );
     }
 
-//    /**
-//     * Flush and clear the hibernate cache if a session is active. Call during persistence of large collections.
-//     */
-//    protected void flushAndClearSession() {
-//        Session session = this.getCurrentSession();
-//        if ( session != null ) {
-//            session.flush();
-//            session.clear();
-//        }
-//    }
+    // /**
+    // * Flush and clear the hibernate cache if a session is active. Call during persistence of large collections.
+    // */
+    // protected void flushAndClearSession() {
+    // Session session = this.getCurrentSession();
+    // if ( session != null ) {
+    // session.flush();
+    // session.clear();
+    // }
+    // }
 
     // private Collection<Object> seen = new HashSet<Object>();
     //
@@ -195,8 +227,7 @@ public abstract class AbstractPersister implements Persister {
         try {
             return this.sessionFactory.getCurrentSession();
         } catch ( HibernateException e ) {
-            // that's okay, we don't have a session.
-            return null;
+            return sessionFactory.openSession();
         }
     }
 

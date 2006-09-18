@@ -65,8 +65,8 @@ public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
         bs.setSequence( testSequence );
 
         Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "elephant" );
-        t.setScientificName( "Loxodonta" );
+        t.setCommonName( "mouse" ); // has to match what is used in the getTestPersistentBioSequence method.
+        t.setScientificName( "Mus musculus" );
 
         bs.setTaxon( t );
 

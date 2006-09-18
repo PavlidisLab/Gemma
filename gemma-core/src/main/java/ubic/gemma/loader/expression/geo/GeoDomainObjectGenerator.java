@@ -38,7 +38,7 @@ import ubic.gemma.loader.util.sdo.SourceDomainObjectGenerator;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
- * Handle fetching,
+ * Handle fetching and parsing GEO files.
  * 
  * @author pavlidis
  * @version $Id$

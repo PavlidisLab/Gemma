@@ -40,7 +40,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/JAR_SOURCE/commons-configuration-1.1/src/java" kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.1/commons-configuration-1.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar">
+		<attributes>
+			<attribute value="http://jakarta.apache.org/commons/beanutils/api/" name="javadoc_location"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar"/>
 	<classpathentry sourcepath="/JAR_SOURCE/commons-validator-1.3.0-src/src/share" kind="var" path="M2_REPO/commons-validator/commons-validator/1.3.0/commons-validator-1.3.0.jar"/>
 	<classpathentry sourcepath="/JAR_SOURCE/spring-framework-1.2.8/src" kind="var" path="M2_REPO/spring/spring/1.2.8/spring-1.2.8.jar">
@@ -177,5 +181,6 @@
 			<attribute value="http://jtidy.sourceforge.net/apidocs/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/commons-httpclient/commons-httpclient/3.0.1/commons-httpclient-3.0.1.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

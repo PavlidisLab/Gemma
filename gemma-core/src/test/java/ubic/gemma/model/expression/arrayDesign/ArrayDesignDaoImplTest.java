@@ -20,6 +20,9 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -31,6 +34,113 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
     ArrayDesign ad;
     ArrayDesignDao arrayDesignDao;
+    ExternalDatabaseDao externalDatabaseDao;
+
+    /**
+     * @param arrayDesignDao The arrayDesignDao to set.
+     */
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
+
+    /**
+     * @param externalDatabaseDao the externalDatabaseDao to set
+     */
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
+    }
+
+    public void testCascadeCreateCompositeSequences() {
+        arrayDesignDao.update( ad ); // should cascade.
+        flushSession(); // fails without this.
+        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
+        assertNotNull( cs.getId() );
+        assertNotNull( cs.getArrayDesign().getId() );
+    }
+
+    public void testCascadeDeleteOrphanCompositeSequences() {
+        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
+        ad.getCompositeSequences().remove( cs );
+        cs.setArrayDesign( null );
+        arrayDesignDao.update( ad );
+        assertEquals( 2, ad.getCompositeSequences().size() );
+    }
+
+    public void testCascadeDeleteOrphanReporters() {
+        Reporter cs = ad.getReporters().iterator().next();
+        ad.getReporters().remove( cs );
+        cs.setArrayDesign( null );
+        arrayDesignDao.update( ad );
+        assertEquals( 2, ad.getReporters().size() );
+    }
+
+    public void testFindWithExternalReference() {
+        ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "fll" );
+        assignExternalReference( ad, "GPL3939" );
+        assignExternalReference( ad, "GPL4939" );
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+
+        ArrayDesign toFind = ArrayDesign.Factory.newInstance();
+
+        // artficial, wouldn't normally have multiple GEO acc
+        assignExternalReference( toFind, "GPL39392" );
+        assignExternalReference( toFind, "GPL39394" );
+        assignExternalReference( toFind, "GPL3939" );
+        ArrayDesign found = arrayDesignDao.find( toFind );
+
+        assertNotNull( found );
+    }
+
+    public void testFindWithExternalReferenceNotFound() {
+        ad = ArrayDesign.Factory.newInstance();
+        assignExternalReference( ad, "GPL3939" );
+        assignExternalReference( ad, "GPL4939" );
+        ad.setName( "fhhFll" );
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ArrayDesign toFind = ArrayDesign.Factory.newInstance();
+
+        // artficial, wouldn't normally have multiple GEO acc
+        assignExternalReference( toFind, "GPL39392" );
+        assignExternalReference( toFind, "GPL39394" );
+        ArrayDesign found = arrayDesignDao.find( toFind );
+
+        assertNull( found );
+    }
+
+    public void testLoadCompositeSequences() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
+        assertEquals( 3, actualValue.size() );
+        assertTrue( actualValue.iterator().next() instanceof CompositeSequence );
+    }
+
+    public void testLoadReporters() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection actualValue = arrayDesignDao.loadReporters( ad.getId() );
+        assertEquals( 3, actualValue.size() );
+        assertTrue( actualValue.iterator().next() instanceof Reporter );
+    }
+
+    /*
+     * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numCompositeSequences(ArrayDesign)'
+     */
+    public void testNumCompositeSequencesArrayDesign() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Integer actualValue = arrayDesignDao.numCompositeSequences( ad.getId() );
+        Integer expectedValue = 3;
+        assertEquals( expectedValue, actualValue );
+    }
+
+    /*
+     * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numReporters(ArrayDesign)'
+     */
+    public void testNumReportersArrayDesign() {
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Integer actualValue = arrayDesignDao.numReporters( ad.getId() );
+        Integer expectedValue = 3;
+        assertEquals( expectedValue, actualValue );
+    }
 
     /*
      * @see TestCase#setUp()
@@ -80,69 +190,19 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
 
     }
 
-    public void testCascadeCreateCompositeSequences() {
-        arrayDesignDao.update( ad ); // should cascade.
-        flushSession(); // fails without this.
-        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
-        assertNotNull( cs.getId() );
-        assertNotNull( cs.getArrayDesign().getId() );
-    }
-
-    public void testCascadeDeleteOrphanCompositeSequences() {
-        CompositeSequence cs = ad.getCompositeSequences().iterator().next();
-        ad.getCompositeSequences().remove( cs );
-        cs.setArrayDesign( null );
-        arrayDesignDao.update( ad );
-        assertEquals( 2, ad.getCompositeSequences().size() );
-    }
-
-    public void testCascadeDeleteOrphanReporters() {
-        Reporter cs = ad.getReporters().iterator().next();
-        ad.getReporters().remove( cs );
-        cs.setArrayDesign( null );
-        arrayDesignDao.update( ad );
-        assertEquals( 2, ad.getReporters().size() );
-    }
-
-    /*
-     * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numCompositeSequences(ArrayDesign)'
-     */
-    public void testNumCompositeSequencesArrayDesign() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Integer actualValue = arrayDesignDao.numCompositeSequences( ad.getId() );
-        Integer expectedValue = 3;
-        assertEquals( expectedValue, actualValue );
-    }
-
-    /*
-     * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl.numReporters(ArrayDesign)'
-     */
-    public void testNumReportersArrayDesign() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Integer actualValue = arrayDesignDao.numReporters( ad.getId() );
-        Integer expectedValue = 3;
-        assertEquals( expectedValue, actualValue );
-    }
-
-    public void testLoadCompositeSequences() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection actualValue = arrayDesignDao.loadCompositeSequences( ad.getId() );
-        assertEquals( 3, actualValue.size() );
-        assertTrue( actualValue.iterator().next() instanceof CompositeSequence );
-    }
-
-    public void testLoadReporters() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Collection actualValue = arrayDesignDao.loadReporters( ad.getId() );
-        assertEquals( 3, actualValue.size() );
-        assertTrue( actualValue.iterator().next() instanceof Reporter );
-    }
-
     /**
-     * @param arrayDesignDao The arrayDesignDao to set.
+     * @param accession
      */
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
+    private void assignExternalReference( ArrayDesign toFind, String accession ) {
+        ExternalDatabase geo = externalDatabaseDao.findByName( "GEO" );
+        assert geo != null;
+
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+        de.setExternalDatabase( geo );
+
+        de.setAccession( accession );
+
+        toFind.getExternalReferences().add( de );
     }
 
 }

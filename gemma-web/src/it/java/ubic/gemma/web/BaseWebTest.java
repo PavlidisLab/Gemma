@@ -63,7 +63,6 @@ public class BaseWebTest extends WebTestCase {
     public void setUp() throws Exception {
         super.setUp();
         baseSetup();
-
         logIn();
     }
 
@@ -73,6 +72,7 @@ public class BaseWebTest extends WebTestCase {
     protected void baseSetup() {
         getTestContext().setUserAgent( "Mozilla/5.0" );
         getTestContext().setBaseUrl( "http://localhost:8080/Gemma" );
+        setScriptingEnabled( false );
         setUpSSL();
         log.debug( "Test base url=" + getTestContext().getBaseUrl() );
     }

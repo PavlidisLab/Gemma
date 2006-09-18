@@ -41,7 +41,7 @@ public class NcbiGeneConverter implements Converter {
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
-    public Collection<Object> convert( Collection<Object> sourceDomainObjects ) {
+    public Collection<Object> convert( Collection sourceDomainObjects ) {
         Collection<Object> results = new HashSet<Object>();
         for ( Object object : sourceDomainObjects ) {
             results.add( this.convert( object ) );

@@ -23,11 +23,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -50,11 +52,25 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
         addNameRestriction( queryObject, arrayDesign );
 
+        /*
+         * Test whether ANY of the associated external references match any of the given external references.
+         */
+        if ( arrayDesign.getExternalReferences().size() != 0 ) {
+            Criteria externalRef = queryObject.createCriteria( "externalReferences" );
+            Disjunction disjunction = Restrictions.disjunction();
+            for ( DatabaseEntry databaseEntry : arrayDesign.getExternalReferences() ) {
+                disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
+            }
+            externalRef.add( disjunction );
+        }
+
         if ( arrayDesign.getDesignProvider() != null
                 && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
             queryObject.createCriteria( "designProvider" ).add(
                     Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
         }
+
+        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -144,7 +160,8 @@ public class BusinessKey {
     }
 
     public static void checkValidKey( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null || StringUtils.isBlank( arrayDesign.getName() ) ) {
+        if ( arrayDesign == null
+                || ( StringUtils.isBlank( arrayDesign.getName() ) && arrayDesign.getExternalReferences().size() == 0 ) ) {
             throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
         }
     }
@@ -280,10 +297,10 @@ public class BusinessKey {
 
     /**
      * @param queryObject
-     * @param arrayDesign
+     * @param describable
      */
-    private static void addNameRestriction( Criteria queryObject, Describable arrayDesign ) {
-        queryObject.add( Restrictions.eq( "name", arrayDesign.getName() ) );
+    private static void addNameRestriction( Criteria queryObject, Describable describable ) {
+        if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
     }
 
     /**

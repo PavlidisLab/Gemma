@@ -23,7 +23,6 @@ package ubic.gemma.model.genome;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -48,7 +47,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
             BusinessKey.checkKey( gene );
 
-          BusinessKey.createQueryObject( queryObject, gene );
+            BusinessKey.createQueryObject( queryObject, gene );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -74,9 +73,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     public Gene findOrCreate( Gene gene ) {
-        Gene newGene = this.find( gene );
-        if ( newGene != null ) {
-            return newGene;
+        Gene existingGene = this.find( gene );
+        if ( existingGene != null ) {
+            return existingGene;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new gene: " + gene.getName() );
         return ( Gene ) create( gene );

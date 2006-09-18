@@ -38,6 +38,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
     private static Log log = LogFactory.getLog( MageLoadIntegrationTest.class.getName() );
     MageMLConverter mageMLConverter = null;
     PersisterHelper persisterHelper;
+    ExpressionExperiment ee;
 
     /*
      * (non-Javadoc)
@@ -49,6 +50,17 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
         super.onSetUp();
         persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
         this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
+     */
+    @Override
+    protected void onTearDown() throws Exception {
+        super.onTearDown();
+        // FIXME delete the experiment that was created.
     }
 
     /**
@@ -79,9 +91,10 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
         for ( Object object : result ) {
             if ( object instanceof ExpressionExperiment ) {
-                ExpressionExperiment ee = ( ExpressionExperiment ) persisterHelper.persist( object );
+                ee = ( ExpressionExperiment ) persisterHelper.persist( object );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );
+                break;
             }
         }
     }
@@ -115,9 +128,10 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
         for ( Object object : result ) {
             if ( object instanceof ExpressionExperiment ) {
-                ExpressionExperiment ee = ( ExpressionExperiment ) persisterHelper.persist( object );
+                ee = ( ExpressionExperiment ) persisterHelper.persist( object );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );
+                break;
             }
         }
 

@@ -127,6 +127,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -235,12 +236,7 @@ public class MageMLConverterHelper {
 
     private ExternalDatabase mgedOntology;
 
-    /**
-     * @param simplifiedXml
-     */
-    public void setSimplifiedXml( Document simplifiedXml ) {
-        this.simplifiedXml = simplifiedXml;
-    }
+    Set<String> missingFiles = new HashSet<String>();
 
     /**
      * Constructor
@@ -254,56 +250,6 @@ public class MageMLConverterHelper {
 
         initMGEDOntology();
 
-    }
-
-    /**
-     * 
-     */
-    private void initMGEDOntology() {
-        URL ontologyDaml = this.getClass().getResource( "MGEDOntology.daml" );
-
-        log.info( "Reading MGED Ontology" );
-        File test = new File( ontologyDaml.getFile() );
-        assert test.canRead() : "Could not read MGED Ontology DAML file";
-        mgedOntologyHelper = new MgedOntologyHelper( ontologyDaml.getFile() );
-
-    }
-
-    /**
-     * 
-     */
-    private void initLocalExternalDataPaths() {
-        localExternalDataPaths = new HashSet<String>();
-
-        String path = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
-        File p = new File( path );
-        if ( !p.canRead() ) {
-            log.error( "Cannot read from " + path );
-        }
-        localExternalDataPaths.add( path );
-
-        // add temp file location.
-        localExternalDataPaths.add( System.getProperty( "java.io.tmpdir" ) );
-
-    }
-
-    /**
-     * This is provided for tests.
-     * 
-     * @param path
-     */
-    protected void addLocalExternalDataPath( String path ) {
-        localExternalDataPaths.add( path );
-    }
-
-    /**
-     * 
-     */
-    private void initMGEDOntologyAliases() {
-        mgedOntologyAliases = new HashSet<String>();
-        mgedOntologyAliases.add( "MGED Ontology" );
-        mgedOntologyAliases.add( "MO" );
-        mgedOntologyAliases.add( "ebi.ac.uk:Database:MO" );
     }
 
     /**
@@ -544,39 +490,6 @@ public class MageMLConverterHelper {
         return result;
     }
 
-    Set<String> missingFiles = new HashSet<String>();
-
-    /**
-     * Given a URI, try to find the corresponding local file. The only part of the URI that is looked at is the file
-     * name. We then look in known local directory paths that are used to store MAGE-ML derived files. The search path
-     * can be modified by using addLocalExternaldataPath
-     * 
-     * @param seekURI
-     * @return URL matching the file.
-     * @see addLocalExternaldataPath
-     */
-    private URL findLocalMageExternalDataFile( String rawFileName ) {
-        String fileName = rawFileName;
-        if ( fileName.lastIndexOf( File.separatorChar ) >= 0 ) {
-            fileName = rawFileName.substring( rawFileName.lastIndexOf( File.separatorChar ) + 1 );
-        }
-
-        log.debug( "Seeking external data file " + fileName );
-        for ( String path : this.localExternalDataPaths ) {
-            File f = new File( path + File.separatorChar + fileName );
-            log.debug( "Looking in " + f.getAbsolutePath() );
-            if ( f.exists() ) {
-                log.debug( "Found it! In " + f.getAbsolutePath() );
-                try {
-                    return f.toURI().toURL();
-                } catch ( MalformedURLException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-        }
-        return null;
-    }
-
     /**
      * In a typical MAGE file, we have the following associations:
      * <p>
@@ -621,13 +534,13 @@ public class MageMLConverterHelper {
         List<BioAssay> bioAssays = bioAssayDim.getBioAssays();
         for ( BioAssay bioAssay : bioAssays ) {
             if ( ded instanceof FeatureDimension ) {
-                log.debug( "Got a feature dimension: " + ded.getIdentifier() );
+                if ( log.isDebugEnabled() ) log.debug( "Got a feature dimension: " + ded.getIdentifier() );
                 designElements = ( ( FeatureDimension ) ded ).getContainedFeatures();
             } else if ( ded instanceof CompositeSequenceDimension ) {
-                log.debug( "Got a compositesequence dimension: " + ded.getIdentifier() );
+                if ( log.isDebugEnabled() ) log.debug( "Got a compositesequence dimension: " + ded.getIdentifier() );
                 designElements = ( ( CompositeSequenceDimension ) ded ).getCompositeSequences();
             } else if ( ded instanceof ReporterDimension ) {
-                log.debug( "Got a reporter dimension: " + ded.getIdentifier() );
+                if ( log.isDebugEnabled() ) log.debug( "Got a reporter dimension: " + ded.getIdentifier() );
                 designElements = ( ( ReporterDimension ) ded ).getReporters();
             }
 
@@ -684,29 +597,9 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * Given a Gemma bioassay, return the associated DesignElementDimension.
+     * Note that LabeledExtracts are where we get the BioMaterial information from (directly). Information from other
+     * subclasses of org.biomage.BioMaterial.BioMaterial has to be merged in here.
      * 
-     * @param bioAssay
-     * @return A List of DesignElements representing the DesignElementDimension for the BioAssay. If there is no such
-     *         bioAssay in the current data, returns null.
-     */
-    public List<DesignElement> getBioAssayDesignElementDimension( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        if ( bioAssay == null ) throw new IllegalArgumentException();
-        return bioAssayDimensions.getDesignElementDimension( bioAssay );
-    }
-
-    /**
-     * @param bioAssay
-     * @return A List of QuantitationTypes representing the QuantitationTypeDimension for the BioAssay. If there is no
-     *         such bioAssay in the current data, returns null.
-     */
-    public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        if ( bioAssay == null ) throw new IllegalArgumentException();
-        return bioAssayDimensions.getQuantitationTypeDimension( bioAssay );
-    }
-
-    /**
      * @param mageObj
      * @return
      * @see convertLabeledExtract
@@ -721,6 +614,54 @@ public class MageMLConverterHelper {
 
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
+
+        /*
+         * If it is a labeledExtract, get the treatment -> sourcebiomaterials and samples and merge them in into the
+         * current. This is important as we get the Taxon for the biomaterial this way.
+         */
+        if ( mageObj instanceof LabeledExtract ) {
+            LabeledExtract mageEx = ( LabeledExtract ) mageObj;
+            for ( Object o : mageEx.getTreatments() ) {
+                org.biomage.BioMaterial.Treatment treatment = ( org.biomage.BioMaterial.Treatment ) o;
+
+                // drill down to biosamples and to biosources, recursively.
+                for ( Object p : treatment.getSourceBioMaterialMeasurements() ) {
+                    BioMaterialMeasurement bmm = ( BioMaterialMeasurement ) p;
+                    org.biomage.BioMaterial.BioMaterial bm = bmm.getBioMaterial();
+
+                    if ( !( bm instanceof BioSample ) ) {
+                        throw new UnsupportedOperationException( "Didn't expect a " + bm.getClass().getName() );
+                    }
+                    BioSample bsample = ( BioSample ) bm;
+                    processBioSampleCharacteristics( result, bsample );
+
+                }
+            }
+
+        } else if ( result.getSourceTaxon() == null && mageObj instanceof BioSource ) {
+            // explicitly conver the taxon over.
+            boolean found = false;
+            for ( Characteristic character : result.getCharacteristics() ) {
+                if ( character.getCategory().equals( "Organism" ) ) {
+                    String scientificName = character.getValue();
+                    Taxon t = Taxon.Factory.newInstance();
+                    t.setScientificName( scientificName );
+                    result.setSourceTaxon( t );
+                    found = true;
+                    break;
+                }
+            }
+
+            if ( !found && log.isWarnEnabled() ) {
+                log.warn( "There is no organism information available for " + result + " (converting from " + mageObj
+                        + "; Information is usually in BioSource" );
+            } else if ( log.isInfoEnabled() ) {
+                if ( log.isDebugEnabled() )
+                    log.debug( "Found " + result.getSourceTaxon() + " from ontology entries for " + result );
+            }
+
+        }
+
         return result;
     }
 
@@ -755,191 +696,6 @@ public class MageMLConverterHelper {
 
     /**
      * @param mageObj
-     * @param gemmaObj
-     * @param associatedObject
-     */
-    private void specialConvertBioMaterialBioCharacteristics( org.biomage.BioMaterial.BioMaterial mageObj,
-            BioMaterial gemmaObj ) {
-
-        assert simplifiedXml != null;
-        List<Element> elmList = simplifiedXml.selectNodes( "/BioList/BioMaterial[@identifier='"
-                + mageObj.getIdentifier() + "']/Characteristics/child::node()" );
-
-        // just debugging information.
-        if ( elmList.isEmpty() ) {
-            List<Element> check = simplifiedXml.selectNodes( "/BioList/BioMaterial[@identifier='"
-                    + mageObj.getIdentifier() + "']" );
-            if ( check.isEmpty() ) {
-                log.error( "Failed to find identifier " + mageObj.getIdentifier() + " in simplified DOM." );
-            } else {
-                log.debug( "Found identifier " + mageObj.getIdentifier()
-                        + " in simplified DOM but no 'Characteristics'" );
-            }
-            return;
-        }
-
-        log.debug( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM." );
-        for ( Element elm : elmList ) {
-            Characteristic bioCharacteristic = Characteristic.Factory.newInstance();
-            bioCharacteristic.setCategory( elm.getName() );
-            bioCharacteristic.setValue( elm.valueOf( "@value" ) );
-
-            specialFillInCharacteristicOntologyEntries( bioCharacteristic, elm );
-
-            List subList = elm.selectNodes( "child::node()" );
-            Collection<Characteristic> bcConstituents = bioCharacteristic.getConstituents();
-            if ( subList.size() > 0 ) {
-                for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
-                    Element elmSub = ( Element ) subIter.next();
-                    Characteristic bcConstitutent = Characteristic.Factory.newInstance();
-                    bcConstitutent.setCategory( elmSub.getName() );
-                    bcConstitutent.setValue( elmSub.valueOf( "@value" ) );
-                    log.debug( " CAT: " + bcConstitutent.getCategory() + " VAL: " + bcConstitutent.getValue() );
-                    bcConstituents.add( bcConstitutent );
-                }
-                bioCharacteristic.setConstituents( bcConstituents );
-            }
-            gemmaObj.getCharacteristics().add( bioCharacteristic );
-        }
-    }
-
-    /**
-     * Fill in the associated OntologyEntry (controlled vocabulary terms) for a characteristic. If no accession or
-     * database is given, we look in the MGED Ontology (MO) for a matching term.
-     * <p>
-     * Unfortunately, in MO the instances don't necessarily match up with the categories - annotators seem to use
-     * whatever instance for whatever category. For example, technically a BioSampleType can only be "extract" or
-     * "not_extract", but our tests include a file that has "fresh_sample" as the value for BioSampleType. Therefore we
-     * have to check the instances of <em>other</em> classes as well.
-     * 
-     * @param characteristic
-     * @param elm that holds the parsed accession and database identifiers.
-     */
-    private void specialFillInCharacteristicOntologyEntries( Characteristic characteristic, Element elm ) {
-        assert mgedOntologyHelper != null;
-        if ( characteristic == null ) {
-            log.warn( "Null characteristic passed, ignoring" );
-            return;
-        }
-
-        if ( characteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
-
-        boolean isCategoryMo = false;
-        boolean isValueMo = false;
-        boolean hasCategoryAcc = false;
-        boolean hasValueAcc = false;
-        String categoryDb = elm.valueOf( "@CategoryDatabaseIdentifier" );
-        String categoryAcc = elm.valueOf( "@CategoryDatabaseAccession" );
-        String valueDb = elm.valueOf( "@ValueDatabaseIdentifier" );
-        String valueAcc = elm.valueOf( "@ValueDatabaseAccession" );
-
-        if ( categoryDb.length() > 0 ) {
-            isCategoryMo = this.mgedOntologyAliases.contains( categoryDb );
-            if ( isCategoryMo ) {
-                categoryDb = MGED_DATABASE_IDENTIFIER;
-            }
-        } else if ( mgedOntologyHelper.classExists( characteristic.getCategory() ) ) {
-            isCategoryMo = true;
-            categoryDb = MGED_DATABASE_IDENTIFIER;
-        } else {
-            log.debug( "No category database for '" + characteristic.getCategory() + "'" );
-        }
-
-        if ( categoryAcc.length() > 0 ) {
-            if ( isCategoryMo ) {
-                categoryAcc = formMgedOntologyAccession( categoryAcc );
-            }
-        } else if ( isCategoryMo ) {
-            categoryAcc = formMgedOntologyAccession( characteristic.getCategory() );
-        } else {
-            hasCategoryAcc = false;
-            log.debug( "No category accession value for '" + characteristic.getCategory() + "'" );
-        }
-
-        if ( characteristic.getValue().length() > 0 ) {
-            if ( valueDb.length() > 0 ) {
-                isValueMo = this.mgedOntologyAliases.contains( valueDb );
-                if ( isValueMo ) {
-                    valueDb = MGED_DATABASE_IDENTIFIER;
-                }
-            } else if ( isCategoryMo
-                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ) != null
-                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ).contains(
-                            characteristic.getValue() ) ) {
-                isValueMo = true;
-                valueDb = MGED_DATABASE_IDENTIFIER;
-
-            } else if ( isCategoryMo ) {
-                String instanceCategory = this.mgedOntologyHelper.getClassNameForInstance( characteristic.getValue() );
-                if ( instanceCategory != null ) {
-                    log.debug( "'" + characteristic.getValue() + "' is actually an instance of '" + instanceCategory
-                            + "', not '" + characteristic.getCategory() + "', but we just go with the flow." );
-                    isValueMo = true;
-                    valueDb = MGED_DATABASE_IDENTIFIER;
-                } else {
-                    log.debug( "No value database available for '" + characteristic.getValue() + "'" );
-                }
-
-            } else {
-                log.debug( "No value database available for '" + characteristic.getValue() + "'" );
-            }
-
-            if ( valueAcc.length() > 0 ) {
-                if ( isValueMo ) {
-                    valueAcc = formMgedOntologyAccession( valueAcc );
-                }
-            } else if ( isValueMo ) {
-                valueAcc = formMgedOntologyAccession( characteristic.getValue() );
-            } else {
-                hasValueAcc = false;
-            }
-        }
-
-        if ( hasCategoryAcc ) {
-            ExternalDatabase categoryExternalDatabase = ExternalDatabase.Factory.newInstance();
-            categoryExternalDatabase.setName( categoryDb );
-            ubic.gemma.model.common.description.OntologyEntry categoryOntologyEntry = ubic.gemma.model.common.description.OntologyEntry.Factory
-                    .newInstance();
-            categoryOntologyEntry.setAccession( categoryAcc );
-            categoryOntologyEntry.setExternalDatabase( categoryExternalDatabase );
-            categoryOntologyEntry.setCategory( characteristic.getCategory() );
-            categoryOntologyEntry.setValue( characteristic.getCategory() );
-            characteristic.setCategoryTerm( categoryOntologyEntry );
-        }
-
-        if ( hasValueAcc ) {
-            ExternalDatabase valueExternalDatabase = ExternalDatabase.Factory.newInstance();
-            valueExternalDatabase.setName( valueDb );
-            ubic.gemma.model.common.description.OntologyEntry valueOntologyEntry = ubic.gemma.model.common.description.OntologyEntry.Factory
-                    .newInstance();
-            valueOntologyEntry.setAccession( valueAcc );
-            valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
-            valueOntologyEntry.setCategory( characteristic.getValue() );
-            valueOntologyEntry.setValue( characteristic.getValue() );
-            characteristic.setValueTerm( valueOntologyEntry );
-        }
-
-        log.debug( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
-                + "'   CatDb: '" + categoryDb + "'  ValDb: '" + valueDb + "'   CatAcc: '" + categoryAcc
-                + "'   ValAcc: " + valueAcc );
-    }
-
-    /**
-     * @param name Possibly mal-formed accession
-     * @return property formed accession identifier for the term.
-     */
-    private String formMgedOntologyAccession( String name ) {
-        if ( name.startsWith( MGED_ONTOLOGY_URL ) ) {
-            return name;
-        } else if ( name.startsWith( "#" ) ) {
-            return MGED_ONTOLOGY_URL + name;
-        } else {
-            return MGED_ONTOLOGY_URL + "#" + name;
-        }
-    }
-
-    /**
-     * @param mageObj
      * @return
      */
     public BioMaterial convertBioSample( BioSample mageObj ) {
@@ -967,7 +723,8 @@ public class MageMLConverterHelper {
         if ( associationName.equals( "Type" ) ) {
             // we don't support.
         } else {
-            log.debug( "Unknown or unsupported type, or is for superclass " + associationName );
+            if ( log.isDebugEnabled() )
+                log.debug( "Unknown or unsupported type, or is for superclass " + associationName );
         }
     }
 
@@ -1030,7 +787,7 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * @param mageObj
+     * @param mageObjIn
      * @return BioMaterial
      * @see convertBioMaterial
      */
@@ -1342,6 +1099,33 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * @param dateString
+     * @return
+     */
+    public Date convertDateString( String dateString ) {
+        Date result = null;
+        try {
+            result = ( new SimpleDateFormat() ).parse( dateString );
+
+        } catch ( ParseException e ) {
+            if ( dateString.equals( "n\\a" ) || dateString.equals( "n/a" ) ) {
+                return null;
+            }
+            log.debug( "Trying alternative date formats" );
+            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
+            try {
+                result = formatter.parse( dateString );
+            } catch ( ParseException e1 ) {
+                log.error( "Could not parse date from  '" + dateString + "'" );
+            }
+
+            log.error( "Could not parse date from  '" + dateString + "'" );
+            return null;
+        }
+        return result;
+    }
+
+    /**
      * @param mageObj
      * @return
      */
@@ -1370,8 +1154,8 @@ public class MageMLConverterHelper {
                 BioAssay bioAssay = ( BioAssay ) iter.next();
                 if ( bioAssay instanceof MeasuredBioAssay ) {
 
-                    specialGetArrayDesignForPhysicalBioAssay( ( ( MeasuredBioAssay ) bioAssay ).getFeatureExtraction()
-                            .getPhysicalBioAssaySource(), result );
+                    specialConvertAssociationsForPhysicalBioAssay( ( ( MeasuredBioAssay ) bioAssay )
+                            .getFeatureExtraction().getPhysicalBioAssaySource(), result );
                 } else {
                     log.error( "What kind of bioassay is associated?: " + bioAssay.getClass().getName() );
                 }
@@ -1466,6 +1250,22 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * @param designElement
+     * @return
+     */
+    public DesignElement convertDesignElement( org.biomage.DesignElement.DesignElement designElement ) {
+        if ( designElement instanceof org.biomage.DesignElement.Reporter ) {
+            return convertReporter( ( org.biomage.DesignElement.Reporter ) designElement );
+        } else if ( designElement instanceof org.biomage.DesignElement.CompositeSequence ) {
+            return convertCompositeSequence( ( org.biomage.DesignElement.CompositeSequence ) designElement );
+        } else if ( designElement instanceof Feature ) {
+            return convertFeature( ( Feature ) designElement );
+        } else {
+            throw new IllegalArgumentException( "Can't convert a " + designElement.getClass().getName() );
+        }
+    }
+
+    /**
      * @param mageObj
      * @return
      */
@@ -1549,7 +1349,9 @@ public class MageMLConverterHelper {
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "BioAssays" ) ) {
             assert associatedObject instanceof List;
-            if ( ( ( List ) associatedObject ).size() > 0 ) log.debug( "Converting Experiment-->BioAssays" );
+            if ( ( ( List ) associatedObject ).size() > 0 && log.isDebugEnabled() ) {
+                log.debug( "Converting Experiment-->BioAssays" );
+            }
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Providers" ) ) {
             assert associatedObject instanceof List;
@@ -1676,6 +1478,16 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * @param feature
+     * @return
+     */
+    @SuppressWarnings("unused")
+    public DesignElement convertFeature( Feature feature ) {
+        // I think we just have to ignore this.
+        return null;
+    }
+
+    /**
      * Unlike in MAGE, feature-reporter map is not an entity. (The mage name is also confusing: it is an assocation
      * between a reporter and the features that make it up). Therefore, this is a no-op.
      * 
@@ -1686,18 +1498,6 @@ public class MageMLConverterHelper {
         if ( mageObj == null ) return null;
         return null;
     }
-
-    // /**
-    // * @param list
-    // * @param gemmaObj
-    // */
-    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
-    // ExpressionExperiment gemmaObj ) {
-    // for ( BioAssayData data : bioAssayData ) {
-    // LocalFile file = convertBioAssayData( data );
-    // // need to attachi this to
-    // }
-    // }
 
     /**
      * @param mageObj
@@ -1864,6 +1664,18 @@ public class MageMLConverterHelper {
         return result;
     }
 
+    // /**
+    // * @param list
+    // * @param gemmaObj
+    // */
+    // private void specialConvertExperimentBioAssayDataAssociations( List<BioAssayData> bioAssayData,
+    // ExpressionExperiment gemmaObj ) {
+    // for ( BioAssayData data : bioAssayData ) {
+    // LocalFile file = convertBioAssayData( data );
+    // // need to attachi this to
+    // }
+    // }
+
     /**
      * @param mageObj
      * @param gemmaObj
@@ -1984,31 +1796,6 @@ public class MageMLConverterHelper {
             }
         }
         return result;
-    }
-
-    /**
-     * @return
-     */
-    private ExternalDatabase getUnknownDatabaseObject() {
-        ExternalDatabase unknownDatabase = ExternalDatabase.Factory.newInstance();
-        unknownDatabase.setName( UNKNOWN_DATABASE_IDENTIFIER );
-        return unknownDatabase;
-    }
-
-    /**
-     * Convenience method to access a ready-made ExternalDatabase representing the MGED Ontology.
-     * 
-     * @return
-     */
-    private ExternalDatabase getMAGEOntologyDatabaseObject() {
-        if ( this.mgedOntology != null ) {
-            return mgedOntology;
-        }
-        this.mgedOntology = ExternalDatabase.Factory.newInstance();
-        mgedOntology.setName( MGED_DATABASE_IDENTIFIER );
-        mgedOntology.setType( DatabaseType.ONTOLOGY );
-        mgedOntology.setWebUri( MGED_ONTOLOGY_URL );
-        return mgedOntology;
     }
 
     /**
@@ -2157,7 +1944,7 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "BioAssayCreation" ) ) { // we only use this to get the array designs.
-            specialGetArrayDesignForPhysicalBioAssay( mageObj, gemmaObj );
+            specialConvertAssociationsForPhysicalBioAssay( mageObj, gemmaObj );
         } else if ( associationName.equals( "BioAssayTreatments" ) ) {
             assert associatedObject instanceof List;
             // this is not supported in our data model currently.
@@ -2239,33 +2026,6 @@ public class MageMLConverterHelper {
         }
         convertDescribable( mageObj, result );
         convertAssociations( mageObj, result );
-        return result;
-    }
-
-    /**
-     * @param dateString
-     * @return
-     */
-    public Date convertDateString( String dateString ) {
-        Date result = null;
-        try {
-            result = ( new SimpleDateFormat() ).parse( dateString );
-
-        } catch ( ParseException e ) {
-            if ( dateString.equals( "n\\a" ) || dateString.equals( "n/a" ) ) {
-                return null;
-            }
-            log.debug( "Trying alternative date formats" );
-            DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
-            try {
-                result = formatter.parse( dateString );
-            } catch ( ParseException e1 ) {
-                log.error( "Could not parse date from  '" + dateString + "'" );
-            }
-
-            log.error( "Could not parse date from  '" + dateString + "'" );
-            return null;
-        }
         return result;
     }
 
@@ -2425,32 +2185,6 @@ public class MageMLConverterHelper {
     public void convertRatioAssociations( Ratio mageObj,
             ubic.gemma.model.common.quantitationtype.QuantitationType gemmaObj, Method getter ) {
         convertQuantitationTypeAssociations( mageObj, gemmaObj, getter );
-    }
-
-    /**
-     * @param designElement
-     * @return
-     */
-    public DesignElement convertDesignElement( org.biomage.DesignElement.DesignElement designElement ) {
-        if ( designElement instanceof org.biomage.DesignElement.Reporter ) {
-            return convertReporter( ( org.biomage.DesignElement.Reporter ) designElement );
-        } else if ( designElement instanceof org.biomage.DesignElement.CompositeSequence ) {
-            return convertCompositeSequence( ( org.biomage.DesignElement.CompositeSequence ) designElement );
-        } else if ( designElement instanceof Feature ) {
-            return convertFeature( ( Feature ) designElement );
-        } else {
-            throw new IllegalArgumentException( "Can't convert a " + designElement.getClass().getName() );
-        }
-    }
-
-    /**
-     * @param feature
-     * @return
-     */
-    @SuppressWarnings("unused")
-    public DesignElement convertFeature( Feature feature ) {
-        // I think we just have to ignore this.
-        return null;
     }
 
     /**
@@ -2694,6 +2428,10 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "ProtocolApplications" ) ) {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+        } else if ( associationName.equals( "SourceBioMaterialMeasurements" ) ) {
+            // deal with separately.
+            // assert associatedObject instanceof List;
+            // need the bioSource for our biomaterial.
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2727,6 +2465,43 @@ public class MageMLConverterHelper {
      */
     public ubic.gemma.model.common.description.OntologyEntry convertValue( OntologyEntry mageObj ) {
         return convertOntologyEntry( mageObj );
+    }
+
+    /**
+     * Given a Gemma bioassay, return the associated DesignElementDimension.
+     * 
+     * @param bioAssay
+     * @return A List of DesignElements representing the DesignElementDimension for the BioAssay. If there is no such
+     *         bioAssay in the current data, returns null.
+     */
+    public List<DesignElement> getBioAssayDesignElementDimension( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+        if ( bioAssay == null ) throw new IllegalArgumentException();
+        return bioAssayDimensions.getDesignElementDimension( bioAssay );
+    }
+
+    /**
+     * @return Returns the bioAssayDimensions.
+     */
+    public BioAssayDimensions getBioAssayDimensions() {
+        return this.bioAssayDimensions;
+    }
+
+    /**
+     * @param bioAssay
+     * @return A List of QuantitationTypes representing the QuantitationTypeDimension for the BioAssay. If there is no
+     *         such bioAssay in the current data, returns null.
+     */
+    public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
+            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+        if ( bioAssay == null ) throw new IllegalArgumentException();
+        return bioAssayDimensions.getQuantitationTypeDimension( bioAssay );
+    }
+
+    /**
+     * @param simplifiedXml
+     */
+    public void setSimplifiedXml( Document simplifiedXml ) {
+        this.simplifiedXml = simplifiedXml;
     }
 
     /**
@@ -2856,40 +2631,15 @@ public class MageMLConverterHelper {
                 convertAssociations( superclazz, mageObj, gemmaObj );
 
         } catch ( NoSuchMethodException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( IllegalArgumentException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( IllegalAccessException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            log.error( "InvocationTargetException For: " + gemmaObjName, e );
+            throw new RuntimeException( "InvocationTargetException For: " + gemmaObjName, e );
         }
     }
-
-    // /**
-    // * If this object has a slot for an OntologyEntry, fill it in.
-    // *
-    // * @param associatedGemmaObj
-    // */
-    // private void fillInOntologyEntry( Object gemmaObj ) {
-    // Method setter = findOntologyEntrySetter( gemmaObj );
-    // if ( setter == null ) {
-    // log.debug( "No ontologyEntry associated with " + gemmaObj.getClass().getSimpleName() );
-    // return;
-    // }
-    //
-    // try {
-    // setter.invoke( gemmaObj, new Object[] { ubic.gemma.model.common.description.OntologyEntry.Factory
-    // .newInstance() } );
-    // } catch ( IllegalArgumentException e ) {
-    // log.error( e, e );
-    // } catch ( IllegalAccessException e ) {
-    // log.error( e, e );
-    // } catch ( InvocationTargetException e ) {
-    // log.error( e, e );
-    // }
-    //
-    // }
 
     /**
      * Locate a converter for a MAGE object.
@@ -3053,6 +2803,37 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * Given a URI, try to find the corresponding local file. The only part of the URI that is looked at is the file
+     * name. We then look in known local directory paths that are used to store MAGE-ML derived files. The search path
+     * can be modified by using addLocalExternaldataPath
+     * 
+     * @param seekURI
+     * @return URL matching the file.
+     * @see addLocalExternaldataPath
+     */
+    private URL findLocalMageExternalDataFile( String rawFileName ) {
+        String fileName = rawFileName;
+        if ( fileName.lastIndexOf( File.separatorChar ) >= 0 ) {
+            fileName = rawFileName.substring( rawFileName.lastIndexOf( File.separatorChar ) + 1 );
+        }
+
+        if ( log.isDebugEnabled() ) log.debug( "Seeking external data file " + fileName );
+        for ( String path : this.localExternalDataPaths ) {
+            File f = new File( path + File.separatorChar + fileName );
+            if ( log.isDebugEnabled() ) log.debug( "Looking in " + f.getAbsolutePath() );
+            if ( f.exists() ) {
+                if ( log.isDebugEnabled() ) log.debug( "Found it! In " + f.getAbsolutePath() );
+                try {
+                    return f.toURI().toURL();
+                } catch ( MalformedURLException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Find a setter for a property.
      * 
      * @param setter - The object on which we want to call the setter
@@ -3071,6 +2852,178 @@ public class MageMLConverterHelper {
             log.error( "No such setter: " + "set" + propertyName + "(" + setee.getSimpleName() + ")", e );
         }
         return gemmaSetter;
+    }
+
+    /**
+     * @param name Possibly mal-formed accession
+     * @return property formed accession identifier for the term.
+     */
+    private String formMgedOntologyAccession( String name ) {
+        if ( name.startsWith( MGED_ONTOLOGY_URL ) ) {
+            return name;
+        } else if ( name.startsWith( "#" ) ) {
+            return MGED_ONTOLOGY_URL + name;
+        } else {
+            return MGED_ONTOLOGY_URL + "#" + name;
+        }
+    }
+
+    /**
+     * Convenience method to access a ready-made ExternalDatabase representing the MGED Ontology.
+     * 
+     * @return
+     */
+    private ExternalDatabase getMAGEOntologyDatabaseObject() {
+        if ( this.mgedOntology != null ) {
+            return mgedOntology;
+        }
+        this.mgedOntology = ExternalDatabase.Factory.newInstance();
+        mgedOntology.setName( MGED_DATABASE_IDENTIFIER );
+        mgedOntology.setType( DatabaseType.ONTOLOGY );
+        mgedOntology.setWebUri( MGED_ONTOLOGY_URL );
+        return mgedOntology;
+    }
+
+    // /**
+    // * If this object has a slot for an OntologyEntry, fill it in.
+    // *
+    // * @param associatedGemmaObj
+    // */
+    // private void fillInOntologyEntry( Object gemmaObj ) {
+    // Method setter = findOntologyEntrySetter( gemmaObj );
+    // if ( setter == null ) {
+    // log.debug( "No ontologyEntry associated with " + gemmaObj.getClass().getSimpleName() );
+    // return;
+    // }
+    //
+    // try {
+    // setter.invoke( gemmaObj, new Object[] { ubic.gemma.model.common.description.OntologyEntry.Factory
+    // .newInstance() } );
+    // } catch ( IllegalArgumentException e ) {
+    // log.error( e, e );
+    // } catch ( IllegalAccessException e ) {
+    // log.error( e, e );
+    // } catch ( InvocationTargetException e ) {
+    // log.error( e, e );
+    // }
+    //
+    // }
+
+    /**
+     * For a method like "getFoo", returns "Foo".
+     * 
+     * @param getter
+     * @return
+     */
+    private String getterToPropertyName( Method getter ) {
+        if ( !getter.getName().startsWith( "get" ) ) throw new IllegalArgumentException( "Not a getter" );
+        return getter.getName().substring( 3 );
+    }
+
+    /**
+     * @return
+     */
+    private ExternalDatabase getUnknownDatabaseObject() {
+        ExternalDatabase unknownDatabase = ExternalDatabase.Factory.newInstance();
+        unknownDatabase.setName( UNKNOWN_DATABASE_IDENTIFIER );
+        return unknownDatabase;
+    }
+
+    /**
+     * @param gemmaObj
+     * @return
+     */
+    private Collection<CompositeSequence> initializeCompositeSequenceCollection(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
+        Collection<CompositeSequence> designObjs;
+        if ( gemmaObj.getCompositeSequences() == null ) {
+            designObjs = new HashSet<CompositeSequence>();
+            gemmaObj.setCompositeSequences( designObjs );
+        } else {
+            designObjs = gemmaObj.getCompositeSequences();
+        }
+        return designObjs;
+    }
+
+    /**
+     * @param gemmaObj
+     * @return
+     */
+    private Collection<Reporter> initializeReporterCollection(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
+        Collection<Reporter> designObjs;
+        if ( gemmaObj.getReporters() == null ) {
+            designObjs = new HashSet<Reporter>();
+            gemmaObj.setReporters( designObjs );
+        } else {
+            designObjs = gemmaObj.getReporters();
+        }
+        return designObjs;
+    }
+
+    /**
+     * 
+     */
+    private void initLocalExternalDataPaths() {
+        localExternalDataPaths = new HashSet<String>();
+
+        String path = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
+        File p = new File( path );
+        if ( !p.canRead() ) {
+            log.error( "Cannot read from " + path );
+        }
+        localExternalDataPaths.add( path );
+
+        // add temp file location.
+        localExternalDataPaths.add( System.getProperty( "java.io.tmpdir" ) );
+
+    }
+
+    /**
+     * 
+     */
+    private void initMGEDOntology() {
+        URL ontologyDaml = this.getClass().getResource( "MGEDOntology.daml" );
+
+        log.info( "Reading MGED Ontology" );
+        File test = new File( ontologyDaml.getFile() );
+        assert test.canRead() : "Could not read MGED Ontology DAML file";
+        mgedOntologyHelper = new MgedOntologyHelper( ontologyDaml.getFile() );
+
+    }
+
+    /**
+     * 
+     */
+    private void initMGEDOntologyAliases() {
+        mgedOntologyAliases = new HashSet<String>();
+        mgedOntologyAliases.add( "MGED Ontology" );
+        mgedOntologyAliases.add( "MO" );
+        mgedOntologyAliases.add( "ebi.ac.uk:Database:MO" );
+    }
+
+    /**
+     * Initialize the conversion process by calling the getter and getting the association name
+     * 
+     * @param mageObj
+     * @param gemmaObj
+     * @param getter
+     * @return The name of the association, taken from the getter.
+     */
+    private Object intializeConversion( Object mageObj, Method getter ) {
+        Object associatedObject = invokeGetter( mageObj, getter );
+
+        if ( associatedObject == null ) {
+            if ( log.isDebugEnabled() )
+                log.debug( "Getter called on " + mageObj.getClass().getName() + " but failed to return a value: "
+                        + getter.getName() + " (Probably no data)" );
+            return null;
+        }
+
+        if ( log.isDebugEnabled() )
+            log.debug( mageObj.getClass().getName() + "--->" + getterToPropertyName( getter ) );
+
+        return associatedObject;
     }
 
     // /**
@@ -3119,70 +3072,6 @@ public class MageMLConverterHelper {
     // }
 
     /**
-     * For a method like "getFoo", returns "Foo".
-     * 
-     * @param getter
-     * @return
-     */
-    private String getterToPropertyName( Method getter ) {
-        if ( !getter.getName().startsWith( "get" ) ) throw new IllegalArgumentException( "Not a getter" );
-        return getter.getName().substring( 3 );
-    }
-
-    /**
-     * @param gemmaObj
-     * @return
-     */
-    private Collection<Reporter> initializeReporterCollection(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
-        Collection<Reporter> designObjs;
-        if ( gemmaObj.getReporters() == null ) {
-            designObjs = new HashSet<Reporter>();
-            gemmaObj.setReporters( designObjs );
-        } else {
-            designObjs = gemmaObj.getReporters();
-        }
-        return designObjs;
-    }
-
-    /**
-     * @param gemmaObj
-     * @return
-     */
-    private Collection<CompositeSequence> initializeCompositeSequenceCollection(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
-        Collection<CompositeSequence> designObjs;
-        if ( gemmaObj.getCompositeSequences() == null ) {
-            designObjs = new HashSet<CompositeSequence>();
-            gemmaObj.setCompositeSequences( designObjs );
-        } else {
-            designObjs = gemmaObj.getCompositeSequences();
-        }
-        return designObjs;
-    }
-
-    /**
-     * Initialize the conversion process by calling the getter and getting the association name
-     * 
-     * @param mageObj
-     * @param gemmaObj
-     * @param getter
-     * @return The name of the association, taken from the getter.
-     */
-    private Object intializeConversion( Object mageObj, Method getter ) {
-        Object associatedObject = invokeGetter( mageObj, getter );
-
-        if ( associatedObject == null ) {
-            log.debug( "Getter called on " + mageObj.getClass().getName() + " but failed to return a value: "
-                    + getter.getName() + " (Probably no data)" );
-            return null;
-        }
-
-        log.debug( mageObj.getClass().getName() + "--->" + getterToPropertyName( getter ) );
-        return associatedObject;
-    }
-
-    /**
      * Call a 'get' method to retrieve an associated MAGE object for conversion.
      * 
      * @param mageObj
@@ -3207,6 +3096,58 @@ public class MageMLConverterHelper {
                     e );
         }
         return associatedObject;
+    }
+
+    /**
+     * @param result
+     * @param bsample
+     */
+    private void processBioSampleCharacteristics( ubic.gemma.model.expression.biomaterial.BioMaterial result,
+            BioSample bioSample ) {
+        BioMaterial sample = convertBioSample( bioSample );
+
+        // copy characteristics over.
+        for ( Characteristic character : sample.getCharacteristics() ) {
+            result.getCharacteristics().add( character );
+        }
+
+        // drill down to biosource
+        for ( Object q : bioSample.getTreatments() ) {
+            org.biomage.BioMaterial.Treatment sampleTreatment = ( org.biomage.BioMaterial.Treatment ) q;
+            for ( Object r : sampleTreatment.getSourceBioMaterialMeasurements() ) {
+                BioMaterialMeasurement bioMaterialMeas = ( BioMaterialMeasurement ) r;
+                org.biomage.BioMaterial.BioMaterial bioMaterial = bioMaterialMeas.getBioMaterial();
+
+                if ( bioMaterial instanceof BioSample ) {
+                    BioSample biosample = ( BioSample ) bioMaterial;
+                    processBioSampleCharacteristics( result, biosample ); // recursion.
+
+                } else if ( bioMaterial instanceof BioSource ) {
+                    processBioSourceChacteristics( result, bioMaterial );
+                } else {
+                    throw new UnsupportedOperationException( "Can't deal with " + bioMaterial.getClass().getName() );
+                }
+
+            }
+
+        }
+    }
+
+    /**
+     * @param result
+     * @param bm2
+     */
+    private void processBioSourceChacteristics( ubic.gemma.model.expression.biomaterial.BioMaterial result,
+            org.biomage.BioMaterial.BioMaterial bm2 ) {
+        BioSource bs = ( BioSource ) bm2;
+        BioMaterial source = convertBioSource( bs ); // here we should get the taxon.
+        for ( Characteristic character : source.getCharacteristics() ) {
+            result.getCharacteristics().add( character );
+        }
+        if ( source.getSourceTaxon() != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Adding " + source.getSourceTaxon() + " to " + result );
+            result.setSourceTaxon( source.getSourceTaxon() );
+        }
     }
 
     /**
@@ -3335,6 +3276,43 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * From a PhysicalBioAssay, find the associated ArrayDesign, and also sort out the biomaterials.
+     * 
+     * @param mageObj
+     * @param result
+     */
+    private void specialConvertAssociationsForPhysicalBioAssay( PhysicalBioAssay mageObj,
+            ubic.gemma.model.expression.bioAssay.BioAssay result ) {
+
+        BioAssayCreation bac = mageObj.getBioAssayCreation();
+        if ( bac == null ) return;
+
+        ArrayDesign ad = bac.getArray().getArrayDesign();
+        if ( ad == null ) {
+            log.warn( "No array Design for " + result + " from " + mageObj );
+        } else {
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
+
+            if ( log.isTraceEnabled() )
+                log.trace( "Adding array design used " + ad.getName() + " to " + result.getName() );
+
+            result.setArrayDesignUsed( conv );
+        }
+
+        // add biomaterials to the resulting bioassay
+        Collection<BioMaterialMeasurement> measurements = bac.getSourceBioMaterialMeasurements();
+        Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
+
+        for ( BioMaterialMeasurement bmm : measurements ) {
+            if ( log.isDebugEnabled() ) log.debug( "Converting " + bmm.getBioMaterial() + " for " + mageObj );
+            biomaterials.add( convertBioMaterial( bmm.getBioMaterial() ) );
+        }
+
+        result.setSamplesUsed( biomaterials );
+
+    }
+
+    /**
      * Special case to convert BioAssayData associations of a BioAssay object. We only store references to the data
      * files - there is no BioAssayData object in gemma.model.
      * 
@@ -3377,6 +3355,58 @@ public class MageMLConverterHelper {
     }
 
     /**
+     * @param mageObj
+     * @param gemmaObj
+     * @param associatedObject
+     */
+    private void specialConvertBioMaterialBioCharacteristics( org.biomage.BioMaterial.BioMaterial mageObj,
+            BioMaterial gemmaObj ) {
+
+        assert simplifiedXml != null;
+        List<Element> elmList = simplifiedXml.selectNodes( "/BioList/BioMaterial[@identifier='"
+                + mageObj.getIdentifier() + "']/Characteristics/child::node()" );
+
+        // just debugging information.
+        if ( elmList.isEmpty() ) {
+            List<Element> check = simplifiedXml.selectNodes( "/BioList/BioMaterial[@identifier='"
+                    + mageObj.getIdentifier() + "']" );
+            if ( check.isEmpty() ) {
+                log.error( "Failed to find identifier " + mageObj.getIdentifier() + " in simplified DOM." );
+            } else {
+                if ( log.isDebugEnabled() )
+                    log.debug( "Found identifier " + mageObj.getIdentifier()
+                            + " in simplified DOM but no 'Characteristics'" );
+            }
+            return;
+        }
+
+        if ( log.isDebugEnabled() ) log.debug( "Found identifier " + mageObj.getIdentifier() + " in simplified DOM." );
+        for ( Element elm : elmList ) {
+            Characteristic bioCharacteristic = Characteristic.Factory.newInstance();
+            bioCharacteristic.setCategory( elm.getName() );
+            bioCharacteristic.setValue( elm.valueOf( "@value" ) );
+
+            specialFillInCharacteristicOntologyEntries( bioCharacteristic, elm );
+
+            List subList = elm.selectNodes( "child::node()" );
+            Collection<Characteristic> bcConstituents = bioCharacteristic.getConstituents();
+            if ( subList.size() > 0 ) {
+                for ( Iterator subIter = subList.iterator(); subIter.hasNext(); ) {
+                    Element elmSub = ( Element ) subIter.next();
+                    Characteristic bcConstitutent = Characteristic.Factory.newInstance();
+                    bcConstitutent.setCategory( elmSub.getName() );
+                    bcConstitutent.setValue( elmSub.valueOf( "@value" ) );
+                    if ( log.isDebugEnabled() )
+                        log.debug( " CAT: " + bcConstitutent.getCategory() + " VAL: " + bcConstitutent.getValue() );
+                    bcConstituents.add( bcConstitutent );
+                }
+                bioCharacteristic.setConstituents( bcConstituents );
+            }
+            gemmaObj.getCharacteristics().add( bioCharacteristic );
+        }
+    }
+
+    /**
      * Extract compositeSequence information from the ArrayDesign package. The ArrayDesign package doesn't have any
      * information about the compositeSequences, other than the fact that they belong to this arrayDesign.
      * 
@@ -3406,7 +3436,7 @@ public class MageMLConverterHelper {
     private void specialConvertFeatureExtraction( FeatureExtraction mageObj,
             ubic.gemma.model.expression.bioAssay.BioAssay gemmaObj ) {
         PhysicalBioAssay pba = mageObj.getPhysicalBioAssaySource();
-        specialGetArrayDesignForPhysicalBioAssay( pba, gemmaObj );
+        specialConvertAssociationsForPhysicalBioAssay( pba, gemmaObj );
         convertAssociations( pba, gemmaObj );
     }
 
@@ -3497,46 +3527,130 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * From a PhysicalBioAssay, find the associated ArrayDesign.
+     * Fill in the associated OntologyEntry (controlled vocabulary terms) for a characteristic. If no accession or
+     * database is given, we look in the MGED Ontology (MO) for a matching term.
+     * <p>
+     * Unfortunately, in MO the instances don't necessarily match up with the categories - annotators seem to use
+     * whatever instance for whatever category. For example, technically a BioSampleType can only be "extract" or
+     * "not_extract", but our tests include a file that has "fresh_sample" as the value for BioSampleType. Therefore we
+     * have to check the instances of <em>other</em> classes as well.
      * 
-     * @param mageObj
-     * @param result
+     * @param characteristic
+     * @param elm that holds the parsed accession and database identifiers.
      */
-    private void specialGetArrayDesignForPhysicalBioAssay( PhysicalBioAssay mageObj,
-            ubic.gemma.model.expression.bioAssay.BioAssay result ) {
-
-        BioAssayCreation bac = mageObj.getBioAssayCreation();
-        if ( bac == null ) return;
-
-        ArrayDesign ad = bac.getArray().getArrayDesign();
-        if ( ad == null ) return;
-        ubic.gemma.model.expression.arrayDesign.ArrayDesign conv = convertArrayDesign( ad );
-
-        if ( result.getArrayDesignsUsed() == null ) {
-            result.setArrayDesignsUsed( new HashSet() );
+    private void specialFillInCharacteristicOntologyEntries( Characteristic characteristic, Element elm ) {
+        assert mgedOntologyHelper != null;
+        if ( characteristic == null ) {
+            log.warn( "Null characteristic passed, ignoring" );
+            return;
         }
 
-        // check to make sure we aren't addin the same array design twice.
-        Set<String> alreadyLinkedArrayDesigns = new HashSet<String>();
-        for ( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign : result.getArrayDesignsUsed() ) {
-            alreadyLinkedArrayDesigns.add( arrayDesign.getName() );
+        if ( characteristic.getCategory() == null ) throw new IllegalArgumentException( "Category cannot be null" );
+
+        boolean isCategoryMo = false;
+        boolean isValueMo = false;
+        boolean hasCategoryAcc = false;
+        boolean hasValueAcc = false;
+        String categoryDb = elm.valueOf( "@CategoryDatabaseIdentifier" );
+        String categoryAcc = elm.valueOf( "@CategoryDatabaseAccession" );
+        String valueDb = elm.valueOf( "@ValueDatabaseIdentifier" );
+        String valueAcc = elm.valueOf( "@ValueDatabaseAccession" );
+
+        if ( categoryDb.length() > 0 ) {
+            isCategoryMo = this.mgedOntologyAliases.contains( categoryDb );
+            if ( isCategoryMo ) {
+                categoryDb = MGED_DATABASE_IDENTIFIER;
+            }
+        } else if ( mgedOntologyHelper.classExists( characteristic.getCategory() ) ) {
+            isCategoryMo = true;
+            categoryDb = MGED_DATABASE_IDENTIFIER;
+        } else {
+            log.debug( "No category database for '" + characteristic.getCategory() + "'" );
         }
 
-        if ( alreadyLinkedArrayDesigns.contains( conv.getName() ) ) return;
+        if ( categoryAcc.length() > 0 ) {
+            if ( isCategoryMo ) {
+                categoryAcc = formMgedOntologyAccession( categoryAcc );
+            }
+        } else if ( isCategoryMo ) {
+            categoryAcc = formMgedOntologyAccession( characteristic.getCategory() );
+        } else {
+            hasCategoryAcc = false;
+            if ( log.isDebugEnabled() )
+                log.debug( "No category accession value for '" + characteristic.getCategory() + "'" );
+        }
 
-        log.debug( "Adding array design used " + ad.getName() + " to " + result.getName() );
-        result.getArrayDesignsUsed().add( conv );
+        if ( characteristic.getValue().length() > 0 ) {
+            if ( valueDb.length() > 0 ) {
+                isValueMo = this.mgedOntologyAliases.contains( valueDb );
+                if ( isValueMo ) {
+                    valueDb = MGED_DATABASE_IDENTIFIER;
+                }
+            } else if ( isCategoryMo
+                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ) != null
+                    && mgedOntologyHelper.getInstanceNamesForClass( characteristic.getCategory() ).contains(
+                            characteristic.getValue() ) ) {
+                isValueMo = true;
+                valueDb = MGED_DATABASE_IDENTIFIER;
 
-        // add biomaterials to the resulting bioassay
-        Collection<BioMaterialMeasurement> measurements = bac.getSourceBioMaterialMeasurements();
+            } else if ( isCategoryMo ) {
+                String instanceCategory = this.mgedOntologyHelper.getClassNameForInstance( characteristic.getValue() );
+                if ( instanceCategory != null ) {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "'" + characteristic.getValue() + "' is actually an instance of '"
+                                + instanceCategory + "', not '" + characteristic.getCategory()
+                                + "', but we just go with the flow." );
+                    isValueMo = true;
+                    valueDb = MGED_DATABASE_IDENTIFIER;
+                } else {
+                    if ( log.isDebugEnabled() )
+                        log.debug( "No value database available for '" + characteristic.getValue() + "'" );
+                }
 
-        Collection<BioMaterial> biomaterials = new HashSet<BioMaterial>();
+            } else {
+                if ( log.isDebugEnabled() )
+                    log.debug( "No value database available for '" + characteristic.getValue() + "'" );
+            }
 
-        for ( BioMaterialMeasurement bmm : measurements )
-            biomaterials.add( convertBioMaterial( bmm.getBioMaterial() ) );
+            if ( valueAcc.length() > 0 ) {
+                if ( isValueMo ) {
+                    valueAcc = formMgedOntologyAccession( valueAcc );
+                }
+            } else if ( isValueMo ) {
+                valueAcc = formMgedOntologyAccession( characteristic.getValue() );
+            } else {
+                hasValueAcc = false;
+            }
+        }
 
-        result.setSamplesUsed( biomaterials );
+        if ( hasCategoryAcc ) {
+            ExternalDatabase categoryExternalDatabase = ExternalDatabase.Factory.newInstance();
+            categoryExternalDatabase.setName( categoryDb );
+            ubic.gemma.model.common.description.OntologyEntry categoryOntologyEntry = ubic.gemma.model.common.description.OntologyEntry.Factory
+                    .newInstance();
+            categoryOntologyEntry.setAccession( categoryAcc );
+            categoryOntologyEntry.setExternalDatabase( categoryExternalDatabase );
+            categoryOntologyEntry.setCategory( characteristic.getCategory() );
+            categoryOntologyEntry.setValue( characteristic.getCategory() );
+            characteristic.setCategoryTerm( categoryOntologyEntry );
+        }
 
+        if ( hasValueAcc ) {
+            ExternalDatabase valueExternalDatabase = ExternalDatabase.Factory.newInstance();
+            valueExternalDatabase.setName( valueDb );
+            ubic.gemma.model.common.description.OntologyEntry valueOntologyEntry = ubic.gemma.model.common.description.OntologyEntry.Factory
+                    .newInstance();
+            valueOntologyEntry.setAccession( valueAcc );
+            valueOntologyEntry.setExternalDatabase( valueExternalDatabase );
+            valueOntologyEntry.setCategory( characteristic.getValue() );
+            valueOntologyEntry.setValue( characteristic.getValue() );
+            characteristic.setValueTerm( valueOntologyEntry );
+        }
+
+        if ( log.isDebugEnabled() )
+            log.debug( "Category: '" + characteristic.getCategory() + "'   Value: '" + characteristic.getValue()
+                    + "'   CatDb: '" + categoryDb + "'  ValDb: '" + valueDb + "'   CatAcc: '" + categoryAcc
+                    + "'   ValAcc: " + valueAcc );
     }
 
     /**
@@ -3569,10 +3683,12 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * @return Returns the bioAssayDimensions.
+     * This is provided for tests.
+     * 
+     * @param path
      */
-    public BioAssayDimensions getBioAssayDimensions() {
-        return this.bioAssayDimensions;
+    protected void addLocalExternalDataPath( String path ) {
+        localExternalDataPaths.add( path );
     }
 
 }

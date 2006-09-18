@@ -44,11 +44,12 @@ public class GeoPlatformService extends AbstractGeoService {
     @SuppressWarnings("unchecked")
     @Override
     public Object fetchAndLoad( String geoPlatformAccession ) {
-        if ( this.generator == null ) this.generator = new GeoDomainObjectGenerator();
-        this.generator.setProcessPlatformsOnly( true );
+        if ( this.geoDomainObjectGenerator == null ) this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+        this.geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 
-        Collection<GeoPlatform> platforms = ( Collection<GeoPlatform> ) generator.generate( geoPlatformAccession );
-        Collection<Object> arrayDesigns = ( Collection<Object> ) converter.convert( platforms );
+        Collection<GeoPlatform> platforms = ( Collection<GeoPlatform> ) geoDomainObjectGenerator
+                .generate( geoPlatformAccession );
+        Collection<Object> arrayDesigns = geoConverter.convert( platforms );
         return persisterHelper.persist( arrayDesigns );
     }
 

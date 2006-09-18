@@ -34,7 +34,6 @@ public class EditProfileTest extends BaseWebTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        setScriptingEnabled( false );
     }
 
     public void testEditProfileCancel() throws Exception {
@@ -47,12 +46,13 @@ public class EditProfileTest extends BaseWebTest {
     }
 
     public void testEditProfile() throws Exception {
-        this.gotoPage( "/editUser.html?username=test&from=list" );
+        this.gotoPage( "/editUser.html?userName=testing&from=list" );
         assertFormPresent();
+        dumpHtml();
         assertSubmitButtonPresent( "save" );
         this.setTextField( "passwordHint", "guess" );
-        this.submit( "save" );
-        dumpHtml();
+        submit( "save" );
+
         assertTextPresent( "updated" );
         assertLinkPresentWithText( "active" );
     }

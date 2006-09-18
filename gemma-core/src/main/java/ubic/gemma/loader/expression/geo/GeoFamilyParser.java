@@ -40,7 +40,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -60,9 +59,6 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.parser.Parser;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Class for parsing GSE and GDS files from NCBI GEO. See

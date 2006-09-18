@@ -262,28 +262,40 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * Fill in the categoryTerm and valueTerm associations of a
+     * Fill in the categoryTerm and valueTerm associations of characteristics
      * 
      * @param Characteristics Collection of Characteristics
      */
-    protected void fillInOntologyEntries( Collection<Characteristic> Characteristics ) {
-        for ( Characteristic Characteristic : Characteristics ) {
-            persistOntologyEntry( Characteristic.getCategoryTerm() );
-            persistOntologyEntry( Characteristic.getValueTerm() );
+    protected void fillInOntologyEntries( Collection<Characteristic> characteristics ) {
+        for ( Characteristic characteristic : characteristics ) {
+            fillInOntologyEntries( characteristic );
         }
+    }
+
+    /**
+     * Fill in the categoryTerm and valueTerm associations of a characteristic
+     * 
+     * @param characteristic
+     */
+    private void fillInOntologyEntries( Characteristic characteristic ) {
+        if ( log.isDebugEnabled() ) log.debug( "Filling in " + characteristic );
+        characteristic.setCategoryTerm( persistOntologyEntry( characteristic.getCategoryTerm() ) );
+        characteristic.setValueTerm( persistOntologyEntry( characteristic.getValueTerm() ) );
+        fillInOntologyEntries( characteristic.getConstituents() ); // recurse
     }
 
     /**
      * @param protocol
      */
     protected void fillInProtocol( Protocol protocol ) {
+        if ( !isTransient( protocol ) ) return;
         if ( protocol == null ) {
             log.warn( "Null protocol" );
             return;
         }
 
         OntologyEntry type = protocol.getType();
-        persistOntologyEntry( type );
+        type = persistOntologyEntry( type );
         protocol.setType( type );
 
         for ( Software software : protocol.getSoftwareUsed() ) {
@@ -300,6 +312,7 @@ abstract public class CommonPersister extends AbstractPersister {
      */
 
     protected void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
+        if ( !isTransient( protocolApplication ) ) return;
         if ( protocolApplication == null ) return;
 
         log.debug( "Filling in protocolApplication" );
@@ -324,7 +337,7 @@ abstract public class CommonPersister extends AbstractPersister {
                 throw new IllegalStateException( "Must have software associated with SoftwareApplication" );
 
             OntologyEntry type = software.getType();
-            persistOntologyEntry( type );
+            type = persistOntologyEntry( type );
             software.setType( type );
 
             softwareApplication.setSoftware( softwareService.findOrCreate( software ) );
@@ -398,6 +411,7 @@ abstract public class CommonPersister extends AbstractPersister {
     protected DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) return null;
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
+        assert databaseEntry.getExternalDatabase().getId() != null;
         DatabaseEntry nde = databaseEntryService.findOrCreate( databaseEntry );
         log.debug( "Persisted " + nde );
         return nde;
@@ -480,6 +494,8 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( !isTransient( ontologyEntry ) ) {
             return ontologyEntry;
         }
+
+        if ( log.isDebugEnabled() ) log.debug( "Persisting " + ontologyEntry );
 
         ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
 

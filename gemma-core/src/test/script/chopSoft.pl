@@ -8,8 +8,8 @@ handle quickly for testing. Original files are renamed *.bak.
 
 chopsoft  -n 100 -s GSE1632_family.soft.txt.gz GDS244.soft.gz
 
-Important limitation: This cannot correctly deal with many-to-one GSE to
- GDS relationships (though this could be fixed).
+Important limitation: This cannot correctly deal with many-to-one GDS to
+ GSE relationships (though this could be fixed).
  
 Requires a "gzip" on the path.
 
@@ -50,6 +50,10 @@ $opt_n = 20;
 my $result = GetOptions("n=i" => \$opt_n,
 			 "s=s" => \$opt_s,   
 			 "h" => \$opt_h);
+			 
+if ($opt_h || !$opt_s) {
+   pod2usage(-verbose=>1, -exitval=>2);
+}
 
 print STDERR "Opening $opt_s\n";
 
@@ -70,7 +74,7 @@ open (OUT, "| gzip -c > $outputSeriesFile");
 my $i = 0;
 my $n = 0;
 print STDERR "Keeping $opt_n probes\n";
-my $inplatform = 0;
+my $inPlatform = 0;
 while(<IN>) {
   $i++;
   if ($i > 0 && $i % 20000 == 0) {
@@ -81,6 +85,15 @@ while(<IN>) {
   } elsif ($_=~ /^!Platform_series_id/) {
     next; # missable
   } elsif ($_ =~ /[\^!\#]/) {
+
+    if ($_ =~ /^!platform_table_begin/) {
+      $inPlatform  = 1;
+      print STDERR "Starting platform\n";
+    } elsif ($_ =~ /^!platform_table_end/) {
+      $inPlatform = 0;
+      print STDERR "Ending platform\n";
+    }
+
     print OUT; # normal annotation lines
   } elsif ($_ =~ /^ID/) {
     print OUT;
@@ -88,13 +101,16 @@ while(<IN>) {
     my @vals = split "\t", $_;
     my $probe = $vals[0];
 
-    if ($n < $opt_n && !$keepers{$probe}) {
+    if ($inPlatform && $n < $opt_n && !$keepers{$probe}) {
       $keepers{$probe}++;
       $n++;
+    } else { # done
+      $inPlatform = 0;
+      $n = 0; # start over on another platform.
     }
 
     if ($keepers{$probe}) {
-      print OUT;
+      print OUT; # includes sample data lines.
     }
   }
 }

@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;
@@ -53,6 +54,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -62,7 +64,6 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-// import ubic.gemma.model.expression.bioAssayData.BioMaterialDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -72,10 +73,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.basecode.io.ByteArrayConverter;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.
@@ -87,11 +88,20 @@ import ubic.basecode.io.ByteArrayConverter;
  * For our purposes, a usable expression data set is at first represented by a GEO "GDS" number (a curated dataset),
  * which corresponds to a series. HOWEVER, multiple datasets may go together to form a series (GSE). This can happen
  * when the "A" and "B" arrays were both run on the same samples. Thus we actually normally go by GSE.
+ * <p>
+ * This service can be used in database-aware or unaware states.
  * 
  * @author pavlidis
  * @version $Id$
+ * @spring.bean id="geoConverter"
+ * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
+ * @spring.property name="taxonService" ref="taxonService"
  */
 public class GeoConverter implements Converter {
+
+    private ExternalDatabaseService externalDatabaseService;
+
+    private TaxonService taxonService;
 
     /**
      * How often we tell the user about data processing (items per update)
@@ -115,11 +125,7 @@ public class GeoConverter implements Converter {
 
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
 
-    public GeoConverter() {
-        geoDatabase = ExternalDatabase.Factory.newInstance();
-        geoDatabase.setName( "GEO" );
-        geoDatabase.setType( DatabaseType.EXPRESSION );
-    }
+    private ExternalDatabase genbank;
 
     /**
      * @param seriesMap
@@ -300,9 +306,30 @@ public class GeoConverter implements Converter {
      */
     private DatabaseEntry convertDatabaseEntry( GeoData geoData ) {
         DatabaseEntry result = DatabaseEntry.Factory.newInstance();
+
+        initGeoExternalDatabase();
+
         result.setExternalDatabase( this.geoDatabase );
         result.setAccession( geoData.getGeoAccession() );
         return result;
+    }
+
+    /**
+     * 
+     */
+    private void initGeoExternalDatabase() {
+        if ( geoDatabase == null ) {
+            if ( externalDatabaseService != null ) {
+                ExternalDatabase ed = externalDatabaseService.find( "GEO" );
+                if ( ed != null ) {
+                    geoDatabase = ed;
+                }
+            } else {
+                geoDatabase = ExternalDatabase.Factory.newInstance();
+                geoDatabase.setName( "GEO" );
+                geoDatabase.setType( DatabaseType.EXPRESSION );
+            }
+        }
     }
 
     /**
@@ -627,6 +654,16 @@ public class GeoConverter implements Converter {
         CompositeSequence compositeSequence = platformDesignElementMap.get(
                 convertPlatform( geoDataset.getPlatform() ).getName() ).get( designElementName );
 
+        if ( compositeSequence == null ) {
+            assert compositeSequence != null : "No composite sequence " + designElementName;
+        }
+
+        if ( compositeSequence.getBiologicalCharacteristic() != null
+                && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
+            assert compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry().getExternalDatabase()
+                    .getName() != null;
+        }
+
         DesignElementDataVector vector = DesignElementDataVector.Factory.newInstance();
         vector.setDesignElement( compositeSequence );
         vector.setExpressionExperiment( expExp );
@@ -732,12 +769,15 @@ public class GeoConverter implements Converter {
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
+        assert externalDb != null;
+
         List<String> identifiers = platform.getColumnData( identifier );
         List<String> externalRefs = platform.getColumnData( externalReference );
         List<String> descriptions = platform.getColumnData( descriptionColumn );
 
         assert identifier != null;
-        assert externalRefs != null;
+        assert externalRefs != null : "No externalRefs found for column " + externalReference;
+
         assert externalRefs.size() == identifiers.size() : "Unequal numbers of identifiers and external references! "
                 + externalRefs.size() + " != " + identifiers.size();
 
@@ -802,6 +842,8 @@ public class GeoConverter implements Converter {
         }
         arrayDesign.setDesignProvider( manufacturer );
 
+        arrayDesign.getExternalReferences().add( convertDatabaseEntry( platform ) );
+
         seenPlatforms.put( platform.getGeoAccession(), arrayDesign );
 
         return arrayDesign;
@@ -812,6 +854,9 @@ public class GeoConverter implements Converter {
      * @return
      */
     private Taxon convertPlatformOrganism( GeoPlatform platform ) {
+
+        // FIXME cache values.
+
         Taxon taxon = Taxon.Factory.newInstance();
         Collection<String> organisms = platform.getOrganisms();
 
@@ -834,6 +879,14 @@ public class GeoConverter implements Converter {
         }
 
         taxon.setScientificName( organism );
+
+        if ( taxonService != null ) {
+            Taxon t = taxonService.findOrCreate( taxon );
+            if ( t != null ) {
+                taxon = t;
+            }
+        }
+
         return taxon;
     }
 
@@ -974,7 +1027,7 @@ public class GeoConverter implements Converter {
                 bioMaterial.setSourceTaxon( taxon );
             }
 
-            bioAssay.getArrayDesignsUsed().add( arrayDesign );
+            bioAssay.setArrayDesignUsed( arrayDesign );
         }
 
         return bioAssay;
@@ -1275,7 +1328,6 @@ public class GeoConverter implements Converter {
      */
     private ExternalDatabase determinePlatformExternalDatabase( GeoPlatform platform ) {
         ExternalDatabase result = ExternalDatabase.Factory.newInstance();
-        result.setType( DatabaseType.SEQUENCE );
 
         String likelyExternalDatabaseIdentifier = determinePlatformExternalReferenceIdentifier( platform );
         String dbIdentifierDescription = getDbIdentifierDescription( platform );
@@ -1290,14 +1342,23 @@ public class GeoConverter implements Converter {
         }
 
         if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" ) ) {
-            result.setName( "Genbank" );
-            result.setType( DatabaseType.SEQUENCE );
+            if ( genbank == null ) {
+                if ( externalDatabaseService != null ) {
+                    genbank = externalDatabaseService.find( "Genbank" );
+                } else {
+                    result.setName( "Genbank" );
+                    result.setType( DatabaseType.SEQUENCE );
+                    genbank = result;
+                }
+            }
+            result = genbank;
         } else if ( likelyExternalDatabaseIdentifier.equals( "ORF" ) ) {
             String organism = platform.getOrganisms().iterator().next();
             result.setName( organism + " ORFs" ); // TODO this is silly.
             result.setType( DatabaseType.GENOME );
+            log.warn( "External database is " + result );
         }
-
+        assert result != null && result.getName() != null;
         return result;
     }
 
@@ -1413,5 +1474,19 @@ public class GeoConverter implements Converter {
             }
         }
         return byteArrayConverter.toBytes( toConvert.toArray() );
+    }
+
+    /**
+     * @param externalDatabaseService the externalDatabaseService to set
+     */
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 }

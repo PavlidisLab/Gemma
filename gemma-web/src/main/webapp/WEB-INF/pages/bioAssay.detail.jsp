@@ -50,7 +50,7 @@
         <h3>
             <fmt:message key="bioAssay.arrayDesigns" />
         </h3>
-        <display:table name="bioAssay.arrayDesignsUsed" class="list" requestURI="" id="arrayDesignList"
+        <display:table name="bioAssay.arrayDesignUsed" class="list" requestURI="" id="arrayDesignList"
         export="true" pagesize="10" >
             <display:column property="name" maxWords="20" sortable="true" href="/Gemma/arrayDesign/showArrayDesign.html" paramId="name" paramProperty="name"/>
             <display:column property="description" maxWords="100" />

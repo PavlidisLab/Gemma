@@ -136,7 +136,9 @@ abstract public class GenomePersister extends CommonPersister {
             bioSequence2GeneProduct = persistBioSequence2GeneProduct( bioSequence2GeneProduct );
         }
 
-        return bioSequenceService.findOrCreate( bioSequence );
+        assert bioSequence.getTaxon().getId() != null;
+        bioSequence = bioSequenceService.findOrCreate( bioSequence );
+        return bioSequence;
     }
 
     /**
@@ -236,33 +238,36 @@ abstract public class GenomePersister extends CommonPersister {
      * @param taxon
      */
     protected Taxon persistTaxon( Taxon taxon ) {
-        if (taxon == null )return null;
-        if (!isTransient(taxon)) return taxon;
-        
+        if ( taxon == null ) return null;
+        if ( !isTransient( taxon ) ) return taxon;
+
         // Avoid trips to the database to get the taxon.
         String scientificName = taxon.getScientificName();
         String commonName = taxon.getCommonName();
         Integer ncbiId = taxon.getNcbiId();
-        if ( scientificName != null && seenTaxa.get( scientificName ) != null ) {
-            return seenTaxa.get( scientificName );
-        } else if ( commonName != null && seenTaxa.get( commonName ) != null ) {
-            return seenTaxa.get( commonName );
-        } else if ( ncbiId != null && seenTaxa.get( ncbiId ) != null ) {
+        if ( scientificName != null && seenTaxa.containsKey( scientificName.toLowerCase() ) ) {
+            return seenTaxa.get( scientificName.toLowerCase() );
+        } else if ( commonName != null && seenTaxa.containsKey( commonName.toLowerCase() ) ) {
+            return seenTaxa.get( commonName.toLowerCase() );
+        } else if ( ncbiId != null && seenTaxa.containsKey( ncbiId ) ) {
             return seenTaxa.get( ncbiId );
         } else {
-            assert isTransient( taxon );
             Taxon fTaxon = taxonService.findOrCreate( taxon );
-            log.warn( "Fetched taxon " + taxon.getScientificName() );
+            assert fTaxon != null;
+            assert fTaxon.getId() != null;
 
-            if ( taxon.getScientificName() != null ) {
-                seenTaxa.put( taxon.getScientificName(), fTaxon );
+            log.info( "Fetched taxon " + fTaxon.getScientificName() );
+
+            if ( fTaxon.getScientificName() != null ) {
+                seenTaxa.put( fTaxon.getScientificName().toLowerCase(), fTaxon );
             }
-            if ( taxon.getCommonName() != null ) {
-                seenTaxa.put( taxon.getCommonName(), fTaxon );
+            if ( fTaxon.getCommonName() != null ) {
+                seenTaxa.put( fTaxon.getCommonName().toLowerCase(), fTaxon );
             }
-            if ( taxon.getNcbiId() != null ) {
-                seenTaxa.put( taxon.getNcbiId(), fTaxon );
+            if ( fTaxon.getNcbiId() != null ) {
+                seenTaxa.put( fTaxon.getNcbiId(), fTaxon );
             }
+
             return fTaxon;
         }
     }

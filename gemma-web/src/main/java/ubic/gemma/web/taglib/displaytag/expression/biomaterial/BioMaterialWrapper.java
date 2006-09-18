@@ -22,8 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-
 /**
  * Used to generate hyperlinks in displaytag tables.
  * <p>
@@ -37,15 +35,16 @@ public class BioMaterialWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );
 
-//    /**
-//     * @return String
-//     */
-//    public String getTreatmentsLink() {
-//        BioMaterial object = ( BioMaterial ) getCurrentRowObject();
-//        if ( object.getTreatments() != null ) {
-//            return "<a href=\"/Gemma/biomaterial/showBioMaterial.html?id=" + object.getId() + "\">"
-//                    + object.getTreatments().size() + "</a>";
-//        }
-//        return "No treatments";
-//    }
+    // FIXME remove this class or implement the method.
+    // /**
+    // * @return String
+    // */
+    // public String getTreatmentsLink() {
+    // BioMaterial object = ( BioMaterial ) getCurrentRowObject();
+    // if ( object.getTreatments() != null ) {
+    // return "<a href=\"/Gemma/biomaterial/showBioMaterial.html?id=" + object.getId() + "\">"
+    // + object.getTreatments().size() + "</a>";
+    // }
+    // return "No treatments";
+    // }
 }

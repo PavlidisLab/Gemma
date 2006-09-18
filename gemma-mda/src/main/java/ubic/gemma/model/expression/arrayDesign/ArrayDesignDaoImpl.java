@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,9 +52,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + ArrayDesign.class.getName()
-                                    + "' was found when executing query" );
+                    debug( results );
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
+                            + ArrayDesign.class.getName() + "s were found when executing query" );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -63,6 +64,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    /**
+     * 
+     */
+    private void debug( List results ) {
+        for ( Object ad : results ) {
+            log.error( ad );
+        }
+
     }
 
     /*

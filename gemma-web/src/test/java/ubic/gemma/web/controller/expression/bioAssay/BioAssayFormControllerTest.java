@@ -18,9 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.bioAssay;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -28,6 +25,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
@@ -57,14 +55,13 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
         ba.setName( "BioAssay Bot" );
         ba.setDescription( "A bioassay created from the BioAssayFormControllerTest." );
 
-        Collection<ArrayDesign> adCol = new HashSet();
-        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
-            ArrayDesign ad = ArrayDesign.Factory.newInstance();
-            ad.setName( "Array Design Bot" );
-            ad.setDescription( "An array design created from the ExperimentalDesignFormControllerTest" );
-            adCol.add( ad );
-        }
-        ba.setArrayDesignsUsed( adCol );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "Array Design Bot" );
+        ad.setDescription( "An array design created from the ExperimentalDesignFormControllerTest" );
+        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
+        ad = ads.create( ad );
+        
+        ba.setArrayDesignUsed( ad );
 
         BioAssayService bas = ( BioAssayService ) getBean( "bioAssayService" );
         bas.findOrCreate( ba );

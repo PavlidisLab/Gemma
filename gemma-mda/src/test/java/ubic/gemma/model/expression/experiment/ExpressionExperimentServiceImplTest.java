@@ -68,9 +68,11 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
         for ( int i = 0; i < 10; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance();
-            ba.getArrayDesignsUsed().add( ad2 );
+
             if ( i % 2 == 0 ) {
-                ba.getArrayDesignsUsed().add( ad1 );
+                ba.setArrayDesignUsed( ad1 );
+            } else {
+                ba.setArrayDesignUsed( ad2 );
             }
             ee.getBioAssays().add( ba );
         }

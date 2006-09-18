@@ -22,8 +22,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -66,11 +64,6 @@ public class AuditInterceptor implements MethodInterceptor {
     private boolean AUDIT_READ = false;
 
     private boolean AUDIT_UPDATE = true;
-
-    /**
-     * Cache of users. FIXME this is too primitive.
-     */
-    private Map<String, User> currentUsers = new HashMap<String, User>();
 
     AuditTrailDao auditTrailDao;
 
@@ -275,13 +268,7 @@ public class AuditInterceptor implements MethodInterceptor {
      * @return
      */
     private User getCurrentUser() {
-        String userName = UserDetailsServiceImpl.getCurrentUsername();
-        assert userName != null;
-        if ( currentUsers.get( userName ) == null ) {
-            assert userDao != null;
-            currentUsers.put( userName, userDao.findByUserName( userName ) );
-        }
-        return currentUsers.get( userName );
+        return UserDetailsServiceImpl.getCurrentUser();
     }
 
     /**

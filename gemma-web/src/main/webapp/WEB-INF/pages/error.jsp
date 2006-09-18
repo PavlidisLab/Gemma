@@ -6,8 +6,7 @@
 
 <html>
 	<head>
-		<title><fmt:message key="errorPage.title" />
-		</title>
+		<title><fmt:message key="errorPage.title" /></title>
 		<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
 	</head>
 
@@ -22,8 +21,9 @@
 					<a href="mainMenu.html" onclick="history.back();return false">&#171; Back</a>
 
 					<%@ include file="/common/messages.jsp"%>
+
 					<%
-					if ( exception != null ) {
+					if ( request.getAttribute( "exception" ) != null ) {
 					%>
 					<Gemma:exception exception="${pageContext.request.exception}" />
 					<%

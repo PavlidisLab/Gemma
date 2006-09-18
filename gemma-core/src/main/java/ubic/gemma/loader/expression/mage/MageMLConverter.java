@@ -75,7 +75,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
      * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
-    public Collection<Object> convert( Collection<Object> Objects ) {
+    public Collection<Object> convert( Collection objects ) {
         Package[] allPackages = Package.getPackages();
         if ( convertedResult == null ) {
             convertedResult = new ArrayList<Object>();
@@ -95,7 +95,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
             for ( int j = 0; j < mageClasses.length; j++ ) {
                 try {
                     Class c = Class.forName( name + "." + mageClasses[j] );
-                    Collection<Object> convertedObjects = getConvertedDataForType( c, Objects );
+                    Collection<Object> convertedObjects = getConvertedDataForType( c, objects );
                     if ( convertedObjects != null && convertedObjects.size() > 0 ) {
                         log.info( "Adding " + convertedObjects.size() + " converted " + name + "." + mageClasses[j]
                                 + "s" );
@@ -170,7 +170,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter {
      * @param type
      * @return
      */
-    private Collection<Object> getConvertedDataForType( Class type, Collection<Object> mageDomainObjects ) {
+    private Collection<Object> getConvertedDataForType( Class type, Collection<?> mageDomainObjects ) {
         if ( mageDomainObjects == null ) return null;
 
         Collection<Object> localResult = new ArrayList<Object>();

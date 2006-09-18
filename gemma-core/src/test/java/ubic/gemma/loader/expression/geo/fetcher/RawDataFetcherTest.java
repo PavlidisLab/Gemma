@@ -61,6 +61,9 @@ public class RawDataFetcherTest extends TestCase {
             if ( e.getCause() instanceof ExecutionException ) {
                 log.error( "Failed to get file -- skipping rest of test" );
                 return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.error( "Failed to connect to NCBI, skipping test" );
+                return;
             }
         }
 

@@ -19,7 +19,14 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.hibernate.LockMode;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+
+import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -27,11 +34,15 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ExpressionDataMatrixService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.testing.AbstractGeoServiceTest;
 
 /**
  * This is an integration test
@@ -40,13 +51,58 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
  * @version $Id$
  */
 public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
+    ExpressionExperimentService eeService;
+    ExpressionExperiment ee;
+    protected AbstractGeoService geoService;
 
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
         geoService = new GeoDatasetService();
         geoService.setLoadPlatformOnly( false );
-        super.init();
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+        init();
+    }
+
+    @Override
+    protected void onTearDown() throws Exception {
+        // this.delete( ee );
+    }
+
+    /**
+     * Clean up expression experiments inserted by this test.
+     * 
+     * @param expExp
+     */
+    private void delete( ExpressionExperiment expExp ) {
+        BioAssayDimensionDao daddao = ( BioAssayDimensionDao ) this.getBean( "bioAssayDimensionDao" );
+        DesignElementDataVectorDao dedvdao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
+        Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+
+        // avoid lazy-load errors.
+        SessionFactory sessf = ( SessionFactory ) this.getBean( "sessionFactory" );
+        Session sess = sessf.openSession();
+        sess.beginTransaction();
+        sess.lock( expExp, LockMode.NONE );
+        Collection<DesignElementDataVector> designElementDataVectors = expExp.getDesignElementDataVectors();
+        designElementDataVectors.size(); // lazy-load...
+        sess.getTransaction().commit();
+        sess.evict( expExp );
+        sess.close();
+
+        for ( DesignElementDataVector dv : designElementDataVectors ) {
+            BioAssayDimension dim = dv.getBioAssayDimension();
+            dims.add( dim );
+        }
+
+        dedvdao.remove( designElementDataVectors );
+
+        for ( BioAssayDimension dim : dims ) {
+            daddao.remove( dim );
+        }
+        eeService.update( expExp );
+        eeService.delete( expExp );
+
     }
 
     // ////////////////////////////////////////////////////////////
@@ -148,9 +204,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     public void testFetchAndLoadGDS775() throws Exception {
         String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds775short" ) );
-        geoService.fetchAndLoad( "GDS775" );
-        log.info( "**** done ****" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gds775short" ) );
+        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS775" );
     }
 
     /**
@@ -158,9 +214,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     public void testFetchAndLoadGDS22() throws Exception {
         String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds22Short" ) );
-        geoService.fetchAndLoad( "GDS22" );
-        log.info( "**** done ****" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gds22Short" ) );
+
+        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS22" );
     }
 
     /*
@@ -169,9 +226,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     public void testFetchAndLoadGDS994() throws Exception {
         String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "gds994Short" ) );
-        geoService.fetchAndLoad( "GDS994" );
-        log.info( "**** done ****" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gds994Short" ) );
+        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS994" );
     }
 
     //
@@ -181,7 +238,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         // this.setFlushModeCommit();
         // this.setComplete();
         String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "shortTest" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "shortTest" ) );
 
         /*
          * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
@@ -198,7 +256,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         edms
                 .setDesignElementDataVectorService( ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" ) );
 
-        ExpressionExperiment ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
+        ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
 
         // Recovering a quantitation type.
         QuantitationType qtf = QuantitationType.Factory.newInstance();
@@ -242,11 +300,18 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     public void testConversionGDS825Family() throws Exception {
         String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "complexShortTest" ) );
+
+        // clean up possibly corrupt state from previous runs.
+        // ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
+        // if ( ee != null ) {
+        // this.delete( ee );
+        // }
+
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "complexShortTest" ) );
         ExpressionExperiment newee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS825" );
 
         // get the data back out.
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
         ExpressionDataMatrixService edms = new ExpressionDataMatrixService();
@@ -254,7 +319,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         edms
                 .setDesignElementDataVectorService( ( DesignElementDataVectorService ) getBean( "designElementDataVectorService" ) );
 
-        ExpressionExperiment ee = ees.findByName( "Breast Cancer Cell Line Experiment" );
+        ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
         QuantitationType qtf = QuantitationType.Factory.newInstance();
 
         // Affymetrix platform.
@@ -270,12 +335,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertTrue( newee.equals( ee ) );
 
         DoubleMatrixNamed matrix = edms.getMatrix( newee, qt );
-
+        assertTrue( matrix != null );
         if ( log.isDebugEnabled() ) {
             printMatrix( matrix );
         }
-
-        assertTrue( matrix != null );
 
         assertEquals( 116, matrix.rows() );
 
@@ -342,6 +405,16 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             buf.append( "\n" );
         }
         log.debug( buf.toString() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.geo.service.AbstractGeoServiceTest#init()
+     */
+    @Override
+    protected void init() {
+        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
     }
 
 }

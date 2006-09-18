@@ -55,15 +55,6 @@ public class ExpressionExperimentControllerTest extends AbstractExpressionExperi
      */
     public void testGetExpressionExperiments() throws Exception {
         log.debug( "-> (association), => (composition)" );
-        /* set to avoid using stale data (data from previous tests */
-        setFlushModeCommit();
-
-        /* uncomment to use prod environment instead of test environment */
-        // this.setDisableTestEnv( true );
-        onSetUpInTransaction();
-
-        /* uncomment to persist and leave data in database */
-        setComplete();
 
         // AbstractExpressionExperimentTest eeh = new AbstractExpressionExperimentTest();
         ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();

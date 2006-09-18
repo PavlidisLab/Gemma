@@ -55,7 +55,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
 
         NcbiGeneConverter ngc = new NcbiGeneConverter();
         log.info( "Converting..." );
-        Collection<Gene> gemmaObj = ( Collection<Gene> ) ngc.convert( smallSample );
+        Collection<Object> gemmaObj = ngc.convert( smallSample );
 
         Collection<Gene> persistedObj = ( Collection<Gene> ) persisterHelper.persist( gemmaObj );
 

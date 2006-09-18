@@ -21,44 +21,55 @@ package ubic.gemma.loader.expression.geo.service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.util.converter.Converter;
-import ubic.gemma.persistence.Persister;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
  * @author pavlidis
  * @version $Id$
+ * @spring.property name="geoConverter" ref="geoConverter"
+ * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public abstract class AbstractGeoService {
 
     protected static Log log = LogFactory.getLog( AbstractGeoService.class );
-    protected GeoDomainObjectGenerator generator;
-    protected Persister persisterHelper;
-    protected Converter converter;
+    protected GeoDomainObjectGenerator geoDomainObjectGenerator;
+    protected PersisterHelper persisterHelper;
+    protected ArrayDesignService arrayDesignService;
+    protected GeoConverter geoConverter;
     protected boolean loadPlatformOnly = false;
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
 
     /**
      * This is supplied to allow plugging in non-standard generators for testing (e.g., using local files only)
      * 
      * @param generator
      */
-    public void setGenerator( GeoDomainObjectGenerator generator ) {
-        this.generator = generator;
+    public void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator ) {
+        this.geoDomainObjectGenerator = generator;
     }
 
     /**
      * @param expressionLoader
      */
-    public void setPersister( PersisterHelper expressionLoader ) {
-        this.persisterHelper = expressionLoader;
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 
     /**
      * @param geoConv to set
      */
-    public void setConverter( Converter geoConv ) {
-        this.converter = geoConv;
+    public void setGeoConverter( GeoConverter geoConverter ) {
+        this.geoConverter = geoConverter;
     }
 
     /**

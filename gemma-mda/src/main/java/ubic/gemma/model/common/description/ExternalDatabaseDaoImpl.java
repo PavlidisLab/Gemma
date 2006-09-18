@@ -37,6 +37,11 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
     @Override
     public ExternalDatabase find( ExternalDatabase externalDatabase ) {
         try {
+
+            if ( externalDatabase == null || externalDatabase.getName() == null ) {
+                throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
+            }
+
             Criteria queryObject = super.getSession( false ).createCriteria( ExternalDatabase.class );
             queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
             java.util.List results = queryObject.list();
@@ -60,9 +65,7 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
 
     @Override
     public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase ) {
-        if ( externalDatabase == null || externalDatabase.getName() == null ) {
-            throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
-        }
+
         ExternalDatabase existingExternalDatabase = find( externalDatabase );
         if ( existingExternalDatabase != null ) {
             return existingExternalDatabase;

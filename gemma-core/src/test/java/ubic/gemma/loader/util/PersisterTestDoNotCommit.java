@@ -66,7 +66,7 @@ public class PersisterTestDoNotCommit extends BaseTransactionalSpringContextTest
                 }
             }
 
-            ba.getArrayDesignsUsed().add( a );
+            ba.setArrayDesignUsed( a );
 
             try {
                 log.debug( sessionFactory.getCurrentSession().getIdentifier( a ) );

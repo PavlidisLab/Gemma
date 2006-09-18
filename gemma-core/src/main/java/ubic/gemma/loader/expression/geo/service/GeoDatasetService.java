@@ -20,7 +20,10 @@ package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
 
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -28,8 +31,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @author pavlidis
  * @version $Id$
+ * @spring.bean id="geoDatasetService"
  */
 public class GeoDatasetService extends AbstractGeoService {
+
+    public GeoDatasetService() {
+        this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+    }
 
     /**
      * Given a GEO GSE or GDS:
@@ -45,15 +53,15 @@ public class GeoDatasetService extends AbstractGeoService {
     @Override
     public Object fetchAndLoad( String geoAccession ) {
 
-        generator.setProcessPlatformsOnly( this.loadPlatformOnly );
+        geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
 
         if ( this.loadPlatformOnly ) {
-            Collection<?> platforms = generator.generate( geoAccession );
-            Collection<Object> arrayDesigns = ( Collection<Object> ) converter.convert( platforms );
+            Collection<?> platforms = geoDomainObjectGenerator.generate( geoAccession );
+            Collection<Object> arrayDesigns = geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
 
-        Collection<?> results = generator.generate( geoAccession );
+        Collection<?> results = geoDomainObjectGenerator.generate( geoAccession );
 
         assert results.iterator().next() instanceof GeoSeries : "Got a "
                 + results.iterator().next().getClass().getName() + " instead of a " + GeoSeries.class.getName();
@@ -62,12 +70,27 @@ public class GeoDatasetService extends AbstractGeoService {
 
         log.info( "Generated GEO domain objects for " + geoAccession );
 
-        ExpressionExperiment result = ( ExpressionExperiment ) converter.convert( series );
+        ExpressionExperiment result = ( ExpressionExperiment ) geoConverter.convert( series );
+
+        for ( BioAssay bioAssay : result.getBioAssays() ) {
+            ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
+            checkArrayDesign( arrayDesign );
+        }
 
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
         return persisterHelper.persist( result );
 
+    }
+
+    /**
+     * @param arrayDesigns
+     */
+    private void checkArrayDesign( ArrayDesign arrayDesign ) {
+        ArrayDesign existing = arrayDesignService.find( arrayDesign );
+        if ( existing != null ) {
+            log.info( arrayDesign + " already exists in the system" );
+        }
     }
 
 }

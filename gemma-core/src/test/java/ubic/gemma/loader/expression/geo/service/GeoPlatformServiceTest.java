@@ -18,7 +18,10 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.testing.AbstractGeoServiceTest;
 
 /**
  * Tests of GeoPlatformService
@@ -27,12 +30,12 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
  * @version $Id$
  */
 public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
+    protected AbstractGeoService geoService;
 
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
-        geoService = new GeoPlatformService();
-        super.init();
+        init();
     }
 
     /*
@@ -40,8 +43,20 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
      */
     public void testFetchAndLoadGPL101Short() throws Exception {
         String path = getTestFileBasePath();
-        geoService.setGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT + "platform" ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "platform" ) );
         geoService.fetchAndLoad( "GPL101" );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.geo.service.AbstractGeoServiceTest#init()
+     */
+    @Override
+    protected void init() {
+        geoService = new GeoPlatformService();
+        geoService.setGeoConverter( ( GeoConverter ) getBean( "geoConverter" ) );
+        geoService.setPersisterHelper( ( PersisterHelper ) getBean( "persisterHelper" ) );
+    }
 }

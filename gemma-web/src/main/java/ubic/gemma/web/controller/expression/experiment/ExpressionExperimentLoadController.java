@@ -19,13 +19,12 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,31 +32,29 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.loader.expression.geo.GeoConverter;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="expressionExperimentLoadController" 
+ * @spring.bean id="expressionExperimentLoadController"
  * @spring.property name="commandName" value="expressionExperimentLoadCommand"
  * @spring.property name="commandClass"
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
- * @spring.property name="successView" value="loadExpressionExperimentFormResult"
- * @spring.property name="persisterHelper" ref="persisterHelper"
+ * @spring.property name="successView" value="expressionExperiment.detail"
+ * @spring.property name="geoDatasetService" ref="geoDatasetService"
  */
 public class ExpressionExperimentLoadController extends BaseFormController {
 
-    private PersisterHelper persisterHelper;
-
     private static Log log = LogFactory.getLog( ExpressionExperimentLoadController.class.getName() );
+    private GeoDatasetService geoDatasetService;
 
     /**
      * 
@@ -68,56 +65,36 @@ public class ExpressionExperimentLoadController extends BaseFormController {
             BindException errors ) throws Exception {
 
         final ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
-        final HttpSession session = request.getSession();
 
-        // final double startAt = Double.parseDouble(request.getParameter("startAt"));
-        // final double endAt = Double.parseDouble(request.getParameter("endAt"));
-        // final long sleepTime = Long.parseLong(request.getParameter("sleepTime"));
+        Map<Object, Object> model = new HashMap<Object, Object>();
 
-        // TODO make this generic instead of GEO-specific.
-
-        // validate an accession was entered
+        // validate an accession was entered (FIXME - should be done by validation
         if ( StringUtils.isBlank( eeLoadCommand.getAccession() ) ) {
             Object[] args = new Object[] { getText( "expressionExperiment.accession", request.getLocale() ) };
             errors.rejectValue( "accession", "errors.required", args, "Accession" );
             return showForm( request, response, errors );
         }
 
-        final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        log.debug( "authentication object: " + auth );
-//        Thread t = new Thread( new Runnable() {
-//            public void run() { // Do your real processing here
-                // once validated.. TODO put this in its own thread and update use with progress.
-                SecurityContextHolder.getContext().setAuthentication( auth );
-                log.info( "Loading " + eeLoadCommand.getAccession() );
-                if ( eeLoadCommand.isLoadPlatformOnly() ) {
-                    log.info( "Only loading platform" );
-                }
-                GeoDatasetService gds = new GeoDatasetService();
-                GeoConverter geoConv = new GeoConverter();
-                gds.setPersister( persisterHelper );
-                gds.setConverter( geoConv );
-                gds.setGenerator( new GeoDomainObjectGenerator() );
-                gds.setLoadPlatformOnly( eeLoadCommand.isLoadPlatformOnly() );
-                if ( eeLoadCommand.isLoadPlatformOnly() ) {
-                    gds.setLoadPlatformOnly( true );
-                    Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) gds.fetchAndLoad( eeLoadCommand
-                            .getAccession() );
-                    request.setAttribute( "arrayDesigns", arrayDesigns );
-                } else {
-                    ExpressionExperiment result = ( ExpressionExperiment ) gds.fetchAndLoad( eeLoadCommand
-                            .getAccession() );
-                    request.setAttribute( "expressionExperiment", result );
-                }
-                // place the data into the request for retrieval on next page
+        log.info( "Loading " + eeLoadCommand.getAccession() );
+        if ( eeLoadCommand.isLoadPlatformOnly() ) {
+            log.info( "Only loading platform" );
+        }
+        ProgressJob job;
+        if ( eeLoadCommand.isLoadPlatformOnly() ) {
+            job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading arrayDesign(s)" );
+            geoDatasetService.setLoadPlatformOnly( true );
+            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService
+                    .fetchAndLoad( eeLoadCommand.getAccession() );
+            model.put( "arrayDesigns", arrayDesigns ); // FIXME view should be different than default.
+        } else {
+            job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading expression experiment" );
+            ExpressionExperiment result = ( ExpressionExperiment ) geoDatasetService.fetchAndLoad( eeLoadCommand
+                    .getAccession() );
+            model.put( "expressionExperiment", result );
+        }
+        ProgressManager.destroyProgressJob( job );
 
-                session.setAttribute( "stillProcessing", Boolean.FALSE );
-//            }
-//        } );
-//        t.start();
-//        response.sendRedirect( response.encodeRedirectURL( "loadExpressionExperimentProgress.html" ) );
-
-        return new ModelAndView( getSuccessView() );
+        return new ModelAndView( getSuccessView(), model );
     }
 
     /**
@@ -134,9 +111,10 @@ public class ExpressionExperimentLoadController extends BaseFormController {
     }
 
     /**
-     * @param persisterHelper The persisterHelper to set.
+     * @param geoDatasetService the geoDatasetService to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
+        this.geoDatasetService = geoDatasetService;
     }
+
 }

@@ -30,6 +30,8 @@ import org.apache.commons.lang.exception.ExceptionUtils;
  */
 public class ExceptionTag extends TagSupport {
 
+    Exception exception;
+
     /*
      * (non-Javadoc)
      * 
@@ -48,28 +50,30 @@ public class ExceptionTag extends TagSupport {
      */
     @Override
     public int doStartTag() throws JspException {
-        final StringBuilder buf = new StringBuilder();
-        if ( this.exception == null ) {
-            buf.append( "Error was not recovered" );
-        } else {
-            buf.append( "<p>" );
-            buf.append( exception.getMessage() );
-            buf.append( "</p>" );
-            buf
-                    .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
-            buf.append( ExceptionUtils.getFullStackTrace( exception ) );
-            buf.append( "</textarea>" );
-        }
-
         try {
+            final StringBuilder buf = new StringBuilder();
+            if ( this.exception == null ) {
+                buf.append( "Error was not recovered" );
+            } else {
+                buf.append( "<p>" );
+                buf.append( exception.getMessage() );
+                buf.append( "</p>" );
+                buf
+                        .append( "<textarea readonly=\"true\" class=\"stacktrace\" name=\"stacktrace\" rows=\"20\" cols=\"120\" >" );
+                if ( exception.getStackTrace() != null ) {
+                    buf.append( ExceptionUtils.getFullStackTrace( exception ) );
+                } else {
+                    buf.append( "There was no stack trace!" );
+                }
+                buf.append( "</textarea>" );
+            }
+
             pageContext.getOut().print( buf.toString() );
         } catch ( Exception ex ) {
-            throw new JspException( "ContactTag: " + ex.getMessage() );
+            throw new JspException( "Exception tag threw an exception: " + ex.getMessage(), ex );
         }
         return SKIP_BODY;
     }
-
-    Exception exception;
 
     /**
      * @jsp.attribute description="The exception" required="true" rtexprvalue="true"

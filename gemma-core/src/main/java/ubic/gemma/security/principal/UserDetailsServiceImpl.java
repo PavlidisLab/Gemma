@@ -18,6 +18,9 @@
  */
 package ubic.gemma.security.principal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.ProviderManager;
@@ -42,6 +45,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
 
     UserService userService;
     private ApplicationContext applicationContext;
+    private static Map<String, User> userCache = new HashMap<String, User>();
 
     /**
      * @param userService the userService to set
@@ -71,6 +75,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
         if ( u == null ) {
             throw new UsernameNotFoundException( username + " not found" );
         }
+        userCache.put( username, u );
         return new UserDetailsImpl( u );
     }
 
@@ -89,6 +94,16 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
         }
         return auth.getPrincipal().toString();
 
+    }
+
+    /**
+     * Avoid doing this from the database, because
+     * 
+     * @param userName
+     * @return
+     */
+    public static User getCurrentUser() {
+        return userCache.get( getCurrentUsername() );
     }
 
     /*

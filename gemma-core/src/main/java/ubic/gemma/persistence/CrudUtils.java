@@ -19,14 +19,12 @@
 package ubic.gemma.persistence;
 
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -247,6 +245,40 @@ public class CrudUtils implements InitializingBean, ApplicationContextAware {
                     log.debug( "Invoking " + m.getName() + " on " + service.getClass().getName() + " with argument "
                             + entity );
                     m.invoke( service, new Object[] { entity } );
+                    return true;
+
+                } catch ( Exception e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+        };
+    }
+
+    /**
+     * Predicate to call save (create) or update on an entity. If the object is transient, create will be called.
+     * Otherwise, update will be called.
+     * 
+     * @return false if update was called, true if create was called.
+     */
+    public Predicate getSaveOrUpdatePredicate() {
+        return new Predicate() {
+            public boolean evaluate( Object entity ) {
+                try {
+                    Object service = getService( entity );
+                    final Method createMethod = getCreateMethod( service, entity );
+                    final Method updateMethod = getUpdateMethod( service, entity );
+
+                    if ( org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null ) {
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Invoking " + updateMethod.getName() + " on " + service.getClass().getName()
+                                    + " with argument " + entity );
+                        updateMethod.invoke( service, new Object[] { entity } );
+                        return false;
+                    }
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Invoking " + createMethod.getName() + " on " + service.getClass().getName()
+                                + " with argument " + entity );
+                    entity = createMethod.invoke( service, new Object[] { entity } );
                     return true;
 
                 } catch ( Exception e ) {

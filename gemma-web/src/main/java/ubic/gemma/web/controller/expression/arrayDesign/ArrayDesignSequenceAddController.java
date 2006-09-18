@@ -22,6 +22,7 @@ import java.beans.PropertyEditorSupport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,96 +65,11 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  */
 public class ArrayDesignSequenceAddController extends BaseFormController {
 
-    private TaxonService taxonService;
+    TaxonService taxonService;
 
-    public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
-        public String getAsText() {
-            return ( ( ArrayDesign ) this.getValue() ).getName();
-        }
+    ArrayDesignService arrayDesignService;
 
-        public void setAsText( String text ) throws IllegalArgumentException {
-            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to an array design..." );
-            Object ad = arrayDesignService.findArrayDesignByName( text );
-            if ( ad == null ) {
-                throw new IllegalArgumentException( "There is no array design with name=" + text );
-            }
-            this.setValue( ad );
-        }
-    }
-
-    public class TaxonPropertyEditor extends PropertyEditorSupport {
-        public String getAsText() {
-            return ( ( Taxon ) this.getValue() ).getScientificName();
-        }
-
-        public void setAsText( String text ) throws IllegalArgumentException {
-            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
-            Object ad = taxonService.findByScientificName( text );
-            if ( ad == null ) {
-                throw new IllegalArgumentException( "There is no taxon with name=" + text );
-            }
-            this.setValue( ad );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
-        return adsac;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
-     *      org.springframework.web.bind.ServletRequestDataBinder)
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest,
-     *      java.lang.Object, org.springframework.validation.Errors)
-     */
-    @SuppressWarnings( { "unchecked", "unused" })
-    @Override
-    protected Map referenceData( HttpServletRequest request ) throws Exception {
-
-        Map<String, List<String>> mapping = new HashMap<String, List<String>>();
-
-        List<String> arrayDesignNames = new ArrayList<String>();
-
-        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
-            arrayDesignNames.add( arrayDesign.getName() );
-        }
-
-        List<String> taxonNames = new ArrayList<String>();
-
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            taxonNames.add( taxon.getScientificName() );
-        }
-
-        Collections.sort( arrayDesignNames );
-
-        mapping.put( "arrayDesigns", arrayDesignNames );
-
-        mapping.put( "sequenceTypes", new ArrayList<String>( SequenceType.literals() ) );
-
-        mapping.put( "taxa", taxonNames );
-
-        return mapping;
-
-    }
+    BioSequenceService bioSequenceService;
 
     /*
      * (non-Javadoc)
@@ -232,10 +148,6 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
     }
 
-    ArrayDesignService arrayDesignService;
-
-    BioSequenceService bioSequenceService;
-
     /**
      * @param arrayDesignService the arrayDesignService to set
      */
@@ -255,6 +167,105 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
      */
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
+        return adsac;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
+     *      org.springframework.web.bind.ServletRequestDataBinder)
+     */
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor() );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.SimpleFormController#referenceData(javax.servlet.http.HttpServletRequest,
+     *      java.lang.Object, org.springframework.validation.Errors)
+     */
+    @SuppressWarnings( { "unchecked", "unused" })
+    @Override
+    protected Map referenceData( HttpServletRequest request ) throws Exception {
+
+        Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
+
+        List<ArrayDesign> arrayDesignNames = new ArrayList<ArrayDesign>();
+
+        for ( ArrayDesign arrayDesign : ( Collection<ArrayDesign> ) arrayDesignService.loadAll() ) {
+            arrayDesignNames.add( arrayDesign );
+        }
+
+        List<Taxon> taxonNames = new ArrayList<Taxon>();
+
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            taxonNames.add( taxon );
+        }
+
+        Collections.sort( arrayDesignNames, new Comparator() {
+            public int compare( Object o1, Object o2 ) {
+                return ( ( ArrayDesign ) o1 ).getName().compareTo( ( ( ArrayDesign ) o2 ).getName() );
+            }
+        } );
+        Collections.sort( taxonNames, new Comparator() {
+            public int compare( Object o1, Object o2 ) {
+                return ( ( Taxon ) o1 ).getScientificName().compareTo( ( ( Taxon ) o2 ).getScientificName() );
+            }
+        } );
+
+        mapping.put( "arrayDesigns", arrayDesignNames );
+
+        mapping.put( "sequenceTypes", new ArrayList<String>( SequenceType.literals() ) );
+
+        mapping.put( "taxa", taxonNames );
+
+        return mapping;
+
+    }
+
+    public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
+        public String getAsText() {
+            return ( ( ArrayDesign ) this.getValue() ).getName();
+        }
+
+        public void setAsText( String text ) throws IllegalArgumentException {
+            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to an array design..." );
+            Object ad = arrayDesignService.findArrayDesignByName( text );
+            if ( ad == null ) {
+                throw new IllegalArgumentException( "There is no array design with name=" + text );
+            }
+            this.setValue( ad );
+        }
+    }
+
+    public class TaxonPropertyEditor extends PropertyEditorSupport {
+        public String getAsText() {
+            return ( ( Taxon ) this.getValue() ).getScientificName();
+        }
+
+        public void setAsText( String text ) throws IllegalArgumentException {
+            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
+            Object ad = taxonService.findByScientificName( text );
+            if ( ad == null ) {
+                throw new IllegalArgumentException( "There is no taxon with name=" + text );
+            }
+            this.setValue( ad );
+        }
     }
 
 }

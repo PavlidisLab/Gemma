@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -54,7 +56,7 @@ public class LoginTest extends BaseWebTest {
         assertFormPresent();
     }
 
-    public final void testSignupWithClientSideValidation() throws Exception {
+    public final void testSignupWithValidationFailure() throws Exception {
         // assertJavascriptAlertPresent( "Username is a required field." ); // in 2.0 api
         // final WebClient webClient = new WebClient();
         // webClient.setAlertHandler( new CollectingAlertHandler() );
@@ -64,61 +66,55 @@ public class LoginTest extends BaseWebTest {
         // signup
         clickLinkWithText( "Signup" );
         assertFormPresent();
-
+        String username = RandomStringUtils.randomAlphabetic( 10 );
         // leave out user name on purpose, should get client-side validation error.
-        setTextField( "password", "testing" );
-        setTextField( "confirmPassword", "testing" );
-        setTextField( "firstName", "testing" );
+        setTextField( "newPassword", "testing" );
+        setTextField( "confirmNewPassword", "testing" );
+        setTextField( "name", "testing" );
         setTextField( "lastName", "testing" );
         setTextField( "email", "testing@localhost.com" );
         setTextField( "passwordHint", "cat" );
 
         submit( "save" );
 
-        assertFormPresent(); // should still be on page because of client-side validation
+        assertFormPresent(); // should still be on page because of validation
         assertSubmitButtonPresent();
 
-        setTextField( "userName", "testing" );
+        setTextField( "userName", username );
 
-        // can't do this because of alert?
-        // submit();
+        submit( "save" );
 
-        // this doesn't work at present
-        // assertTextPresent( "You have successfully registered" );
-
-        // edit profile
-
-        // assertLinkPresentWithText( "Edit Profile" );
-        // clickLinkWithText( "Edit Profile" );
-
-        // sign is as admin
-
-        // delete the user we just created
+        assertTextPresent( "Main Menu" );
 
     }
 
-    public final void testSignup() throws Exception {
+    public final void testSignupAndLogin() throws Exception {
         this.beginAt( "/login.html" );
         assertFormPresent();
+
         // signup
         clickLinkWithText( "Signup" );
         assertFormPresent();
-
-        setTextField( "userName", "testing" );
-        setTextField( "password", "testing" );
-        setTextField( "confirmPassword", "testing" );
-        setTextField( "firstName", "testing" );
+        String username = RandomStringUtils.randomAlphabetic( 10 );
+        String password = "testing";
+        setTextField( "userName", username );
+        setTextField( "newPassword", password );
+        setTextField( "confirmNewPassword", password );
+        setTextField( "name", "testing" );
         setTextField( "lastName", "testing" );
-        setTextField( "email", "testing@localhost.com" );
+        setTextField( "email", username + ".testing@localhost.com" );
         setTextField( "passwordHint", "cat" );
 
         submit( "save" );
-        
-        dumpHtml();
-        this.gotoPage( "/mainMenu.html" );
 
-        assertLinkNotPresentWithText( "Signup" );
+        // should redirect to main menu, if javascript is on?
 
+        setTextField( "j_username", username );
+        setTextField( "j_password", password );
+
+        submit();
+
+        assertTextPresent( "Main Menu" );
     }
 
     // public final void testDeleteUser() throws Exception {

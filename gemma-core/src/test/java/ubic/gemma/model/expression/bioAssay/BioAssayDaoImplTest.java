@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao;
@@ -52,8 +53,10 @@ public class BioAssayDaoImplTest extends BaseTransactionalSpringContextTest {
         BioAssayDimension bad = ( BioAssayDimension ) bioAssayDimensionDao.create( BioAssayDimension.Factory
                 .newInstance() );
 
+        ArrayDesign a = this.getTestPersistentArrayDesign( 10, true );
+
         for ( int i = 0; i < NUMTESTBIOASSAYS; i++ ) {
-            ba = this.getTestPersistentBioAssay( null );
+            ba = this.getTestPersistentBioAssay( a );
             bas.add( ba );
         }
 

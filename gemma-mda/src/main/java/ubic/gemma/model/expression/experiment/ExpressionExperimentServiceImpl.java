@@ -112,7 +112,8 @@ public class ExpressionExperimentServiceImpl extends
 
         Collection<BioAssay> bioassays = expressionExperiment.getBioAssays();
         for ( BioAssay bioassay : bioassays ) {
-            bioassay.getArrayDesignsUsed().size();
+            // bioassay.getArrayDesignsUsed().size(); // FIXME, not needed because arrayDesigns is no longer a
+            // colection.
         }
     }
 
@@ -166,7 +167,7 @@ public class ExpressionExperimentServiceImpl extends
     protected ExpressionExperiment handleFind( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().find( expressionExperiment );
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -175,7 +176,7 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected Map handleGetQuantitationTypeCountById( Long Id ) throws Exception {
         return this.getExpressionExperimentDao().getQuantitationTypeCountById( Id );
-    }    
+    }
 
     /*
      * (non-Javadoc)
@@ -186,7 +187,7 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection<ArrayDesign> handleGetArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> result = new HashSet<ArrayDesign>();
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            result.addAll( ba.getArrayDesignsUsed() );
+            result.add( ba.getArrayDesignUsed() );
         }
         return result;
     }

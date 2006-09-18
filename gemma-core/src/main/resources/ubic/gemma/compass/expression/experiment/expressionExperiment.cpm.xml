@@ -49,7 +49,7 @@
       <meta-data>bioassay description</meta-data>
     </property>
 	 
-    <component name="arrayDesignsUsed" ref-alias="arrayDesign" />
+    <component name="arrayDesignUsed" ref-alias="arrayDesign" />
 	
 </class>
 

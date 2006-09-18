@@ -18,10 +18,6 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.experiment;
 
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;

@@ -69,7 +69,7 @@ public class SeriesFetcher extends FtpFetcher {
                 return result;
             }
         } catch ( IOException e ) {
-            log.error( e, e );
+            throw new RuntimeException( e );
         }
         log.error( "Failed" );
         return null;

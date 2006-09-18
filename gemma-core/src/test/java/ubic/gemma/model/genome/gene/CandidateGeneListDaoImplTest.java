@@ -57,9 +57,10 @@ public class CandidateGeneListDaoImplTest extends BaseTransactionalSpringContext
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         candidateGeneList.setAuditTrail( ad );
 
+        // have to use a real existing taxon (PP)
         t = Taxon.Factory.newInstance();
-        t.setCommonName( "imatest" );
-        t.setScientificName( "Mus mickeyus" );
+        t.setCommonName( "mouse" );
+        t.setScientificName( "Mus musculus" );
         t = ( Taxon ) persisterHelper.persist( t );
 
         ad = AuditTrail.Factory.newInstance();
