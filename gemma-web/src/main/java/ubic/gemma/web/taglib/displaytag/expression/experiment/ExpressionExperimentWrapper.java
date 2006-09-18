@@ -51,7 +51,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getSourceLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getSource() != null ) {
+        if ( object != null && object.getSource() != null ) {
             return "<a href=\"" + object.getAccession().getExternalDatabase().getWebUri() + "\">" + object.getSource()
                     + "</a>";
         }
@@ -63,7 +63,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDetailsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getAccession() != null ) {
+        if ( object != null && object.getAccession() != null ) {
             return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">"
             + getDetails() + "</a>";
         }
@@ -76,7 +76,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDetails() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getAccession() != null ) {
+        if ( object != null && object.getAccession() != null ) {
             return object.getAccession().getExternalDatabase().getName() + " - "
             + object.getAccession().getAccession();
         }
@@ -88,7 +88,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getAssaysLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getBioAssays() != null ) {
+        if ( object != null && object.getBioAssays() != null ) {
             return "<a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
             + object.getBioAssays().size() + "</a>";
         }
@@ -105,7 +105,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
         ExperimentalDesign object = ( ExperimentalDesign ) getCurrentRowObject();
 
-        if ( object.getExperimentalFactors() != null ) {
+        if ( object != null && object.getExperimentalFactors() != null ) {
             return "<a href=\"/Gemma/experimentalDesign/showExperimentalDesign.html?id=" + object.getId() + "\">"
                     + object.getExperimentalFactors().size() + "</a>";
         }
@@ -135,7 +135,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getDesignsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getExperimentalDesigns() != null ) {
+        if ( object != null && object.getExperimentalDesigns() != null ) {
             return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
                     + object.getExperimentalDesigns().size() + "</a>";
         }
@@ -148,7 +148,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getNameLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getExperimentalDesigns() != null ) {
+        if ( object != null && object.getExperimentalDesigns() != null ) {
             return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getName() + "</a>";
         }
         return "No design";
@@ -159,7 +159,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getCreateDate() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object.getAuditTrail() != null ) {
+        if ( object != null && 
+                object.getAuditTrail() != null && 
+                object.getAuditTrail().getCreationEvent() != null && 
+                object.getAuditTrail().getCreationEvent().getDate() != null ) {
 
             Date date = object.getAuditTrail().getCreationEvent().getDate();
 
@@ -193,6 +196,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      */
     public String getTaxon() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        if (object == null) {
+            return "Taxon unavailable";
+        }
+        
         Collection bioAssayCol = object.getBioAssays();
         BioAssay bioAssay = null;
 
