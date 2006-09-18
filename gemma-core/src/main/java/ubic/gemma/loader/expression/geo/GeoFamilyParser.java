@@ -114,10 +114,6 @@ public class GeoFamilyParser implements Parser {
 
     private boolean processPlatformsOnly;
 
-    public GeoFamilyParser() {
-        results = new GeoParseResult();
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -347,10 +343,11 @@ public class GeoFamilyParser implements Parser {
         haveReadSampleDataHeader = false;
         String line = "";
         parsedLines = 0;
+        results = new GeoParseResult();
 
-//        ProgressJob pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
-//                .getName(), "Parsing file...." );
-//        pJob.updateProgress( new ProgressData( 0, "Parsing file" ) );
+        // ProgressJob pJob = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
+        // .getName(), "Parsing file...." );
+        // pJob.updateProgress( new ProgressData( 0, "Parsing file" ) );
 
         try {
 
@@ -363,9 +360,9 @@ public class GeoFamilyParser implements Parser {
                 parsedLines++;
 
                 // Just a quick work around untill i get a progress spinner working..
-//                if ( pJob.getProgressData().getPercent() == 99 ) pJob.updateProgress( 1 );
-//
-//                pJob.updateProgress();
+                // if ( pJob.getProgressData().getPercent() == 99 ) pJob.updateProgress( 1 );
+                //
+                // pJob.updateProgress();
             }
         } catch ( Exception e ) {
             log.error( e, e );
@@ -400,7 +397,7 @@ public class GeoFamilyParser implements Parser {
      * (in a platform section of a GSE file):
      * 
      * <pre>
-     *             #SEQ_LEN = Sequence length
+     *                 #SEQ_LEN = Sequence length
      * </pre>
      * 
      * @param line
@@ -482,8 +479,8 @@ public class GeoFamilyParser implements Parser {
      * For samples in GSE files, they become values for the data in the sample. For example
      * 
      * <pre>
-     *            #ID_REF = probe id
-     *            #VALUE = RMA value
+     *                #ID_REF = probe id
+     *                #VALUE = RMA value
      * </pre>
      * 
      * <p>
@@ -494,9 +491,9 @@ public class GeoFamilyParser implements Parser {
      * provided. Here is an example.
      * 
      * <pre>
-     *            #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
-     *            #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
-     *            #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
+     *                #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
      * 
      * @param line

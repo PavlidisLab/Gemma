@@ -126,6 +126,15 @@ public class GeoConverter implements Converter {
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
 
     private ExternalDatabase genbank;
+    
+    /**
+     * Remove old results. Call this prior to starting converstion of a full dataset.
+     *
+     */
+    public void clear() {
+        results = new HashSet<Object>();
+    }
+    
 
     /**
      * @param seriesMap
@@ -346,7 +355,7 @@ public class GeoConverter implements Converter {
         for ( GeoSample sample : datasetSamples ) {
             boolean found = false;
             String sampleAcc = sample.getGeoAccession();
-            bioAssayDimName.append( sampleAcc + "," );
+            bioAssayDimName.append( sampleAcc + "," ); // this is rather silly!
             found = matchSampleToBioAssay( expExp, resultBioAssayDimension, sampleAcc );
             if ( !found ) {
                 // this is normal because not all headings are
@@ -1462,18 +1471,30 @@ public class GeoConverter implements Converter {
                 // if ( !StringUtils.isBlank( string ) ) {
                 // throw e; // not a missing value, some other problem.
                 // }
-                if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                    toConvert.add( Double.NaN );
-                } else if ( pt.equals( PrimitiveType.INT ) ) {
-                    toConvert.add( 0 );
-                } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                    toConvert.add( false ); // FIXME - what happens if boolean parsing fails?
-                } else {
-                    throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
-                }
+                handleMissing( toConvert, pt );
+            } catch ( NullPointerException e ) {
+                handleMissing( toConvert, pt );
             }
         }
         return byteArrayConverter.toBytes( toConvert.toArray() );
+    }
+
+    /**
+     * Deal with missing values, identified by nulls or number format exceptions.
+     * 
+     * @param toConvert
+     * @param pt
+     */
+    private void handleMissing( List<Object> toConvert, PrimitiveType pt ) {
+        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
+            toConvert.add( Double.NaN );
+        } else if ( pt.equals( PrimitiveType.INT ) ) {
+            toConvert.add( 0 );
+        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
+            toConvert.add( false ); // FIXME - what happens if boolean parsing fails?
+        } else {
+            throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
+        }
     }
 
     /**

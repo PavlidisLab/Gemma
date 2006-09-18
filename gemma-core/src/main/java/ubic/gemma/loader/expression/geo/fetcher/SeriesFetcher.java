@@ -59,7 +59,8 @@ public class SeriesFetcher extends FtpFetcher {
             // String seekFile = baseDir + "/" + accession + "_family.soft.gz";
             String seekFile = baseDir + accession + "/" + accession + "_family.soft.gz";
             boolean success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
-
+            f.disconnect();
+            
             if ( success ) {
                 LocalFile file = fetchedFile( seekFile, outputFileName );
                 log.info( "Retrieved " + seekFile + " for experiment(set) " + accession + " .Output file is "

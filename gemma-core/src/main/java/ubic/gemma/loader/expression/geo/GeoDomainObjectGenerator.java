@@ -51,7 +51,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     protected Fetcher seriesFetcher;
     protected Fetcher platformFetcher;
 
-    protected GeoFamilyParser gfp = new GeoFamilyParser();
+    protected GeoFamilyParser parser = new GeoFamilyParser();
 
     private boolean processPlatformsOnly;
 
@@ -70,7 +70,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         datasetFetcher = new DatasetFetcher();
         seriesFetcher = new SeriesFetcher();
         platformFetcher = new PlatformFetcher();
-        this.gfp = new GeoFamilyParser();
     }
 
     /**
@@ -137,6 +136,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                     + ", must be a GDS, GSE or GPL" );
         }
         return result;
+
     }
 
     /**
@@ -166,14 +166,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         platformPath = platformFile.getLocalURL().getPath();
 
-        gfp.setProcessPlatformsOnly( true );
+        parser.setProcessPlatformsOnly( true );
         try {
-            gfp.parse( platformPath );
+            parser.parse( platformPath );
         } catch ( IOException e1 ) {
             throw new RuntimeException( e1 );
         }
 
-        return ( ( GeoParseResult ) gfp.getResults().iterator().next() ).getPlatformMap().get( geoAccession );
+        return ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get( geoAccession );
 
     }
 
@@ -200,14 +200,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         seriesPath = seriesFile.getLocalURL().getPath();
 
-        gfp.setProcessPlatformsOnly( this.processPlatformsOnly );
+        parser.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {
-            gfp.parse( seriesPath );
+            parser.parse( seriesPath );
         } catch ( IOException e1 ) {
             throw new RuntimeException( e1 );
         }
 
-        GeoSeries series = ( ( GeoParseResult ) gfp.getResults().iterator().next() ).getSeriesMap().get(
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get(
                 seriesAccession );
 
         // FIXME put this back...or something.
@@ -238,14 +238,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
         seriesPath = seriesFile.getLocalURL().getPath();
 
-        gfp.setProcessPlatformsOnly( this.processPlatformsOnly );
+        parser.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {
-            gfp.parse( seriesPath );
+            parser.parse( seriesPath );
         } catch ( IOException e1 ) {
             throw new RuntimeException( e1 );
         }
 
-        return ( ( GeoParseResult ) gfp.getResults().iterator().next() ).getPlatformMap().values();
+        return ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().values();
 
     }
 
@@ -258,9 +258,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      * @throws IOException
      */
     private GeoDataset processDataSet( String geoDataSetAccession, String dataSetPath ) throws IOException {
-        gfp.parse( dataSetPath );
 
-        GeoParseResult results = ( GeoParseResult ) gfp.getResults().iterator().next(); // first result is where
+        parser = new GeoFamilyParser();
+        parser.parse( dataSetPath );
+
+        GeoParseResult results = ( GeoParseResult ) parser.getResults().iterator().next(); // first result is where
         // we
         // start.
 

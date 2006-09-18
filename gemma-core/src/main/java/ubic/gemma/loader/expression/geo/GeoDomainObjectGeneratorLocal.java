@@ -42,7 +42,7 @@ public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
         seriesFetcher = new LocalSeriesFetcher( fileLocation );
         platformFetcher = new LocalSeriesFetcher( fileLocation );
 
-        this.gfp = new GeoFamilyParser();
+        this.parser = new GeoFamilyParser();
     }
 
 }

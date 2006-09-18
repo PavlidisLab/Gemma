@@ -63,6 +63,10 @@ public class GeoDatasetService extends AbstractGeoService {
 
         Collection<?> results = geoDomainObjectGenerator.generate( geoAccession );
 
+        if ( results == null || results.size() == 0 ) {
+            throw new RuntimeException( "Could not get domain objects for " + geoAccession );
+        }
+
         assert results.iterator().next() instanceof GeoSeries : "Got a "
                 + results.iterator().next().getClass().getName() + " instead of a " + GeoSeries.class.getName();
 
@@ -70,6 +74,7 @@ public class GeoDatasetService extends AbstractGeoService {
 
         log.info( "Generated GEO domain objects for " + geoAccession );
 
+        geoConverter.clear();
         ExpressionExperiment result = ( ExpressionExperiment ) geoConverter.convert( series );
 
         for ( BioAssay bioAssay : result.getBioAssays() ) {
@@ -79,8 +84,9 @@ public class GeoDatasetService extends AbstractGeoService {
 
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
-        return persisterHelper.persist( result );
-
+        Object persistedResult = persisterHelper.persist( result );
+        geoConverter.clear();
+        return persistedResult;
     }
 
     /**
