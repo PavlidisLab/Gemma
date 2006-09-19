@@ -42,7 +42,7 @@
 				<sendOnSuccess>true</sendOnSuccess>
 				<sendOnWarning>true</sendOnWarning>
 				<configuration>
-					<address>paul@bioinformatics.ubc.ca</address>
+					<address>joseph@bioinformatics.ubc.ca</address>
 				</configuration>
 			</notifier>
 		</notifiers>
