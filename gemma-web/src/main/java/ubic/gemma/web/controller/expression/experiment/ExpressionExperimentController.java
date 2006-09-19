@@ -28,6 +28,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -36,12 +38,14 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @version $Id$
  * @spring.bean id="expressionExperimentController"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @spring.property name = "expressionExperimentSubSetService" ref="expressionExperimentSubSetService"
  * @spring.property name="methodNameResolver" ref="expressionExperimentActions"
  */
 public class ExpressionExperimentController extends BaseMultiActionController {
 
     private ExpressionExperimentService expressionExperimentService = null;
-
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
+    
     private final String messagePrefix = "Expression experiment with id";
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -50,6 +54,13 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
+    }
+    
+    /**
+     * @param expressionExperimentSubSetService
+     */
+    public void setExpressionExperimentSubSetService( ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
+        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
     }
 
     /**
@@ -106,6 +117,31 @@ public class ExpressionExperimentController extends BaseMultiActionController {
         request.setAttribute( "id", id );
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays",
                 expressionExperiment.getBioAssays());
+    }
+    
+    /**
+     * shows a list of BioAssays for an expression experiment subset
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @SuppressWarnings("unused")
+    public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        if ( id == null ) {
+            // should be a validation error, on 'submit'.
+            throw new EntityNotFoundException( identifierNotFound );
+        }
+
+        ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
+        if ( subset == null ) {
+            throw new EntityNotFoundException( id + " not found" );
+        }
+
+//        request.setAttribute( "id", id );
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays",
+                subset.getBioAssays());
     }
     
     /**

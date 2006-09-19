@@ -56,6 +56,7 @@ Mapping URLS to controllers
             <prop key="/geneDetail.html">geneController</prop>
             <prop key="/geneFinder.html">geneFinderController</prop>
             <prop key="/addTestData.html">testDataAddingController</prop>
+            <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
         </props>
     </property>
 </bean>
@@ -189,6 +190,7 @@ Mapping urls to views. List views here that are just jsps and that don't need a 
             <prop key="/expressionExperiment/deleteExpressionExperiment.html">delete</prop>
             <prop key="/expressionExperiment/showExpressionExperiment.html">show</prop>
             <prop key="/expressionExperiment/showBioAssaysFromExpressionExperiment.html">showBioAssays</prop>
+            <prop key="/expressionExperiment/showExpressionExperimentSubSet.html">showSubSet</prop>
         </props>
     </property>
 </bean>
