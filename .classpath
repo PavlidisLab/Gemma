@@ -4,7 +4,6 @@
 	<classpathentry output="test-build" kind="src" path="gemma-web/src/test/resources"/>
 	<classpathentry output="test-build" kind="src" path="gemma-web/src/it/java"/>
 	<classpathentry output="test-build" kind="src" path="gemma-util/src/test/resources"/>
-	<classpathentry output="build/Gemma" kind="src" path="gemma-web/src/main/applets"/>
 	<classpathentry including="**/*.jar|**/version.properties" excluding="**/*.class|**/*.xml|**/empty.file|**/gemma*.jar" output="build/Gemma" kind="src" path="gemma-web/target/Gemma"/>
 	<classpathentry output="build/Gemma/" kind="src" path="generated-sources/Gemma"/>
 	<classpathentry including="ubic/gemma/localTestDataSource.xml" excluding="log4j.properties" output="build/Gemma/WEB-INF/classes" kind="src" path="gemma-testing/src/main/resources"/>
