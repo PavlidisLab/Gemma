@@ -34,7 +34,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @spring.bean id="experimentalDesignFormController"
  * @spring.property name = "commandName" value="experimentalDesign"
  * @spring.property name = "formView" value="experimentalDesign.edit"
- * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
+ * @spring.property name = "successView" value="experimentalDesign.detail"
  * @spring.property name = "experimentalDesignService" ref="experimentalDesignService"
  */
 public class ExperimentalDesignFormController extends BaseFormController {
@@ -113,10 +113,8 @@ public class ExperimentalDesignFormController extends BaseFormController {
         ExperimentalDesign ed = ( ExperimentalDesign ) command;
 
         experimentalDesignService.update( ed );
-
         saveMessage( request, "object.saved", new Object[] { ed.getClass().getSimpleName(), ed.getId() }, "Saved" );
-
-        return new ModelAndView( getSuccessView() );
+        return new ModelAndView( getSuccessView() ).addObject( "experimentalDesign", ed );
     }
 
     /**

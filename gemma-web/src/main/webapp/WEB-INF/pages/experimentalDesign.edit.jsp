@@ -114,7 +114,8 @@
 		<tr>
         <td>
 	    	<input type="submit" class="button" name="save" value="<fmt:message key="button.save"/>" />
-            <input type="submit" class="button" name="cancel" value="<fmt:message key="button.cancel"/>" />
+            <input type="button" name="cancel" value="<fmt:message key="button.cancel"/>" 
+            onclick="location.href='showExperimentalDesign.html?id=<%=experimentalDesign.getId()%>'"/>
        	</td>
        	</tr>
        	</table>
