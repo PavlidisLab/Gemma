@@ -18,12 +18,16 @@
  */
 package ubic.gemma.testing;
 
+import java.io.IOException;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
@@ -352,6 +356,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+        disableLuceneLocks();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
         this.testHelper = new TestPersistentObjectHelper();
 
@@ -372,6 +377,19 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
         // flushSession();
+    }
+
+    /**
+     * Disables lucene locking mechanism.
+     * 
+     * @throws IOException
+     */
+    private void disableLuceneLocks() throws IOException {
+        // TODO candidate for a potential CompassUtils
+        log.debug( "lock directory is " + FSDirectory.LOCK_DIR );
+
+        log.debug( "disabling lucene locks" );
+        FSDirectory.setDisableLocks( true );
     }
 
     /**
