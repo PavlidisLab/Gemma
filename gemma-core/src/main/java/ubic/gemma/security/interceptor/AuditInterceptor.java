@@ -177,7 +177,6 @@ public class AuditInterceptor implements MethodInterceptor {
             User user = getCurrentUser();
 
             at.start( "create " + d, user );
-            log.debug( "boom " + at.getLast().getNote() );
             updateAndLog( d, user, at.getLast().getNote() );
         }
     }
