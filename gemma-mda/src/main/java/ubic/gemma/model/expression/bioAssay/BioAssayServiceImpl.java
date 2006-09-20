@@ -77,7 +77,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
      */
     @Override
     protected Collection handleLoadAll() throws Exception {
-        throw new NotImplementedException( "This method has not been implemented" );
+        return this.getBioAssayDao().loadAll();
     }
 
     /**
