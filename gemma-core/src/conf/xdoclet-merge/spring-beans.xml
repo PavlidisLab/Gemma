@@ -120,6 +120,7 @@
             <props>
                 <prop key="compass.engine.connection">file://${user.home}/compass/gemma</prop>
                 <prop key="compass.transaction.factory">org.compass.spring.transaction.SpringSyncTransactionFactory</prop>
+                <prop key="compass.transaction.lockTimeout">20</prop>
             </props>
         </property>
         <property name="transactionManager">
