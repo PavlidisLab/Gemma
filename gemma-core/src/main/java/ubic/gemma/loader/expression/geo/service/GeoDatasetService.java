@@ -35,10 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class GeoDatasetService extends AbstractGeoService {
 
-    public GeoDatasetService() {
-        this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
-    }
-
     /**
      * Given a GEO GSE or GDS:
      * <ol>
@@ -52,7 +48,8 @@ public class GeoDatasetService extends AbstractGeoService {
     @SuppressWarnings("unchecked")
     @Override
     public Object fetchAndLoad( String geoAccession ) {
-
+        this.geoConverter.clear();
+        this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
         geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
 
         if ( this.loadPlatformOnly ) {
@@ -74,7 +71,6 @@ public class GeoDatasetService extends AbstractGeoService {
 
         log.info( "Generated GEO domain objects for " + geoAccession );
 
-        geoConverter.clear();
         ExpressionExperiment result = ( ExpressionExperiment ) geoConverter.convert( series );
 
         for ( BioAssay bioAssay : result.getBioAssays() ) {
@@ -85,7 +81,7 @@ public class GeoDatasetService extends AbstractGeoService {
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
         Object persistedResult = persisterHelper.persist( result );
-        geoConverter.clear();
+        this.geoConverter.clear();
         return persistedResult;
     }
 

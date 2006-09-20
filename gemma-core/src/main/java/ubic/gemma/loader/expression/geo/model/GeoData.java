@@ -39,6 +39,21 @@ public abstract class GeoData {
 
     private List<String> columnDescriptions = new ArrayList<String>();
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( obj instanceof GeoData ) {
+            return ( ( GeoData ) obj ).getGeoAccession().equals( this.getGeoAccession() );
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( getGeoAccession() == null ? 0 : getGeoAccession().hashCode() );
+        return hashCode;
+    }
+
     /**
      * @return Returns the columnNames.
      */
