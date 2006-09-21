@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -91,7 +92,9 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
         for ( Object object : result ) {
             if ( object instanceof ExpressionExperiment ) {
-                ee = ( ExpressionExperiment ) persisterHelper.persist( object );
+                ee = ( ExpressionExperiment ) object;
+                ee.setName( RandomStringUtils.randomAlphabetic( 20 ) + "expressionExperiment" );
+                ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );
                 break;
@@ -128,7 +131,9 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
         for ( Object object : result ) {
             if ( object instanceof ExpressionExperiment ) {
-                ee = ( ExpressionExperiment ) persisterHelper.persist( object );
+                ee = ( ExpressionExperiment ) object;
+                ee.setName( RandomStringUtils.randomAlphabetic( 20 ) + "expressionExperiment" );
+                ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );
                 break;

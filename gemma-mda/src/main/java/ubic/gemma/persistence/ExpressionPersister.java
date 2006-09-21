@@ -196,7 +196,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         ArrayDesign arrayDesign = assay.getArrayDesignUsed();
         assert arrayDesign != null;
 
-        assay.setArrayDesignUsed( cacheArrayDesign( arrayDesign ) );
+        arrayDesign = cacheArrayDesign( arrayDesign );
+        assert arrayDesign.getId() != null;
+        assay.setArrayDesignUsed( arrayDesign );
+        assert assay.getArrayDesignUsed().getId() != null;
 
         for ( FactorValue factorValue : assay.getFactorValues() ) {
             // factors are not compositioned in any more, but by association with the ExperimentalFactor.
@@ -338,11 +341,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             alreadyFilled = fillInExpressionExperimentDataVectorAssociations( entity );
             // these are persistent! So we don't use the cascade.
             entity.setBioAssays( alreadyFilled );
+        } else {
+            for ( BioAssay bA : entity.getBioAssays() ) {
+                fillInBioAssayAssociations( bA );
+                alreadyFilled.add( bA );
+            }
         }
 
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
             for ( BioAssay bA : subset.getBioAssays() ) {
                 bA.setId( persistBioAssay( bA ).getId() );
+                assert bA.getArrayDesignUsed().getId() != null;
                 if ( !alreadyFilled.contains( bA ) ) {
                     throw new IllegalStateException( bA + " not in the experiment?" );
                 }
@@ -350,12 +359,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 // alreadyFilled.add( bA );
             }
         }
-
-        // No need to do this..
-        // for ( BioAssay bA : entity.getBioAssays() ) {
-        // if ( alreadyFilled.contains( bA ) ) continue;
-        // fillInBioAssayAssociations( bA );
-        // }
 
         return expressionExperimentService.create( entity );
     }
