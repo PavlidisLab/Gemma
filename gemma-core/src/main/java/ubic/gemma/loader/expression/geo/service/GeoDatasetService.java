@@ -49,7 +49,7 @@ public class GeoDatasetService extends AbstractGeoService {
     @Override
     public Object fetchAndLoad( String geoAccession ) {
         this.geoConverter.clear();
-        this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+        geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
 
         if ( this.loadPlatformOnly ) {

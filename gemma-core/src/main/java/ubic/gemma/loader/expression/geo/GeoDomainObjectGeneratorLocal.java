@@ -41,7 +41,6 @@ public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
         datasetFetcher = new LocalDatasetFetcher( fileLocation );
         seriesFetcher = new LocalSeriesFetcher( fileLocation );
         platformFetcher = new LocalSeriesFetcher( fileLocation );
-
         this.parser = new GeoFamilyParser();
     }
 

@@ -58,7 +58,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
-        geoService = new GeoDatasetService();
+        geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
         geoService.setLoadPlatformOnly( false );
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         init();
