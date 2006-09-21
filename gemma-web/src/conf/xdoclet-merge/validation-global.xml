@@ -55,6 +55,15 @@
             </field>
         </form>
         
+        <form name="coexpressionSearchCommand">
+            <field property="searchString" depends="required">
+                <arg0 key="coexpressionSearchCommand.searchString"/>
+            </field>
+            <field property="stringency" depends="required">
+                <arg0 key="coexpressionSearchCommand.stringency"/>
+            </field>
+        </form>
+        
         <form name="arrayDesign">
             <field property="name" depends="required">
                 <arg0 key="arrayDesign.name"/>

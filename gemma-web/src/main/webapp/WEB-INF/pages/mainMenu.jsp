@@ -38,7 +38,9 @@
 	<li>
 		<a href="<c:url value="/bibRefSearch.html"/>"> <fmt:message key="menu.flow.PubMedSearch" /> </a>
 	</li>
-
+	<li>
+		<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message key="menu.Coexpression" /> </a>
+	</li>
 	<li>
 		<a href="<c:url value="/editProfile.html"/>"> <fmt:message key="menu.user" /> </a>
 	</li>
