@@ -2734,6 +2734,9 @@ public class MageMLConverterHelper {
         try {
             // PropertyUtils.setProperty(setterObj, propertyName, settee); // this would work if we didn't have this
             // Impl vs. base problem.
+            if ( log.isDebugEnabled() ) {
+                log.debug( "Setting " + settee + " on " + setterObj );
+            }
             gemmaSetter.invoke( setterObj, new Object[] { settee } );
         } catch ( IllegalArgumentException e ) {
             log.error( e );
@@ -2993,7 +2996,7 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * 
+     * Different ways the MGED ontology shows up in MAGE-ML files. Might have to be extended.
      */
     private void initMGEDOntologyAliases() {
         mgedOntologyAliases = new HashSet<String>();
@@ -3025,51 +3028,6 @@ public class MageMLConverterHelper {
 
         return associatedObject;
     }
-
-    // /**
-    // * Given a Gemma object, and a class name, try to get an instance of the named class, first assuming that the new
-    // * object is in the same package as the Gemma object but then looking in other packages of ubic.gemma.model.
-    // *
-    // * @param gemmaObj The object whose package we expect to find the new object's class
-    // * @param className The unqualified name of the class to be instantiated (e.g., "BioMaterial")
-    // * @return an instance of className.
-    // * @throws ClassNotFoundException
-    // * @throws NoSuchMethodException
-    // * @throws IllegalAccessException
-    // * @throws InvocationTargetException
-    // */
-    // private Object getInstanceFromStaticInnerFactory( Object gemmaObj, String className ) throws
-    // NoSuchMethodException,
-    // IllegalAccessException, InvocationTargetException, ClassNotFoundException {
-    // String factoryClassName = gemmaObj.getClass().getPackage().getName() + "." + className + "$Factory";
-    // Class clazz = null;
-    // try {
-    // clazz = Class.forName( factoryClassName );
-    // } catch ( ClassNotFoundException e ) {
-    // Package[] allPackages = Package.getPackages();
-    // for ( int i = 0; i < allPackages.length; i++ ) {
-    // String packageName = allPackages[i].getName();
-    // if ( !packageName.startsWith( "ubic.gemma.model." ) ) continue;
-    //
-    // factoryClassName = packageName + "." + className + "$Factory";
-    // try {
-    // clazz = Class.forName( factoryClassName );
-    // if ( clazz != null ) {
-    // break;
-    // }
-    // } catch ( ClassNotFoundException e1 ) {
-    // ; // that's okay.
-    // }
-    // }
-    // }
-    //
-    // if ( clazz == null ) {
-    // throw new ClassNotFoundException( "No support found for " + className );
-    // }
-    //
-    // Method factoryMethod = clazz.getMethod( "newInstance", new Class[] {} );
-    // return factoryMethod.invoke( null, new Object[] {} );
-    // }
 
     /**
      * Call a 'get' method to retrieve an associated MAGE object for conversion.
@@ -3166,7 +3124,7 @@ public class MageMLConverterHelper {
      * Generic method to fill in a Gemma object where the association in Mage has cardinality of >1.
      * 
      * @param associatedList - The result of the Getter call.
-     * @param gemmObj - The Gemma object in which to place the converted Mage object(s).
+     * @param gemmObj - The Gemma object in which to place the converted Mage object(s). This might be a collection.
      * @param onlyTakeOne - This indicates that the cardinality in the Gemma object is at most 1. Therefore we pare down
      *        the Mage object list to take just the first one.
      * @param actualGemmaAssociationName - for example, a BioSequence hasa "SequenceDatabaseEntry", not a
@@ -3196,11 +3154,15 @@ public class MageMLConverterHelper {
                 log.debug( "Converting a MAGE list to a single instance of " + convertedGemmaClass.getSimpleName() );
                 findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, associationName );
             } else {
+                // Collection
                 Class gemmaClass = ReflectionUtil.getBaseForImpl( gemmaObj );
                 log.debug( "Converting a MAGE list to a Gemma list associated with a " + gemmaClass.getSimpleName() );
                 Collection<Object> gemmaObjList = ( Collection<Object> ) findAndInvokeGetter( gemmaObj, associationName );
                 if ( gemmaObjList == null ) {
                     gemmaObjList = new HashSet<Object>();
+                } else if ( gemmaObjList.size() > 0 ) {
+                    log.warn( "**** " + gemmaObjList + " (" + associationName + ") already contains "
+                            + gemmaObjList.size() + " elements" );
                 }
 
                 // avoid adding the same object twice.
@@ -3208,7 +3170,10 @@ public class MageMLConverterHelper {
                     Object convertedGemmaObj = findAndInvokeConverter( mageObj );
                     if ( convertedGemmaObj == null ) continue; // not supported.
                     if ( !gemmaObjList.contains( convertedGemmaObj ) ) {
-                        log.debug( "Adding " + convertedGemmaObj );
+                        if ( log.isDebugEnabled() ) {
+                            log.debug( "Adding " + convertedGemmaObj + " to " + gemmaObjList + " (" + associationName
+                                    + ")" );
+                        }
                         gemmaObjList.add( convertedGemmaObj );
                     }
                 }

@@ -86,7 +86,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
         Collection<Object> result = getMageMLConverter().convert( parseResult );
 
         log.info( result.size() + " Objects parsed from the MAGE file." );
-        log.info( "Tally:\n" + mlp );
+        if ( log.isDebugEnabled() ) log.debug( "Tally:\n" + mlp );
         istMageExamples.close();
 
         for ( Object object : result ) {
@@ -123,7 +123,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
         Collection<Object> result = getMageMLConverter().convert( parseResult );
         log.info( result.size() + " Objects parsed from the MAGE file." );
-        log.info( "Tally:\n" + mlp );
+        if ( log.isDebugEnabled() ) log.debug( "Tally:\n" + mlp );
         istMageExamples.close();
 
         for ( Object object : result ) {
