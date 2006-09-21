@@ -174,14 +174,14 @@
             <value>
                 <![CDATA[
                 PATTERN_TYPE_APACHE_ANT 
-                /signup.html=ROLE_ANONYMOUS,admin,user
-                /passwordhint.html*=ROLE_ANONYMOUS,admin,user
+                /signup.html=admin,user,ROLE_ANONYMOUS
+                /passwordhint.html*=admin,user,ROLE_ANONYMOUS
                 /users.html*=admin
                 /clickstreams.jsp*=admin
                 /flushCache.*=admin
                 /reload.*=admin
                 /dwr/**/*.dwr =admin,user,ROLE_ANONYMOUS
-                /**/*.html*=admin,user 
+                /**/*.html*=admin,user,ROLE_ANONYMOUS
              ]]>
             </value>
         </property>
