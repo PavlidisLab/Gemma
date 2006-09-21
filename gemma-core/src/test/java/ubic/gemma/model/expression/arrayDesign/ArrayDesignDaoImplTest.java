@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
@@ -76,17 +78,20 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
 
     public void testFindWithExternalReference() {
         ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "fll" );
-        assignExternalReference( ad, "GPL3939" );
-        assignExternalReference( ad, "GPL4939" );
+        ad.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign" );
+
+        String findMeBy = "GPL" + RandomStringUtils.randomNumeric( 4 );
+
+        assignExternalReference( ad, findMeBy );
+        assignExternalReference( ad, "GPL" + RandomStringUtils.randomNumeric( 4 ) );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
 
         // artficial, wouldn't normally have multiple GEO acc
-        assignExternalReference( toFind, "GPL39392" );
-        assignExternalReference( toFind, "GPL39394" );
-        assignExternalReference( toFind, "GPL3939" );
+        assignExternalReference( toFind, "GPL" + RandomStringUtils.randomNumeric( 4 ) );
+        assignExternalReference( toFind, "GPL" + RandomStringUtils.randomNumeric( 4 ) );
+        assignExternalReference( toFind, findMeBy );
         ArrayDesign found = arrayDesignDao.find( toFind );
 
         assertNotNull( found );
@@ -94,15 +99,17 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
 
     public void testFindWithExternalReferenceNotFound() {
         ad = ArrayDesign.Factory.newInstance();
-        assignExternalReference( ad, "GPL3939" );
-        assignExternalReference( ad, "GPL4939" );
-        ad.setName( "fhhFll" );
+        String findMeBy = "GPL" + RandomStringUtils.randomNumeric( 4 );
+
+        assignExternalReference( ad, findMeBy );
+        assignExternalReference( ad, "GPL" + RandomStringUtils.randomNumeric( 4 ) );
+        ad.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign" );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
 
         // artficial, wouldn't normally have multiple GEO acc
-        assignExternalReference( toFind, "GPL39392" );
-        assignExternalReference( toFind, "GPL39394" );
+        assignExternalReference( toFind, "GPL" + RandomStringUtils.randomNumeric( 4 ) );
+        assignExternalReference( toFind, "GPL" + RandomStringUtils.randomNumeric( 4 ) );
         ArrayDesign found = arrayDesignDao.find( toFind );
 
         assertNull( found );
@@ -151,7 +158,7 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
 
         ad = ArrayDesign.Factory.newInstance();
 
-        ad.setName( "foobly" );
+        ad.setName( RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign" );
         ad = ( ArrayDesign ) arrayDesignDao.create( ad );
 
         Reporter r1 = Reporter.Factory.newInstance();
