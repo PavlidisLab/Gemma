@@ -169,7 +169,7 @@
 			<attribute value="http://www.opensymphony.com/compass/versions/1.0.0/api/" name="javadoc_location"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/lucene/lucene-core/2.0.0/lucene-core-2.0.0.jar"/>
+	<classpathentry sourcepath="/JAR_SOURCE/lucene-2.0.0/src/java" kind="var" path="M2_REPO/lucene/lucene-core/2.0.0/lucene-core-2.0.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-analyzers/2.0.0/lucene-analyzers-2.0.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-highlighter/2.0.0/lucene-highlighter-2.0.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/lucene/lucene-snowball/2.0.0/lucene-snowball-2.0.0.jar"/>
