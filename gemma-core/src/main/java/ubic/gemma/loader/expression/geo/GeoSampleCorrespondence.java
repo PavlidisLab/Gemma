@@ -58,13 +58,20 @@ public class GeoSampleCorrespondence {
     }
 
     /**
+     * @return the number of sets (groups of matching samples)
+     */
+    public int size() {
+        return sets.size();
+    }
+
+    /**
      * @param gsmNumberA
      * @param gsmNumberB If null, interpreted as meaning there is no correspondence to worry about
      */
     public void addCorrespondence( String gsmNumberA, String gsmNumberB ) {
-        
+
         assert gsmNumberA != null : "Must pass at least one GSM accession";
-        
+
         // if ( !map.containsKey( gsmNumberA ) ) map.put( gsmNumberA, new HashSet<String>() );
         // if ( !map.containsKey( gsmNumberB ) ) map.put( gsmNumberB, new HashSet<String>() );
         // map.get( gsmNumberA ).add( gsmNumberB );

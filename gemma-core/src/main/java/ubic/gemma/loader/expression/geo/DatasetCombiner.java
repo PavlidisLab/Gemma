@@ -53,8 +53,9 @@ import ubic.gemma.loader.expression.geo.model.GeoSubset;
  * <li>There is a single GSE (e.g., GSE674) but two datasets (GDS472, GDS473). This can happen when there are two
  * different microarrays used such as the "A" and B" HG-U133 Affymetrix arrays. (Each GDS can only refer to a single
  * platform)</li>
- * <li>Rarely, there can be two series, as well as two data sets, for the situation described above. I haven't seen one
- * of these yet.</li>
+ * <li>Rarely, there can be two series, as well as two data sets, for the situation described above. These are
+ * 'pathological' (due to incorrect data entry by a user, back in the day) and GEO folks should be removing them
+ * eventually.</li>
  * </ol>
  * <p>
  * One major problem is figuring out which samples (GSMs) correspond across the datasets. In the example of GSE674,

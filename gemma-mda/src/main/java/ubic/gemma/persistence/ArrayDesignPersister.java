@@ -253,27 +253,26 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( arrayDesign.getCompositeSequences().size() == 0 ) return arrayDesign;
         log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
-        int persistedBioSequences = 0;
+        // int persistedBioSequences = 0;
 
         assert arrayDesign.getId() != null;
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
             compositeSequence.setArrayDesign( arrayDesign );
         }
 
-        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
-            compositeSequence.setBiologicalCharacteristic( persistBioSequence( compositeSequence
-                    .getBiologicalCharacteristic() ) );
-
-            if ( persistedBioSequences > 0 && persistedBioSequences % 5000 == 0 ) {
-                log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
-            }
-            persistedBioSequences++;
-
-        }
-
-        if ( persistedBioSequences > 0 ) {
-            log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
-        }
+        // for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+        // compositeSequence.setBiologicalCharacteristic( persistBioSequence( compositeSequence
+        // .getBiologicalCharacteristic() ) );
+        //
+        // if ( ++persistedBioSequences % 5000 == 0 && log.isInfoEnabled() ) {
+        // log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
+        // }
+        //
+        // }
+        //
+        // if ( persistedBioSequences > 0 ) {
+        // log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
+        // }
 
         return arrayDesign;
     }
@@ -298,10 +297,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         for ( Reporter reporter : arrayDesign.getReporters() ) {
             reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
 
-            if ( persistedBioSequences > 0 && persistedBioSequences % 5000 == 0 ) {
+            if ( ++persistedBioSequences % 5000 == 0 && log.isInfoEnabled() ) {
                 log.info( persistedBioSequences + " reporter sequences examined for " + arrayDesign );
             }
-            persistedBioSequences++;
         }
 
         if ( persistedBioSequences > 0 ) {
@@ -373,15 +371,21 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 file = persistLocalFile( file );
             }
         }
-
+        
         Collection<CompositeSequence> c = arrayDesign.getCompositeSequences();
+        arrayDesign.setCompositeSequences( null ); // so we can perist it.
+        for ( CompositeSequence sequence : c ) {
+            sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
+        }
+
         Collection<Reporter> r = arrayDesign.getReporters();
-        arrayDesign.setCompositeSequences( null );
         arrayDesign.setReporters( null );
+     
 
         arrayDesign = arrayDesignService.create( arrayDesign );
 
-        arrayDesign.setCompositeSequences( c );
+        // may need to flush before update?
+        arrayDesign.setCompositeSequences( c ); // this is enough to trigger an update of arrayDesign?
         arrayDesign.setReporters( r );
         arrayDesign = persistArrayDesignReporterAssociations( arrayDesign );
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
@@ -390,5 +394,4 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         return arrayDesign;
     }
-
 }

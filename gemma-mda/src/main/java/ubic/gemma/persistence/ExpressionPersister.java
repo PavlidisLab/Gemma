@@ -112,7 +112,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     /**
      * @param vect
      */
-    private void fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
+    private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
         DesignElement designElement = vect.getDesignElement();
 
         assert designElement != null;
@@ -135,25 +135,30 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         assert designElement != null && designElement.getId() != null;
         vect.setDesignElement( designElement ); // shouldn't have to do this. Some kind of hibernate weirdness.s
 
-        checkBioAssayDimensionCache( vect );
+        BioAssayDimension baDim = checkBioAssayDimensionCache( vect );
 
         assert vect.getQuantitationType() != null;
         vect.setQuantitationType( persistQuantitationType( vect.getQuantitationType() ) );
+
+        return baDim;
     }
 
     /**
      * @param entity
      */
-    private void fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
+    private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
 
         log.info( "Filling in DesignElementDataVectors" );
 
         Session sess = this.getCurrentSession();
 
+        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+
         int count = 0;
         for ( DesignElementDataVector vect : entity.getDesignElementDataVectors() ) {
 
-            fillInDesignElementDataVectorAssociations( vect );
+            BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
+            bioAssays.addAll( baDim.getBioAssays() );
 
             if ( ++count % 2000 == 0 ) {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
@@ -164,8 +169,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 sess.clear();
             }
         }
-        log.info( "Done, filled in " + count + " DesignElementDataVectors" );
-
+        log.info( "Done, filled in " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
+        return bioAssays;
     }
 
     /**
@@ -328,21 +333,29 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
 
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
+
+        if ( entity.getDesignElementDataVectors().size() > 0 ) {
+            alreadyFilled = fillInExpressionExperimentDataVectorAssociations( entity );
+            // these are persistent! So we don't use the cascade.
+            entity.setBioAssays( alreadyFilled );
+        }
+
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
             for ( BioAssay bA : subset.getBioAssays() ) {
-                fillInBioAssayAssociations( bA );
-                alreadyFilled.add( bA );
+                bA.setId( persistBioAssay( bA ).getId() );
+                if ( !alreadyFilled.contains( bA ) ) {
+                    throw new IllegalStateException( bA + " not in the experiment?" );
+                }
+                // fillInBioAssayAssociations( bA );
+                // alreadyFilled.add( bA );
             }
         }
 
-        for ( BioAssay bA : entity.getBioAssays() ) {
-            if ( alreadyFilled.contains( bA ) ) continue;
-            fillInBioAssayAssociations( bA );
-        }
-
-        if ( entity.getDesignElementDataVectors().size() > 0 ) {
-            fillInExpressionExperimentDataVectorAssociations( entity );
-        }
+        // No need to do this..
+        // for ( BioAssay bA : entity.getBioAssays() ) {
+        // if ( alreadyFilled.contains( bA ) ) continue;
+        // fillInBioAssayAssociations( bA );
+        // }
 
         return expressionExperimentService.create( entity );
     }
@@ -398,8 +411,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param bioAssayDimensionCache
      * @param vect
      */
-    private void checkBioAssayDimensionCache( DesignElementDataVector vect ) {
-        if ( !isTransient( vect.getBioAssayDimension() ) ) return;
+    private BioAssayDimension checkBioAssayDimensionCache( DesignElementDataVector vect ) {
+        if ( !isTransient( vect.getBioAssayDimension() ) ) return vect.getBioAssayDimension();
         assert bioAssayDimensionCache != null;
         String dimensionName = vect.getBioAssayDimension().getName();
         if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
@@ -409,6 +422,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             bioAssayDimensionCache.put( dimensionName, bAd );
             vect.setBioAssayDimension( bAd );
         }
+        return bioAssayDimensionCache.get( dimensionName );
     }
 
     /**

@@ -76,7 +76,7 @@ public abstract class BasicLineParser implements LineParser {
             if ( newItem != null ) {
                 addResult( newItem );
             } else {
-                log.debug( "Got null parse from " + line );
+                if ( log.isDebugEnabled() ) log.debug( "Got null parse from " + line );
                 nullLines++;
             }
             linesParsed++;

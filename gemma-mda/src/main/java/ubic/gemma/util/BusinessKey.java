@@ -308,15 +308,17 @@ public class BusinessKey {
      * @param bioSequence
      */
     private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
+        
         if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
             addNameRestriction( queryObject, bioSequence );
         }
         if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
             queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
         }
+        
         addRestrictions( queryObject, bioSequence.getTaxon() );
 
-        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
+         if ( bioSequence.getSequenceDatabaseEntry() != null ) {
             queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
                     Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
         }
@@ -348,6 +350,8 @@ public class BusinessKey {
 
         if ( taxon.getNcbiId() != null ) {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
+            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
         }

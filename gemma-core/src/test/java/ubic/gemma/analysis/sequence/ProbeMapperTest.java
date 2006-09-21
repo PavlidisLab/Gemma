@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.externalDb.GoldenPath;
+import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -71,7 +71,8 @@ public class ProbeMapperTest extends TestCase {
         ProbeMapper pm = new ProbeMapper();
 
         try {
-            GoldenPath gp = new GoldenPath( 3306, "mm8", databaseHost, databaseUser, databasePassword );
+            GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser,
+                    databasePassword );
             if ( gp == null ) {
                 log.warn( "Could not get Goldenpath database connection, skipping test" );
                 return;

@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.apps.Blat.BlattableGenome;
 import ubic.gemma.externalDb.GoldenPath;
+import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -55,7 +56,8 @@ public class ProbeMapper {
      * @param genbankId
      * @throws IOException
      */
-    public Map<String, Collection<BlatAssociation>> processGbId( GoldenPath goldenPathDb, String genbankId ) {
+    public Map<String, Collection<BlatAssociation>> processGbId( GoldenPathSequenceAnalysis goldenPathDb,
+            String genbankId ) {
 
         log.debug( "Entering processGbId with " + genbankId );
 
@@ -129,7 +131,7 @@ public class ProbeMapper {
      * @param sequences
      * @return
      */
-    public Map<String, Collection<BlatAssociation>> processSequences( GoldenPath goldenpath,
+    public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
             Collection<BioSequence> sequences ) {
         Blat b = new Blat();
 
@@ -178,7 +180,7 @@ public class ProbeMapper {
      * @return
      * @see processSequences
      */
-    public Collection<BlatAssociation> processSequence( GoldenPath goldenPath, BioSequence sequence ) {
+    public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
         BlattableGenome bg = inferBlatGenome( goldenPath );
         Blat b = new Blat();
         Collection<BlatResult> results;
@@ -198,7 +200,7 @@ public class ProbeMapper {
      * @param genbankIds
      * @return
      */
-    public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPath goldenPathDb,
+    public Map<String, Collection<BlatAssociation>> processGbIds( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<String[]> genbankIds ) {
         Map<String, Collection<BlatAssociation>> allRes = new HashMap<String, Collection<BlatAssociation>>();
         int count = 0;
@@ -235,7 +237,7 @@ public class ProbeMapper {
      * @return
      * @throws IOException
      */
-    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPath goldenPathDb,
+    public Map<String, Collection<BlatAssociation>> processBlatResults( GoldenPathSequenceAnalysis goldenPathDb,
             Collection<BlatResult> blatResults ) {
 
         assert goldenPathDb != null;
@@ -280,7 +282,8 @@ public class ProbeMapper {
      * @param blatResult
      * @return
      */
-    private Collection<BlatAssociation> processBlatResult( GoldenPath goldenPathDb, BlatResult blatResult ) {
+    private Collection<BlatAssociation> processBlatResult( GoldenPathSequenceAnalysis goldenPathDb,
+            BlatResult blatResult ) {
         assert blatResult.getTargetChromosome() != null : "Chromosome not filled in for blat result";
         Collection<BlatAssociation> blatAssociations = goldenPathDb.getThreePrimeDistances( blatResult
                 .getTargetChromosome().getName(), blatResult.getTargetStart(), blatResult.getTargetEnd(), blatResult

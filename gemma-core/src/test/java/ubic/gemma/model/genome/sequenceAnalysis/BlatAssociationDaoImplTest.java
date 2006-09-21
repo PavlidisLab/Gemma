@@ -36,9 +36,6 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTest {
 
-    /**
-     * 
-     */
     private String testGeneIdentifier = RandomStringUtils.randomAlphabetic( 4 );
 
     String testSequence = RandomStringUtils.random( 35, "ATGC" );
@@ -61,7 +58,8 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
         bioSequenceDao = ( BioSequenceDao ) getBean( "bioSequenceDao" );
         geneProductDao = ( GeneProductDao ) getBean( "geneProductDao" );
 
-        for ( int i = 0; i < 20; i++ ) {
+        int numSequencesToCreate = 20;
+        for ( int i = 0; i < numSequencesToCreate; i++ ) {
             BioSequence bs = this.getTestPersistentBioSequence();
             if ( i == 11 ) {
                 bs.setSequence( testSequence );
@@ -101,13 +99,12 @@ public class BlatAssociationDaoImplTest extends BaseTransactionalSpringContextTe
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         Taxon t = Taxon.Factory.newInstance();
-        // t.setCommonName( "elephant" );
-        t.setScientificName( "Loxodonta" );
+        t.setScientificName( "Mus musculus" ); // has to match what the testpersistent object is.
         bs.setSequence( testSequence );
         bs.setTaxon( t );
 
         BioSequence bsIn = this.bioSequenceDao.find( bs );
-        assertNotNull( bsIn );
+        assertNotNull( "Did not find " + bs, bsIn );
 
         Collection res = this.blatAssociationDao.find( bs );
         assertEquals( "Was seeking blatresults for sequence " + testSequence, 1, res.size() );

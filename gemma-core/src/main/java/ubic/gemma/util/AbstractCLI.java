@@ -55,32 +55,33 @@ import org.apache.log4j.Logger;
  */
 public abstract class AbstractCLI {
 
+    public enum ErrorCode {
+        NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENTICATION_ERROR
+    }
+
     private static final char PASSWORD_CONSTANT = 'p';
     private static final char USERNAME_OPTION = 'u';
     private static final char PORT_OPTION = 'P';
     private static final char HOST_OPTION = 'H';
-    private static final char VERBOSITY_OPTION = 'v';
 
+    private static final char VERBOSITY_OPTION = 'v';
     private static final String HEADER = "Options:";
     private static final String FOOTER = "The Gemma project, Copyright (c) 2006 University of British Columbia.";
-    private Options options = new Options();
-    private CommandLine commandLine;
-    protected Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );
     private static final int DEFAULT_PORT = 3306;
+    private static int DEFAULT_VERBOSITY = 2;
+    private Options options = new Options();
 
-    private String DEFAULT_HOST = "localhost";
+    private CommandLine commandLine;
 
-    public enum ErrorCode {
-        NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENTICATION_ERROR
-    };
+    protected Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );;
 
     /* support for convenience options */
 
+    private String DEFAULT_HOST = "localhost";
     protected String host = DEFAULT_HOST;
     protected int port = DEFAULT_PORT;
     protected String username;
     protected String password;
-    private static int DEFAULT_VERBOSITY = 2;
     private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
     private Level originalLoggingLevel;
 
@@ -89,85 +90,81 @@ public abstract class AbstractCLI {
         this.buildOptions();
     }
 
+    /**
+     * Convenience method to add a standard pair of options to intake a host name and port number. *
+     * 
+     * @param hostRequired Whether the host name is required
+     * @param portRequired Whether the port is required
+     */
     @SuppressWarnings("static-access")
-    protected void buildStandardOptions() {
-        log.debug( "Creating standard options" );
-        Option helpOpt = new Option( "h", "help", false, "Print this message" );
-        Option testOpt = new Option( "testing", false, "Use the test environment" );
-        Option logOpt = new Option( "v", "verbosity", true,
-                "Set verbosity level (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
+    protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
+        Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg().withDescription(
+                "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( HOST_OPTION );
 
-        options.addOption( logOpt );
-        options.addOption( helpOpt );
-        options.addOption( testOpt );
+        hostOpt.setRequired( hostRequired );
+
+        Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg().withDescription(
+                "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( PORT_OPTION );
+
+        portOpt.setRequired( portRequired );
+
+        options.addOption( hostOpt );
+        options.addOption( portOpt );
     }
 
     /**
-     * 
-     *
-     */
-    protected abstract void buildOptions();
-
-    /**
-     * @param args
+     * @param opt
      * @return
-     * @throws Exception
+     * @see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
      */
-    protected abstract Exception doWork( String[] args );
+    public final Options addOption( Option opt ) {
+        return this.options.addOption( opt );
+    }
 
     /**
-     * This must be called in your main method. It triggers parsing of the command line and processing of the options.
-     * Check the error code to decide whether execution of your program should proceed.
-     * 
-     * @param args
-     * @return Exception; null if nothing went wrong.
-     * @throws ParseException
+     * @param opt
+     * @param hasArg
+     * @param description
+     * @return
+     * @see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
      */
-    protected final Exception processCommandLine( String commandName, String[] args ) {
-        /* COMMAND LINE PARSER STAGE */
-        BasicParser parser = new BasicParser();
+    public final Options addOption( String opt, boolean hasArg, String description ) {
+        return this.options.addOption( opt, hasArg, description );
+    }
 
-        if ( args == null ) {
-            printHelp( commandName );
-            return new Exception( "No arguments" );
-        }
+    /**
+     * @param opt
+     * @param longOpt
+     * @param hasArg
+     * @param description
+     * @return
+     * @see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
+     */
+    public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
+        return this.options.addOption( opt, longOpt, hasArg, description );
+    }
 
-        try {
-            commandLine = parser.parse( options, args );
-        } catch ( ParseException e ) {
-            if ( e instanceof MissingOptionException ) {
-                System.out.println( "Required option(s) were not supplied: " + e.getMessage() );
+    /**
+     * @param group
+     * @return
+     * @see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
+     */
+    public final Options addOptionGroup( OptionGroup group ) {
+        return this.options.addOptionGroup( group );
+    }
 
-            } else if ( e instanceof AlreadySelectedException ) {
-                System.out.println( "The option(s) " + e.getMessage() + " were already selected" );
-            } else if ( e instanceof MissingArgumentException ) {
-                System.out.println( "Missing argument: " + e.getMessage() );
-            } else if ( e instanceof UnrecognizedOptionException ) {
-                System.out.println( e.getMessage() );
-            } else {
-                e.printStackTrace();
-            }
+    /**
+     * Convenience method to add a standard pair of (required) options to intake a user name and password.
+     */
+    @SuppressWarnings("static-access")
+    protected void addUserNameAndPasswordOptions() {
+        Option usernameOpt = OptionBuilder.withArgName( "user" ).isRequired().withLongOpt( "user" ).hasArg()
+                .withDescription( "User name for accessing the system" ).create( USERNAME_OPTION );
 
-            printHelp( commandName );
-
-            if ( log.isDebugEnabled() ) {
-                log.debug( e );
-            }
-
-            return e;
-        }
-
-        /* INTERROGATION STAGE */
-        if ( commandLine.hasOption( 'h' ) ) {
-            printHelp( commandName );
-            return new Exception( "Asked for help" );
-        }
-
-        processStandardOptions();
-        processOptions();
-
-        return null;
-
+        Option passwordOpt = OptionBuilder.withArgName( "passwd" ).isRequired().withLongOpt( "password" ).hasArg()
+                .withDescription( "Password for accessing the system" ).create( PASSWORD_CONSTANT );
+        options.addOption( usernameOpt );
+        options.addOption( passwordOpt );
     }
 
     /**
@@ -181,54 +178,23 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * This is needed for CLIs that run in tests, so the logging settings get reset.
+     * Implement this method to add options to your command line, using the OptionBuilder.
+     * 
+     * @see OptionBuilder
      */
-    public void resetLogging() {
-        String loggerName = "ubic.gemma";
-        Logger log4jLogger = LogManager.exists( loggerName );
+    protected abstract void buildOptions();
 
-        if ( log4jLogger == null ) {
-            log.warn( "No logger of name '" + loggerName + "'" );
-            return;
-        }
+    @SuppressWarnings("static-access")
+    protected void buildStandardOptions() {
+        log.debug( "Creating standard options" );
+        Option helpOpt = new Option( "h", "help", false, "Print this message" );
+        Option testOpt = new Option( "testing", false, "Use the test environment" );
+        Option logOpt = new Option( "v", "verbosity", true,
+                "Set verbosity level (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
 
-        log4jLogger.setLevel( this.originalLoggingLevel );
-    }
-
-    /**
-     * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own purposes.
-     */
-    private void processStandardOptions() {
-
-        if ( commandLine.hasOption( HOST_OPTION ) ) {
-            this.host = commandLine.getOptionValue( HOST_OPTION );
-        } else {
-            this.host = DEFAULT_HOST;
-        }
-
-        if ( commandLine.hasOption( PORT_OPTION ) ) {
-            this.port = getIntegerOptionValue( PORT_OPTION );
-        } else {
-            this.port = DEFAULT_PORT;
-        }
-
-        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
-            this.username = commandLine.getOptionValue( USERNAME_OPTION );
-        }
-
-        if ( commandLine.hasOption( PASSWORD_CONSTANT ) ) {
-            this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
-        }
-
-        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
-            this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
-            if ( verbosity < 1 || verbosity > 5 ) {
-                throw new RuntimeException( "Verbosity must be from 1 to 5" );
-            }
-        }
-
-        configureLogging();
-
+        options.addOption( logOpt );
+        options.addOption( helpOpt );
+        options.addOption( testOpt );
     }
 
     /**
@@ -276,17 +242,11 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * Implement this to provide processing of options. It is called at the end of processCommandLine.
+     * @param args
+     * @return
+     * @throws Exception
      */
-    protected abstract void processOptions();
-
-    /**
-     * @param command The name of the command as used at the command line.
-     */
-    protected void printHelp( String command ) {
-        HelpFormatter h = new HelpFormatter();
-        h.printHelp( command + " [options]", HEADER, options, FOOTER );
-    }
+    protected abstract Exception doWork( String[] args );
 
     public List getArgList() {
         return commandLine.getArgList();
@@ -294,92 +254,6 @@ public abstract class AbstractCLI {
 
     public String[] getArgs() {
         return commandLine.getArgs();
-    }
-
-    public boolean hasOption( char opt ) {
-        return commandLine.hasOption( opt );
-    }
-
-    public boolean hasOption( String opt ) {
-        return commandLine.hasOption( opt );
-    }
-
-    public Object getOptionObject( char opt ) {
-        return commandLine.getOptionObject( opt );
-    }
-
-    public Object getOptionObject( String opt ) {
-        return commandLine.getOptionObject( opt );
-    }
-
-    public String getOptionValue( char opt, String defaultValue ) {
-        return commandLine.getOptionValue( opt, defaultValue );
-    }
-
-    public String getOptionValue( char opt ) {
-        return commandLine.getOptionValue( opt );
-    }
-
-    public String getOptionValue( String opt, String defaultValue ) {
-        return commandLine.getOptionValue( opt, defaultValue );
-    }
-
-    public String getOptionValue( String opt ) {
-        return commandLine.getOptionValue( opt );
-    }
-
-    public String[] getOptionValues( char opt ) {
-        return commandLine.getOptionValues( opt );
-    }
-
-    public String[] getOptionValues( String opt ) {
-        return commandLine.getOptionValues( opt );
-    }
-
-    /**
-     * Convenience method to add a standard pair of (required) options to intake a user name and password.
-     */
-    @SuppressWarnings("static-access")
-    protected void addUserNameAndPasswordOptions() {
-        Option usernameOpt = OptionBuilder.withArgName( "user" ).isRequired().withLongOpt( "user" ).hasArg()
-                .withDescription( "User name for accessing the system" ).create( USERNAME_OPTION );
-
-        Option passwordOpt = OptionBuilder.withArgName( "passwd" ).isRequired().withLongOpt( "password" ).hasArg()
-                .withDescription( "Password for accessing the system" ).create( PASSWORD_CONSTANT );
-        options.addOption( usernameOpt );
-        options.addOption( passwordOpt );
-    }
-
-    /**
-     * Convenience method to add a standard pair of options to intake a host name and port number. *
-     * 
-     * @param hostRequired Whether the host name is required
-     * @param portRequired Whether the port is required
-     */
-    @SuppressWarnings("static-access")
-    protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
-        Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg().withDescription(
-                "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( HOST_OPTION );
-
-        hostOpt.setRequired( hostRequired );
-
-        Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg().withDescription(
-                "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( PORT_OPTION );
-
-        portOpt.setRequired( portRequired );
-
-        options.addOption( hostOpt );
-        options.addOption( portOpt );
-    }
-
-    protected final double getDoubleOptionValue( String option ) {
-        try {
-            return Double.parseDouble( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( option ) + ", not a valid double" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return 0.0;
     }
 
     protected final double getDoubleOptionValue( char option ) {
@@ -392,28 +266,14 @@ public abstract class AbstractCLI {
         return 0.0;
     }
 
-    protected final int getIntegerOptionValue( String option ) {
+    protected final double getDoubleOptionValue( String option ) {
         try {
-            return Integer.parseInt( commandLine.getOptionValue( option ) );
+            return Double.parseDouble( commandLine.getOptionValue( option ) );
         } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( option ) + ", not a valid integer" );
+            System.out.println( invalidOptionString( option ) + ", not a valid double" );
             bail( ErrorCode.INVALID_OPTION );
         }
-        return 0;
-    }
-
-    private String invalidOptionString( String option ) {
-        return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
-    }
-
-    protected final int getIntegerOptionValue( char option ) {
-        try {
-            return Integer.parseInt( commandLine.getOptionValue( option ) );
-        } catch ( NumberFormatException e ) {
-            System.out.println( invalidOptionString( "" + option ) + ", not a valid integer" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return 0;
+        return 0.0;
     }
 
     /**
@@ -444,45 +304,24 @@ public abstract class AbstractCLI {
         return fileName;
     }
 
-    /**
-     * @param opt
-     * @return
-     * @see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
-     */
-    public final Options addOption( Option opt ) {
-        return this.options.addOption( opt );
+    protected final int getIntegerOptionValue( char option ) {
+        try {
+            return Integer.parseInt( commandLine.getOptionValue( option ) );
+        } catch ( NumberFormatException e ) {
+            System.out.println( invalidOptionString( "" + option ) + ", not a valid integer" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return 0;
     }
 
-    /**
-     * @param opt
-     * @param hasArg
-     * @param description
-     * @return
-     * @see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
-     */
-    public final Options addOption( String opt, boolean hasArg, String description ) {
-        return this.options.addOption( opt, hasArg, description );
-    }
-
-    /**
-     * @param opt
-     * @param longOpt
-     * @param hasArg
-     * @param description
-     * @return
-     * @see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
-     */
-    public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
-        return this.options.addOption( opt, longOpt, hasArg, description );
-    }
-
-    /**
-     * @param group
-     * @return
-     * @see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
-     */
-    public final Options addOptionGroup( OptionGroup group ) {
-        return this.options.addOptionGroup( group );
+    protected final int getIntegerOptionValue( String option ) {
+        try {
+            return Integer.parseInt( commandLine.getOptionValue( option ) );
+        } catch ( NumberFormatException e ) {
+            System.out.println( invalidOptionString( option ) + ", not a valid integer" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return 0;
     }
 
     /**
@@ -503,6 +342,14 @@ public abstract class AbstractCLI {
         return this.options.getOptionGroup( opt );
     }
 
+    public Object getOptionObject( char opt ) {
+        return commandLine.getOptionObject( opt );
+    }
+
+    public Object getOptionObject( String opt ) {
+        return commandLine.getOptionObject( opt );
+    }
+
     /**
      * @return
      * @see org.apache.commons.cli.Options#getOptions()
@@ -511,11 +358,165 @@ public abstract class AbstractCLI {
         return this.options.getOptions();
     }
 
+    public String getOptionValue( char opt ) {
+        return commandLine.getOptionValue( opt );
+    }
+
+    public String getOptionValue( char opt, String defaultValue ) {
+        return commandLine.getOptionValue( opt, defaultValue );
+    }
+
+    public String getOptionValue( String opt ) {
+        return commandLine.getOptionValue( opt );
+    }
+
+    public String getOptionValue( String opt, String defaultValue ) {
+        return commandLine.getOptionValue( opt, defaultValue );
+    }
+
+    public String[] getOptionValues( char opt ) {
+        return commandLine.getOptionValues( opt );
+    }
+
+    public String[] getOptionValues( String opt ) {
+        return commandLine.getOptionValues( opt );
+    }
+
     /**
      * @return
      * @see org.apache.commons.cli.Options#getRequiredOptions()
      */
     public final List getRequiredOptions() {
         return this.options.getRequiredOptions();
+    }
+
+    public boolean hasOption( char opt ) {
+        return commandLine.hasOption( opt );
+    }
+
+    public boolean hasOption( String opt ) {
+        return commandLine.hasOption( opt );
+    }
+
+    private String invalidOptionString( String option ) {
+        return "Invalid value '" + commandLine.getOptionValue( option ) + " for option " + option;
+    }
+
+    /**
+     * @param command The name of the command as used at the command line.
+     */
+    protected void printHelp( String command ) {
+        HelpFormatter h = new HelpFormatter();
+        h.printHelp( command + " [options]", HEADER, options, FOOTER );
+    }
+
+    /**
+     * This must be called in your main method. It triggers parsing of the command line and processing of the options.
+     * Check the error code to decide whether execution of your program should proceed.
+     * 
+     * @param args
+     * @return Exception; null if nothing went wrong.
+     * @throws ParseException
+     */
+    protected final Exception processCommandLine( String commandName, String[] args ) {
+        /* COMMAND LINE PARSER STAGE */
+        BasicParser parser = new BasicParser();
+
+        if ( args == null ) {
+            printHelp( commandName );
+            return new Exception( "No arguments" );
+        }
+
+        try {
+            commandLine = parser.parse( options, args );
+        } catch ( ParseException e ) {
+            if ( e instanceof MissingOptionException ) {
+                System.out.println( "Required option(s) were not supplied: " + e.getMessage() );
+            } else if ( e instanceof AlreadySelectedException ) {
+                System.out.println( "The option(s) " + e.getMessage() + " were already selected" );
+            } else if ( e instanceof MissingArgumentException ) {
+                System.out.println( "Missing argument: " + e.getMessage() );
+            } else if ( e instanceof UnrecognizedOptionException ) {
+                System.out.println( "Unrecognized option: " + e.getMessage() );
+            } else {
+                e.printStackTrace();
+            }
+
+            printHelp( commandName );
+
+            if ( log.isDebugEnabled() ) {
+                log.debug( e );
+            }
+
+            return e;
+        }
+
+        /* INTERROGATION STAGE */
+        if ( commandLine.hasOption( 'h' ) ) {
+            printHelp( commandName );
+            return new Exception( "Asked for help" );
+        }
+
+        processStandardOptions();
+        processOptions();
+
+        return null;
+
+    }
+
+    /**
+     * Implement this to provide processing of options. It is called at the end of processCommandLine.
+     */
+    protected abstract void processOptions();
+
+    /**
+     * FIXME this causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc for their own purposes.
+     */
+    private void processStandardOptions() {
+
+        if ( commandLine.hasOption( HOST_OPTION ) ) {
+            this.host = commandLine.getOptionValue( HOST_OPTION );
+        } else {
+            this.host = DEFAULT_HOST;
+        }
+
+        if ( commandLine.hasOption( PORT_OPTION ) ) {
+            this.port = getIntegerOptionValue( PORT_OPTION );
+        } else {
+            this.port = DEFAULT_PORT;
+        }
+
+        if ( commandLine.hasOption( USERNAME_OPTION ) ) {
+            this.username = commandLine.getOptionValue( USERNAME_OPTION );
+        }
+
+        if ( commandLine.hasOption( PASSWORD_CONSTANT ) ) {
+            this.password = commandLine.getOptionValue( PASSWORD_CONSTANT );
+        }
+
+        if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
+            this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
+            if ( verbosity < 1 || verbosity > 5 ) {
+                throw new RuntimeException( "Verbosity must be from 1 to 5" );
+            }
+        }
+
+        configureLogging();
+
+    }
+
+    /**
+     * This is needed for CLIs that run in tests, so the logging settings get reset.
+     */
+    public void resetLogging() {
+        String loggerName = "ubic.gemma";
+        Logger log4jLogger = LogManager.exists( loggerName );
+
+        if ( log4jLogger == null ) {
+            log.warn( "No logger of name '" + loggerName + "'" );
+            return;
+        }
+
+        log4jLogger.setLevel( this.originalLoggingLevel );
     }
 }

@@ -35,7 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
-import ubic.gemma.externalDb.GoldenPath;
+import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.util.parser.TabDelimParser;
@@ -184,9 +184,9 @@ public class ProbeMapperCli extends AbstractCLI {
                     return new Exception( "Missing genbank identifiers" );
                 }
 
-                GoldenPath goldenPathDb;
+                GoldenPathSequenceAnalysis goldenPathDb;
                 try {
-                    goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+                    goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username, password );
                 } catch ( SQLException e ) {
                     throw new RuntimeException( e );
                 } catch ( InstantiationException e ) {
@@ -245,7 +245,8 @@ public class ProbeMapperCli extends AbstractCLI {
     public Map<String, Collection<BlatAssociation>> runOnSequences( InputStream stream, Writer output ) {
 
         try {
-            GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+            GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host,
+                    username, password );
 
             FastaParser parser = new FastaParser();
             parser.parse( stream );
@@ -355,7 +356,8 @@ public class ProbeMapperCli extends AbstractCLI {
     public Map<String, Collection<BlatAssociation>> runOnBlatResults( InputStream blatResultInputStream, Writer output )
             throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-        GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username,
+                password );
 
         BlatResultParser brp = new BlatResultParser();
         brp.parse( blatResultInputStream );
@@ -397,7 +399,8 @@ public class ProbeMapperCli extends AbstractCLI {
      */
     public Map<String, Collection<BlatAssociation>> runOnGbIds( InputStream stream, Writer writer ) throws IOException,
             SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-        GoldenPath goldenPathDb = new GoldenPath( port, databaseName, host, username, password );
+        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username,
+                password );
 
         TabDelimParser parser = new TabDelimParser();
         parser.parse( stream );

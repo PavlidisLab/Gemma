@@ -21,6 +21,8 @@ package ubic.gemma.security;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -71,7 +73,7 @@ public class SecurityIntegrationTest extends BaseTransactionalSpringContextTest 
     @SuppressWarnings("unchecked")
     public void testRemoveArrayDesign() throws Exception {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "YoucanDeleteME" );
+        ad.setName( RandomStringUtils.randomAlphabetic( 10 ) + "_array" );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         arrayDesignService.remove( ad );
     }

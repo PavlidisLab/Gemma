@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayDaoImplTest;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoImplTest;
 import ubic.gemma.model.expression.biomaterial.BioMaterialDaoImplTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImplTest;
+import ubic.gemma.model.genome.BioSequencePersistTest;
 import ubic.gemma.model.genome.QtlDaoImplTest;
 import ubic.gemma.model.genome.gene.CandidateGeneListDaoImplTest;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoImplTest;
@@ -53,6 +54,7 @@ public class AllModelTests {
         suite.addTestSuite( BioAssayDaoImplTest.class );
         suite.addTestSuite( BioAssayDimensionDaoImplTest.class );
         suite.addTestSuite( BioMaterialDaoImplTest.class );
+        suite.addTestSuite( BioSequencePersistTest.class );
         suite.addTestSuite( CandidateGeneListDaoImplTest.class );
 
         suite.addTestSuite( BlatAssociationDaoImplTest.class );

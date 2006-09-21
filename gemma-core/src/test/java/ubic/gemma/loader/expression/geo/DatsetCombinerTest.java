@@ -84,8 +84,15 @@ public class DatsetCombinerTest extends TestCase {
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
 
         gds = parseResult.getDatasets().values();
+
+        assertEquals( 2, gds.size() );
+
         GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
 
+        // log.info( result );
+        assertEquals( 15, result.size() );
+
+        // these are just all the sample names.
         String[] keys = new String[] { "GSM10354", "GSM10355", "GSM10356", "GSM10359", "GSM10360", "GSM10361",
                 "GSM10362", "GSM10363", "GSM10364", "GSM10365", "GSM10366", "GSM10367", "GSM10368", "GSM10369",
                 "GSM10370", "GSM10374", "GSM10375", "GSM10376", "GSM10377", "GSM10378", "GSM10379", "GSM10380",
@@ -93,7 +100,8 @@ public class DatsetCombinerTest extends TestCase {
 
         for ( int i = 0; i < keys.length; i++ ) {
             String string = keys[i];
-            assertTrue( result.getCorrespondingSamples( string ).size() == 2 );
+            assertEquals( "Wrong result for " + keys[i] + ", expected 2", 2, result.getCorrespondingSamples( string )
+                    .size() );
         }
         assertTrue( result.getCorrespondingSamples( "GSM10354" ).contains( "GSM10374" ) );
         assertTrue( result.getCorrespondingSamples( "GSM10374" ).contains( "GSM10354" ) );
@@ -139,11 +147,15 @@ public class DatsetCombinerTest extends TestCase {
 
         GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
 
-        // System.err.println( result );
+        assertEquals( 16, result.size() );
+
+        log.info( result );
 
         for ( int i = 0; i < keys.length; i++ ) {
             String string = keys[i];
-            assertTrue( result.getCorrespondingSamples( string ).size() == 3 );
+            assertNotNull( "Got null for " + string, result.getCorrespondingSamples( string ) );
+            assertTrue( "Wrong result for " + keys[i] + ", expected 3",
+                    result.getCorrespondingSamples( string ).size() == 3 );
         }
         assertTrue( result.getCorrespondingSamples( "GSM4076" ).contains( "GSM4078" ) );
         assertTrue( result.getCorrespondingSamples( "GSM4080" ).contains( "GSM4084" ) );

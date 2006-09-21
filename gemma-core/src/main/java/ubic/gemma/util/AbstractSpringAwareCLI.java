@@ -107,6 +107,20 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         this.ctx = ctx;
     }
 
+    /**
+     * Convenience method to obtain instance of any bean by name. Use this only when necessary, you should wire your
+     * tests by injection instead.
+     * 
+     * @param name
+     * @return
+     */
+    protected Object getBean( String name ) {
+        return ctx.getBean( name );
+    }
+
+    /**
+     * You must override this method to process any options you added.(?)
+     */
     @Override
     protected void processOptions() {
         createSpringContext();

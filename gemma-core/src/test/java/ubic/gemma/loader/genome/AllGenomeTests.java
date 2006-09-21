@@ -38,6 +38,7 @@ public class AllGenomeTests {
         suite.addTestSuite( FastaParserTest.class );
         suite.addTestSuite( NCBIGeneIntegrationTest.class );
         suite.addTestSuite( NCBIGeneParserTest.class );
+        suite.addTestSuite( GoldenPathBioSequenceLoaderTest.class );
         // $JUnit-END$
         return suite;
     }
