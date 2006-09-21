@@ -18,15 +18,17 @@
  */
 package ubic.gemma.testing;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -356,7 +358,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        disableLuceneLocks();
+        // disableLuceneLocks();
+        deleteCompassLocks();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
         this.testHelper = new TestPersistentObjectHelper();
 
@@ -380,7 +383,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     }
 
     /**
-     * Disables lucene locking mechanism.
+     * Disables lucene locking mechanism. Alternatively, you see deleteCompassLock to delete the compass lock file.
      * 
      * @throws IOException
      */
@@ -390,6 +393,30 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
 
         log.debug( "disabling lucene locks" );
         FSDirectory.setDisableLocks( true );
+    }
+
+    /**
+     * Deletes compass lock file(s).
+     * 
+     * @throws IOException
+     */
+    private void deleteCompassLocks() throws IOException {
+        log.debug( "compass lock dir: " + FSDirectory.LOCK_DIR );
+
+        Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
+                .suffixFileFilter( "lock" ), null );
+
+        if ( lockFiles.size() == 0 ) {
+            log.debug( "Compass lock files do not exist." );
+            return;
+        }
+
+        for ( File file : lockFiles ) {
+            log.warn( "removing file " + file );
+            // FileUtils.forceDeleteOnExit( file );
+            file.delete(); // delete right away, not on jvm termination (not forcing).
+        }
+
     }
 
     /**
