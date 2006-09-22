@@ -405,8 +405,8 @@
 									<srcFiles>
 										<srcFile>target/schema/gemma-ddl.sql</srcFile>
 										<scrFile>src/main/resources/sql/init-indices.sql</scrFile>
-										<srcFile>src/test/resources/sql/mysql-acegi-acl.sql</srcFile>
-										<srcFile>src/test/resources/sql/init-script.sql</srcFile>
+										<srcFile>src/main/resources/sql/mysql-acegi-acl.sql</srcFile>
+										<srcFile>src/main/resources/sql/init-script.sql</srcFile>
 									</srcFiles>
 									<onError>continue</onError>
 								</configuration>
@@ -497,8 +497,8 @@
 									<srcFiles>
 										<srcFile>target/schema/gemma-ddl.sql</srcFile>
 										<srcFile>src/main/resources/sql/init-indices.sql</srcFile>
-										<srcFile>src/test/resources/sql/mysql-acegi-acl.sql</srcFile>
-										<srcFile>src/test/resources/sql/init-script.sql</srcFile>
+										<srcFile>src/main/resources/sql/mysql-acegi-acl.sql</srcFile>
+										<srcFile>src/main/resources/sql/init-script.sql</srcFile>
 									</srcFiles>
 									<onError>continue</onError>
 								</configuration>
