@@ -43,11 +43,12 @@
 		<a href="<c:url value="/searchCoexpression.html"/>"> <fmt:message
 				key="menu.Coexpression" /> </a>
 	</li>
+	<authz:authorize ifAnyGranted="user,admin">
 	<li>
 		<a href="<c:url value="/editProfile.html"/>"> <fmt:message
 				key="menu.user" /> </a>
 	</li>
-
+	</authz:authorize>
 
 </ul>
 <authz:authorize ifAnyGranted="admin">
