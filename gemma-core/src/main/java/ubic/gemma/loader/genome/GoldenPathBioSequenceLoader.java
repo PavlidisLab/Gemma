@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -137,9 +139,9 @@ public class GoldenPathBioSequenceLoader {
 
         parseThread.start();
 
-        while ( !producerDone ) {
+        while ( !producerDone || !consumerDone ) {
             try {
-                Thread.sleep( 100 );
+                Thread.sleep( 1000 );
             } catch ( InterruptedException e ) {
                 e.printStackTrace();
             }
@@ -155,15 +157,8 @@ public class GoldenPathBioSequenceLoader {
     public void load( final GoldenPathDumper dumper ) {
         final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
 
-        Thread loadThread = new Thread( new Runnable() {
-            public void run() {
-                log.info( "Starting loading" );
-                load( queue );
-            }
-        } );
-
-        loadThread.start();
-
+        final SecurityContext context = SecurityContextHolder.getContext();
+        assert context != null;
         Thread parseThread = new Thread( new Runnable() {
             public void run() {
                 dumper.dumpTranscriptBioSequences( limit, queue );
@@ -174,9 +169,19 @@ public class GoldenPathBioSequenceLoader {
 
         parseThread.start();
 
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+                SecurityContextHolder.setContext( context ); // don't know why this is needed, but it works.
+                log.info( "Starting loading" );
+                load( queue );
+            }
+        } );
+
+        loadThread.start();
+
         while ( !producerDone || !consumerDone ) {
             try {
-                Thread.sleep( 100 );
+                Thread.sleep( 1000 );
             } catch ( InterruptedException e ) {
                 e.printStackTrace();
             }
@@ -224,7 +229,11 @@ public class GoldenPathBioSequenceLoader {
 
             }
         } catch ( InterruptedException e ) {
+            consumerDone = true;
             log.info( "Interrupted." );
+        } catch ( Exception e ) {
+            consumerDone = true;
+            throw new RuntimeException( e );
         }
 
         // finish up.

@@ -371,16 +371,19 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 file = persistLocalFile( file );
             }
         }
-        
+
         Collection<CompositeSequence> c = arrayDesign.getCompositeSequences();
         arrayDesign.setCompositeSequences( null ); // so we can perist it.
+        int count = 0;
         for ( CompositeSequence sequence : c ) {
             sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
+            if ( ++count % 1000 == 0 && log.isInfoEnabled() ) {
+                log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign );
+            }
         }
 
         Collection<Reporter> r = arrayDesign.getReporters();
         arrayDesign.setReporters( null );
-     
 
         arrayDesign = arrayDesignService.create( arrayDesign );
 

@@ -91,7 +91,7 @@ public class GeoDatasetService extends AbstractGeoService {
     private void checkArrayDesign( ArrayDesign arrayDesign ) {
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
         if ( existing != null ) {
-            log.info( arrayDesign + " already exists in the system" );
+            log.debug( arrayDesign + " already exists in the system" );
         }
     }
 

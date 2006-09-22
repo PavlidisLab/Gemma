@@ -20,6 +20,7 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 
+import org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
@@ -112,6 +113,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     public void load( String taxonCommonName, int limit ) {
+
         Taxon taxon = taxonService.findByCommonName( taxonCommonName );
         if ( taxon == null ) {
             throw new IllegalArgumentException( "No such taxon in system: " + taxonCommonName );
@@ -121,6 +123,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
 
     private void doLoad( String file, Taxon taxon, int limit ) throws IOException {
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
+
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
         gp.setLimit( limit );
@@ -168,7 +171,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 'L' ) ) {
             limit = getIntegerOptionValue( 'L' );
         }
-
+   //     MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
         this.bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );
         this.externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
         this.taxonService = ( TaxonService ) getBean( "taxonService" );

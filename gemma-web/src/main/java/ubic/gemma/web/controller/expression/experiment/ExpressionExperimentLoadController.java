@@ -32,6 +32,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -79,20 +80,23 @@ public class ExpressionExperimentLoadController extends BaseFormController {
         if ( eeLoadCommand.isLoadPlatformOnly() ) {
             log.info( "Only loading platform" );
         }
-        ProgressJob job;
+        // ProgressJob job;
+
+        geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+
         if ( eeLoadCommand.isLoadPlatformOnly() ) {
-            job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading arrayDesign(s)" );
+            // job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading arrayDesign(s)" );
             geoDatasetService.setLoadPlatformOnly( true );
             Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService
                     .fetchAndLoad( eeLoadCommand.getAccession() );
             model.put( "arrayDesigns", arrayDesigns ); // FIXME view should be different than default.
         } else {
-            job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading expression experiment" );
+            // job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading expression experiment" );
             ExpressionExperiment result = ( ExpressionExperiment ) geoDatasetService.fetchAndLoad( eeLoadCommand
                     .getAccession() );
             model.put( "expressionExperiment", result );
         }
-        ProgressManager.destroyProgressJob( job );
+        // ProgressManager.destroyProgressJob( job );
 
         return new ModelAndView( getSuccessView(), model );
     }

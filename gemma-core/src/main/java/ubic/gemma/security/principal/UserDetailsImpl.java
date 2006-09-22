@@ -35,6 +35,11 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class UserDetailsImpl extends User implements UserDetails, Serializable {
 
+    @Override
+    public String toString() {
+        return this.getUserName();
+    }
+
     /**
      * 
      */

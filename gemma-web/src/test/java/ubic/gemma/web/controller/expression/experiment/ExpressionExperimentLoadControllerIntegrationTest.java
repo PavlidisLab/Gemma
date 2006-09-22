@@ -76,6 +76,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
 
         request.setParameter( "accession", "GDS999" );
         request.setParameter( "loadPlatformOnly", "false" );
+        request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
 
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
@@ -93,6 +94,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         controller.setGeoDatasetService( ( GeoDatasetService ) geoService );
         request.setParameter( "accession", "GDS266" );
         request.setParameter( "loadPlatformOnly", "false" );
+        request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
 
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );

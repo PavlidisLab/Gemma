@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -55,11 +56,19 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             if ( results != null ) {
                 if ( results.size() > 1 ) {
 
-                    this.debug( results );
+                    if ( log.isDebugEnabled() ) this.debug( results );
 
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + BioSequence.class.getName()
-                                    + "' was found when executing query" );
+                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    // "More than one instance of '" + BioSequence.class.getName()
+                    // + "' was found when executing query" );
+                    Iterator it = results.iterator();
+                    result = it.next(); // arbitrary pick the first one.
+
+                    for ( ; it.hasNext(); ) {
+                        BioSequence bs = ( BioSequence ) it.next();
+                        if ( log.isDebugEnabled() ) log.debug( "Removing " + bs + ", duplicate of " + result );
+                        this.remove( bs );
+                    }
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
@@ -91,7 +100,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     private void debug( List results ) {
         StringBuilder sb = new StringBuilder();
-        sb.append( "\nBioSequences found:\n" );
+        sb.append( "\nMultiple BioSequences found matching query:\n" );
         for ( Object object : results ) {
             BioSequence entity = ( BioSequence ) object;
             sb.append( "\tID=" + entity.getId() + " Name=" + entity.getName() );
@@ -103,6 +112,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
-        log.error( sb.toString() );
+        log.debug( sb.toString() );
     }
 }

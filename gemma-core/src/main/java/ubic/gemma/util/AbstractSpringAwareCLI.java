@@ -79,11 +79,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
             ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
                     .getBean( "manualAuthenticationProcessing" );
+
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username (got " + username
                         + ") and/or password" );
                 bail( ErrorCode.AUTHENTICATION_ERROR );
+            } else {
+                log.info( "Logged in as " + username );
             }
         } else {
 

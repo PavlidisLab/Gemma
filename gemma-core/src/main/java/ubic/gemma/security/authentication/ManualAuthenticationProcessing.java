@@ -18,6 +18,8 @@
  */
 package ubic.gemma.security.authentication;
 
+import java.io.IOException;
+
 import org.acegisecurity.Authentication;
 import org.acegisecurity.AuthenticationException;
 import org.acegisecurity.AuthenticationManager;
@@ -26,7 +28,9 @@ import org.acegisecurity.event.authentication.InteractiveAuthenticationSuccessEv
 import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import ubic.gemma.security.principal.AuthenticationUtils;
 
@@ -37,7 +41,7 @@ import ubic.gemma.security.principal.AuthenticationUtils;
  * @author keshav
  * @version $Id$
  */
-public class ManualAuthenticationProcessing {
+public class ManualAuthenticationProcessing implements ApplicationContextAware {
     private static Log log = LogFactory.getLog( ManualAuthenticationProcessing.class.getName() );
 
     private AuthenticationManager authenticationManager;
@@ -91,7 +95,7 @@ public class ManualAuthenticationProcessing {
      */
     public boolean validateRequest( String username, String password ) {
 
-        Authentication authResult;
+        Authentication authResult = null;
 
         try {
             authResult = attemptAuthentication( username, password );
@@ -119,8 +123,12 @@ public class ManualAuthenticationProcessing {
         }
 
         // Fire event
+        assert context != null;
+
         if ( this.context != null ) {
             context.publishEvent( new InteractiveAuthenticationSuccessEvent( authResult, this.getClass() ) );
+        } else {
+            log.fatal( "No context in which to place the authentication object" );
         }
     }
 
@@ -132,6 +140,10 @@ public class ManualAuthenticationProcessing {
         log.debug( "Updated SecurityContextHolder to contain null Authentication" );
         log.debug( "Authentication request failed: " + failed.toString() );
 
+    }
+
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.context = applicationContext;
     }
 
 }
