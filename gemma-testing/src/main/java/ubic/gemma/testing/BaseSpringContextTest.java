@@ -30,6 +30,7 @@ import org.springframework.test.AbstractDependencyInjectionSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
 import ubic.gemma.util.SpringContextUtil;
+import ubic.gemma.util.search.CompassUtils;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
@@ -51,6 +52,7 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
+        CompassUtils.deleteCompassLocks();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
     }
 
