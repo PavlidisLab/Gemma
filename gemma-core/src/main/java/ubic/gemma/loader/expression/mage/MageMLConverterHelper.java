@@ -1367,7 +1367,11 @@ public class MageMLConverterHelper {
             // specialConvertExperimentBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "ExperimentDesigns" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "ExperimentalDesigns" );
+            List list = ( List ) associatedObject;
+            if ( list.size() > 1 ) {
+                log.warn( "****** Multiple experimental designs - we only take one *******" );
+            }
+            simpleFillIn( ( ( List ) associatedObject ).iterator().next(), gemmaObj, getter, "ExperimentalDesign" );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2744,9 +2748,9 @@ public class MageMLConverterHelper {
         } catch ( IllegalArgumentException e ) {
             log.error( e );
         } catch ( IllegalAccessException e ) {
-            log.error( e );
+            throw new RuntimeException( e );
         } catch ( InvocationTargetException e ) {
-            log.error( e );
+            throw new RuntimeException( e );
         }
     }
 

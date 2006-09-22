@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 
@@ -61,7 +62,9 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
     @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
-        // FIXME delete the experiment that was created.
+        ExpressionExperimentService service = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        service.delete( ee );
     }
 
     /**
