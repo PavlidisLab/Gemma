@@ -175,9 +175,24 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( at.getEvents().size() == 0 ) {
             User user = getCurrentUser();
+
             at.start( "create " + d, user );
+            updateAndLog( d, user, at.getLast().getNote() );
+        }
+    }
+
+    /**
+     * Updates and logs the audit trail provided certain conditions are met (ie. user is not null).
+     * 
+     * @param at
+     */
+    private void updateAndLog( Auditable d, User user, String note ) {
+        if ( user != null ) {
+            AuditTrail at = d.getAuditTrail();
             auditTrailDao.update( at );
-            if ( log.isTraceEnabled() ) log.trace( "Create event on " + d + " by " + user.getUserName() );
+            if ( log.isTraceEnabled() ) log.trace( note + " event on " + d + " by " + user.getUserName() );
+        } else {
+            log.info( "NULL user: Cannot update the audit trail with a null user" );
         }
     }
 
@@ -188,7 +203,7 @@ public class AuditInterceptor implements MethodInterceptor {
         assert d != null;
         // what else could we do? But need to keep this record in a good place.
         User user = getCurrentUser();
-        if ( log.isInfoEnabled() ) log.info( "Delete event on " + d + " by " + user.getUserName() );
+        if ( log.isInfoEnabled() && user != null ) log.info( "Delete event on " + d + " by " + user.getUserName() );
     }
 
     /**
@@ -205,8 +220,7 @@ public class AuditInterceptor implements MethodInterceptor {
         } else {
             User user = getCurrentUser();
             at.read( "Loaded", user );
-            auditTrailDao.update( at );
-            if ( log.isTraceEnabled() ) log.trace( "Read event on " + auditable + " by " + user.getUserName() );
+            updateAndLog( auditable, user, at.getLast().getNote() );
         }
     }
 
@@ -236,8 +250,7 @@ public class AuditInterceptor implements MethodInterceptor {
         } else {
             User user = getCurrentUser();
             at.update( "Updated" + d, user );
-            auditTrailDao.update( at );
-            if ( log.isTraceEnabled() ) log.trace( "Update event on " + d + " by " + user.getUserName() );
+            updateAndLog( d, user, at.getLast().getNote() );
         }
 
     }
@@ -250,11 +263,10 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( returnValue == null ) return;
 
+        log.debug( "After: " + m.getName() + " on " + returnValue );
         if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
             for ( Object object2 : ( Collection<?> ) returnValue ) {
-                if ( object2 instanceof Auditable ) {
-                    processAfter( m, ( Auditable ) object2 );
-                }
+                processAfter( m, ( Auditable ) object2 );
             }
         } else if ( !Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
             return; // no need to look at it!
@@ -279,7 +291,7 @@ public class AuditInterceptor implements MethodInterceptor {
     private void processAfter( Method m, Auditable returnValue ) {
 
         if ( returnValue == null ) return;
-        if ( log.isDebugEnabled() ) log.debug( "After: " + m.getName() + " on " + returnValue );
+
         String methodName = m.getName();
 
         if ( methodName.equals( "findOrCreate" ) ) {
