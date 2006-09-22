@@ -115,10 +115,12 @@ public class GoldenPathBioSequenceLoader {
     public void load( final InputStream inputStream ) throws IOException {
 
         final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
+        final SecurityContext context = SecurityContextHolder.getContext();
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
                 log.info( "Starting loading" );
+                SecurityContextHolder.setContext( context ); // don't know why this is needed, but it works.
                 load( queue );
             }
         } );
@@ -194,7 +196,7 @@ public class GoldenPathBioSequenceLoader {
      */
     @SuppressWarnings("unchecked")
     private void load( BlockingQueue<BioSequence> queue ) {
-        log.info( "Entering 'load' " );
+        log.debug( "Entering 'load' " );
 
         long millis = System.currentTimeMillis();
 
@@ -204,7 +206,7 @@ public class GoldenPathBioSequenceLoader {
 
         Collection<BioSequence> bioSequencesToPersist = new ArrayList<BioSequence>();
         try {
-            while ( true && !( producerDone && queue.isEmpty() ) ) {
+            while ( !( producerDone && queue.isEmpty() ) ) {
                 BioSequence sequence = queue.take();
                 // if ( log.isTraceEnabled() ) log.trace( "Got " + sequence );
 

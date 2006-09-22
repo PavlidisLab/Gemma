@@ -49,7 +49,6 @@ public class GoldenPathBioSequenceLoaderTest extends BaseTransactionalSpringCont
         gp.setBioSequenceService( bioSequenceService );
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/goldenPathSequenceTest.txt" );
-
         gp.load( is );
 
     }
@@ -73,7 +72,6 @@ public class GoldenPathBioSequenceLoaderTest extends BaseTransactionalSpringCont
         gp.setBioSequenceService( bioSequenceService );
 
         gp.setLimit( 2000 );
-
         gp.load( dumper );
 
     }
