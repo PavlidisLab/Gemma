@@ -207,7 +207,12 @@ public class GoldenPathBioSequenceLoader {
         Collection<BioSequence> bioSequencesToPersist = new ArrayList<BioSequence>();
         try {
             while ( !( producerDone && queue.isEmpty() ) ) {
-                BioSequence sequence = queue.take();
+                BioSequence sequence = queue.poll();
+
+                if ( sequence == null ) {
+                    continue;
+                }
+
                 // if ( log.isTraceEnabled() ) log.trace( "Got " + sequence );
 
                 sequence.getSequenceDatabaseEntry().setExternalDatabase( genbank );
@@ -230,9 +235,6 @@ public class GoldenPathBioSequenceLoader {
                 }
 
             }
-        } catch ( InterruptedException e ) {
-            consumerDone = true;
-            log.info( "Interrupted." );
         } catch ( Exception e ) {
             consumerDone = true;
             throw new RuntimeException( e );
