@@ -18,18 +18,12 @@
  */
 package ubic.gemma.testing;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.store.FSDirectory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
@@ -58,6 +52,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
+import ubic.gemma.util.search.CompassUtils;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**
@@ -358,8 +353,8 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        // disableLuceneLocks();
-        deleteCompassLocks();
+        // CompassUtils.disableLuceneLocks();
+        CompassUtils.deleteCompassLocks();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
         this.testHelper = new TestPersistentObjectHelper();
 
@@ -380,43 +375,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
         // flushSession();
-    }
-
-    /**
-     * Disables lucene locking mechanism. Alternatively, you see deleteCompassLock to delete the compass lock file.
-     * 
-     * @throws IOException
-     */
-    private void disableLuceneLocks() throws IOException {
-        // TODO candidate for a potential CompassUtils
-        log.debug( "lock directory is " + FSDirectory.LOCK_DIR );
-
-        log.debug( "disabling lucene locks" );
-        FSDirectory.setDisableLocks( true );
-    }
-
-    /**
-     * Deletes compass lock file(s).
-     * 
-     * @throws IOException
-     */
-    private void deleteCompassLocks() throws IOException {
-        log.debug( "compass lock dir: " + FSDirectory.LOCK_DIR );
-
-        Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
-                .suffixFileFilter( "lock" ), null );
-
-        if ( lockFiles.size() == 0 ) {
-            log.debug( "Compass lock files do not exist." );
-            return;
-        }
-
-        for ( File file : lockFiles ) {
-            log.warn( "removing file " + file );
-            // FileUtils.forceDeleteOnExit( file );
-            file.delete(); // delete right away, not on jvm termination (not forcing).
-        }
-
     }
 
     /**
