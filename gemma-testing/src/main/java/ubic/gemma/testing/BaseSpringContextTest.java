@@ -29,8 +29,8 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.AbstractDependencyInjectionSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
+import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.SpringContextUtil;
-import ubic.gemma.util.search.CompassUtils;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**

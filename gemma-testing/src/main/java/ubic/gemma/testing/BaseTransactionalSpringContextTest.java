@@ -50,9 +50,9 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
-import ubic.gemma.util.search.CompassUtils;
 import uk.ltd.getahead.dwr.create.SpringCreator;
 
 /**

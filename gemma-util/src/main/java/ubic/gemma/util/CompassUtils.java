@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.util.search;
+package ubic.gemma.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,9 +56,10 @@ public class CompassUtils {
      * 
      * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     public static void deleteCompassLocks() throws IOException {
         log.debug( "compass lock dir: " + FSDirectory.LOCK_DIR );
-
+ 
         Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
                 .suffixFileFilter( "lock" ), null );
 
