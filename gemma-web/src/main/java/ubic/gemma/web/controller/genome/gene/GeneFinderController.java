@@ -88,7 +88,7 @@ public class GeneFinderController extends SimpleFormController {
         Map<String, Collection> geneModel = new HashMap<String, Collection>();
 
         if ( searchType.compareTo( "all" ) == 0 ) {
-            geneModel.put( "genes", this.getGeneService().findAll() );
+            geneModel.put( "genes", this.getGeneService().loadAll() );
         }
         if ( searchType.compareTo( "bySymbol" ) == 0 ) {
             geneModel.put( "genes", this.getGeneService().findByOfficialSymbol( lookup ) );

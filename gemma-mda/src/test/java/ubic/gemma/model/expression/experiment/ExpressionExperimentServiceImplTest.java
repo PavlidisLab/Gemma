@@ -70,9 +70,9 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
             BioAssay ba = BioAssay.Factory.newInstance();
 
             if ( i % 2 == 0 ) {
-                ba.setArrayDesignUsed( ad1 );
+              ba.setArrayDesignUsed( ad1 );
             } else {
-                ba.setArrayDesignUsed( ad2 );
+              ba.setArrayDesignUsed( ad2 );
             }
             ee.getBioAssays().add( ba );
         }
@@ -116,6 +116,8 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         svc.loadAll();
         verify( eeDao );
     }
+    
+ 
 
     protected void tearDown() throws Exception {
         super.tearDown();

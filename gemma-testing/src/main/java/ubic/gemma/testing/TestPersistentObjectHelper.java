@@ -159,19 +159,29 @@ public class TestPersistentObjectHelper {
     /**
      * @return
      */
-    public Collection<ExperimentalDesign> getExperimentalDesigns() {
-        Collection<ExperimentalDesign> edCol = new HashSet<ExperimentalDesign>();
-        for ( int i = 0; i < NUM_EXPERIMENTAL_DESIGNS; i++ ) {
-            ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
-            ed.setName( "Experimental Design " + RandomStringUtils.randomNumeric( 10 ) );
-            ed.setDescription( i + ": A test experimental design." );
+    // public Collection<ExperimentalDesign> getExperimentalDesigns() {
+    // Collection<ExperimentalDesign> edCol = new HashSet<ExperimentalDesign>();
+    // for ( int i = 0; i < NUM_EXPERIMENTAL_DESIGNS; i++ ) {
+    // ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+    // ed.setName( "Experimental Design " + RandomStringUtils.randomNumeric( 10 ) );
+    // ed.setDescription( i + ": A test experimental design." );
+    //
+    // log.debug( "experimental design => experimental factors" );
+    // ed.setExperimentalFactors( getExperimentalFactors() ); // set test experimental factors
+    //
+    // edCol.add( ed ); // add experimental designs
+    // }
+    // return edCol;
+    //            
+    // }
+    public ExperimentalDesign getExperimentalDesign() {
 
-            log.debug( "experimental design => experimental factors" );
-            ed.setExperimentalFactors( getExperimentalFactors() ); // set test experimental factors
-
-            edCol.add( ed ); // add experimental designs
-        }
-        return edCol;
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.setName( "Experimental Design " + RandomStringUtils.randomNumeric( 10 ) );
+        ed.setDescription( RandomStringUtils.randomNumeric( 10 ) + ": A test experimental design." );
+        log.debug( "experimental design => experimental factors" );
+        ed.setExperimentalFactors( getExperimentalFactors() ); // set test experimental factors
+        return ed;
     }
 
     /**
@@ -225,7 +235,7 @@ public class TestPersistentObjectHelper {
         ee.setBioAssays( getBioAssays( ad ) );
 
         log.debug( ee + " => experimentalDesigns designs" );
-        ee.setExperimentalDesigns( getExperimentalDesigns() );
+        ee.setExperimentalDesigns( getExperimentalDesign() );
 
         log.debug( "expression experiment -> owner " );
 
@@ -267,23 +277,23 @@ public class TestPersistentObjectHelper {
         for ( int i = 0; i < numCompositeSequences; i++ ) {
 
             Reporter reporter = Reporter.Factory.newInstance();
+            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
+            
             if ( randomNames ) {
                 reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testreporter" );
             } else {
                 reporter.setName( i + "_at" );
             }
-
-            reporter.setArrayDesign( ad );
-            ad.getReporters().add( reporter );
-
-            CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
+            
+            reporter.setCompositeSequence( compositeSequence );
+            
             if ( randomNames ) {
                 compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testcs" );
             } else {
                 compositeSequence.setName( "probe_" + i );
             }
 
-            compositeSequence.getComponentReporters().add( reporter );
+            compositeSequence.getComponentReporters().add( reporter );            
             compositeSequence.setArrayDesign( ad );
             ad.getCompositeSequences().add( compositeSequence );
         }
@@ -295,7 +305,6 @@ public class TestPersistentObjectHelper {
         // flushSession();
 
         assert ( ad.getCompositeSequences().size() == numCompositeSequences );
-        assert ( ad.getReporters().size() == numCompositeSequences );
 
         return ( ArrayDesign ) persisterHelper.persist( ad );
     }

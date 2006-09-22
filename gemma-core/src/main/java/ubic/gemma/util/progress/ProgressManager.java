@@ -140,6 +140,8 @@ public class ProgressManager {
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
+        assert userName != null : "Username cannot be null!";
+
         if ( !progressJobs.containsKey( userName ) ) progressJobs.put( userName, new Vector<ProgressJob>() );
 
         usersJobs = progressJobs.get( userName );

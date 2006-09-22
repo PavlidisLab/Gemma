@@ -37,6 +37,7 @@ import ubic.gemma.loader.genome.AllGenomeTests;
 import ubic.gemma.loader.util.HttpFetcherTest;
 import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDeleteTest;
 import ubic.gemma.persistence.CrudUtilsTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.progress.ProgressDataTest;
@@ -52,6 +53,7 @@ import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
 public class AllCoreTests {
 
     public static Test suite() {
+
         TestSuite suite = new TestSuite( "Tests for gemma-core" );
 
         suite.addTest( AllPubMedTests.suite() );
@@ -86,6 +88,8 @@ public class AllCoreTests {
         suite.addTestSuite( ProgressIntegrationTest.class );
 
         suite.addTestSuite( CrudUtilsTest.class );
+
+        suite.addTestSuite( ExpressionExperimentDeleteTest.class );
 
         System.out.print( "----------------------\nGemma Core Tests\n" + suite.countTestCases()
                 + " Tests to run\n----------------------\n" );

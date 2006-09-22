@@ -201,12 +201,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         assay.setArrayDesignUsed( arrayDesign );
         assert assay.getArrayDesignUsed().getId() != null;
 
-        for ( FactorValue factorValue : assay.getFactorValues() ) {
-            // factors are not compositioned in any more, but by association with the ExperimentalFactor.
-            fillInFactorValueAssociations( factorValue );
-            factorValue = persistFactorValue( factorValue );
+        for ( BioMaterial material : assay.getSamplesUsed() ) {
+            for ( FactorValue factorValue : material.getFactorValues() ) {
+                // factors are not compositioned in any more, but by association with the ExperimentalFactor.
+                fillInFactorValueAssociations( factorValue );
+                factorValue = persistFactorValue( factorValue );
+            }
         }
-
         // DatabaseEntries are persisted by composition, so we just need to fill in the ExternalDatabase.
         if ( assay.getAccession() != null ) {
             assay.getAccession().setExternalDatabase(
@@ -313,8 +314,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
         }
 
-        for ( ExperimentalDesign experimentalDesign : entity.getExperimentalDesigns() ) {
-
+        if ( entity.getExperimentalDesigns() != null ) {
+            ExperimentalDesign experimentalDesign = entity.getExperimentalDesigns();
             persistCollectionElements( experimentalDesign.getTypes() );
 
             for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
@@ -345,7 +346,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             for ( BioAssay bA : entity.getBioAssays() ) {
                 fillInBioAssayAssociations( bA );
                 alreadyFilled.add( bA );
-            }
+        }
         }
 
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
@@ -382,7 +383,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private void fillInFactorValueAssociations( FactorValue factorValue ) {
         if ( factorValue.getOntologyEntry() != null ) {
-            if ( factorValue.getMeasurement() != null || factorValue.getMeasurement() != null ) {
+            if ( factorValue.getMeasurement() != null ) {
                 throw new IllegalStateException(
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }

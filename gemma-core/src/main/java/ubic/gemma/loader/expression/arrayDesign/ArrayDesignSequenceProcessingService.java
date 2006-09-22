@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.PersisterHelper;
@@ -53,6 +55,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @spring.bean id="arrayDesignSequenceProcessingService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="bioSequenceService" ref="bioSequenceService"
  */
 public class ArrayDesignSequenceProcessingService {
 
@@ -62,72 +65,24 @@ public class ArrayDesignSequenceProcessingService {
 
     private PersisterHelper persisterHelper;
 
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
+    private BioSequenceService bioSequenceService;
 
     /**
-     * Collapse probe sequences down into biosequences.
+     * For the case where the reporter and compositeSequence are the same thing, make a new reporter and add it to the
+     * array design.
      * 
-     * @param arrayName
-     * @param probeSequences
-     * @return
-     * @throws IOException
+     * @param arrayDesign
+     * @param compositeSequence
+     * @param bioSequence
      */
-    public Collection<BioSequence> collapse( Collection<CompositeSequence> probeSequences ) {
-        Collection<BioSequence> results = new HashSet<BioSequence>();
-        for ( CompositeSequence sequence : probeSequences ) {
-            BioSequence m = SequenceManipulation.collapse( sequence );
-            m.setDescription( "Collapsed from probes for " + sequence.getName() + " ["
-                    + sequence.getArrayDesign().getName() + "]" );
-            results.add( m );
-        }
-        return results;
-    }
-
-    /**
-     * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
-     * of a design element.
-     * 
-     * @param designElements
-     * @param fastaFile
-     * @throws IOException
-     */
-    public void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements, File fastaFile )
-            throws IOException {
-
-        FastaParser fp = new FastaParser();
-        fp.parse( fastaFile );
-        Collection<BioSequence> sequences = fp.getResults();
-        log.debug( "Parsed " + sequences.size() + " sequences" );
-
-        assignSequencesToDesignElements( designElements, sequences );
-    }
-
-    /**
-     * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
-     * of a design element. Provided for testing purposes.
-     * 
-     * @param designElements
-     * @param fastaFile
-     * @throws IOException
-     */
-    protected void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements,
-            InputStream fastaFile ) throws IOException {
-
-        FastaParser fp = new FastaParser();
-        fp.parse( fastaFile );
-        Collection<BioSequence> sequences = fp.getResults();
-        log.debug( "Parsed " + sequences.size() + " sequences" );
-
-        assignSequencesToDesignElements( designElements, sequences );
+    private void addReporter( CompositeSequence compositeSequence ) {
+        BioSequence bioSequence = compositeSequence.getBiologicalCharacteristic();
+        Reporter reporter = Reporter.Factory.newInstance();
+        reporter.setCompositeSequence( compositeSequence );
+        reporter.setImmobilizedCharacteristic( bioSequence );
+        reporter.setName( compositeSequence.getName() );
+        reporter.setDescription( "Reporter same as composite sequence" );
+        compositeSequence.getComponentReporters().add( reporter );
     }
 
     /**
@@ -170,6 +125,198 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
+     * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
+     * of a design element.
+     * 
+     * @param designElements
+     * @param fastaFile
+     * @throws IOException
+     */
+    public void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements, File fastaFile )
+            throws IOException {
+
+        FastaParser fp = new FastaParser();
+        fp.parse( fastaFile );
+        Collection<BioSequence> sequences = fp.getResults();
+        log.debug( "Parsed " + sequences.size() + " sequences" );
+
+        assignSequencesToDesignElements( designElements, sequences );
+    }
+
+    /**
+     * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
+     * of a design element. Provided for testing purposes.
+     * 
+     * @param designElements
+     * @param fastaFile
+     * @throws IOException
+     */
+    protected void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements,
+            InputStream fastaFile ) throws IOException {
+
+        FastaParser fp = new FastaParser();
+        fp.parse( fastaFile );
+        Collection<BioSequence> sequences = fp.getResults();
+        log.debug( "Parsed " + sequences.size() + " sequences" );
+
+        assignSequencesToDesignElements( designElements, sequences );
+    }
+
+    /**
+     * Collapse probe sequences down into biosequences.
+     * 
+     * @param arrayName
+     * @param probeSequences
+     * @return
+     * @throws IOException
+     */
+    public Collection<BioSequence> collapse( Collection<CompositeSequence> probeSequences ) {
+        Collection<BioSequence> results = new HashSet<BioSequence>();
+        for ( CompositeSequence sequence : probeSequences ) {
+            BioSequence m = SequenceManipulation.collapse( sequence );
+            m.setDescription( "Collapsed from probes for " + sequence.getName() + " ["
+                    + sequence.getArrayDesign().getName() + "]" );
+            results.add( m );
+        }
+        return results;
+    }
+
+    /**
+     * When the probe id is in the format ArrayName:ProbeId, just return the ProbeId. For anything else return the
+     * entire string.
+     * 
+     * @param probeId
+     * @return
+     */
+    private String deMangleProbeId( String probeId ) {
+        String[] toks = StringUtils.split( probeId, ":" );
+        if ( toks.length > 1 ) {
+            return toks[1];
+        }
+        return probeId;
+    }
+
+    /**
+     * Use this to add sequences to an existing Affymetrix design.
+     * 
+     * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
+     * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
+     * @throws IOException
+     */
+    public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
+            Taxon taxon ) throws IOException {
+
+        // FIXME: need to add a check to make sure reportes are no filled in already
+        // if ( arrayDesign.getReporters().size() != 0 ) {
+        // throw new IllegalArgumentException(
+        // "Call with a 'naive' arrayDesign, this one had reporters filled in already." );
+        // }
+
+        log.info( "Processing Affymetrix design" );
+
+        boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
+
+        Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
+
+        AffyProbeReader apr = new AffyProbeReader();
+        apr.parse( probeSequenceFile );
+        Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
+        Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
+        for ( CompositeSequence compositeSequence : compositeSequencesFromProbes ) {
+
+            compositeSequence.setArrayDesign( arrayDesign );
+            BioSequence collapsed = SequenceManipulation.collapse( compositeSequence );
+            collapsed.setName( compositeSequence.getName() + "_collapsed" );
+            collapsed.setType( SequenceType.AFFY_COLLAPSED );
+            collapsed.setPolymerType( PolymerType.DNA );
+            collapsed.setTaxon( taxon );
+            collapsed = bioSequenceService.create( collapsed );
+            assert collapsed.getId() != null;
+            bioSequences.add( collapsed );
+            compositeSequence.setBiologicalCharacteristic( collapsed );
+
+            Map<String, Reporter> reporterSeqMap = new HashMap<String, Reporter>();
+            Collection<BioSequence> seqs = new ArrayList<BioSequence>();
+            for ( Reporter reporter : compositeSequence.getComponentReporters() ) {
+                BioSequence seq = reporter.getImmobilizedCharacteristic();
+                seq.setTaxon( taxon );
+                reporterSeqMap.put( seq.getName(), reporter );
+                seqs.add( seq );
+            }
+
+            Collection<BioSequence> persistedSequences = bioSequenceService.create( seqs );
+
+            for ( BioSequence sequence : persistedSequences ) {
+                Reporter rep = reporterSeqMap.get( sequence.getName() );
+                rep.setImmobilizedCharacteristic( sequence );
+            }
+
+            if ( wasOriginallyLackingCompositeSequences ) {
+                arrayDesign.getCompositeSequences().add( compositeSequence );
+            } else {
+                quickFindMap.put( compositeSequence.getName(), compositeSequence );
+            }
+        }
+
+        if ( !wasOriginallyLackingCompositeSequences ) {
+            for ( CompositeSequence originalCompositeSequence : arrayDesign.getCompositeSequences() ) {
+                // go back and fill this information into the composite sequences, namely the database entry
+                // information.
+                CompositeSequence compositeSequenceFromParse = quickFindMap.get( originalCompositeSequence.getName() );
+                if ( compositeSequenceFromParse == null ) {
+                    throw new IllegalArgumentException( "Array Design file did not contain "
+                            + originalCompositeSequence.getName() );
+                }
+
+                originalCompositeSequence.setBiologicalCharacteristic( compositeSequenceFromParse
+                        .getBiologicalCharacteristic() );
+
+                assert originalCompositeSequence.getBiologicalCharacteristic().getId() != null;
+
+                originalCompositeSequence.setComponentReporters( compositeSequenceFromParse.getComponentReporters() );
+                for ( Reporter reporter : originalCompositeSequence.getComponentReporters() ) {
+                    reporter.setCompositeSequence( originalCompositeSequence );
+                }
+                originalCompositeSequence.setArrayDesign( compositeSequenceFromParse.getArrayDesign() );
+
+            }
+        }
+
+        // FIXME: if value already exists, compare and warn if it is different
+        arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
+        arrayDesignService.update( arrayDesign );
+
+        return bioSequences;
+    }
+
+    /**
+     * Create a new Affymetrix design from scratch, given the name.
+     * 
+     * @param arrayDesignName design name.
+     * @param arrayDesignFile design file in our 'old fashioned' format.
+     * @param probeSequenceFile probe file
+     * @param taxon
+     * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
+     *         filled in.
+     */
+    protected ArrayDesign processAffymetrixDesign( String arrayDesignName, InputStream arrayDesignFile,
+            InputStream probeSequenceFile, Taxon taxon ) throws IOException {
+        ArrayDesign result = ArrayDesign.Factory.newInstance();
+        result.setName( arrayDesignName );
+        // FIXME add manufacturer.
+        result = arrayDesignService.create( result );
+
+        CompositeSequenceParser csp = new CompositeSequenceParser();
+        csp.parse( arrayDesignFile );
+        Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
+        result.setCompositeSequences( rawCompositeSequences );
+
+        this.processAffymetrixDesign( result, probeSequenceFile, taxon );
+
+        return result;
+    }
+
+    /**
      * @param Array design name.
      * @param Array design file in our 'old fashioned' format.
      * @param Affymetrix probe file
@@ -204,7 +351,7 @@ public class ArrayDesignSequenceProcessingService {
      * </ol>
      * 
      * @param arrayDesign
-     * @param sequenceFile
+     * @param sequenceFile FASTA format
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
      * @param taxon
      * @throws IOException
@@ -220,16 +367,11 @@ public class ArrayDesignSequenceProcessingService {
 
         log.info( "Processing non-Affymetrix design" );
 
-        if ( arrayDesign.getReporters().size() != 0 ) {
+        boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
+
+        if ( wasOriginallyLackingCompositeSequences ) {
             throw new IllegalArgumentException(
-                    "Should call with a 'naive' arrayDesign - this one had reporters filled in aready." );
-        }
-
-        Collection<CompositeSequence> rawCompositeSequences = arrayDesign.getCompositeSequences();
-
-        /* maybe not fail on this condition */
-        if ( rawCompositeSequences.size() == 0 ) {
-            throw new IllegalArgumentException( "Call with array design already containing composite sequences" );
+                    "You need to pass in an array design that already has compositeSequences filled in." );
         }
 
         FastaParser fastaParser = new FastaParser();
@@ -244,7 +386,9 @@ public class ArrayDesignSequenceProcessingService {
             sequence.setType( sequenceType );
             sequence.setPolymerType( PolymerType.DNA );
             sequence.setTaxon( taxon );
-            sequence = ( BioSequence ) persisterHelper.persist( sequence ); // FIXME possiblyjust create.
+
+            // find and update?
+            sequence = ( BioSequence ) persisterHelper.persist( sequence );
 
             nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
 
@@ -253,9 +397,11 @@ public class ArrayDesignSequenceProcessingService {
             } else {
                 if ( log.isWarnEnabled() ) log.warn( "No sequence database entry for " + sequence.getName() );
             }
+
         }
 
-        for ( CompositeSequence compositeSequence : rawCompositeSequences ) {
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+
             // go back and fill information into the composite sequences, namely the database entry information.
             BioSequence match = null;
             if ( nameMap.containsKey( compositeSequence.getName() ) ) {
@@ -274,9 +420,9 @@ public class ArrayDesignSequenceProcessingService {
 
             // overwrite the existing characteristic if necessary.
             compositeSequence.setBiologicalCharacteristic( match );
+            compositeSequence.setArrayDesign( arrayDesign );
 
-            addReporter( arrayDesign, compositeSequence );
-
+            addReporter( compositeSequence );
         }
 
         log.info( "Updating sequences on arrayDesign" );
@@ -287,136 +433,20 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * For the case where the reporter and compositeSequence are the same thing, make a new reporter and add it to the
-     * array design.
-     * 
-     * @param arrayDesign
-     * @param compositeSequence
-     * @param bioSequence
+     * @param arrayDesignService the arrayDesignService to set
      */
-    private void addReporter( ArrayDesign arrayDesign, CompositeSequence compositeSequence ) {
-        BioSequence bioSequence = compositeSequence.getBiologicalCharacteristic();
-        Reporter reporter = Reporter.Factory.newInstance();
-        reporter.setArrayDesign( arrayDesign );
-        reporter.setImmobilizedCharacteristic( bioSequence );
-        reporter.setName( compositeSequence.getName() );
-        reporter.setDescription( "Reporter same as composite sequence" );
-
-        arrayDesign.getReporters().add( reporter );
-        compositeSequence.getComponentReporters().add( reporter );
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     /**
-     * When the probe id is in the format ArrayName:ProbeId, just return the ProbeId. For anything else return the
-     * entire string.
-     * 
-     * @param probeId
-     * @return
+     * @param bioSequenceService the bioSequenceService to set
      */
-    private String deMangleProbeId( String probeId ) {
-        String[] toks = StringUtils.split( probeId, ":" );
-        if ( toks.length > 1 ) {
-            return toks[1];
-        }
-        return probeId;
+    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
+        this.bioSequenceService = bioSequenceService;
     }
 
-    /**
-     * Use this to add sequences to an existing Affymetrix design.
-     * 
-     * @param arrayDesign An existing ArrayDesign that already has compositeSequences filled in.
-     * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
-     * @throws IOException
-     */
-    public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
-            Taxon taxon ) throws IOException {
-
-        if ( arrayDesign.getReporters().size() != 0 ) {
-            throw new IllegalArgumentException(
-                    "Call with a 'naive' arrayDesign, this one had reporters filled in already." );
-        }
-
-        log.info( "Processing Affymetrix design" );
-
-        Collection<CompositeSequence> rawCompositeSequences = arrayDesign.getCompositeSequences();
-
-        /* maybe not fail on this condition */
-        if ( rawCompositeSequences.size() == 0 ) {
-            throw new IllegalArgumentException( "Call with array design not already containing composite sequences" );
-        }
-
-        Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
-
-        AffyProbeReader apr = new AffyProbeReader();
-        apr.parse( probeSequenceFile );
-        Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
-        Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
-        for ( CompositeSequence compositeSequence : compositeSequencesFromProbes ) {
-
-            compositeSequence.setArrayDesign( arrayDesign );
-            BioSequence collapsed = SequenceManipulation.collapse( compositeSequence );
-            collapsed.setName( compositeSequence.getName() + "_collapsed" );
-            collapsed.setType( SequenceType.AFFY_COLLAPSED );
-            collapsed.setPolymerType( PolymerType.DNA );
-            collapsed.setTaxon( taxon );
-            compositeSequence.setBiologicalCharacteristic( collapsed );
-            collapsed = ( BioSequence ) persisterHelper.persist( collapsed ); // FIXME Maybe just do create.
-            bioSequences.add( collapsed );
-
-            arrayDesign.getReporters().addAll( compositeSequence.getComponentReporters() );
-
-            for ( Reporter reporter : compositeSequence.getComponentReporters() ) {
-                reporter.setArrayDesign( arrayDesign );
-            }
-
-            quickFindMap.put( compositeSequence.getName(), compositeSequence );
-        }
-
-        for ( CompositeSequence compositeSequence : rawCompositeSequences ) {
-            // go back and fill this information into the composite sequences, namely the database entry information.
-            CompositeSequence keeper = quickFindMap.get( compositeSequence.getName() );
-            if ( keeper == null ) {
-                throw new IllegalArgumentException( "Array Design file did not contain " + compositeSequence.getName() );
-            }
-
-            keeper.getBiologicalCharacteristic().setSequenceDatabaseEntry(
-                    compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
-
-        }
-
-        // FIXME: if value already exists, compare and warn if it is different
-        arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
-
-        // FIXME - if there are already CS's, issue a warning (instead of throwing an exception?)
-        arrayDesign.setCompositeSequences( compositeSequencesFromProbes );
-
-        return bioSequences;
-    }
-
-    /**
-     * Create a new Affymetrix design from scratch, given the name.
-     * 
-     * @param arrayDesignName design name.
-     * @param arrayDesignFile design file in our 'old fashioned' format.
-     * @param probeSequenceFile probe file
-     * @param taxon
-     * @return ArrayDesign with CompositeSequences, Reporters, ImmobilizedCharacteristics and BiologicalCharacteristics
-     *         filled in.
-     */
-    protected ArrayDesign processAffymetrixDesign( String arrayDesignName, InputStream arrayDesignFile,
-            InputStream probeSequenceFile, Taxon taxon ) throws IOException {
-        ArrayDesign result = ArrayDesign.Factory.newInstance();
-        result.setName( arrayDesignName );
-        // FIXME add manufacturer.
-        result = arrayDesignService.create( result );
-
-        CompositeSequenceParser csp = new CompositeSequenceParser();
-        csp.parse( arrayDesignFile );
-        Collection<CompositeSequence> rawCompositeSequences = csp.getResults();
-        result.setCompositeSequences( rawCompositeSequences );
-
-        this.processAffymetrixDesign( result, probeSequenceFile, taxon );
-
-        return result;
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
     }
 }

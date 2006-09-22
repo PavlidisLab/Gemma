@@ -298,8 +298,7 @@
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.find=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.create=user,admin
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getCompositeSequenceCount=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadReporters=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount=user,admin,ROLE_ANONYMOUS               
                 ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadCompositeSequences=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.expression.bioAssay.BioAssayService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
                 ubic.gemma.model.expression.bioAssay.BioAssayService.getAllBioAssays=user,admin 
@@ -411,7 +410,7 @@
                 ubic.gemma.model.genome.gene.CandidateGeneListService.setActor=user,admin
                 ubic.gemma.model.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
                 ubic.gemma.model.genome.gene.GeneService.update=ACL_SECURABLE_EDIT
-                ubic.gemma.model.genome.gene.GeneService.findAll=user,admin,ROLE_ANONYMOUS 
+                ubic.gemma.model.genome.gene.GeneService.loadAll=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.genome.gene.GeneService.remove=ACL_SECURABLE_EDIT
                 ubic.gemma.model.genome.gene.GeneService.findByOfficialName=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin,ROLE_ANONYMOUS

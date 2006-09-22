@@ -258,7 +258,7 @@ public class RawDataParser implements FileCombiningParser {
             if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
         } else {
             de = Reporter.Factory.newInstance();
-            de.setArrayDesign( currentBioAssay.getArrayDesignUsed() );
+            //de.setArrayDesign( currentBioAssay.getArrayDesignUsed() );
             de.setName( "R_" + Integer.toString( linesParsed ) );
         }
         return de;

@@ -79,8 +79,8 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
             fail( "Failed to create ACL for " + ee );
         }
 
-        assert ee.getExperimentalDesigns().size() > 0 : "No experimentalDesigns";
-        ExperimentalDesign ed = ee.getExperimentalDesigns().iterator().next();
+        assert ee.getExperimentalDesigns() != null : "No experimentalDesigns";
+        ExperimentalDesign ed = ee.getExperimentalDesigns();
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ed ) ) == null ) {
             fail( "Failed to cascade create ACL for " + ed );

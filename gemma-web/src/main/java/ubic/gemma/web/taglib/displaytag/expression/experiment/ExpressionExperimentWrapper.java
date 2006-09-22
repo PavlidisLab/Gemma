@@ -136,8 +136,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDesignsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object != null && object.getExperimentalDesigns() != null ) {
-            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\">"
-                    + object.getExperimentalDesigns().size() + "</a>";
+            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\"> </a>";
         }
         return "No design";
     }

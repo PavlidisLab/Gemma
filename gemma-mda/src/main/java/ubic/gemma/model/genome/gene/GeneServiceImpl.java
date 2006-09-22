@@ -94,7 +94,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleGetAllGenes()
      */
     @Override
-    protected Collection handleFindAll() throws Exception {
+    protected Collection handleLoadAll() throws Exception {
         return this.getGeneDao().loadAll();
     }
 
@@ -124,4 +124,20 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
 
     }
 
+    @Override
+    protected Gene handleCreate( Gene gene ) throws Exception {
+        return (Gene) this.getGeneDao().create( gene );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleCreate(java.util.Collection)
+     */
+    @Override
+    protected Collection handleCreate( Collection genes ) throws Exception {
+        return this.getGeneDao().create( genes );
+
+    }
+    
 }

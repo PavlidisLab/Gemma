@@ -70,7 +70,7 @@ public class GenePersister implements Persister {
      * 
      */
     public void removeAll() {
-        Collection col = geneService.findAll();
+        Collection col = geneService.loadAll();
         geneService.remove( col );
     }
 

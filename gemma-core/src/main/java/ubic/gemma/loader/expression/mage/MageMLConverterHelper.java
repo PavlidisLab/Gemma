@@ -310,7 +310,8 @@ public class MageMLConverterHelper {
             assert associatedObject instanceof List;
         } else if ( associationName.equals( "ReporterGroups" ) ) {
             assert associatedObject instanceof List;
-            specialConvertReporterGroups( ( List ) associatedObject, gemmaObj );
+            // specialConvertReporterGroups( ( List ) associatedObject, gemmaObj );
+            // no longer needed
         } else {
             log.debug( "Unsupported or unknown association, or it belongs to the subclass: " + associationName );
         }
@@ -880,7 +881,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "ReporterCompositeMaps" ) ) {
             // special case. This is complicated, because the mage model has compositeSequence ->
             // reportercompositemap(s) -> reporterposition(s) -> reporter(1)
-            gemmaObj.setComponentReporters( specialConvertReporterCompositeMaps( ( List ) associatedObject ) );
+            gemmaObj.setComponentReporters( specialConvertReporterCompositeMaps( gemmaObj, ( List ) associatedObject ) );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2535,7 +2536,7 @@ public class MageMLConverterHelper {
      * @param reporterCompositeMaps
      * @return Collection of Gemma Reporters.
      */
-    public Collection specialConvertReporterCompositeMaps( List reporterCompositeMaps ) {
+    public Collection specialConvertReporterCompositeMaps( CompositeSequence owner, List reporterCompositeMaps ) {
 
         if ( reporterCompositeMaps.size() > 1 ) log.warn( "**** More than one ReporterCompositeMaps for a Reporter!" );
 
@@ -2559,6 +2560,8 @@ public class MageMLConverterHelper {
                     log.error( "Null converted reporter!" );
                     continue;
                 }
+
+                conv.setCompositeSequence( owner );
 
                 result.add( conv );
 
@@ -2948,21 +2951,22 @@ public class MageMLConverterHelper {
         return designObjs;
     }
 
-    /**
-     * @param gemmaObj
-     * @return
-     */
-    private Collection<Reporter> initializeReporterCollection(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
-        Collection<Reporter> designObjs;
-        if ( gemmaObj.getReporters() == null ) {
-            designObjs = new HashSet<Reporter>();
-            gemmaObj.setReporters( designObjs );
-        } else {
-            designObjs = gemmaObj.getReporters();
-        }
-        return designObjs;
-    }
+    // /**
+    // * @param gemmaObj
+    // * @return
+    // */
+    // private Collection<Reporter> initializeReporterCollection(
+    // ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
+    // Collection<Reporter> designObjs;
+    // if ( gemmaObj.getReporters() == null ) {
+    // designObjs = new HashSet<Reporter>();
+    // gemmaObj.setReporters( designObjs );
+    // } else {
+    // designObjs = gemmaObj.getReporters();
+    // }
+    // return designObjs;
+    //
+    // }
 
     /**
      * 
@@ -3432,7 +3436,7 @@ public class MageMLConverterHelper {
     }
 
     /**
-     * Convert all the reporters via the reporter groups.
+     * Convert all the reporters via the reporter groups. no-op not needed.
      * 
      * @param reporterGroups
      * @param gemmaObj
@@ -3440,20 +3444,20 @@ public class MageMLConverterHelper {
     private void specialConvertReporterGroups( List reporterGroups,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign gemmaObj ) {
 
-        Collection<Reporter> designObjs;
-        designObjs = initializeReporterCollection( gemmaObj );
-
-        for ( Iterator iter = reporterGroups.iterator(); iter.hasNext(); ) {
-            ReporterGroup rg = ( ReporterGroup ) iter.next();
-            List reps = rg.getReporters();
-            for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
-                org.biomage.DesignElement.Reporter reporter = ( org.biomage.DesignElement.Reporter ) iterator.next();
-                Reporter convertedReporter = convertReporter( reporter );
-                convertedReporter.setArrayDesign( gemmaObj );
-                if ( !designObjs.contains( convertedReporter ) ) designObjs.add( convertedReporter );
-            }
-        }
-        gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );
+        // Collection<Reporter> designObjs;
+        // designObjs = initializeReporterCollection( gemmaObj );
+        //
+        // for ( Iterator iter = reporterGroups.iterator(); iter.hasNext(); ) {
+        // ReporterGroup rg = ( ReporterGroup ) iter.next();
+        // List reps = rg.getReporters();
+        // for ( Iterator iterator = reps.iterator(); iterator.hasNext(); ) {
+        // org.biomage.DesignElement.Reporter reporter = ( org.biomage.DesignElement.Reporter ) iterator.next();
+        // Reporter convertedReporter = convertReporter( reporter );
+        // convertedReporter.setArrayDesign( gemmaObj );
+        // if ( !designObjs.contains( convertedReporter ) ) designObjs.add( convertedReporter );
+        // }
+        // }
+        // gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );
     }
 
     /**

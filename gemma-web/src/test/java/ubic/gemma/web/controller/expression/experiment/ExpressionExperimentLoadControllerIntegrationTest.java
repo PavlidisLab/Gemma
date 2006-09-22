@@ -26,6 +26,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -69,6 +70,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/loadExpressionExperiment.html" );
+        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds999Short" ) );
@@ -89,6 +91,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         String path = getTestFileBasePath();
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/loadExpressionExperiment.html" );
+        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds266Short" ) );
         controller.setGeoDatasetService( ( GeoDatasetService ) geoService );

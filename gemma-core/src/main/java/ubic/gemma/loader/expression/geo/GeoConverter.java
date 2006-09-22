@@ -128,14 +128,7 @@ public class GeoConverter implements Converter {
     private ExternalDatabase genbank;
 
     /**
-     * Given a BioAssay for searching, locate the corresponding BioAssay in the ExpressionExperiment, and associate it
-     * with the SubSet.
-     * 
-     * @param subSet ExpressionExperimentSubSet to add to.
-     * @param queryBioAssay BioAssay to search for. This need not be filled in completely, it is only used to store
-     *        parameters for the search.
-     * @param expExp ExpressionExperiment to search.
-     * @return
+     * Remove old results. Call this prior to starting converstion of a full dataset.
      */
     @SuppressWarnings("unchecked")
     private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, BioAssay queryBioAssay,
@@ -307,13 +300,13 @@ public class GeoConverter implements Converter {
             if ( string != null ) {
                 containsAtLeastOneNonNull = true;
                 break;
-            }
+    }
         }
 
         if ( !containsAtLeastOneNonNull ) {
             if ( log.isDebugEnabled() ) {
                 log.debug( "No data for " + qt + " in vector of length " + vector.size() );
-            }
+                }
             return null;
         }
 
@@ -329,9 +322,9 @@ public class GeoConverter implements Converter {
                     toConvert.add( Boolean.parseBoolean( string ) );
                 } else if ( pt.equals( PrimitiveType.STRING ) ) {
                     toConvert.add( string );
-                } else {
+            } else {
                     throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
-                }
+            }
             } catch ( NumberFormatException e ) {
                 // if ( !StringUtils.isBlank( string ) ) {
                 // throw e; // not a missing value, some other problem.
@@ -339,10 +332,10 @@ public class GeoConverter implements Converter {
                 handleMissing( toConvert, pt );
             } catch ( NullPointerException e ) {
                 handleMissing( toConvert, pt );
-            }
         }
-        return byteArrayConverter.toBytes( toConvert.toArray() );
     }
+        return byteArrayConverter.toBytes( toConvert.toArray() );
+            }
 
     /**
      * Often-needed generation of a valid databaseentry object.
@@ -358,7 +351,7 @@ public class GeoConverter implements Converter {
         result.setExternalDatabase( this.geoDatabase );
         result.setAccession( geoData.getGeoAccession() );
         return result;
-    }
+            }
 
     /**
      * @param geoDataset
@@ -491,7 +484,7 @@ public class GeoConverter implements Converter {
     private void convertDatasetDescriptions( GeoDataset geoDataset, ExpressionExperiment expExp ) {
         if ( StringUtils.isEmpty( expExp.getDescription() ) ) {
             expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
-        }
+            }
 
         expExp.setDescription( expExp.getDescription() + " Includes " + geoDataset.getGeoAccession() + ". " );
         if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
@@ -504,7 +497,8 @@ public class GeoConverter implements Converter {
             expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
                     + ": " + geoDataset.getTitle() + ". " );
         }
-    }
+        }
+
 
     /**
      * @param geoDataset
@@ -568,12 +562,12 @@ public class GeoConverter implements Converter {
                 // sample ids.
                 log.warn( "No bioassay match for " + sampleAcc );
             }
-        }
+                }
         log.info( resultBioAssayDimension.getBioAssays() + " Bioassays in biodimension" );
         resultBioAssayDimension.setName( formatName( bioAssayDimName ) );
         resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
         return resultBioAssayDimension;
-    }
+                }
 
     /**
      * @param platform
@@ -669,7 +663,7 @@ public class GeoConverter implements Converter {
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequences.size() );
 
         // We don't get reporters from GEO SOFT files.
-        arrayDesign.setReporters( new HashSet() );
+        // arrayDesign.setReporters( new HashSet() );
 
         Contact manufacturer = Contact.Factory.newInstance();
         if ( platform.getManufacturer() != null ) {
@@ -825,12 +819,12 @@ public class GeoConverter implements Converter {
 
         // FIXME: use the ones from the ExperimentalFactor.
         for ( GeoReplication replication : sample.getReplicates() ) {
-            bioAssay.getFactorValues().add( convertReplicationToFactorValue( replication ) );
+            bioMaterial.getFactorValues().add( convertReplicationToFactorValue( replication ) );
         }
 
         // FIXME: use the ones from the ExperimentalFactor.
         for ( GeoVariable variable : sample.getVariables() ) {
-            bioAssay.getFactorValues().add( convertVariableToFactorValue( variable ) );
+            bioMaterial.getFactorValues().add( convertVariableToFactorValue( variable ) );
         }
 
         for ( GeoChannel channel : sample.getChannels() ) {
@@ -839,7 +833,7 @@ public class GeoConverter implements Converter {
              * So we need to just add the channel information to the biomaterials we have already.
              */
             convertChannel( sample, channel, bioMaterial );
-            // bioAssay.getSamplesUsed().add( bioMaterial );
+            bioAssay.getSamplesUsed().add( bioMaterial );
         }
 
         Taxon lastTaxon = null;
@@ -939,8 +933,9 @@ public class GeoConverter implements Converter {
             design.getExperimentalFactors().add( ef );
         }
 
-        expExp.setExperimentalDesigns( new HashSet<ExperimentalDesign>() );
-        expExp.getExperimentalDesigns().add( design );
+        expExp.setExperimentalDesigns( design );
+        // expExp.setExperimentalDesigns( new HashSet<ExperimentalDesign>() );
+        // expExp.getExperimentalDesigns().add( design );
 
         // GEO does not have the concept of a biomaterial.
         Collection<GeoSample> samples = series.getSamples();
@@ -1008,9 +1003,16 @@ public class GeoConverter implements Converter {
         subSet.setSourceExperiment( expExp );
         subSet.setBioAssays( new HashSet<BioAssay>() );
 
+        int i = 0;
         for ( GeoSample sample : geoSubSet.getSamples() ) {
 
-            BioAssay bioAssayForSearch = convertSample( sample, null ); // converted object only used for searching.
+            // needed to adda biomaterial as convertSample will get an NPE without it... is this correct?
+            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+            bioMaterial.setName( geoSubSet.getGeoAccession() + "_bioMaterial_" + i );
+            i++;
+
+            BioAssay bioAssayForSearch = convertSample( sample, bioMaterial ); // converted object only used for
+                                                                                // searching.
 
             boolean found = addMatchingBioAssayToSubSet( subSet, bioAssayForSearch, expExp );
             assert found : "No matching bioassay found for " + bioAssayForSearch.getAccession().getAccession()
@@ -1368,7 +1370,7 @@ public class GeoConverter implements Converter {
         if ( description.toLowerCase().contains( "background" ) ) {
             qType = StandardQuantitationType.DERIVEDSIGNAL;
             isBackground = Boolean.TRUE;
-        }
+            }
 
         if ( description.contains( "log2" ) ) {
             sType = ScaleType.LOG2;
@@ -1383,7 +1385,7 @@ public class GeoConverter implements Converter {
         } else if ( name.matches( "fold_change" ) || description.contains( "log ratio" )
                 || name.toLowerCase().contains( "ratio" ) || description.contains( "ratio" ) ) {
             qType = StandardQuantitationType.RATIO;
-        }
+                }
 
         qt.setGeneralType( gType );
         qt.setRepresentation( pType );
@@ -1395,9 +1397,8 @@ public class GeoConverter implements Converter {
             log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
                     + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
                     + " Encoding=" + pType );
+            }
         }
-
-    }
 
     /**
      * Deal with missing values, identified by nulls or number format exceptions.
@@ -1547,10 +1548,9 @@ public class GeoConverter implements Converter {
             String clazz = element.getClass().getName();
             if ( !tally.containsKey( clazz ) ) {
                 tally.put( clazz, new Integer( 0 ) );
-            }
+}
             tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
         }
-
         for ( String clazz : tally.keySet() ) {
             buf.append( tally.get( clazz ) + " " + clazz + "s\n" );
         }

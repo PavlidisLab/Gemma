@@ -108,7 +108,7 @@ public class GeneServiceImplTest extends TestCase {
         geneDaoMock.loadAll();
         expectLastCall().andReturn( allThree );
         replay( geneDaoMock );
-        svc.findAll();
+        svc.loadAll();
         verify( geneDaoMock );
     }
 

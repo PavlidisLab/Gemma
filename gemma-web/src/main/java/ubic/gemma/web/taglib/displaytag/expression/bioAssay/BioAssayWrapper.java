@@ -41,11 +41,12 @@ public class BioAssayWrapper extends TableDecorator {
      * @return String
      */
     public String getFactorValuesLink() {
-        BioAssay object = ( BioAssay ) getCurrentRowObject();
-        if ( object.getFactorValues() != null ) {
-            return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
-                    + object.getFactorValues().size() + "</a>";
-        }
+// FIXME:  GetFactorValuesLink has no meaning for bioassays as they do not contain factor values anymore.         
+//        BioAssay object = ( BioAssay ) getCurrentRowObject();
+//        if ( object.getFactorValues() != null ) {
+//            return "<a href=\"/Gemma/bioAssay/showBioAssay.html?id=" + object.getId() + "\">"
+//                    + object.getFactorValues().size() + "</a>";
+//        }
         return "No factor values";
     }
     

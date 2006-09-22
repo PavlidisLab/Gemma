@@ -105,6 +105,7 @@ public class AffyProbeReader extends BasicLineMapParser {
         probeSet.setName( probeSetId );
         if ( probeSet.getComponentReporters() == null ) probeSet.setComponentReporters( new HashSet() );
 
+        reporter.setCompositeSequence( probeSet );
         probeSet.getComponentReporters().add( reporter );
         return probeSet;
 

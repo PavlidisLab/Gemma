@@ -153,20 +153,21 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Integer handleNumReporters( Long id ) throws Exception {
-        final String queryString = "select count (*) from  ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id";
+        final String queryString = "select count (*) from ArrayDesignImpl as ar inner join ar.compositeSequences as compositeSequences inner join compositeSequences.componentReporters as rep where ar.id = :id";
         return queryByIdReturnInteger( id, queryString );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadReporters(java.lang.Long)
-     */
-    @Override
-    protected Collection handleLoadReporters( Long id ) throws Exception {
-        final String queryString = "select rep from ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id = :id";
-        return queryByIdReturnCollection( id, queryString );
-    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadReporters(java.lang.Long)
+    // */
+    // @Override
+    // protected Collection handleLoadReporters( Long id ) throws Exception {
+    // final String queryString = "select rep from ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id =
+    // :id";
+    // return queryByIdReturnCollection( id, queryString );
+    // }
 
     /*
      * (non-Javadoc)

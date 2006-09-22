@@ -210,6 +210,11 @@
             </td>
         </authz:acl>
         
+            <td COLSPAN="2">  
+            <div align="left"><input type="button"
+            onclick="location.href='deleteExpressionExperiment.html?id=<%=request.getAttribute("id")%>'"
+            value="Delete"></div>
+            </td>
     </tr>
     </table>
     </body>

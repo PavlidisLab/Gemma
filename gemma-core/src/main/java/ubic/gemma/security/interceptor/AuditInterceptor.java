@@ -266,7 +266,7 @@ public class AuditInterceptor implements MethodInterceptor {
         log.debug( "After: " + m.getName() + " on " + returnValue );
         if ( Collection.class.isAssignableFrom( returnValue.getClass() ) ) {
             for ( Object object2 : ( Collection<?> ) returnValue ) {
-                processAfter( m, ( Auditable ) object2 );
+                if ( object2 instanceof Auditable ) processAfter( m, ( Auditable ) object2 );
             }
         } else if ( !Auditable.class.isAssignableFrom( returnValue.getClass() ) ) {
             return; // no need to look at it!
