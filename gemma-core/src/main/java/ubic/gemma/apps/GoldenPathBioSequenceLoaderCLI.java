@@ -19,8 +19,8 @@
 package ubic.gemma.apps;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
-import org.acegisecurity.intercept.method.aopalliance.MethodSecurityInterceptor;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
@@ -134,14 +134,18 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
-        GoldenPathDumper dumper = new GoldenPathDumper( taxon );
+        GoldenPathDumper dumper;
+        try {
+            dumper = new GoldenPathDumper( taxon );
+            externalDatabaseService = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
 
-        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) this
-                .getBean( "externalDatabaseService" );
+            dumper.setExternalDatabaseService( externalDatabaseService );
+            gp.setLimit( limit );
+            gp.load( dumper );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
 
-        dumper.setExternalDatabaseService( externalDatabaseService );
-        gp.setLimit( limit );
-        gp.load( dumper );
     }
 
     /**
@@ -171,7 +175,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 'L' ) ) {
             limit = getIntegerOptionValue( 'L' );
         }
-   //     MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
+        // MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
         this.bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );
         this.externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
         this.taxonService = ( TaxonService ) getBean( "taxonService" );

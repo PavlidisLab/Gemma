@@ -48,8 +48,6 @@ import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Download (but do not parse) data files for a given ExperimentSet.
- * <hr>
- * <p>
  * 
  * @author pavlidis
  * @version $Id$
@@ -75,7 +73,7 @@ public class DataFileFetcher extends FtpFetcher {
      * @throws IOException
      */
     private void getCuts() throws IOException {
-        FTPFile[] files = f.listFiles( baseDir );
+        FTPFile[] files = ftpClient.listFiles( baseDir );
         cuts = new TreeMap<Integer, String>();
         for ( int i = 0; i < files.length; i++ ) {
             String name = files[i].getName();
@@ -93,7 +91,7 @@ public class DataFileFetcher extends FtpFetcher {
     public void fetch( SMDExperiment expM ) throws SocketException, IOException {
         log.info( "Seeking experiment data files for " + expM.getName() );
 
-        if ( !f.isConnected() ) SmdUtil.connect( FTP.BINARY_FILE_TYPE );
+        if ( !ftpClient.isConnected() ) SmdUtil.connect( FTP.BINARY_FILE_TYPE );
 
         // create a place to store the files.
         File newDir = mkdir( Integer.toString( expM.getNumber() ) );
@@ -112,7 +110,7 @@ public class DataFileFetcher extends FtpFetcher {
 
             String seekFile = baseDir + group + "/" + assayId + ".xls.gz";
 
-            NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force );
+            NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );
 
             // get meta-data about the file.
             SMDFile file = new SMDFile();

@@ -78,7 +78,7 @@ public class ExperimentFetcher extends FtpFetcher {
      * @throws SAXException
      */
     public void fetch() throws IOException, SAXException {
-        if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
+        if ( !ftpClient.isConnected() ) ftpClient = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
         for ( Iterator<SMDPublication> iter = pubs.getIterator(); iter.hasNext(); ) {
             SMDPublication pubM = iter.next();
@@ -92,21 +92,21 @@ public class ExperimentFetcher extends FtpFetcher {
                 log.info( "Seeking experiment set meta file for " + expM.getName() );
 
                 // now, the experiments for this won't be filled in. So we have to retrive it.
-                FTPFile[] expSetFiles = f.listFiles( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() );
+                FTPFile[] expSetFiles = ftpClient.listFiles( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() );
 
                 for ( int i = 0; i < expSetFiles.length; i++ ) {
                     String expFile = expSetFiles[i].getName();
 
                     if ( !expFile.matches( "exptset_[0-9]+.meta" ) ) continue;
 
-                    InputStream is = f.retrieveFileStream( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() + "/"
+                    InputStream is = ftpClient.retrieveFileStream( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() + "/"
                             + expFile );
                     if ( is == null ) throw new IOException( "Could not get stream for " + expFile );
                     SMDExperiment newExptSet = new SMDExperiment();
                     newExptSet.read( is );
                     is.close();
 
-                    if ( !f.completePendingCommand() ) {
+                    if ( !ftpClient.completePendingCommand() ) {
                         log.error( "Failed to complete download of " + expFile );
                         continue;
                     }

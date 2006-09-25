@@ -38,10 +38,10 @@ public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
 
     @Override
     public void intialize() {
+        log.info( "Initializing local-source domain object generator" );
         datasetFetcher = new LocalDatasetFetcher( fileLocation );
         seriesFetcher = new LocalSeriesFetcher( fileLocation );
         platformFetcher = new LocalSeriesFetcher( fileLocation );
         this.parser = new GeoFamilyParser();
     }
-
 }

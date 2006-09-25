@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -81,8 +82,6 @@ public class ExpressionExperimentLoadController extends BaseFormController {
             log.info( "Only loading platform" );
         }
         // ProgressJob job;
-
-        geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
         if ( eeLoadCommand.isLoadPlatformOnly() ) {
             // job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading arrayDesign(s)" );

@@ -19,12 +19,6 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.hibernate.LockMode;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -34,10 +28,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ExpressionDataMatrixService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -66,43 +56,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @Override
     protected void onTearDown() throws Exception {
-        // this.delete( ee );
-    }
-
-    /**
-     * Clean up expression experiments inserted by this test.
-     * 
-     * @param expExp
-     */
-    private void delete( ExpressionExperiment expExp ) {
-        BioAssayDimensionDao daddao = ( BioAssayDimensionDao ) this.getBean( "bioAssayDimensionDao" );
-        DesignElementDataVectorDao dedvdao = ( DesignElementDataVectorDao ) this.getBean( "designElementDataVectorDao" );
-        Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-
-        // avoid lazy-load errors.
-        SessionFactory sessf = ( SessionFactory ) this.getBean( "sessionFactory" );
-        Session sess = sessf.openSession();
-        sess.beginTransaction();
-        sess.lock( expExp, LockMode.NONE );
-        Collection<DesignElementDataVector> designElementDataVectors = expExp.getDesignElementDataVectors();
-        designElementDataVectors.size(); // lazy-load...
-        sess.getTransaction().commit();
-        sess.evict( expExp );
-        sess.close();
-
-        for ( DesignElementDataVector dv : designElementDataVectors ) {
-            BioAssayDimension dim = dv.getBioAssayDimension();
-            dims.add( dim );
-        }
-
-        dedvdao.remove( designElementDataVectors );
-
-        for ( BioAssayDimension dim : dims ) {
-            daddao.remove( dim );
-        }
-        eeService.update( expExp );
-        eeService.delete( expExp );
-
+        eeService.delete( ee );
     }
 
     // ////////////////////////////////////////////////////////////

@@ -69,10 +69,11 @@ public abstract class AbstractFetcher implements Fetcher {
                 log.warn( "Attempting to create directory '" + localBasePath + "'" );
                 targetPath.mkdirs();
             } else {
-                log.debug( targetPath + " exists, proceeding" );
+                log.info( targetPath + " exists, proceeding" );
                 return targetPath;
             }
             newDir = new File( targetPath + File.separator + accession );
+
         }
 
         if ( localBasePath == null || !targetPath.canRead() ) {
@@ -92,6 +93,8 @@ public abstract class AbstractFetcher implements Fetcher {
         if ( !newDir.canWrite() ) {
             throw new IOException( "Cannot write to target directory " + newDir.getAbsolutePath() );
         }
+
+        log.info( "New dir is " + newDir );
 
         return newDir;
     }
@@ -126,6 +129,13 @@ public abstract class AbstractFetcher implements Fetcher {
      */
     public String getLocalBasePath() {
         return this.localBasePath;
+    }
+
+    /**
+     * @return the force
+     */
+    public boolean isForce() {
+        return this.force;
     }
 
 }

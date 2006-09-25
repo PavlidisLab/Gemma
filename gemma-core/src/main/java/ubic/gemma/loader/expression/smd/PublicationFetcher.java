@@ -55,15 +55,15 @@ public class PublicationFetcher extends FtpFetcher {
      * @throws IOException
      */
     public void fetch( int limit ) throws IOException, SAXException {
-        if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
+        if ( !ftpClient.isConnected() ) ftpClient = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
 
-        FTPFile[] files = f.listFiles( baseDir );
+        FTPFile[] files = ftpClient.listFiles( baseDir );
 
         for ( int i = 0; i < files.length; i++ ) {
             if ( files[i].isDirectory() ) {
                 String pubNum = files[i].getName();
 
-                FTPFile[] pubfiles = f.listFiles( baseDir + "/" + pubNum );
+                FTPFile[] pubfiles = ftpClient.listFiles( baseDir + "/" + pubNum );
                 for ( int j = 0; j < pubfiles.length; j++ ) {
 
                     if ( !pubfiles[j].isDirectory() ) {
@@ -71,12 +71,12 @@ public class PublicationFetcher extends FtpFetcher {
 
                         if ( !pubFile.matches( "publication_[0-9]+.meta" ) ) continue;
 
-                        InputStream is = f.retrieveFileStream( baseDir + "/" + pubNum + "/" + pubFile );
+                        InputStream is = ftpClient.retrieveFileStream( baseDir + "/" + pubNum + "/" + pubFile );
                         if ( is == null ) throw new IOException( "Could not get stream for " + pubFile );
 
                         SMDPublication newPub = new SMDPublication();
                         newPub.read( is );
-                        boolean success = f.completePendingCommand();
+                        boolean success = ftpClient.completePendingCommand();
                         is.close();
 
                         if ( !success ) {
@@ -99,7 +99,7 @@ public class PublicationFetcher extends FtpFetcher {
 
         log.info( publications.size() + " publications retrieved." );
 
-        f.disconnect();
+        ftpClient.disconnect();
     }
 
     /*

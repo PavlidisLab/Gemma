@@ -57,11 +57,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     private static final double RECHECK_OVERLAP_THRESHOLD = 0.9;
 
     public GoldenPathSequenceAnalysis( int port, String databaseName, String host, String user, String password )
-            throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+            throws SQLException {
         super( port, databaseName, host, user, password );
     }
 
-    public GoldenPathSequenceAnalysis( Taxon taxon ) {
+    public GoldenPathSequenceAnalysis( Taxon taxon ) throws SQLException {
         super( taxon );
     }
 

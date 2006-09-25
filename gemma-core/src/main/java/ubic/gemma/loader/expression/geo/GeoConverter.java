@@ -300,13 +300,13 @@ public class GeoConverter implements Converter {
             if ( string != null ) {
                 containsAtLeastOneNonNull = true;
                 break;
-    }
+            }
         }
 
         if ( !containsAtLeastOneNonNull ) {
             if ( log.isDebugEnabled() ) {
                 log.debug( "No data for " + qt + " in vector of length " + vector.size() );
-                }
+            }
             return null;
         }
 
@@ -322,9 +322,9 @@ public class GeoConverter implements Converter {
                     toConvert.add( Boolean.parseBoolean( string ) );
                 } else if ( pt.equals( PrimitiveType.STRING ) ) {
                     toConvert.add( string );
-            } else {
+                } else {
                     throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
-            }
+                }
             } catch ( NumberFormatException e ) {
                 // if ( !StringUtils.isBlank( string ) ) {
                 // throw e; // not a missing value, some other problem.
@@ -332,10 +332,10 @@ public class GeoConverter implements Converter {
                 handleMissing( toConvert, pt );
             } catch ( NullPointerException e ) {
                 handleMissing( toConvert, pt );
-        }
-    }
-        return byteArrayConverter.toBytes( toConvert.toArray() );
             }
+        }
+        return byteArrayConverter.toBytes( toConvert.toArray() );
+    }
 
     /**
      * Often-needed generation of a valid databaseentry object.
@@ -351,7 +351,7 @@ public class GeoConverter implements Converter {
         result.setExternalDatabase( this.geoDatabase );
         result.setAccession( geoData.getGeoAccession() );
         return result;
-            }
+    }
 
     /**
      * @param geoDataset
@@ -484,7 +484,7 @@ public class GeoConverter implements Converter {
     private void convertDatasetDescriptions( GeoDataset geoDataset, ExpressionExperiment expExp ) {
         if ( StringUtils.isEmpty( expExp.getDescription() ) ) {
             expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
-            }
+        }
 
         expExp.setDescription( expExp.getDescription() + " Includes " + geoDataset.getGeoAccession() + ". " );
         if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
@@ -497,8 +497,7 @@ public class GeoConverter implements Converter {
             expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
                     + ": " + geoDataset.getTitle() + ". " );
         }
-        }
-
+    }
 
     /**
      * @param geoDataset
@@ -562,12 +561,12 @@ public class GeoConverter implements Converter {
                 // sample ids.
                 log.warn( "No bioassay match for " + sampleAcc );
             }
-                }
+        }
         log.info( resultBioAssayDimension.getBioAssays() + " Bioassays in biodimension" );
         resultBioAssayDimension.setName( formatName( bioAssayDimName ) );
         resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
         return resultBioAssayDimension;
-                }
+    }
 
     /**
      * @param platform
@@ -933,7 +932,7 @@ public class GeoConverter implements Converter {
             design.getExperimentalFactors().add( ef );
         }
 
-        expExp.setExperimentalDesigns( design );
+        expExp.setExperimentalDesign( design );
         // expExp.setExperimentalDesigns( new HashSet<ExperimentalDesign>() );
         // expExp.getExperimentalDesigns().add( design );
 
@@ -1012,7 +1011,7 @@ public class GeoConverter implements Converter {
             i++;
 
             BioAssay bioAssayForSearch = convertSample( sample, bioMaterial ); // converted object only used for
-                                                                                // searching.
+            // searching.
 
             boolean found = addMatchingBioAssayToSubSet( subSet, bioAssayForSearch, expExp );
             assert found : "No matching bioassay found for " + bioAssayForSearch.getAccession().getAccession()
@@ -1370,7 +1369,7 @@ public class GeoConverter implements Converter {
         if ( description.toLowerCase().contains( "background" ) ) {
             qType = StandardQuantitationType.DERIVEDSIGNAL;
             isBackground = Boolean.TRUE;
-            }
+        }
 
         if ( description.contains( "log2" ) ) {
             sType = ScaleType.LOG2;
@@ -1385,7 +1384,7 @@ public class GeoConverter implements Converter {
         } else if ( name.matches( "fold_change" ) || description.contains( "log ratio" )
                 || name.toLowerCase().contains( "ratio" ) || description.contains( "ratio" ) ) {
             qType = StandardQuantitationType.RATIO;
-                }
+        }
 
         qt.setGeneralType( gType );
         qt.setRepresentation( pType );
@@ -1397,8 +1396,8 @@ public class GeoConverter implements Converter {
             log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
                     + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
                     + " Encoding=" + pType );
-            }
         }
+    }
 
     /**
      * Deal with missing values, identified by nulls or number format exceptions.
@@ -1548,7 +1547,7 @@ public class GeoConverter implements Converter {
             String clazz = element.getClass().getName();
             if ( !tally.containsKey( clazz ) ) {
                 tally.put( clazz, new Integer( 0 ) );
-}
+            }
             tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
         }
         for ( String clazz : tally.keySet() ) {

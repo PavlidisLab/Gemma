@@ -185,17 +185,8 @@ public class ProbeMapperCli extends AbstractCLI {
                 }
 
                 GoldenPathSequenceAnalysis goldenPathDb;
-                try {
-                    goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username, password );
-                } catch ( SQLException e ) {
-                    throw new RuntimeException( e );
-                } catch ( InstantiationException e ) {
-                    throw new RuntimeException( e );
-                } catch ( IllegalAccessException e ) {
-                    throw new RuntimeException( e );
-                } catch ( ClassNotFoundException e ) {
-                    throw new RuntimeException( e );
-                }
+
+                goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username, password );
 
                 for ( int i = 0; i < moreArgs.length; i++ ) {
                     String gbId = moreArgs[i];
@@ -263,12 +254,6 @@ public class ProbeMapperCli extends AbstractCLI {
             return allRes;
 
         } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        } catch ( InstantiationException e ) {
-            throw new RuntimeException( e );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( ClassNotFoundException e ) {
             throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );

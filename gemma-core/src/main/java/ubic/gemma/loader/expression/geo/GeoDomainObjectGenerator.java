@@ -112,7 +112,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      *         one). If the accession is a GPL then processPlatformsOnly is set to true and any sample data is ignored.
      */
     public Collection<?> generate( String geoAccession ) {
-        log.info( "Generating objects for " + geoAccession );
+        log.info( "Generating objects for " + geoAccession + " using " + this.getClass().getSimpleName() );
         Collection<Object> result = new HashSet<Object>();
         if ( geoAccession.startsWith( "GPL" ) ) {
             GeoPlatform platform = processPlatform( geoAccession );

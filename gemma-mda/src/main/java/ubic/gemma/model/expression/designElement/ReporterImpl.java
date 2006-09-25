@@ -28,22 +28,20 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 public class ReporterImpl extends ubic.gemma.model.expression.designElement.Reporter {
 
-    
     /**
      * 
      */
     private static final long serialVersionUID = -4106592694842336681L;
 
-    public ArrayDesign getArrayDesign() {   
-        return this.getCompositeSequence().getArrayDesign();
+    public ArrayDesign getArrayDesign() {
+        return this.getCompositeSequence() == null ? null : this.getCompositeSequence().getArrayDesign();
     }
 
     /**
      * 
      */
-    
-    public void setArrayDesign(ArrayDesign arrayDesign) {
-        
-        this.getCompositeSequence().setArrayDesign( arrayDesign );     
+
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        if ( this.getCompositeSequence() != null ) this.getCompositeSequence().setArrayDesign( arrayDesign );
     }
 }

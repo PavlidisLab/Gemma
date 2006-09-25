@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.biomaterial.CompoundService;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -59,6 +60,7 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name="compoundService" ref="compoundService"
+ * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
  * @author pavlidis
  * @version $Id$
  */
@@ -77,6 +79,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private FactorValueService factorValueService;
 
     private CompoundService compoundService;
+
+    private ExperimentalDesignService experimentalDesignService;
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
 
@@ -118,9 +122,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         assert designElement != null;
 
         ArrayDesign ad = designElement.getArrayDesign();
-        assert ad != null;
+        assert ad != null : designElement + " does not have an array design";
 
-        ad = cacheArrayDesign( ad ); // possibly avoid doing this check each time
+        ad = cacheArrayDesign( ad );
 
         String key = designElement.getName() + DESIGN_ELEMENT_KEY_SEPARATOR + ad.getName();
 
@@ -128,7 +132,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             designElement = designElementCache.get( key );
         } else {
             // means the array design is lacking it.
-            // if ( log.isTraceEnabled() ) log.trace( ad + " does not contain " + designElement + ", adding it" );
             designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
         }
 
@@ -214,7 +217,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                     persistExternalDatabase( assay.getAccession().getExternalDatabase() ) );
         }
 
-        if ( log.isInfoEnabled() ) log.info( assay.getSamplesUsed().size() + " bioMaterials for " + assay );
+        if ( log.isDebugEnabled() ) log.debug( assay.getSamplesUsed().size() + " bioMaterials for " + assay );
 
         persistCollectionElements( assay.getSamplesUsed() );
 
@@ -274,20 +277,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         return bioMaterialService.findOrCreate( entity );
     }
 
-    // /**
-    // * @param bioMaterialDimension
-    // * @return
-    // */
-    // private BioMaterialDimension persistBioMaterialDimension( BioMaterialDimension bioMaterialDimension ) {
-    // assert bioMaterialDimensionService != null;
-    // List<BioMaterial> persistentBioMaterials = new ArrayList<BioMaterial>();
-    // for ( BioMaterial bioMaterial : bioMaterialDimension.getBioMaterials() ) {
-    // persistentBioMaterials.add( persistBioMaterial( bioMaterial ) );
-    // }
-    // bioMaterialDimension.setBioMaterials( persistentBioMaterials );
-    // return bioMaterialDimensionService.findOrCreate( bioMaterialDimension );
-    // }
-
     /**
      * @param entity
      * @return
@@ -314,24 +303,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
         }
 
-        if ( entity.getExperimentalDesigns() != null ) {
-            ExperimentalDesign experimentalDesign = entity.getExperimentalDesigns();
-            persistCollectionElements( experimentalDesign.getTypes() );
+        if ( entity.getExperimentalDesign() != null ) {
+            ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
 
-            for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
-
-                persistCollectionElements( experimentalFactor.getAnnotations() );
-
-                OntologyEntry category = experimentalFactor.getCategory();
-                if ( category != null ) {
-                    experimentalFactor.setCategory( persistOntologyEntry( category ) );
-                }
-
-                // factorvalue is cascaded.
-                for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
-                    fillInFactorValueAssociations( factorValue );
-                }
-            }
+            processExperimentalDesign( experimentalDesign );
         }
 
         if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
@@ -346,7 +321,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             for ( BioAssay bA : entity.getBioAssays() ) {
                 fillInBioAssayAssociations( bA );
                 alreadyFilled.add( bA );
-        }
+            }
         }
 
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
@@ -356,12 +331,46 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 if ( !alreadyFilled.contains( bA ) ) {
                     throw new IllegalStateException( bA + " not in the experiment?" );
                 }
-                // fillInBioAssayAssociations( bA );
-                // alreadyFilled.add( bA );
             }
         }
 
         return expressionExperimentService.create( entity );
+    }
+
+    /**
+     * @param experimentalDesign
+     */
+    private void processExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+
+        persistCollectionElements( experimentalDesign.getTypes() );
+
+        // withhold to avoid premature cascade.
+        Collection<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
+        experimentalDesign.setExperimentalFactors( null );
+
+        experimentalDesign = experimentalDesignService.create( experimentalDesign );
+
+        // put back.
+        experimentalDesign.setExperimentalFactors( factors );
+
+        for ( ExperimentalFactor experimentalFactor : experimentalDesign.getExperimentalFactors() ) {
+
+            experimentalFactor.setExperimentalDesign( experimentalDesign );
+
+            persistCollectionElements( experimentalFactor.getAnnotations() );
+
+            OntologyEntry category = experimentalFactor.getCategory();
+            if ( category != null ) {
+                experimentalFactor.setCategory( persistOntologyEntry( category ) );
+            }
+
+            // factorvalue is cascaded.
+            for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
+                factorValue.setExperimentalFactor( experimentalFactor );
+                fillInFactorValueAssociations( factorValue );
+            }
+
+        }
     }
 
     /**
@@ -399,10 +408,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * This is used when creating vectors "one by one" rather than by composition with an ExpressionExperiment.
+     * This is used when creating vectors "one by one" rather than by composition with an ExpressionExperiment. Not
+     * normally used.
      * 
      * @param vector
-     * @return FIXME we may not want to use this, and always do it with an update of the ExpressionExperiment instead.
+     * @return
      */
     private DesignElementDataVector persistDesignElementDataVector( DesignElementDataVector vector ) {
         if ( vector == null ) return null;
@@ -455,13 +465,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         this.bioAssayService = bioAssayService;
     }
 
-    // /**
-    // * @param bioMaterialDimensionService The bioMaterialDimensionService to set.
-    // */
-    // public void setBioMaterialDimensionService( BioMaterialDimensionService bioMaterialDimensionService ) {
-    // this.bioMaterialDimensionService = bioMaterialDimensionService;
-    // }
-
     /**
      * @param bioMaterialService The bioMaterialService to set.
      */
@@ -495,6 +498,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     public void setFactorValueService( FactorValueService factorValueService ) {
         this.factorValueService = factorValueService;
+    }
+
+    /**
+     * @param experimentalDesignService the experimentalDesignService to set
+     */
+    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
+        this.experimentalDesignService = experimentalDesignService;
     }
 
 }

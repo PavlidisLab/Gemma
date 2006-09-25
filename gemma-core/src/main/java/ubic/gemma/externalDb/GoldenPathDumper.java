@@ -47,15 +47,15 @@ public class GoldenPathDumper extends GoldenPath {
     private boolean DO_REFSEQ = true;
 
     public GoldenPathDumper( int port, String databaseName, String host, String user, String password )
-            throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+            throws SQLException {
         super( port, databaseName, host, user, password );
     }
 
-    public GoldenPathDumper( Taxon taxon ) {
+    public GoldenPathDumper( Taxon taxon ) throws SQLException {
         super( taxon );
     }
 
-    public GoldenPathDumper() {
+    public GoldenPathDumper() throws SQLException {
         super();
     }
 

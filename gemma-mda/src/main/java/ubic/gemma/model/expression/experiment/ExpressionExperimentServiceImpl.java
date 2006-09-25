@@ -21,35 +21,25 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.LockMode;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao;
 
 /**
  * @author pavlidis
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService
- * 
- * 
  */
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
     private Log log = LogFactory.getLog( this.getClass() );
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -144,40 +134,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
-
-        // BioAssayDimensionDao daddao = ( BioAssayDimensionDao ) this.getBean( "bioAssayDimensionDao" );
-        // DesignElementDataVectorDao dedvdao = ( DesignElementDataVectorDao ) this.getBean(
-        // "designElementDataVectorDao" );
-           Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-
-        // avoid lazy-load errors.         
-//         Session sess = sessFact.openSession();
-//         sess.beginTransaction();
-//         sess.lock( ee, LockMode.NONE );
-
-        Collection<DesignElementDataVector> designElementDataVectors = ee.getDesignElementDataVectors();
-
-         //designElementDataVectors.size(); // lazy-load...
-
-        for ( DesignElementDataVector dv : designElementDataVectors ) {
-            BioAssayDimension dim = dv.getBioAssayDimension();
-            dims.add( dim );            
-        }
-       
-        getDesignElementDataVectorDao().remove( designElementDataVectors );
-        BioAssayDimensionDao badDao = getBioAssayDimensionDao();
-        for ( BioAssayDimension dim : dims ) {
-            badDao.remove( dim );
-        }
-        // eeService.update( expExp );
-        // eeService.delete( expExp );
-
         this.getExpressionExperimentDao().remove( ee );
-        
-//         sess.getTransaction().commit();
-//         sess.evict( ee );
-//         sess.close();
-
     }
 
     /*

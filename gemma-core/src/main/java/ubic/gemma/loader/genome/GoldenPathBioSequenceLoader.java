@@ -51,7 +51,7 @@ public class GoldenPathBioSequenceLoader {
 
     private static final int QUEUE_SIZE = 10000;
     private static final int BATCH_SIZE = 1000;
-    private static Log log = LogFactory.getLog( GoldenPathBioSequenceLoader.class.getName() );
+    static Log log = LogFactory.getLog( GoldenPathBioSequenceLoader.class.getName() );
     ExternalDatabaseService externalDatabaseService;
     BioSequenceService bioSequenceService;
     ExternalDatabase genbank;
@@ -195,7 +195,7 @@ public class GoldenPathBioSequenceLoader {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private void load( BlockingQueue<BioSequence> queue ) {
+    void load( BlockingQueue<BioSequence> queue ) {
         log.debug( "Entering 'load' " );
 
         long millis = System.currentTimeMillis();

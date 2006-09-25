@@ -55,4 +55,24 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
         return this.getExperimentalFactorDao().findById( id );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     */
+    @Override
+    protected ExperimentalFactor handleFindOrCreate( ExperimentalFactor experimentalFactor ) throws Exception {
+        return this.getExperimentalFactorDao().findOrCreate( experimentalFactor );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     */
+    @Override
+    protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) throws Exception {
+        return this.getExperimentalFactorDao().find( experimentalFactor );
+    }
+
 }

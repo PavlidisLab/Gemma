@@ -68,10 +68,7 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class TestPersistentObjectHelper {
-    /**
-     * 
-     */
-    private static final int NUM_EXPERIMENTAL_DESIGNS = 2;
+
     /**
      * 
      */
@@ -156,24 +153,6 @@ public class TestPersistentObjectHelper {
         return vectors;
     }
 
-    /**
-     * @return
-     */
-    // public Collection<ExperimentalDesign> getExperimentalDesigns() {
-    // Collection<ExperimentalDesign> edCol = new HashSet<ExperimentalDesign>();
-    // for ( int i = 0; i < NUM_EXPERIMENTAL_DESIGNS; i++ ) {
-    // ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
-    // ed.setName( "Experimental Design " + RandomStringUtils.randomNumeric( 10 ) );
-    // ed.setDescription( i + ": A test experimental design." );
-    //
-    // log.debug( "experimental design => experimental factors" );
-    // ed.setExperimentalFactors( getExperimentalFactors() ); // set test experimental factors
-    //
-    // edCol.add( ed ); // add experimental designs
-    // }
-    // return edCol;
-    //            
-    // }
     public ExperimentalDesign getExperimentalDesign() {
 
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
@@ -234,8 +213,8 @@ public class TestPersistentObjectHelper {
         log.debug( "expression experiment => bioassays" );
         ee.setBioAssays( getBioAssays( ad ) );
 
-        log.debug( ee + " => experimentalDesigns designs" );
-        ee.setExperimentalDesigns( getExperimentalDesign() );
+        log.debug( ee + " => experimentalDesign" );
+        ee.setExperimentalDesign( getExperimentalDesign() );
 
         log.debug( "expression experiment -> owner " );
 
@@ -278,22 +257,22 @@ public class TestPersistentObjectHelper {
 
             Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
-            
+
             if ( randomNames ) {
                 reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testreporter" );
             } else {
                 reporter.setName( i + "_at" );
             }
-            
+
             reporter.setCompositeSequence( compositeSequence );
-            
+
             if ( randomNames ) {
                 compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testcs" );
             } else {
                 compositeSequence.setName( "probe_" + i );
             }
 
-            compositeSequence.getComponentReporters().add( reporter );            
+            compositeSequence.getComponentReporters().add( reporter );
             compositeSequence.setArrayDesign( ad );
             ad.getCompositeSequences().add( compositeSequence );
         }

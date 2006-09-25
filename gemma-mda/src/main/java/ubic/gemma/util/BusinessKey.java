@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -308,17 +309,17 @@ public class BusinessKey {
      * @param bioSequence
      */
     private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
-        
+
         if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
             addNameRestriction( queryObject, bioSequence );
         }
         if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
             queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
         }
-        
+
         addRestrictions( queryObject, bioSequence.getTaxon() );
 
-         if ( bioSequence.getSequenceDatabaseEntry() != null ) {
+        if ( bioSequence.getSequenceDatabaseEntry() != null ) {
             queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
                     Restrictions.eq( "accession", bioSequence.getSequenceDatabaseEntry().getAccession() ) );
         }
@@ -354,6 +355,33 @@ public class BusinessKey {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
+        }
+    }
+
+    /**
+     * @param experimentalFactor
+     */
+    public static void checkValidKey( ExperimentalFactor experimentalFactor ) {
+        if ( StringUtils.isBlank( experimentalFactor.getName() ) && experimentalFactor.getCategory() == null ) {
+            throw new IllegalArgumentException( "Experimental factor must have name or category" );
+        }
+    }
+
+    /**
+     * @param queryObject
+     * @param experimentalFactor
+     */
+    public static void addRestrictions( Criteria queryObject, ExperimentalFactor experimentalFactor ) {
+        if ( StringUtils.isNotBlank( experimentalFactor.getName() ) ) {
+            queryObject.add( Restrictions.eq( "name", experimentalFactor.getName() ) );
+        }
+
+        if ( experimentalFactor.getCategory() != null ) {
+            // FIXME this might not be complete.
+            queryObject.createCriteria( "category" ).add(
+                    Restrictions.eq( "accession", experimentalFactor.getCategory().getAccession() ) ).createCriteria(
+                    "externalDatabase" ).add(
+                    Restrictions.eq( "name", experimentalFactor.getCategory().getExternalDatabase().getName() ) );
         }
     }
 }

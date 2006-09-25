@@ -21,7 +21,7 @@ insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("admin", "administrat
 insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "test", "test", "test", "1ee223e4d9a7c2bf81996941705435d7a43bee9a", 1, 2, "test@gemma.org", "hint");
 insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("user", "test", 2 );
 
--- contact
+-- contact, audit trail #3.
 insert into CONTACT (CLASS, NAME, EMAIL, AUDIT_TRAIL_FK) values ("ContactImpl", "admin", "another.admin@gemma.org", 3);
 
 -- taxa

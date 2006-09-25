@@ -57,12 +57,12 @@ public class DatasetFetcher extends GeoFetcher {
         log.info( "Seeking GDS file for " + accession );
 
         try {
-            if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( ftpClient == null || !ftpClient.isConnected() ) ftpClient = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
             String seekFile = baseDir + "/" + accession + SOFT_GZ;
             File newDir = mkdir( accession );
             File outputFile = new File( newDir, accession + SOFT_GZ );
-            boolean success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
-            f.disconnect();
+            boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
+            ftpClient.disconnect();
 
             if ( success ) {
                 // get meta-data about the file.

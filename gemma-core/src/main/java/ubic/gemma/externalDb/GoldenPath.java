@@ -52,12 +52,12 @@ public class GoldenPath {
 
     protected QueryRunner qr;
 
-    private String databaseName;
+    private String databaseName = null;
 
     /**
      * Get golden path for the default database (human);
      */
-    public GoldenPath() {
+    public GoldenPath() throws SQLException {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
         init( taxon );
@@ -69,16 +69,10 @@ public class GoldenPath {
      * @param user
      * @param password
      * @throws SQLException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws ClassNotFoundException
      */
-    public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException,
-            InstantiationException, IllegalAccessException, ClassNotFoundException {
-
+    public GoldenPath( int port, String databaseName, String host, String user, String password ) throws SQLException {
         this.databaseName = databaseName;
-
-        init( port, host, databaseName, user, password );
+        init( port, host, user, password );
     }
 
     /**
@@ -86,7 +80,7 @@ public class GoldenPath {
      * 
      * @param taxon
      */
-    public GoldenPath( Taxon taxon ) {
+    public GoldenPath( Taxon taxon ) throws SQLException {
         init( taxon );
     }
 
@@ -97,7 +91,8 @@ public class GoldenPath {
         return databaseName;
     }
 
-    private void init( int port, String host, String databaseName, String user, String password ) {
+    private void init( int port, String host, String user, String password ) throws SQLException {
+        assert databaseName != null;
         dataSource = new DriverManagerDataSource();
         jt = new JdbcTemplate( dataSource );
 
@@ -121,14 +116,12 @@ public class GoldenPath {
             throw new RuntimeException( e );
         } catch ( ClassNotFoundException e ) {
             throw new RuntimeException( e );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        }
+        }  
 
         qr = new QueryRunner();
     }
 
-    private void init( Taxon taxon ) {
+    private void init( Taxon taxon ) throws SQLException {
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {
             databaseName = "mm8"; // FIXME get these names from an external source.
@@ -144,7 +137,7 @@ public class GoldenPath {
         String databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
         String databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
 
-        this.init( 3306, databaseHost, databaseName, databaseUser, databasePassword );
+        this.init( 3306, databaseHost, databaseUser, databasePassword );
     }
 
     /**

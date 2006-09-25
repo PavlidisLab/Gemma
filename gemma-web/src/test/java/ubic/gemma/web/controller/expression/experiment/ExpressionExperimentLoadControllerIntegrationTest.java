@@ -25,6 +25,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -36,6 +38,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     protected static final String GEO_TEST_DATA_ROOT = "/gemma-core/src/test/resources/data/loader/expression/geo/";
 
     private ExpressionExperimentLoadController controller;
+    ExpressionExperiment ee = null;
 
     AbstractGeoService geoService;
 
@@ -51,6 +54,22 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         super.onSetUp();
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
+     */
+    @Override
+    protected void onTearDown() throws Exception {
+        super.onTearDown();
+        if ( ee != null && ee.getId() != null ) {
+            ExpressionExperimentService service = ( ExpressionExperimentService ) this
+                    .getBean( "expressionExperimentService" );
+            service.delete( ee );
+        }
+
     }
 
     public MockHttpServletRequest newPost( String url ) {
@@ -80,6 +99,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "loadPlatformOnly", "false" );
         request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
+        ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
 
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
@@ -99,7 +119,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "loadPlatformOnly", "false" );
         request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
-
+        ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
     }
@@ -113,7 +133,6 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      * <li>Existing platform, existing expression experiment
      * </ul>
      */
-
     public final void testShowForm() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newGet( "/loadExpressionExperiment.html" );

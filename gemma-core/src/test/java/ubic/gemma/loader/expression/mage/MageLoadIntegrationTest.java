@@ -26,6 +26,8 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -62,9 +64,11 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
     @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
-        ExpressionExperimentService service = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
-        service.delete( ee );
+        if ( ee != null && ee.getId() != null ) {
+            ExpressionExperimentService service = ( ExpressionExperimentService ) this
+                    .getBean( "expressionExperimentService" );
+            service.delete( ee );
+        }
     }
 
     /**
@@ -100,6 +104,14 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
                 ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );
+
+                for ( BioAssay bioAssay : ee.getBioAssays() ) {
+                    assertNotNull( bioAssay.getId() );
+                    for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {
+                        assertNotNull( bioMaterial.getId() );
+                    }
+                }
+
                 break;
             }
         }
@@ -139,6 +151,14 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
                 ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );
+
+                for ( BioAssay bioAssay : ee.getBioAssays() ) {
+                    assertNotNull( bioAssay.getId() );
+                    for ( BioMaterial bioMaterial : bioAssay.getSamplesUsed() ) {
+                        assertNotNull( bioMaterial.getId() );
+                    }
+                }
+
                 break;
             }
         }

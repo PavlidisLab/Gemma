@@ -20,6 +20,7 @@ package ubic.gemma.testing;
 
 import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.GrantedAuthorityImpl;
+import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.context.SecurityContextImpl;
 import org.acegisecurity.providers.AbstractAuthenticationToken;
@@ -77,7 +78,7 @@ public class SpringTestUtil {
      */
     private static void putTokenInContext( AbstractAuthenticationToken token ) {
         // Create and store the Acegi SecureContext into the ContextHolder.
-        SecurityContextImpl secureContext = new SecurityContextImpl();
+        SecurityContext secureContext = SecurityContextHolder.getContext();
         secureContext.setAuthentication( token );
         SecurityContextHolder.setContext( secureContext );
     }

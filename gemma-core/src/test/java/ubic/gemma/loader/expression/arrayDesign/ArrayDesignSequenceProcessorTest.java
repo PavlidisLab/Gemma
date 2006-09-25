@@ -22,7 +22,10 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
@@ -41,11 +44,13 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     InputStream probeFile;
     InputStream designElementStream;
     Taxon taxon;
+    ArrayDesign result;
 
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
 
+        // note that the name MG-U74A is not used by the result.
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
 
         seqFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_target" );
@@ -54,6 +59,13 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Mus musculus" );
         assert taxon != null;
+    }
+
+    protected void onTearDown() throws Exception {
+        if ( result != null ) {
+            ArrayDesignService svc = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+            svc.remove( result );
+        }
     }
 
     public void testAssignSequencesToDesignElements() throws Exception {
@@ -107,7 +119,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     public void testProcessAffymetrixDesign() throws Exception {
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        ArrayDesign result = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile, taxon );
+        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign",
+                designElementStream, probeFile, taxon );
 
         assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
         // assertEquals( "reporter count", 528, result.getReporters().size() );
@@ -120,17 +133,18 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     public void testProcessNonAffyDesign() throws Exception {
 
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        ArrayDesign arrayDesign = app.processAffymetrixDesign( "MG-U74A", designElementStream, probeFile, taxon );
+        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign",
+                designElementStream, probeFile, taxon );
 
-        assertNotNull( arrayDesign.getId() );
+        assertNotNull( result.getId() );
 
-        app.processArrayDesign( arrayDesign, seqFile, SequenceType.EST, taxon );
+        app.processArrayDesign( result, seqFile, SequenceType.EST, taxon );
 
-        assertEquals( "composite sequence count", 33, arrayDesign.getCompositeSequences().size() );
-       
-        assertEquals( "reporter per composite sequence", 17, arrayDesign.getCompositeSequences().iterator().next()
+        assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
+
+        assertEquals( "reporter per composite sequence", 17, result.getCompositeSequences().iterator().next()
                 .getComponentReporters().size() );
-        assertTrue( arrayDesign.getCompositeSequences().iterator().next().getArrayDesign() == arrayDesign );
+        assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
     }
 
 }

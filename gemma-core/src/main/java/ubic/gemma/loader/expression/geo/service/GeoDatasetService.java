@@ -20,7 +20,6 @@ package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
 
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

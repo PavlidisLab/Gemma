@@ -20,7 +20,6 @@ package ubic.gemma.persistence;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import ubic.gemma.model.common.description.LocalFile;
@@ -155,26 +154,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         return arrayDesignCache.get( ad.getName() );
     }
 
-    // /**
-    // * @param persistentDesignElement
-    // * @param maybeExistingDesignElement
-    // * @param key
-    // * @return
-    // */
-    // protected DesignElement getPersistentDesignElement( DesignElement persistentDesignElement,
-    // DesignElement maybeExistingDesignElement, String key ) {
-    // if ( maybeExistingDesignElement instanceof CompositeSequence ) {
-    // persistentDesignElement = persistDesignElement( maybeExistingDesignElement );
-    // } else if ( maybeExistingDesignElement instanceof Reporter ) {
-    // persistentDesignElement = persistDesignElement( maybeExistingDesignElement );
-    // }
-    // if ( persistentDesignElement == null ) {
-    // throw new IllegalStateException( maybeExistingDesignElement + " does not have a persistent version" );
-    // }
-    //
-    // designElementCache.put( key, persistentDesignElement );
-    // return persistentDesignElement;
-    // }
     /**
      * Persist an array design.
      * 
@@ -192,59 +171,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             return persistNewArrayDesign( arrayDesign );
         }
 
-        // throw new IllegalArgumentException( "Array design \"" + existing.getName() + "\" already exists in database."
-        // );
-        // updateArrayDesign( existing, arrayDesign );
-
         return existing;
 
     }
-
-    // /**
-    // * @param existing
-    // * @param arrayDesign
-    // */
-    // protected void updateArrayDesign( ArrayDesign existing, ArrayDesign arrayDesign ) {
-    //
-    // assert existing.getId() != null;
-    //
-    // if ( StringUtils.isNotBlank( arrayDesign.getName() ) ) existing.setName( arrayDesign.getName() );
-    //
-    // if ( StringUtils.isNotBlank( arrayDesign.getDescription() ) )
-    // existing.setDescription( arrayDesign.getDescription() );
-    //
-    // // manufacturer. Replace it.
-    // if ( arrayDesign.getDesignProvider() != null ) {
-    // existing.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
-    // }
-    //
-    // if ( arrayDesign.getAdvertisedNumberOfDesignElements() != null ) {
-    // existing.setAdvertisedNumberOfDesignElements( arrayDesign.getAdvertisedNumberOfDesignElements() );
-    // }
-    //
-    // // localfiles. We add them.
-    // for ( LocalFile file : arrayDesign.getLocalFiles() ) {
-    // existing.getLocalFiles().add( persistLocalFile( file ) );
-    // }
-    //
-    // // designelement, biosequences.
-    // existing.getCompositeSequences().clear();
-    // existing.getReporters().clear();
-    //
-    // for ( CompositeSequence cs : existing.getCompositeSequences() ) {
-    // cs.setArrayDesign( existing );
-    // existing.getCompositeSequences().add( cs );
-    // cs.setBiologicalCharacteristic( persistBioSequence( cs.getBiologicalCharacteristic() ) );
-    // }
-    //
-    // for ( Reporter rep : existing.getReporters() ) {
-    // rep.setArrayDesign( existing );
-    // existing.getReporters().add( rep );
-    // rep.setImmobilizedCharacteristic( persistBioSequence( rep.getImmobilizedCharacteristic() ) );
-    // }
-    //
-    // arrayDesignService.update( existing );
-    // }
 
     /**
      * @param arrayDesign
@@ -280,40 +209,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * @param arrayDesign
-     */
-    private CompositeSequence persistCompositeSequenceReporterAssociations( CompositeSequence compositeSequence ) {
-
-        if ( compositeSequence.getComponentReporters().size() == 0 ) {
-            compositeSequence.setComponentReporters( ( new HashSet<Reporter>() ) );
-            return compositeSequence;
-        }
-
-        log.debug( "Filling in or updating sequences in reporters for " + compositeSequence );
-        int persistedBioSequences = 0;
-
-        assert compositeSequence.getId() != null;
-        for ( Reporter reporter : compositeSequence.getComponentReporters() ) {
-            reporter.setCompositeSequence( compositeSequence ); // defensive.
-        }
-
-        for ( Reporter reporter : compositeSequence.getComponentReporters() ) {
-            reporter.setImmobilizedCharacteristic( persistBioSequence( reporter.getImmobilizedCharacteristic() ) );
-
-            if ( persistedBioSequences > 0 && persistedBioSequences % 5000 == 0 ) {
-                log.info( persistedBioSequences + " reporter sequences examined for " + compositeSequence );
-            }
-            persistedBioSequences++;
-        }
-
-        if ( persistedBioSequences > 0 ) {
-            log.info( persistedBioSequences + " reporter sequences examined for " + compositeSequence );
-        }
-
-        return compositeSequence;
-    }
-
-    /**
      * Note: Update is not called on the array design.
      * 
      * @param designElement
@@ -338,15 +233,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             designElement = compositeSequenceService.create( ( CompositeSequence ) designElement );
             arrayDesign.getCompositeSequences().add( ( CompositeSequence ) designElement );
 
-            // FixMe is this still possible now that reporters need composite sequences to exist?
-            // } else if ( designElement instanceof Reporter ) {
-            // if ( isTransient( ( ( Reporter ) designElement ).getImmobilizedCharacteristic() ) ) {
-            // ( ( Reporter ) designElement )
-            // .setImmobilizedCharacteristic( persistBioSequence( ( ( Reporter ) designElement )
-            // .getImmobilizedCharacteristic() ) );
-            // }
-            // designElement = reporterService.create( ( Reporter ) designElement );
-            // arrayDesign.getReporters().add( ( Reporter ) designElement );
         } else {
             throw new IllegalArgumentException( "Unknown subclass of DesignElement" );
         }
@@ -376,6 +262,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 file = persistLocalFile( file );
             }
         }
+
+        persistCollectionElements( arrayDesign.getExternalReferences() );
 
         Collection<CompositeSequence> c = arrayDesign.getCompositeSequences();
         arrayDesign.setCompositeSequences( null ); // so we can perist it.

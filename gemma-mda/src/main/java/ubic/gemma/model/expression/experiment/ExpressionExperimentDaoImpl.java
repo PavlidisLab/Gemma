@@ -18,14 +18,25 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 
 /**
  * @author pavlidis
@@ -34,7 +45,7 @@ import org.hibernate.criterion.Restrictions;
  */
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
+    static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
     /*
      * (non-Javadoc)
@@ -87,7 +98,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
         return ( ExpressionExperiment ) create( expressionExperiment );
     }
- 
+
     /*
      * (non-Javadoc)
      * 
@@ -95,22 +106,59 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @Override
     public Map handleGetQuantitationTypeCountById( Long Id ) {
-        HashMap<String, Integer> qtCounts = new HashMap<String,Integer>();
-        
+        HashMap<String, Integer> qtCounts = new HashMap<String, Integer>();
+
         final String queryString = "select quantType.name,count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id GROUP BY quantType.name";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
             queryObject.setParameter( "id", Id );
-            ScrollableResults list = queryObject.scroll( );
-            while (list.next()) {
+            ScrollableResults list = queryObject.scroll();
+            while ( list.next() ) {
                 qtCounts.put( list.getString( 0 ), list.getInteger( 1 ) );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        
-        return qtCounts;       
+
+        return qtCounts;
     }
-    
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#remove(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public void remove( ExpressionExperiment expressionExperiment ) {
+        final ExpressionExperiment toDelete = expressionExperiment;
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                ExpressionExperiment toDeletePers = ( ExpressionExperiment ) session.merge( toDelete );
+
+                Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+
+                Collection<DesignElementDataVector> designElementDataVectors = toDeletePers
+                        .getDesignElementDataVectors();
+
+                int count = 0;
+                for ( DesignElementDataVector dv : designElementDataVectors ) {
+                    BioAssayDimension dim = dv.getBioAssayDimension();
+                    dims.add( dim );
+                    session.delete( dv );
+                    if ( ++count % 1000 == 0 ) {
+                        log.info( count + " vectors deleted" );
+                    }
+                }
+
+                for ( BioAssayDimension dim : dims ) {
+                    session.delete( dim );
+                }
+                session.delete( toDeletePers );
+                return null;
+            }
+        }, true );
+
+    }
+
 }

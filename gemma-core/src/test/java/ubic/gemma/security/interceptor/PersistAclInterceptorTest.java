@@ -74,13 +74,14 @@ public class PersistAclInterceptorTest extends AbstractExpressionExperimentTest 
      * @throws Exception
      */
     public void testCascadeCreateAndDelete() throws Exception {
+        setComplete();
         ExpressionExperiment ee = this.getTestExpressionExperimentWithAllDependencies();
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ee ) ) == null ) {
             fail( "Failed to create ACL for " + ee );
         }
 
-        assert ee.getExperimentalDesigns() != null : "No experimentalDesigns";
-        ExperimentalDesign ed = ee.getExperimentalDesigns();
+        assert ee.getExperimentalDesign() != null : "No experimentalDesign";
+        ExperimentalDesign ed = ee.getExperimentalDesign();
 
         if ( basicAclExtendedDao.getAcls( new NamedEntityObjectIdentity( ed ) ) == null ) {
             fail( "Failed to cascade create ACL for " + ed );

@@ -50,7 +50,7 @@ public class SeriesFetcher extends FtpFetcher {
         log.info( "Seeking GSE  file for " + accession );
 
         try {
-            if ( this.f == null || !this.f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( this.ftpClient == null || !this.ftpClient.isConnected() ) ftpClient = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
             File newDir = mkdir( accession );
 
             File outputFile = new File( newDir, accession + "_family.soft.gz" );
@@ -58,8 +58,8 @@ public class SeriesFetcher extends FtpFetcher {
 
             // String seekFile = baseDir + "/" + accession + "_family.soft.gz";
             String seekFile = baseDir + accession + "/" + accession + "_family.soft.gz";
-            boolean success = NetUtils.ftpDownloadFile( f, seekFile, outputFile, force );
-            f.disconnect();
+            boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
+            ftpClient.disconnect();
             
             if ( success ) {
                 LocalFile file = fetchedFile( seekFile, outputFileName );

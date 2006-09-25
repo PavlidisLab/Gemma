@@ -34,6 +34,9 @@ import org.acegisecurity.acl.basic.SimpleAclEntry;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.aop.AfterReturningAdvice;
@@ -175,6 +178,17 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         assert args != null;
         assert args.length == 1;
         Object persistentObject = getPersistentObject( retValue, m, args );
+
+        Session sess = crudUtils.getSessionFactory().openSession();
+
+        try {
+            Hibernate.initialize( persistentObject );
+        } catch ( HibernateException e ) {
+            // this can result in a second objet being created if the object is already in a session that has not been
+            // flushed.
+            persistentObject = sess.merge( persistentObject );
+        }
+
         if ( persistentObject == null ) return;
         if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
             for ( Object o : ( Collection<Object> ) persistentObject ) {
@@ -186,6 +200,8 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
         } else { // note that check for securable is in the pointcut.
             processObject( m, persistentObject );
         }
+
+        sess.close();
     }
 
     /**
@@ -255,16 +271,20 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
                 if ( log.isDebugEnabled() ) log.debug( "Processing ACL for " + propertyNames[j] + ", Cascade=" + cs );
                 processObject( m, associatedObject );
             } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
-                Collection associatedObjects = ( Collection ) associatedObject;
-                for ( Object object2 : associatedObjects ) {
-                    if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
-                        if ( log.isDebugEnabled() ) {
-                            log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
-                                    + ", Cascade=" + cs );
-                        }
-                        processObject( m, object2 );
-                    }
-                }
+
+                /*
+                 * This block commented out because of lazy-load problems.
+                 */
+                // Collection associatedObjects = ( Collection ) associatedObject;
+                // for ( Object object2 : associatedObjects ) {
+                // if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+                // if ( log.isDebugEnabled() ) {
+                // log.debug( "Processing ACL for member " + object2 + " of collection " + propertyNames[j]
+                // + ", Cascade=" + cs );
+                // }
+                // processObject( m, object2 );
+                // }
+                // }
             }
         }
     }

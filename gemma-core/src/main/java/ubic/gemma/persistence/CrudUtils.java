@@ -653,4 +653,11 @@ public class CrudUtils implements InitializingBean, ApplicationContextAware {
     public static boolean methodIsUpdate( Method m ) {
         return m.getName().equals( "update" );
     }
+
+    /**
+     * @return the sessionFactory
+     */
+    public SessionFactory getSessionFactory() {
+        return this.sessionFactory;
+    }
 }

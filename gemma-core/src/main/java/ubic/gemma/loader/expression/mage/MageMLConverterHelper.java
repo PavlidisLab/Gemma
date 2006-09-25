@@ -281,6 +281,16 @@ public class MageMLConverterHelper {
                 .newInstance();
         Integer numFeatures = mageObj.getNumberOfFeatures();
         if ( numFeatures != null ) result.setAdvertisedNumberOfDesignElements( numFeatures.intValue() );
+
+        // convert the identifier into a external reference. We can use this to fetch the array design later.
+        String accession = mageObj.getIdentifier();
+
+        DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
+        acc.setAccession( accession );
+        acc.setExternalDatabase( this.getArrayExpressReference() );
+
+        result.getExternalReferences().add( acc );
+
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;
@@ -2558,21 +2568,21 @@ public class MageMLConverterHelper {
 
                 if ( repr == null ) continue;
 
-                Reporter conv = convertReporter( repr );
+                Reporter convertedReporter = convertReporter( repr );
 
-                if ( conv == null ) {
+                if ( convertedReporter == null ) {
                     log.error( "Null converted reporter!" );
                     continue;
                 }
 
-                conv.setCompositeSequence( owner );
+                convertedReporter.setCompositeSequence( owner );
 
-                result.add( conv );
+                result.add( convertedReporter );
 
                 Integer m = rps.getStart();
                 if ( m == null ) continue;
 
-                conv.setStartInBioChar( m.longValue() );
+                convertedReporter.setStartInBioChar( m.longValue() );
             }
             break; // only take the first one;
         }
@@ -2990,6 +3000,16 @@ public class MageMLConverterHelper {
 
     }
 
+    ExternalDatabase arrayExpress = null;
+
+    private ExternalDatabase getArrayExpressReference() {
+        if ( arrayExpress == null ) {
+            arrayExpress = ExternalDatabase.Factory.newInstance();
+            arrayExpress.setName( "ArrayExpress" );
+        }
+        return arrayExpress;
+    }
+
     /**
      * 
      */
@@ -3391,8 +3411,8 @@ public class MageMLConverterHelper {
 
         Collection<CompositeSequence> designObjs = initializeCompositeSequenceCollection( gemmaObj );
 
-        for ( CompositeGroup rg : compositeGroups ) {
-            List<org.biomage.DesignElement.CompositeSequence> reps = rg.getCompositeSequences();
+        for ( CompositeGroup compositeGroup : compositeGroups ) {
+            List<org.biomage.DesignElement.CompositeSequence> reps = compositeGroup.getCompositeSequences();
             for ( org.biomage.DesignElement.CompositeSequence compseq : reps ) {
                 CompositeSequence csconv = convertCompositeSequence( compseq );
                 csconv.setArrayDesign( gemmaObj );

@@ -58,26 +58,31 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
         ed.setDescription( "An experimental design created from the ExperimentalDesignFormControllerTest." );
 
         Collection<ExperimentalFactor> efCol = new HashSet();
+
+        ExperimentalDesignService eds = ( ExperimentalDesignService ) getBean( "experimentalDesignService" );
+        ed = eds.findOrCreate( ed );
+
         for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
             ef.setName( "Experimental Factor Bot" );
             ef.setDescription( "An experimental factor created from the ExperimentalDesignFormControllerTest" );
             efCol.add( ef );
+            ef.setExperimentalDesign( ed );
         }
         ed.setExperimentalFactors( efCol );
 
-        ExperimentalDesignService eds = ( ExperimentalDesignService ) getBean( "experimentalDesignService" );
-        ed = eds.findOrCreate( ed );
+        eds.update( ed );
+
         assert ed.getId() != null;
     }
-
-    /**
-     * @throws Exception
-     */
-    public void testSave() throws Exception {
-        log.debug( "testing save" );
-        // FIXME - implement this.
-    }
+//
+//    /**
+//     * @throws Exception
+//     */
+//    public void testSave() throws Exception {
+//        log.debug( "testing save" );
+//        // FIXME - implement this.
+//    }
 
     /**
      * @throws Exception
@@ -95,11 +100,11 @@ public class ExperimentalDesignFormControllerTest extends BaseTransactionalSprin
         assertEquals( "experimentalDesign.edit", mav.getViewName() );
     }
 
-    /**
-     * @throws Exception
-     */
-    public void testDelete() throws Exception {
-        log.debug( "testing delete" ); // FIXME - implement this.
-    }
+    // /**
+    // * @throws Exception
+    // */
+    // public void testDelete() throws Exception {
+    // log.debug( "testing delete" ); // FIXME - implement this.
+    //    }
 
 }
