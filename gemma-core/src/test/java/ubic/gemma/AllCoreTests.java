@@ -29,7 +29,7 @@ import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
 import ubic.gemma.loader.expression.arrayDesign.AllArrayDesignTests;
-import ubic.gemma.loader.expression.arrayExpress.DataFileFetcherTest;
+import ubic.gemma.loader.expression.arrayExpress.DataFileFetcherIntegrationTest;
 import ubic.gemma.loader.expression.geo.AllGeoTests;
 import ubic.gemma.loader.expression.mage.AllMageTests;
 import ubic.gemma.loader.expression.smd.AllSmdTests;
@@ -79,7 +79,7 @@ public class AllCoreTests {
 
         suite.addTestSuite( Gene2GOAssociationParserTest.class );
         suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
-        suite.addTestSuite( DataFileFetcherTest.class );
+        suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
         suite.addTestSuite( ExpressionDataMatrixTest.class );
         suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
