@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignFetcherTest extends TestCase {
+public class ArrayDesignFetcherIntegrationTest extends TestCase {
 
     /**
      * Test method for {@link ubic.gemma.loader.expression.arrayExpress.ArrayDesignFetcher#fetch(java.lang.String)}.

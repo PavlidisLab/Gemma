@@ -29,7 +29,7 @@ import ubic.gemma.model.common.description.LocalFile;
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcherTest extends TestCase {
+public class DataFileFetcherIntegrationTest extends TestCase {
     FtpArchiveFetcher faf;
 
     /*
