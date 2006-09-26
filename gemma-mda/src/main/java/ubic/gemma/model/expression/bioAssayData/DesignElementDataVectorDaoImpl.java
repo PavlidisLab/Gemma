@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -90,6 +92,45 @@ public class DesignElementDataVectorDaoImpl extends
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new designElementDataVector: " + designElementDataVector );
         return ( DesignElementDataVector ) create( designElementDataVector );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleQueryByGeneSymbolAndSpecies(java.lang.String,
+     *      java.lang.String)
+     */
+    @Override
+    protected Collection handleQueryByGeneSymbolAndSpecies( String geneSymbol, String species ) throws Exception {
+        final String queryString = "from DesignElementDataVectorImpl as d inner join d.designElement as de )";
+        // + "inner join de.biologicalCharacteristic as bs inner join bs.bioSequence2geneProduct as b2g "
+        // + "inner join b2g.geneProduct as gp inner join gp.gene as g "
+        // + "inner join g.taxon as t where g.symbol='GRIN1' and t.commonName='mouse' "
+        // + "and d.expressionExperiment.id in (1,4,6)";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            // queryObject.setParameter( "id", id );
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                log.debug( "size: " + results.size() );
+                for ( Object obj : results ) {
+                    log.debug( obj );
+                }
+                // if ( results.size() > 1 ) {
+                // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                // "More than one instance of 'Integer" + "' was found when executing query --> '"
+                // + queryString + "'" );
+                // } else if ( results.size() == 1 ) {
+                // result = results.iterator().next();
+                // }
+            }
+
+            return ( Collection ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }
