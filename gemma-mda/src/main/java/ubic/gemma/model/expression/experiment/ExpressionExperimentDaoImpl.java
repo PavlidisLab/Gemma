@@ -30,12 +30,9 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 
 /**

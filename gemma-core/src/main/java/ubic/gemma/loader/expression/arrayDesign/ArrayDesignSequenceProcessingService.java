@@ -206,12 +206,6 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException {
 
-        // FIXME: need to add a check to make sure reportes are no filled in already
-        // if ( arrayDesign.getReporters().size() != 0 ) {
-        // throw new IllegalArgumentException(
-        // "Call with a 'naive' arrayDesign, this one had reporters filled in already." );
-        // }
-
         log.info( "Processing Affymetrix design" );
 
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;

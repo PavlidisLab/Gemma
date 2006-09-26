@@ -45,8 +45,8 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
     private BioSequenceService bioSequenceService;
     private TaxonService taxonService;
     private String taxonName;
-    private String file;
-    private int limit = -1;
+    private String fileArg;
+    private int limitArg = -1;
 
     @SuppressWarnings("static-access")
     @Override
@@ -84,10 +84,10 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
             Exception err = processCommandLine( "Seqref loader", args );
             if ( err != null ) return err;
 
-            if ( StringUtils.isNotBlank( file ) ) {
-                this.load( taxonName, file, limit );
+            if ( StringUtils.isNotBlank( fileArg ) ) {
+                this.load( taxonName, fileArg, limitArg );
             } else {
-                this.load( taxonName, limit );
+                this.load( taxonName, limitArg );
             }
 
         } catch ( Exception e ) {
@@ -169,11 +169,11 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         }
 
         if ( hasOption( 'f' ) ) {
-            file = getOptionValue( 'f' );
+            fileArg = getOptionValue( 'f' );
         }
 
         if ( hasOption( 'L' ) ) {
-            limit = getIntegerOptionValue( 'L' );
+            limitArg = getIntegerOptionValue( 'L' );
         }
         // MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
         this.bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );

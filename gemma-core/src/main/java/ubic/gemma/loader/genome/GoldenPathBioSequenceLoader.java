@@ -112,7 +112,7 @@ public class GoldenPathBioSequenceLoader {
      * @return
      * @throws IOException
      */
-    public void load( final InputStream inputStream ) throws IOException {
+    public void load( final InputStream inputStream ) {
 
         final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
         final SecurityContext context = SecurityContextHolder.getContext();

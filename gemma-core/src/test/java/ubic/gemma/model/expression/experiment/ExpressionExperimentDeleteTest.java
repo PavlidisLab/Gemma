@@ -19,9 +19,6 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import org.acegisecurity.Authentication;
-import org.acegisecurity.AuthenticationManager;
-import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -29,15 +26,11 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.testing.TestPersistentObjectHelper;
-import ubic.gemma.util.ConfigUtils;
 
 /**
- * @spring.bean id="expressionExperimentDeleteTest"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
+ * @author kelsey
+ * @version $Id$
  */
-
 public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
     private PersisterHelper persisterHelper;
@@ -45,13 +38,6 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
     private ExpressionExperimentService svc;
 
     public void testExpressionExperimentDelete() {
-
-        // AuthenticationUtils.anonymousAuthenticate( ConfigUtils.getString( "gemma.admin.user" ),
-        // ( AuthenticationManager ) this.getBean( "authenticationManager" ) );
-
-//        Authentication authRequest = new UsernamePasswordAuthenticationToken( ConfigUtils
-//                .getString( "gemma.admin.user" ), ConfigUtils.getString( "gemma.admin.password" ) );
-//        ( ( AuthenticationManager ) this.getBean( "authenticationManager" ) ).authenticate( authRequest );
 
         SessionFactory sessf = ( SessionFactory ) this.getBean( "sessionFactory" );
         Session sess = sessf.openSession();
@@ -62,9 +48,6 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
         helper.setExternalDatabaseService( externalDatabaseService );
 
         ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies();
-
-        // sess.lock( ee, LockMode.NONE );
-        // ee = svc.create( ee );
 
         assertNotNull( svc.findById( ee.getId() ) );
         svc.delete( ee );

@@ -339,7 +339,7 @@ public class ProbeMapperCli extends AbstractCLI {
      */
     @SuppressWarnings("unchecked")
     public Map<String, Collection<BlatAssociation>> runOnBlatResults( InputStream blatResultInputStream, Writer output )
-            throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+            throws IOException, SQLException {
 
         GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username,
                 password );
@@ -383,7 +383,7 @@ public class ProbeMapperCli extends AbstractCLI {
      * @return
      */
     public Map<String, Collection<BlatAssociation>> runOnGbIds( InputStream stream, Writer writer ) throws IOException,
-            SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+            SQLException {
         GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( port, databaseName, host, username,
                 password );
 

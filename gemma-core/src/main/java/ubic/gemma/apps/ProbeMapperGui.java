@@ -165,12 +165,6 @@ public class ProbeMapperGui extends JFrame {
             log.error( e, e );
         } catch ( SQLException e ) {
             log.error( e, e );
-        } catch ( InstantiationException e ) {
-            log.error( e, e );
-        } catch ( IllegalAccessException e ) {
-            log.error( e, e );
-        } catch ( ClassNotFoundException e ) {
-            log.error( e, e );
         }
 
     }

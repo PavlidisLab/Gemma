@@ -34,8 +34,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  */
 public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
     String email = null;
-    String adminName;
-    String userName;
+
     private UserDao userDao;
     private final Log log = LogFactory.getLog( UserDaoImplTest.class );
     private User testUser;
@@ -69,7 +68,7 @@ public class UserDaoImplTest extends BaseTransactionalSpringContextTest {
 
         String rand = ( new Date() ).toString();
 
-        String adminName =RandomStringUtils.randomAlphabetic( 16 );
+        String adminName = RandomStringUtils.randomAlphabetic( 16 );
         String userName = RandomStringUtils.randomAlphabetic( 16 );
         User checkUser = userDao.findByUserName( adminName );
 

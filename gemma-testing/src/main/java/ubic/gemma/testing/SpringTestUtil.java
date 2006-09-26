@@ -22,7 +22,6 @@ import org.acegisecurity.GrantedAuthority;
 import org.acegisecurity.GrantedAuthorityImpl;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
-import org.acegisecurity.context.SecurityContextImpl;
 import org.acegisecurity.providers.AbstractAuthenticationToken;
 import org.acegisecurity.providers.ProviderManager;
 import org.acegisecurity.providers.TestingAuthenticationProvider;
