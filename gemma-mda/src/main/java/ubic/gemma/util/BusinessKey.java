@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
@@ -382,6 +383,14 @@ public class BusinessKey {
                     Restrictions.eq( "accession", experimentalFactor.getCategory().getAccession() ) ).createCriteria(
                     "externalDatabase" ).add(
                     Restrictions.eq( "name", experimentalFactor.getCategory().getExternalDatabase().getName() ) );
+        }
+    }
+
+    public static void checkKey( DesignElementDataVector designElementDataVector ) {
+        if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
+                || designElementDataVector.getExpressionExperiment() == null ) {
+            throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
+                    + designElementDataVector );
         }
     }
 }

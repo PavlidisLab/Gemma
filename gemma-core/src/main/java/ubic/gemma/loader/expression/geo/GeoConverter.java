@@ -562,7 +562,7 @@ public class GeoConverter implements Converter {
                 log.warn( "No bioassay match for " + sampleAcc );
             }
         }
-        log.info( resultBioAssayDimension.getBioAssays() + " Bioassays in biodimension" );
+        log.info( resultBioAssayDimension.getBioAssays().size() + " Bioassays in biodimension" );
         resultBioAssayDimension.setName( formatName( bioAssayDimName ) );
         resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
         return resultBioAssayDimension;
@@ -1260,10 +1260,11 @@ public class GeoConverter implements Converter {
 
         // get just the samples used in this series
         Collection<GeoSample> datasetSamples = new ArrayList<GeoSample>();
+
         for ( GeoSample sample : seriesSamples ) {
             if ( geoDataset.getColumnNames().contains( sample.getGeoAccession() ) ) {
-                if ( log.isInfoEnabled() ) {
-                    log.info( "Dataset " + geoDataset + " includes sample " + sample + " on platform "
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "Dataset " + geoDataset + " includes sample " + sample + " on platform "
                             + sample.getPlatforms().iterator().next() );
                 }
                 datasetSamples.add( sample );
@@ -1274,6 +1275,7 @@ public class GeoConverter implements Converter {
                         + sample.getPlatforms().iterator().next() );
             }
         }
+
         return datasetSamples;
     }
 

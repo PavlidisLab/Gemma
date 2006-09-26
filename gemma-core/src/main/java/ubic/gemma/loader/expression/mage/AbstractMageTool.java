@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
 
 /**
- * TODO - DOCUMENT ME
+ * Superclass for MageML - related loading tools.
  * 
  * @author pavlidis
  * @version $Id$

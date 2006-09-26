@@ -43,8 +43,8 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  */
 public class UserDetailsServiceImpl implements UserDetailsService, ApplicationContextAware {
 
-    UserService userService;
-    private ApplicationContext applicationContext;
+    static UserService userService;
+    private static ApplicationContext applicationContext;
     private static Map<String, User> userCache = new HashMap<String, User>();
 
     /**
@@ -61,6 +61,12 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
      */
     public UserDetails loadUserByUsername( String username ) throws UsernameNotFoundException, DataAccessException {
 
+        User u = getUserForUserName( username );
+        userCache.put( username, u );
+        return new UserDetailsImpl( u );
+    }
+
+    private static User getUserForUserName( String username ) {
         /*
          * This is needed to provide initial authentication to the session, so logging in can be attempted. Alternative:
          * get the user without using an authenticated method. (e.g., through a
@@ -75,8 +81,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
         if ( u == null ) {
             throw new UsernameNotFoundException( username + " not found" );
         }
-        userCache.put( username, u );
-        return new UserDetailsImpl( u );
+        return u;
     }
 
     /**
@@ -97,13 +102,20 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
     }
 
     /**
-     * Avoid doing this from the database, because
-     * 
      * @param userName
      * @return
      */
     public static User getCurrentUser() {
-        return userCache.get( getCurrentUsername() );
+        if ( getCurrentUsername() == null ) {
+            throw new IllegalStateException( "No current user!" );
+        }
+        if ( userCache.containsKey( getCurrentUsername() ) ) {
+            return userCache.get( getCurrentUsername() );
+        } else {
+            User u = getUserForUserName( getCurrentUsername() );
+            userCache.put( getCurrentUsername(), u );
+            return u;
+        }
     }
 
     /*

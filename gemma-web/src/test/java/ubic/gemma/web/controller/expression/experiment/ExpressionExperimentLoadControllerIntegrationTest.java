@@ -25,6 +25,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.AbstractGeoServiceTest;
@@ -40,6 +42,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     private ExpressionExperimentLoadController controller;
     ExpressionExperiment ee = null;
 
+    ArrayDesign ad;
     AbstractGeoService geoService;
 
     protected void init() {
@@ -69,6 +72,10 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
                     .getBean( "expressionExperimentService" );
             service.delete( ee );
         }
+        if ( ad != null ) {
+            ArrayDesignService adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+            adService.remove( ad );
+        }
 
     }
 
@@ -92,15 +99,15 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gds999Short" ) );
+                + "gds999medium" ) );
         controller.setGeoDatasetService( ( GeoDatasetService ) geoService );
 
         request.setParameter( "accession", "GDS999" );
         request.setParameter( "loadPlatformOnly", "false" );
-        request.setRemoteUser( "test" );
+        request.setRemoteUser( "administrator" );
         ModelAndView mv = controller.handleRequest( request, response );
         ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
-
+        ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
     }
@@ -120,6 +127,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
         ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
+        ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
     }
@@ -136,8 +144,8 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     public final void testShowForm() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newGet( "/loadExpressionExperiment.html" );
-        request.setParameter( "accession", "GDS999" );
-        request.setParameter( "loadPlatformOnly", "false" );
+//        request.setParameter( "accession", "GDS999" );
+//        request.setParameter( "loadPlatformOnly", "false" );
         ModelAndView mv = controller.handleRequest( request, response );
         assertEquals( "Returned incorrect view name", "loadExpressionExperimentForm", mv.getViewName() );
 

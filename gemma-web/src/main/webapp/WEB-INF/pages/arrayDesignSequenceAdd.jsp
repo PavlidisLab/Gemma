@@ -45,7 +45,7 @@
 		</tr>
 		<tr>
 			<td>
-				<Gemma:label styleClass="desc" key="taxon" />
+				<Gemma:label styleClass="desc" key="taxon.title" />
 				<spring:bind path="arrayDesignSequenceAddCommand.taxon">
 					<select name="${status.expression}">
 						<c:forEach items="${taxa}" var="taxon">

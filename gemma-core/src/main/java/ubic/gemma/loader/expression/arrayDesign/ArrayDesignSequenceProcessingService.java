@@ -276,7 +276,6 @@ public class ArrayDesignSequenceProcessingService {
             }
         }
 
-        // FIXME: if value already exists, compare and warn if it is different
         arrayDesign.setAdvertisedNumberOfDesignElements( compositeSequencesFromProbes.size() );
         arrayDesignService.update( arrayDesign );
 

@@ -71,9 +71,10 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
         return this.getTaxonDao().findByCommonName( commonName );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Taxon> handleLoadAll() throws Exception {
-        return this.getTaxonDao().loadAll();
+         return this.getTaxonDao().loadAll();
     }
 
 }

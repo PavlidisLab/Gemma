@@ -159,10 +159,12 @@ public class AuditInterceptor implements MethodInterceptor {
 
         if ( at != null && at.getEvents().size() == 1
                 && at.getEvents().iterator().next().getAction() == AuditAction.CREATE ) {
-            log.warn( "Expected empty or null audit trail for creating object, but got "
 
-            + at.getEvents().size() + " events for " + d + ", first one was "
-                    + at.getEvents().iterator().next().getAction() );
+            // This can happen when we persist objects and then let this interceptor look at them again while persisting
+            // parent objects. Harmless.
+
+            // log.warn( "Expected empty or null audit trail for creating object, but got " + at.getEvents().size()
+            // + " events for " + d + ", first one was " + at.getEvents().iterator().next().getAction() );
             return;
         }
 

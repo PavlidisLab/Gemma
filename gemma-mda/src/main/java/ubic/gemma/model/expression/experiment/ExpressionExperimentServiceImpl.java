@@ -97,24 +97,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
-
         this.getExpressionExperimentDao().update( expressionExperiment );
-        loadLazyHibernateCollections( expressionExperiment );// TODO use lazy=false instead
-    }
-
-    /**
-     * Collections with lazy=true are initially not filled with values from the database. An operation such as size()
-     * will load the collection.
-     * 
-     * @param expressionExperiment
-     */
-    private void loadLazyHibernateCollections( ExpressionExperiment expressionExperiment ) {
-
-        Collection<BioAssay> bioassays = expressionExperiment.getBioAssays();
-        for ( BioAssay bioassay : bioassays ) {
-            // bioassay.getArrayDesignsUsed().size(); // FIXME, not needed because arrayDesigns is no longer a
-            // colection.
-        }
     }
 
     /*

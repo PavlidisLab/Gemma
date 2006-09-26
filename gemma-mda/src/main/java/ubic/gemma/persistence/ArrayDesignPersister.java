@@ -18,10 +18,17 @@
  */
 package ubic.gemma.persistence;
 
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.Session;
+
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -231,6 +238,13 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                                 .getBiologicalCharacteristic() ) );
             }
             designElement = compositeSequenceService.create( ( CompositeSequence ) designElement );
+
+            try {
+                Hibernate.initialize( arrayDesign.getCompositeSequences() );
+            } catch ( HibernateException e ) {
+                Session sess = this.getCurrentSession();
+                sess.lock( arrayDesign, LockMode.NONE );
+            }
             arrayDesign.getCompositeSequences().add( ( CompositeSequence ) designElement );
 
         } else {
@@ -253,7 +267,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         if ( arrayDesign == null ) return null;
 
-        log.debug( "Persisting new array design " + arrayDesign.getName() );
+        log.info( "Persisting new array design " + arrayDesign.getName() );
 
         arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
 
@@ -263,23 +277,39 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
         }
 
-        persistCollectionElements( arrayDesign.getExternalReferences() );
+        for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
+            externalRef.setExternalDatabase( persistExternalDatabase( externalRef.getExternalDatabase() ) );
+        }
 
         Collection<CompositeSequence> c = arrayDesign.getCompositeSequences();
         arrayDesign.setCompositeSequences( null ); // so we can perist it.
         int count = 0;
+        long startTime = System.currentTimeMillis();
         for ( CompositeSequence sequence : c ) {
             sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
             if ( ++count % 1000 == 0 && log.isInfoEnabled() ) {
-                log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign );
+                log.info( count
+                        + " compositeSequence biologicalCharacteristics checked for "
+                        + arrayDesign
+                        + "( elapsed time="
+                        + NumberFormat.getNumberInstance().format(
+                                0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) + " minutes)" );
             }
         }
+
+        log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign + "( elapsed time="
+                + NumberFormat.getNumberInstance().format( 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 )
+                + " minutes)" );
 
         arrayDesign.setCompositeSequences( null );
 
         arrayDesign = arrayDesignService.create( arrayDesign );
 
+        // this.getCurrentSession().evict( arrayDesign );
+
         arrayDesign.setCompositeSequences( c );
+
+        // arrayDesign = ( ArrayDesign ) this.getCurrentSession().merge( arrayDesign );
 
         Map<String, Collection<Reporter>> csNameReporterMap = new HashMap<String, Collection<Reporter>>();
         for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
@@ -296,7 +326,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         // now have persistent CS
         for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
-            assert sequence.getId() != null;
             sequence.setComponentReporters( csNameReporterMap.get( sequence.getName() ) );
             for ( Reporter reporter : sequence.getComponentReporters() ) {
                 reporter.setCompositeSequence( sequence );

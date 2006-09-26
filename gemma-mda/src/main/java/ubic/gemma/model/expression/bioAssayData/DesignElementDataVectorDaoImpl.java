@@ -25,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.util.BusinessKey;
+
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  * @author pavlidis
@@ -41,6 +43,8 @@ public class DesignElementDataVectorDaoImpl extends
     @Override
     public DesignElementDataVector find( DesignElementDataVector designElementDataVector ) {
         try {
+            BusinessKey.checkKey( designElementDataVector );
+
             Criteria queryObject = super.getSession( false ).createCriteria( DesignElementDataVector.class );
 
             queryObject.createCriteria( "designElement" ).add(
@@ -79,16 +83,11 @@ public class DesignElementDataVectorDaoImpl extends
      */
     @Override
     public DesignElementDataVector findOrCreate( DesignElementDataVector designElementDataVector ) {
-        if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
-                || designElementDataVector.getExpressionExperiment() == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
-                    + designElementDataVector );
-        }
-        DesignElementDataVector newDesignElementDataVector = find( designElementDataVector );
-        if ( newDesignElementDataVector != null ) {
-            if ( log.isDebugEnabled() )
-                log.debug( "Found existing designElementDataVector: " + newDesignElementDataVector );
-            return newDesignElementDataVector;
+
+        DesignElementDataVector existing = find( designElementDataVector );
+        if ( existing != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing designElementDataVector: " + existing );
+            return existing;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new designElementDataVector: " + designElementDataVector );
         return ( DesignElementDataVector ) create( designElementDataVector );

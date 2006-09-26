@@ -157,18 +157,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return queryByIdReturnInteger( id, queryString );
     }
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadReporters(java.lang.Long)
-    // */
-    // @Override
-    // protected Collection handleLoadReporters( Long id ) throws Exception {
-    // final String queryString = "select rep from ReporterImpl as rep inner join rep.arrayDesign as ar where ar.id =
-    // :id";
-    // return queryByIdReturnCollection( id, queryString );
-    // }
-
     /*
      * (non-Javadoc)
      * 

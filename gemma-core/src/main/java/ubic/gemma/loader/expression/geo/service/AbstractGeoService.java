@@ -59,6 +59,15 @@ public abstract class AbstractGeoService {
     }
 
     /**
+     * This is supplied to allow clients to check that the generator has been set correctly.
+     * 
+     * @return
+     */
+    public GeoDomainObjectGenerator getGeoDomainObjectGenerator() {
+        return this.geoDomainObjectGenerator;
+    }
+
+    /**
      * @param expressionLoader
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {

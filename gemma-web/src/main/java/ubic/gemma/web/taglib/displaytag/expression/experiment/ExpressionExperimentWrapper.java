@@ -196,16 +196,15 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
         Collection bioAssayCol = object.getBioAssays();
         BioAssay bioAssay = null;
-
-        if ( bioAssayCol != null )
-            bioAssay = ( BioAssay ) bioAssayCol.iterator().next();
-
-        else
-            return "Taxon unavailable";
-
-        Collection bioMaterialCol = bioAssay.getSamplesUsed();
         Taxon taxon = null;
 
+        if ( bioAssayCol != null && bioAssayCol.size() > 0 ) {
+            bioAssay = ( BioAssay ) bioAssayCol.iterator().next();
+        } else {
+            return "Taxon unavailable";
+        }
+
+        Collection bioMaterialCol = bioAssay.getSamplesUsed();
         if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) {
             BioMaterial bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next();
             taxon = bioMaterial.getSourceTaxon();

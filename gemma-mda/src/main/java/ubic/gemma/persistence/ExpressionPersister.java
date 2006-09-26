@@ -167,10 +167,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
             }
 
-            if ( ++count % 100 == 0 ) {
-                sess.flush();
-                sess.clear();
-            }
+//            if ( ++count % 100 == 0 ) {
+//                sess.flush();
+//                sess.clear();
+//            }
         }
         log.info( "Done, filled in " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
         return bioAssays;
@@ -303,12 +303,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
         }
 
-        if ( entity.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
-
-            processExperimentalDesign( experimentalDesign );
-        }
-
         if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
 
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
@@ -322,6 +316,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 fillInBioAssayAssociations( bA );
                 alreadyFilled.add( bA );
             }
+        }
+
+        if ( entity.getExperimentalDesign() != null ) {
+            ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
+            processExperimentalDesign( experimentalDesign, entity.getBioAssays() );
         }
 
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
@@ -340,7 +339,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     /**
      * @param experimentalDesign
      */
-    private void processExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+    private void processExperimentalDesign( ExperimentalDesign experimentalDesign, Collection<BioAssay> bioAssays ) {
+
+        /* At this point, the bioassay experimental factor values have already been persisted. */
 
         persistCollectionElements( experimentalDesign.getTypes() );
 
@@ -369,7 +370,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 fillInFactorValueAssociations( factorValue );
             }
-
         }
     }
 

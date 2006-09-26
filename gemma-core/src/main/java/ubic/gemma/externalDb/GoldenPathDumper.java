@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
@@ -183,6 +184,9 @@ public class GoldenPathDumper extends GoldenPath {
             Long length = rs.getLong( "qSize" );
             bioSequence.setName( name );
             bioSequence.setLength( length );
+            bioSequence.setIsApproximateLength( false );
+            bioSequence.setPolymerType( PolymerType.DNA );
+            bioSequence.setIsCircular( false );
 
             de.setAccession( name );
             de.setExternalDatabase( genbank );
@@ -209,6 +213,8 @@ public class GoldenPathDumper extends GoldenPath {
 
             String name = rs.getString( "name" );
             bioSequence.setName( name );
+            bioSequence.setPolymerType( PolymerType.DNA );
+            bioSequence.setIsCircular( false );
 
             de.setAccession( name );
             de.setExternalDatabase( genbank );
