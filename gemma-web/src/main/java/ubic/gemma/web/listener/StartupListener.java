@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.listener;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +43,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserRoleDao;
+import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.LabelValue;
 
@@ -74,6 +76,14 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         // call Spring's context ContextLoaderListener to initialize
         // all the context files specified in web.xml
         super.contextInitialized( event );
+
+        /* delete the lucene lock file */
+        try {
+            CompassUtils.deleteCompassLocks();
+        } catch ( IOException e ) {
+            log.error( "Problem deleting compass locks.  Error is: " );
+            e.printStackTrace();
+        }
 
         ServletContext context = event.getServletContext();
 
