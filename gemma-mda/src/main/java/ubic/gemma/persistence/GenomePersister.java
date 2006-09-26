@@ -24,6 +24,7 @@ import java.util.Map;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -95,6 +96,8 @@ abstract public class GenomePersister extends CommonPersister {
             return persistBioSequence2GeneProduct( ( BioSequence2GeneProduct ) entity );
         } else if ( entity instanceof SequenceSimilaritySearchResult ) {
             return persistSequenceSimilaritySearchResult( ( SequenceSimilaritySearchResult ) entity );
+        } else if ( entity instanceof DatabaseEntry ) {
+            return persistDatabaseEntry( ( DatabaseEntry ) entity );
         }
         return super.persist( entity );
     }
@@ -110,10 +113,28 @@ abstract public class GenomePersister extends CommonPersister {
         gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         gene.setTaxon( ( Taxon ) persistTaxon( gene.getTaxon() ) );
 
+        for ( DatabaseEntry accession : gene.getAccessions() ) {
+            accession.setExternalDatabase( persistExternalDatabase( accession.getExternalDatabase() ) );
+        }
+
+        Collection<GeneProduct> temp = gene.getProducts();
+        gene.setProducts( null );
+
         gene = geneService.findOrCreate( gene );
+
+        if ( temp != null ) {
+            for ( GeneProduct product : temp ) {
+                product.setGene( gene );
+                fillInGeneProductExternalDatabases( product );
+            }
+        }
+        gene.setProducts( temp );
+
         for ( GeneAlias alias : gene.getAliases() ) {
             alias.setGene( gene );
         }
+
+        geneService.update( gene );
 
         // gene.setGeneAlias( temp );
         return gene;
@@ -219,7 +240,15 @@ abstract public class GenomePersister extends CommonPersister {
         Gene g = geneProduct.getGene();
         geneProduct.setGene( persistGene( g ) ); // should cascade to the geneproducts.
 
+        fillInGeneProductExternalDatabases( geneProduct );
+
         return geneProductService.create( geneProduct );
+    }
+
+    private void fillInGeneProductExternalDatabases( GeneProduct geneProduct ) {
+        for ( DatabaseEntry accession : geneProduct.getAccessions() ) {
+            accession.setExternalDatabase( persistExternalDatabase( accession.getExternalDatabase() ) );
+        }
     }
 
     /**
@@ -327,4 +356,5 @@ abstract public class GenomePersister extends CommonPersister {
     public void setGeneProductService( GeneProductService geneProductService ) {
         this.geneProductService = geneProductService;
     }
+
 }

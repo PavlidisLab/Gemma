@@ -45,7 +45,8 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
     private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 13;
 
     private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
-
+    
+    
     /*
      * (non-Javadoc)
      * 

@@ -413,7 +413,7 @@ abstract public class CommonPersister extends AbstractPersister {
         databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
         assert databaseEntry.getExternalDatabase().getId() != null;
         DatabaseEntry nde = databaseEntryService.findOrCreate( databaseEntry );
-        log.debug( "Persisted " + nde );
+        log.info( "Persisted DatabaseEntry" + nde );
         return nde;
     }
 

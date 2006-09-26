@@ -69,7 +69,7 @@ public abstract class BasicLineMapParser implements LineParser {
      * 
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
-    public void parse( InputStream is ) throws IOException {
+    public void parse( InputStream is) throws IOException {
 
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );

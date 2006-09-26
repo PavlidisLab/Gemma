@@ -409,9 +409,9 @@
                 ubic.gemma.model.genome.gene.CandidateGeneListService.findAll=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.genome.gene.CandidateGeneListService.setActor=user,admin
                 ubic.gemma.model.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
-                ubic.gemma.model.genome.gene.GeneService.update=ACL_SECURABLE_EDIT
+                ubic.gemma.model.genome.gene.GeneService.update=admin
                 ubic.gemma.model.genome.gene.GeneService.loadAll=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.genome.gene.GeneService.remove=ACL_SECURABLE_EDIT
+                ubic.gemma.model.genome.gene.GeneService.remove=admin
                 ubic.gemma.model.genome.gene.GeneService.findByOfficialName=user,admin,ROLE_ANONYMOUS 
                 ubic.gemma.model.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.genome.gene.GeneService.findByOfficialSymbol=user,admin,ROLE_ANONYMOUS

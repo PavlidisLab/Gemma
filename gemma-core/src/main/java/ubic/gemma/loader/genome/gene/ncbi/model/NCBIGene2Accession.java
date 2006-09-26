@@ -79,17 +79,104 @@ public class NCBIGene2Accession {
     private int taxId;
     private String geneId;
     private String status;
-    private String RNANucleotideAccession;
-    private String RNANucleotideGI;
+    private String rnaNucleotideAccession;
+    private String rnaNucleotideAccessionVersion;
+    private String rnaNucleotideGI;
     private String proteinAccession;
+    private String proteinAccessionVersion;
     private String proteinGI;
-    private String GenomicNucleotideAccession;
+    private String genomicNucleotideAccession;
+    private String genomicNucleotideAccessionVersion;
     private String genomicNucleotideGI;
     private int startPosition;
     private int endPosition;
     private String orientation;
 
     private NCBIGeneInfo info;
+
+    /**
+     * @return the genomicNucleotideAccession
+     */
+    public String getGenomicNucleotideAccession() {
+        return genomicNucleotideAccession;
+    }
+
+    /**
+     * @param genomicNucleotideAccession the genomicNucleotideAccession to set
+     */
+    public void setGenomicNucleotideAccession( String genomicNucleotideAccession ) {
+        this.genomicNucleotideAccession = genomicNucleotideAccession;
+    }
+
+    /**
+     * @return the genomicNucleotideAccessionVersion
+     */
+    public String getGenomicNucleotideAccessionVersion() {
+        return genomicNucleotideAccessionVersion;
+    }
+
+    /**
+     * @param genomicNucleotideAccessionVersion the genomicNucleotideAccessionVersion to set
+     */
+    public void setGenomicNucleotideAccessionVersion( String genomicNucleotideAccessionVersion ) {
+        this.genomicNucleotideAccessionVersion = genomicNucleotideAccessionVersion;
+    }
+
+    /**
+     * @return the proteinAccessionVersion
+     */
+    public String getProteinAccessionVersion() {
+        return proteinAccessionVersion;
+    }
+
+    /**
+     * @param proteinAccessionVersion the proteinAccessionVersion to set
+     */
+    public void setProteinAccessionVersion( String proteinAccessionVersion ) {
+        this.proteinAccessionVersion = proteinAccessionVersion;
+    }
+
+    /**
+     * @return the rnaNucleotideAccession
+     */
+    public String getRnaNucleotideAccession() {
+        return rnaNucleotideAccession;
+    }
+
+    /**
+     * @param rnaNucleotideAccession the rnaNucleotideAccession to set
+     */
+    public void setRnaNucleotideAccession( String rnaNucleotideAccession ) {
+        this.rnaNucleotideAccession = rnaNucleotideAccession;
+    }
+
+    /**
+     * @return the rnaNucleotideAccessionVersion
+     */
+    public String getRnaNucleotideAccessionVersion() {
+        return rnaNucleotideAccessionVersion;
+    }
+
+    /**
+     * @param rnaNucleotideAccessionVersion the rnaNucleotideAccessionVersion to set
+     */
+    public void setRnaNucleotideAccessionVersion( String rnaNucleotideAccessionVersion ) {
+        this.rnaNucleotideAccessionVersion = rnaNucleotideAccessionVersion;
+    }
+
+    /**
+     * @return the rnaNucleotideGI
+     */
+    public String getRnaNucleotideGI() {
+        return rnaNucleotideGI;
+    }
+
+    /**
+     * @param rnaNucleotideGI the rnaNucleotideGI to set
+     */
+    public void setRnaNucleotideGI( String rnaNucleotideGI ) {
+        this.rnaNucleotideGI = rnaNucleotideGI;
+    }
 
     /**
      * @return Returns the info.
@@ -131,20 +218,6 @@ public class NCBIGene2Accession {
      */
     public void setGeneId( String geneId ) {
         this.geneId = geneId;
-    }
-
-    /**
-     * @return Returns the genomicNucleotideAccessionVersion.
-     */
-    public String getGenomicNucleotideAccession() {
-        return this.GenomicNucleotideAccession;
-    }
-
-    /**
-     * @param genomicNucleotideAccession The genomicNucleotideAccession to set.
-     */
-    public void setGenomicNucleotideAccession( String genomicNucleotideAccession ) {
-        this.GenomicNucleotideAccession = genomicNucleotideAccession;
     }
 
     /**
@@ -203,19 +276,6 @@ public class NCBIGene2Accession {
         this.proteinGI = proteinGI;
     }
 
-    /**
-     * @return Returns the rNANucleotideAccessionVersion.
-     */
-    public String getRNANucleotideAccession() {
-        return this.RNANucleotideAccession;
-    }
-
-    /**
-     * @param nucleotideAccession The rNANucleotideAccession to set.
-     */
-    public void setRNANucleotideAccession( String nucleotideAccession ) {
-        this.RNANucleotideAccession = nucleotideAccession;
-    }
 
     /**
      * @return Returns the startPosition.
@@ -259,17 +319,4 @@ public class NCBIGene2Accession {
         this.taxId = taxId;
     }
 
-    /**
-     * @return Returns the rNANucleotideGI.
-     */
-    public String getRNANucleotideGI() {
-        return this.RNANucleotideGI;
-    }
-
-    /**
-     * @param nucleotideGI The rNANucleotideGI to set.
-     */
-    public void setRNANucleotideGI( String nucleotideGI ) {
-        this.RNANucleotideGI = nucleotideGI;
-    }
 }

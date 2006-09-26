@@ -18,11 +18,24 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -31,37 +44,106 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest {
-
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoad() throws Exception {
+    public void testGeneDomainObjectLoad() throws Exception {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
 
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
 
         String basePath = ConfigUtils.getString( "gemma.home" );
+        final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
+        sdog.generateLocal( basePath + geneInfoTestFile, basePath
+                + gene2AccTestFile, queue );         
+        
+        // wait until the producer is done.
+        while (!sdog.isProducerDone()) {
+            Thread.sleep( 100 );
+        }
+        
+        // producer is done.
+        log.debug( "Producer done with number of elements: " + queue.size() );
+        assertTrue(queue.size() == 100);
+    }
+    
+    public void testGeneConverter()  throws Exception {
+        NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
+        NcbiGeneConverter converter = new NcbiGeneConverter();
+        // set flags
+        AtomicBoolean generatorDone = new AtomicBoolean(false);
+        AtomicBoolean converterDone = new AtomicBoolean(false);
+        
+        sdog.setProducerDoneFlag( generatorDone );
+        converter.setSourceDoneFlag( generatorDone );
+        converter.setProducerDoneFlag(converterDone);
+        
+        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
+        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
 
-        Collection<NCBIGene2Accession> results = sdog.generateLocal( basePath + geneInfoTestFile, basePath
+        String basePath = ConfigUtils.getString( "gemma.home" );
+        final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
+        final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>(100);
+
+        sdog.generateLocal( basePath + geneInfoTestFile, basePath
+                + gene2AccTestFile, queue );     
+        
+        converter.convert( queue, geneQueue );
+        
+        // wait until the producer is done.
+        while (!converter.isProducerDone()) {
+            Thread.sleep( 100 );
+        }
+        
+        // producer is done.
+        log.debug( "Converter done with number of elements: " + geneQueue.size() );
+        assertTrue(geneQueue.size() == 100);        
+    }
+    
+    public void testGeneLoader()  throws Exception {
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        NcbiGeneLoader loader = new NcbiGeneLoader(persisterHelper);
+        
+        String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
+        String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
+
+        // threaded load 
+        String basePath = ConfigUtils.getString( "gemma.home" );
+        loader.load( basePath + geneInfoTestFile, basePath
                 + gene2AccTestFile );
-
-        Collection<NCBIGene2Accession> smallSample = new HashSet<NCBIGene2Accession>();
-        int i = 0;
-        for ( NCBIGene2Accession gene : results ) {
-            smallSample.add( gene );
-            i++;
-            if ( i > 10 ) break;
+        
+        // wait until the loader is done.
+        while (!loader.isLoaderDone()) {
+            Thread.sleep( 100 );
         }
-        results = null;
-
-        NcbiGeneConverter ngc = new NcbiGeneConverter();
-        log.info( "Converting..." );
-        Collection<Object> gemmaObj = ngc.convert( smallSample );
-
-        Collection<Gene> persistedObj = ( Collection<Gene> ) persisterHelper.persist( gemmaObj );
-
-        for ( Gene gene : persistedObj ) {
-            assertTrue( gene.getId() != null );
+        
+        // loader is done.
+        // check if it loaded 100 elements to the database
+        log.debug( "Loader done with number of elements: " + loader.getLoadedGeneCount() );
+        assertTrue(loader.getLoadedGeneCount() == 100);   
+        
+        // grab one gene and check its information
+        // (depends on information in gene_info and gene2accession file
+        // gene_info
+        Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
+        Iterator<Gene> geneIterator = geneCollection.iterator();
+        Gene g = geneIterator.next();
+        Collection<GeneProduct> products = g.getProducts();
+        Collection<String> expectedAccessions = new ArrayList<String>();
+        Collection<String> hasAccessions = new ArrayList<String>();
+        expectedAccessions.add( "AAF29803.1" );
+        expectedAccessions.add( "NP_862654.1" );
+        for ( GeneProduct product : products ) {
+            Collection<DatabaseEntry> accessions = product.getAccessions();
+            for ( DatabaseEntry de : accessions ) {
+                String accession = de.getAccession();
+                String accVersion = de.getAccessionVersion();
+                hasAccessions.add( accession + "." + accVersion );
+                log.debug( accession + "." + accVersion );
+            }
         }
+        assertTrue(hasAccessions.containsAll( expectedAccessions ));
+        Taxon t = g.getTaxon();
+        assertTrue(t.getNcbiId() == 139);
+        assertTrue(g.getNcbiId().equalsIgnoreCase( "1343074" ));
 
     }
 }
