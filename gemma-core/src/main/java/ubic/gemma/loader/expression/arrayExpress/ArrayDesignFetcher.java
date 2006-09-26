@@ -76,7 +76,8 @@ public class ArrayDesignFetcher extends FtpFetcher {
 
         Collection<Future> futures = new HashSet<Future>();
 
-        for ( final String suffix : suffixes ) {
+        for ( String suf : suffixes ) {
+            final String suffix = suf;
             log.info( "Attempting Download of " + suffix + " for " + identifier );
             FutureTask<Boolean> fetchThread = new FutureTask<Boolean>( new Callable<Boolean>() {
                 @SuppressWarnings("synthetic-access")
