@@ -133,7 +133,23 @@
 			out.print( expressionExperiment.getBioAssays().size() );
 			%> </a> bioAssays for this expression experiment.
 		<br />
-
+		
+        <h3>
+            <fmt:message key="experimentalDesign.title" />
+        </h3>
+        <a 
+        	href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+        <%out.print(expressionExperiment.getExperimentalDesign().getName());%>
+        </a>
+        <br />
+        <br />
+        <%out.print(expressionExperiment.getExperimentalDesign().getDescription());%>
+        <br />
+        <br />
+        This experimental design has 
+        <%out.print(expressionExperiment.getExperimentalDesign().getExperimentalFactors().size()); %>
+        experimental factors.
+        <br />
 		<%--
         <h3>
             <fmt:message key="experimentalDesigns.title" />
