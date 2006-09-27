@@ -72,7 +72,10 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
     public static void main( String[] args ) {
         GoldenPathBioSequenceLoaderCLI p = new GoldenPathBioSequenceLoaderCLI();
         try {
-            p.doWork( args );
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -91,6 +94,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
             }
 
         } catch ( Exception e ) {
+            log.error( e, e );
             return e;
         }
         return null;
