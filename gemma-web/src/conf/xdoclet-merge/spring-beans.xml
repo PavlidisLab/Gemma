@@ -57,6 +57,7 @@ Mapping URLS to controllers
             <prop key="/geneFinder.html">geneFinderController</prop>
             <prop key="/addTestData.html">testDataAddingController</prop>
             <prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+            <prop key="/genome/goldenPathSequenceLoad.html">goldenPathSequenceLoadController</prop>
         </props>
     </property>
 </bean>

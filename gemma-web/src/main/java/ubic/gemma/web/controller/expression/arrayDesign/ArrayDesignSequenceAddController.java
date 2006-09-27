@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import java.beans.PropertyEditorSupport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,6 +43,8 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
+import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
+import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.util.upload.CommonsMultipartFile;
 import ubic.gemma.web.util.upload.FileUploadUtil;
 
@@ -189,8 +190,8 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
     @Override
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( request, binder );
-        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor() );
-        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor() );
+        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
     /*
@@ -236,36 +237,6 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
         return mapping;
 
-    }
-
-    public class ArrayDesignPropertyEditor extends PropertyEditorSupport {
-        public String getAsText() {
-            return ( ( ArrayDesign ) this.getValue() ).getName();
-        }
-
-        public void setAsText( String text ) throws IllegalArgumentException {
-            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to an array design..." );
-            Object ad = arrayDesignService.findArrayDesignByName( text );
-            if ( ad == null ) {
-                throw new IllegalArgumentException( "There is no array design with name=" + text );
-            }
-            this.setValue( ad );
-        }
-    }
-
-    public class TaxonPropertyEditor extends PropertyEditorSupport {
-        public String getAsText() {
-            return ( ( Taxon ) this.getValue() ).getScientificName();
-        }
-
-        public void setAsText( String text ) throws IllegalArgumentException {
-            if ( log.isDebugEnabled() ) log.debug( "Transforming " + text + " to a taxon..." );
-            Object ad = taxonService.findByScientificName( text );
-            if ( ad == null ) {
-                throw new IllegalArgumentException( "There is no taxon with name=" + text );
-            }
-            this.setValue( ad );
-        }
     }
 
 }
