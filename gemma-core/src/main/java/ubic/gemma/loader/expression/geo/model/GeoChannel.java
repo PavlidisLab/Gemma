@@ -75,6 +75,10 @@ public class GeoChannel {
         characteristics.add( characteristic );
     }
 
+    public void addToTreatmentProtocol( String s ) {
+        this.treatmentProtocol = this.treatmentProtocol + " " + s;
+    }
+
     /**
      * @return Returns the bioMaterialProvider.
      */

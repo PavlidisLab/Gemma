@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -166,8 +167,23 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // this.setFlushModeCommit();
     // geoService.fetchAndLoad( "GDS994" );
     // }
+    /**
+     * GSE3434 has no dataset. It's  small so okay to download.
+     */
+    public void testFetchAndLoadSeriesOnly() throws Exception {
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GSE3434" );
+        assertEquals( 4, ee.getBioAssays().size() );
+        assertEquals( 532, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
+
+        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+        ads.add( ad );
+        int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
+        assertEquals( 532, actualValue );
+    }
+
     // ////////////////////////////////////////////////////////////
-    // Unit tests, should run reasonably quickly.
+    // Small tests, should run reasonably quickly.
     // ////////////////////////////////////////////////////////////
     /**
      * Original reason for test: yields audit trail errors.

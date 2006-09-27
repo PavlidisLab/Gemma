@@ -34,7 +34,6 @@ import java.util.Map;
  */
 public class GeoSample extends GeoData implements Comparable {
 
-    private String title = "";
     private List<GeoChannel> channels;
     private String hybProtocol = "";
     private String dataProcessing = "";
@@ -292,20 +291,6 @@ public class GeoSample extends GeoData implements Comparable {
     }
 
     /**
-     * @return Returns the title.
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
-     * @param title The title to set.
-     */
-    public void setTitle( String title ) {
-        this.title = title;
-    }
-
-    /**
      * @return Returns the replicates.
      */
     public Collection<GeoReplication> getReplicates() {
@@ -339,7 +324,7 @@ public class GeoSample extends GeoData implements Comparable {
      * @see java.lang.Comparable#compareTo(T)
      */
     public int compareTo( Object o ) {
-        return ( ( GeoSample ) o ).getGeoAccession().compareTo( this.getGeoAccession() );
+        return ( ( GeoData ) o ).getGeoAccession().compareTo( this.getGeoAccession() );
     }
 
 }

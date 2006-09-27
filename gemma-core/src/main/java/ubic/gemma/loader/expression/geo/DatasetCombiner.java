@@ -30,9 +30,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +43,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.math.StringDistance;
+import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
@@ -219,7 +223,14 @@ public class DatasetCombiner {
      * @return
      */
     public static GeoSampleCorrespondence findGSECorrespondence( GeoSeries series ) {
-        return findGSECorrespondence( series.getDatasets() );
+        if ( series.getDatasets() != null && series.getDatasets().size() > 0 ) {
+            return findGSECorrespondence( series.getDatasets() );
+        }
+
+        LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
+        LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<String, String>();
+        int numPlatforms = fillAccessionMaps( series, accToTitle, accToPlatform );
+        return findCorrespondence( numPlatforms, accToTitle, accToPlatform );
     }
 
     /**
@@ -231,39 +242,30 @@ public class DatasetCombiner {
 
         if ( dataSets == null ) return null;
 
-        GeoSampleCorrespondence result = new GeoSampleCorrespondence();
+        int numDatasets = dataSets.size();
+
         LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
         LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
 
-        // get all the 'title's of the GSMs.
-        for ( GeoDataset dataset : dataSets ) {
-            for ( GeoSubset subset : dataset.getSubsets() ) {
-                for ( GeoSample sample : subset.getSamples() ) {
+        fillAccessionMaps( dataSets, accToTitle, accToDataset );
 
-                    assert sample != null : "Null sample for subset " + subset.getDescription();
+        return findCorrespondence( numDatasets, accToTitle, accToDataset );
+    }
 
-                    String title = sample.getTitle();
-                    if ( StringUtils.isBlank( title ) ) {
-                        continue; // the same sample may show up more than once with a blank title.
-                    }
-                    accToTitle.put( sample.getGeoAccession(), title );
-                    accToDataset.put( sample.getGeoAccession(), dataset.getGeoAccession() );
-                }
-            }
-        }
-
+    /**
+     * @param numDatasets
+     * @param accToTitle
+     * @param accToDataset
+     * @return
+     */
+    private static GeoSampleCorrespondence findCorrespondence( int numDatasets,
+            LinkedHashMap<String, String> accToTitle, LinkedHashMap<String, String> accToDataset ) {
+        GeoSampleCorrespondence result = new GeoSampleCorrespondence();
         // allocate matrix.
         int[][] matrix = new int[accToTitle.keySet().size()][accToTitle.keySet().size()];
         for ( int i = 0; i < matrix.length; i++ ) {
             Arrays.fill( matrix[i], -1 );
         }
-
-        // this is purely for making tests.
-        // StringBuilder buf = new StringBuilder();
-        // for ( String acc : accToTitle.keySet() ) {
-        // buf.append( "\"" + acc + "\"," );
-        // }
-        // System.err.println( buf );
 
         List<String> sampleAccs = new ArrayList<String>( accToTitle.keySet() );
 
@@ -313,7 +315,7 @@ public class DatasetCombiner {
             assert targetAcc != null;
             result.addCorrespondence( targetAcc, bestMatchAcc );
 
-            if ( dataSets.size() > 1 ) {
+            if ( numDatasets > 1 ) {
                 if ( bestMatchAcc == null ) {
                     log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + "\n" );
                 } else {
@@ -322,7 +324,69 @@ public class DatasetCombiner {
                 }
             }
         }
-
         return result;
     }
+
+    /**
+     * @param geoSeries
+     * @return
+     */
+    public static Map<GeoPlatform, List<GeoSample>> getPlatformSampleMap( GeoSeries geoSeries ) {
+        Map<GeoPlatform, List<GeoSample>> platformSamples = new HashMap<GeoPlatform, List<GeoSample>>();
+
+        for ( GeoSample sample : geoSeries.getSamples() ) {
+
+            for ( GeoPlatform platform : sample.getPlatforms() ) {
+                if ( !platformSamples.containsKey( platform ) ) {
+                    platformSamples.put( platform, new ArrayList<GeoSample>() );
+                }
+                platformSamples.get( platform ).add( sample );
+            }
+        }
+        return platformSamples;
+    }
+
+    private static void fillAccessionMaps( Collection<GeoDataset> dataSets, LinkedHashMap<String, String> accToTitle,
+            LinkedHashMap<String, String> accToDataset ) {
+        // get all the 'title's of the GSMs.
+        for ( GeoDataset dataset : dataSets ) {
+            for ( GeoSubset subset : dataset.getSubsets() ) {
+                for ( GeoSample sample : subset.getSamples() ) {
+                    assert sample != null : "Null sample for subset " + subset.getDescription();
+                    fillAccessionMap( sample, dataset, accToTitle, accToDataset );
+                }
+            }
+        }
+    }
+
+    private static int fillAccessionMaps( GeoSeries series, LinkedHashMap<String, String> accToTitle,
+            LinkedHashMap<String, String> accToOwneracc ) {
+
+        Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( series );
+
+        for ( GeoPlatform platform : platformSamples.keySet() ) {
+            for ( GeoSample sample : platformSamples.get( platform ) ) {
+                assert sample != null : "Null sample for platform " + platform.getDescription();
+                fillAccessionMap( sample, platform, accToTitle, accToOwneracc );
+            }
+        }
+
+        return platformSamples.keySet().size();
+    }
+
+    /**
+     * @param sample
+     * @param accToTitle
+     * @param accToDataset
+     */
+    private static void fillAccessionMap( GeoSample sample, GeoData owner, LinkedHashMap<String, String> accToTitle,
+            LinkedHashMap<String, String> accToOwneracc ) {
+        String title = sample.getTitle();
+        if ( StringUtils.isBlank( title ) ) {
+            return; // the same sample may show up more than once with a blank title.
+        }
+        accToTitle.put( sample.getGeoAccession(), title );
+        accToOwneracc.put( sample.getGeoAccession(), owner.getGeoAccession() );
+    }
+
 }

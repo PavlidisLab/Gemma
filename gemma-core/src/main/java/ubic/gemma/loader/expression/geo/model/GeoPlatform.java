@@ -62,8 +62,6 @@ public class GeoPlatform extends GeoData {
 
     private GeoDataset.PlatformType technology;
 
-    private String title = "";
-
     private Collection<String> webLinks = new HashSet<String>();
 
     /**
@@ -191,13 +189,6 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @return Returns the title.
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
      * @return Returns the webLinks.
      */
     public Collection<String> getWebLinks() {
@@ -286,13 +277,6 @@ public class GeoPlatform extends GeoData {
      */
     public void setTechnology( GeoDataset.PlatformType technology ) {
         this.technology = technology;
-    }
-
-    /**
-     * @param title The title to set.
-     */
-    public void setTitle( String title ) {
-        this.title = title;
     }
 
     /**

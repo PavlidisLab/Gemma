@@ -55,7 +55,6 @@ public class GeoDataset extends GeoData {
     private SampleType sampleType;
     private Collection<GeoSeries> series;
     private Collection<GeoSubset> subsets;
-    private String title;
     private String updateDate;
     private ValueType valueType;
 
@@ -183,13 +182,6 @@ public class GeoDataset extends GeoData {
     }
 
     /**
-     * @return Returns the title.
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
      * @return Returns the updateDate.
      */
     public String getUpdateDate() {
@@ -306,13 +298,6 @@ public class GeoDataset extends GeoData {
      */
     public void setSubsets( Collection<GeoSubset> subsets ) {
         this.subsets = subsets;
-    }
-
-    /**
-     * @param title The title to set.
-     */
-    public void setTitle( String title ) {
-        this.title = title;
     }
 
     /**

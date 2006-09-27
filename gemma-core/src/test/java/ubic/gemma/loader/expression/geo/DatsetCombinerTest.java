@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
 
 /**
  * @author pavlidis
@@ -66,6 +67,8 @@ public class DatsetCombinerTest extends TestCase {
             throw e;
         }
     }
+
+    // todo: add test of findGSECorrespondence( GeoSeries series ) when there is no dataset.
 
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGSECorrespondence(Collection<GeoDataset>)'

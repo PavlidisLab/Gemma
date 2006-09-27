@@ -49,8 +49,8 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
  */
 public class GoldenPathBioSequenceLoader {
 
-    private static final int QUEUE_SIZE = 10000;
-    private static final int BATCH_SIZE = 1000;
+    private static final int QUEUE_SIZE = 30000;
+    private static final int BATCH_SIZE = 2000;
     static Log log = LogFactory.getLog( GoldenPathBioSequenceLoader.class.getName() );
     ExternalDatabaseService externalDatabaseService;
     BioSequenceService bioSequenceService;

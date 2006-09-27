@@ -34,7 +34,6 @@ import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
  */
 public class GeoSeries extends GeoData {
 
-    String title = "";
     String summary = "";
     String overallDesign = "";
     Collection<String> keyWords;
@@ -113,20 +112,6 @@ public class GeoSeries extends GeoData {
      */
     public void setPubmedIds( Collection<String> pubmedIds ) {
         this.pubmedIds = pubmedIds;
-    }
-
-    /**
-     * @return Returns the seriesTitle.
-     */
-    public String getTitle() {
-        return this.title;
-    }
-
-    /**
-     * @param seriesTitle The seriesTitle to set.
-     */
-    public void setTitle( String seriesTitle ) {
-        this.title = seriesTitle;
     }
 
     /**

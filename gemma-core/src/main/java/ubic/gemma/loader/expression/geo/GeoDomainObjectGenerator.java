@@ -189,8 +189,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
 
         if ( datasetsToProcess == null || datasetsToProcess.size() == 0 ) {
-            throw new NoDatasetForSeriesException( "No data set found for " + seriesAccession
-                    + ", processing will be halted" );
+            log.warn( "No data set found for " + seriesAccession );
         }
 
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );

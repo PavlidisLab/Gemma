@@ -392,15 +392,45 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * Use this when we don't have a GDS for a GSE.
+     * 
+     * @param geoSeries
+     * @param expExp
+     */
+    private void convertSeriesDataVectors( GeoSeries geoSeries, ExpressionExperiment expExp ) {
+        /*
+         * Tricky thing is that series contains data from multiple platforms.
+         */
+        Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( geoSeries );
+
+        for ( GeoPlatform platform : platformSamples.keySet() ) {
+            convertSampleOnPlatformVectors( expExp, platformSamples.get( platform ), platform );
+        }
+
+    }
+
+  
+
+    /**
      * Convert the GEO data into DesignElementDataVectors associated with the ExpressionExperiment
      * 
      * @param geoDataset Source of the data
      * @param expExp ExpressionExperiment to fill in.
      */
-    @SuppressWarnings("unchecked")
     private void convertDataSetDataVectors( GeoDataset geoDataset, ExpressionExperiment expExp ) {
         List<GeoSample> datasetSamples = new ArrayList<GeoSample>( getDatasetSamples( geoDataset ) );
+        GeoPlatform geoPlatform = geoDataset.getPlatform();
 
+        convertSampleOnPlatformVectors( expExp, datasetSamples, geoPlatform );
+    }
+
+    /**
+     * @param expExp
+     * @param datasetSamples
+     * @param geoPlatform
+     */
+    private void convertSampleOnPlatformVectors( ExpressionExperiment expExp, List<GeoSample> datasetSamples,
+            GeoPlatform geoPlatform ) {
         assert datasetSamples.size() > 0 : "No samples in dataset";
 
         BioAssayDimension bioAssayDimension = convertGeoSampleList( datasetSamples, expExp );
@@ -451,8 +481,8 @@ public class GeoConverter implements Converter {
             for ( String designElementName : dataVectors.keySet() ) {
                 List<String> dataVector = dataVectors.get( designElementName );
                 assert dataVector != null && dataVector.size() != 0;
-                DesignElementDataVector vector = convertDesignElementDataVector( geoDataset, expExp, bioAssayDimension,
-                        designElementName, dataVector, qt );
+                DesignElementDataVector vector = convertDesignElementDataVector( geoPlatform, expExp,
+                        bioAssayDimension, designElementName, dataVector, qt );
 
                 if ( vector == null ) {
                     continue;
@@ -472,7 +502,7 @@ public class GeoConverter implements Converter {
             if ( log.isInfoEnabled() ) {
                 log.info( count + " Data vectors added for '" + quantitationType + "'" );
             }
-            expExp.getDesignElementDataVectors().addAll( new HashSet( vectors ) );
+            expExp.getDesignElementDataVectors().addAll( new HashSet<DesignElementDataVector>( vectors ) );
             quantitationTypeIndex++;
         }
     }
@@ -507,8 +537,9 @@ public class GeoConverter implements Converter {
      * @param dataVector
      * @return
      */
-    private DesignElementDataVector convertDesignElementDataVector( GeoDataset geoDataset, ExpressionExperiment expExp,
-            BioAssayDimension bioAssayDimension, String designElementName, List<String> dataVector, QuantitationType qt ) {
+    private DesignElementDataVector convertDesignElementDataVector( GeoPlatform geoPlatform,
+            ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName,
+            List<String> dataVector, QuantitationType qt ) {
         byte[] blob = convertData( dataVector, qt );
         if ( blob == null ) {
             return null;
@@ -517,8 +548,8 @@ public class GeoConverter implements Converter {
             log.debug( blob.length + " bytes for " + dataVector.size() + " raw elements" );
         }
 
-        CompositeSequence compositeSequence = platformDesignElementMap.get(
-                convertPlatform( geoDataset.getPlatform() ).getName() ).get( designElementName );
+        CompositeSequence compositeSequence = platformDesignElementMap.get( convertPlatform( geoPlatform ).getName() )
+                .get( designElementName );
 
         if ( compositeSequence == null ) {
             assert compositeSequence != null : "No composite sequence " + designElementName;
@@ -933,14 +964,16 @@ public class GeoConverter implements Converter {
         }
 
         expExp.setExperimentalDesign( design );
-        // expExp.setExperimentalDesigns( new HashSet<ExperimentalDesign>() );
-        // expExp.getExperimentalDesigns().add( design );
 
         // GEO does not have the concept of a biomaterial.
         Collection<GeoSample> samples = series.getSamples();
         expExp.setBioAssays( new HashSet() );
-        int i = 1;
 
+        if ( series.getSampleCorrespondence().size() == 0 ) {
+            throw new IllegalArgumentException( "No sample correspondence!" );
+        }
+
+        int i = 1;
         /* For each set of "corresponding" samples (from the same RNA) we make up a new BioMaterial. */
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
@@ -963,7 +996,7 @@ public class GeoConverter implements Converter {
                     if ( accession.equals( cSample ) ) {
                         BioAssay ba = convertSample( sample, bioMaterial );
                         ba.getSamplesUsed().add( bioMaterial );
-                        log.debug( "Adding " + ba + " and associating with  " + bioMaterial );
+                        log.info( "Adding " + ba + " and associating with  " + bioMaterial );
                         expExp.getBioAssays().add( ba );
                         found = true;
                         break;
@@ -980,8 +1013,13 @@ public class GeoConverter implements Converter {
 
         // Dataset has additional information about the samples.
         Collection<GeoDataset> dataSets = series.getDatasets();
-        for ( GeoDataset dataset : dataSets ) {
-            convertDataset( dataset, expExp );
+        if ( dataSets.size() == 0 ) {
+            // we miss extra description and the subset information.
+            convertSeriesDataVectors( series, expExp );
+        } else {
+            for ( GeoDataset dataset : dataSets ) {
+                convertDataset( dataset, expExp );
+            }
         }
 
         return expExp;

@@ -39,6 +39,8 @@ public abstract class GeoData {
 
     private List<String> columnDescriptions = new ArrayList<String>();
 
+    private String title = "";
+
     @Override
     public boolean equals( Object obj ) {
         if ( obj instanceof GeoData ) {
@@ -99,6 +101,20 @@ public abstract class GeoData {
      */
     public List<String> getColumnDescriptions() {
         return this.columnDescriptions;
+    }
+
+    /**
+     * @return Returns the title.
+     */
+    public String getTitle() {
+        return this.title;
+    }
+
+    /**
+     * @param title The title to set.
+     */
+    public void setTitle( String title ) {
+        this.title = title;
     }
 
 }

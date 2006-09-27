@@ -295,6 +295,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                         + NumberFormat.getNumberInstance().format(
                                 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) + " minutes)" );
             }
+            if ( count % 10 == 0 ) {
+                this.getCurrentSession().flush();
+            }
         }
 
         log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign + "( elapsed time="
