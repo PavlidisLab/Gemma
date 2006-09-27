@@ -111,7 +111,7 @@ abstract public class GenomePersister extends CommonPersister {
             gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         }
 
-        gene.setTaxon( ( Taxon ) persistTaxon( gene.getTaxon() ) );
+        gene.setTaxon( persistTaxon( gene.getTaxon() ) );
 
         gene = geneService.findOrCreate( gene );
 
@@ -130,7 +130,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
 
-        // avoi making the instance 'dirty' if we don't have to, to avoid updates.
+        // avoid making the instance 'dirty' if we don't have to, to avoid updates.
         if ( existingBioSequence == null ) {
 
             if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioSequence );
