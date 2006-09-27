@@ -26,7 +26,7 @@
 
 		<p>
 			<strong>This is normally a one-time process for each taxon. Don't load more than once unless you know what
-				you are doing!</strong> You also need a fresh database. Also, the list of taxa doens't imply the Golden Path database for
+				you are doing!</strong> Also, the list of taxa doens't imply the Golden Path database for
 			each taxon is installed. You have to make sure it's available.
 		</p>
 		<p>
