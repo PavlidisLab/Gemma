@@ -39,6 +39,8 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Load a dump of a Goldenpath table. The input is expected to have just two columns: sequence identifier (accession)
@@ -229,8 +231,12 @@ public class GoldenPathBioSequenceLoader {
                     double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
                     secspt += secsperthousand;
                     double meanspt = secspt / cpt;
-                    log.info( "Processed and loaded " + count + " sequences, last one was " + sequence.getName() + " ("
-                            + secsperthousand + " seconds elapsed, average per thousand=" + meanspt + ")" );
+
+                    String progString = "Processed and loaded " + count + " sequences, last one was "
+                            + sequence.getName() + " (" + secsperthousand + " seconds elapsed, average per thousand="
+                            + meanspt + ")";
+                    ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
+                    log.info( progString );
                     millis = System.currentTimeMillis();
                 }
 

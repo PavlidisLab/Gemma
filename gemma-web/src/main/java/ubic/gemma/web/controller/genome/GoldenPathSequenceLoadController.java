@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.genome;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
@@ -40,6 +43,8 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 
 /**
@@ -63,22 +68,35 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
     BioSequenceService bioSequenceService;
 
     @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+    public ModelAndView onSubmit( final HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
-        GoldenPathSequenceLoadCommand params = ( GoldenPathSequenceLoadCommand ) command;
+        final GoldenPathSequenceLoadCommand params = ( GoldenPathSequenceLoadCommand ) command;
 
-        Taxon taxon = params.getTaxon();
+        final SecurityContext context = SecurityContextHolder.getContext();
 
-        GoldenPathDumper dumper = new GoldenPathDumper( taxon );
-        GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
-        gp.setExternalDatabaseService( externalDatabaseService );
-        gp.setBioSequenceService( bioSequenceService );
+//        new Thread( new Runnable() {
+//            public void run() {
+//                try {
+ //                   SecurityContextHolder.setContext( context );
+                    Taxon taxon = params.getTaxon();
+                    GoldenPathDumper dumper = new GoldenPathDumper( taxon );
+                    GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
+                    if ( params.getLimit() > 0 ) {
+                        gp.setLimit( params.getLimit() );
+                    }
+                    gp.setExternalDatabaseService( externalDatabaseService );
+                    gp.setBioSequenceService( bioSequenceService );
 
-        if ( params.getLimit() > 0 ) {
-            gp.setLimit( params.getLimit() );
-        }
+                    ProgressJob job = ProgressManager.createProgressJob( "pavlidis", "Golden path loading" );
+                    gp.load( dumper );
+                    ProgressManager.destroyProgressJob( job );
 
-        gp.load( dumper );
+        // } catch ( SQLException e ) {
+        // throw new RuntimeException( e );
+        // }
+        // }
+        //
+        //        } ).start();
 
         return new ModelAndView( this.getSuccessView() );
 
