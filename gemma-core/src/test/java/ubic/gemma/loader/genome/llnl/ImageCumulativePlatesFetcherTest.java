@@ -16,19 +16,24 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome.gene.ncbi;
+package ubic.gemma.loader.genome.llnl;
 
-import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.NetDatasourceUtil;
+import java.util.Collection;
+
+import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesFetcher;
+import ubic.gemma.model.common.description.LocalFile;
+import junit.framework.TestCase;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIUtil extends NetDatasourceUtil {
+public class ImageCumulativePlatesFetcherTest extends TestCase {
 
-    public void init() {
-        this.setHost( ConfigUtils.getString( "ncbi.host" ) );
+    public void testFetch() throws Exception {
+        ImageCumulativePlatesFetcher fetcher = new ImageCumulativePlatesFetcher();
+        Collection<LocalFile> files = fetcher.fetch( "20060901" );
+        assertEquals( 1, files.size() );
     }
 
 }

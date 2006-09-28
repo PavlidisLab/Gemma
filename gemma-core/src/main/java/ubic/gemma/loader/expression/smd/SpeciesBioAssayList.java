@@ -38,7 +38,6 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
@@ -74,7 +73,7 @@ public class SpeciesBioAssayList {
      * @throws IOException
      */
     public void retrieveByFTP( String species ) throws IOException {
-        if ( !f.isConnected() ) f = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
+        if ( !f.isConnected() ) f = ( new SmdUtil() ).connect( FTP.ASCII_FILE_TYPE );
 
         String work = baseDir + speciesMap.getCode( species );
         FTPFile[] files = f.listFiles( work );

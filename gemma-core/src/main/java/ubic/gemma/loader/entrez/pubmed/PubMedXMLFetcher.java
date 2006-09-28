@@ -24,15 +24,13 @@ import java.util.Collection;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Class that can retrieve pubmed records (in XML format) via HTTP. The url used is configured via a resource.
@@ -47,17 +45,12 @@ public class PubMedXMLFetcher {
     private String uri;
 
     public PubMedXMLFetcher() {
-        try {
-            Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-            String baseURL = ( String ) config.getProperty( "entrez.efetch.baseurl" );
-            String db = ( String ) config.getProperty( "entrez.efetch.pubmed.db" );
-            String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
-            String retmode = ( String ) config.getProperty( "entrez.efetch.pubmed.retmode" );
-            String rettype = ( String ) config.getProperty( "entrez.efetch.pubmed.rettype" );
-            uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
-        } catch ( ConfigurationException e ) {
-            throw new RuntimeException( e );
-        }
+        String baseURL = ConfigUtils.getString( "entrez.efetch.baseurl" );
+        String db = ConfigUtils.getString( "entrez.efetch.pubmed.db" );
+        String idtag = ConfigUtils.getString( "entrez.efetch.pubmed.idtag" );
+        String retmode = ConfigUtils.getString( "entrez.efetch.pubmed.retmode" );
+        String rettype = ConfigUtils.getString( "entrez.efetch.pubmed.rettype" );
+        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
     }
 
     /**

@@ -57,7 +57,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
 
         try {
             if ( f == null || !f.isConnected() ) {
-                f = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+                f = ( new ArrayExpressUtil() ).connect( FTP.BINARY_FILE_TYPE );
             }
 
             File newDir = mkdir( identifier );

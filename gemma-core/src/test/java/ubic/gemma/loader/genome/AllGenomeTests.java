@@ -20,6 +20,11 @@ package ubic.gemma.loader.genome;
 
 import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneIntegrationTest;
 import ubic.gemma.loader.genome.gene.ncbi.NCBIGeneParserTest;
+import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoaderTest;
+import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoaderTest;
+import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesParserTest;
+import ubic.gemma.loader.genome.taxon.TaxonLoaderTest;
+import ubic.gemma.loader.genome.taxon.TaxonParserTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -32,13 +37,17 @@ import junit.framework.TestSuite;
 public class AllGenomeTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.genome" );
+        TestSuite suite = new TestSuite( "Tests for ubic.gemma.loader.genome" );
         // $JUnit-BEGIN$
         suite.addTestSuite( BlatResultParserTest.class );
         suite.addTestSuite( FastaParserTest.class );
         suite.addTestSuite( NCBIGeneIntegrationTest.class );
         suite.addTestSuite( NCBIGeneParserTest.class );
         suite.addTestSuite( GoldenPathBioSequenceLoaderTest.class );
+        suite.addTestSuite( ImageCumulativePlatesLoaderTest.class );
+        suite.addTestSuite( ImageCumulativePlatesParserTest.class );
+        suite.addTestSuite( TaxonLoaderTest.class );
+        suite.addTestSuite( TaxonParserTest.class );
         // $JUnit-END$
         return suite;
     }

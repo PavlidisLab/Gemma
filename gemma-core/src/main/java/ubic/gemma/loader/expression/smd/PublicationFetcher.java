@@ -7,9 +7,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
 import org.xml.sax.SAXException;
@@ -18,11 +15,10 @@ import ubic.gemma.loader.expression.smd.model.SMDPublication;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Retrieve information on SMD publications.
- * <hr>
- * <p>
  * 
  * @author pavlidis
  * @version $Id$
@@ -31,10 +27,9 @@ public class PublicationFetcher extends FtpFetcher {
 
     private Set<SMDPublication> publications;
 
-    public PublicationFetcher() throws ConfigurationException {
+    public PublicationFetcher() {
         publications = new HashSet<SMDPublication>();
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-        baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
+        baseDir = ConfigUtils.getString( "smd.publication.baseDir" );
 
     }
 
@@ -55,7 +50,7 @@ public class PublicationFetcher extends FtpFetcher {
      * @throws IOException
      */
     public void fetch( int limit ) throws IOException, SAXException {
-        if ( !ftpClient.isConnected() ) ftpClient = SmdUtil.connect( FTP.ASCII_FILE_TYPE );
+        if ( !ftpClient.isConnected() ) ftpClient = ( new SmdUtil() ).connect( FTP.ASCII_FILE_TYPE );
 
         FTPFile[] files = ftpClient.listFiles( baseDir );
 

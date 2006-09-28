@@ -91,7 +91,7 @@ public class DataFileFetcher extends FtpFetcher {
     public void fetch( SMDExperiment expM ) throws SocketException, IOException {
         log.info( "Seeking experiment data files for " + expM.getName() );
 
-        if ( !ftpClient.isConnected() ) SmdUtil.connect( FTP.BINARY_FILE_TYPE );
+        if ( !ftpClient.isConnected() ) ( new SmdUtil() ).connect( FTP.BINARY_FILE_TYPE );
 
         // create a place to store the files.
         File newDir = mkdir( Integer.toString( expM.getNumber() ) );

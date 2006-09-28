@@ -18,51 +18,17 @@
  */
 package ubic.gemma.loader.expression.geo.util;
 
-import java.io.IOException;
-import java.net.SocketException;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.net.ftp.FTPClient;
-
-import ubic.basecode.util.NetUtils;
-
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.NetDatasourceUtil;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class GeoUtil {
-    protected static final Log log = LogFactory.getLog( GeoUtil.class );
-    private static String host;
-    private static String login;
-    private static String password;
+public class GeoUtil extends NetDatasourceUtil {
 
-    static {
-        Configuration config = null;
-        try {
-            config = new PropertiesConfiguration( "Gemma.properties" );
-        } catch ( ConfigurationException e ) {
-            log.error( e );
-        }
-        host = ( String ) config.getProperty( "geo.host" );
-        login = ( String ) config.getProperty( "geo.login" );
-        password = ( String ) config.getProperty( "geo.password" );
-    }
-
-    /**
-     * Convenient method to get a FTP connection.
-     * 
-     * @param mode
-     * @return
-     * @throws SocketException
-     * @throws IOException
-     */
-    public static FTPClient connect( int mode ) throws SocketException, IOException {
-        return NetUtils.connect( mode, host, login, password );
+    public void init() {
+        this.setHost( ConfigUtils.getString( "geo.host" ) );
     }
 
 }

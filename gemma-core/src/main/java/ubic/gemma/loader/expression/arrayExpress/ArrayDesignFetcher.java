@@ -94,7 +94,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
                         if ( tries > 3 ) {
                             throw new IOException( "Couldn't get connection" );
                         }
-                        client = ArrayExpressUtil.connect( FTP.BINARY_FILE_TYPE );
+                        client = ( new ArrayExpressUtil() ).connect( FTP.BINARY_FILE_TYPE );
                         tries++;
                     }
 

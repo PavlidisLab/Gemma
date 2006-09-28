@@ -57,7 +57,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
     }
 
     public NCBIGeneFileFetcher() {
-        initConfig();
+        super();
         initArchiveHandler( "gz" );
     }
 
@@ -70,7 +70,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
         log.info( "Seeking Ncbi " + identifier + " file " );
 
         try {
-            if ( this.f == null || !this.f.isConnected() ) f = NCBIUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( this.f == null || !this.f.isConnected() ) f = ( new NCBIUtil() ).connect( FTP.BINARY_FILE_TYPE );
 
             File newDir = mkdir( identifier );
             final String outputFileName = formLocalFilePath( identifier, newDir );
@@ -151,8 +151,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
      * @return
      */
     protected String formRemoteFilePath( String identifier ) {
-        String seekFile = baseDir + identifier + ".gz";
-        return seekFile;
+        return baseDir + identifier + ".gz";
     }
 
 }

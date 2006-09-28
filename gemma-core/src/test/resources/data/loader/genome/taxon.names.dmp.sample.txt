@@ -1,0 +1,275 @@
+1	|	all	|		|	synonym	|
+1	|	root	|		|	scientific name	|
+2	|	Bacteria	|	Bacteria <bacteria>	|	scientific name	|
+2	|	Monera	|	Monera <Bacteria>	|	in-part	|
+2	|	Procaryotae	|	Procaryotae <#1>	|	in-part	|
+2	|	Prokaryota	|	Prokaryota <#2>	|	in-part	|
+2	|	Prokaryotae	|	Prokaryotae <#1>	|	in-part	|
+2	|	eubacteria	|		|	genbank common name	|
+2	|	eubacteria	|	Bacteria<blast2>	|	blast name	|
+2	|	not Bacteria Haeckel 1894	|		|	synonym	|
+6	|	Azorhizobium	|		|	scientific name	|
+6	|	Azorhizobium Dreyfus et al. 1988	|		|	synonym	|
+6	|	Azotirhizobium	|		|	equivalent name	|
+7	|	Azorhizobium caulinodans	|		|	scientific name	|
+7	|	Azorhizobium caulinodans Dreyfus et al. 1988	|		|	synonym	|
+7	|	Azotirhizobium caulinodans	|		|	equivalent name	|
+7	|	Rhizobium ORS571	|		|	includes	|
+7	|	Rhizobium sp. (strain ORS571)	|		|	includes	|
+7	|	Rhizobium sp. ORS 571	|		|	includes	|
+7	|	Rhizobium sp. ORS571	|		|	includes	|
+9	|	Acyrthosiphon pisum symbiont P	|		|	includes	|
+9	|	Buchnera aphidicola	|		|	scientific name	|
+9	|	Buchnera aphidicola Munson et al. 1991	|		|	synonym	|
+10	|	"Cellvibrio" Winogradsky 1929	|		|	synonym	|
+10	|	Cellvibrio	|		|	scientific name	|
+10	|	Cellvibrio (ex Winogradsky 1929) Blackall et al. 1986 emend. Humphry et al. 2003	|		|	synonym	|
+11	|	'Cellvibrio gilvus'	|		|	synonym	|
+11	|	Cellvibrio gilvus	|		|	scientific name	|
+13	|	Dictyoglomus	|		|	scientific name	|
+13	|	Dictyoglomus Saiki et al. 1985	|		|	synonym	|
+14	|	Dictyoglomus thermophilum	|		|	scientific name	|
+14	|	Dictyoglomus thermophilum Saiki et al. 1985	|		|	synonym	|
+16	|	Methyliphilus	|		|	equivalent name	|
+16	|	Methylophilus	|		|	scientific name	|
+16	|	Methylophilus Jenkins et al. 1987	|		|	synonym	|
+16	|	Methylotrophus	|		|	misspelling	|
+17	|	Methyliphilus methylitrophus	|		|	equivalent name	|
+17	|	Methyliphilus methylotrophus	|		|	equivalent name	|
+17	|	Methylophilus methylitrophus	|		|	equivalent name	|
+17	|	Methylophilus methylotrophus	|		|	scientific name	|
+17	|	Methylophilus methylotrophus Jenkins et al. 1987	|		|	synonym	|
+17	|	Methylotrophus methylophilus	|		|	synonym	|
+18	|	Pelobacter	|		|	scientific name	|
+18	|	Pelobacter Schink and Pfennig 1983	|		|	synonym	|
+19	|	Pelobacter carbinolicus	|		|	scientific name	|
+19	|	Pelobacter carbinolicus Schink 1984	|		|	synonym	|
+20	|	Phenylobacterium	|		|	scientific name	|
+20	|	Phenylobacterium Lingens et al. 1985 emend. Kanso and Patel 2004	|		|	synonym	|
+20	|	Phenylobacterium Lingens et al. 1985 emend. Tiago et al. 2005	|		|	synonym	|
+21	|	Phenylobacterium immobile	|		|	scientific name	|
+21	|	Phenylobacterium immobile Lingens et al. 1985	|		|	synonym	|
+22	|	Shewanella	|		|	scientific name	|
+22	|	Shewanella MacDonell and Colwell 1986	|		|	synonym	|
+23	|	Alteromonas colwelliana	|		|	synonym	|
+23	|	Shewanella colwelliana	|		|	scientific name	|
+23	|	Shewanella colwelliana (Weiner et al. 1988) Coyne et al. 1990	|		|	synonym	|
+24	|	"Pseudomonas putrefaciens" (Derby and Hammer) Long and Hammer 1941	|		|	synonym	|
+24	|	Alteromonas putrefaciens	|		|	synonym	|
+24	|	Alteromonas putrefaciens (ex Derby and Hammer) Lee et al. 1981	|		|	synonym	|
+24	|	Alteromonas putrifaciens	|		|	misspelling	|
+24	|	Pseudomonas putrefaciens	|		|	synonym	|
+24	|	Shewanella putrefaciens	|		|	scientific name	|
+24	|	Shewanella putrefaciens (Lee et al. 1981) MacDonell and Colwell 1986	|		|	synonym	|
+24	|	Shewanella putrifaciens	|		|	misspelling	|
+25	|	Alteromonas hanedai	|		|	synonym	|
+25	|	Alteromonas hanedai Jensen et al. 1981	|		|	synonym	|
+25	|	Shewanella hanedai	|		|	scientific name	|
+25	|	Shewanella hanedai (Jensen et al. 1981) MacDonell and Colwell 1986	|		|	synonym	|
+27	|	halophilic eubacterium (NRCC 41227)	|		|	synonym	|
+27	|	halophilic eubacterium NRCC 41227	|		|	scientific name	|
+27	|	halophilic eubacterium NRCC41227	|		|	synonym	|
+29	|	Myxobacteria	|		|	synonym	|
+29	|	Myxococcales	|		|	scientific name	|
+29	|	Myxococcales Tchan et al. 1948	|		|	synonym	|
+29	|	The Myxobacteria	|		|	synonym	|
+29	|	fruiting gliding bacteria	|		|	genbank common name	|
+31	|	Myxococcaceae	|		|	scientific name	|
+31	|	Myxococcaceae Jahn 1924	|		|	synonym	|
+32	|	Myxococcus	|		|	scientific name	|
+32	|	Myxococcus Thaxter 1892	|		|	synonym	|
+33	|	"Micrococcus fulvus" Cohn 1875	|		|	synonym	|
+33	|	Micrococcus fulvus	|		|	synonym	|
+33	|	Myxococcus fulvus	|		|	scientific name	|
+33	|	Myxococcus fulvus (Cohn 1875) Jahn 1911	|		|	synonym	|
+34	|	Myxococcus xanthus	|		|	scientific name	|
+34	|	Myxococcus xanthus Beebe 1941	|		|	synonym	|
+34	|	Myxococcus xanthus retron Mx162	|		|	includes	|
+34	|	Myxococcus xanthus retron Mx65	|		|	includes	|
+35	|	"Chondrococcus macrosporus" Krzemieniewska and Krzemieniewski 1926	|		|	synonym	|
+35	|	'Corallococcus macrosporus'	|		|	synonym	|
+35	|	Chondrococcus macrosporus	|		|	synonym	|
+35	|	Corallococcus macrosporus	|		|	synonym	|
+35	|	Myxococcus macrosporus	|		|	scientific name	|
+35	|	Myxococcus macrosporus (Krzemieniewska and Krzemieniewski 1926) Zahler and McCurdy 1974	|		|	synonym	|
+35	|	not "Myxococcus macrosporus" Zukal 1897	|		|	synonym	|
+36	|	"Chondrococcus coralloides" (Thaxter 1892) Jahn 1924	|		|	synonym	|
+36	|	"Chondrococcus polycystus" (Kofler 1913) Krzemieniewska and Krzemieniewski 1926	|		|	synonym	|
+36	|	"Myxococcus clavatus" Quehl 1906	|		|	synonym	|
+36	|	"Myxococcus digitatus" Quehl 1906	|		|	synonym	|
+36	|	"Myxococcus exiguus" Kofler 1913	|		|	synonym	|
+36	|	"Myxococcus polycystus" Kofler 1913	|		|	synonym	|
+36	|	Chondrococcus coralloides	|		|	synonym	|
+36	|	Chondrococcus polycystus	|		|	synonym	|
+36	|	Myxococcus clavatus	|		|	synonym	|
+36	|	Myxococcus coralloides	|		|	scientific name	|
+36	|	Myxococcus coralloides Thaxter 1892	|		|	synonym	|
+36	|	Myxococcus digitatus	|		|	synonym	|
+36	|	Myxococcus exiguus	|		|	synonym	|
+36	|	Myxococcus polycystus	|		|	synonym	|
+38	|	"Angiococcus disciformis" (Thaxter 1904) Jahn 1924	|		|	synonym	|
+38	|	'Cystobacter disciformis'	|		|	synonym	|
+38	|	Angiococcus disciformis	|		|	scientific name	|
+38	|	Angiococcus disciformis (Thaxter 1904) Hook et al. 1980	|		|	synonym	|
+38	|	Cystobacter disciformis	|		|	synonym	|
+38	|	Myxococcus disciformis	|		|	synonym	|
+38	|	Myxococcus disciformis Thaxter 1904 (Approved Lists 1980)	|		|	synonym	|
+39	|	Archangiaceae	|		|	includes	|
+39	|	Archangiaceae Jahn 1924	|		|	includes	|
+39	|	Cystobacteraceae	|		|	scientific name	|
+39	|	Cystobacteraceae McCurdy 1970	|		|	synonym	|
+40	|	Stigmatella	|		|	scientific name	|
+40	|	Stigmatella Berkeley and Curtis 1875	|		|	synonym	|
+41	|	"Chondromyces aurantiacus" (Berkeley and Curtis) Thaxter 1892	|		|	synonym	|
+41	|	Chondromyces aurantiacus	|		|	synonym	|
+41	|	Stigmatella aurantiaca	|		|	scientific name	|
+41	|	Stigmatella aurantiaca Berkeley and Curtis 1875	|		|	synonym	|
+42	|	"Angiococcus" Jahn 1924	|		|	includes	|
+42	|	Angiococcus	|		|	includes	|
+42	|	Angiococcus (ex Jahn 1924) Hook et al. 1980	|		|	includes	|
+42	|	Cystobacter	|		|	scientific name	|
+42	|	Cystobacter Schroeter 1886	|		|	synonym	|
+43	|	"Polyangium fuscum" (Schroeter 1886) Thaxter 1904	|		|	synonym	|
+43	|	Cystobacter fuscus	|		|	scientific name	|
+43	|	Cystobacter fuscus Schroeter 1886	|		|	synonym	|
+43	|	Polyangium fuscum	|		|	synonym	|
+44	|	Melittangium	|		|	scientific name	|
+44	|	Melittangium Jahn 1924	|		|	synonym	|
+45	|	"Chondromyces gracilipes" Thaxter 1897	|		|	synonym	|
+45	|	"Chondromyces lichenicolus" Thaxter 1892	|		|	synonym	|
+45	|	"Chondromyces minor" Krzemieniewska and Krzemieniewski 1930	|		|	synonym	|
+45	|	"Podangium gracilipes" (Thaxter 1897) Jahn 1924	|		|	synonym	|
+45	|	"Podangium lichenicolum" (Thaxter 1892) Jahn 1924	|		|	synonym	|
+45	|	Chondromyces gracilipes	|		|	synonym	|
+45	|	Chondromyces lichenicolus	|		|	synonym	|
+45	|	Chondromyces minor	|		|	synonym	|
+45	|	Melittangium lichenicola	|		|	scientific name	|
+45	|	Melittangium lichenicola (Thaxter 1892) McCurdy 1971	|		|	synonym	|
+45	|	Podangium gracilipes	|		|	synonym	|
+45	|	Podangium lichenicolum	|		|	synonym	|
+47	|	Archangium	|		|	scientific name	|
+47	|	Archangium Jahn 1924	|		|	synonym	|
+48	|	"Chondrococcus cerebriformis" (Kofler) Jahn 1924	|		|	synonym	|
+48	|	"Chondromyces serpens" Quehl 1906	|		|	synonym	|
+48	|	"Myxococcus cerebriformis" Kofler 1913	|		|	synonym	|
+48	|	Archangium gephyra	|		|	scientific name	|
+48	|	Archangium gephyra Jahn 1924	|		|	synonym	|
+48	|	Chondrococcus cerebriformis	|		|	synonym	|
+48	|	Chondromyces serpens	|		|	synonym	|
+48	|	Myxococcus cerebriformis	|		|	synonym	|
+49	|	"Sorangiaceae" Jahn 1924	|		|	includes	|
+49	|	Polyangiaceae	|		|	scientific name	|
+49	|	Polyangiaceae Jahn 1924	|		|	synonym	|
+49	|	Sorangiaceae	|		|	includes	|
+50	|	"Myxobotrys" Zukal 1896	|		|	synonym	|
+50	|	"Polycephalum" Kalchbrenner and Cooke 1880	|		|	synonym	|
+50	|	Chondromyces	|		|	scientific name	|
+50	|	Chondromyces Berkeley and Curtis 1874	|		|	synonym	|
+50	|	Chrondromyces	|		|	misspelling	|
+50	|	Myxobotrys	|		|	synonym	|
+50	|	Polycephalum	|		|	synonym	|
+51	|	Chondromyces apiculatus	|		|	scientific name	|
+51	|	Chondromyces apiculatus Thaxter 1897	|		|	synonym	|
+51	|	Chrondromyces apiculatus	|		|	misspelling	|
+52	|	"Myxobotrys variabilis" Zukal 1896 (putative synonym)	|		|	synonym	|
+52	|	Chondromyces crocatus	|		|	scientific name	|
+52	|	Chondromyces crocatus Berkeley and Curtis 1874	|		|	synonym	|
+52	|	Chrondromyces crocatus	|		|	misspelling	|
+52	|	Myxobotrys variabilis	|		|	synonym	|
+53	|	Nannocystis	|		|	scientific name	|
+53	|	Nannocystis Reichenbach 1970	|		|	synonym	|
+54	|	Nannocystis exedens	|		|	scientific name	|
+54	|	Nannocystis exedens Reichenbach 1970	|		|	synonym	|
+55	|	Polyangium	|		|	scientific name	|
+55	|	Polyangium Link 1809	|		|	synonym	|
+56	|	"Polyangium cellulosum" Imshenetski and Solntseva 1936	|		|	synonym	|
+56	|	"Sorangium cellulosum" (Imshenetski and Solntseva 1936) Imshenetski and Solntseva 1937	|		|	synonym	|
+56	|	"Sorangium nigrescens" Krzemieniewska and Krzemieniewski 1938	|		|	synonym	|
+56	|	"Sorangium nigrum" Krzemieniewska and Krzemieniewski 1938	|		|	synonym	|
+56	|	Polyangium cellulosum	|		|	scientific name	|
+56	|	Polyangium cellulosum (ex Imshenetski and Solntseva 1936) Brockman 1989	|		|	synonym	|
+56	|	Sorangium cellulosum	|		|	synonym	|
+56	|	Sorangium nigrescens	|		|	synonym	|
+56	|	Sorangium nigrum	|		|	synonym	|
+57	|	Polyangium sp.	|		|	scientific name	|
+59	|	Vitreoscilla	|		|	scientific name	|
+59	|	Vitreoscilla Pringsheim 1949	|		|	synonym	|
+60	|	Vitreoscilla sp.	|		|	scientific name	|
+61	|	Vitreoscilla stercoraria	|		|	scientific name	|
+61	|	Vitreoscilla stercoraria Pringsheim 1951 (Approved Lists 1980) emend. Strohl et al. 1986	|		|	synonym	|
+62	|	Vitreoscilla beggiatoides	|		|	scientific name	|
+62	|	Vitreoscilla beggiatoides Pringsheim 1949 (Approved Lists 1980) emend. Strohl et al. 1986	|		|	synonym	|
+63	|	"Vitreoscilla filiformis" Pringsheim 1951	|		|	synonym	|
+63	|	Vitreoscilla filiformis	|		|	scientific name	|
+63	|	Vitreoscilla filiformis (ex Pringsheim 1951) Strohl et al. 1986	|		|	synonym	|
+64	|	Herpetosiphon	|		|	scientific name	|
+64	|	Herpetosiphon Holt and Lewin 1968	|		|	synonym	|
+65	|	Herpetosiphon aurantiacus	|		|	scientific name	|
+65	|	Herpetosiphon aurantiacus Holt and Lewin 1968	|		|	synonym	|
+65	|	Herpetosiphon giganteus	|		|	synonym	|
+68	|	Lysobacter	|		|	scientific name	|
+68	|	Lysobacter Christensen and Cook 1978	|		|	synonym	|
+69	|	Lysobacter enzymogenes	|		|	scientific name	|
+69	|	Lysobacter enzymogenes Christensen and Cook 1978	|		|	synonym	|
+71	|	Simonsiella	|		|	scientific name	|
+71	|	Simonsiella Schmid 1922	|		|	synonym	|
+72	|	"Caryophanon muelleri" (Schmid 1922) Peshkoff 1948	|		|	synonym	|
+72	|	Caryophanon muelleri	|		|	synonym	|
+72	|	Scheibenbakterien	|		|	common name	|
+72	|	Scheibenbakterien Muller 1911	|		|	common name	|
+72	|	Simonsiella muelleri	|		|	scientific name	|
+72	|	Simonsiella muelleri Schmid 1922	|		|	synonym	|
+75	|	Caulobacter	|		|	scientific name	|
+75	|	Caulobacter Henrici and Johnson 1935 (Approved Lists 1980) emend. Abraham et al. 1999	|		|	synonym	|
+78	|	Caulobacter sp.	|		|	scientific name	|
+80	|	'Caulobacter spinosum'	|		|	synonym	|
+80	|	Caulobacter spinosum	|		|	scientific name	|
+81	|	Hyphomicrobium	|		|	scientific name	|
+81	|	Hyphomicrobium Stutzer and Hartleb 1898	|		|	synonym	|
+81	|	Hyphomicrobium Stutzer and Hartleb 1899 (sic)	|		|	synonym	|
+82	|	Hyphomicrobium sp.	|		|	scientific name	|
+83	|	Hyphomicrobium vulgare	|		|	scientific name	|
+83	|	Hyphomicrobium vulgare Stutzer and Hartleb 1898	|		|	synonym	|
+83	|	Hyphomicrobium vulgare Stutzer and Hartleb 1899 (sic)	|		|	synonym	|
+84	|	Hyphomicrobium methylovorum	|		|	scientific name	|
+84	|	Hyphomicrobium methylovorum Izumi et al. 1983	|		|	synonym	|
+85	|	Hyphomonas	|		|	scientific name	|
+85	|	Hyphomonas (ex Pongratz 1957) Moore et al. 1984 emend. Weiner et al. 2000	|		|	synonym	|
+86	|	Hyphomonas jannaschiana	|		|	scientific name	|
+86	|	Hyphomonas jannaschiana Weiner et al. 1985	|		|	synonym	|
+87	|	Hyphomonas sp.	|		|	scientific name	|
+88	|	"Chlamydothrix" Migula 1900	|		|	synonym	|
+88	|	"Detoniella" Trevisan in de Toni and Trevisan 1889	|		|	synonym	|
+88	|	Chlamydothrix	|		|	synonym	|
+88	|	Detoniella	|		|	synonym	|
+88	|	Leptothrix	|		|	scientific name	|
+88	|	Leptothrix Kutzing 1843	|		|	synonym	|
+89	|	"Leptothrix crassa" Cholodny 1924	|		|	synonym	|
+89	|	"Leptothrix discophora" (Schwers 1912) Dorff 1934	|		|	synonym	|
+89	|	"Megalothrix discophora" Schwers 1912	|		|	synonym	|
+89	|	Leptothrix crassa	|		|	synonym	|
+89	|	Leptothrix discophora	|		|	scientific name	|
+89	|	Leptothrix discophora (ex Schwers 1912) Spring et al. 1997	|		|	synonym	|
+89	|	Megalothrix discophora	|		|	synonym	|
+93	|	Stella	|		|	scientific name	|
+93	|	Stella Vasilyeva 1985	|		|	synonym	|
+94	|	Stella humosa	|		|	scientific name	|
+94	|	Stella humosa Vasilyeva 1985	|		|	synonym	|
+96	|	Gallionella	|		|	scientific name	|
+96	|	Gallionella Ehrenberg 1838	|		|	synonym	|
+97	|	"Chlamydothrix ferruginea" (Ehrenberg 1838) Migula 1900	|		|	synonym	|
+97	|	"Spirillum ferrugineum" (Ehrenberg 1838) de Toni and Trevisan 1889	|		|	synonym	|
+97	|	"Spirophyllum ferrugineum" (Ehrenberg 1838) Ellis 1907	|		|	synonym	|
+97	|	Chlamydothrix ferruginea	|		|	synonym	|
+97	|	Gallionella ferruginea	|		|	scientific name	|
+97	|	Gallionella ferruginea Ehrenberg 1838	|		|	synonym	|
+97	|	Spirillum ferrugineum	|		|	synonym	|
+97	|	Spirophyllum ferrugineum	|		|	synonym	|
+99	|	Ancylobacter	|		|	scientific name	|
+99	|	Ancylobacter Raj 1983	|		|	synonym	|
+99	|	Microcyclus	|	Microcyclus <bacteria>	|	synonym	|
+99	|	Microcyclus Orskov 1928 (Approved Lists 1980)	|		|	synonym	|
+100	|	Ancylobacter aquaticus	|		|	scientific name	|
+100	|	Ancylobacter aquaticus (Orskov 1928) Raj 1983	|		|	synonym	|
+100	|	Microcyclus aquaticus	|		|	synonym	|
+100	|	Microcyclus aquaticus Orskov 1928 (Approved Lists 1980)	|		|	synonym	|

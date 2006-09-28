@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome.gene.ncbi;
+package ubic.gemma.loader.genome.llnl;
 
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.NetDatasourceUtil;
@@ -25,10 +25,10 @@ import ubic.gemma.util.NetDatasourceUtil;
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIUtil extends NetDatasourceUtil {
+public class ImageLlnlUtil extends NetDatasourceUtil {
 
     public void init() {
-        this.setHost( ConfigUtils.getString( "ncbi.host" ) );
+        this.setHost( ConfigUtils.getString( "llnl.image.host" ) );
+        assert this.getHost() != null;
     }
-
 }

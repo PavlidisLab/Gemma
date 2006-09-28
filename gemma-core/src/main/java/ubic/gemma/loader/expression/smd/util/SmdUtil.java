@@ -18,46 +18,16 @@
  */
 package ubic.gemma.loader.expression.smd.util;
 
-import java.io.IOException;
-import java.net.SocketException;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.net.ftp.FTPClient;
-
-import ubic.basecode.util.NetUtils;
-
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.NetDatasourceUtil;
 
 /**
- * <hr>
- * <p>
- * 
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class SmdUtil {
+public class SmdUtil extends NetDatasourceUtil {
 
-    protected static final Log log = LogFactory.getLog( SmdUtil.class );
-    private static String host;
-    private static String login;
-    private static String password;
     public static final String SMD_DELIM = "\n";
-
-    static {
-        Configuration config = null;
-        try {
-            config = new PropertiesConfiguration( "Gemma.properties" );
-        } catch ( ConfigurationException e ) {
-            log.error( e );
-        }
-        host = ( String ) config.getProperty( "smd.host" );
-        login = ( String ) config.getProperty( "smd.login" );
-        password = ( String ) config.getProperty( "smd.password" );
-    }
 
     /**
      * Split a SMD-formatted key-value string. These are preceded by 0 or more white-space, a "!", and then a
@@ -76,23 +46,9 @@ public class SmdUtil {
         return vals;
     }
 
-    /**
-     * Convenient method to get a FTP connection.
-     * 
-     * @param mode
-     * @return
-     * @throws SocketException
-     * @throws IOException
-     */
-    public static FTPClient connect( int mode ) throws SocketException, IOException {
-        return NetUtils.connect( mode, host, login, password );
-    }
-
-    /**
-     * @return
-     */
-    public static String getHostName() {
-        return host;
+    @Override
+    public void init() {
+        this.setHost( ConfigUtils.getString( "smd.host" ) );
     }
 
 }

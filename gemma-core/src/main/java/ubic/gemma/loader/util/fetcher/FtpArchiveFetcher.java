@@ -59,6 +59,10 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
     protected boolean doDelete = false;
     protected FTPClient f;
 
+    public FtpArchiveFetcher() {
+        initConfig();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -154,6 +158,12 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         if ( methodName != null ) {
             if ( methodName.equals( "gz" ) ) {
                 expander = null;
+            } else if ( methodName.equals( "tar.gz" ) ) {
+                expander = new Untar();
+                expander.setProject( new Project() );
+                UntarCompressionMethod method = new UntarCompressionMethod();
+                method.setValue( "gzip" );
+                ( ( Untar ) expander ).setCompression( method );
             } else {
                 expander = new Untar();
                 expander.setProject( new Project() );
@@ -177,7 +187,11 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
     @SuppressWarnings("unchecked")
     protected Collection<LocalFile> listFiles( String identifier, File newDir, String excludePattern )
             throws IOException {
-        log.info( "Got files for " + identifier + ":" );
+        if ( identifier == null ) {
+            log.info( "Got files:" );
+        } else {
+            log.info( "Got files for " + identifier + ":" );
+        }
         Collection<LocalFile> result = new HashSet<LocalFile>();
         for ( File file : ( Collection<File> ) FileTools.listDirectoryFiles( newDir ) ) {
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;

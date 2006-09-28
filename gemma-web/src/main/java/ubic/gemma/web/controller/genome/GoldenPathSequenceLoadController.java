@@ -38,7 +38,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import ubic.gemma.externalDb.GoldenPathDumper;
-import ubic.gemma.loader.genome.GoldenPathBioSequenceLoader;
+import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;

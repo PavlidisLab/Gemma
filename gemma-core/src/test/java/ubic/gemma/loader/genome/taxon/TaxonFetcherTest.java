@@ -16,19 +16,30 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome.gene.ncbi;
+package ubic.gemma.loader.genome.taxon;
 
-import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.NetDatasourceUtil;
+import java.util.Collection;
+
+import ubic.gemma.model.common.description.LocalFile;
+import junit.framework.TestCase;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIUtil extends NetDatasourceUtil {
+public class TaxonFetcherTest extends TestCase {
 
-    public void init() {
-        this.setHost( ConfigUtils.getString( "ncbi.host" ) );
+    public void testFetch() throws Exception {
+        TaxonFetcher fetcher = new TaxonFetcher();
+        Collection<LocalFile> files = fetcher.fetch();
+        assertEquals( 9, files.size() );
+        for ( LocalFile file : files ) {
+            if ( file.getLocalURL().toString().endsWith( "names.dmp" ) ) {
+                return;
+            }
+        }
+        fail( "No names.dmp file" );
+
     }
 
 }

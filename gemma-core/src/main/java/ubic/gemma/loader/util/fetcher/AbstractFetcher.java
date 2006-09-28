@@ -50,6 +50,15 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
+     * Like mkdir(accession) but for cases where there is no accession.
+     * 
+     * @return
+     */
+    protected File mkdir() throws IOException {
+        return this.mkdir( null );
+    }
+
+    /**
      * Create a directory according to the current accession number and set path information, including any nonexisting
      * parent directories. If the path cannot be used, we use a temporary directory.
      * 
@@ -68,18 +77,26 @@ public abstract class AbstractFetcher implements Fetcher {
             if ( !( targetPath.exists() && targetPath.canRead() ) ) {
                 log.warn( "Attempting to create directory '" + localBasePath + "'" );
                 targetPath.mkdirs();
-            } else {
-                log.info( targetPath + " exists, proceeding" );
-                return targetPath;
             }
-            newDir = new File( targetPath + File.separator + accession );
+
+            if ( accession == null ) {
+                newDir = targetPath;
+            } else {
+                newDir = new File( targetPath + File.separator + accession );
+            }
 
         }
 
         if ( localBasePath == null || !targetPath.canRead() ) {
             log.warn( "Could not create output directory " + newDir );
 
-            File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) + File.separator + accession );
+            File tmpDir;
+            String systemTempDir = System.getProperty( "java.io.tmpdir" );
+            if ( accession == null ) {
+                tmpDir = new File( systemTempDir );
+            } else {
+                tmpDir = new File( systemTempDir + File.separator + accession );
+            }
             log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
             newDir = tmpDir;
         }

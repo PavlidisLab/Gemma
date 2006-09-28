@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome;
+package ubic.gemma.loader.genome.goldenpath;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -194,7 +194,6 @@ public class GoldenPathBioSequenceLoader {
 
     /**
      * @param bioSequences
-     * @return
      */
     @SuppressWarnings("unchecked")
     void load( BlockingQueue<BioSequence> queue ) {

@@ -55,7 +55,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      */
     public Collection<LocalFile> fetch( String identifier ) {
         try {
-            if ( f == null || !f.isConnected() ) f = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( f == null || !f.isConnected() ) f = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
             assert f != null;
             File newDir = mkdir( identifier );
             newDir = new File( newDir, "rawDataFiles" );

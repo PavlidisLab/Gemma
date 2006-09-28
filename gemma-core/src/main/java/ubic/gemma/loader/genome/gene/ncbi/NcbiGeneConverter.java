@@ -18,7 +18,6 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
@@ -27,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.genome.GoldenPathBioSequenceLoader;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.util.converter.Converter;
@@ -48,15 +46,15 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 public class NcbiGeneConverter implements Converter {
 
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
-    private AtomicBoolean producerDone = new AtomicBoolean(false);
-    private AtomicBoolean sourceDone = new AtomicBoolean(false);
+    private AtomicBoolean producerDone = new AtomicBoolean( false );
+    private AtomicBoolean sourceDone = new AtomicBoolean( false );
     private ExternalDatabase genBank;
-    
+
     public NcbiGeneConverter() {
         genBank = ExternalDatabase.Factory.newInstance();
         genBank.setName( "Genbank" );
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -113,16 +111,16 @@ public class NcbiGeneConverter implements Converter {
         NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
         return convert( ncbiGene.getInfo() );
     }
-    
-    public Collection<GeneProduct> convert(NCBIGene2Accession acc, Gene gene) {
+
+    public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
         Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
         // initialize up to two Gene Products
         // one for RNA, one for Protein
 
         // RNA section
-        if (acc.getRnaNucleotideAccession() != null) {
+        if ( acc.getRnaNucleotideAccession() != null ) {
             GeneProduct geneProduct = GeneProduct.Factory.newInstance();
-        
+
             // set available fields
             geneProduct.setNcbiId( acc.getRnaNucleotideGI() );
             geneProduct.setGene( gene );
@@ -133,17 +131,17 @@ public class NcbiGeneConverter implements Converter {
             accession.setAccession( acc.getRnaNucleotideAccession() );
             accession.setAccessionVersion( acc.getRnaNucleotideAccessionVersion() );
             accession.setExternalDatabase( genBank );
-            
+
             Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
             accessions.add( accession );
             geneProduct.setAccessions( accessions );
             geneProducts.add( geneProduct );
         }
-        
+
         // Protein section
-        if (acc.getProteinAccession() != null) {
+        if ( acc.getProteinAccession() != null ) {
             GeneProduct geneProduct = GeneProduct.Factory.newInstance();
-        
+
             // set available fields
             geneProduct.setNcbiId( acc.getProteinGI() );
             geneProduct.setGene( gene );
@@ -154,7 +152,7 @@ public class NcbiGeneConverter implements Converter {
             accession.setAccession( acc.getProteinAccession() );
             accession.setAccessionVersion( acc.getProteinAccessionVersion() );
             accession.setExternalDatabase( genBank );
-            
+
             Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
             accessions.add( accession );
             geneProduct.setAccessions( accessions );
@@ -162,29 +160,29 @@ public class NcbiGeneConverter implements Converter {
         }
         return geneProducts;
     }
-    
-    public Gene convert(NcbiGeneData data) {        
+
+    public Gene convert( NcbiGeneData data ) {
         // get gene info and fill in gene
         NCBIGeneInfo geneInfo = data.getGeneInfo();
-        Gene gene = convert(geneInfo);
-        
-        // grab all accessions and fill in GeneProduct/DatabaseEntry 
+        Gene gene = convert( geneInfo );
+
+        // grab all accessions and fill in GeneProduct/DatabaseEntry
         // and associate with Gene
         Collection<NCBIGene2Accession> gene2accession = data.getAccessions();
         Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
 
-        for (NCBIGene2Accession acc : gene2accession ) {
-            geneProducts.addAll( convert(acc, gene));
+        for ( NCBIGene2Accession acc : gene2accession ) {
+            geneProducts.addAll( convert( acc, gene ) );
         }
         gene.setProducts( geneProducts );
-        
+
         return gene;
     }
-    
+
     /*
-     * Threaded conversion of domain objects to 
+     * Threaded conversion of domain objects to
      */
-    public void convert (final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue) {
+    public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
         Thread convertThread = new Thread( new Runnable() {
@@ -193,8 +191,8 @@ public class NcbiGeneConverter implements Converter {
                     NcbiGeneData data = null;
                     try {
                         data = geneInfoQueue.poll();
-                        if (data != null) {
-                            geneQueue.put( convert(data) );
+                        if ( data != null ) {
+                            geneQueue.put( convert( data ) );
                         }
                     } catch ( InterruptedException e ) {
                         log.info( "Interrupted." );
@@ -204,18 +202,18 @@ public class NcbiGeneConverter implements Converter {
             }
         } );
 
-        convertThread.start();     
+        convertThread.start();
     }
-    
+
     public boolean isProducerDone() {
         return this.producerDone.get();
     }
-    
-    public void setProducerDoneFlag(AtomicBoolean flag) {
+
+    public void setProducerDoneFlag( AtomicBoolean flag ) {
         this.producerDone = flag;
     }
-    
-    public void setSourceDoneFlag(AtomicBoolean flag) {
+
+    public void setSourceDoneFlag( AtomicBoolean flag ) {
         this.sourceDone = flag;
     }
 

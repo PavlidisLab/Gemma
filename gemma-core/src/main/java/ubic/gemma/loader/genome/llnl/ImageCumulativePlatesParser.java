@@ -16,50 +16,44 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome;
+package ubic.gemma.loader.genome.llnl;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
- * Parse a dump of a Goldenpath table. The input is expected to have just two columns: sequence identifier (accession)
- * and sequence length.
+ * <code>
+ *  100     LLAM    5753    a       7       381     human   AA17697
+ * </code>
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class GoldenPathBioSequenceParser extends BasicLineParser implements QueuingParser {
+public class ImageCumulativePlatesParser extends BasicLineParser {
 
-    private BlockingQueue<BioSequence> results = new ArrayBlockingQueue<BioSequence>( 10000 );
-
+    Collection<BioSequence> results = new ArrayList<BioSequence>();
     private ExternalDatabase genbank;
 
-    public GoldenPathBioSequenceParser() {
+    public ImageCumulativePlatesParser() {
         super();
         initGenbank();
     }
 
     @Override
     protected void addResult( Object obj ) {
-        try {
-            results.put( ( BioSequence ) obj );
-        } catch ( InterruptedException e ) {
-            // ;
-        }
+        results.add( ( BioSequence ) obj );
     }
 
+    @Override
     public Collection<BioSequence> getResults() {
         return results;
     }
@@ -74,29 +68,41 @@ public class GoldenPathBioSequenceParser extends BasicLineParser implements Queu
         // }
     }
 
-    @SuppressWarnings("unchecked")
-    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
-        this.results = queue;
-        parse( inputStream );
-    }
-
     public Object parseOneLine( String line ) {
-        String[] fields = StringUtils.split( line );
-        BioSequence bioSequence = BioSequence.Factory.newInstance();
+        String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+        if ( StringUtils.isBlank( fields[7] ) ) {
+            return null;
+        }
 
-        String name = fields[0];
-        Long length = Long.parseLong( fields[1] );
-        bioSequence.setName( name );
-        bioSequence.setLength( length );
+        BioSequence seq = BioSequence.Factory.newInstance();
 
-        de.setAccession( name );
-        de.setExternalDatabase( genbank );
+        seq.setName( fields[7] );
 
-        bioSequence.setSequenceDatabaseEntry( de );
+        StringBuilder buf = new StringBuilder();
 
-        return bioSequence;
+        buf.append( "IMAGE clone" );
+
+        if ( fields.length > 8 ) {
+            buf.append( "Other accession:" );
+            for ( int i = 8; i < fields.length; i++ ) {
+                buf.append( " " + fields[i] );
+            }
+        }
+
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( fields[6] );
+
+        seq.setTaxon( t );
+
+        seq.setDescription( buf.toString() );
+
+        DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
+        acc.setAccession( fields[7] );
+        acc.setExternalDatabase( genbank );
+
+        seq.setSequenceDatabaseEntry( acc );
+
+        return seq;
     }
-
 }

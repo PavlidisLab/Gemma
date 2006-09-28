@@ -57,7 +57,8 @@ public class DatasetFetcher extends GeoFetcher {
         log.info( "Seeking GDS file for " + accession );
 
         try {
-            if ( ftpClient == null || !ftpClient.isConnected() ) ftpClient = GeoUtil.connect( FTP.BINARY_FILE_TYPE );
+            if ( ftpClient == null || !ftpClient.isConnected() )
+                ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
             String seekFile = baseDir + "/" + accession + SOFT_GZ;
             File newDir = mkdir( accession );
             File outputFile = new File( newDir, accession + SOFT_GZ );
