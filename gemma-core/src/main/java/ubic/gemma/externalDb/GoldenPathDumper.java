@@ -84,7 +84,6 @@ public class GoldenPathDumper extends GoldenPath {
             limitSuffix = " limit " + batchSize;
         }
 
-        // FIXME - repeated code.
         log.info( "starting ests" );
         int offset = 0;
         int numInput = 0;
@@ -95,12 +94,7 @@ public class GoldenPathDumper extends GoldenPath {
                 if ( sequences.size() == 0 ) {
                     break;
                 }
-                for ( BioSequence sequence : sequences ) {
-                    queue.put( sequence );
-                    if ( ++numInput % 1000 == 0 ) {
-                        log.info( "Input " + numInput + " from goldenpath db" );
-                    }
-                }
+                numInput = addToQueue( queue, numInput, sequences );
                 offset += batchSize;
             } catch ( Exception e ) {
                 log.info( e );
@@ -118,12 +112,7 @@ public class GoldenPathDumper extends GoldenPath {
                 if ( sequences.size() == 0 ) {
                     break;
                 }
-                for ( BioSequence sequence : sequences ) {
-                    queue.put( sequence );
-                    if ( ++numInput % 1000 == 0 ) {
-                        log.info( "Input " + numInput + " from goldenpath db" );
-                    }
-                }
+                numInput = addToQueue( queue, numInput, sequences );
                 offset += batchSize;
             } catch ( Exception e ) {
                 log.info( e );
@@ -140,12 +129,7 @@ public class GoldenPathDumper extends GoldenPath {
                 if ( sequences.size() == 0 ) {
                     break;
                 }
-                for ( BioSequence sequence : sequences ) {
-                    queue.put( sequence );
-                    if ( ++numInput % 1000 == 0 ) {
-                        log.info( "Input " + numInput + " from goldenpath db" );
-                    }
-                }
+                numInput = addToQueue( queue, numInput, sequences );
                 offset += batchSize;
             } catch ( Exception e ) {
                 log.info( e );
@@ -153,6 +137,24 @@ public class GoldenPathDumper extends GoldenPath {
             }
         }
 
+    }
+
+    /**
+     * @param queue
+     * @param numInput
+     * @param sequences
+     * @return
+     * @throws InterruptedException
+     */
+    private int addToQueue( BlockingQueue<BioSequence> queue, int numInput, Collection<BioSequence> sequences )
+            throws InterruptedException {
+        for ( BioSequence sequence : sequences ) {
+            queue.put( sequence );
+            if ( ++numInput % 1000 == 0 ) {
+                log.info( "Input " + numInput + " from goldenpath db" );
+            }
+        }
+        return numInput;
     }
 
     private void initGenbank() {
