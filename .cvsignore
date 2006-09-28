@@ -12,3 +12,4 @@ andromda*.exc
 *.jar
 
 velocity.log.*
+.myumldata
