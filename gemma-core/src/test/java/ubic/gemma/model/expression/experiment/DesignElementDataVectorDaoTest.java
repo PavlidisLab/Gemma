@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -44,8 +45,20 @@ public class DesignElementDataVectorDaoTest extends BaseSpringContextTest {
      * 
      *
      */
-    public void testQuerByGeneSymbolAndSpecies() {
-        Collection objects = designElementDataVectorDao.queryByGeneSymbolAndSpecies( "GRIN1", "mouse" );
+    public void testQueryByGeneSymbolAndSpecies() {
+
+        Collection<ExpressionExperiment> expressionExperiments = new HashSet();
+        for ( long i = 0; i < 3; i++ ) {
+            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+            ee.setId( i );
+            ee.setName( "test_ee_" + i + " from DesignElementDataVectorDaoTest" );
+
+            expressionExperiments.add( ee );
+        }
+
+        Collection objects = designElementDataVectorDao.queryByGeneSymbolAndSpecies( "GRIN1", "mouse",
+                expressionExperiments );
+        assertNotNull( objects );
     }
 
 }

@@ -20,11 +20,13 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -100,36 +102,66 @@ public class DesignElementDataVectorDaoImpl extends
      *      java.lang.String)
      */
     @Override
-    protected Collection handleQueryByGeneSymbolAndSpecies( String geneSymbol, String species ) throws Exception {
-        final String queryString = "from DesignElementDataVectorImpl as d inner join d.designElement as de )";
-        // + "inner join de.biologicalCharacteristic as bs inner join bs.bioSequence2geneProduct as b2g "
-        // + "inner join b2g.geneProduct as gp inner join gp.gene as g "
-        // + "inner join g.taxon as t where g.symbol='GRIN1' and t.commonName='mouse' "
-        // + "and d.expressionExperiment.id in (1,4,6)";
+    protected Collection handleQueryByGeneSymbolAndSpecies( String geneOfficialSymbol, String species,
+            Collection expressionExperiments ) throws Exception {
+
+        String expressionExperimentIds = parenthesis( expressionExperiments );
+        final String queryString = "from DesignElementDataVectorImpl as d " // get DesignElementDataVectorImpl
+                + "inner join d.designElement as de " // where de.name='probe_5'";
+                + "inner join de.biologicalCharacteristic as bs " // where bs.name='test_bs'";
+                + "inner join bs.bioSequence2GeneProduct as b2g "// where b2g.score=1.5";
+                + "inner join b2g.geneProduct as gp inner join gp.gene as g "
+                + "inner join g.taxon as t where g.officialSymbol = :geneOfficialSymbol and t.commonName = :species "
+                + "and d.expressionExperiment.id in " + expressionExperimentIds;
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            // queryObject.setParameter( "id", id );
+            queryObject.setParameter( "geneOfficialSymbol", geneOfficialSymbol );
+            queryObject.setParameter( "species", species );
+            // queryObject.setParameter( "expressionExperiments", get ids of each expression experiment );
             java.util.List results = queryObject.list();
-            Object result = null;
+
             if ( results != null ) {
                 log.debug( "size: " + results.size() );
                 for ( Object obj : results ) {
                     log.debug( obj );
                 }
-                // if ( results.size() > 1 ) {
-                // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                // "More than one instance of 'Integer" + "' was found when executing query --> '"
-                // + queryString + "'" );
-                // } else if ( results.size() == 1 ) {
-                // result = results.iterator().next();
-                // }
             }
 
-            return ( Collection ) result;
+            return ( Collection ) results;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
     }
 
+    /**
+     * Places objects in the collection in a list surrounded by parenthesis and separated by commas. Useful for placing
+     * this String representation of the list in a sql "in" statement. ie. "... in stringReturnedFromThisMethod" will
+     * look like "... in (a,b,c)"
+     * 
+     * @param objects
+     * @return String
+     */
+    private String parenthesis( Collection objects ) {
+        // TODO refactor me into a utilities class and use reflection to determine
+        // the parameters that should live in the parenthesis.
+        String expressionExperimentIds = "";
+
+        Object[] objs = objects.toArray();
+        for ( int i = 0; i < objs.length; i++ ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) objs[i];
+
+            if ( StringUtils.isEmpty( expressionExperimentIds ) ) {
+                expressionExperimentIds = "(";
+            } else {
+                expressionExperimentIds = expressionExperimentIds + ee.getId().toString();
+                expressionExperimentIds = expressionExperimentIds + ",";
+            }
+        }
+
+        expressionExperimentIds = expressionExperimentIds + ( ( ExpressionExperiment ) objs[objs.length - 1] ).getId()
+                + ")";
+
+        return expressionExperimentIds;
+    }
 }
