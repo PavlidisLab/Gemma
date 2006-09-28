@@ -3,6 +3,7 @@ package ubic.gemma.loader.genome.llnl;
 import java.io.InputStream;
 
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoader;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -20,8 +21,9 @@ public class ImageCumulativePlatesLoaderTest extends BaseTransactionalSpringCont
         ImageCumulativePlatesLoader loader = new ImageCumulativePlatesLoader();
         loader.setPersisterHelper( persisterHelper );
         loader.setBioSequenceService( ( BioSequenceService ) this.getBean( "bioSequenceService" ) );
+        loader.setExternalDatabaseService( ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" ) );
         int actualValue = loader.load( is );
-        assertEquals( 100, actualValue );
+        assertEquals( 425, actualValue );
     }
 
     @Override

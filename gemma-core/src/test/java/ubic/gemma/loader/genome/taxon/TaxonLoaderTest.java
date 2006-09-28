@@ -40,7 +40,7 @@ public class TaxonLoaderTest extends BaseTransactionalSpringContextTest {
         TaxonLoader tl = new TaxonLoader();
         tl.setPersisterHelper( persisterHelper );
         int actualValue = tl.load( is );
-        assertEquals( 100, actualValue );
+        assertEquals( 75, actualValue );
     }
 
     @Override
