@@ -17,6 +17,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseTransactionalSpringCont
 
     public void testLoadInputStream() throws Exception {
         ImageCumulativePlatesLoader loader = new ImageCumulativePlatesLoader();
+        loader.setPersisterHelper( persisterHelper );
         int actualValue = loader.load( is );
         assertEquals( 100, actualValue );
     }
