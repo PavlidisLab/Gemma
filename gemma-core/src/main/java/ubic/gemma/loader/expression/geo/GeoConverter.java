@@ -236,7 +236,9 @@ public class GeoConverter implements Converter {
                 + ( StringUtils.isBlank( channel.getLabelProtocol() ) ? "" : " Labeling Protocol: "
                         + channel.getLabelProtocol() )
                 + ( StringUtils.isBlank( channel.getTreatmentProtocol() ) ? "" : " Treatment Protocol: "
-                        + channel.getTreatmentProtocol() ) );
+                        + channel.getTreatmentProtocol() )
+                + ( StringUtils.isBlank( channel.getGrowthProtocol() ) ? "" : " Growth Protocol: "
+                        + channel.getGrowthProtocol() ) );
         // these protocols could be made into 'real' protocols, if anybody cares.
 
         for ( String characteristic : channel.getCharacteristics() ) {
@@ -408,8 +410,6 @@ public class GeoConverter implements Converter {
         }
 
     }
-
-  
 
     /**
      * Convert the GEO data into DesignElementDataVectors associated with the ExpressionExperiment
