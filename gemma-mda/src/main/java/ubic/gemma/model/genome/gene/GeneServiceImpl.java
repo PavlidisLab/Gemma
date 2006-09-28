@@ -55,14 +55,16 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialName(java.lang.String)
      */
-    protected java.util.Collection handleFindByOfficialName( java.lang.String officialName ) throws java.lang.Exception {
+    @SuppressWarnings("unchecked")
+    protected java.util.Collection<Gene> handleFindByOfficialName( java.lang.String officialName ) throws java.lang.Exception {
         return this.getGeneDao().findByOfficialName( officialName );
     }
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialSymbol(java.lang.String)
      */
-    protected java.util.Collection handleFindByOfficialSymbol( java.lang.String officialSymbol )
+    @SuppressWarnings("unchecked")
+    protected java.util.Collection<Gene> handleFindByOfficialSymbol( java.lang.String officialSymbol )
             throws java.lang.Exception {
         return this.getGeneDao().findByOfficalSymbol( officialSymbol );
     }
@@ -70,7 +72,8 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#handleFindByOfficialSymbolInexact(java.lang.String)
      */
-    protected java.util.Collection handleFindByOfficialSymbolInexact( java.lang.String officialSymbol )
+    @SuppressWarnings("unchecked")
+    protected java.util.Collection<Gene> handleFindByOfficialSymbolInexact( java.lang.String officialSymbol )
             throws java.lang.Exception {
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
     }

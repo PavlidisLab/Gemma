@@ -410,7 +410,11 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected DatabaseEntry persistDatabaseEntry( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null ) return null;
-        databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
+        ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
+        databaseEntry.setExternalDatabase( null );
+        ExternalDatabase persistedDb = persistExternalDatabase( tempExternalDb );
+        databaseEntry.setExternalDatabase( persistedDb );
+        
         assert databaseEntry.getExternalDatabase().getId() != null;
         DatabaseEntry nde = databaseEntryService.findOrCreate( databaseEntry );
         log.info( "Persisted DatabaseEntry" + nde );
@@ -424,16 +428,24 @@ abstract public class CommonPersister extends AbstractPersister {
 
         if ( database == null ) return null;
         if ( !isTransient( database ) ) return database;
-
+        
         String name = database.getName(); // FIXME make sure this is the right business key to use.
 
         if ( seenDatabases.containsKey( name ) ) {
             return seenDatabases.get( name );
         }
+        
+        Collection<DatabaseEntry> tempDbEntry = database.getDatabaseEntries();
+        database.setDatabaseEntries( null );
 
         log.debug( "Loading or creating " + name );
         database = externalDatabaseService.findOrCreate( database );
+        
+        database.setDatabaseEntries( tempDbEntry );
+        database = externalDatabaseService.findOrCreate( database );
+        
         seenDatabases.put( database.getName(), database );
+        
         return database;
     }
 

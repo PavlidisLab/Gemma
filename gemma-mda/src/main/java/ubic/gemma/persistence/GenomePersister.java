@@ -111,14 +111,25 @@ abstract public class GenomePersister extends CommonPersister {
             gene.setAccessions( ( Collection<DatabaseEntry> ) persist( gene.getAccessions() ) );
         }
 
+        Collection<GeneProduct> tempGeneProduct = gene.getProducts();
+        gene.setProducts( null );
+
         gene.setTaxon( persistTaxon( gene.getTaxon() ) );
 
         gene = geneService.findOrCreate( gene );
 
+        for ( GeneProduct product : tempGeneProduct ) {
+            product.setGene( gene );
+            for ( DatabaseEntry databaseEntry : product.getAccessions() ) {
+                databaseEntry.setExternalDatabase( persistExternalDatabase( databaseEntry.getExternalDatabase() ) );
+            }
+        }
+        gene.setProducts( tempGeneProduct );
+
         for ( GeneAlias alias : gene.getAliases() ) {
             alias.setGene( gene );
         }
-
+        geneService.update( gene );
         return gene;
     }
 
@@ -231,8 +242,8 @@ abstract public class GenomePersister extends CommonPersister {
         if ( geneProduct == null ) return null;
         if ( !isTransient( geneProduct ) ) return geneProduct;
 
-        Gene g = geneProduct.getGene();
-        geneProduct.setGene( persistGene( g ) ); // should cascade to the geneproducts.
+        // Gene g = geneProduct.getGene();
+        // geneProduct.setGene( persistGene( g ) ); // should cascade to the geneproducts.
 
         return geneProductService.create( geneProduct );
     }
