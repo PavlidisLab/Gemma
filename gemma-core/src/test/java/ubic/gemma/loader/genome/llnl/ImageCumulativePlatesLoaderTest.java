@@ -3,6 +3,7 @@ package ubic.gemma.loader.genome.llnl;
 import java.io.InputStream;
 
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoader;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 public class ImageCumulativePlatesLoaderTest extends BaseTransactionalSpringContextTest {
@@ -18,6 +19,7 @@ public class ImageCumulativePlatesLoaderTest extends BaseTransactionalSpringCont
     public void testLoadInputStream() throws Exception {
         ImageCumulativePlatesLoader loader = new ImageCumulativePlatesLoader();
         loader.setPersisterHelper( persisterHelper );
+        loader.setBioSequenceService( ( BioSequenceService ) this.getBean( "bioSequenceService" ) );
         int actualValue = loader.load( is );
         assertEquals( 100, actualValue );
     }
