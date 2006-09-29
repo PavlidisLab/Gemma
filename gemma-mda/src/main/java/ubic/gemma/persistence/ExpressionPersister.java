@@ -92,10 +92,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     public Object persist( Object entity ) {
         if ( entity == null ) return null;
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Persisting: " + entity.getClass().getSimpleName() + " (" + entity + ")" );
-        }
-
         if ( entity instanceof ExpressionExperiment ) {
             return persistExpressionExperiment( ( ExpressionExperiment ) entity );
         } else if ( entity instanceof BioAssayDimension ) {

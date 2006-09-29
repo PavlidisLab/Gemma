@@ -20,7 +20,6 @@ package ubic.gemma.loader.genome.llnl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -34,6 +33,7 @@ import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 
 /**
  * <code>
@@ -55,7 +55,11 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
 
     @Override
     protected void addResult( Object obj ) {
-        results.add( ( BioSequence ) obj );
+        try {
+            results.put( ( BioSequence ) obj );
+        } catch ( InterruptedException e ) {
+            // ;
+        }
     }
 
     @Override
@@ -82,7 +86,9 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
 
         BioSequence seq = BioSequence.Factory.newInstance();
 
-        seq.setName( fields[7] );
+        seq.setName( "IMAGE:" + fields[0] );
+
+        seq.setType( SequenceType.EST );
 
         StringBuilder buf = new StringBuilder();
 
@@ -94,13 +100,12 @@ public class ImageCumulativePlatesParser extends BasicLineParser implements Queu
                 buf.append( " " + fields[i] );
             }
         }
+        seq.setDescription( buf.toString() );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( fields[6] );
 
         seq.setTaxon( t );
-
-        seq.setDescription( buf.toString() );
 
         DatabaseEntry acc = DatabaseEntry.Factory.newInstance();
         acc.setAccession( fields[7] );
