@@ -45,29 +45,20 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
     private static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
     private AtomicBoolean producerDone = new AtomicBoolean(false);
     
+    
+    
     /**
      * @return a collection of NCBIGene2Accession
      * @see ubic.gemma.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
      */
-    public Collection<NCBIGene2Accession> generate() {
-        return this.generate( null );
-    }
-
-    /**
-     * @param accession NOT USED HERE
-     * @return a collection of NCBIGene2Accession
-     * @see ubic.gemma.loader.loaderutils.SourceDomainObjectGenerator#generate(java.lang.String)
-     */
-    @SuppressWarnings("unused")
-    public Collection<NCBIGene2Accession> generate( String accession ) {
+    public Collection<NCBIGene2Accession> generate( final BlockingQueue<NcbiGeneData> queue ) {
 
         log.info( "Fetching..." );
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
         LocalFile geneInfoFile = fetcher.fetch( "gene_info" ).iterator().next();
         LocalFile gene2AccessionFile = fetcher.fetch( "gene2accession" ).iterator().next();
 
- //       return processLocalFiles( geneInfoFile, gene2AccessionFile );
-        return null;
+        return processLocalFiles( geneInfoFile, gene2AccessionFile, queue );
     }
 
     /**
@@ -154,6 +145,11 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
             NCBIGeneInfo info = infoParser.get( o.getGeneId() );
             o.setInfo( info );
         }*/
+        return null;
+    }
+
+    // not used at all
+    public Collection<?> generate( String accession ) {
         return null;
     }
 

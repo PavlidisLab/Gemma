@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -22,7 +23,7 @@ import ubic.gemma.persistence.PersisterHelper;
  */
 public class NcbiGeneLoader {
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
-    private static final int QUEUE_SIZE = 10000;
+    private static final int QUEUE_SIZE = 1000;
     private static final int BATCH_SIZE = 1000;
 
     private AtomicBoolean generatorDone;
@@ -30,6 +31,9 @@ public class NcbiGeneLoader {
     private AtomicBoolean loaderDone;
     private PersisterHelper persisterHelper;
     private int loadedGeneCount = 0;
+    
+    private String GENEINFO_FILE = "gene_info";
+    private String GENE2ACCESSION_FILE = "gene2accession";
 
     /**
      * @param persisterHelper the persisterHelper to set
@@ -72,7 +76,12 @@ public class NcbiGeneLoader {
         final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<NcbiGeneData>( QUEUE_SIZE );
         final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( QUEUE_SIZE );
         // Threaded producer - loading files into queue as GeneInfo objects
-        sdog.generateLocal( geneInfoFile, gene2AccFile, geneInfoQueue );
+        if (StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
+            sdog.generate( geneInfoQueue );
+        }
+        else {
+            sdog.generateLocal( geneInfoFile, gene2AccFile, geneInfoQueue );
+        }
         // Threaded consumer/producer - consumes GeneInfo objects and generates
         // Gene/GeneProduct/DatabaseEntry entries
         converter.convert( geneInfoQueue, geneQueue );
@@ -80,12 +89,23 @@ public class NcbiGeneLoader {
         // the database
         this.load( geneQueue );
     }
+    
+    /**
+     * download the gene_info and gene2accession files, then call load
+     * @return
+     * @throws IOException
+     */
+    public void load( ) throws IOException {
+        String geneInfoFile = "";
+        String gene2AccFile = "";
+        load(geneInfoFile,gene2AccFile);
+    }
 
     /**
      * @param geneQueue a blocking queue of genes to be loaded into the database loads genes into the database
      * @param geneQueue
      */
-    public void load( final BlockingQueue<Gene> geneQueue ) {
+    private void load( final BlockingQueue<Gene> geneQueue ) {
         final SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
 
