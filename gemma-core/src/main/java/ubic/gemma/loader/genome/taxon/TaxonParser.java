@@ -20,7 +20,6 @@ package ubic.gemma.loader.genome.taxon;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;

@@ -58,11 +58,11 @@ public class GoldenPathBioSequenceLoader {
     BioSequenceService bioSequenceService;
     ExternalDatabase genbank;
 
-    private int limit = -1;
+    int limit = -1;
 
     GoldenPathBioSequenceParser parser = new GoldenPathBioSequenceParser();
     private Taxon taxon;
-    private boolean producerDone = false;
+    boolean producerDone = false;
     private boolean consumerDone = false;
 
     public GoldenPathBioSequenceLoader( Taxon taxon ) {

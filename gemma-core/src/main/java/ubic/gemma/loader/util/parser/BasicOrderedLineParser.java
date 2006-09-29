@@ -18,7 +18,6 @@
  */
 package ubic.gemma.loader.util.parser;
 
-import java.util.Collection;
 import java.util.List;
 
 /**

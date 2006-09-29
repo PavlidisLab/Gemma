@@ -42,6 +42,7 @@ import ubic.gemma.util.ConfigUtils;
 public class TaxonFetcher extends FtpArchiveFetcher {
 
     @Override
+    @SuppressWarnings("unused")
     protected String formRemoteFilePath( String identifier ) {
         return baseDir + "taxdump.tar.gz";
     }
