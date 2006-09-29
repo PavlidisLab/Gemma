@@ -98,10 +98,14 @@ public class SpringContextUtil {
      * @param paths
      */
     private static void addCommonConfig( boolean isWebapp, List<String> paths ) {
-        paths.add( "classpath*:ubic/gemma/applicationContext-*.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-security.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );
+        paths.add( "classpath*:ubic/gemma/applicationContext-persisterBeans.xml" );
         File f = new File( getGemmaHomeProperty() );
         try {
             if ( isWebapp ) {
+                paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
                 paths.add( f.toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
             }
         } catch ( MalformedURLException e ) {

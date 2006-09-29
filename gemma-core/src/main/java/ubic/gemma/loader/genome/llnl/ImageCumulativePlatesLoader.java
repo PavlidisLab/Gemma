@@ -62,11 +62,8 @@ public class ImageCumulativePlatesLoader {
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
         genbank = externalDatabaseService.find( "Genbank" );
+        assert ( genbank != null && genbank.getId() != null );
     }
-
-    // public void setTaxonService( TaxonService taxonService ) {
-    // this.taxonService = taxonService;
-    // }
 
     public void setBioSequenceService( BioSequenceService bioSequenceService ) {
         this.bioSequenceService = bioSequenceService;
@@ -117,8 +114,7 @@ public class ImageCumulativePlatesLoader {
         ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         parser.parse( inputStream );
         Collection<BioSequence> results = parser.getResults();
-        // results = ( Collection<BioSequence> ) persisterHelper.persist( results );
-        // log.info( "Persisted " + results.size() + " biosequences" );
+
         Collection<BioSequence> bioSequencesToPersist = new ArrayList<BioSequence>();
         int count = 0;
         int cpt = 0;
