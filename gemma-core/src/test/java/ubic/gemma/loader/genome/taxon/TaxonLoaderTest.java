@@ -38,6 +38,7 @@ public class TaxonLoaderTest extends BaseTransactionalSpringContextTest {
 
     public void testLoadInputStream() throws Exception {
         TaxonLoader tl = new TaxonLoader();
+        tl.setFilter( false);
         tl.setPersisterHelper( persisterHelper );
         int actualValue = tl.load( is );
         assertEquals( 75, actualValue );

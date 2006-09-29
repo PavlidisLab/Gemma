@@ -45,12 +45,6 @@ public class TaxonParser extends BasicLineMapParser {
     @Override
     public Taxon get( Object key ) {
         Taxon t = results.get( key );
-        //
-        // // some are not really usable or taxa, like Phylum names. We identify these by the fact that they lack common
-        // // names.
-        // if ( t.getCommonName() == null ) {
-        // return null;
-        // }
         return t;
     }
 
@@ -61,13 +55,6 @@ public class TaxonParser extends BasicLineMapParser {
 
     @Override
     public Collection<Taxon> getResults() {
-        // Collection<Taxon> cleanedResults = new HashSet<Taxon>();
-        // for ( Taxon taxon : results.values() ) {
-        // Taxon toAdd = this.get( taxon.getNcbiId() );
-        // if ( toAdd == null ) continue;
-        // cleanedResults.add( toAdd );
-        // }
-        // return cleanedResults;
         return results.values();
     }
 

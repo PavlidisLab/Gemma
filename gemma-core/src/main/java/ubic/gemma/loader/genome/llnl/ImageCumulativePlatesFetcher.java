@@ -41,6 +41,7 @@ import ubic.gemma.util.ConfigUtils;
 public class ImageCumulativePlatesFetcher extends FtpFetcher {
 
     public ImageCumulativePlatesFetcher() {
+        this.force = false;
         initConfig();
     }
 
@@ -63,7 +64,6 @@ public class ImageCumulativePlatesFetcher extends FtpFetcher {
             File outputFile = new File( newDir, "cumulative_arrayed_plates." + identifier + ".gz" );
             String outputFileName = outputFile.getAbsolutePath();
 
-            // String seekFile = baseDir + "/" + accession + "_family.soft.gz";
             String seekFile = baseDir + "cumulative_arrayed_plates." + identifier + ".gz";
             boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
             ftpClient.disconnect();

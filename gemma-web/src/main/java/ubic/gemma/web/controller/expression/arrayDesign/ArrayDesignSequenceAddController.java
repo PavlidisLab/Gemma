@@ -34,6 +34,7 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
+import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
@@ -215,6 +216,9 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
         List<Taxon> taxonNames = new ArrayList<Taxon>();
 
         for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            if ( !SupportedTaxa.contains( taxon ) ) {
+                continue;
+            }
             taxonNames.add( taxon );
         }
 

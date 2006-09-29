@@ -24,6 +24,7 @@ import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoaderTest;
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesFetcherTest;
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesLoaderTest;
 import ubic.gemma.loader.genome.llnl.ImageCumulativePlatesParserTest;
+import ubic.gemma.loader.genome.taxon.SupportedTaxaTest;
 import ubic.gemma.loader.genome.taxon.TaxonFetcherTest;
 import ubic.gemma.loader.genome.taxon.TaxonLoaderTest;
 import ubic.gemma.loader.genome.taxon.TaxonParserTest;
@@ -52,6 +53,7 @@ public class AllGenomeTests {
         suite.addTestSuite( TaxonFetcherTest.class );
         suite.addTestSuite( TaxonLoaderTest.class );
         suite.addTestSuite( TaxonParserTest.class );
+        suite.addTestSuite( SupportedTaxaTest.class );
         // $JUnit-END$
         return suite;
     }

@@ -30,8 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Load taxa into the system.
@@ -44,6 +42,8 @@ public class TaxonLoader {
     private static Log log = LogFactory.getLog( TaxonLoader.class.getName() );
 
     PersisterHelper persisterHelper;
+
+    private boolean filter = true;
 
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
@@ -92,29 +92,29 @@ public class TaxonLoader {
         Collection<Taxon> results = parser.getResults();
 
         int count = 0;
-        int cpt = 0;
-        double secspt = 0.0;
-        long millis = System.currentTimeMillis();
 
         for ( Taxon taxon : results ) {
 
-            taxon = ( Taxon ) persisterHelper.persist( taxon );
-
-            // just some timing information.
-            if ( ++count % 1000 == 0 ) {
-                cpt++;
-                double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
-                secspt += secsperthousand;
-                double meanspt = secspt / cpt;
-
-                String progString = "Processed and loaded " + count + " taxa, last one was " + taxon.getCommonName()
-                        + " (" + secsperthousand + " seconds elapsed, average per thousand=" + meanspt + ")";
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
-                log.info( progString );
-                millis = System.currentTimeMillis();
+            if ( filter && !SupportedTaxa.contains( taxon ) ) {
+                continue;
             }
+
+            if ( log.isDebugEnabled() ) log.debug( "Loading " + taxon );
+            taxon = ( Taxon ) persisterHelper.persist( taxon );
+            count++;
+
         }
+
+        log.info( "Persisted " + count + " taxa" );
         return count;
     }
 
+    /**
+     * Default is to filter to exclude non-supported taxa.
+     * 
+     * @param b
+     */
+    public void setFilter( boolean b ) {
+        this.filter = b;
+    }
 }
