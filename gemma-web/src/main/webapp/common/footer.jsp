@@ -27,5 +27,6 @@ _uacct = "UA-255601-1";
 urchinTracker();
 </script>
 <br />
+<authz:authorize ifAllGranted="admin">
 <script type="text/javascript"> document.writeln("Last Updated: "+document.lastModified); </script>
-
+</authz:authorize>
