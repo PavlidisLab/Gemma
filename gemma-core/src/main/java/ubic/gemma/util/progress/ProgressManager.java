@@ -26,12 +26,12 @@ import java.util.Observer;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.JobInfoDao;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 
 /**
@@ -130,21 +130,24 @@ public class ProgressManager {
     }
 
     /**
-     * @param userName (owner of the job)
+     * @param id If a valid user name is used for the id the progress job created will be automatically associated with
+     *        that user, else there will be no association between the created job and any user. In this case it might
+     *        be good to use a session id for tracking purposes although currently the session id is not persisted to
+     *        the database. todo: should session id's be persisted to the database for anonymous users?
      * @param description (description of the job)
      * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
      *         job assciated with it that progress job will be returned.
      */
-    public static synchronized ProgressJob createProgressJob( String userName, String description ) {
+    public static synchronized ProgressJob createProgressJob( String id, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob;
 
-        assert userName != null : "Username cannot be null!";
+        assert id != null : "id cannot be null!";
 
-        if ( !progressJobs.containsKey( userName ) ) progressJobs.put( userName, new Vector<ProgressJob>() );
+        if ( !progressJobs.containsKey( id ) ) progressJobs.put( id, new Vector<ProgressJob>() );
 
-        usersJobs = progressJobs.get( userName );
+        usersJobs = progressJobs.get( id );
 
         // No job currently assciated with this thread.
         if ( currentJob.get() == null ) {
@@ -154,9 +157,11 @@ public class ProgressManager {
             jobI.setStartTime( cal.getTime() );
             jobI.setDescription( description );
 
-            jobI
-                    .setUser( userService.findByUserName( SecurityContextHolder.getContext().getAuthentication()
-                            .getName() ) );
+            // User aUser = userService.findByUserName( SecurityContextHolder.getContext().getAuthentication().getName()
+            // );
+            User aUser = userService.findByUserName( id );
+            if ( aUser != null ) jobI.setUser( aUser );
+           
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
             newJob = new ProgressJobImpl( createdJobI, description );
@@ -164,15 +169,16 @@ public class ProgressManager {
             newJob.setPhase( 0 );
 
             // keep track of these jobs
-            usersJobs.add( newJob );
+            usersJobs.add( newJob ); // adds to the progressJobs collection
             progressJobsById.put( createdJobI.getId(), newJob );
         } else {
-            Long id = currentJob.get();
-            newJob = progressJobsById.get( id );
+            Long oldId = currentJob.get();
+            newJob = progressJobsById.get( oldId );
             newJob.setPhase( newJob.getPhase() + 1 );
             newJob.setDescription( description );
         }
 
+        newJob.setTrackingId(id);
         // ProgressManager.dump();
 
         return newJob;
@@ -235,10 +241,14 @@ public class ProgressManager {
      */
     public static synchronized boolean destroyProgressJob( ProgressJob ajob ) {
 
-        if ( progressJobs.containsKey( ajob.getUser() ) ) {
-            Collection jobs = progressJobs.get( ajob.getUser() );
+        ajob.updateProgress(  new ProgressData(100,"Finalizing and cleaning up...", true) );
+        ajob.done();
+  
+        
+        if ( progressJobs.containsKey( ajob.getTrackingId() ) ) {
+            Collection jobs = progressJobs.get( ajob.getTrackingId() );
             jobs.remove( ajob );
-            if ( jobs.isEmpty() ) progressJobs.remove( ajob.getUser() );
+            if ( jobs.isEmpty() ) progressJobs.remove( ajob.getTrackingId() );
         }
         if ( progressJobsById.containsKey( ajob.getId() ) ) progressJobsById.remove( ajob.getId() );
 

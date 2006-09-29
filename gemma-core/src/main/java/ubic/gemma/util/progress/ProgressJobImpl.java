@@ -36,6 +36,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     protected ProgressData pData;
     protected JobInfo jInfo;
     protected int currentPhase;
+    protected String trackingId;
 
     /**
      * The factory create method in ProgressManager is the advised way to create a ProgressJob
@@ -78,7 +79,9 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     }
 
     public String getUser() {
-        return jInfo.getUser().getName();
+        if ( jInfo.getUser() == null ) return null;
+
+        return jInfo.getUser().getUserName();
     }
 
     /**
@@ -91,8 +94,8 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     }
 
     /**
-     * Updates the progress job by a complete progressData. Used if more than the percent needs to be updates.
-     * Updating the entire datapack causes the underlying dao to update its database entry for desciption only
+     * Updates the progress job by a complete progressData. Used if more than the percent needs to be updates. Updating
+     * the entire datapack causes the underlying dao to update its database entry for desciption only
      * 
      * @param pd
      */
@@ -122,10 +125,10 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     }
 
     public void done() {
-        
-       Calendar cal = new GregorianCalendar(); 
-       jInfo.setEndTime( cal.getTime() );            
-            
+
+        Calendar cal = new GregorianCalendar();
+        jInfo.setEndTime( cal.getTime() );
+
     }
 
     public int getPhase() {
@@ -136,23 +139,36 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public void setPhase( int phase ) {
         if ( phase < 0 ) return;
 
-        if ( phase > jInfo.getPhases()) jInfo.setPhases( phase );
+        if ( phase > jInfo.getPhases() ) jInfo.setPhases( phase );
 
         currentPhase = phase;
     }
-    
-    public void setDescription(String description) {
+
+    public void setDescription( String description ) {
         this.pData.setDescription( description );
         this.jInfo.setDescription( description );
     }
-    
+
     public String getDescription() {
         return this.pData.getDescription();
     }
-    
-    public JobInfo getJobInfo()
-    {
+
+    public JobInfo getJobInfo() {
         return this.jInfo;
     }
-    
+
+    /**
+     * @return the anonymousId
+     */
+    public String getTrackingId() {
+        return trackingId;
+    }
+
+    /**
+     * @param anonymousId the anonymousId to set
+     */
+    public void setTrackingId( String trackingId ) {
+        this.trackingId = trackingId;
+    }
+
 }
