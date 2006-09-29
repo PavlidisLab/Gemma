@@ -43,12 +43,12 @@ import org.apache.log4j.Logger;
 /**
  * Base Command Line Interface. Provides some default functionality.
  * <p>
- * To use this, in your concrete subclass, implement your main method so that it calls processCommandLine. You must
- * implement buildOptions and processOptions to handle any application-specific options. In your main method, you should
- * return any non-null return value from processCommandLine.
+ * To use this, in your concrete subclass, implement a main method. You must implement buildOptions and processOptions
+ * to handle any application-specific options (they can be no-ops).
  * <p>
- * To facilitate testing of your subclass, your main method can must call a non-static 'doWork' method, that will be
- * exposed for testing.
+ * To facilitate testing of your subclass, your main method must call a non-static 'doWork' method, that will be exposed
+ * for testing. In that method call processCommandline. You should return any non-null return value from
+ * processCommandLine.
  * 
  * @author pavlidis
  * @version $Id$
