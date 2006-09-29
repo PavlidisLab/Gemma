@@ -131,7 +131,17 @@
 			href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%> ">
 			<%
 			out.print( expressionExperiment.getBioAssays().size() );
-			%> </a> bioAssays for this expression experiment.
+			%> </a> bioAssays for this expression experiment, with the following designs.
+		<br />
+		<h3>
+			<fmt:message key="arrayDesigns.title" />			
+		</h3>
+		<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList" export="true"
+			pagesize="10">
+			<display:column property="name" sortable="true" maxWords="20"
+				href="/Gemma/arrays/showArrayDesign.html" paramId="name" paramProperty="name" />
+			<display:setProperty name="basic.empty.showtable" value="false" />
+		</display:table>			
 		<br />
 		
         <h3>

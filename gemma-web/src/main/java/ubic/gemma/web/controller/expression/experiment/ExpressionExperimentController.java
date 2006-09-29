@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +28,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -90,6 +94,17 @@ public class ExpressionExperimentController extends BaseMultiActionController {
  
         Set s  = expressionExperimentService.getQuantitationTypeCountById(id ).entrySet();
         mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById(id ).entrySet());
+        
+        // add arrayDesigns used, by name
+        Collection<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
+        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
+        for ( BioAssay assay : bioAssays ) {
+            ArrayDesign design = assay.getArrayDesignUsed();
+            if (!arrayDesigns.contains( design )) {
+                arrayDesigns.add( design );
+            }
+        }
+        mav.addObject( "arrayDesigns", arrayDesigns );
         return mav;
     }
     
