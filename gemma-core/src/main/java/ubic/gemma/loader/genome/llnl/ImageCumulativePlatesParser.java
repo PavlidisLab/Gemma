@@ -18,11 +18,16 @@
  */
 package ubic.gemma.loader.genome.llnl;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -38,9 +43,9 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author pavlidis
  * @version $Id$
  */
-public class ImageCumulativePlatesParser extends BasicLineParser {
+public class ImageCumulativePlatesParser extends BasicLineParser implements QueuingParser {
 
-    Collection<BioSequence> results = new ArrayList<BioSequence>();
+    BlockingQueue<BioSequence> results = new ArrayBlockingQueue<BioSequence>( 10000 );
     private ExternalDatabase genbank;
 
     public ImageCumulativePlatesParser() {
@@ -104,5 +109,17 @@ public class ImageCumulativePlatesParser extends BasicLineParser {
         seq.setSequenceDatabaseEntry( acc );
 
         return seq;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.QueuingParser#parse(java.io.InputStream, java.util.concurrent.BlockingQueue)
+     */
+    @SuppressWarnings("unchecked")
+    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
+        this.results = queue;
+        parse( inputStream );
+
     }
 }

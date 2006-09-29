@@ -23,7 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,12 +54,18 @@ public class ImageCumulativePlatesLoader {
     private static Log log = LogFactory.getLog( ImageCumulativePlatesLoader.class.getName() );
 
     private static final int BATCH_SIZE = 2000;
+    private static final int QUEUE_SIZE = 30000;
+
+    boolean producerDone = false;
+    private boolean consumerDone = false;
 
     PersisterHelper persisterHelper;
 
     ExternalDatabaseService externalDatabaseService;
     BioSequenceService bioSequenceService;
     ExternalDatabase genbank;
+
+    private int numLoaded;
 
     // private TaxonService taxonService;
 
@@ -111,45 +121,100 @@ public class ImageCumulativePlatesLoader {
      */
     @SuppressWarnings("unchecked")
     public int load( final InputStream inputStream ) throws IOException {
-        ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
-        parser.parse( inputStream );
-        Collection<BioSequence> results = parser.getResults();
+        final ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
+        final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
+        final SecurityContext context = SecurityContextHolder.getContext();
 
-        Collection<BioSequence> bioSequencesToPersist = new ArrayList<BioSequence>();
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+                log.info( "Starting loading" );
+                SecurityContextHolder.setContext( context ); // don't know why this is needed, but it works.
+                load( queue );
+            }
+        } );
+
+        loadThread.start();
+
+        Thread parseThread = new Thread( new Runnable() {
+            public void run() {
+                try {
+                    parser.parse( inputStream, queue );
+                } catch ( IOException e ) {
+                    e.printStackTrace();
+                }
+                log.info( "Done parsing" );
+                producerDone = true;
+            }
+        } );
+
+        parseThread.start();
+
+        while ( !producerDone || !consumerDone ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
+        return this.numLoaded;
+
+    }
+
+    private void load( BlockingQueue<BioSequence> queue ) {
+        log.debug( "Entering 'load' " );
+
+        long millis = System.currentTimeMillis();
+
         int count = 0;
         int cpt = 0;
         double secspt = 0.0;
-        long millis = System.currentTimeMillis();
 
-        for ( BioSequence sequence : results ) {
-            sequence.getSequenceDatabaseEntry().setExternalDatabase( genbank );
-            sequence.setTaxon( ( Taxon ) persisterHelper.persist( sequence.getTaxon() ) );
+        Collection<BioSequence> bioSequencesToPersist = new ArrayList<BioSequence>();
+        try {
+            while ( !( producerDone && queue.isEmpty() ) ) {
+                BioSequence sequence = queue.poll();
 
-            bioSequencesToPersist.add( sequence );
-            if ( ++count % BATCH_SIZE == 0 ) {
-                bioSequenceService.create( bioSequencesToPersist );
-                bioSequencesToPersist.clear();
+                if ( sequence == null ) {
+                    continue;
+                }
+
+                sequence.getSequenceDatabaseEntry().setExternalDatabase( genbank );
+                sequence.setTaxon( ( Taxon ) persisterHelper.persist( sequence.getTaxon() ) );
+
+                bioSequencesToPersist.add( sequence );
+                if ( ++count % BATCH_SIZE == 0 ) {
+                    bioSequenceService.create( bioSequencesToPersist );
+                    bioSequencesToPersist.clear();
+                }
+
+                // just some timing information.
+                if ( count % 1000 == 0 ) {
+                    cpt++;
+                    double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
+                    secspt += secsperthousand;
+                    double meanspt = secspt / cpt;
+
+                    String progString = "Processed and loaded " + count + " sequences, last one was "
+                            + sequence.getName() + " (" + secsperthousand + " seconds elapsed, average per thousand="
+                            + meanspt + ")";
+                    ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
+                    log.info( progString );
+                    millis = System.currentTimeMillis();
+                }
+
             }
-
-            // just some timing information.
-            if ( count % 1000 == 0 ) {
-                cpt++;
-                double secsperthousand = ( System.currentTimeMillis() - millis ) / 1000.0;
-                secspt += secsperthousand;
-                double meanspt = secspt / cpt;
-
-                String progString = "Processed and loaded " + count + " sequences, last one was " + sequence.getName()
-                        + " (" + secsperthousand + " seconds elapsed, average per thousand=" + meanspt + ")";
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
-                log.info( progString );
-                millis = System.currentTimeMillis();
-            }
+        } catch ( Exception e ) {
+            consumerDone = true;
+            throw new RuntimeException( e );
         }
 
         // finish up.
         bioSequenceService.create( bioSequencesToPersist );
+
         log.info( "Loaded total of " + count + " sequences" );
-        return count;
+        consumerDone = true;
+
+        this.numLoaded = count;
     }
 
 }
