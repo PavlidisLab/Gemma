@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -132,10 +133,20 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
 
         Collection<NCBIGeneInfo> geneInfoList = infoParser.getResults();
         // put into HashMap
-        final HashMap<String, NCBIGeneInfo> geneInfoMap = new HashMap<String, NCBIGeneInfo>();
+        final Map<String, NCBIGeneInfo> geneInfoMap = new HashMap<String, NCBIGeneInfo>();
+        Map<Integer, Integer> taxCount = new HashMap<Integer, Integer>();
         for ( NCBIGeneInfo o : geneInfoList ) {
+            if ( !taxCount.containsKey( o.getTaxId() ) ) {
+                taxCount.put( new Integer( o.getTaxId() ), new Integer( 0 ) );
+            }
+            taxCount.put( new Integer( o.getTaxId() ), taxCount.get( o.getTaxId() ) + 1 );
             geneInfoMap.put( o.getGeneId(), o );
         }
+
+        for ( Integer taxId : taxCount.keySet() ) {
+            log.info( "Taxon " + taxId + ": " + taxCount.get( taxId ) + " genes" );
+        }
+
         // 1) use a producer-consumer model for Gene2Accession conversion
         // 1a) Parse Gene2Accession until the gene id changes. This means that all accessions for the gene are done.
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
