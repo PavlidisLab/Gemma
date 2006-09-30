@@ -11,7 +11,7 @@
 		<a href="/Gemma">Gemma</a>
 	</h1>
 	<p>
-		Microarray experiments on steroids.
+		Microarray data meta-analysis
 	</p>
 </div>
 <hr />
