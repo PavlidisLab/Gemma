@@ -243,6 +243,12 @@ public class GeoConverter implements Converter {
 
         for ( String characteristic : channel.getCharacteristics() ) {
             Characteristic gemmaChar = Characteristic.Factory.newInstance();
+
+            if ( characteristic.length() > 255 ) {
+                log.warn( "** Characteristic too long: " + characteristic + " - will truncate - ****" );
+                characteristic = characteristic.substring( 0, 199 ) + " (truncated at 200 characters)";
+            }
+
             gemmaChar.setCategory( characteristic );
             gemmaChar.setValue( characteristic ); // TODO need to put in actual value.
             bioMaterial.getCharacteristics().add( gemmaChar );
@@ -449,6 +455,9 @@ public class GeoConverter implements Converter {
          * data is 'counts'). For others we just have free text in the column descriptions
          */
 
+        // use a List for performance.
+        Collection<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
+
         int quantitationTypeIndex = 0;
         for ( String quantitationType : quantitationTypes ) {
 
@@ -473,9 +482,6 @@ public class GeoConverter implements Converter {
              * that's is the zeroth quantitation type.
              */
             Map<String, List<String>> dataVectors = makeDataVectors( datasetSamples, quantitationTypeIndex - 1 );
-
-            // use a List for performance.
-            Collection<DesignElementDataVector> vectors = new ArrayList<DesignElementDataVector>();
 
             int count = 0;
             for ( String designElementName : dataVectors.keySet() ) {
@@ -502,8 +508,14 @@ public class GeoConverter implements Converter {
             if ( log.isInfoEnabled() ) {
                 log.info( count + " Data vectors added for '" + quantitationType + "'" );
             }
-            expExp.getDesignElementDataVectors().addAll( new HashSet<DesignElementDataVector>( vectors ) );
+
             quantitationTypeIndex++;
+        }
+
+        if ( expExp.getDesignElementDataVectors().size() == 0 ) {
+            expExp.setDesignElementDataVectors( new HashSet<DesignElementDataVector>( vectors ) );
+        } else {
+            expExp.getDesignElementDataVectors().addAll( vectors );
         }
     }
 
@@ -1084,7 +1096,6 @@ public class GeoConverter implements Converter {
         result.setName( variable.getType().toString() );
         result.setDescription( variable.getDescription() );
         OntologyEntry term = convertVariableType( variable.getType() );
-
         result.setCategory( term );
         return result;
 
@@ -1221,7 +1232,8 @@ public class GeoConverter implements Converter {
             result.setWebUri( url );
         }
 
-        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" ) ) {
+        if ( likelyExternalDatabaseIdentifier.equals( "GB_ACC" ) || likelyExternalDatabaseIdentifier.equals( "GB_LIST" )
+                || likelyExternalDatabaseIdentifier.toLowerCase().equals( "genbank" ) ) {
             if ( genbank == null ) {
                 if ( externalDatabaseService != null ) {
                     genbank = externalDatabaseService.find( "Genbank" );
@@ -1238,7 +1250,9 @@ public class GeoConverter implements Converter {
             result.setType( DatabaseType.GENOME );
             log.warn( "External database is " + result );
         }
-        assert result != null && result.getName() != null;
+        if ( result == null || result.getName() == null ) {
+            throw new IllegalStateException( "No external database was identified" );
+        }
         return result;
     }
 

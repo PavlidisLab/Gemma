@@ -73,7 +73,7 @@ public abstract class AbstractCLI {
 
     private CommandLine commandLine;
 
-    protected Log log = LogFactory.getLog( AbstractSpringAwareCLI.class );;
+    protected Log log = LogFactory.getLog( this.getClass() );
 
     /* support for convenience options */
 

@@ -48,6 +48,8 @@ public class GeoConstants {
         extRefNames.add( "GB_ACC" );
         extRefNames.add( "GB_LIST" );
         extRefNames.add( "ORF" );
+        extRefNames.add( "Genbank" );
+        extRefNames.add( "GenBank" );
 
         descriptionNames = new HashSet<String>();
         descriptionNames.add( "GENE_SYMBOL" );
