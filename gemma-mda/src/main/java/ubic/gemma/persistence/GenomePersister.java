@@ -271,7 +271,7 @@ abstract public class GenomePersister extends CommonPersister {
         String scientificName = taxon.getScientificName();
         String commonName = taxon.getCommonName();
         Integer ncbiId = taxon.getNcbiId();
-        
+
         if ( ncbiId != null && seenTaxa.containsKey( ncbiId ) ) {
             return seenTaxa.get( ncbiId );
         } else if ( scientificName != null && seenTaxa.containsKey( scientificName.toLowerCase() ) ) {
@@ -283,7 +283,7 @@ abstract public class GenomePersister extends CommonPersister {
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
-            log.info( "Fetched or created taxon " + fTaxon.getScientificName() );
+            log.info( "Fetched or created taxon " + fTaxon );
 
             if ( fTaxon.getScientificName() != null ) {
                 seenTaxa.put( fTaxon.getScientificName().toLowerCase(), fTaxon );

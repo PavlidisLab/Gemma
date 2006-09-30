@@ -46,7 +46,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
 
         String basePath = ConfigUtils.getString( "gemma.home" );
         final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
-        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, queue );
+        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, queue, false );
 
         // wait until the producer is done.
         while ( !sdog.isProducerDone() ) {
@@ -76,7 +76,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
         final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( 100 );
 
-        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, queue );
+        sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, queue, false );
 
         converter.convert( queue, geneQueue );
 
@@ -90,6 +90,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         assertTrue( geneQueue.size() == 100 );
     }
 
+    @SuppressWarnings("unchecked")
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
@@ -99,7 +100,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
 
         // threaded load
         String basePath = ConfigUtils.getString( "gemma.home" );
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile );
+        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, false );
 
         // wait until the loader is done.
         while ( !loader.isLoaderDone() ) {
@@ -114,7 +115,7 @@ public class NCBIGeneIntegrationTest extends BaseTransactionalSpringContextTest 
         // grab one gene and check its information
         // (depends on information in gene_info and gene2accession file
         // gene_info
-        Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
+         Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
         Iterator<Gene> geneIterator = geneCollection.iterator();
         Gene g = geneIterator.next();
         Collection<GeneProduct> products = g.getProducts();

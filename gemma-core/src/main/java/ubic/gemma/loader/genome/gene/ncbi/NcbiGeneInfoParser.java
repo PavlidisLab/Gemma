@@ -18,17 +18,23 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
+import ubic.gemma.loader.genome.taxon.SupportedTaxa;
+import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.loader.util.parser.FileFormatException;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Class to parse the gene_info file from NCBI Gene. See {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details
@@ -37,7 +43,7 @@ import ubic.gemma.loader.util.parser.FileFormatException;
  * @author pavlidis
  * @version $Id$
  */
-public class NcbiGeneInfoParser extends BasicLineMapParser {
+public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingParser {
 
     /**
      * 
@@ -45,8 +51,15 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
     private static final int NCBI_GENEINFO_FIELDS_PER_ROW = 13;
 
     private Map<String, NCBIGeneInfo> results = new HashMap<String, NCBIGeneInfo>();
-    
-    
+
+    private BlockingQueue<String> resultsKeys;
+
+    private boolean filter = true;
+
+    public void setFilter( boolean filter ) {
+        this.filter = filter;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -61,7 +74,18 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
         }
         NCBIGeneInfo geneInfo = new NCBIGeneInfo();
         try {
-            geneInfo.setTaxId( Integer.parseInt( fields[0] ) );
+
+            // Skip taxa that we don't support.
+            int taxonId = Integer.parseInt( fields[0] );
+            if ( filter ) {
+                Taxon taxon = Taxon.Factory.newInstance();
+                taxon.setNcbiId( taxonId );
+                if ( !SupportedTaxa.contains( taxon ) ) {
+                    return null;
+                }
+            }
+
+            geneInfo.setTaxId( taxonId );
             geneInfo.setGeneId( fields[1] );
             geneInfo.setDefaultSymbol( fields[2] );
             geneInfo.setLocusTag( fields[3] );
@@ -119,12 +143,25 @@ public class NcbiGeneInfoParser extends BasicLineMapParser {
 
     @Override
     protected void put( Object key, Object value ) {
-        results.put( ( String ) key, ( NCBIGeneInfo ) value );
+        try {
+            if ( resultsKeys != null ) {
+                resultsKeys.put( ( String ) key );
+            }
+            results.put( ( String ) key, ( NCBIGeneInfo ) value );
+        } catch ( InterruptedException e ) {
+            log.error( e );
+            throw new RuntimeException( e );
+        }
     }
 
     @Override
     public boolean containsKey( Object key ) {
         return results.containsKey( key );
+    }
+
+    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
+        this.resultsKeys = queue;
+        this.parse( inputStream );
     }
 
 }

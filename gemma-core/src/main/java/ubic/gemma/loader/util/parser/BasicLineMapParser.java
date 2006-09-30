@@ -43,7 +43,7 @@ public abstract class BasicLineMapParser implements LineParser {
      */
     private static final String COMMENTMARK = "#";
 
-    protected Log log = LogFactory.getLog( BasicLineMapParser.class.getName() );
+    protected Log log = LogFactory.getLog( getClass() );
 
     /**
      * @param key
@@ -69,37 +69,39 @@ public abstract class BasicLineMapParser implements LineParser {
      * 
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
-    public void parse( InputStream is) throws IOException {
+    public void parse( InputStream is ) throws IOException {
 
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
+        int nullLines = 0;
         String line = null;
-        int count = 0;
+        int linesParsed = 0;
         while ( ( line = br.readLine() ) != null ) {
 
             if ( line.startsWith( COMMENTMARK ) ) {
                 continue;
             }
-
+            linesParsed++;
             Object newItem = parseOneLine( line );
 
             if ( newItem == null ) {
-                log.debug( "Null object returned" ); // this could be a header or a tolerated parse error
+                nullLines++;
                 continue;
             }
 
             Object key = getKey( newItem );
             if ( key == null ) {
-                throw new IllegalStateException( "Got null key for item " + count );
+                throw new IllegalStateException( "Got null key for item " + linesParsed );
             }
             put( key, newItem );
-            count++;
-            if ( count % PARSE_ALERT_FREQUENCY == 0 )
-                log.debug( "Parsed " + count + " lines..., last had key " + key );
+
+            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 )
+                log.debug( "Parsed " + linesParsed + " lines..., last had key " + key );
 
         }
-        log.info( "Parsed " + count + " lines." );
+        log.info( "Parsed " + linesParsed + " lines. "
+                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
         br.close();
     }
 

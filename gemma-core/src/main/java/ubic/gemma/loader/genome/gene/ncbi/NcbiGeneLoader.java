@@ -1,5 +1,20 @@
-/**
+/*
+ * The Gemma project
  * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
@@ -24,16 +39,12 @@ import ubic.gemma.persistence.PersisterHelper;
 public class NcbiGeneLoader {
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     private static final int QUEUE_SIZE = 1000;
-    private static final int BATCH_SIZE = 1000;
 
     private AtomicBoolean generatorDone;
     private AtomicBoolean converterDone;
     private AtomicBoolean loaderDone;
     private PersisterHelper persisterHelper;
     private int loadedGeneCount = 0;
-    
-    private String GENEINFO_FILE = "gene_info";
-    private String GENE2ACCESSION_FILE = "gene2accession";
 
     /**
      * @param persisterHelper the persisterHelper to set
@@ -63,10 +74,11 @@ public class NcbiGeneLoader {
     /**
      * @param file the gene_info file
      * @param file the gene2accession file
+     * @param filterTaxa should we filter out taxa we're not supporting
      * @return
      * @throws IOException
      */
-    public void load( String geneInfoFile, String gene2AccFile ) throws IOException {
+    public void load( String geneInfoFile, String gene2AccFile, boolean filterTaxa ) throws IOException {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
         sdog.setProducerDoneFlag( generatorDone );
         NcbiGeneConverter converter = new NcbiGeneConverter();
@@ -76,11 +88,10 @@ public class NcbiGeneLoader {
         final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<NcbiGeneData>( QUEUE_SIZE );
         final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( QUEUE_SIZE );
         // Threaded producer - loading files into queue as GeneInfo objects
-        if (StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
+        if ( StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
             sdog.generate( geneInfoQueue );
-        }
-        else {
-            sdog.generateLocal( geneInfoFile, gene2AccFile, geneInfoQueue );
+        } else {
+            sdog.generateLocal( geneInfoFile, gene2AccFile, geneInfoQueue, filterTaxa );
         }
         // Threaded consumer/producer - consumes GeneInfo objects and generates
         // Gene/GeneProduct/DatabaseEntry entries
@@ -89,16 +100,17 @@ public class NcbiGeneLoader {
         // the database
         this.load( geneQueue );
     }
-    
+
     /**
      * download the gene_info and gene2accession files, then call load
+     * 
      * @return
      * @throws IOException
      */
-    public void load( ) throws IOException {
+    public void load( boolean filterTaxa ) throws IOException {
         String geneInfoFile = "";
         String gene2AccFile = "";
-        load(geneInfoFile,gene2AccFile);
+        load( geneInfoFile, gene2AccFile, filterTaxa );
     }
 
     /**

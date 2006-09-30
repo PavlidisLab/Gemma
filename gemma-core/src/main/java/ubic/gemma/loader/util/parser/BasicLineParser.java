@@ -40,7 +40,7 @@ public abstract class BasicLineParser implements LineParser {
 
     private static final String COMMENTMARK = "#";
 
-    protected static final Log log = LogFactory.getLog( BasicLineParser.class );
+    protected Log log = LogFactory.getLog( getClass() );
 
     protected int linesParsed = 0;
 

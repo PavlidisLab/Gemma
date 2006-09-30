@@ -164,6 +164,7 @@ public class NcbiGeneConverter implements Converter {
     public Gene convert( NcbiGeneData data ) {
         // get gene info and fill in gene
         NCBIGeneInfo geneInfo = data.getGeneInfo();
+        assert geneInfo != null;
         Gene gene = convert( geneInfo );
 
         // grab all accessions and fill in GeneProduct/DatabaseEntry
@@ -188,12 +189,14 @@ public class NcbiGeneConverter implements Converter {
         Thread convertThread = new Thread( new Runnable() {
             public void run() {
                 while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
-                    NcbiGeneData data = null;
                     try {
-                        data = geneInfoQueue.poll();
-                        if ( data != null ) {
-                            geneQueue.put( convert( data ) );
+                        NcbiGeneData data = geneInfoQueue.poll();
+                        if ( data == null || data.getGeneInfo() == null ) {
+                            continue;
                         }
+                        assert data.getGeneInfo() != null;
+                        geneQueue.put( convert( data ) );
+
                     } catch ( InterruptedException e ) {
                         log.info( "Interrupted." );
                     }

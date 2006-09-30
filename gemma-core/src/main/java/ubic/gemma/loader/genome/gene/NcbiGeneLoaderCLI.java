@@ -34,12 +34,12 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
     private NcbiGeneLoader loader;
-    
+
     private String GENEINFO_FILE = "gene_info.gz";
     private String GENE2ACCESSION_FILE = "gene2accession.gz";
-    
+
     private String filePath = "";
-    
+
     public NcbiGeneLoaderCLI() {
         super();
     }
@@ -66,9 +66,9 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
                 // load through files
                 String geneInfoFile = filePath + "/" + GENEINFO_FILE;
                 String gene2AccFile = filePath + "/" + GENE2ACCESSION_FILE;
-                loader.load( geneInfoFile, gene2AccFile );               
+                loader.load( geneInfoFile, gene2AccFile, true ); // do filtering of taxa
             } else { /* defaults to download files remotely. */
-                loader.load();
+                loader.load( true );
             }
 
         } catch ( IOException e ) {
@@ -95,16 +95,16 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         /* parse */
 
-        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" ).withDescription( "Optional path to the gene_info and gene2accession files" )
-                .withLongOpt( "file" ).create( 'f' );
+        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" ).withDescription(
+                "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( pathOption );
     }
-    
+
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( hasOption( 'f' ) ) { 
+        if ( hasOption( 'f' ) ) {
             filePath = getOptionValue( 'f' );
         }
     }
