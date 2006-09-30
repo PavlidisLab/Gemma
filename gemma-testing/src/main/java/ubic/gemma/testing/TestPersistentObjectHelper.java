@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.Constants;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
@@ -57,6 +58,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
@@ -244,8 +246,8 @@ public class TestPersistentObjectHelper {
      * created, they are each associated with a single generated Reporter.
      * 
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
-     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_at....N_at
-     * @return
+     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
+     * @return ArrayDesign
      */
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
@@ -261,7 +263,7 @@ public class TestPersistentObjectHelper {
             if ( randomNames ) {
                 reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testreporter" );
             } else {
-                reporter.setName( i + "_at" );
+                reporter.setName( i + "_probe_at" );
             }
 
             reporter.setCompositeSequence( compositeSequence );
@@ -269,12 +271,17 @@ public class TestPersistentObjectHelper {
             if ( randomNames ) {
                 compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testcs" );
             } else {
-                compositeSequence.setName( "probe_" + i );
+                compositeSequence.setName( "probeset_" + i );
             }
 
             compositeSequence.getComponentReporters().add( reporter );
             compositeSequence.setArrayDesign( ad );
             ad.getCompositeSequences().add( compositeSequence );
+
+            BioSequence bioSequence = getTestPersistentBioSequence();
+            compositeSequence.setBiologicalCharacteristic( bioSequence );
+
+            bioSequence.setBioSequence2GeneProduct( this.getTestPersistentBioSequence2GeneProducts( bioSequence ) );
         }
 
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
@@ -343,7 +350,27 @@ public class TestPersistentObjectHelper {
         bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiosequence" );
         bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
         bs.setTaxon( getTestNonPersistentTaxon() );
+
         return ( BioSequence ) persisterHelper.persist( bs );
+    }
+
+    /**
+     * @return Collection<BioSequence2GeneProduct>
+     */
+    private Collection getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
+
+        Collection b2gCol = new HashSet<BioSequence2GeneProduct>();
+        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
+            BlatAssociation b2g = BlatAssociation.Factory.newInstance();
+            b2g.setBioSequence( bioSequence );
+            b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPeristentGene() ) );
+            // FIXME is this the right biosequence for the blat?
+            b2g.setBlatResult( this.getTestPersistentBlatResult( bioSequence ) );
+
+            b2gCol.add( b2g );
+        }
+
+        return persisterHelper.persist( b2gCol );
     }
 
     /**
