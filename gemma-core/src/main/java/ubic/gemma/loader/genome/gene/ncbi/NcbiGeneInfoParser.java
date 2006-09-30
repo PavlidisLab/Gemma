@@ -80,9 +80,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
             if ( filter ) {
                 Taxon taxon = Taxon.Factory.newInstance();
                 taxon.setNcbiId( taxonId );
-                if ( taxonId == 10118 ) {
-                    log.info( "Got rat gene" );
-                }
+
                 if ( !SupportedTaxa.contains( taxon ) ) {
                     return null;
                 }
