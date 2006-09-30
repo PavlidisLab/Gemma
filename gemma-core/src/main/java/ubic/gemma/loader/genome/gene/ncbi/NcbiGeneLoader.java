@@ -84,18 +84,22 @@ public class NcbiGeneLoader {
         NcbiGeneConverter converter = new NcbiGeneConverter();
         converter.setSourceDoneFlag( generatorDone );
         converter.setProducerDoneFlag( converterDone );
+
         // create queue for GeneInfo objects
         final BlockingQueue<NcbiGeneData> geneInfoQueue = new ArrayBlockingQueue<NcbiGeneData>( QUEUE_SIZE );
         final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( QUEUE_SIZE );
+
         // Threaded producer - loading files into queue as GeneInfo objects
         if ( StringUtils.isEmpty( geneInfoFile ) || StringUtils.isEmpty( geneInfoFile ) ) {
             sdog.generate( geneInfoQueue );
         } else {
             sdog.generateLocal( geneInfoFile, gene2AccFile, geneInfoQueue, filterTaxa );
         }
+
         // Threaded consumer/producer - consumes GeneInfo objects and generates
         // Gene/GeneProduct/DatabaseEntry entries
         converter.convert( geneInfoQueue, geneQueue );
+
         // Threaded consumer. Consumes Gene objects and persists them into
         // the database
         this.load( geneQueue );
@@ -124,28 +128,39 @@ public class NcbiGeneLoader {
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
                 SecurityContextHolder.setContext( context );
-                while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
-                    Gene gene = null;
-                    try {
-                        gene = geneQueue.take();
-                        if ( gene != null ) {
-                            // persist gene, then geneProducts
-                            persisterHelper.persist( gene );
-
-                            // geneService.create( data );
-                            loadedGeneCount++;
-                        }
-                    } catch ( Exception e ) {
-                        log.error( e, e );
-                        loaderDone.set( true );
-                        throw new RuntimeException( e );
-                    }
-                }
-                loaderDone.set( true );
+                doLoad( geneQueue );
             }
+
         } );
         loadThread.start();
+    }
 
+    /**
+     * @param geneQueue
+     */
+    private void doLoad( final BlockingQueue<Gene> geneQueue ) {
+        while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
+
+            try {
+                Gene gene = geneQueue.poll();
+                if ( gene == null ) {
+                    continue;
+                }
+                persisterHelper.persist( gene );
+
+                if ( ++loadedGeneCount % 1000 == 0 ) {
+                    log
+                            .info( "Loaded " + loadedGeneCount + " genes. Current queue has " + geneQueue.size()
+                                    + " items." );
+                }
+
+            } catch ( Exception e ) {
+                log.error( e, e );
+                loaderDone.set( true );
+                throw new RuntimeException( e );
+            }
+        }
+        loaderDone.set( true );
     }
 
     public boolean isLoaderDone() {

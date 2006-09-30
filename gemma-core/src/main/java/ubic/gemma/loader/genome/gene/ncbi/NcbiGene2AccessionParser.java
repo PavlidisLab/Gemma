@@ -53,7 +53,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
 
     String lastGeneId = null;
     // a grouping of Gene2Accessions with the same gene Id
-    NcbiGeneData geneCollection = new NcbiGeneData();
+    NcbiGeneData geneData = new NcbiGeneData();
     Map<String, NCBIGeneInfo> geneInfo = null;
 
     @SuppressWarnings("unchecked")
@@ -90,6 +90,45 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
                     + " fields, expected " + NCBI_GENE2ACCESSION_FIELDS_PER_ROW );
         }
 
+        NCBIGene2Accession currentAccession = processFields( fields );
+
+        /*
+         * Only some genes are relevant - for example, we might have filtered them by taxon.
+         */
+        if ( !geneInfo.containsKey( currentAccession.getGeneId() ) ) {
+            return null;
+        }
+
+        // if the current gene Id is different from this current one, then
+        // we are done with the gene Id. Push the geneCollection into the queue.
+        if ( lastGeneId != null && !lastGeneId.equalsIgnoreCase( currentAccession.getGeneId() ) ) {
+            // push the gene set to the queue
+            try {
+                queue.put( geneData );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
+            // clear the gene set
+            geneData = new NcbiGeneData();
+            geneInfo.remove( lastGeneId );
+        }
+
+        assert currentAccession.getGeneId() != null;
+
+        // we're either starting a new one, or continuing with an old one.
+        lastGeneId = currentAccession.getGeneId();
+        geneData.addAccession( currentAccession );
+        geneData.setGeneInfo( geneInfo.get( currentAccession.getGeneId() ) );
+
+        // this will be a trailing accession.?
+        return currentAccession;
+    }
+
+    /**
+     * @param fields
+     * @return
+     */
+    private NCBIGene2Accession processFields( String[] fields ) {
         NCBIGene2Accession newGene = new NCBIGene2Accession();
         try {
             newGene.setTaxId( Integer.parseInt( fields[0] ) );
@@ -147,26 +186,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( e );
         }
-
-        // if the current gene Id is different from this current one, then
-        // we are done with the gene Id. Push the geneCollection into the queue.
-        if ( lastGeneId != null && !lastGeneId.equalsIgnoreCase( newGene.getGeneId() ) ) {
-            // push the gene set to the queue
-            try {
-                queue.put( geneCollection );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( e );
-            }
-            // clear the gene set
-            geneCollection = new NcbiGeneData();
-            geneInfo.remove( lastGeneId );
-        }
-
-        lastGeneId = newGene.getGeneId();
-        geneCollection.addAccession( newGene );
-        geneCollection.setGeneInfo( geneInfo.get( newGene.getGeneId() ) );
-
-        // push in the last geneCollection
         return newGene;
     }
 
@@ -180,9 +199,9 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     public void parse( InputStream is ) throws IOException {
         super.parse( is );
         // add last gene with an accession
-        if ( geneCollection.getGeneInfo() != null ) {
+        if ( geneData.getGeneInfo() != null ) {
             try {
-                queue.put( geneCollection );
+                queue.put( geneData );
             } catch ( InterruptedException e ) {
                 throw new RuntimeException( e );
             }

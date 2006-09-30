@@ -100,11 +100,11 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
     /**
      * @param geneInfoFile
      * @param gene2AccessionFile
-     * @param queue
+     * @param geneDataQueue
      * @return
      */
     private Collection<NCBIGene2Accession> processLocalFiles( final LocalFile geneInfoFile,
-            LocalFile gene2AccessionFile, final BlockingQueue<NcbiGeneData> queue, boolean filter ) {
+            LocalFile gene2AccessionFile, final BlockingQueue<NcbiGeneData> geneDataQueue, boolean filter ) {
         log.info( "Parsing geneinfo=" + geneInfoFile.asFile().getAbsolutePath() + " and gene2accession="
                 + gene2AccessionFile.asFile().getAbsolutePath() );
 
@@ -143,7 +143,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
         Thread parseThread = new Thread( new Runnable() {
             public void run() {
                 try {
-                    accParser.parse( gene2accessionFileHandle, queue, geneInfoMap );
+                    accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }

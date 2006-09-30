@@ -159,6 +159,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
         return results.containsKey( key );
     }
 
+    @SuppressWarnings("unchecked")
     public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
         this.resultsKeys = queue;
         this.parse( inputStream );

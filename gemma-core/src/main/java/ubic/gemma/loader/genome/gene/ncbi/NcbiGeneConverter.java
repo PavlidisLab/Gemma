@@ -77,8 +77,9 @@ public class NcbiGeneConverter implements Converter {
         Gene gene = Gene.Factory.newInstance();
 
         gene.setNcbiId( info.getGeneId() );
+        gene.setName( info.getDefaultSymbol() );
         gene.setOfficialSymbol( info.getDefaultSymbol() );
-        gene.setOfficialName( info.getDefaultSymbol() );
+        gene.setOfficialName( info.getDescription() );
         gene.setDescription( info.getDescription() );
 
         Taxon t = Taxon.Factory.newInstance();
@@ -164,7 +165,6 @@ public class NcbiGeneConverter implements Converter {
     public Gene convert( NcbiGeneData data ) {
         // get gene info and fill in gene
         NCBIGeneInfo geneInfo = data.getGeneInfo();
-        assert geneInfo != null;
         Gene gene = convert( geneInfo );
 
         // grab all accessions and fill in GeneProduct/DatabaseEntry
@@ -181,7 +181,7 @@ public class NcbiGeneConverter implements Converter {
     }
 
     /*
-     * Threaded conversion of domain objects to
+     * Threaded conversion of domain objects to Gemma objects.
      */
     public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
@@ -191,10 +191,9 @@ public class NcbiGeneConverter implements Converter {
                 while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
                     try {
                         NcbiGeneData data = geneInfoQueue.poll();
-                        if ( data == null || data.getGeneInfo() == null ) {
+                        if ( data == null ) {
                             continue;
                         }
-                        assert data.getGeneInfo() != null;
                         geneQueue.put( convert( data ) );
 
                     } catch ( InterruptedException e ) {
