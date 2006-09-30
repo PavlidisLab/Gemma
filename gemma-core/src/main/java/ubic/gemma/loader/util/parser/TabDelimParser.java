@@ -18,8 +18,8 @@
  */
 package ubic.gemma.loader.util.parser;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -33,8 +33,8 @@ public class TabDelimParser extends BasicLineParser {
 
     private String[] header = null;
 
-    public void setHeader( String header ) {
-        this.header = ( String[] ) parseOneLine( header );
+    public void setHeader( String[] header ) {
+        this.header = header;
     }
 
     public String[] getHeader() {
@@ -44,7 +44,7 @@ public class TabDelimParser extends BasicLineParser {
     Collection<String[]> results;
 
     public TabDelimParser() {
-        this.results = new HashSet<String[]>();
+        this.results = new ArrayList<String[]>();
     }
 
     /*
