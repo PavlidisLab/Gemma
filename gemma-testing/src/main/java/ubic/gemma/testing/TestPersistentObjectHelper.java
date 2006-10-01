@@ -362,6 +362,7 @@ public class TestPersistentObjectHelper {
         Collection b2gCol = new HashSet<BioSequence2GeneProduct>();
         for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
             BlatAssociation b2g = BlatAssociation.Factory.newInstance();
+            b2g.setScore( RandomUtils.nextDouble() );
             b2g.setBioSequence( bioSequence );
             b2g.setGeneProduct( this.getTestPersistentGeneProduct( this.getTestPeristentGene() ) );
             // FIXME is this the right biosequence for the blat?

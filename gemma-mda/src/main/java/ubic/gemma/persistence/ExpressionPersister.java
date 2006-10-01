@@ -53,6 +53,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
+ * Expression experiment is a top-level persister. That is, it contains only outbound associations.
+ * 
  * @spring.property name="factorValueService" ref="factorValueService"
  * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
@@ -163,10 +165,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 log.info( "Filled in " + count + " DesignElementDataVectors" );
             }
 
-//            if ( ++count % 100 == 0 ) {
-//                sess.flush();
-//                sess.clear();
-//            }
+            // if ( ++count % 100 == 0 ) {
+            // sess.flush();
+            // sess.clear();
+            // }
         }
         log.info( "Done, filled in " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
         return bioAssays;
@@ -283,7 +285,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
-
+        
         ExpressionExperiment existing = expressionExperimentService.findByName( entity.getName() );
         if ( existing != null ) {
             log.warn( "Expression experiment with same name exists (" + existing
