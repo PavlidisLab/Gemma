@@ -96,7 +96,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         try {
 
-            Collection<Describable> persistedObjects = new HashSet<Describable>();
+            Collection<String> persistedObjects = new HashSet<String>();
 
             GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -122,11 +122,14 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         Collection designs = ( Collection ) geoService.fetchAndLoad( accession );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            persistedObjects.add( ( ArrayDesign ) object );
+                            persistedObjects.add( ( ( Describable ) object ).getName()
+                                    + " ("
+                                    + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next()
+                                            .getAccession() + ")" );
                         }
                     } else {
                         ExpressionExperiment ee = ( ExpressionExperiment ) geoService.fetchAndLoad( accession );
-                        persistedObjects.add( ee );
+                        persistedObjects.add( ee.getName() + " (" + ee.getAccession().getAccession() + ")" );
                     }
                 }
             }
@@ -144,24 +147,15 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                     }
 
                     ExpressionExperiment ee = ( ExpressionExperiment ) geoService.fetchAndLoad( accession );
-                    persistedObjects.add( ee );
+                    persistedObjects.add( ee.getName() + " (" + ee.getAccession().getAccession() + ")" );
                 }
             }
 
             if ( persistedObjects.size() > 0 ) {
                 StringBuilder buf = new StringBuilder();
                 buf.append( "\n---------------------\n   Processed:\n" );
-                for ( Describable object : persistedObjects ) {
-                    buf.append( "     " + object.getName() );
-                    if ( object instanceof ExpressionExperiment ) {
-                        buf.append( " (" + ( ( ExpressionExperiment ) object ).getAccession().getAccession() + ")\n" );
-                    } else if ( object instanceof ArrayDesign ) {
-                        buf.append( " ("
-                                + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next().getAccession()
-                                + ")\n" );
-                    } else {
-                        throw new IllegalStateException( "Got " + object );
-                    }
+                for ( String object : persistedObjects ) {
+                    buf.append( "    " + object + "\n" );
                 }
                 buf.append( "---------------------\n" );
 
