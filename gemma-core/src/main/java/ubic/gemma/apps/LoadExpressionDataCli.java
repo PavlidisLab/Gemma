@@ -150,7 +150,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
             if ( persistedObjects.size() > 0 ) {
                 StringBuilder buf = new StringBuilder();
-                buf.append( "---------------------\n   Processed:\n" );
+                buf.append( "\n---------------------\n   Processed:\n" );
                 for ( Describable object : persistedObjects ) {
                     buf.append( "     " + object.getName() );
                     if ( object instanceof ExpressionExperiment ) {
