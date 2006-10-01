@@ -201,15 +201,18 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             compositeSequence.setBiologicalCharacteristic( persistBioSequence( compositeSequence
                     .getBiologicalCharacteristic() ) );
 
-            if ( persistedBioSequences > 0 && persistedBioSequences % 5000 == 0 ) {
+            if ( ++persistedBioSequences % 5000 == 0 ) {
                 log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
             }
-            persistedBioSequences++;
+
+            if ( persistedBioSequences % 50 == 0 ) {
+                this.getCurrentSession().flush();
+            }
 
         }
 
         if ( persistedBioSequences > 0 ) {
-            log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
+            log.info( "Total of " + persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
         }
 
         return arrayDesign;
@@ -295,8 +298,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                         + NumberFormat.getNumberInstance().format(
                                 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) + " minutes)" );
             }
-            if ( count % 10 == 0 ) {
+            if ( count % 50 == 0 ) {
                 this.getCurrentSession().flush();
+                this.getCurrentSession().clear();
             }
         }
 
