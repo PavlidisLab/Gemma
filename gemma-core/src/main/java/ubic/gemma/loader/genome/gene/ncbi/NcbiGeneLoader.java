@@ -78,7 +78,7 @@ public class NcbiGeneLoader {
      * @return
      * @throws IOException
      */
-    public void load( String geneInfoFile, String gene2AccFile, boolean filterTaxa ) throws IOException {
+    public void load( String geneInfoFile, String gene2AccFile, boolean filterTaxa ) {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
         sdog.setProducerDoneFlag( generatorDone );
         NcbiGeneConverter converter = new NcbiGeneConverter();

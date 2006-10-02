@@ -26,11 +26,9 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.concurrent.FutureTask;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.net.ftp.FTP;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
@@ -48,9 +46,10 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
     public void initConfig() {
         this.localBasePath = ConfigUtils.getString( "ncbi.local.datafile.basepath" );
-        this.baseDir = ConfigUtils.getString( "ncbi.remote.gene.basedir" );
+        this.remoteBaseDir = ConfigUtils.getString( "ncbi.remote.gene.basedir" );
 
-        if ( baseDir == null ) throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
+        if ( remoteBaseDir == null )
+            throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
         if ( localBasePath == null )
             throw new RuntimeException( new ConfigurationException( "Failed to get localBasePath" ) );
 
@@ -58,92 +57,69 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
 
     public NCBIGeneFileFetcher() {
         super();
+        this.setExcludePattern( ".gz" );
         initArchiveHandler( "gz" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
-     */
-    public Collection<LocalFile> fetch( String identifier ) {
-        log.info( "Seeking Ncbi " + identifier + " file " );
-
-        try {
-            if ( this.f == null || !this.f.isConnected() ) f = ( new NCBIUtil() ).connect( FTP.BINARY_FILE_TYPE );
-
-            File newDir = mkdir( identifier );
-            final String outputFileName = formLocalFilePath( identifier, newDir );
-            final String seekFile = formRemoteFilePath( identifier );
-
-            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            long expectedSize = this.getExpectedSize( seekFile );
-            return this.doTask( future, expectedSize, outputFileName, identifier, newDir, ".gz" );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * @param file
-     * @return
-     */
-    public Collection<LocalFile> fetch( URL file ) {
-        if ( file == null ) {
-            throw new IllegalArgumentException();
-        }
-
-        String[] chunks = StringUtils.splitByWholeSeparator( file.getPath(), "/" );
-        assert chunks.length > 1;
-        String identifier = FileTools.chompExtension( chunks[chunks.length - 1] );
-
-        log.info( "Seeking Ncbi " + file.toString() + " file, using identifier " + identifier );
-
-        try {
-            File newDir = mkdir( identifier );
-
-            String outputFileName = newDir + File.separator + identifier + ".gz";
-
-            log.warn( "output file name is " + outputFileName );
-
-            OutputStream out = new FileOutputStream( new File( outputFileName ) );
-
-            LocalFile localFile = LocalFile.Factory.newInstance();
-
-            localFile.setLocalURL( ( new File( outputFileName ).toURI().toURL() ) );
-
-            Collection<LocalFile> result = new HashSet<LocalFile>();
-
-            result.add( localFile );
-
-            InputStream is = file.openStream();
-            byte[] buf = new byte[1024];
-            int len;
-            while ( ( len = is.read( buf ) ) > 0 ) {
-                out.write( buf, 0, len );
-            }
-            is.close();
-
-            String finalOutputPath = FileTools.unGzipFile( outputFileName );
-
-            localFile.setLocalURL( ( new File( finalOutputPath ).toURI().toURL() ) );
-            localFile.setSize( new File( finalOutputPath ).length() );
-
-            return result;
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
+    // /**
+    // * @param file
+    // * @return
+    // */
+    // public Collection<LocalFile> fetch( URL file ) {
+    // if ( file == null ) {
+    // throw new IllegalArgumentException();
+    // }
+    //
+    // String[] chunks = StringUtils.splitByWholeSeparator( file.getPath(), "/" );
+    // assert chunks.length > 1;
+    // String identifier = FileTools.chompExtension( chunks[chunks.length - 1] );
+    //
+    // log.info( "Seeking Ncbi " + file.toString() + " file, using identifier " + identifier );
+    //
+    // try {
+    // File newDir = mkdir( identifier );
+    //
+    // String outputFileName = newDir + File.separator + identifier + ".gz";
+    //
+    // log.warn( "output file name is " + outputFileName );
+    //
+    // OutputStream out = new FileOutputStream( new File( outputFileName ) );
+    //
+    // LocalFile localFile = LocalFile.Factory.newInstance();
+    //
+    // localFile.setLocalURL( ( new File( outputFileName ).toURI().toURL() ) );
+    //
+    // Collection<LocalFile> result = new HashSet<LocalFile>();
+    //
+    // result.add( localFile );
+    //
+    // InputStream is = file.openStream();
+    // byte[] buf = new byte[1024];
+    // int len;
+    // while ( ( len = is.read( buf ) ) > 0 ) {
+    // out.write( buf, 0, len );
+    // }
+    // is.close();
+    //
+    // String finalOutputPath = FileTools.unGzipFile( outputFileName );
+    //
+    // localFile.setLocalURL( ( new File( finalOutputPath ).toURI().toURL() ) );
+    // localFile.setSize( new File( finalOutputPath ).length() );
+    //
+    //            return result;
+    //
+    //        } catch ( IOException e ) {
+    //            throw new RuntimeException( e );
+    //        }
+    //    }
 
     /**
      * @param identifier
      * @param newDir
      * @return
      */
-    private String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + File.separator + identifier + ".gz";
-        return outputFileName;
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        return newDir + File.separator + identifier + ".gz";
     }
 
     /**
@@ -151,7 +127,17 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
      * @return
      */
     protected String formRemoteFilePath( String identifier ) {
-        return baseDir + identifier + ".gz";
+        return remoteBaseDir + identifier + ".gz";
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
+     */
+    @Override
+    public void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new NCBIUtil();
     }
 
 }

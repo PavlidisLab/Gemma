@@ -37,6 +37,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
@@ -47,7 +48,7 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringContextTest {
     protected static final Log log = LogFactory.getLog( OntologyEntryLoaderIntegrationTest.class );
     String url = "http://archive.godatabase.org/latest-termdb/go_daily-termdb.rdf-xml.gz";
-    OntologyEntryPersister ontologyEntryPersister = null;
+    GeneOntologyLoader ontologyEntryPersister = null;
     GeneOntologyEntryParser ontologyEntryParser = null;
     Collection<?> createdObjects = null;
 
@@ -105,18 +106,18 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
         }
 
         if ( future.get().booleanValue() ) {
-            Collection<Object> ontologyEntries = ontologyEntryParser.getResults();
+            Collection<OntologyEntry> ontologyEntries = ontologyEntryParser.getResults();
 
             // throw out most of the results so this test is faster
-            Collection<Object> testSet = new HashSet<Object>();
+            Collection<OntologyEntry> testSet = new HashSet<OntologyEntry>();
             int count = 0;
-            for ( Object object : ontologyEntries ) {
+            for ( OntologyEntry object : ontologyEntries ) {
                 testSet.add( object );
                 count++;
                 if ( count >= 10 ) break;
             }
 
-            createdObjects = ontologyEntryPersister.persist( testSet );
+            createdObjects = ontologyEntryPersister.load( testSet );
 
             assertEquals( 10, createdObjects.size() );
         }
@@ -131,7 +132,7 @@ public class OntologyEntryLoaderIntegrationTest extends BaseTransactionalSpringC
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
         ontologyEntryParser = new GeneOntologyEntryParser();
-        ontologyEntryPersister = new OntologyEntryPersister();
+        ontologyEntryPersister = new GeneOntologyLoader();
         ontologyEntryPersister.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
     }
 

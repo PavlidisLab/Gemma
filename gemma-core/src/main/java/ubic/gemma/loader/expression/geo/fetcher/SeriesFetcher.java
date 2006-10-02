@@ -27,54 +27,65 @@ import org.apache.commons.net.ftp.FTP;
 
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.geo.util.GeoUtil;
-import ubic.gemma.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
-public class SeriesFetcher extends FtpFetcher {
+public class SeriesFetcher extends GeoFetcher {
 
-    /**
+    // /**
+    // * @param accession
+    // * @throws SocketException
+    // * @throws IOException
+    // */
+    // public Collection<LocalFile> fetch( String accession ) {
+    // log.info( "Seeking GSE file for " + accession );
+    //
+    // try {
+    // if ( this.ftpClient == null || !this.ftpClient.isConnected() )
+    // ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
+    // File newDir = mkdir( accession );
+    //
+    // File outputFile = new File( newDir, accession + "_family.soft.gz" );
+    // String outputFileName = outputFile.getAbsolutePath();
+    //
+    // String seekFile = formRemoteFilePath( accession );
+    // boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
+    // ftpClient.disconnect();
+    //
+    // if ( success ) {
+    // LocalFile file = fetchedFile( seekFile, outputFileName );
+    // log.info( "Retrieved " + seekFile + " for experiment(set) " + accession + " .Output file is "
+    // + outputFileName );
+    // Collection<LocalFile> result = new HashSet<LocalFile>();
+    // result.add( file );
+    // return result;
+    // }
+    // } catch ( IOException e ) {
+    // throw new RuntimeException( e );
+    //        }
+    //        log.error( "Failed" );
+    //        return null;
+    //
+    //    }
+
+    /*
+     * (non-Javadoc)
      * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
-    public SeriesFetcher() {
-        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        this.baseDir = ConfigUtils.getString( "geo.remote.seriesDir" );
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return remoteBaseDir + identifier + "/" + identifier + "_family.soft.gz";
     }
 
-    /**
-     * @param accession
-     * @throws SocketException
-     * @throws IOException
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
      */
-    public Collection<LocalFile> fetch( String accession ) {
-        log.info( "Seeking GSE  file for " + accession );
-
-        try {
-            if ( this.ftpClient == null || !this.ftpClient.isConnected() )
-                ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
-            File newDir = mkdir( accession );
-
-            File outputFile = new File( newDir, accession + "_family.soft.gz" );
-            String outputFileName = outputFile.getAbsolutePath();
-
-            // String seekFile = baseDir + "/" + accession + "_family.soft.gz";
-            String seekFile = baseDir + accession + "/" + accession + "_family.soft.gz";
-            boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
-            ftpClient.disconnect();
-
-            if ( success ) {
-                LocalFile file = fetchedFile( seekFile, outputFileName );
-                log.info( "Retrieved " + seekFile + " for experiment(set) " + accession + " .Output file is "
-                        + outputFileName );
-                Collection<LocalFile> result = new HashSet<LocalFile>();
-                result.add( file );
-                return result;
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        log.error( "Failed" );
-        return null;
-
+    @Override
+    protected void initConfig() {
+        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
+        this.remoteBaseDir = ConfigUtils.getString( "geo.remote.seriesDir" );
     }
 }

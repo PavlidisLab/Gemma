@@ -19,12 +19,9 @@
 package ubic.gemma.loader.expression.arrayExpress;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.concurrent.FutureTask;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.net.ftp.FTP;
 
 import ubic.gemma.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
@@ -42,36 +39,9 @@ import ubic.gemma.util.ConfigUtils;
 public class DataFileFetcher extends FtpArchiveFetcher {
 
     public DataFileFetcher() {
-        initConfig();
+        super();
+        this.setExcludePattern( ".mageml.tgz" );
         initArchiveHandler( "gzip" );
-    }
-
-    /**
-     * @param identifier The accession value for the experiment, such as "SMDB-14"
-     * @param discardArchive Whether to delete the downloaded archive after unpacking its contents
-     * @return
-     * @throws SocketException
-     * @throws IOException
-     */
-    public Collection<LocalFile> fetch( String identifier ) {
-
-        try {
-            if ( f == null || !f.isConnected() ) {
-                f = ( new ArrayExpressUtil() ).connect( FTP.BINARY_FILE_TYPE );
-            }
-
-            File newDir = mkdir( identifier );
-            final String outputFileName = formLocalFilePath( identifier, newDir );
-            final String seekFile = formRemoteFilePath( identifier );
-            long expectedSize = getExpectedSize( seekFile );
-
-            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, expectedSize, outputFileName, identifier, newDir, ".mageml.tgz" );
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( "Couldn't fetch file for " + identifier, e );
-        }
-
     }
 
     /**
@@ -92,7 +62,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @param newDir
      * @return
      */
-    private String formLocalFilePath( String identifier, File newDir ) {
+    public String formLocalFilePath( String identifier, File newDir ) {
         String outputFileName = newDir + System.getProperty( "file.separator" ) + "E-" + identifier + ".mageml.tgz";
         return outputFileName;
     }
@@ -101,24 +71,37 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      * @param identifier
      * @return
      */
-    protected String formRemoteFilePath( String identifier ) {
+    public String formRemoteFilePath( String identifier ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
-        String seekFile = baseDir + "/" + dirName + "/" + "E-" + identifier + "/" + "E-" + identifier + ".mageml.tgz";
+        String seekFile = remoteBaseDir + "/" + dirName + "/" + "E-" + identifier + "/" + "E-" + identifier
+                + ".mageml.tgz";
         return seekFile;
     }
 
     /**
      * @throws ConfigurationException
      */
-    protected void initConfig() {
+    @Override
+    public void initConfig() {
 
         localBasePath = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
-        baseDir = ConfigUtils.getString( "arrayExpress.experiments.baseDir" );
+        remoteBaseDir = ConfigUtils.getString( "arrayExpress.experiments.baseDir" );
 
         if ( localBasePath == null || localBasePath.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
-        if ( baseDir == null || baseDir.length() == 0 )
+        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
+     */
+    @Override
+    public void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new ArrayExpressUtil();
 
     }
 }

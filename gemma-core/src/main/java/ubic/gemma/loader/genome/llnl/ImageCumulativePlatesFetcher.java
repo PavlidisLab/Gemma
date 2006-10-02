@@ -19,16 +19,10 @@
 package ubic.gemma.loader.genome.llnl;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.net.ftp.FTP;
 
-import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -45,41 +39,46 @@ public class ImageCumulativePlatesFetcher extends FtpFetcher {
         initConfig();
     }
 
-    protected void initConfig() {
+    @Override
+    public void initConfig() {
         this.localBasePath = ConfigUtils.getString( "llnl.image.local.datafile.basepath" );
-        this.baseDir = ConfigUtils.getString( "llnl.image.remote.gene.basedir" );
+        this.remoteBaseDir = ConfigUtils.getString( "llnl.image.remote.gene.basedir" );
 
-        if ( baseDir == null ) throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
+        if ( remoteBaseDir == null )
+            throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
         if ( localBasePath == null )
             throw new RuntimeException( new ConfigurationException( "Failed to get localBasePath" ) );
 
     }
 
-    public Collection<LocalFile> fetch( String identifier ) {
-        try {
-            if ( this.ftpClient == null || !this.ftpClient.isConnected() )
-                ftpClient = ( new ImageLlnlUtil() ).connect( FTP.BINARY_FILE_TYPE );
-            File newDir = mkdir( identifier );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
+     */
+    @Override
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        return newDir.getAbsolutePath() + File.separatorChar + "cumulative_arrayed_plates." + identifier + ".gz";
+    }
 
-            File outputFile = new File( newDir, "cumulative_arrayed_plates." + identifier + ".gz" );
-            String outputFileName = outputFile.getAbsolutePath();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
+     */
+    @Override
+    public void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new ImageLlnlUtil();
+    }
 
-            String seekFile = baseDir + "cumulative_arrayed_plates." + identifier + ".gz";
-            boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
-            ftpClient.disconnect();
-
-            if ( success ) {
-                LocalFile file = fetchedFile( seekFile, outputFileName );
-                log.info( "Retrieved " + seekFile + " " + identifier + ". Output file is " + outputFileName );
-                Collection<LocalFile> result = new HashSet<LocalFile>();
-                result.add( file );
-                return result;
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        log.error( "Failed" );
-        return null;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
+     */
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return remoteBaseDir + "cumulative_arrayed_plates." + identifier + ".gz";
     }
 
 }

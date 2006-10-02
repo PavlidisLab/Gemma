@@ -62,7 +62,6 @@ public abstract class AbstractPersister implements Persister {
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
      */
     public Collection<?> persist( Collection<?> col ) {
-
         Collection<Object> result = new HashSet<Object>();
         try {
             int count = 0;
@@ -70,7 +69,8 @@ public abstract class AbstractPersister implements Persister {
             for ( Object entity : col ) {
                 result.add( persist( entity ) );
                 // if ( ++count % 20 == 0 ) {
-                // this.flushAndClearSession();
+                // this.getCurrentSession().flush();
+                // this.getCurrentSession().clear();
                 // }
                 if ( ++count % COLLECTION_INFO_FREQUENCY == 0 ) {
                     log.info( "Persisted " + count + " objects in collection" );
@@ -121,104 +121,6 @@ public abstract class AbstractPersister implements Persister {
         this.sessionFactory = sessionFactory;
         // crudUtils.initMetaData( sessionFactory );
     }
-
-    // /**
-    // * Flush and clear the hibernate cache if a session is active. Call during persistence of large collections.
-    // */
-    // protected void flushAndClearSession() {
-    // Session session = this.getCurrentSession();
-    // if ( session != null ) {
-    // session.flush();
-    // session.clear();
-    // }
-    // }
-
-    // private Collection<Object> seen = new HashSet<Object>();
-    //
-    // protected void resetCollectionSeen() {
-    // seen = new HashSet<Object>();
-    // }
-
-    // /**
-    // * Recursively "Fixup" persistent collections so we don't get the "two copies" error
-    // *
-    // * @param entity
-    // */
-    // @SuppressWarnings("unchecked")
-    // protected void refreshCollections( Object entity ) {
-    //
-    // if ( seen.contains( entity ) ) {
-    // log.info( "Already saw " + entity );
-    // return;
-    // }
-    //
-    // this.crudUtils.initMetaData( this.sessionFactory );
-    //
-    // EntityPersister persister = crudUtils.getEntityPersister( entity );
-    //
-    // // it's either null, not a domain object or not persistent.
-    // if ( persister == null || isTransient( entity ) ) {
-    // return;
-    // }
-    //
-    // String[] propertyNames = persister.getPropertyNames();
-    //
-    // for ( int j = 0; j < propertyNames.length; j++ ) {
-    // PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( entity.getClass(), propertyNames[j] );
-    //
-    // if ( descriptor == null ) {
-    // continue;
-    // }
-    //
-    // Method setter = descriptor.getWriteMethod();
-    // if ( setter == null ) continue;
-    // Method getter = descriptor.getReadMethod();
-    //
-    // try {
-    // Object value = getter.invoke( entity, new Object[] {} );
-    //
-    // if ( value == null ) continue;
-    //
-    // seen.add( value );
-    //
-    // if ( !( value instanceof Collection ) ) {
-    // refreshCollections( value );
-    // continue;
-    // }
-    //
-    // if ( log.isDebugEnabled() ) {
-    // log.debug( "Refreshing collection: " + propertyNames[j] + " of "
-    // + entity.getClass().getSimpleName() );
-    // }
-    //
-    // try {
-    // if ( value instanceof List ) {
-    // setter.invoke( entity, new Object[] { new ArrayList( ( List ) value ) } );
-    // } else if ( value instanceof Set ) {
-    // setter.invoke( entity, new Object[] { new HashSet( ( Set ) value ) } );
-    // }
-    //
-    // // recurse
-    // assert value instanceof Collection;
-    // for ( Object obj : ( Collection ) value ) {
-    // refreshCollections( obj );
-    // }
-    // } catch ( LazyInitializationException ignored ) {
-    // log.info( "LazyInitializationException" );
-    // // ignore
-    // }
-    //
-    // } catch ( IllegalArgumentException e ) {
-    // throw new RuntimeException( e );
-    // } catch ( IllegalAccessException e ) {
-    // throw new RuntimeException( e );
-    // } catch ( InvocationTargetException e ) {
-    // throw new RuntimeException( e );
-    // }
-    //
-    // }
-    //
-    // }
 
     /**
      * @return Current Hibernate Session.

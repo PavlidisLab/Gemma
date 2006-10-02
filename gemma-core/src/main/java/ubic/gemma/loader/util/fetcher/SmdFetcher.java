@@ -16,24 +16,38 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.expression.geo.fetcher;
+package ubic.gemma.loader.util.fetcher;
 
+import java.io.File;
+
+import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Retrieve GEO GDS files from the NCBI FTP server.
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class DatasetFetcher extends GeoFetcher {
+public abstract class SmdFetcher extends FtpFetcher {
 
-    /**
-     * @throws ConfigurationException
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
      */
-    public DatasetFetcher() {
-        super();
+    @Override
+    public final void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new SmdUtil();
+    }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
+     */
+    @Override
+    @SuppressWarnings("unused")
+    protected final String formLocalFilePath( String identifier, File newDir ) {
+        throw new UnsupportedOperationException();
     }
 
     /*
@@ -42,8 +56,9 @@ public class DatasetFetcher extends GeoFetcher {
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
     @Override
-    protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + "/" + identifier + SOFT_GZ;
+    @SuppressWarnings("unused")
+    protected final String formRemoteFilePath( String identifier ) {
+        throw new UnsupportedOperationException();
     }
 
     /*
@@ -53,8 +68,7 @@ public class DatasetFetcher extends GeoFetcher {
      */
     @Override
     protected void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "geo.remote.datasetDir" );
+        remoteBaseDir = ConfigUtils.getString( "smd.publication.baseDir" );
     }
 
 }

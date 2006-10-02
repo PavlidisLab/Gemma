@@ -50,6 +50,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
     /**
      * @param userService the userService to set
      */
+    @SuppressWarnings("static-access")
     public void setUserService( UserService userService ) {
         this.userService = userService;
     }
@@ -111,11 +112,11 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
         }
         if ( userCache.containsKey( getCurrentUsername() ) ) {
             return userCache.get( getCurrentUsername() );
-        } else {
-            User u = getUserForUserName( getCurrentUsername() );
-            userCache.put( getCurrentUsername(), u );
-            return u;
         }
+        User u = getUserForUserName( getCurrentUsername() );
+        userCache.put( getCurrentUsername(), u );
+        return u;
+
     }
 
     /*
@@ -123,6 +124,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
      * 
      * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
      */
+    @SuppressWarnings("static-access")
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
 

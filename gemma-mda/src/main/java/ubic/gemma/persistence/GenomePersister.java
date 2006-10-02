@@ -141,30 +141,28 @@ abstract public class GenomePersister extends CommonPersister {
 
         BioSequence existingBioSequence = bioSequenceService.find( bioSequence );
 
-        // avoid making the instance 'dirty' if we don't have to, to avoid updates.
-        if ( existingBioSequence == null ) {
-
-            if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioSequence );
-
-            fillInBioSequenceTaxon( bioSequence );
-
-            if ( bioSequence.getSequenceDatabaseEntry() != null
-                    && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
-                bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
-                        persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() ) );
-            }
-
-            for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
-                bioSequence2GeneProduct = persistBioSequence2GeneProduct( bioSequence2GeneProduct );
-            }
-
-            assert bioSequence.getTaxon().getId() != null;
-            bioSequence = bioSequenceService.create( bioSequence );
-        } else {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing " + existingBioSequence );
-            bioSequence = existingBioSequence;
+        // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
+        if ( existingBioSequence != null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
+            return existingBioSequence;
         }
-        return bioSequence;
+
+        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+
+        fillInBioSequenceTaxon( bioSequence );
+
+        if ( bioSequence.getSequenceDatabaseEntry() != null
+                && bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getId() == null ) {
+            bioSequence.getSequenceDatabaseEntry().setExternalDatabase(
+                    persistExternalDatabase( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() ) );
+        }
+
+        for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequence.getBioSequence2GeneProduct() ) {
+            bioSequence2GeneProduct = persistBioSequence2GeneProduct( bioSequence2GeneProduct );
+        }
+
+        assert bioSequence.getTaxon().getId() != null;
+        return bioSequenceService.create( bioSequence );
     }
 
     /**
@@ -201,6 +199,7 @@ abstract public class GenomePersister extends CommonPersister {
      * @param blastResult
      */
     private BlastResult persistBlastResult( BlastResult blastResult ) {
+        blastResult.setQuerySequence( persistBioSequence( blastResult.getQuerySequence() ) );
         return blastResultService.create( blastResult );
     }
 
@@ -208,6 +207,7 @@ abstract public class GenomePersister extends CommonPersister {
      * @param blatResult
      */
     private BlatResult persistBlatResult( BlatResult blatResult ) {
+        blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
         return blatResultService.create( blatResult );
     }
 
@@ -241,9 +241,6 @@ abstract public class GenomePersister extends CommonPersister {
     private GeneProduct persistGeneProduct( GeneProduct geneProduct ) {
         if ( geneProduct == null ) return null;
         if ( !isTransient( geneProduct ) ) return geneProduct;
-
-        // Gene g = geneProduct.getGene();
-        // geneProduct.setGene( persistGene( g ) ); // should cascade to the geneproducts.
 
         return geneProductService.create( geneProduct );
     }

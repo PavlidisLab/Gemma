@@ -51,7 +51,7 @@ import ubic.gemma.util.progress.ProgressManager;
  */
 public class ImageCumulativePlatesLoader {
 
-    private static Log log = LogFactory.getLog( ImageCumulativePlatesLoader.class.getName() );
+    Log log = LogFactory.getLog( ImageCumulativePlatesLoader.class.getName() );
 
     private static final int BATCH_SIZE = 2000;
     private static final int QUEUE_SIZE = 30000;
@@ -120,7 +120,7 @@ public class ImageCumulativePlatesLoader {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public int load( final InputStream inputStream ) throws IOException {
+    public int load( final InputStream inputStream ) {
         final ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
         final SecurityContext context = SecurityContextHolder.getContext();
@@ -160,7 +160,7 @@ public class ImageCumulativePlatesLoader {
 
     }
 
-    private void load( BlockingQueue<BioSequence> queue ) {
+    void load( BlockingQueue<BioSequence> queue ) {
         log.debug( "Entering 'load' " );
 
         long millis = System.currentTimeMillis();

@@ -26,8 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GOAssociationDao;
-import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -36,16 +34,12 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @author keshav
  * @version $Id$
  */
-public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContextTest {
-    protected static final Log log = LogFactory.getLog( Gene2GOAssociationParserTest.class );
+public class NCBIGene2GOAssociationParserTest extends BaseTransactionalSpringContextTest {
+    protected Log log = LogFactory.getLog( NCBIGene2GOAssociationParserTest.class );
 
-    Gene2GOAssociationParser gene2GOAssParser = null;
+    NCBIGene2GOAssociationParser gene2GOAssParser = null;
 
-    Gene2GOAssociationLoaderImpl gene2GOAssLoader = null;
-
-    Collection<Gene2GOAssociation> gene2GOCol = null;
-
-    TaxonDao taxonDao = null;
+    NCBIGene2GOAssociationLoader gene2GOAssLoader = null;
 
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since its dependencies are
@@ -59,11 +53,11 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
 
         gene2GOAssParser.parse( gZipIs );
 
-        gene2GOCol = gene2GOAssParser.getResults();
+        Collection<Collection<Gene2GOAssociation>> results = gene2GOAssParser.getResults();
 
-        Collection<Object> results = gene2GOAssLoader.persist( gene2GOCol );
+        Collection<Gene2GOAssociation> finalResults = gene2GOAssLoader.load( results );
 
-        assertEquals( 21, results.size() );
+        assertEquals( 21, finalResults.size() );
 
     }
 
@@ -74,11 +68,8 @@ public class Gene2GOAssociationParserTest extends BaseTransactionalSpringContext
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        gene2GOAssParser = new Gene2GOAssociationParser();
-
-        gene2GOAssLoader = new Gene2GOAssociationLoaderImpl();
-
-        gene2GOAssLoader.setGene2GOAssociationDao( ( Gene2GOAssociationDao ) getBean( "gene2GOAssociationDao" ) );
+        gene2GOAssParser = new NCBIGene2GOAssociationParser();
+        gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
         gene2GOAssLoader.setPersisterHelper( persisterHelper );
     }
 

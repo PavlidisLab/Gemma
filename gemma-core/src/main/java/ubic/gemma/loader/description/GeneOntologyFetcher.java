@@ -16,43 +16,37 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome.taxon;
+package ubic.gemma.loader.description;
 
 import java.io.File;
-import java.util.Collection;
 
 import org.apache.commons.configuration.ConfigurationException;
 
-import ubic.gemma.loader.genome.gene.ncbi.NCBIUtil;
-import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.loader.util.fetcher.FtpFetcher;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Taxon information from NCBI comes as a tar.gz archive; only the names.dmp file is of interest. From
- * ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz
+ * Fetch the RDF file from GO.
  * 
  * @author pavlidis
  * @version $Id$
  */
-public class TaxonFetcher extends FtpArchiveFetcher {
+public class GeneOntologyFetcher extends FtpFetcher {
 
-    @Override
-    @SuppressWarnings("unused")
-    protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + "taxdump.tar.gz";
-    }
+    /**
+     * 
+     */
+    private static final String GO_FILE_NAME = "go_daily-termdb.rdf-xml.gz";
 
-    public TaxonFetcher() {
-        super();
-        this.setExcludePattern( ".gz" );
-        initArchiveHandler( "tar.gz" );
-    }
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
+     */
     @Override
     public void initConfig() {
-        this.localBasePath = ConfigUtils.getString( "ncbi.local.datafile.basepath" );
-        this.remoteBaseDir = ConfigUtils.getString( "ncbi.remote.taxon.basedir" );
+        this.localBasePath = ConfigUtils.getString( "go.local.datafile.basepath" );
+        this.remoteBaseDir = ConfigUtils.getString( "go.termdb.remote.basedir" );
 
         if ( remoteBaseDir == null )
             throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
@@ -60,18 +54,15 @@ public class TaxonFetcher extends FtpArchiveFetcher {
             throw new RuntimeException( new ConfigurationException( "Failed to get localBasePath" ) );
     }
 
-    /**
-     * Fetch the Taxon bundle from NCBI.
+    /*
+     * (non-Javadoc)
      * 
-     * @return
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
      */
-    public Collection<LocalFile> fetch() {
-        return this.fetch( "taxon" );
-    }
-
+    @Override
     @SuppressWarnings("unused")
-    protected String formLocalFilePath( String unused, File newDir ) {
-        return newDir + File.separator + "taxdump.tar.gz";
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        return newDir.getAbsolutePath() + File.separatorChar + GO_FILE_NAME;
     }
 
     /*
@@ -81,6 +72,18 @@ public class TaxonFetcher extends FtpArchiveFetcher {
      */
     @Override
     public void setNetDataSourceUtil() {
-        this.netDataSourceUtil = new NCBIUtil();
+        this.netDataSourceUtil = new GoUtil();
+
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
+     */
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return this.remoteBaseDir + GO_FILE_NAME;
+    }
+
 }

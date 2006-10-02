@@ -19,10 +19,7 @@
 package ubic.gemma.loader.util.fetcher;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -42,33 +39,28 @@ import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 
 import ubic.basecode.util.FileTools;
-import ubic.basecode.util.NetUtils;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
+ * Fetcher that can fetch archives (e.g., tar.gz) and unpack them.
+ * 
  * @author pavlidis
  * @version $Id$
  */
-public abstract class FtpArchiveFetcher extends AbstractFetcher implements ArchiveFetcher {
-    /**
-     * 
-     */
-    private static final int INFO_UPDATE_INTERVAL = 2000;
+public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFetcher {
+
+    private String excludePattern;
+
     protected static Log log = LogFactory.getLog( FtpArchiveFetcher.class.getName() );
     public Expand expander;
     protected boolean doDelete = false;
     protected FTPClient f;
-
-    public FtpArchiveFetcher() {
-        initConfig();
-    }
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
      */
-    @SuppressWarnings("hiding")
     public void setDeleteAfterUnpack( boolean doDelete ) {
         this.doDelete = doDelete;
     }
@@ -85,70 +77,9 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
     /**
      * @param outputFileName
      */
-    protected void cleanUp( String outputFileName ) {
-        if ( this.doDelete ) ( new File( outputFileName ) ).delete();
+    protected void cleanUp( File outputFile ) {
+        if ( this.doDelete ) outputFile.delete();
     }
-
-    /**
-     * @param outputFileName
-     * @param seekFile
-     * @return
-     */
-    protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
-        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
-            @SuppressWarnings("synthetic-access")
-            public Boolean call() throws FileNotFoundException, IOException {
-                log.info( "Fetching " + seekFile );
-                return new Boolean( NetUtils.ftpDownloadFile( f, seekFile, outputFileName, force ) );
-            }
-        } );
-        return future;
-    }
-
-    /**
-     * @param future
-     * @param outputFileName
-     * @param identifier
-     * @param newDir
-     * @param excludePattern
-     * @return
-     */
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String outputFileName,
-            String identifier, File newDir, String excludePattern ) {
-        assert f != null;
-        Executors.newSingleThreadExecutor().execute( future );
-        try {
-
-            while ( !future.isDone() ) {
-                try {
-                    Thread.sleep( INFO_UPDATE_INTERVAL );
-                } catch ( InterruptedException ie ) {
-                    ;
-                }
-
-                if ( log.isInfoEnabled() ) {
-                    log
-                            .info( ( new File( outputFileName ).length()
-                                    + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
-                }
-            }
-            if ( future.get().booleanValue() ) {
-                if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFileName );
-                unPack( newDir, outputFileName );
-                cleanUp( outputFileName );
-                return listFiles( identifier, newDir, excludePattern );
-            }
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Couldn't fetch file for " + identifier, e );
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Interrupted: Couldn't fetch file for " + identifier, e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( "Couldn't fetch file for " + identifier, e );
-        }
-        throw new RuntimeException( "Couldn't fetch file for " + identifier );
-    }
-
-    protected abstract String formRemoteFilePath( String identifier );
 
     /**
      * @param methodName e.g., "gzip". If null, ignored
@@ -174,8 +105,6 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         }
     }
 
-    protected abstract void initConfig();
-
     /**
      * @param identifier
      * @param newDir
@@ -185,20 +114,15 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    protected Collection<LocalFile> listFiles( String identifier, File newDir, String excludePattern )
-            throws IOException {
-        if ( identifier == null ) {
-            log.info( "Got files:" );
-        } else {
-            log.info( "Got files for " + identifier + ":" );
-        }
+    protected Collection<LocalFile> listFiles( String remoteFile, File newDir ) throws IOException {
+
         Collection<LocalFile> result = new HashSet<LocalFile>();
         for ( File file : ( Collection<File> ) FileTools.listDirectoryFiles( newDir ) ) {
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) ) continue;
             log.info( "\t" + file.getCanonicalPath() );
             LocalFile newFile = LocalFile.Factory.newInstance();
             newFile.setLocalURL( file.toURI().toURL() );
-            newFile.setRemoteURL( new File( formRemoteFilePath( identifier ) ).toURI().toURL() );
+            newFile.setRemoteURL( new File( remoteFile ).toURI().toURL() );
             newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
             result.add( newFile );
         }
@@ -206,21 +130,52 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
     }
 
     /**
+     * @param future
+     * @param outputFileName
+     * @param identifier
+     * @param newDir
+     * @param excludePattern
+     * @return
+     */
+    @Override
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
+            String outputFileName ) {
+        Executors.newSingleThreadExecutor().execute( future );
+        try {
+            File outputFile = new File( outputFileName );
+            waitForDownload( future, expectedSize, outputFile );
+            if ( future.get().booleanValue() ) {
+                if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFile );
+                unPack( outputFile );
+                cleanUp( outputFile );
+                return listFiles( seekFileName, outputFile.getParentFile() );
+            }
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Couldn't fetch " + seekFileName, e );
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName, e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName, e );
+        }
+        throw new RuntimeException( "Couldn't fetch " + seekFileName );
+    }
+
+    /**
      * @param newDir
      * @param seekFile
      */
-    protected void unPack( final File newDir, final String seekFile ) {
+    protected void unPack( final File outputFile ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             @SuppressWarnings("synthetic-access")
             public Boolean call() {
-                log.info( "Unpacking " + seekFile );
+                log.info( "Unpacking " + outputFile );
                 if ( expander != null ) {
-                    expander.setSrc( new File( seekFile ) );
-                    expander.setDest( newDir );
+                    expander.setSrc( outputFile );
+                    expander.setDest( outputFile.getParentFile() );
                     expander.perform();
                 } else { // gzip.
                     try {
-                        FileTools.unGzipFile( seekFile );
+                        FileTools.unGzipFile( outputFile.getAbsolutePath() );
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
@@ -245,20 +200,11 @@ public abstract class FtpArchiveFetcher extends AbstractFetcher implements Archi
         }
     }
 
-    protected long getExpectedSize( final String seekFile ) throws IOException, SocketException {
-        long expectedSize = 0;
-
-        try {
-            expectedSize = NetUtils.ftpFileSize( f, seekFile );
-        } catch ( FileNotFoundException e ) {
-            // when this happens we need to reconnect.
-            log.error( e );
-            log.warn( "Couldn't get remote file size for " + seekFile );
-            InetAddress ad = f.getRemoteAddress();
-            f.disconnect();
-            f.connect( ad );
-        }
-        return expectedSize;
+    /**
+     * @param excludePattern the excludePattern to set
+     */
+    public void setExcludePattern( String excludePattern ) {
+        this.excludePattern = excludePattern;
     }
 
 }

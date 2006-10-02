@@ -38,6 +38,7 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * A generic class for fetching files via HTTP and writing them to a local file system.
@@ -49,15 +50,15 @@ public class HttpFetcher extends AbstractFetcher {
 
     private static final int INFO_UPDATE_INTERVAL = 3000;
 
-    /*
-     * (non-Javadoc)
+    /**
+     * The identifier is the URL for the file.
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
     public Collection<LocalFile> fetch( String identifier ) {
         log.info( "Seeking " + identifier + " file " );
 
-        this.localBasePath = System.getProperty( "java.io.tmpdir" );
+        this.localBasePath = ConfigUtils.getDownloadPath();
 
         try {
 
@@ -89,7 +90,7 @@ public class HttpFetcher extends AbstractFetcher {
      * @param newDir
      * @return
      */
-    private String formLocalFilePath( String identifier, File newDir ) {
+    protected String formLocalFilePath( String identifier, File newDir ) {
         return newDir + File.separator + identifier;
     }
 
@@ -125,9 +126,6 @@ public class HttpFetcher extends AbstractFetcher {
      * @param future
      * @param seekFile
      * @param outputFileName
-     * @param identifier
-     * @param newDir
-     * @param excludePattern
      * @return
      */
     protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, String outputFileName ) {
@@ -164,13 +162,33 @@ public class HttpFetcher extends AbstractFetcher {
     protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
         Collection<LocalFile> result = new HashSet<LocalFile>();
         File file = new File( outputFileName );
-        log.info( "\t" + file.getCanonicalPath() );
+        log.info( "Downlaoded: " + file.getCanonicalPath() );
         LocalFile newFile = LocalFile.Factory.newInstance();
         newFile.setLocalURL( file.toURI().toURL() );
         newFile.setRemoteURL( new URL( seekFile ) );
         newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
         result.add( newFile );
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
+     */
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return identifier;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
+     */
+    @Override
+    protected void initConfig() {
+        throw new UnsupportedOperationException();
     }
 
 }

@@ -78,10 +78,16 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
             URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURI().toURL();
             URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURI().toURL();
 
-            log.info( "Fetching..." );
-            NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
-            LocalFile geneInfoFile = fetcher.fetch( geneInfoUrl ).iterator().next();
-            LocalFile gene2AccessionFile = fetcher.fetch( gene2AccesionUrl ).iterator().next();
+            // log.info( "Fetching..." );
+            // NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
+            // LocalFile geneInfoFile = fetcher.fetch( geneInfoUrl ).iterator().next();
+            // LocalFile gene2AccessionFile = fetcher.fetch( gene2AccesionUrl ).iterator().next();
+
+            LocalFile geneInfoFile = LocalFile.Factory.newInstance();
+            geneInfoFile.setLocalURL( geneInfoUrl );
+
+            LocalFile gene2AccessionFile = LocalFile.Factory.newInstance();
+            geneInfoFile.setLocalURL( gene2AccesionUrl );
 
             return processLocalFiles( geneInfoFile, gene2AccessionFile, queue, filter );
 

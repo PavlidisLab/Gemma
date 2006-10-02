@@ -42,6 +42,7 @@ public class HttpFetcherTest extends TestCase {
      */
     public void testFetch() throws Exception {
         HttpFetcher hf = new HttpFetcher();
+
         try {
             hf.setForce( true );
             Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );

@@ -18,13 +18,16 @@
  */
 package ubic.gemma.loader.description;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.OntologyEntry;
-import ubic.gemma.persistence.Persister;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -33,37 +36,48 @@ import ubic.gemma.persistence.PersisterHelper;
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="ontologyEntryLoader"
- * @spring.property name="persisterHelper" ref="persisterHelper"
  */
-public class OntologyEntryPersister implements Persister {
+public class GeneOntologyLoader {
 
-    protected static final Log log = LogFactory.getLog( OntologyEntryPersister.class );
+    protected static final Log log = LogFactory.getLog( GeneOntologyLoader.class );
 
     private PersisterHelper persisterHelper;
 
-    public Collection<?> persist( Collection<?> oeCol ) {
-        int i = 0;
-        for ( Object oe : oeCol ) {
-            persist( oe );
-            if ( log.isDebugEnabled() && i > 0 && i % 5000 == 0 ) {
-                log.debug( "Persisted " + i + " ontology entries from GO" );
-            }
-            i++;
+    /**
+     * @param is
+     * @return
+     */
+    public Collection<OntologyEntry> load( InputStream is ) {
+        GeneOntologyEntryParser parser = new GeneOntologyEntryParser();
+        try {
+            parser.parse( is );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-        return oeCol;
+        return this.load( parser.getResults() );
     }
 
     /**
-     * @param oe
+     * @param is
+     * @return
      */
-    public Object persist( Object oe ) {
-        assert oe instanceof OntologyEntry;
-        assert ( ( OntologyEntry ) oe ).getExternalDatabase() != null;
-        for ( OntologyEntry o : ( ( OntologyEntry ) oe ).getAssociations() ) {
-            assert o.getExternalDatabase() != null;
+    public Collection<OntologyEntry> load( File file ) throws IOException {
+        return this.load( FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() ) );
+    }
+
+    /**
+     * @param oeCol
+     * @return
+     */
+    public Collection<OntologyEntry> load( Collection<OntologyEntry> oeCol ) {
+        int count = 0;
+        for ( Object oe : oeCol ) {
+            persisterHelper.persist( oe );
+            if ( ++count % 1000 == 0 ) {
+                log.info( "Persisted " + count + " ontology entries from GO" );
+            }
         }
-        return persisterHelper.persist( oe );
+        return oeCol;
     }
 
     /**

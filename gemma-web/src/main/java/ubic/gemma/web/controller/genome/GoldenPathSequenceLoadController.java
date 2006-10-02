@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.genome;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,35 +67,36 @@ public class GoldenPathSequenceLoadController extends SimpleFormController {
     BioSequenceService bioSequenceService;
 
     @Override
+    @SuppressWarnings("unused")
     public ModelAndView onSubmit( final HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
         final GoldenPathSequenceLoadCommand params = ( GoldenPathSequenceLoadCommand ) command;
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
-//        new Thread( new Runnable() {
-//            public void run() {
-//                try {
- //                   SecurityContextHolder.setContext( context );
-                    Taxon taxon = params.getTaxon();
-                    GoldenPathDumper dumper = new GoldenPathDumper( taxon );
-                    GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
-                    if ( params.getLimit() > 0 ) {
-                        gp.setLimit( params.getLimit() );
-                    }
-                    gp.setExternalDatabaseService( externalDatabaseService );
-                    gp.setBioSequenceService( bioSequenceService );
+        // new Thread( new Runnable() {
+        // public void run() {
+        // try {
+        // SecurityContextHolder.setContext( context );
+        Taxon taxon = params.getTaxon();
+        GoldenPathDumper dumper = new GoldenPathDumper( taxon );
+        GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
+        if ( params.getLimit() > 0 ) {
+            gp.setLimit( params.getLimit() );
+        }
+        gp.setExternalDatabaseService( externalDatabaseService );
+        gp.setBioSequenceService( bioSequenceService );
 
-                    ProgressJob job = ProgressManager.createProgressJob( "pavlidis", "Golden path loading" );
-                    gp.load( dumper );
-                    ProgressManager.destroyProgressJob( job );
+        ProgressJob job = ProgressManager.createProgressJob( "pavlidis", "Golden path loading" );
+        gp.load( dumper );
+        ProgressManager.destroyProgressJob( job );
 
         // } catch ( SQLException e ) {
         // throw new RuntimeException( e );
         // }
         // }
         //
-        //        } ).start();
+        // } ).start();
 
         return new ModelAndView( this.getSuccessView() );
 

@@ -18,6 +18,9 @@
  */
 package ubic.gemma.loader.expression.geo.fetcher;
 
+import java.io.File;
+
+import ubic.gemma.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
 
 /**
@@ -25,5 +28,28 @@ import ubic.gemma.loader.util.fetcher.FtpFetcher;
  * @version $Id$
  */
 abstract public class GeoFetcher extends FtpFetcher {
+    /**
+     * 
+     */
+    protected static final String SOFT_GZ = ".soft.gz";
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
+     */
+    @Override
+    protected final String formLocalFilePath( String identifier, File newDir ) {
+        return newDir.getAbsolutePath() + File.separator + identifier + SOFT_GZ;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
+     */
+    @Override
+    public final void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new GeoUtil();
+    }
 }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.FutureTask;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,10 +36,45 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public abstract class AbstractFetcher implements Fetcher {
 
-    protected static Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
+    protected Log log = LogFactory.getLog( getClass() );
     protected String localBasePath = null;
-    protected String baseDir = null;
+    protected String remoteBaseDir = null;
     protected boolean force = false;
+
+    protected static final int INFO_UPDATE_INTERVAL = 2000;
+
+    protected abstract void initConfig();
+
+    protected abstract String formRemoteFilePath( String identifier );
+
+    protected abstract String formLocalFilePath( String identifier, File newDir );
+
+    /**
+     * 
+     */
+    public AbstractFetcher() {
+        super();
+        initConfig();
+    }
+
+    /**
+     * @param future
+     * @param expectedSize
+     * @param outputFileName
+     */
+    protected void waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
+        while ( !future.isDone() ) {
+            try {
+                Thread.sleep( INFO_UPDATE_INTERVAL );
+            } catch ( InterruptedException ie ) {
+                throw new RuntimeException( ie );
+            }
+
+            if ( log.isInfoEnabled() ) {
+                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+            }
+        }
+    }
 
     /**
      * Set to true if downloads should proceed even if the file already exists.

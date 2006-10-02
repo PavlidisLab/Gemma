@@ -18,10 +18,7 @@
  */
 package ubic.gemma.loader.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 
@@ -83,19 +80,6 @@ public class ParserAndLoaderTools {
     }
 
     /**
-     * @param path
-     * @return
-     * @throws IOException
-     */
-    public static InputStream retrieveByHTTP( String path ) throws IOException {
-
-        if ( path == null ) throw new IllegalArgumentException();
-
-        URL urlPattern = new URL( path );
-        return urlPattern.openStream();
-    }
-
-    /**
      * @param obj
      * @param fileName
      * @return
@@ -132,18 +116,4 @@ public class ParserAndLoaderTools {
         }
     }
 
-    public static boolean validTaxonId( String taxId ) {
-        int taxonId = Integer.parseInt( taxId );
-
-        switch ( taxonId ) {
-            case HOMOSAPIEN:
-                return true;
-            case MUSMUSCULUS:
-                return true;
-            case RATTUS:
-                return true;
-            default:
-                return false;
-        }
-    }
 }

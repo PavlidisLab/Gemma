@@ -44,8 +44,14 @@ import ubic.gemma.util.ConfigUtils;
 public class RawDataFetcher extends FtpArchiveFetcher {
 
     public RawDataFetcher() {
-        initConfig();
+        super();
+        this.setExcludePattern( ".tar" );
         initArchiveHandler( null );
+    }
+
+    @Override
+    public final void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new GeoUtil();
     }
 
     /*
@@ -74,7 +80,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             }
             long expectedSize = this.getExpectedSize( seekFile );
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = doTask( future, expectedSize, outputFileName, identifier, newDir, ".tar" );
+            Collection<LocalFile> result = doTask( future, expectedSize, seekFile, outputFileName );
             f.disconnect();
             return result;
         } catch ( SocketException e ) {
@@ -90,9 +96,8 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * @param newDir
      * @return
      */
-    private String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + File.separator + identifier + "_RAW.tar";
-        return outputFileName;
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        return newDir + File.separator + identifier + "_RAW.tar";
     }
 
     /**
@@ -100,20 +105,21 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * @return
      */
     protected String formRemoteFilePath( String identifier ) {
-        String seekFile = baseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
+        String seekFile = remoteBaseDir + "/" + identifier + "/" + identifier + "_RAW.tar";
         return seekFile;
     }
 
     /**
      * @throws ConfigurationException
      */
-    protected void initConfig() {
+    @Override
+    public void initConfig() {
         localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        baseDir = ConfigUtils.getString( "geo.remote.rawDataDir" );
+        remoteBaseDir = ConfigUtils.getString( "geo.remote.rawDataDir" );
 
         if ( localBasePath == null || localBasePath.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
-        if ( baseDir == null || baseDir.length() == 0 )
+        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
 
     }

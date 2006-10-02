@@ -18,17 +18,8 @@
  */
 package ubic.gemma.loader.expression.geo.fetcher;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.net.ftp.FTP;
 
-import ubic.basecode.util.NetUtils;
-import ubic.gemma.loader.expression.geo.util.GeoUtil;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -39,54 +30,30 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class PlatformFetcher extends GeoFetcher {
 
-    /**
+    /*
+     * (non-Javadoc)
      * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
-    protected static final String SOFT_GZ = ".soft.gz";
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        return remoteBaseDir + identifier + "/" + identifier + "_family" + SOFT_GZ;
+    }
 
-    /**
-     * @throws ConfigurationException
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
      */
-    public PlatformFetcher() {
+    @Override
+    protected void initConfig() {
         this.localBasePath = ConfigUtils.getString( "geo.local.datafile.basepath" );
-        this.baseDir = ConfigUtils.getString( "geo.remote.platformDir" );
-        if ( baseDir == null ) {
+        this.remoteBaseDir = ConfigUtils.getString( "geo.remote.platformDir" );
+        if ( remoteBaseDir == null ) {
             throw new RuntimeException( new ConfigurationException(
                     "geo.remote.platformDir was not defined in resource bundle" ) );
         }
-    }
 
-    /**
-     * @param accession
-     */
-    public Collection<LocalFile> fetch( String accession ) {
-        log.info( "Seeking file for " + accession );
-
-        try {
-            if ( ftpClient == null || !ftpClient.isConnected() )
-                ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
-            String seekFile = baseDir + accession + "/" + accession + "_family" + SOFT_GZ;
-            File newDir = mkdir( accession );
-            File outputFile = new File( newDir, accession + SOFT_GZ );
-            boolean success = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFile, force );
-            ftpClient.disconnect();
-
-            if ( success ) {
-                // get meta-data about the file.
-                LocalFile file = fetchedFile( seekFile, outputFile.getAbsolutePath() );
-                log.info( "Got " + accession + SOFT_GZ + " for platform " + accession + ". Output file is "
-                        + outputFile.getAbsolutePath() );
-
-                // no need to unpack the file, we process as is.
-
-                Collection<LocalFile> result = new HashSet<LocalFile>();
-                result.add( file );
-                return result;
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-        throw new RuntimeException( "Couldn't find file for " + accession );
     }
 
 }

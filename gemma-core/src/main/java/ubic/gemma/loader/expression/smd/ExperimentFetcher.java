@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.smd;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -38,7 +39,9 @@ import ubic.gemma.loader.expression.smd.model.SMDExperiment;
 import ubic.gemma.loader.expression.smd.model.SMDPublication;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.loader.util.fetcher.SmdFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Given a set of Publications from SMD, get all the meta-data for the experiments (bioassays) for the experiment_sets
@@ -46,11 +49,10 @@ import ubic.gemma.model.common.description.LocalFile;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
-public class ExperimentFetcher extends FtpFetcher {
+public class ExperimentFetcher extends SmdFetcher {
 
     private PublicationFetcher pubs;
     private Set<SMDExperiment> experiments;
@@ -62,13 +64,10 @@ public class ExperimentFetcher extends FtpFetcher {
      * @throws ConfigurationException
      * @throws IOException
      */
-    public ExperimentFetcher( PublicationFetcher pubs ) throws IOException, ConfigurationException {
+    public ExperimentFetcher( PublicationFetcher pubs ) throws IOException {
+        super();
         this.pubs = pubs;
         experiments = new HashSet<SMDExperiment>();
-
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-
-        baseDir = ( String ) config.getProperty( "smd.publication.baseDir" );
 
         sem = new SpeciesExperimentMap();
     }
@@ -92,15 +91,16 @@ public class ExperimentFetcher extends FtpFetcher {
                 log.info( "Seeking experiment set meta file for " + expM.getName() );
 
                 // now, the experiments for this won't be filled in. So we have to retrive it.
-                FTPFile[] expSetFiles = ftpClient.listFiles( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() );
+                FTPFile[] expSetFiles = ftpClient.listFiles( remoteBaseDir + "/" + pubM.getId() + "/"
+                        + expM.getNumber() );
 
                 for ( int i = 0; i < expSetFiles.length; i++ ) {
                     String expFile = expSetFiles[i].getName();
 
                     if ( !expFile.matches( "exptset_[0-9]+.meta" ) ) continue;
 
-                    InputStream is = ftpClient.retrieveFileStream( baseDir + "/" + pubM.getId() + "/" + expM.getNumber() + "/"
-                            + expFile );
+                    InputStream is = ftpClient.retrieveFileStream( remoteBaseDir + "/" + pubM.getId() + "/"
+                            + expM.getNumber() + "/" + expFile );
                     if ( is == null ) throw new IOException( "Could not get stream for " + expFile );
                     SMDExperiment newExptSet = new SMDExperiment();
                     newExptSet.read( is );
@@ -150,31 +150,6 @@ public class ExperimentFetcher extends FtpFetcher {
         return experiments.iterator();
     }
 
-    public static void main( String[] args ) {
-        try {
-            PublicationFetcher foo = new PublicationFetcher();
-            foo.fetch( args != null && args.length > 0 ? Integer.parseInt( args[0] ) : 15 );
-            ExperimentFetcher bar = new ExperimentFetcher( foo );
-            bar.fetch();
-
-            log.info( bar );
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        } catch ( SAXException e ) {
-            e.printStackTrace();
-        } catch ( ConfigurationException e ) {
-            e.printStackTrace();
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
-     */
-    public Collection<LocalFile> fetch( String identifier ) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
-    }
+  
 
 }

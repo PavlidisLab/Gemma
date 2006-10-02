@@ -1,5 +1,6 @@
 package ubic.gemma.loader.expression.smd;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -13,7 +14,7 @@ import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.expression.smd.model.SMDPublication;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
-import ubic.gemma.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.loader.util.fetcher.SmdFetcher;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
@@ -23,14 +24,13 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class PublicationFetcher extends FtpFetcher {
+public class PublicationFetcher extends SmdFetcher {
 
     private Set<SMDPublication> publications;
 
     public PublicationFetcher() {
+        super();
         publications = new HashSet<SMDPublication>();
-        baseDir = ConfigUtils.getString( "smd.publication.baseDir" );
-
     }
 
     public Iterator<SMDPublication> getIterator() {
@@ -52,13 +52,13 @@ public class PublicationFetcher extends FtpFetcher {
     public void fetch( int limit ) throws IOException, SAXException {
         if ( !ftpClient.isConnected() ) ftpClient = ( new SmdUtil() ).connect( FTP.ASCII_FILE_TYPE );
 
-        FTPFile[] files = ftpClient.listFiles( baseDir );
+        FTPFile[] files = ftpClient.listFiles( remoteBaseDir );
 
         for ( int i = 0; i < files.length; i++ ) {
             if ( files[i].isDirectory() ) {
                 String pubNum = files[i].getName();
 
-                FTPFile[] pubfiles = ftpClient.listFiles( baseDir + "/" + pubNum );
+                FTPFile[] pubfiles = ftpClient.listFiles( remoteBaseDir + "/" + pubNum );
                 for ( int j = 0; j < pubfiles.length; j++ ) {
 
                     if ( !pubfiles[j].isDirectory() ) {
@@ -66,7 +66,7 @@ public class PublicationFetcher extends FtpFetcher {
 
                         if ( !pubFile.matches( "publication_[0-9]+.meta" ) ) continue;
 
-                        InputStream is = ftpClient.retrieveFileStream( baseDir + "/" + pubNum + "/" + pubFile );
+                        InputStream is = ftpClient.retrieveFileStream( remoteBaseDir + "/" + pubNum + "/" + pubFile );
                         if ( is == null ) throw new IOException( "Could not get stream for " + pubFile );
 
                         SMDPublication newPub = new SMDPublication();
@@ -95,16 +95,6 @@ public class PublicationFetcher extends FtpFetcher {
         log.info( publications.size() + " publications retrieved." );
 
         ftpClient.disconnect();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
-     */
-    public Collection<LocalFile> fetch( String identifier ) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
     }
 
 }

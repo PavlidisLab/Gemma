@@ -30,7 +30,7 @@ import ubic.gemma.model.common.Auditable;
  * @version $Id$
  * @spring.bean id="persisterHelper"
  */
-public class PersisterHelper extends ExpressionPersister {
+public class PersisterHelper extends RelationshipPersister {
 
     /*
      * (non-Javadoc)

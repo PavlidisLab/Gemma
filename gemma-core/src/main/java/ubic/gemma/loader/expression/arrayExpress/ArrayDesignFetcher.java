@@ -56,14 +56,6 @@ public class ArrayDesignFetcher extends FtpFetcher {
 
     private static final String[] suffixes = { "compositesequences", "features", "reporters" };
 
-    /**
-     * 
-     */
-    public ArrayDesignFetcher() {
-        super();
-        initConfig();
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -94,7 +86,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
                         if ( tries > 3 ) {
                             throw new IOException( "Couldn't get connection" );
                         }
-                        client = ( new ArrayExpressUtil() ).connect( FTP.BINARY_FILE_TYPE );
+                        client = getNetDataSourceUtil().connect( FTP.BINARY_FILE_TYPE );
                         tries++;
                     }
 
@@ -107,8 +99,9 @@ public class ArrayDesignFetcher extends FtpFetcher {
                         newFile.setLocalURL( new File( outputFileName ).toURI().toURL() );
                         newFile.setRemoteURL( new File( formRemoteFilePath( identifier, suffix ) ).toURI().toURL() );
                         newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
-                        results.add( newFile );
                         newFile.setSize( size );
+                        results.add( newFile );
+
                         log.info( "Need file of " + size + " bytes" );
                     } catch ( FileNotFoundException e ) {
                         log.info( seekFile + " Not found on " + ConfigUtils.getString( "arrayExpress.host" ) );
@@ -180,7 +173,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
      * @suffix e.g. compositesequence, features, reporters
      * @return
      */
-    private String formLocalFilePath( String identifier, File newDir, String suffix ) {
+    protected String formLocalFilePath( String identifier, File newDir, String suffix ) {
         String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + "." + suffix + ".txt";
         log.info( "Download to " + outputFileName );
         return outputFileName;
@@ -193,7 +186,7 @@ public class ArrayDesignFetcher extends FtpFetcher {
      */
     protected String formRemoteFilePath( String identifier, String suffix ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" ).replaceFirst( "A-", "" );
-        String seekFile = baseDir + dirName + "/" + identifier + "/" + identifier + "." + suffix + ".txt";
+        String seekFile = remoteBaseDir + dirName + "/" + identifier + "/" + identifier + "." + suffix + ".txt";
         return seekFile;
     }
 
@@ -203,13 +196,43 @@ public class ArrayDesignFetcher extends FtpFetcher {
     protected void initConfig() {
 
         localBasePath = ConfigUtils.getString( "arrayExpress.local.datafile.basepath" );
-        baseDir = ConfigUtils.getString( "arrayExpress.arraydesign.baseDir" );
+        remoteBaseDir = ConfigUtils.getString( "arrayExpress.arraydesign.baseDir" );
 
         if ( localBasePath == null || localBasePath.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
-        if ( baseDir == null || baseDir.length() == 0 )
+        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
             throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
+     */
+    @Override
+    protected String formLocalFilePath( String identifier, File newDir ) {
+        throw new UnsupportedOperationException();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
+     */
+    @Override
+    public void setNetDataSourceUtil() {
+        this.netDataSourceUtil = new ArrayExpressUtil();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
+     */
+    @Override
+    protected String formRemoteFilePath( String identifier ) {
+        throw new UnsupportedOperationException();
     }
 
 }

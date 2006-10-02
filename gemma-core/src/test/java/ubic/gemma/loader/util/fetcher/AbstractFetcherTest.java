@@ -100,6 +100,35 @@ public class AbstractFetcherTest extends TestCase {
         public Collection<LocalFile> fetch( String identifier ) {
             return null;
         }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
+         */
+        @Override
+        protected String formLocalFilePath( String identifier, File newDir ) {
+            return null;
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
+         */
+        @Override
+        protected String formRemoteFilePath( String identifier ) {
+            return null;
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
+         */
+        @Override
+        protected void initConfig() {
+        }
     }
 
 }

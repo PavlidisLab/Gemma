@@ -57,16 +57,16 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     Map<String, NCBIGeneInfo> geneInfo = null;
 
     @SuppressWarnings("unchecked")
-    public void parse( InputStream is, BlockingQueue queue ) throws IOException {
+    public void parse( InputStream is, BlockingQueue aQueue ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        this.queue = queue;
+        this.queue = aQueue;
         super.parse( is );
     }
 
     @SuppressWarnings("unchecked")
-    public void parse( File f, BlockingQueue queue, Map geneInfo ) throws IOException {
-        this.queue = queue;
-        this.geneInfo = geneInfo;
+    public void parse( File f, BlockingQueue queue1, Map geneInfo1 ) throws IOException {
+        this.queue = queue1;
+        this.geneInfo = geneInfo1;
         super.parse( f );
     }
 
@@ -218,6 +218,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     }
 
     @Override
+    @SuppressWarnings("unused")
     protected void addResult( Object obj ) {
         // No-op.
         // let queue handle this within parseOneLine

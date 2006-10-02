@@ -25,7 +25,7 @@ import ubic.gemma.analysis.sequence.ProbeMapperTest;
 import ubic.gemma.apps.ProbeMapperCliTest;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixTest;
 import ubic.gemma.externalDb.ExternalDatabaseTest;
-import ubic.gemma.loader.association.Gene2GOAssociationParserTest;
+import ubic.gemma.loader.association.NCBIGene2GOAssociationParserTest;
 import ubic.gemma.loader.description.OntologyEntryLoaderIntegrationTest;
 import ubic.gemma.loader.entrez.pubmed.AllPubMedTests;
 import ubic.gemma.loader.expression.arrayDesign.AllArrayDesignTests;
@@ -39,6 +39,7 @@ import ubic.gemma.loader.util.fetcher.AbstractFetcherTest;
 import ubic.gemma.model.AllModelTests;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDeleteTest;
 import ubic.gemma.persistence.CrudUtilsTest;
+import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.security.AllSecurityTests;
 import ubic.gemma.util.progress.ProgressDataTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
@@ -77,7 +78,7 @@ public class AllCoreTests {
         suite.addTestSuite( ProbeMapperCliTest.class );
         suite.addTestSuite( ProbeMapperTest.class );
 
-        suite.addTestSuite( Gene2GOAssociationParserTest.class );
+        suite.addTestSuite( NCBIGene2GOAssociationParserTest.class );
         suite.addTestSuite( OntologyEntryLoaderIntegrationTest.class );
         suite.addTestSuite( DataFileFetcherIntegrationTest.class );
 
@@ -86,7 +87,7 @@ public class AllCoreTests {
 
         suite.addTestSuite( ProgressDataTest.class );
         suite.addTestSuite( ProgressIntegrationTest.class );
-
+        suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );
 
         suite.addTestSuite( ExpressionExperimentDeleteTest.class );

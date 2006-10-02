@@ -25,26 +25,22 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPFile;
-import org.xml.sax.SAXException;
 
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.loader.expression.smd.model.SMDBioAssay;
 import ubic.gemma.loader.expression.smd.model.SMDExperiment;
 import ubic.gemma.loader.expression.smd.model.SMDFile;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
-import ubic.gemma.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.loader.util.fetcher.SmdFetcher;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Download (but do not parse) data files for a given ExperimentSet.
@@ -52,20 +48,15 @@ import ubic.gemma.model.common.description.LocalFile;
  * @author pavlidis
  * @version $Id$
  */
-public class DataFileFetcher extends FtpFetcher {
+public class DataFileFetcher extends SmdFetcher {
 
     private Map<Integer, String> cuts;
     private Set<SMDFile> localFiles;
 
-    public DataFileFetcher() throws IOException, ConfigurationException {
+    public DataFileFetcher() throws IOException {
+        super();
         localFiles = new HashSet<SMDFile>();
-        Configuration config = new PropertiesConfiguration( "Gemma.properties" );
-
-        localBasePath = ( String ) config.getProperty( "smd.local.datafile.basepath" );
-        baseDir = ( String ) config.getProperty( "smd.experiments.baseDir" );
-
         getCuts();
-
     }
 
     /**
@@ -73,7 +64,7 @@ public class DataFileFetcher extends FtpFetcher {
      * @throws IOException
      */
     private void getCuts() throws IOException {
-        FTPFile[] files = ftpClient.listFiles( baseDir );
+        FTPFile[] files = ftpClient.listFiles( remoteBaseDir );
         cuts = new TreeMap<Integer, String>();
         for ( int i = 0; i < files.length; i++ ) {
             String name = files[i].getName();
@@ -108,7 +99,7 @@ public class DataFileFetcher extends FtpFetcher {
 
             String outputFileName = newDir.getAbsolutePath() + File.separatorChar + assayId + ".xls.gz";
 
-            String seekFile = baseDir + group + "/" + assayId + ".xls.gz";
+            String seekFile = remoteBaseDir + group + "/" + assayId + ".xls.gz";
 
             NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );
 
@@ -146,28 +137,6 @@ public class DataFileFetcher extends FtpFetcher {
         return null;
     }
 
-    public static void main( String[] args ) {
-        try {
-            DataFileFetcher fb = new DataFileFetcher();
-            PublicationFetcher foo = new PublicationFetcher();
-
-            foo.fetch( 10 );
-            ExperimentFetcher bar = new ExperimentFetcher( foo );
-            bar.fetch();
-
-            for ( Iterator<SMDExperiment> iter = bar.getExperimentsIterator(); iter.hasNext(); ) {
-                SMDExperiment element = iter.next();
-                fb.fetch( element );
-            }
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        } catch ( SAXException e ) {
-            e.printStackTrace();
-        } catch ( ConfigurationException e ) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * @return
      */
@@ -187,8 +156,19 @@ public class DataFileFetcher extends FtpFetcher {
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
+    @SuppressWarnings("unused")
     public Collection<LocalFile> fetch( String identifier ) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
+     */
+    @Override
+    protected void initConfig() {
+        localBasePath = ConfigUtils.getString( "smd.local.datafile.basepath" );
+        remoteBaseDir = ConfigUtils.getString( "smd.experiments.baseDir" );
     }
 }

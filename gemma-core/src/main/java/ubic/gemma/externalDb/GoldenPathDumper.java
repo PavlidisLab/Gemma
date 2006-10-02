@@ -177,6 +177,8 @@ public class GoldenPathDumper extends GoldenPath {
             compile();
         }
 
+        @Override
+        @SuppressWarnings("unused")
         public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
@@ -208,6 +210,8 @@ public class GoldenPathDumper extends GoldenPath {
             compile();
         }
 
+        @Override
+        @SuppressWarnings("unused")
         public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 

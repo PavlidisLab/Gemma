@@ -25,7 +25,7 @@ import java.util.HashSet;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
- * A fetcher that only looks locally for "famliy" files (GPLXXX_family, GSEXXX_family).
+ * A fetcher that only looks locally for "family" files (GPLXXX_family, GSEXXX_family).
  * 
  * @author pavlidis
  * @version $Id$

@@ -46,7 +46,7 @@ import ubic.basecode.bio.geneset.GONames;
  */
 public class GeneOntologyEntryParser implements Parser {
     protected static final Log log = LogFactory.getLog( GeneOntologyEntryParser.class );
-    Map<String, Object> cache = new HashMap<String, Object>();
+    Map<String, OntologyEntry> cache = new HashMap<String, OntologyEntry>();
 
     GONames goNames;
 
@@ -104,7 +104,7 @@ public class GeneOntologyEntryParser implements Parser {
             if ( !cache.containsKey( childId ) ) {
                 cache.put( childId, createNewOntologyEntry( childId ) );
             }
-            oeChildren.add( ( OntologyEntry ) cache.get( childId ) );
+            oeChildren.add( cache.get( childId ) );
         }
 
         // Collection<OntologyEntry> oeParents = new HashSet();
@@ -148,7 +148,7 @@ public class GeneOntologyEntryParser implements Parser {
      * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
-    public Collection<Object> getResults() {
+    public Collection<OntologyEntry> getResults() {
         return cache.values();
     }
 

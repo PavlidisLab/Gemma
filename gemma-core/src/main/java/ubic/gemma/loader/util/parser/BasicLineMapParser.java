@@ -20,7 +20,6 @@ package ubic.gemma.loader.util.parser;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +28,8 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.basecode.util.FileTools;
 
 /**
  * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys.
@@ -118,7 +119,7 @@ public abstract class BasicLineMapParser implements LineParser {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
         log.info( "Parsing " + file.getAbsolutePath() );
-        FileInputStream stream = new FileInputStream( file );
+        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
         parse( stream );
         stream.close();
     }

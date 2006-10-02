@@ -4,14 +4,15 @@ delete from EXTERNAL_DATABASE;
 delete from AUDIT_TRAIL;
 
 -- all of these are used.
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
-insert into AUDIT_TRAIL VALUES ();
+insert into AUDIT_TRAIL VALUES (); -- 1
+insert into AUDIT_TRAIL VALUES (); -- 2
+insert into AUDIT_TRAIL VALUES (); -- 3
+insert into AUDIT_TRAIL VALUES (); -- 4 
+insert into AUDIT_TRAIL VALUES (); -- 5
+insert into AUDIT_TRAIL VALUES (); -- 6
+insert into AUDIT_TRAIL VALUES (); -- 7
+insert into AUDIT_TRAIL VALUES (); -- 8 
+insert into AUDIT_TRAIL VALUES (); -- 9
 
 -- username=administrator: primary key = 1, password = test, audit trail #1, role #1
 insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "nobody",  "nobody", "administrator", "1ee223e4d9a7c2bf81996941705435d7a43bee9a", 1, 1, "admin@gemma.org", "hint");
@@ -35,3 +36,4 @@ insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK) values ("GEO", "Gene Expression Omnibus", "http://www.ncbi.nlm.nih.gov/geo/", "ftp://ftp.ncbi.nih.gov/pub/geo/DATA", 6);
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK) values ("ArrayExpress", "EBI ArrayExpress", "http://www.ebi.ac.uk/arrayexpress/", "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/", 7);
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK) values ("Genbank", "NCBI Genbank", "http://www.ncbi.nlm.nih.gov/Genbank/index.html", "ftp://ftp.ncbi.nih.gov/genbank/", 8);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK) values ("Entrez Gene", "NCBI Gene database", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene", "ftp://ftp.ncbi.nih.gov/gene/", 9);

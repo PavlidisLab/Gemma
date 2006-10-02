@@ -26,6 +26,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -76,6 +77,33 @@ public class BusinessKey {
     }
 
     /**
+     * @param queryObject
+     * @param experimentalFactor
+     */
+    public static void addRestrictions( Criteria queryObject, ExperimentalFactor experimentalFactor ) {
+        if ( StringUtils.isNotBlank( experimentalFactor.getName() ) ) {
+            queryObject.add( Restrictions.eq( "name", experimentalFactor.getName() ) );
+        }
+
+        if ( experimentalFactor.getCategory() != null ) {
+            // FIXME this might not be complete.
+            queryObject.createCriteria( "category" ).add(
+                    Restrictions.eq( "accession", experimentalFactor.getCategory().getAccession() ) ).createCriteria(
+                    "externalDatabase" ).add(
+                    Restrictions.eq( "name", experimentalFactor.getCategory().getExternalDatabase().getName() ) );
+        }
+    }
+
+    /**
+     * @param queryObject
+     * @param gene2GOAssociation
+     */
+    public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
+        attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
+        attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry(), "ontologyEntry" );
+    }
+
+    /**
      * Restricts the query to the provided BioSequence.
      * 
      * @param queryObject
@@ -85,7 +113,20 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, bioSequence );
-        log.warn( queryObject.toString() );
+        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
+    }
+
+    /**
+     * Restricts the query to the provided Gene.
+     * 
+     * @param queryObject
+     * @param gene
+     * @param propertyName
+     */
+    public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, gene );
+        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -98,7 +139,20 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, OntologyEntry ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
-        log.debug( queryObject.toString() );
+        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
+    }
+
+    /**
+     * Restricts query to the given Taxon.
+     * 
+     * @param queryObject
+     * @param taxon
+     * @param propertyName often "taxon"
+     */
+    public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, taxon );
+        if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
     /**
@@ -109,6 +163,14 @@ public class BusinessKey {
                 || bibliographicReference.getPubAccession().getAccession() == null ) {
             throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
                     + bibliographicReference );
+        }
+    }
+
+    public static void checkKey( DesignElementDataVector designElementDataVector ) {
+        if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
+                || designElementDataVector.getExpressionExperiment() == null ) {
+            throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
+                    + designElementDataVector );
         }
     }
 
@@ -181,11 +243,40 @@ public class BusinessKey {
     }
 
     /**
+     * @param databaseEntry
+     */
+    public static void checkValidKey( DatabaseEntry databaseEntry ) {
+        if ( databaseEntry == null || databaseEntry.getAccession() == null
+                || databaseEntry.getExternalDatabase() == null ) {
+            throw new IllegalArgumentException( "DatabaseEntry does not have valid key" );
+        }
+    }
+
+    /**
+     * @param experimentalFactor
+     */
+    public static void checkValidKey( ExperimentalFactor experimentalFactor ) {
+        if ( StringUtils.isBlank( experimentalFactor.getName() ) && experimentalFactor.getCategory() == null ) {
+            throw new IllegalArgumentException( "Experimental factor must have name or category" );
+        }
+    }
+
+    /**
      * @param gene
      */
     public static void checkValidKey( Gene gene ) {
-        // FIXME make key.
-        return;
+        if ( gene == null
+                || ( gene.getNcbiId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() ) || gene.getTaxon() == null ) ) ) {
+            throw new IllegalArgumentException( "Gene does not have valid key" );
+        }
+    }
+
+    /**
+     * @param gene2GOAssociation
+     */
+    public static void checkValidKey( Gene2GOAssociation gene2GOAssociation ) {
+        checkValidKey( gene2GOAssociation.getGene() );
+        checkValidKey( gene2GOAssociation.getOntologyEntry() );
     }
 
     /**
@@ -309,11 +400,12 @@ public class BusinessKey {
      * @param innerQuery
      * @param bioSequence
      */
-    private static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
+    public static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
 
         if ( StringUtils.isNotBlank( bioSequence.getName() ) ) {
             addNameRestriction( queryObject, bioSequence );
         }
+
         if ( StringUtils.isNotBlank( bioSequence.getSequence() ) ) {
             queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
         }
@@ -328,10 +420,23 @@ public class BusinessKey {
     }
 
     /**
+     * @param innerQuery
+     * @param gene
+     */
+    public static void addRestrictions( Criteria queryObject, Gene gene ) {
+        if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
+            queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
+            queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
+            attachCriteria( queryObject, gene.getTaxon(), "taxon" );
+        }
+    }
+
+    /**
      * @param queryObject
      * @param ontologyEntry
      */
-    private static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
+    public static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
         if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
             queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
                     "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
@@ -347,7 +452,7 @@ public class BusinessKey {
      * @param queryObject
      * @param taxon
      */
-    private static void addRestrictions( Criteria queryObject, Taxon taxon ) {
+    public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
         checkValidKey( taxon );
 
         if ( taxon.getNcbiId() != null ) {
@@ -356,41 +461,6 @@ public class BusinessKey {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
             queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
-        }
-    }
-
-    /**
-     * @param experimentalFactor
-     */
-    public static void checkValidKey( ExperimentalFactor experimentalFactor ) {
-        if ( StringUtils.isBlank( experimentalFactor.getName() ) && experimentalFactor.getCategory() == null ) {
-            throw new IllegalArgumentException( "Experimental factor must have name or category" );
-        }
-    }
-
-    /**
-     * @param queryObject
-     * @param experimentalFactor
-     */
-    public static void addRestrictions( Criteria queryObject, ExperimentalFactor experimentalFactor ) {
-        if ( StringUtils.isNotBlank( experimentalFactor.getName() ) ) {
-            queryObject.add( Restrictions.eq( "name", experimentalFactor.getName() ) );
-        }
-
-        if ( experimentalFactor.getCategory() != null ) {
-            // FIXME this might not be complete.
-            queryObject.createCriteria( "category" ).add(
-                    Restrictions.eq( "accession", experimentalFactor.getCategory().getAccession() ) ).createCriteria(
-                    "externalDatabase" ).add(
-                    Restrictions.eq( "name", experimentalFactor.getCategory().getExternalDatabase().getName() ) );
-        }
-    }
-
-    public static void checkKey( DesignElementDataVector designElementDataVector ) {
-        if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
-                || designElementDataVector.getExpressionExperiment() == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
-                    + designElementDataVector );
         }
     }
 }
