@@ -42,4 +42,25 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
         this.getOntologyEntryDao().remove( ontologyEntry );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleCreate(ubic.gemma.model.common.description.OntologyEntry)
+     */
+    @Override
+    protected OntologyEntry handleCreate( OntologyEntry ontologyEntry ) throws Exception {
+        return ( OntologyEntry ) this.getOntologyEntryDao().create( ontologyEntry );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleUpdate(ubic.gemma.model.common.description.OntologyEntry)
+     */
+    @Override
+    protected void handleUpdate( OntologyEntry ontologyEntry ) throws Exception {
+        this.getOntologyEntryDao().update( ontologyEntry );
+
+    }
+
 }
