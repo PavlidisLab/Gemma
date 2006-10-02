@@ -81,7 +81,10 @@
 				<property name="applicationContext">applicationContext-hibernate.xml</property>
 				<property name="applicationContextLocalDataSource">localDataSource.xml</property>
 				<property name="jdbcDataSourceClass">
-					org.springframework.jdbc.datasource.DriverManagerDataSource
+					org.apache.commons.dbcp.BasicDataSource
+				</property>
+				<property name="jdbcDataSourceDestroyMethod">
+				   close
 				</property>
 				<property name="localTransactionManager">
 					org.springframework.orm.hibernate3.HibernateTransactionManager

@@ -7,9 +7,7 @@
 <beans>
 
 	<!-- ========================= DATASOURCE DEFINITION ========================= -->
-
-	<!-- Local DataSource that works in any environment -->
-	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
 		<property name="driverClassName">
 			<value>com.mysql.jdbc.Driver</value>
 		</property>
