@@ -225,14 +225,15 @@
             <display:column property="description" sortable="true" maxWords="100" />
             <display:setProperty name="basic.empty.showtable" value="false" />
         </display:table>
-        
+ 
+<!--    
         <h3>
             <fmt:message key="designElementDataVectors.title" />
         </h3>
         There are 
         <b><% out.print(expressionExperiment.getDesignElementDataVectors().size()); %> </b>
         design elements for this expression experiment. (Not displayed)
-  
+-->  
         <br />
 		
 			

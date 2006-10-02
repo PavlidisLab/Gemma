@@ -124,6 +124,32 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public long handleGetDesignElementDataVectorCountById( long Id ) {
+        long count = 0;
+
+        final String queryString = "select count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "id", Id );
+            ScrollableResults list = queryObject.scroll();
+            while ( list.next() ) {
+                int c = list.getInteger( 0 );
+                count = Long.parseLong( (new Integer(c)).toString() );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return count;
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#remove(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override

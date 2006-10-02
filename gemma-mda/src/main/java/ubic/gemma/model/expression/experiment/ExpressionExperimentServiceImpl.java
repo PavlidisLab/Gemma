@@ -159,6 +159,8 @@ public class ExpressionExperimentServiceImpl extends
     protected Map handleGetQuantitationTypeCountById( Long Id ) throws Exception {
         return this.getExpressionExperimentDao().getQuantitationTypeCountById( Id );
     }
+    
+    
 
     /*
      * (non-Javadoc)
@@ -172,6 +174,11 @@ public class ExpressionExperimentServiceImpl extends
             result.add( ba.getArrayDesignUsed() );
         }
         return result;
+    }
+
+    @Override
+    protected long handleGetDesignElementDataVectorCountById( long id ) throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
     }
 
 }

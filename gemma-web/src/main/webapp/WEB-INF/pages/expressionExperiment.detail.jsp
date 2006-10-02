@@ -212,9 +212,8 @@
 		</h3>
 		There are
 		<b>
-			<%
-			out.print( expressionExperiment.getDesignElementDataVectors().size() );
-			%> </b> design elements for this expression
+		<c:out value="${designElementDataVectorCount}"/> 
+ 		</b> design elements for this expression
 		experiment.
 		<br />
 		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" export="true" pagesize="10"
