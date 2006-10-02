@@ -4,15 +4,15 @@ delete from EXTERNAL_DATABASE;
 delete from AUDIT_TRAIL;
 
 -- all of these are used.
-insert into AUDIT_TRAIL VALUES (); -- 1
-insert into AUDIT_TRAIL VALUES (); -- 2
-insert into AUDIT_TRAIL VALUES (); -- 3
-insert into AUDIT_TRAIL VALUES (); -- 4 
-insert into AUDIT_TRAIL VALUES (); -- 5
-insert into AUDIT_TRAIL VALUES (); -- 6
-insert into AUDIT_TRAIL VALUES (); -- 7
-insert into AUDIT_TRAIL VALUES (); -- 8 
-insert into AUDIT_TRAIL VALUES (); -- 9
+insert into AUDIT_TRAIL VALUES (); 
+insert into AUDIT_TRAIL VALUES (); 
+insert into AUDIT_TRAIL VALUES (); 
+insert into AUDIT_TRAIL VALUES ();  
+insert into AUDIT_TRAIL VALUES (); 
+insert into AUDIT_TRAIL VALUES (); 
+insert into AUDIT_TRAIL VALUES (); 
+insert into AUDIT_TRAIL VALUES ();  
+insert into AUDIT_TRAIL VALUES (); 
 
 -- username=administrator: primary key = 1, password = test, audit trail #1, role #1
 insert into CONTACT (CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values ("UserImpl", "nobody",  "nobody", "administrator", "1ee223e4d9a7c2bf81996941705435d7a43bee9a", 1, 1, "admin@gemma.org", "hint");
