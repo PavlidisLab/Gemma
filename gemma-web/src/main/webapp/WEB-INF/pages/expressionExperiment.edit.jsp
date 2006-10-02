@@ -178,15 +178,21 @@
         <br/>
 
         <h3>
-            <fmt:message key="experimentalDesigns.title" />
+            <fmt:message key="experimentalDesign.title" />
         </h3>
-        <display:table name="expressionExperiment.experimentalDesigns" class="list" requestURI="" id="experimentalDesignList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
-            <display:column property="description" sortable="true" maxWords="100"  />
-            <display:column property="factorsLink" sortable="true" maxWords="100"/>
-            <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>	
+        <a 
+        	href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
+        <%out.print(expressionExperiment.getExperimentalDesign().getName());%>
+        </a>
+        <br />
+        <br />
+        <%out.print(expressionExperiment.getExperimentalDesign().getDescription());%>
+        <br />
+        <br />
+        This experimental design has 
+        <%out.print(expressionExperiment.getExperimentalDesign().getExperimentalFactors().size()); %>
+        experimental factors.
+        <br />
         
         <h3>
             <fmt:message key="investigators.title" />
