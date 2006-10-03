@@ -111,7 +111,7 @@ public class NcbiGeneLoader {
      * @return
      * @throws IOException
      */
-    public void load( boolean filterTaxa ) throws IOException {
+    public void load( boolean filterTaxa ) {
         String geneInfoFile = "";
         String gene2AccFile = "";
         load( geneInfoFile, gene2AccFile, filterTaxa );

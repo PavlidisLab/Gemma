@@ -19,7 +19,6 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -32,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.util.sdo.SourceDomainObjectGenerator;
@@ -74,9 +74,14 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
     public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath,
             BlockingQueue queue, boolean filter ) {
 
+        assert gene2AccesionFilePath != null;
+
         try {
             URL geneInfoUrl = ( new File( geneInfoFilePath ) ).toURI().toURL();
             URL gene2AccesionUrl = ( new File( gene2AccesionFilePath ) ).toURI().toURL();
+
+            assert geneInfoUrl != null;
+            assert gene2AccesionUrl != null;
 
             // log.info( "Fetching..." );
             // NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
@@ -87,7 +92,7 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
             geneInfoFile.setLocalURL( geneInfoUrl );
 
             LocalFile gene2AccessionFile = LocalFile.Factory.newInstance();
-            geneInfoFile.setLocalURL( gene2AccesionUrl );
+            gene2AccessionFile.setLocalURL( gene2AccesionUrl );
 
             return processLocalFiles( geneInfoFile, gene2AccessionFile, queue, filter );
 
@@ -126,7 +131,8 @@ public class NcbiGeneDomainObjectGenerator implements SourceDomainObjectGenerato
         // new Thread( new Runnable() {
         // public void run() {
         try {
-            InputStream is = new FileInputStream( geneInfoFile.asFile() );
+            InputStream is = FileTools
+                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() );
             infoParser.parse( is );
             is.close();
         } catch ( IOException e ) {

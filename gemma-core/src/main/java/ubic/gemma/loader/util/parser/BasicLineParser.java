@@ -20,7 +20,6 @@ package ubic.gemma.loader.util.parser;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +28,8 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.basecode.util.FileTools;
 
 /**
  * A simple LineParser implementation that doesn't do anything. Subclass this and implement the "parseOneLine" method.
@@ -100,7 +101,7 @@ public abstract class BasicLineParser implements LineParser {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        FileInputStream stream = new FileInputStream( file );
+        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
         parse( stream );
         stream.close();
     }

@@ -69,7 +69,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser implements QueuingPar
         String[] fields = StringUtil.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != NCBI_GENEINFO_FIELDS_PER_ROW ) {
-            throw new FileFormatException( "Line is not in the right format: has " + fields.length
+            throw new FileFormatException( "Line + " + line + " is not in the right format: has " + fields.length
                     + " fields, expected " + NCBI_GENEINFO_FIELDS_PER_ROW );
         }
         NCBIGeneInfo geneInfo = new NCBIGeneInfo();
