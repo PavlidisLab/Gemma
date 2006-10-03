@@ -168,7 +168,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // geoService.fetchAndLoad( "GDS994" );
     // }
     /**
-     * GSE3434 has no dataset. It's  small so okay to download.
+     * GSE3434 has no dataset. It's small so okay to download.
      */
     public void testFetchAndLoadSeriesOnly() throws Exception {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
@@ -272,6 +272,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
 
+        // we need this for cleanup.
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
             ads.add( bioAssay.getArrayDesignUsed() );
         }
@@ -333,6 +334,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ee = eeService.findByName( "Breast Cancer Cell Line Experiment" );
         QuantitationType qtf = QuantitationType.Factory.newInstance();
 
+        // we need this for cleanup.
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
             ArrayDesign ad = bioAssay.getArrayDesignUsed();
             ads.add( ad );

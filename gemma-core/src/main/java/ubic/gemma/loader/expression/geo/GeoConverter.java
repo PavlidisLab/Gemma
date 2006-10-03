@@ -27,12 +27,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.util.CancellationException;
 import ubic.gemma.loader.expression.geo.model.GeoChannel;
 import ubic.gemma.loader.expression.geo.model.GeoContact;
 import ubic.gemma.loader.expression.geo.model.GeoData;
@@ -512,10 +519,54 @@ public class GeoConverter implements Converter {
             quantitationTypeIndex++;
         }
 
-        if ( expExp.getDesignElementDataVectors().size() == 0 ) {
-            expExp.setDesignElementDataVectors( new HashSet<DesignElementDataVector>( vectors ) );
-        } else {
-            expExp.getDesignElementDataVectors().addAll( vectors );
+        addVectorsToExpressionExperiment( expExp, vectors );
+
+    }
+
+    /**
+     * @param expExp
+     * @param vectors
+     */
+    private void addVectorsToExpressionExperiment( final ExpressionExperiment expExp,
+            final Collection<DesignElementDataVector> vectors ) {
+        FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
+
+            public Boolean call() throws Exception {
+                if ( expExp.getDesignElementDataVectors().size() == 0 ) {
+                    expExp.setDesignElementDataVectors( new HashSet<DesignElementDataVector>( vectors ) );
+                } else {
+                    expExp.getDesignElementDataVectors().addAll( vectors );
+                }
+                return Boolean.TRUE;
+            }
+
+        } );
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute( future );
+        executor.shutdown();
+
+        while ( !future.isDone() ) {
+            try {
+                TimeUnit.SECONDS.sleep( 1L );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
+            log.info( expExp.getDesignElementDataVectors().size() + " vectors added." );
+        }
+
+        try {
+            Boolean ok = future.get();
+            if ( !ok ) {
+                throw new RuntimeException( "Something bad happened during adding of expression vectors." );
+            }
+            log.info( expExp.getDesignElementDataVectors().size() + " vectors added." );
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Failed", e.getCause() );
+        } catch ( CancellationException e ) {
+            throw new RuntimeException( "Cancelled", e.getCause() );
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( "interrupted", e.getCause() );
         }
     }
 
