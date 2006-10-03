@@ -18,7 +18,6 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
-import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;

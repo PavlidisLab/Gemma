@@ -56,6 +56,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     NcbiGeneData geneData = new NcbiGeneData();
     Map<String, NCBIGeneInfo> geneInfo = null;
 
+    private int count = 0;
+
     @SuppressWarnings("unchecked")
     public void parse( InputStream is, BlockingQueue aQueue ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
@@ -68,13 +70,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         this.queue = queue1;
         this.geneInfo = geneInfo1;
         super.parse( f );
-    }
-
-    /**
-     * @param geneInfo
-     */
-    public void setGeneInfo( Map<String, NCBIGeneInfo> geneInfo ) {
-        this.geneInfo = geneInfo;
     }
 
     /*
@@ -91,11 +86,14 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         }
 
         NCBIGene2Accession currentAccession = processFields( fields );
+        assert currentAccession != null;
+
+        addResult( currentAccession ); // really doesn't serve much of a purpose
 
         /*
          * Only some genes are relevant - for example, we might have filtered them by taxon.
          */
-        if ( !geneInfo.containsKey( currentAccession.getGeneId() ) ) {
+        if ( geneInfo != null && !geneInfo.containsKey( currentAccession.getGeneId() ) ) {
             return null;
         }
 
@@ -110,7 +108,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
             }
             // clear the gene set
             geneData = new NcbiGeneData();
-            geneInfo.remove( lastGeneId );
+            if ( geneInfo != null ) geneInfo.remove( lastGeneId );
         }
 
         assert currentAccession.getGeneId() != null;
@@ -220,13 +218,21 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     @Override
     @SuppressWarnings("unused")
     protected void addResult( Object obj ) {
-        // No-op.
-        // let queue handle this within parseOneLine
+        count++;
+        // results.add( ( NCBIGene2Accession ) obj );
+        // no-op - save memory as we use a queue instead.
     }
 
     @Override
     public Collection<NCBIGene2Accession> getResults() {
         return results;
+    }
+
+    /**
+     * @return
+     */
+    public int getCount() {
+        return count;
     }
 
 }

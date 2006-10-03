@@ -19,12 +19,16 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 
 /**
  * @author keshav
@@ -38,6 +42,7 @@ public class NCBIGeneParserTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/genome/gene/gene_info.sample.gz" ) );
         NcbiGeneInfoParser ngip = new NcbiGeneInfoParser();
+        ngip.setFilter( false );
         ngip.parse( is );
         assertEquals( 100, ngip.getResults().size() );
     }
@@ -46,8 +51,9 @@ public class NCBIGeneParserTest extends TestCase {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/genome/gene/gene2accession.sample.gz" ) );
         NcbiGene2AccessionParser ngip = new NcbiGene2AccessionParser();
-        ngip.parse( is );
-        assertEquals( 100, ngip.getResults().size() );
+        ngip.geneInfo = new HashMap<String, NCBIGeneInfo>();
+        ngip.parse( is, new ArrayBlockingQueue( 10 ) );
+        assertEquals( 100, ngip.getCount() );
     }
 
     protected void setUp() throws Exception {
