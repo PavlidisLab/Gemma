@@ -77,6 +77,7 @@ public class GeneOntologyEntryParser implements Parser {
                 }
                 i++;
             }
+            log.info( "Created " + i + " ontology entries from GO" );
 
         } catch ( SAXException e ) {
             throw new RuntimeException( e );
@@ -106,16 +107,6 @@ public class GeneOntologyEntryParser implements Parser {
             }
             oeChildren.add( cache.get( childId ) );
         }
-
-        // Collection<OntologyEntry> oeParents = new HashSet();
-        // Collection<String> parents = goNames.getParents( goId );
-        // for ( String parentId : parents ) {
-        // if ( !cache.containsKey( parentId ) ) {
-        // cache.put( parentId, createNewOntologyEntry( parentId ) );
-        //
-        // }
-        // oeParents.add( ( OntologyEntry ) cache.get( parentId ) );
-        // }
 
         newOE.setAssociations( oeChildren );
 

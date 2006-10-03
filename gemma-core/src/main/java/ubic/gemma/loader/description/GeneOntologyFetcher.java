@@ -82,6 +82,7 @@ public class GeneOntologyFetcher extends FtpFetcher {
      * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
      */
     @Override
+    @SuppressWarnings("unused")
     protected String formRemoteFilePath( String identifier ) {
         return this.remoteBaseDir + GO_FILE_NAME;
     }

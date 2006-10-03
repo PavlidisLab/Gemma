@@ -62,15 +62,10 @@ public class RelationshipPersister extends ExpressionPersister {
         if ( association == null ) return null;
         if ( !isTransient( association ) ) return association;
 
-        Gene2GOAssociation existing = gene2GOAssociationService.find( association );
-
-        if ( existing != null ) {
-            return existing;
-        }
-
+        association.setSource( persistExternalDatabase( association.getSource() ) );
         association.setGene( persistGene( association.getGene() ) );
         association.setOntologyEntry( persistOntologyEntry( association.getOntologyEntry() ) );
-        return gene2GOAssociationService.create( association );
+        return gene2GOAssociationService.findOrCreate( association );
     }
 
 }

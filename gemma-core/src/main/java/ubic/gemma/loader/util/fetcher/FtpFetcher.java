@@ -64,7 +64,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
             long expectedSize = getExpectedSize( seekFile );
 
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = this.doTask( future, expectedSize, outputFileName, seekFile );
+            Collection<LocalFile> result = this.doTask( future, expectedSize, seekFile, outputFileName );
             return result;
 
         } catch ( IOException e ) {
@@ -102,8 +102,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
      * @param seekFileName
      * @return
      */
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String outputFileName,
-            String seekFileName ) {
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
+            String outputFileName ) {
         Executors.newSingleThreadExecutor().execute( future );
         try {
 
@@ -111,7 +111,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
             waitForDownload( future, expectedSize, outputFile );
 
             if ( future.get().booleanValue() ) {
-                if ( log.isInfoEnabled() ) log.info( "Done: Downloaded to " + outputFile );
+                if ( log.isInfoEnabled() ) log.info( "Done: local file is " + outputFile );
                 LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
                 Collection<LocalFile> result = new HashSet<LocalFile>();
                 result.add( file );

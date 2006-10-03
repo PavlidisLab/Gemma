@@ -256,9 +256,10 @@ abstract public class CommonPersister extends AbstractPersister {
      * @return
      */
     private Organization persistOrganization( Organization affiliation ) {
-        // FIXME This is just to get us back in the saddle.
-        log.warn( "Not persisting organization!!" );
-        return null;
+        if ( affiliation == null ) return null;
+        if ( !isTransient( affiliation ) ) return affiliation;
+        affiliation.setParent( persistOrganization( affiliation.getParent() ) );
+        return ( Organization ) persistContact( affiliation );
     }
 
     /**
@@ -429,7 +430,7 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( database == null ) return null;
         if ( !isTransient( database ) ) return database;
 
-        String name = database.getName(); // FIXME make sure this is the right business key to use.
+        String name = database.getName();
 
         if ( seenDatabases.containsKey( name ) ) {
             return seenDatabases.get( name );
@@ -492,22 +493,28 @@ abstract public class CommonPersister extends AbstractPersister {
      * 
      * @param ontologyEntry
      */
-
     protected OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
         if ( !isTransient( ontologyEntry ) ) {
             return ontologyEntry;
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "Persisting " + ontologyEntry );
+        if ( log.isTraceEnabled() ) log.trace( "Persisting " + ontologyEntry );
 
         ontologyEntry.setExternalDatabase( this.persistExternalDatabase( ontologyEntry.getExternalDatabase() ) );
 
-        for ( OntologyEntry associatedOntologyEntry : ontologyEntry.getAssociations() ) {
-            associatedOntologyEntry = persistOntologyEntry( associatedOntologyEntry );
+        /*
+         * Note: we do this instead of persistCollectionElements because with the latter we get
+         * NonUniqueObjectException.
+         */
+        for ( OntologyEntry oe : ontologyEntry.getAssociations() ) {
+            oe = persistOntologyEntry( oe );
         }
 
+        // this.getCurrentSession().flush();
+
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
+
         return ontologyEntry;
     }
 

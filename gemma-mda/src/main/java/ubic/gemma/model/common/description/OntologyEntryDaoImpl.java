@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -44,6 +46,7 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
+                    debug( results );
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
                                     + ubic.gemma.model.common.description.OntologyEntry.class.getName()
@@ -59,20 +62,31 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         }
     }
 
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+        log.info( "Multiple found:" );
+        for ( Object object : results ) {
+            log.info( object );
+        }
+
+    }
+
     @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
 
-        OntologyEntry existingOntologyEntry = find( ontologyEntry );
-        if ( existingOntologyEntry != null ) {
+        OntologyEntry existing = find( ontologyEntry );
+        if ( existing != null ) {
             if ( log.isDebugEnabled() )
                 log.debug( "Found existing ontologyEntry: "
-                        + existingOntologyEntry
+                        + existing
                         + " externalDatabase="
-                        + existingOntologyEntry.getExternalDatabase()
+                        + existing.getExternalDatabase()
                         + ", Database Id="
                         + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
                                 .getId() ) );
-            return existingOntologyEntry;
+            return existing;
         }
         if ( log.isDebugEnabled() )
             log.debug( "Creating new ontologyEntry: "

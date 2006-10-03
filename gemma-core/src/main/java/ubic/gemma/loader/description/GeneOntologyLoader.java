@@ -69,15 +69,9 @@ public class GeneOntologyLoader {
      * @param oeCol
      * @return
      */
+    @SuppressWarnings("unchecked")
     public Collection<OntologyEntry> load( Collection<OntologyEntry> oeCol ) {
-        int count = 0;
-        for ( Object oe : oeCol ) {
-            persisterHelper.persist( oe );
-            if ( ++count % 1000 == 0 ) {
-                log.info( "Persisted " + count + " ontology entries from GO" );
-            }
-        }
-        return oeCol;
+        return ( Collection<OntologyEntry> ) persisterHelper.persist( oeCol );
     }
 
     /**
@@ -86,4 +80,5 @@ public class GeneOntologyLoader {
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
+
 }

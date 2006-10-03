@@ -40,6 +40,10 @@ public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile
      */
     public java.io.File asFile() {
 
+        if ( this.getLocalURL() == null ) {
+            return null;
+        }
+
         try {
             return new File( this.getLocalURL().toURI() );
         } catch ( URISyntaxException e ) {

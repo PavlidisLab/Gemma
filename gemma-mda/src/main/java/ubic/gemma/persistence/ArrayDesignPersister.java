@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence;
 
-import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -193,7 +192,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         int persistedBioSequences = 0;
 
         assert arrayDesign.getId() != null;
-
+        int numElementsPerUpdate = numElementsPerUpdate( arrayDesign.getCompositeSequences() );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
             compositeSequence.setArrayDesign( arrayDesign );
@@ -201,11 +200,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             compositeSequence.setBiologicalCharacteristic( persistBioSequence( compositeSequence
                     .getBiologicalCharacteristic() ) );
 
-            if ( ++persistedBioSequences % 5000 == 0 ) {
+            if ( ++persistedBioSequences % numElementsPerUpdate == 0 ) {
                 log.info( persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
             }
 
-            if ( persistedBioSequences % 50 == 0 ) {
+            if ( persistedBioSequences % SESSION_BATCH_SIZE == 0 ) {
                 this.getCurrentSession().flush();
             }
 
@@ -288,35 +287,27 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         arrayDesign.setCompositeSequences( null ); // so we can perist it.
         int count = 0;
         long startTime = System.currentTimeMillis();
+        int numElementsPerUpdate = numElementsPerUpdate( c );
         for ( CompositeSequence sequence : c ) {
             sequence.setBiologicalCharacteristic( persistBioSequence( sequence.getBiologicalCharacteristic() ) );
-            if ( ++count % 1000 == 0 && log.isInfoEnabled() ) {
-                log.info( count
-                        + " compositeSequence biologicalCharacteristics checked for "
-                        + arrayDesign
-                        + "( elapsed time="
-                        + NumberFormat.getNumberInstance().format(
-                                0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) + " minutes)" );
+            if ( ++count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
+                log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign
+                        + "( elapsed time=" + elapsedMinutes( startTime ) + " minutes)" );
             }
-            if ( count % 50 == 0 ) {
+            if ( count % SESSION_BATCH_SIZE == 0 ) {
                 this.getCurrentSession().flush();
                 this.getCurrentSession().clear();
             }
         }
 
         log.info( count + " compositeSequence biologicalCharacteristics checked for " + arrayDesign + "( elapsed time="
-                + NumberFormat.getNumberInstance().format( 0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 )
-                + " minutes)" );
+                + elapsedMinutes( startTime ) + " minutes)" );
 
         arrayDesign.setCompositeSequences( null );
 
         arrayDesign = arrayDesignService.create( arrayDesign );
 
-        // this.getCurrentSession().evict( arrayDesign );
-
         arrayDesign.setCompositeSequences( c );
-
-        // arrayDesign = ( ArrayDesign ) this.getCurrentSession().merge( arrayDesign );
 
         Map<String, Collection<Reporter>> csNameReporterMap = new HashMap<String, Collection<Reporter>>();
         for ( CompositeSequence sequence : arrayDesign.getCompositeSequences() ) {
@@ -342,4 +333,5 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         arrayDesignService.update( arrayDesign );
         return arrayDesign;
     }
+
 }

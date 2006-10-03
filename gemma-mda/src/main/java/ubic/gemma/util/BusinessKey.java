@@ -208,8 +208,9 @@ public class BusinessKey {
      * @param ontologyEntry
      */
     public static void checkKey( OntologyEntry ontologyEntry ) {
-        if ( ( ontologyEntry.getAccession() == null || ontologyEntry.getExternalDatabase() == null )
-                && ( ontologyEntry.getCategory() == null || ontologyEntry.getValue() == null ) ) {
+        if ( ( StringUtils.isBlank( ontologyEntry.getAccession() ) || ontologyEntry.getExternalDatabase() == null )
+                && ( StringUtils.isBlank( ontologyEntry.getCategory() ) || StringUtils.isBlank( ontologyEntry
+                        .getValue() ) ) ) {
             throw new IllegalArgumentException( "Either accession, or category+value must be filled in." );
         }
     }
@@ -437,10 +438,12 @@ public class BusinessKey {
      * @param ontologyEntry
      */
     public static void addRestrictions( Criteria queryObject, OntologyEntry ontologyEntry ) {
-        if ( ontologyEntry.getAccession() != null && ontologyEntry.getExternalDatabase() != null ) {
+        if ( StringUtils.isNotBlank( ontologyEntry.getAccession() ) && ontologyEntry.getExternalDatabase() != null ) {
             queryObject.add( Restrictions.eq( "accession", ontologyEntry.getAccession() ) ).createCriteria(
                     "externalDatabase" ).add( Restrictions.eq( "name", ontologyEntry.getExternalDatabase().getName() ) );
-        } else {
+        }
+
+        if ( StringUtils.isNotBlank( ontologyEntry.getCategory() ) && StringUtils.isNotBlank( ontologyEntry.getValue() ) ) {
             queryObject.add( Restrictions.ilike( "category", ontologyEntry.getCategory() ) ).add(
                     Restrictions.ilike( "value", ontologyEntry.getValue() ) );
         }

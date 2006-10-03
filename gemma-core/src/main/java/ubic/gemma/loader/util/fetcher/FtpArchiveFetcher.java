@@ -129,14 +129,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         return result;
     }
 
-    /**
-     * @param future
-     * @param outputFileName
-     * @param identifier
-     * @param newDir
-     * @param excludePattern
-     * @return
-     */
     @Override
     protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
             String outputFileName ) {
@@ -148,6 +140,8 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 if ( log.isInfoEnabled() ) log.info( "Unpacking " + outputFile );
                 unPack( outputFile );
                 cleanUp( outputFile );
+                if ( outputFile.isDirectory() ) return listFiles( seekFileName, outputFile );
+
                 return listFiles( seekFileName, outputFile.getParentFile() );
             }
         } catch ( ExecutionException e ) {

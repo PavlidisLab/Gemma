@@ -19,6 +19,7 @@
 package ubic.gemma.persistence;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -39,10 +40,11 @@ import org.hibernate.SessionFactory;
  * @version $Id$
  */
 public abstract class AbstractPersister implements Persister {
+
     /**
-     * 
+     * How many times per collection to update us (at most)
      */
-    private static final int COLLECTION_INFO_FREQUENCY = 1000;
+    private static final int COLLECTION_INFO_FREQUENCY = 10;
 
     protected static Log log = LogFactory.getLog( AbstractPersister.class.getName() );
 
@@ -56,31 +58,58 @@ public abstract class AbstractPersister implements Persister {
      */
     protected SessionFactory sessionFactory;
 
-    // CrudInterceptorUtils crudUtils = new CrudInterceptorUtils();
+    protected int numElementsPerUpdate( Collection col ) {
+        if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY ) return Integer.MAX_VALUE;
+        return ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY );
+    }
 
     /*
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
      */
     public Collection<?> persist( Collection<?> col ) {
+        if ( col == null || col.size() == 0 ) return col;
+
         Collection<Object> result = new HashSet<Object>();
         try {
             int count = 0;
             log.debug( "Entering + " + this.getClass().getName() + ".persist() with " + col.size() + " objects." );
+            int numElementsPerUpdate = numElementsPerUpdate( col );
             for ( Object entity : col ) {
                 result.add( persist( entity ) );
-                // if ( ++count % 20 == 0 ) {
-                // this.getCurrentSession().flush();
-                // this.getCurrentSession().clear();
-                // }
-                if ( ++count % COLLECTION_INFO_FREQUENCY == 0 ) {
-                    log.info( "Persisted " + count + " objects in collection" );
-                }
+                count = iteratorStatusUpdate( col, count, numElementsPerUpdate, true );
             }
+            iteratorStatusUpdate( col, count, numElementsPerUpdate, false );
         } catch ( Exception e ) {
             log.fatal( "Error while persisting collection: ", e );
             throw new RuntimeException( e );
         }
         return result;
+    }
+
+    /**
+     * @param col
+     * @param count
+     * @param numElementsPerUpdate
+     * @return
+     */
+    protected int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
+        assert col != null && col.size() > 0;
+        if ( increment ) ++count;
+        if ( count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
+            log
+                    .info( "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
+                            + "'s" );
+        }
+        return count;
+    }
+
+    /**
+     * @param startTime
+     * @return
+     */
+    protected double elapsedMinutes( long startTime ) {
+        return Double.parseDouble( NumberFormat.getNumberInstance().format(
+                0.001 * ( System.currentTimeMillis() - startTime ) / 60.0 ) );
     }
 
     /**
@@ -96,10 +125,9 @@ public abstract class AbstractPersister implements Persister {
         if ( collection.size() == 0 ) return;
 
         try {
-            // Collection<Object> persistedCollection = new HashSet<Object>();
             for ( Object object : collection ) {
+                if ( !isTransient( object ) ) continue;
                 Object persistedObj = persist( object );
-                // persistedCollection.add( persistedObj );
                 BeanUtils.setProperty( object, "id", BeanUtils.getSimpleProperty( persistedObj, "id" ) );
                 assert BeanUtils.getSimpleProperty( object, "id" ) != null;
             }

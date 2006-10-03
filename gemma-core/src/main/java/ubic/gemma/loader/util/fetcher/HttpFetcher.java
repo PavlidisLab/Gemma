@@ -188,7 +188,7 @@ public class HttpFetcher extends AbstractFetcher {
      */
     @Override
     protected void initConfig() {
-        throw new UnsupportedOperationException();
+        return;
     }
 
 }
