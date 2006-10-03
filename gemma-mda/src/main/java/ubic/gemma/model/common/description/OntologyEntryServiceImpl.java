@@ -72,4 +72,14 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
         return ( OntologyEntry ) this.getOntologyEntryDao().load( id );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBasee#handleFind(ubic.gemma.model.common.description.OntologyEntry)
+     */
+    @Override
+    protected OntologyEntry handleFind( OntologyEntry ontologyEntry ) throws Exception {
+        return this.getOntologyEntryDao().find( ontologyEntry );
+    }
+
 }
