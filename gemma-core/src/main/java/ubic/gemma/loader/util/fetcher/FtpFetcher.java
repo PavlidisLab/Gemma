@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
@@ -104,7 +105,11 @@ public abstract class FtpFetcher extends AbstractFetcher {
      */
     protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
             String outputFileName ) {
-        Executors.newSingleThreadExecutor().execute( future );
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute( future );
+        executor.shutdown();
+
         try {
 
             File outputFile = new File( outputFileName );

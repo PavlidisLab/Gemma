@@ -108,7 +108,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             }
 
             if ( accessions != null ) {
-                log.info( "Got accession(s) from command line" + accessions );
+                log.info( "Got accession(s) from command line " + accessions );
                 String[] accsToRun = StringUtils.split( accessions, ',' );
 
                 for ( String accession : accsToRun ) {

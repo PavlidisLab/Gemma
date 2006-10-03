@@ -26,6 +26,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
@@ -178,8 +180,10 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             }
 
         } );
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        Executors.newSingleThreadExecutor().execute( future );
+        executor.execute( future );
+        executor.shutdown();
 
         StopWatch s = new StopWatch();
         s.start();

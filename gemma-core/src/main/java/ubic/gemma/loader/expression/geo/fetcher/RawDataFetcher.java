@@ -59,6 +59,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
+    @Override
     public Collection<LocalFile> fetch( String identifier ) {
         try {
             if ( f == null || !f.isConnected() ) f = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
