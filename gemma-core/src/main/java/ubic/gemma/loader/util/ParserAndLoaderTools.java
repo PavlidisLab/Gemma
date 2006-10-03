@@ -38,10 +38,6 @@ import ubic.gemma.persistence.Persister;
 public class ParserAndLoaderTools {
     protected static final Log log = LogFactory.getLog( ParserAndLoaderTools.class );
 
-    private static final int HOMOSAPIEN = 9606;
-    private static final int MUSMUSCULUS = 10090;
-    private static final int RATTUS = 10114;
-
     /**
      * User the loader to persist the collection.
      * 
