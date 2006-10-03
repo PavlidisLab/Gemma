@@ -1072,6 +1072,25 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * @param expExp
+     * @param geoSubSet
+     * @return ExperimentalFactor
+     */
+    public ExperimentalFactor convertExperimentalFactors( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
+
+        ExperimentalDesign experimentalDesign = expExp.getExperimentalDesign();
+
+        ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
+        experimentalFactor.setName( geoSubSet.getDescription() );
+        experimentalFactor.setDescription( geoSubSet.getType().toString() );
+
+        /* bi-directional ... don't forget this. */
+        experimentalFactor.setExperimentalDesign( experimentalDesign );
+
+        return experimentalFactor;
+    }
+
+    /**
      * @param result
      * @param geoDataset
      */
