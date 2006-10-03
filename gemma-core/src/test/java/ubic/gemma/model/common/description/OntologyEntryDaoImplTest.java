@@ -26,7 +26,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author pavlidis
  * @version $Id$
  */
-public class OntologyEntryImplTest extends BaseSpringContextTest {
+public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
 
     OntologyEntry top;
     OntologyEntry middle;
