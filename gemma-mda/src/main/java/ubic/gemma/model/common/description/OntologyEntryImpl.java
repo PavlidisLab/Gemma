@@ -24,44 +24,10 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 /**
  * @see ubic.gemma.model.common.description.OntologyEntry
  */
 public class OntologyEntryImpl extends ubic.gemma.model.common.description.OntologyEntry {
-
-    /**
-     * @see ubic.gemma.model.common.description.OntologyEntry#getParents()
-     */
-    public java.util.Collection<OntologyEntry> getParents() {
-        // @todo implement public java.util.Collection getParents()
-        return null;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.OntologyEntry#getChildren()
-     */
-    public java.util.Collection<OntologyEntry> getChildren() {
-        Collection<OntologyEntry> children = new HashSet<OntologyEntry>();
-        return this.getChildren( this, children );
-    }
-
-    /**
-     * Used internally only.
-     * 
-     * @param start
-     * @param addTo
-     * @return
-     */
-    private Collection<OntologyEntry> getChildren( OntologyEntry start, Collection<OntologyEntry> addTo ) {
-        for ( OntologyEntry oe : start.getAssociations() ) {
-            addTo.add( oe );
-            addTo = getChildren( oe, addTo );
-        }
-        return addTo;
-    }
 
     public String toString() {
         return "Id:" + this.getId() + " Accession " + this.getAccession() + " Category:" + this.getCategory()

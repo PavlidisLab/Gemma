@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -34,6 +36,17 @@ import ubic.gemma.util.BusinessKey;
 public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.OntologyEntryDaoBase {
 
     private static Log log = LogFactory.getLog( OntologyEntryDaoImpl.class.getName() );
+
+    /**
+     * @param results
+     */
+    private void debug( List results ) {
+        log.info( "Multiple found:" );
+        for ( Object object : results ) {
+            log.info( object );
+        }
+
+    }
 
     @Override
     public OntologyEntry find( OntologyEntry ontologyEntry ) {
@@ -62,17 +75,6 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
         }
     }
 
-    /**
-     * @param results
-     */
-    private void debug( List results ) {
-        log.info( "Multiple found:" );
-        for ( Object object : results ) {
-            log.info( object );
-        }
-
-    }
-
     @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
 
@@ -97,5 +99,56 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
                     + ( ontologyEntry.getExternalDatabase() == null ? "null" : ontologyEntry.getExternalDatabase()
                             .getId() ) );
         return ( OntologyEntry ) create( ontologyEntry );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.OntologyEntry#getChildren()
+     */
+    @Override
+    public java.util.Collection<OntologyEntry> handleGetChildren( final OntologyEntry ontologyEntry ) {
+        final Collection<OntologyEntry> children = new HashSet<OntologyEntry>();
+        if ( ontologyEntry.getId() == null ) {
+            this.getChildren( ontologyEntry, children );
+        } else {
+            this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+                public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                    OntologyEntry innerOntologyEntry = ( OntologyEntry ) session.merge( ontologyEntry );
+                    getChildren( innerOntologyEntry, children );
+                    return null;
+                }
+            }, true );
+        }
+        return children;
+    }
+
+    /**
+     * Used internally only.
+     * 
+     * @param start
+     * @param addTo
+     * @return
+     */
+    private void getChildren( OntologyEntry start, Collection<OntologyEntry> addTo ) {
+        for ( OntologyEntry oe : start.getAssociations() ) {
+            addTo.add( oe );
+            if ( log.isDebugEnabled() ) log.debug( "Adding " + oe );
+            getChildren( oe, addTo );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<OntologyEntry> handleGetParents( OntologyEntry ontologyEntry ) {
+        if ( ontologyEntry.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot be run on a transient ontologyEntry" );
+        }
+        String queryString = "from OntologyEntryImpl parent where :oe in elements(parent.associations)";
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "oe", ontologyEntry );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 }

@@ -20,55 +20,79 @@ package ubic.gemma.model.common.description;
 
 import java.util.Collection;
 
-import junit.framework.TestCase;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class OntologyEntryImplTest extends TestCase {
+public class OntologyEntryImplTest extends BaseSpringContextTest {
 
     OntologyEntry top;
     OntologyEntry middle;
     OntologyEntry child;
     OntologyEntry childsChild;
 
+    OntologyEntryDao oed;
+    ExternalDatabaseDao edd;
+    ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+
     /*
      * (non-Javadoc)
      * 
      * @see junit.framework.TestCase#setUp()
      */
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Override
+    protected void onSetUp() throws Exception {
+        super.onSetUp();
+
+        oed = ( OntologyEntryDao ) this.getBean( "ontologyEntryDao" );
+        edd = ( ExternalDatabaseDao ) this.getBean( "externalDatabaseDao" );
+
+        ed.setName( "foo" );
+
+        ed = ( ExternalDatabase ) edd.create( ed );
+
         // this is our top level one
         top = OntologyEntry.Factory.newInstance();
-        top.setId( 1L );
+        top.setAccession( "fred" );
+        top.setExternalDatabase( ed );
         middle = OntologyEntry.Factory.newInstance();
-        middle.setId( 2L );
-        top.getAssociations().add( middle );
+        middle.setAccession( "mary" );
+        middle.setExternalDatabase( ed );
         child = OntologyEntry.Factory.newInstance();
-        child.setId( 3L );
-        middle.getAssociations().add( child );
+        child.setAccession( "jeff" );
+        child.setExternalDatabase( ed );
         childsChild = OntologyEntry.Factory.newInstance();
-        childsChild.setId( 3L );
+        childsChild.setAccession( "jane" );
+        childsChild.setExternalDatabase( ed );
+
+        childsChild = ( OntologyEntry ) oed.create( childsChild );
         child.getAssociations().add( childsChild );
+        child = ( OntologyEntry ) oed.create( child );
+        middle.getAssociations().add( child );
+        middle = ( OntologyEntry ) oed.create( middle );
+        top.getAssociations().add( middle );
+        top = ( OntologyEntry ) oed.create( top );
+
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @Override
+    protected void onTearDown() throws Exception {
+        super.onTearDown();
+        oed.remove( top );
+        oed.remove( middle );
+        oed.remove( child );
+        oed.remove( childsChild );
+        edd.remove( ed );
     }
 
     /**
      * Test method for {@link ubic.gemma.model.common.description.OntologyEntryImpl#getParents()}.
      */
     public final void testGetParents() {
-        OntologyEntry actualValue = ( OntologyEntry ) child.getParents().iterator().next();
-        assertEquals( middle, actualValue );
+        OntologyEntry actualValue = ( OntologyEntry ) oed.getParents( child ).iterator().next();
+        assertEquals( middle.getAccession(), actualValue.getAccession() );
     }
 
     /**
@@ -76,7 +100,7 @@ public class OntologyEntryImplTest extends TestCase {
      */
     @SuppressWarnings("unchecked")
     public final void testGetChildren() {
-        Collection<OntologyEntry> actualValue = top.getChildren();
+        Collection<OntologyEntry> actualValue = oed.getChildren( top );
         assertEquals( 3, actualValue.size() );
     }
 
