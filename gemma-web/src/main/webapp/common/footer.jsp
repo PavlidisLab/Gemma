@@ -30,3 +30,4 @@ urchinTracker();
 <authz:authorize ifAllGranted="admin">
 <script type="text/javascript"> document.writeln("Last Updated: "+document.lastModified); </script>
 </authz:authorize>
+<Gemma:lastModified refFile="/index.jsp"></Gemma:lastModified>
