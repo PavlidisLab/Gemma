@@ -60,7 +60,16 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     @Override
     protected void handleUpdate( OntologyEntry ontologyEntry ) throws Exception {
         this.getOntologyEntryDao().update( ontologyEntry );
+    }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleLoad(java.lang.Long)
+     */
+    @Override
+    protected OntologyEntry handleLoad( Long id ) throws Exception {
+        return ( OntologyEntry ) this.getOntologyEntryDao().load( id );
     }
 
 }
