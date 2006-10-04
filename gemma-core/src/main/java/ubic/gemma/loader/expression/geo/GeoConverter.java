@@ -1127,7 +1127,7 @@ public class GeoConverter implements Converter {
      * @param geoSubSet
      * @return ExperimentalFactor
      */
-    public ExperimentalFactor convertExperimentalFactors( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
+    public ExperimentalFactor convertSubsetToExperimentalFactor( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
 
         ExperimentalDesign experimentalDesign = expExp.getExperimentalDesign();
 
@@ -1151,6 +1151,9 @@ public class GeoConverter implements Converter {
             log.debug( "Converting subset: " + subset.getType() );
             ExpressionExperimentSubSet ees = convertSubset( result, subset );
             result.getSubsets().add( ees );
+
+            ExperimentalFactor experimentalFactor = convertSubsetToExperimentalFactor( result, subset );
+            result.getExperimentalDesign().getExperimentalFactors().add( experimentalFactor );
         }
     }
 
