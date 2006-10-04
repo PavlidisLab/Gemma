@@ -104,4 +104,12 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
         return this.getOntologyEntryDao().getParents( ontologyEntry );
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleGetChildren(ubic.gemma.model.common.description.OntologyEntry)
+     */
+    @Override
+    protected Collection handleGetChildren( OntologyEntry ontologyEntry ) throws Exception {
+        return ontologyEntry.getAssociations();
+    }
+
 }

@@ -47,7 +47,7 @@ public class DesignElementDataVectorDaoTest extends BaseSpringContextTest {
      */
     public void testQueryByGeneSymbolAndSpecies() {
 
-        Collection<ExpressionExperiment> expressionExperiments = new HashSet();
+        Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
         for ( long i = 0; i < 3; i++ ) {
             ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
             ee.setId( i );

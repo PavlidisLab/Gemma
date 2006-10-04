@@ -128,7 +128,7 @@ public class DesignElementDataVectorDaoImpl extends
                 }
             }
 
-            return ( Collection ) results;
+            return results;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
