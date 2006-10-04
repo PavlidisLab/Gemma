@@ -1127,18 +1127,34 @@ public class GeoConverter implements Converter {
      * @param geoSubSet
      * @return ExperimentalFactor
      */
-    public ExperimentalFactor convertSubsetToExperimentalFactor( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
+    public void convertSubsetToExperimentalFactor( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
 
         ExperimentalDesign experimentalDesign = expExp.getExperimentalDesign();
+        Collection<ExperimentalFactor> existingExperimentalFactors = experimentalDesign.getExperimentalFactors();
 
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
         experimentalFactor.setName( geoSubSet.getDescription() );
         experimentalFactor.setDescription( geoSubSet.getType().toString() );
 
+        boolean duplicateExists = false;
+        for ( ExperimentalFactor existingExperimentalFactor : existingExperimentalFactors ) {
+            if ( ( experimentalFactor.getName() + experimentalFactor.getDescription() )
+                    .equalsIgnoreCase( existingExperimentalFactor.getName()
+                            + existingExperimentalFactor.getDescription() ) ) {
+                duplicateExists = true;
+                log.debug( experimentalFactor.getName()
+                        + " already exists.  Not adding to list of experimental factors." );
+                break;
+            }
+        }
+
+        if ( !duplicateExists ) {
+            experimentalDesign.getExperimentalFactors().add( experimentalFactor );
+            duplicateExists = false;
+        }
+
         /* bi-directional ... don't forget this. */
         experimentalFactor.setExperimentalDesign( experimentalDesign );
-
-        return experimentalFactor;
     }
 
     /**
@@ -1152,8 +1168,7 @@ public class GeoConverter implements Converter {
             ExpressionExperimentSubSet ees = convertSubset( result, subset );
             result.getSubsets().add( ees );
 
-            ExperimentalFactor experimentalFactor = convertSubsetToExperimentalFactor( result, subset );
-            result.getExperimentalDesign().getExperimentalFactors().add( experimentalFactor );
+            convertSubsetToExperimentalFactor( result, subset );
         }
     }
 
