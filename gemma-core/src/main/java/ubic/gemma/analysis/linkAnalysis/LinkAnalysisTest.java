@@ -15,8 +15,9 @@ public class LinkAnalysisTest {
 		LinkAnalysisDataLoader oneLoader = new LinkAnalysisDataLoader("GSE2276","an.txt");
 		LinkAnalysis oneAnalysis = new LinkAnalysis(oneLoader);
 		System.err.println("Finish Loading");
-		oneLoader.WriteExpressionDataToFile("2276.data");
-		System.err.println("Finish Output");
+		//oneLoader.WriteExpressionDataToFile("2276.data");
+		oneAnalysis.analysis();
+		System.err.println("Finish test");
 	}
 
 }
