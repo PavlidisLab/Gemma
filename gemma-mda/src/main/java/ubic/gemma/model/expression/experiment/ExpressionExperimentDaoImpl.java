@@ -32,8 +32,13 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
  * @author pavlidis
@@ -138,7 +143,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
                 int c = list.getInteger( 0 );
-                count = Long.parseLong( (new Integer(c)).toString() );
+                count = Long.parseLong( ( new Integer( c ) ).toString() );
             }
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -146,7 +151,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         return count;
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -165,6 +170,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                         .getDesignElementDataVectors();
 
                 int count = 0;
+                AuditTrail at; // reused a couple times to delete the audit trails
+
                 for ( DesignElementDataVector dv : designElementDataVectors ) {
                     BioAssayDimension dim = dv.getBioAssayDimension();
                     dims.add( dim );
@@ -175,8 +182,63 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
 
                 for ( BioAssayDimension dim : dims ) {
+
                     session.delete( dim );
+
                 }
+
+                //session.flush();
+                // Delete BioMaterials
+                for ( BioAssay ba : toDeletePers.getBioAssays() ) {
+
+                    // fixme this needs to be here for lazy loading issues. Even though the AD isn't getting removed.
+                    // Not happy about this at all. but what to do?
+                    ba.getArrayDesignUsed().getCompositeSequences().size();
+
+                    // Delete Biomaterial 
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+//                        //fixme Cascade happens for treatment and Protocol application but not protocol. 
+//                        for (Treatment treat : bm.getTreatments())
+//                            for (ProtocolApplication protoApp : treat.getProtocolApplications()) {
+//                                 if (protoApp.getProtocol() != null) {
+//                                     at = protoApp.getProtocol().getAuditTrail();
+//                                     if ( at != null ) {
+//                                         for ( AuditEvent event : at.getEvents() )
+//                                             session.delete( event );
+//                                         session.delete( at );
+//                                     }                                     
+//                                     session.delete( protoApp.getProtocol() );
+//                                 }
+//                            }
+                        session.delete( bm );
+                    }
+                    // delete references to files on disk
+                    for ( LocalFile lf : ba.getDerivedDataFiles() ) {
+                        for ( LocalFile sf : lf.getSourceFiles() )                            
+                            session.delete( sf );
+                        session.delete( lf );
+                    }
+                    // Delete raw data files
+                    if ( ba.getRawDataFile() != null ) session.delete( ba.getRawDataFile() );
+
+                    // remove the bioassay audit trail
+                    at = ba.getAuditTrail();
+                    if ( at != null ) {
+                        for ( AuditEvent event : at.getEvents() )
+                            session.delete( event );
+                        session.delete( at );
+                    }
+                }
+
+                // Remove audit information for ee from the db. We might want to keep this but......
+                at = toDeletePers.getAuditTrail();
+                if ( at != null ) {
+                    for ( AuditEvent event : at.getEvents() )
+                        session.delete( event );
+
+                    session.delete( at );
+                }
+
                 session.delete( toDeletePers );
                 return null;
             }
