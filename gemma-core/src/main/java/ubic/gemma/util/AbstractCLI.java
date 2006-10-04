@@ -73,7 +73,7 @@ public abstract class AbstractCLI {
 
     private CommandLine commandLine;
 
-    protected Log log = LogFactory.getLog( this.getClass() );
+    protected static Log log = LogFactory.getLog( AbstractCLI.class );
 
     /* support for convenience options */
 
