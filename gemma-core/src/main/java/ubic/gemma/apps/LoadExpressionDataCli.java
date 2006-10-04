@@ -28,6 +28,7 @@ import java.util.HashSet;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -73,11 +74,15 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
     public static void main( String[] args ) {
         LoadExpressionDataCli p = new LoadExpressionDataCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
         try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
             }
+            watch.stop();
+            log.info( watch.getTime() );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
