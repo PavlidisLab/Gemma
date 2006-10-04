@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
 /**
  * @author keshav
  * @version $Id$
@@ -80,6 +82,26 @@ public class OntologyEntryServiceImpl extends ubic.gemma.model.common.descriptio
     @Override
     protected OntologyEntry handleFind( OntologyEntry ontologyEntry ) throws Exception {
         return this.getOntologyEntryDao().find( ontologyEntry );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleGetAllChildren(ubic.gemma.model.common.description.OntologyEntry)
+     */
+    @Override
+    protected Collection handleGetAllChildren( OntologyEntry ontologyEntry ) throws Exception {
+        return this.getOntologyEntryDao().getAllChildren( ontologyEntry );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.OntologyEntryServiceBase#handleGetParents(ubic.gemma.model.common.description.OntologyEntry)
+     */
+    @Override
+    protected Collection handleGetParents( OntologyEntry ontologyEntry ) throws Exception {
+        return this.getOntologyEntryDao().getParents( ontologyEntry );
     }
 
 }

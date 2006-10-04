@@ -100,7 +100,7 @@ public class OntologyEntryDaoImplTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unchecked")
     public final void testGetChildren() {
-        Collection<OntologyEntry> actualValue = oed.getChildren( top );
+        Collection<OntologyEntry> actualValue = oed.getAllChildren( top );
         assertEquals( 3, actualValue.size() );
     }
 

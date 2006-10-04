@@ -105,12 +105,13 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
      * @see ubic.gemma.model.common.description.OntologyEntry#getChildren()
      */
     @Override
-    public java.util.Collection<OntologyEntry> handleGetChildren( final OntologyEntry ontologyEntry ) {
+    public java.util.Collection<OntologyEntry> handleGetAllChildren( final OntologyEntry ontologyEntry ) {
         final Collection<OntologyEntry> children = new HashSet<OntologyEntry>();
         if ( ontologyEntry.getId() == null ) {
             this.getChildren( ontologyEntry, children );
         } else {
             this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+                @SuppressWarnings("synthetic-access")
                 public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                     OntologyEntry innerOntologyEntry = ( OntologyEntry ) session.merge( ontologyEntry );
                     getChildren( innerOntologyEntry, children );
@@ -151,4 +152,5 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
             throw super.convertHibernateAccessException( ex );
         }
     }
+
 }
