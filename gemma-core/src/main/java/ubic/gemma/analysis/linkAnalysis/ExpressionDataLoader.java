@@ -44,10 +44,10 @@ public class ExpressionDataLoader{
 		
         GeoDatasetService gds = new GeoDatasetService();
         GeoConverter geoConverter = new GeoConverter();
-        gds.setConverter(geoConverter);
+       // gds.setConverter(geoConverter);
        
         //if you want to read the experiments locally
-        gds.setGenerator( new GeoDomainObjectGeneratorLocal(actualExperimentsPath));
+        //gds.setGenerator( new GeoDomainObjectGeneratorLocal(actualExperimentsPath));
         
         //if you want to read the experiments from the geo repository
         //gds.setGenerator(new GeoDomainObjectGenerator());
