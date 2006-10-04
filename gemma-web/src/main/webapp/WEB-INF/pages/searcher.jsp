@@ -53,7 +53,7 @@
    </c:choose>
 
   </c:forEach>
-<%--
+
   <c:if test="${! empty searchResults.pages}">
 
     <br><br><br>
@@ -81,7 +81,7 @@
     </tr></table>
 
   </c:if>
---%>
+
 </c:if>
 
 <p>
