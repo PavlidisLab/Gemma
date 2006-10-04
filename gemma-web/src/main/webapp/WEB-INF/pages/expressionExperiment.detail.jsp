@@ -34,7 +34,7 @@
 					<%
 					if ( expressionExperiment.getDescription() != null ) {
 					%>
-					<jsp:getProperty name="expressionExperiment" property="description" />
+					<textarea name="" rows=5 cols=60 readonly=true><jsp:getProperty name="expressionExperiment" property="description" /></textarea>
 					<%
 					                } else {
 					                out.print( "Description unavailable" );
@@ -69,7 +69,7 @@
 					<jsp:getProperty name="expressionExperiment" property="owner" />
 					<%
 					                } else {
-					                out.print( "Owner unavailable" );
+					                out.print( "Public" );
 					            }
 					%>
 				</td>
@@ -80,8 +80,8 @@
 				</td>
 				<td>
 					<%
-					                if ( expressionExperiment.getAccession() != null ) {
-					                expressionExperiment.getAccession().getAccession();
+					            if ( expressionExperiment.getAccession() != null ) {
+					                out.print(expressionExperiment.getAccession().getAccession());
 					            } else {
 					                out.print( "Accession unavailable" );
 					            }
@@ -104,21 +104,22 @@
 					%>
 				</td>
 			</tr>
-
-			<tr>
-				<td valign="top">
-					<b> <fmt:message key="auditTrail.date" /> </b>
-				</td>
-				<td>
-					<%
+			<authz:authorize ifAllGranted="admin">
+				<tr>
+					<td valign="top">
+						<b> <fmt:message key="auditTrail.date" /> </b>
+					</td>
+					<td>
+						<%
 					                if ( expressionExperiment.getAuditTrail() != null ) {
 					                out.print( expressionExperiment.getAuditTrail().getCreationEvent().getDate() );
 					            } else {
 					                out.print( "Create date unavailable" );
 					            }
-					%>
-				</td>
-			</tr>
+						%>
+					</td>
+				</tr>
+			</authz:authorize>
 		</table>
 
 		<br />
@@ -133,13 +134,10 @@
 			out.print( expressionExperiment.getBioAssays().size() );
 			%> </a> bioAssays for this expression experiment, with the following designs.
 		<br />
-		<h3>
-			<fmt:message key="arrayDesigns.title" />			
-		</h3>
 		<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList" export="true"
 			pagesize="10">
 			<display:column property="name" sortable="true" maxWords="20"
-				href="/Gemma/arrays/showArrayDesign.html" paramId="name" paramProperty="name" />
+				href="/Gemma/arrays/showArrayDesign.html" paramId="id" paramProperty="id" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>			
 		<br />
@@ -153,25 +151,15 @@
         </a>
         <br />
         <br />
-        <%out.print(expressionExperiment.getExperimentalDesign().getDescription());%>
+        <b>Description:</b>
+        <br />
+        <textarea name="" rows=5 cols=60 readonly=true><%out.print(expressionExperiment.getExperimentalDesign().getDescription());%></textarea>
         <br />
         <br />
         This experimental design has 
         <%out.print(expressionExperiment.getExperimentalDesign().getExperimentalFactors().size()); %>
         experimental factors.
         <br />
-		<%--
-        <h3>
-            <fmt:message key="experimentalDesigns.title" />
-        </h3>
-        <display:table name="expressionExperiment.experimentalDesigns" class="list" requestURI="" id="experimentalDesignList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
-            <display:column property="experimentalDesignNameLink" sortable="true" maxWords="20" titleKey="experimentalDesign.name" />
-            <display:column property="description" sortable="true" maxWords="100"  />
-            <display:column property="factorsLink" sortable="true" maxWords="100" titleKey="experimentalFactors.title"  />
-            <display:setProperty name="basic.empty.showtable" value="false" />
-        </display:table>
-		--%>
 
 		<h3>
 			<fmt:message key="investigators.title" />
@@ -184,11 +172,19 @@
 			<display:column property="fax" sortable="true" maxWords="100" />
 			<display:column property="email" sortable="true" maxWords="100" />
 			<display:setProperty name="basic.empty.showtable" value="false" />
+			<display:setProperty name="basic.msg.empty_list" value="No investigators are associated with this experiment." /> 
 		</display:table>
 
+		<%
+		if ( expressionExperiment.getAnalyses().size() > 0 ) {
+		%>
 		<h3>
 			<fmt:message key="analyses.title" />
 		</h3>
+		<% 
+		} 
+		%>
+		
 		<display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList" export="true"
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="name" sortable="true" maxWords="20"
@@ -197,9 +193,16 @@
 			<display:setProperty name="basic.empty.showtable" value="false" />
 		</display:table>
 
+		<%
+		if ( expressionExperiment.getSubsets().size() > 0 ) {
+		%>
 		<h3>
 			<fmt:message key="expressionExperimentSubsets.title" />
 		</h3>
+		<% 
+		} 
+		%>
+				
 		<display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList" export="true"
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
 			<display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name" />

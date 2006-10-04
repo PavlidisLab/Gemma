@@ -103,15 +103,16 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return ( ArrayDesign ) this.getArrayDesignDao().create( arrayDesign );
     }
 
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadReporters(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-//     */
-//    @Override
-//    protected Collection handleLoadReporters( ArrayDesign arrayDesign ) throws Exception {
-//        return this.getArrayDesignDao().loadReporters( arrayDesign.getId() );
-//    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see
+    // ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadReporters(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+    // */
+    // @Override
+    // protected Collection handleLoadReporters( ArrayDesign arrayDesign ) throws Exception {
+    // return this.getArrayDesignDao().loadReporters( arrayDesign.getId() );
+    // }
 
     /*
      * (non-Javadoc)
@@ -121,6 +122,15 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected Collection handleLoadCompositeSequences( ArrayDesign arrayDesign ) throws Exception {
         return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoad(long)
+     */
+    @Override
+    protected ArrayDesign handleLoad( long id ) throws Exception {
+        return ( ArrayDesign) this.getArrayDesignDao().load( id );
     }
 
 }

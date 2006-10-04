@@ -61,13 +61,20 @@ public class ArrayDesignController extends BaseMultiActionController {
     @SuppressWarnings("unused")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
+        String id = request.getParameter( "id" );
 
-        if ( name == null ) {
+        if ( (name == null) && (id == null) ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an Array Design name" );
+            throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
         }
-
-        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name );
+        ArrayDesign arrayDesign = null;
+        if (id != null) {
+            arrayDesign = arrayDesignService.load( Long.parseLong( id ) );
+        }
+        else if (name != null) {
+            arrayDesign = arrayDesignService.findArrayDesignByName( name );
+        }
+        
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( name + " not found" );
         }
