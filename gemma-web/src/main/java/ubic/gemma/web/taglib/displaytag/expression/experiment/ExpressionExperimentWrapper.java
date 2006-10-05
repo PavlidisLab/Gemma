@@ -49,11 +49,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     /**
      * @return String
      */
-    public String getSourceLink() {
+    public String getDataSource() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object != null && object.getSource() != null ) {
-            return "<a href=\"" + object.getAccession().getExternalDatabase().getWebUri() + "\">" + object.getSource()
-                    + "</a>";
+        if ( object != null && object.getAccession() != null ) {
+            return object.getAccession().getExternalDatabase().getName();
         }
         return "No Source";
     }
@@ -61,10 +60,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     /**
      * @return String
      */
-    public String getDetailsLink() {
+    public String getExternalDetailsLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
-            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + getDetails() + "</a>";
+            return "<a href=\"" + object.getAccession().getExternalDatabase().getWebUri() + "\">" + object.getAccession().getAccession()
+            + "</a>";             
         }
         return "No accession";
     }
@@ -77,6 +77,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getDetails() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
+           
             return object.getAccession().getExternalDatabase().getName() + " - " + object.getAccession().getAccession();
         }
         return "No accession";
@@ -88,10 +89,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getAssaysLink() {
         ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
         if ( object != null && object.getBioAssays() != null ) {
-            return "<a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
-                    + object.getBioAssays().size() + "</a>";
+            return object.getBioAssays().size() + "<small><a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
+                    +  "(list)</a>";
         }
-
         return "No bioassays";
     }
 
