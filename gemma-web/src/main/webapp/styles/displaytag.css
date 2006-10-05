@@ -56,11 +56,11 @@ th.sorted a, th.sortable a {
     display: block;
 }
 
-.table th.order1 a {
+table th.order1 a {
     background-image: url(../images/arrow_down.png) !important;
 }
 
-.table th.order2 a {
+table th.order2 a {
     background-image: url(../images/arrow_up.png) !important;
 }
 
@@ -75,31 +75,33 @@ div#main .tableHeaderImage { /* Tapestry */
     background-image: url(../images/arrow_off.png);
 }*/
 
-.table th.sorted {
+table th.sorted {
     background-color: #ffd;
     color: #000000;
 }
 
-.table th.sorted a, .table th.sortable a {
+table th.sorted a, table th.sortable a {
     background-position: right;
     background-repeat: no-repeat;
     display: block;
 }
 
-.table tr.even {
+table tr.even {
     background: #eee;
     border-top: 1px solid #c0c0c0;
     color: #000000;
+    vertical-align: top;
 }
 
-.table tr.odd {
+table tr.odd {
     background: #fff;
     border-top: 1px solid #c0c0c0;
     color: #000000;
+    vertical-align: top;
 }
 
 /* highlight .table row onmouseover */
-.table tr.over {
+table tr.over {
     border-bottom: 1px solid #C0C0C0;
     border-top: 1px solid #C0C0C0;
     color: #000000;
