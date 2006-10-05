@@ -20,12 +20,14 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -195,8 +197,28 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+        
+        String sId = request.getParameter( "id" );
+        // if no IDs are specified, then load all expressionExperiments
+        if ( sId == null ) {
+            return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments",
+                    expressionExperimentService.loadAll() );
+        }
+        // if ids are specified, then display only those expressionExperiments
+        String[] idList = StringUtils.split( sId, ',' );
+        Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
+        for (int i = 0; i < idList.length; i++) {
+            Long id = Long.parseLong( idList[i] );
+            ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
+            if ( expressionExperiment == null ) {
+                throw new EntityNotFoundException( id + " not found" );
+            }
+            expressionExperiments.add( expressionExperiment );
+        }
         return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments",
-                expressionExperimentService.loadAll() );
+                expressionExperiments );        
+        
+
     }
 
     /**
