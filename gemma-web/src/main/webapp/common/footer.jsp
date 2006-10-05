@@ -29,5 +29,5 @@ urchinTracker();
 <br />
 <authz:authorize ifAllGranted="admin">
 <script type="text/javascript"> document.writeln("Page Loaded: "+document.lastModified); </script>
-<Gemma:lastModified refFile="/WEB-INF"></Gemma:lastModified>
+<Gemma:lastModified refFile="/WEB-INF/action-servlet.xml"></Gemma:lastModified>
 </authz:authorize>
