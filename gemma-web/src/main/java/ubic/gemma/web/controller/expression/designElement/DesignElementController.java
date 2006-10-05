@@ -71,6 +71,7 @@ public class DesignElementController extends BaseMultiActionController {
     // return new ModelAndView( "designElement.detail" ).addObject( "designElement", designElement );
     // }
     /**
+     * Disabled for now.
      * @param request
      * @param response
      * @return
@@ -78,6 +79,10 @@ public class DesignElementController extends BaseMultiActionController {
     @SuppressWarnings( { "unused" })
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
+        
+        this.addMessage( request, "object.unavailable", null );
+        return new ModelAndView("mainMenu");
+        /*
         log.debug( "entered showAll from " + request.getRequestURI() );
 
         String name = request.getParameter( "name" );
@@ -85,7 +90,7 @@ public class DesignElementController extends BaseMultiActionController {
         ArrayDesign ad = arrayDesignService.findArrayDesignByName( name );
         Collection<CompositeSequence> ads = ad.getCompositeSequences();
         // FIXME this only works on composite sequences.
-        return new ModelAndView( "designElements" ).addObject( "designElements", ads );
+        return new ModelAndView( "designElements" ).addObject( "designElements", ads );*/
     }
 
     /**
