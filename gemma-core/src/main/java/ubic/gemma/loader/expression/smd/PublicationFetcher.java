@@ -1,9 +1,7 @@
 package ubic.gemma.loader.expression.smd;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -15,8 +13,6 @@ import org.xml.sax.SAXException;
 import ubic.gemma.loader.expression.smd.model.SMDPublication;
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
 import ubic.gemma.loader.util.fetcher.SmdFetcher;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Retrieve information on SMD publications.

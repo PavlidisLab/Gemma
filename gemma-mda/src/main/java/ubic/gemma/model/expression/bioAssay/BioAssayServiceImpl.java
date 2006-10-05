@@ -22,8 +22,6 @@ package ubic.gemma.model.expression.bioAssay;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.NotImplementedException;
-
 /**
  * @author pavlidis
  * @author keshav

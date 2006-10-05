@@ -19,20 +19,10 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.util.Collection;
-import java.util.HashSet;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.lang.StringUtils;
 
-import ubic.basecode.util.FileTools;
 import ubic.gemma.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -106,12 +96,12 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
     // localFile.setLocalURL( ( new File( finalOutputPath ).toURI().toURL() ) );
     // localFile.setSize( new File( finalOutputPath ).length() );
     //
-    //            return result;
+    // return result;
     //
-    //        } catch ( IOException e ) {
-    //            throw new RuntimeException( e );
-    //        }
-    //    }
+    // } catch ( IOException e ) {
+    // throw new RuntimeException( e );
+    // }
+    // }
 
     /**
      * @param identifier
