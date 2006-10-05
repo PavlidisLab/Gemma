@@ -203,6 +203,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
      * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon ) throws IOException {
 
@@ -239,7 +240,7 @@ public class ArrayDesignSequenceProcessingService {
             }
 
             Collection<BioSequence> persistedSequences = bioSequenceService.create( seqs );
-
+ 
             for ( BioSequence sequence : persistedSequences ) {
                 Reporter rep = reporterSeqMap.get( sequence.getName() );
                 rep.setImmobilizedCharacteristic( sequence );

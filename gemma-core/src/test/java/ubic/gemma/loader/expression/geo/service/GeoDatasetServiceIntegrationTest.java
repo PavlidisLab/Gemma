@@ -170,6 +170,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * GSE3434 has no dataset. It's small so okay to download.
      */
     public void testFetchAndLoadSeriesOnly() throws Exception {
+        endTransaction();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GSE3434" );
         assertEquals( 4, ee.getBioAssays().size() );
@@ -189,6 +190,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * Original reason for test: yields audit trail errors.
      */
     public void testFetchAndLoadGDS775() throws Exception {
+        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds775short" ) );

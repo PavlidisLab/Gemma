@@ -89,6 +89,7 @@ public class TestPersistentObjectHelper {
     private TaxonService taxonService;
 
     private ExternalDatabase geo;
+    private ExternalDatabase genbank;
 
     // private Taxon testTaxon;
 
@@ -249,6 +250,7 @@ public class TestPersistentObjectHelper {
      * @param randomNames If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
      * @return ArrayDesign
      */
+    @SuppressWarnings("unchecked")
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
@@ -287,9 +289,6 @@ public class TestPersistentObjectHelper {
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             cs.setArrayDesign( ad );
         }
-
-        // flushSession();
-
         assert ( ad.getCompositeSequences().size() == numCompositeSequences );
 
         return ( ArrayDesign ) persisterHelper.persist( ad );
@@ -346,12 +345,32 @@ public class TestPersistentObjectHelper {
      * @return
      */
     public BioSequence getTestPersistentBioSequence() {
+        BioSequence bs = getTestNonPersistentBioSequence();
+
+        return ( BioSequence ) persisterHelper.persist( bs );
+    }
+
+    /**
+     * @return
+     */
+    public BioSequence getTestNonPersistentBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();
         bs.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbiosequence" );
         bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
         bs.setTaxon( getTestNonPersistentTaxon() );
 
-        return ( BioSequence ) persisterHelper.persist( bs );
+        if ( this.genbank == null ) {
+            genbank = ExternalDatabase.Factory.newInstance();
+            genbank.setName( "Genbank" );
+        }
+
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+        de.setExternalDatabase( this.genbank );
+        de.setAccession( RandomStringUtils.randomAlphanumeric( 10 ) );
+
+        bs.setSequenceDatabaseEntry( de );
+        return bs;
     }
 
     /**

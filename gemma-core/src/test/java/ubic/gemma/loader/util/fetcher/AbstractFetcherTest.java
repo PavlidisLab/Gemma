@@ -107,6 +107,7 @@ public class AbstractFetcherTest extends TestCase {
          * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
          */
         @Override
+        @SuppressWarnings("unused")
         protected String formLocalFilePath( String identifier, File newDir ) {
             return null;
         }
@@ -117,6 +118,7 @@ public class AbstractFetcherTest extends TestCase {
          * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
          */
         @Override
+        @SuppressWarnings("unused")
         protected String formRemoteFilePath( String identifier ) {
             return null;
         }
