@@ -44,6 +44,7 @@ public class ArrayDesignController extends BaseMultiActionController {
 
     private ArrayDesignService arrayDesignService = null;
     private final String messageName = "Array design with name";
+    private final String messageId = "Array design with id";
 
     /**
      * @param arrayDesignService The arrayDesignService to set.
@@ -70,17 +71,19 @@ public class ArrayDesignController extends BaseMultiActionController {
         ArrayDesign arrayDesign = null;
         if (id != null) {
             arrayDesign = arrayDesignService.load( Long.parseLong( id ) );
+            this.addMessage( request, "object.found", new Object[] { messageId, id } );
+            request.setAttribute( "id", id );
         }
         else if (name != null) {
             arrayDesign = arrayDesignService.findArrayDesignByName( name );
+            this.addMessage( request, "object.found", new Object[] { messageName, name } );
+            request.setAttribute( "name", name );
         }
         
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( name + " not found" );
         }
 
-        this.addMessage( request, "object.found", new Object[] { messageName, name } );
-        request.setAttribute( "name", name );
         return new ModelAndView( "arrayDesign.detail" ).addObject( "arrayDesign", arrayDesign );
     }
 

@@ -24,7 +24,7 @@
 					<display:table name="arrayDesigns" class="list" requestURI=""
 						id="arrayDesignList" export="true">
 						<display:column property="name" sortable="true"
-							href="showArrayDesign.html" paramId="name" paramProperty="name"
+							href="showArrayDesign.html" paramId="id" paramProperty="id"
 							titleKey="arrayDesign.name" />
 						<display:column property="description" sortable="true"
 							titleKey="arrayDesign.description" />
