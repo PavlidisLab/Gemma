@@ -50,6 +50,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.security.interceptor.AuditInterceptor;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SpringContextUtil;
@@ -353,6 +354,7 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
+
         // CompassUtils.disableLuceneLocks();
         CompassUtils.deleteCompassLocks();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
@@ -374,7 +376,6 @@ abstract public class BaseTransactionalSpringContextTest extends AbstractTransac
     @Override
     protected void onTearDownInTransaction() throws Exception {
         super.onTearDownInTransaction();
-        // flushSession();
     }
 
     /**

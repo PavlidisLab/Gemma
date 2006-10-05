@@ -23,9 +23,11 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.test.AbstractDependencyInjectionSpringContextTests;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
@@ -44,6 +46,9 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
     protected ResourceBundle resourceBundle;
     protected Log log = LogFactory.getLog( getClass() );
 
+    HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
+    };
+
     /*
      * (non-Javadoc)
      * 
@@ -52,6 +57,7 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
     @Override
     protected void onSetUp() throws Exception {
         super.onSetUp();
+        hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
         CompassUtils.deleteCompassLocks();
         SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
     }
@@ -132,6 +138,10 @@ abstract public class BaseSpringContextTest extends AbstractDependencyInjectionS
         ( ( XmlWebApplicationContext ) ctx ).refresh();
 
         return ctx;
+    }
+
+    public HibernateDaoSupport getHibernateSupport() {
+        return hibernateSupport;
     }
 
 }

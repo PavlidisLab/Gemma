@@ -26,7 +26,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
+public abstract class AbstractGeoServiceTest extends BaseTransactionalSpringContextTest {
  
     
     protected static final String GEO_TEST_DATA_ROOT = "/gemma-core/src/test/resources/data/loader/expression/geo/";

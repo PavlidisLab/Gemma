@@ -962,6 +962,18 @@ public class GeoConverter implements Converter {
      * @return
      */
     private ExpressionExperiment convertSeries( GeoSeries series ) {
+
+        // figure out if there are multiple species involved here.
+
+        Collection<String> organisms = new HashSet<String>();
+        for ( GeoDataset dataset : series.getDatasets() ) {
+            organisms.add( dataset.getOrganism() );
+        }
+
+        if ( organisms.size() > 1 ) {
+            log.warn( "**** multiple-species dataset! ****" );
+        }
+
         return this.convertSeries( series, null );
     }
 
@@ -1095,13 +1107,9 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private ExpressionExperimentSubSet convertSubset( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
 
-        ExpressionExperimentSubSet subSet = ExpressionExperimentSubSet.Factory.newInstance();
+        ExpressionExperimentSubSet subSet = getExistingOrNewSubSet( expExp, geoSubSet );
 
-        // FIXME turn the geo subset information into factors if possible.
-        subSet.setName( geoSubSet.getDescription() );
-        subSet.setDescription( geoSubSet.getType().toString() );
-        subSet.setSourceExperiment( expExp );
-        subSet.setBioAssays( new HashSet<BioAssay>() );
+        assert subSet != null;
 
         int i = 0;
         for ( GeoSample sample : geoSubSet.getSamples() ) {
@@ -1118,6 +1126,36 @@ public class GeoConverter implements Converter {
             assert found : "No matching bioassay found for " + bioAssayForSearch.getAccession().getAccession()
                     + " in subset. " + " Make sure the ExpressionExperiment was initialized "
                     + "properly by converting the samples before converting the subsets.";
+        }
+        return subSet;
+    }
+
+    /**
+     * check to see if the expExp already has a matching subset to add this to.
+     * 
+     * @param expExp
+     * @param geoSubSet
+     * @return
+     */
+    private ExpressionExperimentSubSet getExistingOrNewSubSet( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
+
+        ExpressionExperimentSubSet subSet = null;
+
+        boolean alreadyExists = false;
+        for ( ExpressionExperimentSubSet existingSubset : expExp.getSubsets() ) {
+            if ( geoSubSet.getDescription().equals( existingSubset.getName() ) ) {
+                subSet = existingSubset;
+                alreadyExists = true;
+                break;
+            }
+        }
+
+        if ( !alreadyExists ) {
+            subSet = ExpressionExperimentSubSet.Factory.newInstance();
+            subSet.setName( geoSubSet.getDescription() );
+            subSet.setDescription( geoSubSet.getType().toString() );
+            subSet.setSourceExperiment( expExp );
+            subSet.setBioAssays( new HashSet<BioAssay>() );
         }
         return subSet;
     }

@@ -34,4 +34,30 @@ public class OntologyEntryImpl extends ubic.gemma.model.common.description.Ontol
                 + " Value:" + this.getValue();
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof DatabaseEntry ) ) {
+            return false;
+        }
+        final DatabaseEntry that = ( DatabaseEntry ) object;
+        if ( this.getId() == null || that.getId() == null || !getId().equals( that.getId() ) ) {
+            return this.getAccession().equals( that.getAccession() );
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        if ( getId() != null ) {
+            hashCode = 29 * hashCode + getId().hashCode();
+        } else {
+            hashCode = 29 * this.getAccession().hashCode();
+        }
+
+        return hashCode;
+    }
 }

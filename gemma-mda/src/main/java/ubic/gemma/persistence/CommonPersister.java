@@ -493,7 +493,7 @@ abstract public class CommonPersister extends AbstractPersister {
      * 
      * @param ontologyEntry
      */
-    protected OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
+    public OntologyEntry persistOntologyEntry( OntologyEntry ontologyEntry ) {
         if ( ontologyEntry == null ) return null;
         if ( !isTransient( ontologyEntry ) ) {
             return ontologyEntry;
@@ -511,10 +511,7 @@ abstract public class CommonPersister extends AbstractPersister {
             oe = persistOntologyEntry( oe );
         }
 
-        // this.getCurrentSession().flush();
-
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
-
         return ontologyEntry;
     }
 

@@ -20,12 +20,14 @@ package ubic.gemma.model.common.description;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -60,24 +62,34 @@ public class OntologyEntryDaoImpl extends ubic.gemma.model.common.description.On
             if ( results != null ) {
                 if ( results.size() > 1 ) {
                     debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
                                     + ubic.gemma.model.common.description.OntologyEntry.class.getName()
                                     + "' was found when executing query" );
+
+                    // Iterator it = results.iterator();
+                    // result = it.next(); // arbitrary pick the first one.
+                    //
+                    // for ( ; it.hasNext(); ) {
+                    // OntologyEntry bs = ( OntologyEntry ) it.next();
+                    // if ( log.isDebugEnabled() ) log.debug( "Removing " + bs + ", duplicate of " + result );
+                    //                        this.remove( bs );
+                    //                    }
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
                 }
             }
+
             return ( OntologyEntry ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+
     }
 
     @Override
     public OntologyEntry findOrCreate( OntologyEntry ontologyEntry ) {
-
         OntologyEntry existing = find( ontologyEntry );
         if ( existing != null ) {
             if ( log.isDebugEnabled() )

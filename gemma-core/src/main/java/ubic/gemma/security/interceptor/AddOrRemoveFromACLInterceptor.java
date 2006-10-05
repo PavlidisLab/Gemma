@@ -212,7 +212,12 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
      * @throws DataAccessException
      */
     public void deletePermission( Object object ) throws DataAccessException, IllegalArgumentException {
-        basicAclExtendedDao.delete( makeObjectIdentity( object ) );
+        try {
+            basicAclExtendedDao.delete( makeObjectIdentity( object ) );
+        } catch ( org.springframework.dao.DataRetrievalFailureException e ) {
+            // this happens during tests where we have flushed during a transaction.
+            log.warn( "Could not delete aclObjectIdentity for " + object );
+        }
         if ( log.isDebugEnabled() ) {
             log.debug( "Deleted object " + object + " ACL permissions for recipient "
                     + UserDetailsServiceImpl.getCurrentUsername() );
@@ -248,6 +253,11 @@ public class AddOrRemoveFromACLInterceptor implements AfterReturningAdvice {
             InvocationTargetException {
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
+        if ( persister == null ) {
+            // FIXME this happens when the object is a proxy.
+            log.error( "No EntityPersister found for " + object.getClass().getName() );
+            return;
+        }
         CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
         String[] propertyNames = persister.getPropertyNames();
 

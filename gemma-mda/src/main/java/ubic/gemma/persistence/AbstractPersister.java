@@ -60,7 +60,7 @@ public abstract class AbstractPersister implements Persister {
 
     protected int numElementsPerUpdate( Collection col ) {
         if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY ) return Integer.MAX_VALUE;
-        return ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY );
+        return Math.max( ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY ), 20 );
     }
 
     /*
@@ -95,7 +95,7 @@ public abstract class AbstractPersister implements Persister {
     protected int iteratorStatusUpdate( Collection<?> col, int count, int numElementsPerUpdate, boolean increment ) {
         assert col != null && col.size() > 0;
         if ( increment ) ++count;
-        if ( count % numElementsPerUpdate == 0 && log.isInfoEnabled() ) {
+        if ( ( !increment || count % numElementsPerUpdate == 0 ) && log.isInfoEnabled() ) {
             log
                     .info( "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
                             + "'s" );

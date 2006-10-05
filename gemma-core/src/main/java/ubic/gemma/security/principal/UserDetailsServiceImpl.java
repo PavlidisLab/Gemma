@@ -21,6 +21,8 @@ package ubic.gemma.security.principal;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.acegisecurity.Authentication;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.acegisecurity.providers.ProviderManager;
@@ -31,6 +33,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
@@ -77,11 +80,16 @@ public class UserDetailsServiceImpl implements UserDetailsService, ApplicationCo
             AuthenticationUtils.anonymousAuthenticate( username, providerManager );
         }
 
+        // JdbcTemplate template = new JdbcTemplate( ( DataSource ) applicationContext.getBean("dataSource");
+        // template.
         User u = userService.findByUserName( username );
 
         if ( u == null ) {
             throw new UsernameNotFoundException( username + " not found" );
         }
+
+        userCache.put( u.getUserName(), u );
+
         return u;
     }
 

@@ -33,8 +33,8 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
     protected AbstractGeoService geoService;
 
     @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
+    protected void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         init();
     }
 
@@ -42,6 +42,7 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
      * Test method for 'ubic.gemma.loader.expression.geo.GeoPlatformService.fetchAndLoad(String)'
      */
     public void testFetchAndLoadGPL101Short() throws Exception {
+        endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "platform" ) );

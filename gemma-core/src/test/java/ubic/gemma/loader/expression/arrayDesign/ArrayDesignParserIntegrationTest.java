@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+// import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -39,6 +40,8 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
 
     private ArrayDesignParser arrayDesignParser = null;
 
+    private Collection<ArrayDesign> result;
+
     /**
      * set up
      */
@@ -48,12 +51,21 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
         arrayDesignParser = new ArrayDesignParser();
     }
 
+    @Override
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
+        // for ( ArrayDesign ad : result ) {
+        // ( ( ArrayDesignService ) this.getBean( "arrayDesignService" ) ).remove( ad );
+        // }
+    }
+
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since it's dependencies are
      * localized to the Gemma project it has been added to the test suite.
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/array.txt" );
 
@@ -62,7 +74,7 @@ public class ArrayDesignParserIntegrationTest extends BaseTransactionalSpringCon
         arrayDesignParser.parse( is );
         assertTrue( "No results", arrayDesignParser.getResults().size() > 0 );
 
-        Collection<?> result = persisterHelper.persist( arrayDesignParser.getResults() );
+        result = ( Collection<ArrayDesign> ) persisterHelper.persist( arrayDesignParser.getResults() );
         assertTrue( result.size() > 0 );
         for ( Object object : result ) {
             assertTrue( object instanceof ArrayDesign );

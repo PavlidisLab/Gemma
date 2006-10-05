@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
+// import ubic.gemma.model.common.description.OntologyEntryService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -43,6 +44,7 @@ public class GeneOntologyLoaderIntegrationTest extends BaseSpringContextTest {
         LocalFile f = files.iterator().next();
         GeneOntologyLoader loader = new GeneOntologyLoader();
         loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+        // OntologyEntryService ontologyEntryService = ( OntologyEntryService ) this.getBean( "ontologyEntryService" );
         Collection<OntologyEntry> results = loader.load( f.asFile() );
 
         // assertEquals( 22385, results.size() ); // true as of 10/3/06

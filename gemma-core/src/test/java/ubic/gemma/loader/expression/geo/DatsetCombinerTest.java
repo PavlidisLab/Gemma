@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.loader.expression.geo.model.GeoSeries;
 
 /**
  * @author pavlidis
