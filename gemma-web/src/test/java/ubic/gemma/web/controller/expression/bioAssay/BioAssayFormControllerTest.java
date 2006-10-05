@@ -50,32 +50,19 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
     @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        ba = BioAssay.Factory.newInstance();
-        ba.setId( new Long( 1 ) );
-        ba.setName( "BioAssay Bot" );
-        ba.setDescription( "A bioassay created from the BioAssayFormControllerTest." );
-
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "Array Design Bot" );
-        ad.setDescription( "An array design created from the ExperimentalDesignFormControllerTest" );
-        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        ad = ads.create( ad );
-        
-        ba.setArrayDesignUsed( ad );
-
+        endTransaction();
+        ArrayDesign ad = this.getTestPersistentArrayDesign( 10, true );
+        ba = this.getTestPersistentBioAssay( ad );
         BioAssayService bas = ( BioAssayService ) getBean( "bioAssayService" );
-        bas.findOrCreate( ba );
+        ba = bas.findOrCreate( ba );
     }
 
     /**
      * @throws Exception
      */
     public void testFormBackingObject() throws Exception {
-
+        endTransaction();
         log.debug( "testing formBackingObject" );
-
-        setFlushModeCommit();
-
         BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
 
         request = new MockHttpServletRequest( "GET", "/bioAssay/editBioAssay.html" );
@@ -91,9 +78,8 @@ public class BioAssayFormControllerTest extends BaseTransactionalSpringContextTe
      * @throws Exception
      */
     public void testEdit() throws Exception {
+        endTransaction();
         log.debug( "testing edit" );
-
-        setFlushModeCommit();
 
         BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
 

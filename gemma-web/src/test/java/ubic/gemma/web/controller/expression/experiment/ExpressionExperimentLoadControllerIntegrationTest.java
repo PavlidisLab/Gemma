@@ -53,8 +53,8 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      * @throws Exception
      */
     @Override
-    public void onSetUp() throws Exception {
-        super.onSetUp();
+    public void onSetUpInTransaction() throws Exception {
+        super.onSetUpInTransaction();
         controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
         this.init();
     }
@@ -65,8 +65,8 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
      */
     @Override
-    protected void onTearDown() throws Exception {
-        super.onTearDown();
+    protected void onTearDownInTransaction() throws Exception {
+        super.onTearDownInTransaction();
         if ( ee != null && ee.getId() != null ) {
             ExpressionExperimentService service = ( ExpressionExperimentService ) this
                     .getBean( "expressionExperimentService" );
@@ -92,6 +92,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      * {@link ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}.
      */
     public final void testOnSubmit() throws Exception {
+        endTransaction();
         String path = getTestFileBasePath();
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -107,7 +108,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setRemoteUser( "administrator" );
         ModelAndView mv = controller.handleRequest( request, response );
         ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
-        ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+        // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
     }
@@ -115,6 +116,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     // GDS395 - same platform as GDS999 XX GDS395 is defective.
     // GDS266 - use instead as an example. linked to GDS267, which uses the B array.
     public final void testOnSubmitB() throws Exception {
+        endTransaction();
         String path = getTestFileBasePath();
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/loadExpressionExperiment.html" );
@@ -127,7 +129,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
         ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
-        ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+        // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
     }
@@ -144,8 +146,8 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
     public final void testShowForm() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newGet( "/loadExpressionExperiment.html" );
-//        request.setParameter( "accession", "GDS999" );
-//        request.setParameter( "loadPlatformOnly", "false" );
+        // request.setParameter( "accession", "GDS999" );
+        // request.setParameter( "loadPlatformOnly", "false" );
         ModelAndView mv = controller.handleRequest( request, response );
         assertEquals( "Returned incorrect view name", "loadExpressionExperimentForm", mv.getViewName() );
 

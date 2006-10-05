@@ -84,7 +84,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         String password = "mypassword";
         User u = createNewUser( request, "newuser", password );
         request.setRemoteUser( "administrator" );
-        request.addUserRole( Constants.ADMIN_ROLE );
+        request.addParameter( "roles", Constants.ADMIN_ROLE );
         request.setParameter( "from", "list" );
 
         assertNotNull( u );
@@ -113,7 +113,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
 
         User u = createNewUser( request, "newuser", "testing" );
         request.setRemoteUser( u.getUserName() );
-        request.addUserRole( Constants.USER_ROLE );
+        request.addParameter( "roles", Constants.USER_ROLE );
 
         controller.signInUser( request, u, "testing" );
 
@@ -146,7 +146,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "from", "list" );
         request.setParameter( "Add", "true" );
         request.setRemoteUser( "administrator" );
-        request.addUserRole( Constants.ADMIN_ROLE );
+        request.addParameter( "roles", Constants.ADMIN_ROLE );
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
@@ -190,7 +190,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
 
         request.setParameter( "firstName", "Something new" );
 
-        request.addUserRole( Constants.USER_ROLE );
+        request.addParameter( "roles", Constants.USER_ROLE );
         request.setRemoteUser( u.getUserName() );
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -213,7 +213,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setRemoteUser( u.getUserName() );
         controller.signInUser( request, u, "testing" );
 
-        request.addUserRole( Constants.USER_ROLE );
+        request.addParameter( "roles", Constants.USER_ROLE );
         request.setRemoteUser( u.getUserName() );
 
         request.setParameter( "firstName", "Something new" );
@@ -256,7 +256,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "from", "list" );
         request.setRemoteUser( "administrator" );
 
-        request.addUserRole( Constants.ADMIN_ROLE );
+        request.addParameter( "roles", Constants.ADMIN_ROLE );
 
         ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );

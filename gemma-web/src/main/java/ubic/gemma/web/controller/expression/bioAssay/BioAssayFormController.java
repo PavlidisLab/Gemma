@@ -36,7 +36,7 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.web.controller.BaseFormController; 
+import ubic.gemma.web.controller.BaseFormController;
 
 /**
  * @author keshav
@@ -57,7 +57,6 @@ public class BioAssayFormController extends BaseFormController {
 
     ExternalDatabaseService externalDatabaseService = null;
 
-   
     /**
      * 
      *
@@ -88,7 +87,9 @@ public class BioAssayFormController extends BaseFormController {
         else
             ba = BioAssay.Factory.newInstance();
 
-        saveMessage( request, "object.editing", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Editing" );
+        if ( ba != null )
+            saveMessage( request, "object.editing", new Object[] { ba.getClass().getSimpleName(), ba.getId() },
+                    "Editing" );
 
         return ba;
     }
