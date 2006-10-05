@@ -5,13 +5,13 @@ function refreshProgress() {
 
 function updateProgress( data ) {
 
-    document.getElementById("progressBarText").innerHTML = data.description + "  :" + data.percent + "%"; 
+    document.getElementById("progressBarText").innerHTML = data.description + "  :"; 
     
-    if (data.done) {
-      //document.getElementById("uploadbutton").disabled = false;
+    if (data.done) {    
+      if (data.forwardingURL != null)
+      		window.location = data.forwardingURL
      }
      else{
-        //document.getElementById("uploadbutton").disabled = true;
         window.setTimeout("refreshProgress()", 1000);
     }
     return true;
@@ -20,11 +20,11 @@ function updateProgress( data ) {
 function startProgress() {
     document.getElementById("progressBar").style.display = "block";
     document.getElementById("progressBarText").innerHTML = "In progress...";
-    //document.getElementById("uploadbutton").disabled = true;
+   
 
-    // wait a little while to make sure the upload has started ..
+    // wait a little while to make sure the progress job has started ..
     progressMotion();
-    window.setTimeout("refreshProgress()", 500);
+    window.setTimeout("refreshProgress()", 800);
     return true;
 }
 

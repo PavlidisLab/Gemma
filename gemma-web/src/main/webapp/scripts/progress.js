@@ -8,10 +8,11 @@ function updateProgress( data ) {
     document.getElementById("progressBarBoxContent").style.width = parseInt(data.percent * 3.5) + "px";	
 
     if (data.done) {
-      document.getElementById("uploadbutton").disabled = false;
+      if (data.forwardingURL != null)
+      		window.location = data.forwardingURL
      }
      else{
-        document.getElementById("uploadbutton").disabled = true;
+        
         window.setTimeout("refreshProgress()", 600);
     }
     return true;
@@ -20,7 +21,7 @@ function updateProgress( data ) {
 function startProgress() {
     document.getElementById("progressBar").style.display = "block";
     document.getElementById("progressBarText").innerHTML = "In progress...";
-    document.getElementById("uploadbutton").disabled = true;
+    
 
     // wait a little while to make sure the upload has started ..
     window.setTimeout("refreshProgress()", 1000);

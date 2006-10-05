@@ -91,7 +91,7 @@ of the sessionFactory that is already set up in the Spring context.
 Mapping urls to views. List views here that are just jsps and that don't need a controller.
 -->
 <!-- ==================================================== -->
-<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/mainMenu.html /flushCache.html"/>
+<bean id="filenameController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/mainMenu.html /flushCache.html /loadExpressionExperimentProgress.html"/>
 
 <!-- ==================================================== -->
 <!-- Exception handler. -->

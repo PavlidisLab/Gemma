@@ -37,6 +37,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     protected JobInfo jInfo;
     protected int currentPhase;
     protected String trackingId;
+    protected String forwardingURL;
 
     /**
      * The factory create method in ProgressManager is the advised way to create a ProgressJob
@@ -47,6 +48,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     ProgressJobImpl( JobInfo info, String description ) {
         this.pData = new ProgressData( 0, description, false );
         this.jInfo = info;
+        currentPhase = 0;
     }
 
     /**
@@ -163,12 +165,26 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public String getTrackingId() {
         return trackingId;
     }
-
+ 
     /**
      * @param anonymousId the anonymousId to set
      */
     public void setTrackingId( String trackingId ) {
         this.trackingId = trackingId;
+    }
+
+    /**
+     * @return the forwardingURL
+     */
+    public String getForwardingURL() {
+        return forwardingURL;
+    }
+
+    /**
+     * @param forwardingURL the forwardingURL to set
+     */
+    public void setForwardingURL( String forwardingURL ) {
+        this.forwardingURL = forwardingURL;
     }
 
 }

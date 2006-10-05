@@ -118,6 +118,7 @@ public class ProgressManager {
      */
     public static synchronized boolean addToRecentNotification( String username, Observer po ) {
 
+        ProgressManager.dump();
         if ( !progressJobs.containsKey( username ) ) return false; // No such user exists with any jobs
 
         Vector<ProgressJob> pJobs = ( Vector<ProgressJob> ) progressJobs.get( username );
@@ -131,9 +132,10 @@ public class ProgressManager {
 
     /**
      * @param id If a valid user name is used for the id the progress job created will be automatically associated with
-     *        that user, else there will be no association between the created job and any user. In this case it might
-     *        be good to use a session id for tracking purposes although currently the session id is not persisted to
-     *        the database. todo: should session id's be persisted to the database for anonymous users?
+     *        that user, else there will be no association between the created job and any user. If a user name is not
+     *        used then the HTTPSessionID must be used for anonymous users. If it is not used there will be no way for
+     *        the Ajax call back to get the progress job that it wants to observer. todo: should session id's be
+     *        persisted to the database for anonymous users?
      * @param description (description of the job)
      * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
      *         job assciated with it that progress job will be returned.
@@ -150,7 +152,7 @@ public class ProgressManager {
         usersJobs = progressJobs.get( id );
 
         // No job currently assciated with this thread.
-        if ( currentJob.get() == null ) {
+        if (( currentJob.get() == null ) || (progressJobsById.get( currentJob.get()) == null ) ) {
             Calendar cal = new GregorianCalendar();
             JobInfo jobI = JobInfo.Factory.newInstance();
             jobI.setRunningStatus( true );
@@ -161,7 +163,7 @@ public class ProgressManager {
             // );
             User aUser = userService.findByUserName( id );
             if ( aUser != null ) jobI.setUser( aUser );
-           
+
             JobInfo createdJobI = jobInfoDao.create( jobI );
 
             newJob = new ProgressJobImpl( createdJobI, description );
@@ -173,13 +175,15 @@ public class ProgressManager {
             progressJobsById.put( createdJobI.getId(), newJob );
         } else {
             Long oldId = currentJob.get();
-            newJob = progressJobsById.get( oldId );
+            newJob = progressJobsById.get( oldId );  
+            
+            assert newJob == null;  //This should not be the case!
             newJob.setPhase( newJob.getPhase() + 1 );
             newJob.setDescription( description );
         }
 
-        newJob.setTrackingId(id);
-        // ProgressManager.dump();
+        newJob.setTrackingId( id );
+        ProgressManager.dump();
 
         return newJob;
     }
@@ -241,10 +245,9 @@ public class ProgressManager {
      */
     public static synchronized boolean destroyProgressJob( ProgressJob ajob ) {
 
-        ajob.updateProgress(  new ProgressData(100,"Finalizing and cleaning up...", true) );
+        ajob.updateProgress( new ProgressData( 100, "Finalizing and cleaning up...", true, ajob.getForwardingURL() ) );
         ajob.done();
-  
-        
+
         if ( progressJobs.containsKey( ajob.getTrackingId() ) ) {
             Collection jobs = progressJobs.get( ajob.getTrackingId() );
             jobs.remove( ajob );

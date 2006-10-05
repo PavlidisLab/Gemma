@@ -216,4 +216,15 @@ public class ExpressionExperimentWrapper extends TableDecorator {
 
         return "Taxon unavailable";
     }
+    
+    public String getDelete() {
+        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        
+        if ( object == null ) {
+            return "Expression Experiment unavailable";
+        }
+        
+        return "<div align='left'> <input type='button' onclick=\"location.href='deleteExpressionExperiment.html?id=" + object.getId() + "'\" value='Delete'>  </div>";
+
+    }
 }

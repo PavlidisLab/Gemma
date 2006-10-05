@@ -94,5 +94,9 @@ public interface ProgressJob {
     public abstract void   setTrackingId(String trackingId);
     
     
+    public abstract String getForwardingURL();
+    public abstract void setForwardingURL( String forwardingURL );
+    
+    
 
 }

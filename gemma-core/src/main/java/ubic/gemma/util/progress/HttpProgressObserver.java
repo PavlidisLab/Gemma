@@ -24,6 +24,8 @@ import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import uk.ltd.getahead.dwr.WebContextFactory;
+
 /**
  * <hr
  * <p>
@@ -47,10 +49,18 @@ public class HttpProgressObserver implements Observer, Serializable {
      */
     public HttpProgressObserver() {
 
-        pData = new ProgressData( 0, "Initilizing", false );
+        pData = new ProgressData( 0, "Initializing", false );
         // Not sure the best way to do this. Perpaps subclassing for different types of monitors...
-        // SecurityContextHolder.getContext().getAuthentication.getName();
-        ProgressManager.addToRecentNotification( SecurityContextHolder.getContext().getAuthentication().getName(), this );
+
+        // not sure how to tell if the user is anonymous. So just see if it fails then try with the session id
+        if ( !ProgressManager.addToRecentNotification(
+                SecurityContextHolder.getContext().getAuthentication().getName(), this ) ) {
+            String sessionId = WebContextFactory.get().getSession().getId();
+            boolean failed = ProgressManager.addToRecentNotification( sessionId, this );
+            logger.info( "No user asscioated with security context.  Tried to use session id: " + sessionId
+                    + "  successful = " + failed );
+
+        }
         // ProgressManager.addToNotification( ExecutionContext.get().getHttpServletRequest().getRemoteUser(), this );
     }
 
@@ -59,23 +69,20 @@ public class HttpProgressObserver implements Observer, Serializable {
      * processes.
      */
     public HttpProgressObserver( String userName ) {
-        pData = new ProgressData( 0, "Initilizing", false );
+        pData = new ProgressData( 0, "Initializing", false );
         ProgressManager.addToNotification( userName, this );
 
     }
-
-   
 
     public ProgressData getProgressData() {
         return pData;
     }
 
     @SuppressWarnings("unused")
-    public void update(Observable o, Object pd)
-    {
-        this.pData = (ProgressData) pd;
+    public void update( Observable o, Object pd ) {
+        this.pData = ( ProgressData ) pd;
     }
-    
+
     /**
      * Tells the observer to stop observering. Remove it self from observations lists. Should be called when the
      * observer is not needed anymore. // todo add code for cleaning up cleaning up notification references. IE stop

@@ -240,6 +240,9 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 }
 
                 session.delete( toDeletePers );
+                session.flush();
+                session.clear();
+                
                 return null;
             }
         }, true );

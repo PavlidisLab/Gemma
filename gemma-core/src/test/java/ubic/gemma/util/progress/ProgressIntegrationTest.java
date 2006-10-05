@@ -313,7 +313,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         MockProcess mp = new MockProcess( ConfigUtils.getString( "gemma.admin.user" ), "A run of tests" );
         MockClient mc = new MockClient();
         ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mc );
-        mp.run();
+        mp.start();
 
         try {
             Thread.sleep( 3000 );
@@ -332,7 +332,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
                 "i luve tests" );
         MockProgress mProgress = new MockProgress( 3, ConfigUtils.getString( "gemma.admin.user" ), "test runs", pj
                 .getId() );
-        mProgress.run();
+        mProgress.start();
     }
 
     public void updateCurrentThreadsProgressJobTest() {
@@ -346,7 +346,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         FakeProgress fProgres = new FakeProgress();
         MockClient mc = new MockClient();
         ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mc );
-        fProgres.run();
+        fProgres.start();
 
         ProgressManager.destroyProgressJob( pj );
 
@@ -354,7 +354,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         
     }
 
-    class FakeProgress implements Runnable {
+    class FakeProgress extends Thread {
         private static final int DELAY = 30;
 
         public void run() {
@@ -382,7 +382,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      * @author klc
      * @version $Id$
      */
-    class MockProcess implements Runnable {
+    class MockProcess extends Thread {
         private static final int DELAY = 30;
 
         private String userName;
@@ -412,12 +412,12 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
 
         }
 
-        public Long getId() {
+        public Long getJobId() {
             return simpleJob.getId();
         }
     }
 
-    class MockProgress implements Runnable {
+    class MockProgress extends Thread {
 
         int times;
         String userName;
@@ -435,9 +435,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
             MockProcess mp;
             for ( int i = 0; i < times; i++ ) {
                 mp = new MockProcess( userName, description );
-                assertEquals( jobId, mp.getId() );
+                assertEquals( jobId, mp.getJobId() );
 
-                mp.run();
+                mp.start();
 
                 mp = null;
             }

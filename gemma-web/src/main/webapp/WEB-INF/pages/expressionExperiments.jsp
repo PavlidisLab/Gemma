@@ -24,6 +24,8 @@
            
             <display:column property="taxon" sortable="true" titleKey="taxon.title" />
   
+  				<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete"/>
+  				
             <display:setProperty name="basic.empty.showtable" value="true" />      
             <display:setProperty name="export.pdf" value="true" />   
             <display:setProperty name="export.xml" value="true" /> 

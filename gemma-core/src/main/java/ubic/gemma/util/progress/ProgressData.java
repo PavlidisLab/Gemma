@@ -17,6 +17,7 @@
 package ubic.gemma.util.progress;
 
 import java.io.Serializable;
+import java.net.URL;
 
 
 /**
@@ -35,6 +36,7 @@ public class ProgressData implements Serializable {
     private int percent = 0;
     private String description = "Default";
     private boolean done = false;
+    private String forwardingURL;
 
     /**
      * @param per int value of percent
@@ -60,6 +62,16 @@ public class ProgressData implements Serializable {
                 
     }
     
+    /**
+     * @param per int value of percent
+     * @param descrip string a description of the progress
+     * @param finished
+     * @param forwardingURL the URL that will be forwarded to when the the progress bar is finished
+     */
+    public ProgressData( int per, String descrip, boolean finished, String forwardingURL ) {
+        this(per,descrip,finished);
+        this.forwardingURL = forwardingURL;
+    }
     
     public String getDescription() {
         return description;
@@ -89,6 +101,20 @@ public class ProgressData implements Serializable {
      */
     public void setPercent( int percent ) {
         this.percent = percent;
+    }
+
+    /**
+     * @return the forwardingURL
+     */
+    public String getForwardingURL() {
+        return forwardingURL;
+    }
+
+    /**
+     * @param forwardingURL the forwardingURL to set
+     */
+    public void setForwardingURL( String forwardingURL ) {
+        this.forwardingURL = forwardingURL;
     }
 
 }

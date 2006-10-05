@@ -25,6 +25,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
+import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,6 +38,9 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -47,7 +52,7 @@ import ubic.gemma.web.controller.BaseFormController;
  *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadCommand"
  * @spring.property name="validator" ref="genericBeanValidator"
  * @spring.property name="formView" value="loadExpressionExperimentForm"
- * @spring.property name="successView" value="expressionExperiment.detail"
+ * @spring.property name="successView" value="loadExpressionExperimentProgress.html"
  * @spring.property name="geoDatasetService" ref="geoDatasetService"
  */
 public class ExpressionExperimentLoadController extends BaseFormController {
@@ -60,12 +65,11 @@ public class ExpressionExperimentLoadController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public ModelAndView onSubmit( final HttpServletRequest request, HttpServletResponse response, Object command,
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        final ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
 
-        Map<Object, Object> model = new HashMap<Object, Object>();
+        ExpressionExperimentLoadCommand eeLoadCommand = ( ExpressionExperimentLoadCommand ) command;
 
         // validate an accession was entered (FIXME - should be done by validation
         if ( StringUtils.isBlank( eeLoadCommand.getAccession() ) ) {
@@ -74,31 +78,94 @@ public class ExpressionExperimentLoadController extends BaseFormController {
             return showForm( request, response, errors );
         }
 
-        log.info( "Loading " + eeLoadCommand.getAccession() );
-        if ( eeLoadCommand.isLoadPlatformOnly() ) {
-            log.info( "Only loading platform" );
-        }
-        // ProgressJob job;
+        final SecurityContext context = SecurityContextHolder.getContext(); // all new threads need this
+        // to acccess protected
+        // resources (like services)
+        ProgressJob job = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
+                .getName(), "loading big stuff!" );
 
-        if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
-            geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        LoadEE eeLoader = new LoadEE( request, response, errors, context, eeLoadCommand, job );
+
+        // Create the thread supplying it with the runnable object
+        Thread thread = new Thread( eeLoader );
+
+        // Start the thread
+        thread.start();
+
+        ModelAndView mv = new ModelAndView( new RedirectView( "loadExpressionExperimentProgress.html" ) );
+
+        return mv;
+    }
+
+    // a inner class for forking the process data into the database;
+    class LoadEE implements Runnable {
+
+        HttpServletRequest req;
+        HttpServletResponse resp;
+        BindException err;
+        ExpressionExperimentLoadCommand eeLoadCommand;
+        ProgressJob job;
+        SecurityContext context;
+
+        public LoadEE( HttpServletRequest request, HttpServletResponse response, BindException errors,
+                SecurityContext context, ExpressionExperimentLoadCommand eeLoadCommand, ProgressJob job ) {
+            req = request;
+            response = resp;
+            err = errors;
+            this.job = job;
+            this.eeLoadCommand = eeLoadCommand;
+           this.context = context;
         }
 
-        if ( eeLoadCommand.isLoadPlatformOnly() ) {
-            // job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading arrayDesign(s)" );
-            geoDatasetService.setLoadPlatformOnly( true );
-            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService
-                    .fetchAndLoad( eeLoadCommand.getAccession() );
-            model.put( "arrayDesigns", arrayDesigns ); // FIXME view should be different than default.
-        } else {
-            // job = ProgressManager.createProgressJob( request.getRemoteUser(), "Loading expression experiment" );
-            ExpressionExperiment result = ( ExpressionExperiment ) geoDatasetService.fetchAndLoad( eeLoadCommand
-                    .getAccession() );
-            model.put( "expressionExperiment", result );
-        }
-        // ProgressManager.destroyProgressJob( job );
+        public void run() {
+          
+            SecurityContextHolder.setContext( context ); // so that acegi doesn't deny the thread permission
+            Map<Object, Object> model = new HashMap<Object, Object>();
+            String accesionNum = eeLoadCommand.getAccession();
+            
+            //put the accession number in a safer form
+            accesionNum = StringUtils.strip( accesionNum );
+            accesionNum = StringUtils.upperCase( accesionNum );
+            
+            log.info( "Loading " + accesionNum );
+            if ( eeLoadCommand.isLoadPlatformOnly() ) {
+                log.info( "Only loading platform" );
+            }
 
-        return new ModelAndView( getSuccessView(), model );
+            if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
+                geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+            }
+
+            if ( eeLoadCommand.isLoadPlatformOnly() ) {
+            
+                job.updateProgress( new ProgressData( 0, "Loading AD..." ) );
+                geoDatasetService.setLoadPlatformOnly( true );
+                Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService
+                        .fetchAndLoad( accesionNum );
+                model.put( "arrayDesigns", arrayDesigns ); // FIXME view should be different than default.
+
+                job.setForwardingURL( "/Gemma/arrayDesign/showArrayDesign.html?id=" + arrayDesigns.iterator().next().getId() );
+
+            } else {               
+                job.updateProgress( new ProgressData( 0, "Loading EE..." ) );
+
+                ExpressionExperiment result = ( ExpressionExperiment ) geoDatasetService.fetchAndLoad( accesionNum );
+                model.put( "expressionExperiment", result );
+              
+                 job.setForwardingURL("/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() );
+            }
+
+            ProgressManager.destroyProgressJob( job );
+
+            // req.setAttribute( "finishing", "true" );
+            // try {
+            // onSubmit( req, resp, model, err );
+            // } catch ( Exception e ) {
+            // throw new RuntimeException( e );
+            // }
+
+        }
+
     }
 
     /**
