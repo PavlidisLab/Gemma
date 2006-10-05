@@ -64,7 +64,7 @@
 						if ( arrayDesign.getDescription() != null && arrayDesign.getDescription().length() > 0 ) {
 
             		%>
-                    <jsp:getProperty name="arrayDesign" property="description" />
+                    <textarea name="" rows=5 cols=60><jsp:getProperty name="arrayDesign" property="description" /></textarea>
                     <%} else {%>
                     (None provided)
                     <%}%>
