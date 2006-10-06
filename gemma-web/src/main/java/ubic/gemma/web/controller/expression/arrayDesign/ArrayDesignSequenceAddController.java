@@ -29,6 +29,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.servlet.ModelAndView;
@@ -40,8 +41,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.util.progress.ProgressJob;
+import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
@@ -62,8 +64,8 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @spring.property name="successView" value="redirect:/arrayDesign/associateSequences.html"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="validator" ref="arrayDesignSequenceAddValidator"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
  * @spring.property name="taxonService" ref="taxonService"
+ * @spring.property name="arrayDesignSequenceProcessingService" ref="arrayDesignSequenceProcessingService"
  */
 public class ArrayDesignSequenceAddController extends BaseFormController {
 
@@ -71,7 +73,31 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
     ArrayDesignService arrayDesignService;
 
-    BioSequenceService bioSequenceService;
+    ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
+        return adsac;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
+     *      org.springframework.web.bind.ServletRequestDataBinder)
+     */
+    @Override
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( request, binder );
+        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
+        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
+    }
 
     /*
      * (non-Javadoc)
@@ -107,12 +133,12 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
         // validate array design has design elements.
         if ( sequenceType == SequenceType.AFFY_PROBE ) {
-            if ( arrayDesignService.getReporterCount( arrayDesign ) == 0 ) {
-                errors
-                        .rejectValue( "arrayDesign", "arrayDesign.noreporters",
-                                "Array design did not have any reporters" );
-                return showForm( request, response, errors );
-            }
+            // if ( arrayDesignService.getReporterCount( arrayDesign ) == 0 ) {
+            // errors
+            // .rejectValue( "arrayDesign", "arrayDesign.noreporters",
+            // "Array design did not have any reporters" );
+            // return showForm( request, response, errors );
+            // }
         } else {
             if ( arrayDesignService.getCompositeSequenceCount( arrayDesign ) == 0 ) {
                 errors.rejectValue( "arrayDesign", "arrayDesign.nocompositesequences",
@@ -131,68 +157,20 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
             return showForm( request, response, errors );
         }
 
+        ProgressJob job = ProgressManager.createProgressJob( SecurityContextHolder.getContext().getAuthentication()
+                .getName(), "Loading data from " + fileUpload.getName() );
         CommonsMultipartFile sequenceFile = FileUploadUtil.uploadFile( request, fileUpload, "sequenceFile.file" );
 
-        // process it
-        ArrayDesignSequenceProcessingService processor = new ArrayDesignSequenceProcessingService();
-
-        Collection<BioSequence> bioSequences = processor.processArrayDesign( arrayDesign,
+        Collection<BioSequence> bioSequences = arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
                 sequenceFile.getInputStream(), sequenceType, taxon );
+
+        ProgressManager.destroyProgressJob( job );
 
         Map<String, Object> model = new HashMap<String, Object>();
         model.put( "numSequencesProcessed", bioSequences.size() );
 
-        // need to persist the bioSequences
-
-        // then update the designelements.
-
         return new ModelAndView( this.getSuccessView(), model );
 
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
-    /**
-     * @param taxonService the taxonService to set
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
-        return adsac;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.BaseFormController#initBinder(javax.servlet.http.HttpServletRequest,
-     *      org.springframework.web.bind.ServletRequestDataBinder)
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( ArrayDesign.class, new ArrayDesignPropertyEditor( this.arrayDesignService ) );
-        binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
     /*
@@ -241,6 +219,25 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
 
         return mapping;
 
+    }
+
+    public void setArrayDesignSequenceProcessingService(
+            ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService ) {
+        this.arrayDesignSequenceProcessingService = arrayDesignSequenceProcessingService;
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

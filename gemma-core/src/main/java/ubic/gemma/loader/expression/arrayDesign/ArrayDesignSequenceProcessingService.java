@@ -23,10 +23,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -46,6 +49,8 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Handles collapsing the sequences, attaching sequences to DesignElements
@@ -59,6 +64,8 @@ import ubic.gemma.persistence.PersisterHelper;
  */
 public class ArrayDesignSequenceProcessingService {
 
+    private static final int BATCH_SIZE = 100;
+
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
     private ArrayDesignService arrayDesignService;
@@ -67,23 +74,23 @@ public class ArrayDesignSequenceProcessingService {
 
     private BioSequenceService bioSequenceService;
 
-    /**
-     * For the case where the reporter and compositeSequence are the same thing, make a new reporter and add it to the
-     * array design.
-     * 
-     * @param arrayDesign
-     * @param compositeSequence
-     * @param bioSequence
-     */
-    private void addReporter( CompositeSequence compositeSequence ) {
-        BioSequence bioSequence = compositeSequence.getBiologicalCharacteristic();
-        Reporter reporter = Reporter.Factory.newInstance();
-        reporter.setCompositeSequence( compositeSequence );
-        reporter.setImmobilizedCharacteristic( bioSequence );
-        reporter.setName( compositeSequence.getName() );
-        reporter.setDescription( "Reporter same as composite sequence" );
-        compositeSequence.getComponentReporters().add( reporter );
-    }
+    // /**
+    // * For the case where the reporter and compositeSequence are the same thing, make a new reporter and add it to the
+    // * array design.
+    // *
+    // * @param arrayDesign
+    // * @param compositeSequence
+    // * @param bioSequence
+    // */
+    // private void addReporter( CompositeSequence compositeSequence ) {
+    // BioSequence bioSequence = compositeSequence.getBiologicalCharacteristic();
+    // Reporter reporter = Reporter.Factory.newInstance();
+    // reporter.setCompositeSequence( compositeSequence );
+    // reporter.setImmobilizedCharacteristic( bioSequence );
+    // reporter.setName( compositeSequence.getName() );
+    // reporter.setDescription( "Reporter same as composite sequence" );
+    // compositeSequence.getComponentReporters().add( reporter );
+    // }
 
     /**
      * Associate sequences with an array design.
@@ -112,7 +119,8 @@ public class ArrayDesignSequenceProcessingService {
                 ( ( CompositeSequence ) designElement ).setBiologicalCharacteristic( nameMap.get( designElement
                         .getName() ) );
             } else if ( designElement instanceof Reporter ) {
-                ( ( Reporter ) designElement ).setImmobilizedCharacteristic( nameMap.get( designElement.getName() ) );
+                // ( ( Reporter ) designElement ).setImmobilizedCharacteristic( nameMap.get( designElement.getName() )
+                // );
             } else {
                 throw new IllegalStateException( "DesignElement was not of a known class" );
             }
@@ -213,10 +221,18 @@ public class ArrayDesignSequenceProcessingService {
 
         Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
 
+        int done = 0;
+        int percent = 0;
+
         AffyProbeReader apr = new AffyProbeReader();
         apr.parse( probeSequenceFile );
         Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
+
+        int total = compositeSequencesFromProbes.size();
+
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
+        Collection<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
+        Collection<CompositeSequence> csBuffer = new ArrayList<CompositeSequence>();
         for ( CompositeSequence compositeSequence : compositeSequencesFromProbes ) {
 
             compositeSequence.setArrayDesign( arrayDesign );
@@ -225,25 +241,11 @@ public class ArrayDesignSequenceProcessingService {
             collapsed.setType( SequenceType.AFFY_COLLAPSED );
             collapsed.setPolymerType( PolymerType.DNA );
             collapsed.setTaxon( taxon );
-            collapsed = bioSequenceService.create( collapsed );
-            assert collapsed.getId() != null;
-            bioSequences.add( collapsed );
-            compositeSequence.setBiologicalCharacteristic( collapsed );
 
-            Map<String, Reporter> reporterSeqMap = new HashMap<String, Reporter>();
-            Collection<BioSequence> seqs = new ArrayList<BioSequence>();
-            for ( Reporter reporter : compositeSequence.getComponentReporters() ) {
-                BioSequence seq = reporter.getImmobilizedCharacteristic();
-                seq.setTaxon( taxon );
-                reporterSeqMap.put( seq.getName(), reporter );
-                seqs.add( seq );
-            }
-
-            Collection<BioSequence> persistedSequences = bioSequenceService.create( seqs );
- 
-            for ( BioSequence sequence : persistedSequences ) {
-                Reporter rep = reporterSeqMap.get( sequence.getName() );
-                rep.setImmobilizedCharacteristic( sequence );
+            sequenceBuffer.add( collapsed );
+            csBuffer.add( compositeSequence );
+            if ( sequenceBuffer.size() == BATCH_SIZE ) {
+                flushBuffer( bioSequences, sequenceBuffer, csBuffer );
             }
 
             if ( wasOriginallyLackingCompositeSequences ) {
@@ -251,7 +253,13 @@ public class ArrayDesignSequenceProcessingService {
             } else {
                 quickFindMap.put( compositeSequence.getName(), compositeSequence );
             }
+
+            if ( ++done % 1000 == 0 ) {
+                percent = updateProgress( total, done, percent );
+            }
         }
+        flushBuffer( bioSequences, sequenceBuffer, csBuffer );
+        updateProgress( total, done, percent );
 
         if ( !wasOriginallyLackingCompositeSequences ) {
             for ( CompositeSequence originalCompositeSequence : arrayDesign.getCompositeSequences() ) {
@@ -268,10 +276,6 @@ public class ArrayDesignSequenceProcessingService {
 
                 assert originalCompositeSequence.getBiologicalCharacteristic().getId() != null;
 
-                originalCompositeSequence.setComponentReporters( compositeSequenceFromParse.getComponentReporters() );
-                for ( Reporter reporter : originalCompositeSequence.getComponentReporters() ) {
-                    reporter.setCompositeSequence( originalCompositeSequence );
-                }
                 originalCompositeSequence.setArrayDesign( compositeSequenceFromParse.getArrayDesign() );
 
             }
@@ -281,6 +285,20 @@ public class ArrayDesignSequenceProcessingService {
         arrayDesignService.update( arrayDesign );
 
         return bioSequences;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
+            Collection<CompositeSequence> csBuffer ) {
+        Collection<BioSequence> newOnes = bioSequenceService.create( sequenceBuffer );
+        bioSequences.addAll( newOnes );
+        Iterator<CompositeSequence> csit = csBuffer.iterator();
+        for ( BioSequence sequence : newOnes ) {
+            CompositeSequence cs = csit.next();
+            cs.setBiologicalCharacteristic( sequence );
+        }
+        csBuffer.clear();
+        sequenceBuffer.clear();
     }
 
     /**
@@ -376,6 +394,9 @@ public class ArrayDesignSequenceProcessingService {
         Map<String, BioSequence> gbIdMap = new HashMap<String, BioSequence>();
         Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
 
+        int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
+        int done = 0;
+        int percent = 0;
         for ( BioSequence sequence : bioSequences ) {
             sequence.setType( sequenceType );
             sequence.setPolymerType( PolymerType.DNA );
@@ -390,6 +411,10 @@ public class ArrayDesignSequenceProcessingService {
                 gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
             } else {
                 if ( log.isWarnEnabled() ) log.warn( "No sequence database entry for " + sequence.getName() );
+            }
+
+            if ( ++done % 1000 == 0 ) {
+                percent = updateProgress( total, done, percent );
             }
 
         }
@@ -416,7 +441,11 @@ public class ArrayDesignSequenceProcessingService {
             compositeSequence.setBiologicalCharacteristic( match );
             compositeSequence.setArrayDesign( arrayDesign );
 
-            addReporter( compositeSequence );
+            // addReporter( compositeSequence );
+
+            if ( ++done % 1000 == 0 ) {
+                percent = updateProgress( total, done, percent );
+            }
         }
 
         log.info( "Updating sequences on arrayDesign" );
@@ -424,6 +453,24 @@ public class ArrayDesignSequenceProcessingService {
 
         return bioSequences;
 
+    }
+
+    /**
+     * @param totalThingsToDo
+     * @param howManyAreDone
+     * @param percentDoneLastTimeWeChecked
+     * @return
+     */
+    private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked ) {
+        int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / ( double ) totalThingsToDo ) );
+        if ( newPercent > percentDoneLastTimeWeChecked ) {
+            ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( newPercent, howManyAreDone
+                    + " items of " + totalThingsToDo + " processed." ) );
+        }
+
+        log.info( howManyAreDone + " items of " + totalThingsToDo + " processed." );
+
+        return newPercent;
     }
 
     /**

@@ -30,6 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * A simple LineParser implementation that doesn't do anything. Subclass this and implement the "parseOneLine" method.
@@ -80,9 +82,12 @@ public abstract class BasicLineParser implements LineParser {
                 // if ( log.isDebugEnabled() ) log.debug( "Got null parse from " + line );
                 nullLines++;
             }
-            linesParsed++;
-            if ( log.isDebugEnabled() && linesParsed % PARSE_ALERT_FREQUENCY == 0 )
-                log.debug( "Parsed " + linesParsed + " lines..." );
+            
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+                String message = "Parsed " + linesParsed + " lines...";
+                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
+                log.debug( message );
+            }
 
         }
         log.info( "Parsed " + linesParsed + " lines. "

@@ -18,15 +18,15 @@ This script is too dumb to figure out which files go with which so you have to t
 
 =over 4
 
-=item B n
+=item n
 
 How many probes to preserve
 
-=item B s <file>
+=item s <file>
 
 GSE file
 
-=item B k
+=item k
 
 File with probes to keep (-n is ignored)
 

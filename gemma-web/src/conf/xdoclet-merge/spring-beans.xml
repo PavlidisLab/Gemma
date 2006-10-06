@@ -250,7 +250,7 @@ Used by the fileUploadController
 ==================================================== -->
 <bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
     <property name="maxUploadSize">
-        <value>2097152</value>
+        <value>20097152</value>
     </property>
 </bean>
 

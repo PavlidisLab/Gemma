@@ -25,11 +25,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
 
+import javax.swing.ProgressMonitor;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys.
@@ -83,7 +87,6 @@ public abstract class BasicLineMapParser implements LineParser {
             if ( line.startsWith( COMMENTMARK ) ) {
                 continue;
             }
-            linesParsed++;
             Object newItem = parseOneLine( line );
 
             if ( newItem == null ) {
@@ -97,12 +100,16 @@ public abstract class BasicLineMapParser implements LineParser {
             }
             put( key, newItem );
 
-            if ( linesParsed % PARSE_ALERT_FREQUENCY == 0 )
-                log.debug( "Parsed " + linesParsed + " lines..., last had key " + key );
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+                String message = "Parsed " + linesParsed + " lines..., last had key " + key;
+                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
+                log.info( message );
+            }
 
         }
         log.info( "Parsed " + linesParsed + " lines. "
                 + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+
         br.close();
     }
 

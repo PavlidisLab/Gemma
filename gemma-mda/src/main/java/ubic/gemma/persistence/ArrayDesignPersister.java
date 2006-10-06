@@ -177,6 +177,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             return persistNewArrayDesign( arrayDesign );
         }
 
+        log.info( "Array Design " + arrayDesign + " already exists, returning..." );
         return existing;
 
     }

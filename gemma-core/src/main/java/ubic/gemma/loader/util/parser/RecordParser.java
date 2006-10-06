@@ -11,6 +11,9 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.util.progress.ProgressData;
+import ubic.gemma.util.progress.ProgressManager;
+
 /**
  * Abstract record-based parser. Records are defined by lines starting with a given record separator. The default record
  * separator is ">".
@@ -63,8 +66,11 @@ public abstract class RecordParser implements Parser {
                 log.debug( "Got null parse from " + line );
                 nullRecords++;
             }
-            if ( log.isDebugEnabled() && recordsParsed % PARSE_ALERT_FREQUENCY == 0 )
-                log.debug( "Parsed " + recordsParsed + " lines..." );
+            if ( recordsParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+                String message = "Parsed " + recordsParsed + " records ...";
+                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
+                log.debug( message );
+            }
 
             if ( line == null ) { // EOF.
                 break;
