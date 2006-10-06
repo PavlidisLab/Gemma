@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -240,7 +241,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
             throw new EntityNotFoundException( expressionExperiment + " not found" );
         }
 
-        return doDelete( request, expressionExperiment );
+        return doDelete( request, response, expressionExperiment );
     }
 
     /**
@@ -248,9 +249,9 @@ public class ExpressionExperimentController extends BaseMultiActionController {
      * @param expressionExperiment
      * @return ModelAndView
      */
-    private ModelAndView doDelete( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
+    private ModelAndView doDelete( HttpServletRequest request, HttpServletResponse response, ExpressionExperiment expressionExperiment ) {
         expressionExperimentService.delete( expressionExperiment );
         addMessage( request, "object.deleted", new Object[] { messagePrefix, expressionExperiment.getId() } );
-        return new ModelAndView( "expressionExperiments", "expressionExperiment", expressionExperiment );
+        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ));
     }
 }
