@@ -316,7 +316,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         mp.start();
 
         try {
-            Thread.sleep( 3000 );
+            Thread.sleep( 3500 );
         } catch ( InterruptedException e ) {
             e.printStackTrace();
 

@@ -151,7 +151,7 @@ public class ProgressManager {
 
         usersJobs = progressJobs.get( id );
 
-        // No job currently assciated with this thread.
+        // No job currently assciated with this thread or the job assciated with the thread is no longer valid
         if (( currentJob.get() == null ) || (progressJobsById.get( currentJob.get()) == null ) ) {
             Calendar cal = new GregorianCalendar();
             JobInfo jobI = JobInfo.Factory.newInstance();
@@ -177,7 +177,7 @@ public class ProgressManager {
             Long oldId = currentJob.get();
             newJob = progressJobsById.get( oldId );  
             
-            assert newJob == null;  //This should not be the case!
+            assert newJob != null : "newJob is unexpectedly null in progress Manager";  //This should not be the case!
             newJob.setPhase( newJob.getPhase() + 1 );
             newJob.setDescription( description );
         }
