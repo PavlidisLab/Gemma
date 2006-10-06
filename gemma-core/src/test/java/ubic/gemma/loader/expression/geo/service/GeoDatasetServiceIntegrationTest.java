@@ -301,24 +301,14 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExpressionDataMatrixService edms = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
         ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
 
-        // this.getHibernateSupport().getHibernateTemplate().execute(
-        // new org.springframework.orm.hibernate3.HibernateCallback() {
-        // public Object doInHibernate( org.hibernate.Session session )
-        // throws org.hibernate.HibernateException {
-        // /**
-        // * Test for bug 468 (merging of subsets across GDS's)
-        // */
+        /*
+         * Test for bug 468 (merging of subsets across GDS's)
+         */
         assertEquals( 2, newee.getSubsets().size() ); // otherwise get 4.
         for ( ExpressionExperimentSubSet s : newee.getSubsets() ) {
             if ( s.getName().equals( "20-29 years" ) ) assertEquals( 14, s.getBioAssays().size() );
         }
-        // session.flush();
-        // session.clear();
-        // return null;
-        // }
-        // }, true );
 
-        // Recovering a quantitation type.
         QuantitationType qtf = QuantitationType.Factory.newInstance();
         qtf.setIsBackground( false );
         qtf.setName( "VALUE" );
@@ -344,12 +334,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         assertEquals( 15, matrix.columns() );
 
-        double k = matrix.getRowByName( "200000_s_at" )[matrix.getColIndexByName( "GSE674_bioMaterial_14" )];
-        assertEquals( 6357.0, k, 0.00001 );
+        testMatrixValue( matrix, "200000_s_at", "GSM10363", 5722.0 );
 
-        k = matrix.getRowByName( "1007_s_at" )[matrix.getColIndexByName( "GSE674_bioMaterial_14" )];
-        assertEquals( 1558.0, k, 0.00001 );
-
+        testMatrixValue( matrix, "1007_s_at", "GSM10380", 1272.0 );
     }
 
     /**

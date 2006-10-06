@@ -27,6 +27,9 @@ import org.apache.commons.logging.LogFactory;
 
 import junit.framework.TestCase;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
+import ubic.gemma.loader.expression.geo.model.GeoPlatform;
+import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.gemma.loader.expression.geo.model.GeoSubset;
 
 /**
  * @author pavlidis
@@ -87,6 +90,8 @@ public class DatsetCombinerTest extends TestCase {
 
         gds = parseResult.getDatasets().values();
 
+        fillInDatasetPlatformAndOrganism();
+
         assertEquals( 2, gds.size() );
 
         GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
@@ -107,6 +112,18 @@ public class DatsetCombinerTest extends TestCase {
         }
         assertTrue( result.getCorrespondingSamples( "GSM10354" ).contains( "GSM10374" ) );
         assertTrue( result.getCorrespondingSamples( "GSM10374" ).contains( "GSM10354" ) );
+    }
+
+    private void fillInDatasetPlatformAndOrganism() {
+        for ( GeoDataset geods : gds ) {
+            GeoPlatform platform = geods.getPlatform();
+            platform.getOrganisms().add( geods.getOrganism() );
+            for ( GeoSubset subset : geods.getSubsets() ) {
+                for ( GeoSample sample : subset.getSamples() ) {
+                    sample.getPlatforms().add( platform );
+                }
+            }
+        }
     }
 
     /*
@@ -147,11 +164,13 @@ public class DatsetCombinerTest extends TestCase {
 
         gds = parseResult.getDatasets().values();
 
+        assertEquals( 3, gds.size() );
+
+        fillInDatasetPlatformAndOrganism();
+
         GeoSampleCorrespondence result = DatasetCombiner.findGSECorrespondence( gds );
-
-        assertEquals( 16, result.size() );
-
         log.info( result );
+        assertEquals( 16, result.size() );
 
         for ( int i = 0; i < keys.length; i++ ) {
             String string = keys[i];

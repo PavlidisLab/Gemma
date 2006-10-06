@@ -136,16 +136,13 @@ public class GeoConverter implements Converter {
     private ExternalDatabase genbank;
 
     private static final String RAT = "rattus";
-    private static final String MOUSE = "mus musculus";
-    private static final String HUMAN = "homo sapien";
 
     /**
-     * Remove old results. Call this prior to starting converstion of a full dataset.
+     * Find the bioassay in the experiment that matches the one given.
      */
     @SuppressWarnings("unchecked")
-    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, BioAssay queryBioAssay,
+    private boolean addMatchingBioAssayToSubSet( ExpressionExperimentSubSet subSet, String accession,
             ExpressionExperiment expExp ) {
-        String accession = queryBioAssay.getAccession().getAccession();
         log.debug( "Seeking subset match for " + accession );
         Collection<BioAssay> experimentBioAssays = expExp.getBioAssays();
         for ( BioAssay assay : experimentBioAssays ) {
@@ -955,9 +952,7 @@ public class GeoConverter implements Converter {
             }
             lastTaxon = taxon;
 
-            if ( bioMaterial != null ) {
-                bioMaterial.setSourceTaxon( taxon );
-            }
+            bioMaterial.setSourceTaxon( taxon );
 
             bioAssay.setArrayDesignUsed( arrayDesign );
         }
@@ -971,8 +966,8 @@ public class GeoConverter implements Converter {
      * ExpressionExperiments, each refers to a modified GEO accession such as GSE2393.1, GSE2393.2 etc for each organism
      * <p>
      * Similarly, because there is no concept of "biomaterial" in GEO, samples that are inferred to have been run using
-     * the same biomaterial. The biomaterials are given names after the GSE such as GSE2939_biomaterial_1,
-     * GSE2939_biomaterial_2, etc.
+     * the same biomaterial. The biomaterials are given names after the GSE and the bioAssays (GSMs) such as
+     * GSE2939_biomaterial_1|GSM12393|GSN12394.
      * 
      * @param series
      * @return
@@ -1125,8 +1120,8 @@ public class GeoConverter implements Converter {
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            String bioMaterialName = series.getGeoAccession() + "_bioMaterial_" + i;
-            String bioMaterialDescription = "Biomaterial corresponding to ";
+            String bioMaterialName = getBiomaterialPrefix( series, i );
+            String bioMaterialDescription = "Biomaterial corresponding to samples: ";
 
             // From the series samples, find the sample that corresponds and convert it.
             Set<String> correspondingSamples = ( Set<String> ) iter.next();
@@ -1145,7 +1140,7 @@ public class GeoConverter implements Converter {
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
-                        bioMaterialName = bioMaterialName + "|" + sample;
+                        bioMaterialName = addToBioMaterialName( bioMaterialName, sample );
                         if ( log.isDebugEnabled() )
                             log.debug( "Adding " + ba + " and associating with  " + bioMaterial );
                         expExp.getBioAssays().add( ba );
@@ -1184,30 +1179,36 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * @param bioMaterialName
+     * @param sample
+     * @return
+     */
+    private String addToBioMaterialName( String bioMaterialName, GeoSample sample ) {
+        bioMaterialName = bioMaterialName + "|" + sample;
+        return bioMaterialName;
+    }
+
+    /**
+     * @param series
+     * @param i
+     * @return
+     */
+    private String getBiomaterialPrefix( GeoSeries series, int i ) {
+        String bioMaterialName = series.getGeoAccession() + "_bioMaterial_" + i;
+        return bioMaterialName;
+    }
+
+    /**
      * @param expExp
      * @param geoSubSet
      */
     @SuppressWarnings("unchecked")
     private ExpressionExperimentSubSet convertSubset( ExpressionExperiment expExp, GeoSubset geoSubSet ) {
-
         ExpressionExperimentSubSet subSet = getExistingOrNewSubSet( expExp, geoSubSet );
-
-        assert subSet != null;
-
-        int i = 0;
         for ( GeoSample sample : geoSubSet.getSamples() ) {
-
-            // needed to adda biomaterial as convertSample will get an NPE without it... is this correct?
-            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( geoSubSet.getGeoAccession() + "_bioMaterial_" + i );
-            i++;
-
-            BioAssay bioAssayForSearch = convertSample( sample, bioMaterial ); // converted object only used for
-            // searching.
-
-            boolean found = addMatchingBioAssayToSubSet( subSet, bioAssayForSearch, expExp );
-            assert found : "No matching bioassay found for " + bioAssayForSearch.getAccession().getAccession()
-                    + " in subset. " + " Make sure the ExpressionExperiment was initialized "
+            boolean found = addMatchingBioAssayToSubSet( subSet, sample.getGeoAccession(), expExp );
+            assert found : "No matching bioassay found for " + sample.getGeoAccession() + " in subset. "
+                    + " Make sure the ExpressionExperiment was initialized "
                     + "properly by converting the samples before converting the subsets.";
         }
         return subSet;

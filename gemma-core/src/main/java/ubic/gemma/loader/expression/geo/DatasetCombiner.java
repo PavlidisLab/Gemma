@@ -283,9 +283,9 @@ public class DatasetCombiner {
         for ( int j = 0; j < sampleAccs.size(); j++ ) {
             String targetAcc = sampleAccs.get( j );
 
-            if ( alreadyMatched.contains( targetAcc ) ) {
-                continue;
-            }
+//            if ( alreadyMatched.contains( targetAcc ) ) {
+//                continue;
+//            }
 
             int mindistance = Integer.MAX_VALUE;
             String bestMatch = null;
@@ -300,9 +300,9 @@ public class DatasetCombiner {
 
                 String testAcc = sampleAccs.get( i );
 
-                if ( alreadyMatched.contains( testAcc ) ) {
-                    continue;
-                }
+//                if ( alreadyMatched.contains( testAcc ) ) {
+//                    continue;
+//                }
 
                 String jTitle = accToTitle.get( testAcc );
                 if ( StringUtils.isBlank( jTitle ) )
@@ -320,6 +320,8 @@ public class DatasetCombiner {
                 double normalizedDistance = ( double ) distance / Math.max( iTitle.length(), jTitle.length() );
 
                 // make sure match is to sample in another data set, in the same species, as well as being a good match.
+                assert accToOrganism.containsKey( targetAcc );
+                assert accToOrganism.containsKey( testAcc );
                 if ( normalizedDistance < SIMILARITY_THRESHOLD && distance <= mindistance
                         && !( accToDataset.get( targetAcc ).equals( accToDataset.get( testAcc ) ) )
                         && accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
@@ -331,8 +333,8 @@ public class DatasetCombiner {
 
             assert targetAcc != null;
             result.addCorrespondence( targetAcc, bestMatchAcc );
-            alreadyMatched.add( targetAcc );
-            alreadyMatched.add( bestMatchAcc );
+            // alreadyMatched.add( targetAcc );
+            // alreadyMatched.add( bestMatchAcc );
 
             if ( numDatasets > 1 ) {
                 if ( bestMatchAcc == null ) {
@@ -366,19 +368,30 @@ public class DatasetCombiner {
         return platformSamples;
     }
 
+    /**
+     * @param dataSets
+     * @param accToTitle
+     * @param accToDataset
+     * @param accToOrganism
+     */
     private static void fillAccessionMaps( Collection<GeoDataset> dataSets, LinkedHashMap<String, String> accToTitle,
             LinkedHashMap<String, String> accToDataset, LinkedHashMap<String, String> accToOrganism ) {
-        // get all the 'title's of the GSMs.
         for ( GeoDataset dataset : dataSets ) {
             for ( GeoSubset subset : dataset.getSubsets() ) {
                 for ( GeoSample sample : subset.getSamples() ) {
-                    assert sample != null : "Null sample for subset " + subset.getDescription();
                     fillAccessionMap( sample, dataset, accToTitle, accToDataset, accToOrganism );
                 }
             }
         }
     }
 
+    /**
+     * @param series
+     * @param accToTitle
+     * @param accToOwneracc
+     * @param accToOrganism
+     * @return
+     */
     private static int fillAccessionMaps( GeoSeries series, LinkedHashMap<String, String> accToTitle,
             LinkedHashMap<String, String> accToOwneracc, LinkedHashMap<String, String> accToOrganism ) {
 
@@ -408,9 +421,22 @@ public class DatasetCombiner {
         accToTitle.put( sample.getGeoAccession(), title );
         accToOwneracc.put( sample.getGeoAccession(), owner.getGeoAccession() );
 
-        String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
+        String organism = getSampleOrganism( sample );
 
         accToOrganism.put( sample.getGeoAccession(), organism );
     }
 
+    /**
+     * @param sample
+     * @return
+     */
+    private static String getSampleOrganism( GeoSample sample ) {
+        Collection<GeoPlatform> platforms = sample.getPlatforms();
+        assert platforms.size() > 0;
+        GeoPlatform platform = platforms.iterator().next();
+        Collection<String> organisms = platform.getOrganisms();
+        assert organisms.size() > 0;
+        String organism = organisms.iterator().next();
+        return organism;
+    }
 }
