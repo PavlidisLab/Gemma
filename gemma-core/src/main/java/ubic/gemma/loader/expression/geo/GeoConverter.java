@@ -744,8 +744,9 @@ public class GeoConverter implements Converter {
             } else {
                 BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setTaxon( taxon );
-                bs.setPolymerType( PolymerType.DNA );
-                bs.setType( SequenceType.DNA ); // TODO need to determine SequenceType and PolymerType.
+                bs.setPolymerType( PolymerType.fromString( platform.getSample() ) );
+                bs.setType( SequenceType.fromString( platform.getSample() ) ); // TODO need to determine SequenceType
+                // and PolymerType.
                 bs.setName( externalRef );
                 DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
                 dbe.setAccession( externalRef );
