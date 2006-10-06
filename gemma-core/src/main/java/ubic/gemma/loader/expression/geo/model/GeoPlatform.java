@@ -25,13 +25,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
- * Bean describing a microarray platform.
+ * Bean describing a microarray platform in GEO
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class GeoPlatform extends GeoData {
+
+    private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
 
     /**
      * Store information on the platform here. Map of designElements to other information.
@@ -83,6 +88,7 @@ public class GeoPlatform extends GeoData {
      * @return
      */
     public List<String> getColumnData( String columnName ) {
+        assert data.size() != 0;
         return data.get( columnName );
     }
 
@@ -92,6 +98,7 @@ public class GeoPlatform extends GeoData {
      */
     public void addToColumnData( String columnName, String value ) {
         if ( !data.containsKey( columnName ) ) {
+            log.info( "Adding " + columnName + " to " + this.getGeoAccession() );
             data.put( columnName, new ArrayList<String>() );
         }
         getColumnData( columnName ).add( value );

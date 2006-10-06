@@ -381,8 +381,9 @@ public class GeoConverter implements Converter {
             throw new UnsupportedOperationException( "GEO Dataset can only be associated with one series" );
         }
 
-        return this.convertSeries( geoDataset.getSeries().iterator().next() );
-
+        Collection<ExpressionExperiment> results = this.convertSeries( geoDataset.getSeries().iterator().next() );
+        assert results.size() == 1; // unless we have multiple species, not possible.
+        return results.iterator().next();
     }
 
     /**
@@ -395,9 +396,10 @@ public class GeoConverter implements Converter {
         convertDatasetDescriptions( geoDataset, expExp );
 
         ArrayDesign ad = seenPlatforms.get( geoDataset.getPlatform().getGeoAccession() );
-        if ( ad == null )
+        if ( ad == null ) {
             throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
                     + geoDataset.getPlatform() );
+        }
 
         convertDataSetDataVectors( geoDataset, expExp );
 
@@ -958,29 +960,90 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * Convert a GEO series into one or more ExpressionExperiments. The more than one case comes up if the are platforms
+     * from more than one organism represented in the series. If the series is split into two or more
+     * ExpressionExperiments, each refers to a modified GEO accession such as GSE2393.1, GSE2393.2 etc for each organism
+     * <p>
+     * Similarly, because there is no concept of "biomaterial" in GEO, samples that are inferred to have been run using
+     * the same biomaterial. The biomaterials are given names after the GSE such as GSE2939_biomaterial_1,
+     * GSE2939_biomaterial_2, etc.
+     * 
      * @param series
      * @return
      */
-    private ExpressionExperiment convertSeries( GeoSeries series ) {
+    private Collection<ExpressionExperiment> convertSeries( GeoSeries series ) {
+
+        Collection<ExpressionExperiment> converted = new HashSet<ExpressionExperiment>();
 
         // figure out if there are multiple species involved here.
 
-        Collection<String> organisms = new HashSet<String>();
+        Map<String, Collection<GeoDataset>> organismDatasetMap = getOrganismDatasetMap( series );
+
+        if ( organismDatasetMap.size() > 1 ) {
+            log.warn( "**** Multiple-species dataset! ****" );
+            int i = 1;
+            for ( String organism : organismDatasetMap.keySet() ) {
+                GeoSeries speciesSpecific = new GeoSeries();
+
+                Collection<GeoDataset> datasets = organismDatasetMap.get( organism );
+                assert datasets.size() > 0;
+
+                for ( GeoSample sample : series.getSamples() ) {
+                    // ugly, we have to assume there is only one platform and one organism...
+                    if ( sample.getPlatforms().iterator().next().getOrganisms().iterator().next().equals( organism ) ) {
+                        speciesSpecific.addSample( sample );
+                    }
+                }
+
+                // strip out samples that aren't from this organism.
+
+                for ( GeoDataset dataset : datasets ) {
+                    dataset.dissociateFromSeries( series );
+                    speciesSpecific.addDataSet( dataset );
+                }
+
+                /*
+                 *
+                 */
+                speciesSpecific.setContact( series.getContact() );
+                speciesSpecific.setContributers( series.getContributers() );
+                speciesSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
+                speciesSpecific.setKeyWords( series.getKeyWords() );
+                speciesSpecific.setOverallDesign( series.getOverallDesign() );
+                speciesSpecific.setPubmedIds( series.getPubmedIds() );
+                speciesSpecific.setReplicates( series.getReplicates() );
+                speciesSpecific.setSampleCorrespondence( series.getSampleCorrespondence() );
+                speciesSpecific.setSummaries( series.getSummaries() );
+                speciesSpecific.setTitle( series.getTitle() + " - " + organism );
+                speciesSpecific.setWebLinks( series.getWebLinks() );
+                converted.add( convertSeries( speciesSpecific, null ) );
+                i++;
+            }
+        } else {
+            converted.add( this.convertSeries( series, null ) );
+        }
+
+        return converted;
+    }
+
+    private Map<String, Collection<GeoDataset>> getOrganismDatasetMap( GeoSeries series ) {
+        Map<String, Collection<GeoDataset>> organisms = new HashMap<String, Collection<GeoDataset>>();
+
         for ( GeoDataset dataset : series.getDatasets() ) {
-            organisms.add( dataset.getOrganism() );
+            String organism = dataset.getOrganism();
+            if ( organisms.get( organism ) == null ) {
+                organisms.put( organism, new HashSet<GeoDataset>() );
+            }
+            organisms.get( organism ).add( dataset );
         }
-
-        if ( organisms.size() > 1 ) {
-            log.warn( "**** multiple-species dataset! ****" );
-        }
-
-        return this.convertSeries( series, null );
+        return organisms;
     }
 
     /**
      * @param series
      * @param resultToAddTo
      * @return
+     * @see convertSeries
      */
     @SuppressWarnings("unchecked")
     private ExpressionExperiment convertSeries( GeoSeries series, ExpressionExperiment resultToAddTo ) {
@@ -1041,26 +1104,29 @@ public class GeoConverter implements Converter {
         expExp.setExperimentalDesign( design );
 
         // GEO does not have the concept of a biomaterial.
-        Collection<GeoSample> samples = series.getSamples();
+        Collection<GeoSample> allSeriesSamples = series.getSamples();
         expExp.setBioAssays( new HashSet() );
 
         if ( series.getSampleCorrespondence().size() == 0 ) {
             throw new IllegalArgumentException( "No sample correspondence!" );
         }
 
+        log.info( series.getSampleCorrespondence() );
+
         int i = 1;
-        /* For each set of "corresponding" samples (from the same RNA) we make up a new BioMaterial. */
+
+        /* For each _set_ of "corresponding" samples (from the same RNA) we make up a new BioMaterial. */
         for ( Iterator iter = series.getSampleCorrespondence().iterator(); iter.hasNext(); ) {
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( series.getGeoAccession() + "_bioMaterial_" + i );
-            i++;
+            String bioMaterialName = series.getGeoAccession() + "_bioMaterial_" + i;
+            String bioMaterialDescription = "Biomaterial corresponding to ";
 
-            // Find the sample and convert it.
+            // From the series samples, find the sample that corresponds and convert it.
             Set<String> correspondingSamples = ( Set<String> ) iter.next();
             for ( String cSample : correspondingSamples ) {
                 boolean found = false;
-                for ( GeoSample sample : samples ) {
+                for ( GeoSample sample : allSeriesSamples ) {
                     if ( sample == null || sample.getGeoAccession() == null ) {
                         log.warn( "Null sample or no accession for " + sample );
                         continue;
@@ -1071,7 +1137,11 @@ public class GeoConverter implements Converter {
                     if ( accession.equals( cSample ) ) {
                         BioAssay ba = convertSample( sample, bioMaterial );
                         ba.getSamplesUsed().add( bioMaterial );
-                        log.info( "Adding " + ba + " and associating with  " + bioMaterial );
+                        bioMaterial.getBioAssaysUsedIn().add( ba );
+                        bioMaterialDescription = bioMaterialDescription + " " + sample;
+                        bioMaterialName = bioMaterialName + "|" + sample;
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Adding " + ba + " and associating with  " + bioMaterial );
                         expExp.getBioAssays().add( ba );
                         found = true;
                         break;
@@ -1079,12 +1149,19 @@ public class GeoConverter implements Converter {
 
                 }
                 if ( !found ) {
-                    log.error( "No sample found for " + cSample );
-                }
-            }
+                    if ( log.isDebugEnabled() )
+                        log.debug( "No sample found in " + series + " to match " + cSample
+                                + "; this can happen if some samples were not run on all platforms." );
 
-            // bioMaterials.add( bioMaterial );
+                }
+
+                i++;
+            }
+            bioMaterial.setName( bioMaterialName );
+            bioMaterial.setDescription( bioMaterialDescription );
         }
+
+        log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays" );
 
         // Dataset has additional information about the samples.
         Collection<GeoDataset> dataSets = series.getDatasets();
@@ -1492,7 +1569,8 @@ public class GeoConverter implements Converter {
         for ( GeoSeries series2 : series ) {
             if ( series2.getSamples() != null && series2.getSamples().size() > 0 ) {
                 if ( found == true ) {
-                    throw new IllegalStateException( "More than one of the series for " + geoDataset + " has samples." );
+                    throw new IllegalStateException( "More than one of the series for " + geoDataset + " has samples: "
+                            + series2 );
                 }
                 seriesSamples = series2.getSamples();
                 found = true;

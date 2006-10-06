@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.Collection;
+
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -91,6 +93,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
      * Test method for
      * {@link ubic.gemma.web.controller.expression.experiment.ExpressionExperimentLoadController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}.
      */
+    @SuppressWarnings("unchecked")
     public final void testOnSubmit() throws Exception {
         endTransaction();
         String path = getTestFileBasePath();
@@ -107,7 +110,10 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "loadPlatformOnly", "false" );
         request.setRemoteUser( "administrator" );
         ModelAndView mv = controller.handleRequest( request, response );
-        ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) mv.getModel().get(
+                "expressionExperiments" );
+        ee = results.iterator().next();
+
         // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 
@@ -115,6 +121,7 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
 
     // GDS395 - same platform as GDS999 XX GDS395 is defective.
     // GDS266 - use instead as an example. linked to GDS267, which uses the B array.
+    @SuppressWarnings("unchecked")
     public final void testOnSubmitB() throws Exception {
         endTransaction();
         String path = getTestFileBasePath();
@@ -128,7 +135,10 @@ public class ExpressionExperimentLoadControllerIntegrationTest extends AbstractG
         request.setParameter( "loadPlatformOnly", "false" );
         request.setRemoteUser( "test" );
         ModelAndView mv = controller.handleRequest( request, response );
-        ee = ( ExpressionExperiment ) mv.getModel().get( "expressionExperiment" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) mv.getModel().get(
+                "expressionExperiments" );
+        ee = results.iterator().next();
+
         // ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         assertEquals( "Wrong view", "expressionExperiment.detail", mv.getViewName() );
 

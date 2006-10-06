@@ -207,6 +207,15 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * Add a group of samples to this series.
+     * 
+     * @param samples
+     */
+    public void addSamples( Collection<GeoSample> samples ) {
+        this.samples.addAll( samples );
+    }
+
+    /**
      * @param dataset
      */
     public void addDataSet( GeoDataset dataset ) {

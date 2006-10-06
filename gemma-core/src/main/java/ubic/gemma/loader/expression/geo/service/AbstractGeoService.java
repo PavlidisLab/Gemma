@@ -18,6 +18,8 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -85,7 +87,7 @@ public abstract class AbstractGeoService {
      * @param geoAccession
      * @return
      */
-    public abstract Object fetchAndLoad( String geoAccession );
+    public abstract Collection<?> fetchAndLoad( String geoAccession );
 
     public void setLoadPlatformOnly( boolean b ) {
         this.loadPlatformOnly = b;

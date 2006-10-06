@@ -229,8 +229,9 @@ public class DatasetCombiner {
 
         LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
         LinkedHashMap<String, String> accToPlatform = new LinkedHashMap<String, String>();
-        int numPlatforms = fillAccessionMaps( series, accToTitle, accToPlatform );
-        return findCorrespondence( numPlatforms, accToTitle, accToPlatform );
+        LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<String, String>();
+        int numPlatforms = fillAccessionMaps( series, accToTitle, accToPlatform, accToOrganism );
+        return findCorrespondence( numPlatforms, accToTitle, accToPlatform, accToOrganism );
     }
 
     /**
@@ -246,10 +247,10 @@ public class DatasetCombiner {
 
         LinkedHashMap<String, String> accToTitle = new LinkedHashMap<String, String>();
         LinkedHashMap<String, String> accToDataset = new LinkedHashMap<String, String>();
+        LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<String, String>();
+        fillAccessionMaps( dataSets, accToTitle, accToDataset, accToOrganism );
 
-        fillAccessionMaps( dataSets, accToTitle, accToDataset );
-
-        return findCorrespondence( numDatasets, accToTitle, accToDataset );
+        return findCorrespondence( numDatasets, accToTitle, accToDataset, accToOrganism );
     }
 
     /**
@@ -259,8 +260,12 @@ public class DatasetCombiner {
      * @return
      */
     private static GeoSampleCorrespondence findCorrespondence( int numDatasets,
-            LinkedHashMap<String, String> accToTitle, LinkedHashMap<String, String> accToDataset ) {
+            LinkedHashMap<String, String> accToTitle, LinkedHashMap<String, String> accToDataset,
+            LinkedHashMap<String, String> accToOrganism ) {
         GeoSampleCorrespondence result = new GeoSampleCorrespondence();
+
+        result.setAccToTitleMap( accToTitle );
+        result.setAccToDatasetMap( accToDataset );
         // allocate matrix.
         int[][] matrix = new int[accToTitle.keySet().size()][accToTitle.keySet().size()];
         for ( int i = 0; i < matrix.length; i++ ) {
@@ -272,9 +277,16 @@ public class DatasetCombiner {
         // using the sorted order helps find the right matches.
         Collections.sort( sampleAccs );
 
+        Collection<String> alreadyMatched = new HashSet<String>();
+
         // do pairwise comparisons of all samples.
         for ( int j = 0; j < sampleAccs.size(); j++ ) {
             String targetAcc = sampleAccs.get( j );
+
+            if ( alreadyMatched.contains( targetAcc ) ) {
+                continue;
+            }
+
             int mindistance = Integer.MAX_VALUE;
             String bestMatch = null;
             String bestMatchAcc = null;
@@ -287,6 +299,10 @@ public class DatasetCombiner {
                 if ( i == j ) continue;
 
                 String testAcc = sampleAccs.get( i );
+
+                if ( alreadyMatched.contains( testAcc ) ) {
+                    continue;
+                }
 
                 String jTitle = accToTitle.get( testAcc );
                 if ( StringUtils.isBlank( jTitle ) )
@@ -303,9 +319,10 @@ public class DatasetCombiner {
 
                 double normalizedDistance = ( double ) distance / Math.max( iTitle.length(), jTitle.length() );
 
-                // make sure match is to sample in another data set, as well as being a good match.
+                // make sure match is to sample in another data set, in the same species, as well as being a good match.
                 if ( normalizedDistance < SIMILARITY_THRESHOLD && distance <= mindistance
-                        && accToDataset.get( targetAcc ) != accToDataset.get( testAcc ) ) {
+                        && !( accToDataset.get( targetAcc ).equals( accToDataset.get( testAcc ) ) )
+                        && accToOrganism.get( targetAcc ).equals( accToOrganism.get( testAcc ) ) ) {
                     mindistance = distance;
                     bestMatch = jTitle;
                     bestMatchAcc = testAcc;
@@ -314,10 +331,13 @@ public class DatasetCombiner {
 
             assert targetAcc != null;
             result.addCorrespondence( targetAcc, bestMatchAcc );
+            alreadyMatched.add( targetAcc );
+            alreadyMatched.add( bestMatchAcc );
 
             if ( numDatasets > 1 ) {
                 if ( bestMatchAcc == null ) {
-                    log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + "\n" );
+                    log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle
+                            + " (Can happen if sample was only run on one platform)\n" );
                 } else {
                     log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch
                             + " (Distance: " + mindistance + ")\n" );
@@ -347,27 +367,27 @@ public class DatasetCombiner {
     }
 
     private static void fillAccessionMaps( Collection<GeoDataset> dataSets, LinkedHashMap<String, String> accToTitle,
-            LinkedHashMap<String, String> accToDataset ) {
+            LinkedHashMap<String, String> accToDataset, LinkedHashMap<String, String> accToOrganism ) {
         // get all the 'title's of the GSMs.
         for ( GeoDataset dataset : dataSets ) {
             for ( GeoSubset subset : dataset.getSubsets() ) {
                 for ( GeoSample sample : subset.getSamples() ) {
                     assert sample != null : "Null sample for subset " + subset.getDescription();
-                    fillAccessionMap( sample, dataset, accToTitle, accToDataset );
+                    fillAccessionMap( sample, dataset, accToTitle, accToDataset, accToOrganism );
                 }
             }
         }
     }
 
     private static int fillAccessionMaps( GeoSeries series, LinkedHashMap<String, String> accToTitle,
-            LinkedHashMap<String, String> accToOwneracc ) {
+            LinkedHashMap<String, String> accToOwneracc, LinkedHashMap<String, String> accToOrganism ) {
 
         Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( series );
 
         for ( GeoPlatform platform : platformSamples.keySet() ) {
             for ( GeoSample sample : platformSamples.get( platform ) ) {
                 assert sample != null : "Null sample for platform " + platform.getDescription();
-                fillAccessionMap( sample, platform, accToTitle, accToOwneracc );
+                fillAccessionMap( sample, platform, accToTitle, accToOwneracc, accToOrganism );
             }
         }
 
@@ -380,13 +400,17 @@ public class DatasetCombiner {
      * @param accToDataset
      */
     private static void fillAccessionMap( GeoSample sample, GeoData owner, LinkedHashMap<String, String> accToTitle,
-            LinkedHashMap<String, String> accToOwneracc ) {
+            LinkedHashMap<String, String> accToOwneracc, LinkedHashMap<String, String> accToOrganism ) {
         String title = sample.getTitle();
         if ( StringUtils.isBlank( title ) ) {
             return; // the same sample may show up more than once with a blank title.
         }
         accToTitle.put( sample.getGeoAccession(), title );
         accToOwneracc.put( sample.getGeoAccession(), owner.getGeoAccession() );
+
+        String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
+
+        accToOrganism.put( sample.getGeoAccession(), organism );
     }
 
 }

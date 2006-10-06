@@ -46,7 +46,7 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Object fetchAndLoad( String geoAccession ) {
+    public Collection fetchAndLoad( String geoAccession ) {
         this.geoConverter.clear();
         geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( this.loadPlatformOnly );
@@ -70,16 +70,18 @@ public class GeoDatasetService extends AbstractGeoService {
 
         log.info( "Generated GEO domain objects for " + geoAccession );
 
-        ExpressionExperiment result = ( ExpressionExperiment ) geoConverter.convert( series );
+        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
-        for ( BioAssay bioAssay : result.getBioAssays() ) {
-            ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
-            checkArrayDesign( arrayDesign );
+        for ( ExpressionExperiment experiment : result ) {
+            for ( BioAssay bioAssay : experiment.getBioAssays() ) {
+                ArrayDesign arrayDesign = bioAssay.getArrayDesignUsed();
+                checkArrayDesign( arrayDesign );
+            }
         }
 
         log.info( "Converted " + series.getGeoAccession() );
         assert persisterHelper != null;
-        Object persistedResult = persisterHelper.persist( result );
+        Collection persistedResult = persisterHelper.persist( result );
         this.geoConverter.clear();
         return persistedResult;
     }
@@ -93,7 +95,5 @@ public class GeoDatasetService extends AbstractGeoService {
             log.debug( arrayDesign + " already exists in the system" );
         }
     }
-
- 
 
 }

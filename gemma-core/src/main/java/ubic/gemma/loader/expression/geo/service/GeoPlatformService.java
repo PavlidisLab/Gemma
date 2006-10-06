@@ -43,7 +43,7 @@ public class GeoPlatformService extends AbstractGeoService {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Object fetchAndLoad( String geoPlatformAccession ) {
+    public Collection fetchAndLoad( String geoPlatformAccession ) {
         if ( this.geoDomainObjectGenerator == null ) this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
         this.geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 

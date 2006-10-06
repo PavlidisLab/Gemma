@@ -440,7 +440,7 @@ public class GeoDataset extends GeoData {
         } else if ( string.equals( "dual channel" ) ) { // legacy term.
             log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
             return ExperimentType.geneExpressionArraybased;
-        } else if (string.equals("single channel")) { // legacy term
+        } else if ( string.equals( "single channel" ) ) { // legacy term
             log.warn( "Experiment Type '" + string + "' is a legacy term. Annotation may be inaccurate." );
             return ExperimentType.geneExpressionArraybased;
         } else {
@@ -463,6 +463,18 @@ public class GeoDataset extends GeoData {
 
     public enum SampleType {
         RNA, genomic, protein, mixed, SAGE, MPSS, SARST
+    }
+
+    /**
+     * This is used when we break a series up into two, along organism lines.
+     * 
+     * @param series
+     */
+    public void dissociateFromSeries( GeoSeries series ) {
+        if ( !this.series.contains( series ) ) {
+            throw new IllegalArgumentException( this + " does not have a reference to " + series );
+        }
+        this.series.remove( series );
     }
 
 }

@@ -93,6 +93,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Expression Data loader", args );
@@ -133,8 +134,13 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                                             .getAccession() + ")" );
                         }
                     } else {
-                        ExpressionExperiment ee = ( ExpressionExperiment ) geoService.fetchAndLoad( accession );
-                        persistedObjects.add( ee.getName() + " (" + ee.getAccession().getAccession() + ")" );
+                        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService
+                                .fetchAndLoad( accession );
+                        for ( Object object : ees ) {
+                            assert object instanceof ExpressionExperiment;
+                            persistedObjects.add( ( ( Describable ) object ).getName() + " ("
+                                    + ( ( ExpressionExperiment ) object ).getAccession().getAccession() + ")" );
+                        }
                     }
                 }
             }

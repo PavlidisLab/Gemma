@@ -166,21 +166,38 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     // this.setFlushModeCommit();
     // geoService.fetchAndLoad( "GDS994" );
     // }
+    //
+    /**
+     * Has multiple species (mouse and human, one and two platforms respectively)
+     */
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadGSE1133() throws Exception {
+        endTransaction();
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse1133Short" ) );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE1133" );
+        assertEquals( 2, results.size() );
+
+    }
+
     /**
      * GSE3434 has no dataset. It's small so okay to download.
      */
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadSeriesOnly() throws Exception {
         endTransaction();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GSE3434" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GSE3434" );
+        ee = ( ExpressionExperiment ) results.iterator().next();
         assertEquals( 4, ee.getBioAssays().size() );
         assertEquals( 532, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
-
-        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        ad.getCompositeSequences().size(); // un-lazify;
-        ads.add( ad );
-        int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
-        assertEquals( 532, actualValue );
+        //
+        // int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId()
+        // );
+        // assertEquals( 532, actualValue );
     }
 
     // ////////////////////////////////////////////////////////////
@@ -189,28 +206,35 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     /**
      * Original reason for test: yields audit trail errors.
      */
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS775() throws Exception {
         endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds775short" ) );
-        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS775" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS775" );
+
+        ee = ( ExpressionExperiment ) results.iterator().next();
         assertEquals( 4, ee.getBioAssays().size() );
         assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
-        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        ad.getCompositeSequences().size(); // un-lazify;
-        ads.add( ad );
-        int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
-        assertEquals( 107, actualValue );
+        //
+        // int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId()
+        // );
+        // assertEquals( 107, actualValue );
     }
 
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS999() throws Exception {
         endTransaction();
         int expectedValue = 20;
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds999short" ) );
-        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS999" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS999" );
+
+        ee = ( ExpressionExperiment ) results.iterator().next();
         assertEquals( 34, ee.getBioAssays().size() );
 
         assertEquals( 3 * expectedValue, ee.getDesignElementDataVectors().size() ); // 3 quantitation types
@@ -220,12 +244,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     /**
      * problem case GDS22 - has lots of missing values and number format issues.
      */
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS22() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds22Short" ) );
 
-        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS22" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS22" );
+        ee = ( ExpressionExperiment ) results.iterator().next();
         assertEquals( 80, ee.getBioAssays().size() );
         assertEquals( 410, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
@@ -234,12 +261,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertEquals( 10, actualValue );
     }
 
+    @SuppressWarnings("unchecked")
     public void testFetchAndLoadGDS994() throws Exception {
         endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gds994Short" ) );
-        ee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS994" );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS994" );
+        ee = ( ExpressionExperiment ) results.iterator().next();
         assertEquals( 12, ee.getBioAssays().size() );
         assertEquals( 300, ee.getDesignElementDataVectors().size() ); // 41 quantitation types
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
@@ -261,8 +291,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          * HG-U133A. GDS473 is for the other chip (B). Series is GSE674. see
          * http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
          */
-        final ExpressionExperiment newee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS472" );
-
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS472" );
+        final ExpressionExperiment newee = ( ExpressionExperiment ) results.iterator().next();
         // get the data back out.
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
@@ -327,13 +358,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     public void testConversionGDS825Family() throws Exception {
         endTransaction();
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "complexShortTest" ) );
-        ExpressionExperiment newee = ( ExpressionExperiment ) geoService.fetchAndLoad( "GDS825" );
-
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                .fetchAndLoad( "GDS825" );
+        ExpressionExperiment newee = ( ExpressionExperiment ) results.iterator().next();
         // get the data back out.
         QuantitationTypeService qts = ( QuantitationTypeService ) getBean( "quantitationTypeService" );
 
@@ -368,12 +401,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         assertEquals( 6, matrix.columns() );
 
-        // GSM21252 on GDS823 (GPL97)
-        double k = matrix.getRowByName( "224444_s_at" )[matrix.getColIndexByName( "GSE1299_bioMaterial_1" )];
-        assertEquals( 7.62, k, 0.0001 );
+        testMatrixValue( matrix, "224501_at", "GSM21252", 7.63 );
 
-        k = matrix.getRowByName( "224501_at" )[matrix.getColIndexByName( "GSE1299_bioMaterial_5" )];
-        assertEquals( 7.88, k, 0.00001 );
+        testMatrixValue( matrix, "224444_s_at", "GSM21251", 8.16 );
 
         // ///////////////////////////////////
         // / now for the other platform // For the agilent array
@@ -400,12 +430,27 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         assertEquals( 4, matrix.columns() );
 
-        k = matrix.getRowByName( "885" )[matrix.getColIndexByName( "GSE1299_bioMaterial_4" )];
-        assertEquals( -0.1202943, k, 0.00001 );
+        testMatrixValue( matrix, "885", "GSM21256", -0.1202943 );
 
-        k = matrix.getRowByName( "878" )[matrix.getColIndexByName( "GSE1299_bioMaterial_2" )];
-        assertEquals( 0.6135323, k, 0.00001 );
+        testMatrixValue( matrix, "878", "GSM21254", 0.6135323 );
 
+    }
+
+    private void testMatrixValue( DoubleMatrixNamed matrix, String probeToTest, String sampleToTest,
+            double expectedValue ) {
+        double[] vals;
+        vals = matrix.getRowByName( probeToTest );
+        for ( Object colName : matrix.getColNames() ) {
+            if ( ( ( String ) colName ).contains( sampleToTest ) ) {
+                double k = vals[matrix.getColIndexByName( ( String ) colName )];
+                assertEquals( expectedValue, k, 0.00001 );
+                return;
+            } else {
+                continue;
+            }
+
+        }
+        fail( "didn't find values for " + sampleToTest );
     }
 
     /**
