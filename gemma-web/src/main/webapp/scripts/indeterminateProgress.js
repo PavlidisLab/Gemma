@@ -6,7 +6,6 @@ function updateProgress(data) {
 	document.getElementById("progressBarText").innerHTML = data.description + "  :";
 	if (data.done && data.forwardingURL != null) {
 			window.location = data.forwardingURL;
-		}
 	} else {
 		window.setTimeout("refreshProgress()", 1000);
 	}
