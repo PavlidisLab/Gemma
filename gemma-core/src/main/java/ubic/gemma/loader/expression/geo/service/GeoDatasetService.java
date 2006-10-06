@@ -21,8 +21,6 @@ package ubic.gemma.loader.expression.geo.service;
 import java.util.Collection;
 
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -63,10 +61,13 @@ public class GeoDatasetService extends AbstractGeoService {
             throw new RuntimeException( "Could not get domain objects for " + geoAccession );
         }
 
-        assert results.iterator().next() instanceof GeoSeries : "Got a "
-                + results.iterator().next().getClass().getName() + " instead of a " + GeoSeries.class.getName();
+        Object obj = results.iterator().next();
+        if ( !( obj instanceof GeoSeries ) ) {
+            throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
+                    + GeoSeries.class.getName() + " (you may need to load platforms only)." );
+        }
 
-        GeoSeries series = ( GeoSeries ) results.iterator().next();
+        GeoSeries series = ( GeoSeries ) obj;
 
         log.info( "Generated GEO domain objects for " + geoAccession );
 
