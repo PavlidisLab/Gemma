@@ -134,7 +134,7 @@
 			out.print( expressionExperiment.getBioAssays().size() );
 			%> </a> bioAssays for this expression experiment, with the following designs.
 		<br />
-		<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList" export="true"
+		<display:table name="arrayDesigns" class="list" requestURI="" id="arrayList"
 			pagesize="10">
 			<display:column property="name" sortable="true" maxWords="20"
 				href="/Gemma/arrays/showArrayDesign.html" paramId="id" paramProperty="id" />
@@ -164,7 +164,7 @@
 		<h3>
 			<fmt:message key="investigators.title" />
 		</h3>
-		<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList" export="true"
+		<display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList"
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="name" sortable="true" maxWords="20"
 				href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name" />
@@ -185,7 +185,7 @@
 		} 
 		%>
 		
-		<display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList" export="true"
+		<display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList" 
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="name" sortable="true" maxWords="20"
 				href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name" />
@@ -203,7 +203,7 @@
 		} 
 		%>
 				
-		<display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList" export="true"
+		<display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
 			pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
 			<display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name" />
 			<display:column property="description" sortable="true" maxWords="100" />
@@ -219,7 +219,7 @@
  		</b> design elements for this expression
 		experiment.
 		<br />
-		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" export="true" pagesize="10"
+		<display:table name="qtCountSet" class="list" requestURI="" id="dataVectorList" pagesize="10"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
 			<display:column property="qtName" sortable="true" maxWords="20" titleKey="quantitationType.name" />
 			<display:column property="qtValue" sortable="true" maxWords="20" titleKey="quantitationType.countVectors" />

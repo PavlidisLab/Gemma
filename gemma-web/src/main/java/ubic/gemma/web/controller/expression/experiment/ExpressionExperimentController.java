@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -52,7 +53,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
 
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
-    
+
     private final String messagePrefix = "Expression experiment with id";
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
 
@@ -62,11 +63,12 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
-    
+
     /**
      * @param expressionExperimentSubSetService
      */
-    public void setExpressionExperimentSubSetService( ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
+    public void setExpressionExperimentSubSetService(
+            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
         this.expressionExperimentSubSetService = expressionExperimentSubSetService;
     }
 
@@ -94,27 +96,28 @@ public class ExpressionExperimentController extends BaseMultiActionController {
         request.setAttribute( "id", id );
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
                 expressionExperiment );
- 
-        Set s  = expressionExperimentService.getQuantitationTypeCountById(id ).entrySet();
-        mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById(id ).entrySet());
-        
+
+        Set s = expressionExperimentService.getQuantitationTypeCountById( id ).entrySet();
+        mav.addObject( "qtCountSet", expressionExperimentService.getQuantitationTypeCountById( id ).entrySet() );
+
         // add arrayDesigns used, by name
         Collection<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         for ( BioAssay assay : bioAssays ) {
             ArrayDesign design = assay.getArrayDesignUsed();
-            if (!arrayDesigns.contains( design )) {
+            if ( !arrayDesigns.contains( design ) ) {
                 arrayDesigns.add( design );
             }
         }
+        ExpressionExperimentValueObject vo;
         mav.addObject( "arrayDesigns", arrayDesigns );
         long num = expressionExperimentService.getDesignElementDataVectorCountById( id );
         // add count of designElementDataVectors
-        mav.addObject( "designElementDataVectorCount", new Long (expressionExperimentService.getDesignElementDataVectorCountById( id )) );
+        mav.addObject( "designElementDataVectorCount", new Long( expressionExperimentService
+                .getDesignElementDataVectorCountById( id ) ) );
         return mav;
     }
-    
-    
+
     /**
      * @param request
      * @param response
@@ -136,12 +139,12 @@ public class ExpressionExperimentController extends BaseMultiActionController {
         }
 
         request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays",
-                expressionExperiment.getBioAssays());
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
     }
-    
+
     /**
      * shows a list of BioAssays for an expression experiment subset
+     * 
      * @param request
      * @param response
      * @param errors
@@ -160,13 +163,13 @@ public class ExpressionExperimentController extends BaseMultiActionController {
             throw new EntityNotFoundException( id + " not found" );
         }
 
-//        request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays",
-                subset.getBioAssays());
+        // request.setAttribute( "id", id );
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
     }
-    
+
     /**
      * Shows a bioassay view of a single expression experiment subset.
+     * 
      * @param request
      * @param response
      * @param errors
@@ -187,8 +190,7 @@ public class ExpressionExperimentController extends BaseMultiActionController {
         }
 
         request.setAttribute( "id", id );
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays",
-                expressionExperiment.getBioAssays());
+        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
     }
 
     /**
@@ -200,21 +202,27 @@ public class ExpressionExperimentController extends BaseMultiActionController {
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
         
         String sId = request.getParameter( "id" );
+        Collection<ExpressionExperimentValueObject> expressionExperiments = new HashSet<ExpressionExperimentValueObject>();        
         // if no IDs are specified, then load all expressionExperiments
         if ( sId == null ) {
-            return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments",
-                    expressionExperimentService.loadAll() );
+            Collection<ExpressionExperiment> expressionExperimentCol = expressionExperimentService.loadAll();
+            for ( ExpressionExperiment experiment : expressionExperimentCol ) {
+                expressionExperiments.add( expressionExperimentService.toExpressionExperimentValueObject( experiment ) );               
+            }
         }
+       
         // if ids are specified, then display only those expressionExperiments
-        String[] idList = StringUtils.split( sId, ',' );
-        Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
+        else {
+            String[] idList = StringUtils.split( sId, ',' );
+
         for (int i = 0; i < idList.length; i++) {
             Long id = Long.parseLong( idList[i] );
             ExpressionExperiment expressionExperiment = expressionExperimentService.findById( id );
             if ( expressionExperiment == null ) {
                 throw new EntityNotFoundException( id + " not found" );
             }
-            expressionExperiments.add( expressionExperiment );
+            expressionExperiments.add( expressionExperimentService.toExpressionExperimentValueObject( expressionExperiment ) );
+        }
         }
         return new ModelAndView( "expressionExperiments" ).addObject( "expressionExperiments",
                 expressionExperiments );        

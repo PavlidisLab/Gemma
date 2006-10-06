@@ -198,7 +198,7 @@
             <fmt:message key="investigators.title" />
         </h3>
         <display:table name="expressionExperiment.investigators" class="list" requestURI="" id="contactList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
             <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
             <display:column property="phone" sortable="true" maxWords="100"  />
             <display:column property="fax" sortable="true" maxWords="100"  />
@@ -210,7 +210,7 @@
             <fmt:message key="analyses.title" />
         </h3>
         <display:table name="expressionExperiment.analyses" class="list" requestURI="" id="analysisList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
+            pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
             <display:column property="name" sortable="true" maxWords="20" href="/Gemma/experimentalDesign/showExperimentalDesign.html" paramId="name" paramProperty="name"/>
             <display:column property="description" sortable="true" maxWords="100"  />
             <display:setProperty name="basic.empty.showtable" value="false" />
@@ -220,7 +220,7 @@
             <fmt:message key="expressionExperimentSubsets.title" />
         </h3>
         <display:table name="expressionExperiment.subsets" class="list" requestURI="" id="subsetList"
-            export="true" pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
+            pagesize="10" decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentSubSetWrapper">
             <display:column property="nameLink" sortable="true" maxWords="20" titleKey="expressionExperimentSubsets.name"/>
             <display:column property="description" sortable="true" maxWords="100" />
             <display:setProperty name="basic.empty.showtable" value="false" />

@@ -26,23 +26,30 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
+import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.SpringContextUtil;
 
 /**
  * Used to generate hyperlinks in displaytag tables.
  * <p>
  * See http://displaytag.sourceforge.net/10/tut_decorators.html and http://displaytag.sourceforge.net/10/tut_links.html
  * for explanation of how this works.
- * 
+ *
  * @author pavlidis
  * @version $Id$
+ *  
  */
 public class ExpressionExperimentWrapper extends TableDecorator {
+
+    private ExpressionExperimentService expressionExperimentService = null;
 
     Log log = LogFactory.getLog( this.getClass() );
 
@@ -50,9 +57,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return String
      */
     public String getDataSource() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
-            return object.getAccession().getExternalDatabase().getName();
+            return object.getExternalDatabase();
         }
         return "No Source";
     }
@@ -61,9 +68,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return String
      */
     public String getExternalDetailsLink() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
-            return "<a href=\"" + object.getAccession().getExternalDatabase().getWebUri() + "\">" + object.getAccession().getAccession()
+            return "<a href=\"" + object.getExternalUri() + "\">" + object.getAccession()
             + "</a>";             
         }
         return "No accession";
@@ -75,10 +82,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return String
      */
     public String getDetails() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null && object.getAccession() != null ) {
            
-            return object.getAccession().getExternalDatabase().getName() + " - " + object.getAccession().getAccession();
+            return object.getExternalDatabase() + " - " + object.getAccession();
         }
         return "No accession";
     }
@@ -87,12 +94,11 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return String
      */
     public String getAssaysLink() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object != null && object.getBioAssays() != null ) {
-            return object.getBioAssays().size() + "<small><a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
-                    +  "(list)</a>";
-        }
-        return "No bioassays";
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        long count = object.getBioAssayCount();
+        
+        return  count + "<small><a href=\"showBioAssaysFromExpressionExperiment.html?id=" + object.getId() + "\">"
+        +  "(list)</a>";        
     }
 
     /**
@@ -131,9 +137,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return String
      */
     public String getDesignsLink() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object != null && object.getExperimentalDesign() != null ) {
-            return "<a href=\"showExpressionExperiment.html?name=" + object.getName() + "\"> </a>";
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object != null  ) {
+            return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\"> </a>";
         }
         return "No design";
     }
@@ -144,8 +150,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return String
      */
     public String getNameLink() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object != null && object.getExperimentalDesign() != null ) {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object != null ) {
             return "<a href=\"showExpressionExperiment.html?id=" + object.getId() + "\">" + object.getName() + "</a>";
         }
         return "No design";
@@ -155,11 +161,10 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return The creation date.
      */
     public String getCreateDate() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object != null && object.getAuditTrail() != null && object.getAuditTrail().getCreationEvent() != null
-                && object.getAuditTrail().getCreationEvent().getDate() != null ) {
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        if ( object != null && object.getCreateDate() != null ) {
 
-            Date date = object.getAuditTrail().getCreationEvent().getDate();
+            Date date = object.getCreateDate();
 
             SimpleDateFormat dateFormat = new SimpleDateFormat( "MM/dd/yyyy" );
             dateFormat.setLenient( false );
@@ -189,36 +194,12 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return
      */
     public String getTaxon() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
-        if ( object == null ) {
-            return "Taxon unavailable";
-        }
-
-        Collection bioAssayCol = object.getBioAssays();
-        BioAssay bioAssay = null;
-        Taxon taxon = null;
-
-        if ( bioAssayCol != null && bioAssayCol.size() > 0 ) {
-            bioAssay = ( BioAssay ) bioAssayCol.iterator().next();
-        } else {
-            return "Taxon unavailable";
-        }
-
-        Collection bioMaterialCol = bioAssay.getSamplesUsed();
-        if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) {
-            BioMaterial bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next();
-            taxon = bioMaterial.getSourceTaxon();
-        } else {
-            return "Taxon unavailable";
-        }
-
-        if ( taxon != null ) return taxon.getScientificName();
-
-        return "Taxon unavailable";
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
+        return object.getTaxon();
     }
     
     public String getDelete() {
-        ExpressionExperiment object = ( ExpressionExperiment ) getCurrentRowObject();
+        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         
         if ( object == null ) {
             return "Expression Experiment unavailable";

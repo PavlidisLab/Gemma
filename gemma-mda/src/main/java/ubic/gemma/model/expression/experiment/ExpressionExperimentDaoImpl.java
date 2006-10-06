@@ -39,6 +39,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author pavlidis
@@ -77,6 +78,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     result = results.iterator().next();
                 }
             }
+            // insert count
+            ((ExpressionExperiment)result).setBioAssayCount( handleGetBioAssayCountById( ((ExpressionExperiment)result).getId() ) );
             return ( ExpressionExperiment ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -95,10 +98,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         ExpressionExperiment newExpressionExperiment = this.find( expressionExperiment );
         if ( newExpressionExperiment != null ) {
+
             return newExpressionExperiment;
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
-        return ( ExpressionExperiment ) create( expressionExperiment );
+        newExpressionExperiment = ( ExpressionExperiment ) create( expressionExperiment );
+        // insert count
+        newExpressionExperiment.setBioAssayCount( handleGetBioAssayCountById( newExpressionExperiment.getId() ) );
+        return newExpressionExperiment;
     }
 
     /*
@@ -136,6 +143,32 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         long count = 0;
 
         final String queryString = "select count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.designElementDataVectors as designElements inner join  designElements.quantitationType as quantType where ee.id = :id";
+
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setParameter( "id", Id );
+            ScrollableResults list = queryObject.scroll();
+            while ( list.next() ) {
+                int c = list.getInteger( 0 );
+                count = Long.parseLong( ( new Integer( c ) ).toString() );
+            }
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        return count;
+    }
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model.expression.experiment.ExpressionExperiment)
+     */
+    @Override
+    public long handleGetBioAssayCountById( long Id ) {
+        long count = 0;
+
+        final String queryString = "select count(*) as count from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee inner join ee.bioAssays as bioAssays where ee.id = :id";
 
         try {
             org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
@@ -247,6 +280,66 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             }
         }, true );
 
+    }
+
+    public ExpressionExperiment expressionExperimentValueObjectToEntity( ExpressionExperimentValueObject expressionExperimentValueObject ) {
+        return (ExpressionExperiment) this.load( Long.parseLong( expressionExperimentValueObject.getId()));
+    }
+    
+    public ExpressionExperimentValueObject toExpressionExperimentValueObject(final ExpressionExperiment entity)
+    {
+        ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject();
+        
+        
+        vo.setId( entity.getId().toString() );
+        vo.setAccession( entity.getAccession().getAccession() );
+        vo.setName(  entity.getName() );
+        vo.setExternalDatabase( entity.getAccession().getExternalDatabase().getName() );
+        vo.setExternalUri( entity.getAccession().getExternalDatabase().getWebUri() );
+        vo.setSource( entity.getSource() );
+        vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
+        vo.setTaxon( getTaxon(entity) );
+        vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
+        
+        if ( entity != null && entity.getAuditTrail() != null && entity.getAuditTrail().getCreationEvent() != null
+                && entity.getAuditTrail().getCreationEvent().getDate() != null ) {
+            vo.setCreateDate( entity.getAuditTrail().getCreationEvent().getDate() );
+        }
+        else {
+            vo.setCreateDate( null );
+        }
+
+        
+        return vo;
+    }
+    
+    public String getTaxon(ExpressionExperiment object) {
+        
+        if ( object == null ) {
+            return "Taxon unavailable";
+        }
+
+        Collection bioAssayCol = object.getBioAssays();
+        BioAssay bioAssay = null;
+        Taxon taxon = null;
+
+        if ( bioAssayCol != null && bioAssayCol.size() > 0 ) {
+            bioAssay = ( BioAssay ) bioAssayCol.iterator().next();
+        } else {
+            return "Taxon unavailable";
+        }
+
+        Collection bioMaterialCol = bioAssay.getSamplesUsed();
+        if ( bioMaterialCol != null && bioMaterialCol.size() != 0 ) {
+            BioMaterial bioMaterial = ( BioMaterial ) bioMaterialCol.iterator().next();
+            taxon = bioMaterial.getSourceTaxon();
+        } else {
+            return "Taxon unavailable";
+        }
+
+        if ( taxon != null ) return taxon.getScientificName();
+
+        return "Taxon unavailable";
     }
 
 }

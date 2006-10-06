@@ -181,4 +181,9 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
     }
 
+    @Override
+    protected ExpressionExperimentValueObject handleToExpressionExperimentValueObject( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().toExpressionExperimentValueObject( expressionExperiment );
+    }
+
 }
