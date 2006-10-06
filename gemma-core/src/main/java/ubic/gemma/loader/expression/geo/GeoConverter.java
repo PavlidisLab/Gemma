@@ -98,6 +98,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * <p>
  * This service can be used in database-aware or unaware states.
  * 
+ * @author keshav
  * @author pavlidis
  * @version $Id$
  * @spring.bean id="geoConverter"
@@ -133,6 +134,10 @@ public class GeoConverter implements Converter {
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
 
     private ExternalDatabase genbank;
+
+    private static final String RAT = "rattus";
+    private static final String MOUSE = "mus musculus";
+    private static final String HUMAN = "homo sapien";
 
     /**
      * Remove old results. Call this prior to starting converstion of a full dataset.
@@ -269,12 +274,14 @@ public class GeoConverter implements Converter {
      */
     private Person convertContact( GeoContact contact ) {
         Person result = Person.Factory.newInstance();
-        result.setAddress( contact.getCity() );
+        result.setAddress( contact.getCity() + " " + contact.getState() + " " + contact.getCountry() + " "
+                + contact.getPostCode() );
         result.setPhone( contact.getPhone() );
         result.setName( contact.getName() );
         result.setEmail( contact.getEmail() );
+        result.setFax( contact.getFax() );
+        result.setURL( contact.getWebLink() );
 
-        // TODO - set other contact fields
         return result;
     }
 
@@ -287,11 +294,11 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
         expExp.getInvestigators().add( convertContact( series.getContact() ) );
-        // TODO possibly add contributers to the investigators.
         if ( series.getContributers().size() > 0 ) {
             expExp.setDescription( expExp.getDescription() + " -- Contributers: " );
             for ( GeoContact contributer : series.getContributers() ) {
                 expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
+                expExp.getInvestigators().add( convertContact( contributer ) );
             }
         }
     }
@@ -799,9 +806,8 @@ public class GeoConverter implements Converter {
         String organism = organisms.iterator().next();
         log.debug( "Organism: " + organism );
 
-        // FIXME hard-coding of Rattus.
-        if ( organism.toLowerCase().startsWith( "rattus" ) ) {
-            organism = "rattus"; // we don't distinguish between species.
+        if ( organism.toLowerCase().startsWith( GeoConverter.RAT ) ) {
+            organism = GeoConverter.RAT; // we don't distinguish between species.
         }
 
         taxon.setScientificName( organism );
