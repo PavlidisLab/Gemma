@@ -36,6 +36,7 @@ public class GeoSeries extends GeoData {
 
     String summary = "";
     String overallDesign = "";
+    String sample = "DNA";
     Collection<String> keyWords;
     Collection<String> pubmedIds;
     Collection<String> webLinks;
@@ -242,6 +243,14 @@ public class GeoSeries extends GeoData {
      */
     public void setSampleCorrespondence( GeoSampleCorrespondence sampleCorrespondence ) {
         this.sampleCorrespondence = sampleCorrespondence;
+    }
+
+    public String getSample() {
+        return sample;
+    }
+
+    public void setSample( String sample ) {
+        this.sample = sample;
     }
 
 }

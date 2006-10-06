@@ -69,6 +69,8 @@ public class GeoPlatform extends GeoData {
 
     private Collection<String> webLinks = new HashSet<String>();
 
+    private String sample = "DNA";
+
     /**
      * @param s
      */
@@ -291,6 +293,14 @@ public class GeoPlatform extends GeoData {
      */
     public void setWebLinks( Collection<String> webLinks ) {
         this.webLinks = webLinks;
+    }
+
+    public String getSample() {
+        return sample;
+    }
+
+    public void setSample( String sample ) {
+        this.sample = sample;
     }
 
 }
