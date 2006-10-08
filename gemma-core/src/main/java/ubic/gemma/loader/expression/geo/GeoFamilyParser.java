@@ -64,6 +64,7 @@ import ubic.gemma.loader.util.parser.Parser;
  * Class for parsing GSE and GDS files from NCBI GEO. See
  * {@link http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
  * 
+ * @author keshav
  * @author pavlidis
  * @version $Id$
  */
@@ -393,7 +394,7 @@ public class GeoFamilyParser implements Parser {
      * (in a platform section of a GSE file):
      * 
      * <pre>
-     *                 #SEQ_LEN = Sequence length
+     *                         #SEQ_LEN = Sequence length
      * </pre>
      * 
      * @param line
@@ -475,8 +476,8 @@ public class GeoFamilyParser implements Parser {
      * For samples in GSE files, they become values for the data in the sample. For example
      * 
      * <pre>
-     *                                                         #ID_REF = probe id
-     *                                                         #VALUE = RMA value
+     *                                                                 #ID_REF = probe id
+     *                                                                 #VALUE = RMA value
      * </pre>
      * 
      * <p>
@@ -487,9 +488,9 @@ public class GeoFamilyParser implements Parser {
      * provided. Here is an example.
      * 
      * <pre>
-     *                                                         #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
-     *                                                         #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
-     *                                                         #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                                                                 #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
+     *                                                                 #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                                                                 #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
      * 
      * @param line
@@ -640,7 +641,6 @@ public class GeoFamilyParser implements Parser {
                 inPlatform = false;
                 inSeries = false;
             } else if ( startsWithIgnoreCase( line, "^SAMPLE" ) ) {
-
                 inSample = true;
                 inSubset = false;
                 inDataset = false;
@@ -839,62 +839,33 @@ public class GeoFamilyParser implements Parser {
             // FIXME - use this.
         } else if ( startsWithIgnoreCase( line, "!Platform_supplementary_file" ) ) {
             // FIXME - use this.
-        } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
-            platformSampleSet( currentPlatformAccession, value );
         } else {
             log.error( "Unknown flag in platform: " + line );
         }
     }
 
     /**
+     * @param accession
      * @param string
-     * @return
      */
-    public void seriesSampleSet( String accession, String string ) {
-        GeoSeries series = results.getSeriesMap().get( accession );
-        if ( string.equals( "cDNA" ) ) {
-            series.setSample( "RNA" );
-        } else if ( string.equals( "RNA" ) ) {
-            series.setSample( "RNA" );
-        } else if ( string.equals( "genomic" ) ) {
-            series.setSample( "genomic" );
-        } else if ( string.equals( "protein" ) ) {
-            series.setSample( "protein" );
-        } else if ( string.equals( "mixed" ) ) {
-            series.setSample( "mixed" );
-        } else if ( string.equals( "SAGE" ) ) {
-            series.setSample( "SAGE" );
-        } else if ( string.equals( "MPSS" ) ) {
-            series.setSample( "MPSS" );
-        } else if ( string.equals( "SARST" ) ) {
-            series.setSample( "protein" );
-        } else {
-            throw new IllegalArgumentException( "Unknown sample type " + string );
-        }
-    }
-
-    /**
-     * @param string
-     * @return
-     */
-    public void platformSampleSet( String accession, String string ) {
-        GeoPlatform platform = results.getPlatformMap().get( accession );
-        if ( string.equals( "cDNA" ) ) {
-            platform.setSample( "RNA" );
-        } else if ( string.equals( "RNA" ) ) {
-            platform.setSample( "RNA" );
-        } else if ( string.equals( "genomic" ) ) {
-            platform.setSample( "genomic" );
-        } else if ( string.equals( "protein" ) ) {
-            platform.setSample( "protein" );
-        } else if ( string.equals( "mixed" ) ) {
-            platform.setSample( "mixed" );
-        } else if ( string.equals( "SAGE" ) ) {
-            platform.setSample( "SAGE" );
-        } else if ( string.equals( "MPSS" ) ) {
-            platform.setSample( "MPSS" );
-        } else if ( string.equals( "SARST" ) ) {
-            platform.setSample( "protein" );
+    public void sampleTypeSet( String accession, String string ) {
+        GeoSample sample = results.getSampleMap().get( accession );
+        if ( string.equalsIgnoreCase( "cDNA" ) ) {
+            sample.setSample( "RNA" );
+        } else if ( string.equalsIgnoreCase( "RNA" ) ) {
+            sample.setSample( "RNA" );
+        } else if ( string.equalsIgnoreCase( "genomic" ) ) {
+            sample.setSample( "genomic" );
+        } else if ( string.equalsIgnoreCase( "protein" ) ) {
+            sample.setSample( "protein" );
+        } else if ( string.equalsIgnoreCase( "mixed" ) ) {
+            sample.setSample( "mixed" );
+        } else if ( string.equalsIgnoreCase( "SAGE" ) ) {
+            sample.setSample( "SAGE" );
+        } else if ( string.equalsIgnoreCase( "MPSS" ) ) {
+            sample.setSample( "MPSS" );
+        } else if ( string.equalsIgnoreCase( "SARST" ) ) {
+            sample.setSample( "protein" );
         } else {
             throw new IllegalArgumentException( "Unknown sample type " + string );
         }
@@ -1118,6 +1089,8 @@ public class GeoFamilyParser implements Parser {
             // FIXME
         } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
             // nooop.
+        } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
+            sampleTypeSet( currentPlatformAccession, value );
         } else {
             log.error( "Unknown flag in sample: " + line );
         }
@@ -1217,8 +1190,6 @@ public class GeoFamilyParser implements Parser {
             // FIXME
         } else if ( startsWithIgnoreCase( line, "!Series_last_update_date" ) ) {
             // FIXME
-        } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
-            seriesSampleSet( currentPlatformAccession, value );
         } else {
             log.error( "Unknown flag in series: " + line );
         }

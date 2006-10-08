@@ -744,9 +744,13 @@ public class GeoConverter implements Converter {
             } else {
                 BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setTaxon( taxon );
-                bs.setPolymerType( PolymerType.fromString( platform.getSample() ) );
-                bs.setType( SequenceType.fromString( platform.getSample() ) ); // TODO need to determine SequenceType
-                // and PolymerType.
+                // TODO Paul, how do you want to determine the polymer type and the sequence. When these are parsed,
+                // they are put in the sample (ie. paragraph starts with ^SAMPLE and line starts with !Sample_type).
+                // Here, we only have a hook
+                // to the platform.
+                bs.setPolymerType( PolymerType.DNA );
+                bs.setType( SequenceType.DNA );
+
                 bs.setName( externalRef );
                 DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
                 dbe.setAccession( externalRef );
@@ -956,6 +960,7 @@ public class GeoConverter implements Converter {
             bioMaterial.setSourceTaxon( taxon );
 
             bioAssay.setArrayDesignUsed( arrayDesign );
+
         }
 
         return bioAssay;
@@ -1677,7 +1682,7 @@ public class GeoConverter implements Converter {
         } else if ( pt.equals( PrimitiveType.INT ) ) {
             toConvert.add( 0 );
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            toConvert.add( false ); // FIXME - what happens if boolean parsing fails?
+            toConvert.add( false );
         } else {
             throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
         }

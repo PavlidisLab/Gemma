@@ -39,6 +39,7 @@ public class GeoSample extends GeoData implements Comparable {
     private String dataProcessing = "";
     private String scanProtocol = "";
     private String description = "";
+    private String sample = "DNA";
 
     Collection<GeoPlatform> platforms;
 
@@ -316,6 +317,14 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public void addReplication( GeoReplication replication ) {
         this.replicates.add( replication );
+    }
+
+    public String getSample() {
+        return sample;
+    }
+
+    public void setSample( String sample ) {
+        this.sample = sample;
     }
 
     /*
