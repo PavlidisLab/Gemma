@@ -129,6 +129,8 @@ public class GeoConverter implements Converter {
 
     private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
 
+    private Map<String, Taxon> platformTaxonMap = new HashMap<String, Taxon>();
+
     private Collection<Object> results = new HashSet<Object>();
 
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<String, ArrayDesign>();
@@ -790,9 +792,6 @@ public class GeoConverter implements Converter {
      */
     private Taxon convertPlatformOrganism( GeoPlatform platform ) {
 
-        // FIXME cache values.
-
-        Taxon taxon = Taxon.Factory.newInstance();
         Collection<String> organisms = platform.getOrganisms();
 
         if ( organisms.size() > 1 ) {
@@ -808,20 +807,32 @@ public class GeoConverter implements Converter {
         String organism = organisms.iterator().next();
         log.debug( "Organism: " + organism );
 
-        if ( organism.toLowerCase().startsWith( GeoConverter.RAT ) ) {
-            organism = GeoConverter.RAT; // we don't distinguish between species.
+        /* see if taxon exists in map */
+        if ( platformTaxonMap.containsKey( organism ) ) {
+            return platformTaxonMap.get( organism );
         }
 
-        taxon.setScientificName( organism );
+        /* if not, either create a new one and persist, or get from db and put in map. */
+        else {
 
-        if ( taxonService != null ) {
-            Taxon t = taxonService.findOrCreate( taxon );
-            if ( t != null ) {
-                taxon = t;
+            if ( organism.toLowerCase().startsWith( GeoConverter.RAT ) ) {
+                organism = GeoConverter.RAT; // we don't distinguish between species.
             }
-        }
 
-        return taxon;
+            Taxon taxon = Taxon.Factory.newInstance();
+
+            taxon.setScientificName( organism );
+
+            if ( taxonService != null ) {
+                Taxon t = taxonService.findOrCreate( taxon );
+                if ( t != null ) {
+                    taxon = t;
+                }
+            }
+
+            platformTaxonMap.put( organism, taxon );
+            return taxon;
+        }
     }
 
     /**
