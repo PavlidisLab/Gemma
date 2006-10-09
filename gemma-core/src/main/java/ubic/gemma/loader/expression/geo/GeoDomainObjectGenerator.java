@@ -211,6 +211,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                 seriesAccession );
 
         // FIXME put this back...or something.
+        // Raw data files have been added to series object as a path (during parsing).
         // processRawData( series )
 
         for ( String dataSetAccession : datasetsToProcess ) {
