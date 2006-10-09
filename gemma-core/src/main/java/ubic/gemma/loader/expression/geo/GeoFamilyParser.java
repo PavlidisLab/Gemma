@@ -1086,7 +1086,7 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
             // nooop.
         } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
-            sampleTypeSet( currentPlatformAccession, value );
+            sampleTypeSet( currentSampleAccession, value );
         } else {
             log.error( "Unknown flag in sample: " + line );
         }
