@@ -36,7 +36,6 @@ public class GeoSeries extends GeoData {
 
     String summary = "";
     String overallDesign = "";
-    String sample = "DNA";
     Collection<String> keyWords;
     Collection<String> pubmedIds;
     Collection<String> webLinks;
@@ -46,6 +45,7 @@ public class GeoSeries extends GeoData {
     GeoSampleCorrespondence sampleCorrespondence;
     Collection<GeoDataset> dataSets;
     Collection<GeoSample> samples;
+    String supplementaryFile = "";
 
     public GeoSeries() {
         keyWords = new HashSet<String>();
@@ -245,12 +245,18 @@ public class GeoSeries extends GeoData {
         this.sampleCorrespondence = sampleCorrespondence;
     }
 
-    public String getSample() {
-        return sample;
+    /**
+     * @return String
+     */
+    public String getSupplementaryFile() {
+        return supplementaryFile;
     }
 
-    public void setSample( String sample ) {
-        this.sample = sample;
+    /**
+     * @param supplementaryFile
+     */
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
     }
 
 }
