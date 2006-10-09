@@ -46,6 +46,7 @@ public class GeoSeries extends GeoData {
     Collection<GeoDataset> dataSets;
     Collection<GeoSample> samples;
     String supplementaryFile = "";
+    String lastUpdateDate = "";
 
     public GeoSeries() {
         keyWords = new HashSet<String>();
@@ -257,6 +258,24 @@ public class GeoSeries extends GeoData {
      */
     public void setSupplementaryFile( String supplementaryFile ) {
         this.supplementaryFile = supplementaryFile;
+    }
+
+    /**
+     * Returns the date the series was last updated.
+     * 
+     * @return String
+     */
+    public String getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    /**
+     * Sets the date the series was last updated.
+     * 
+     * @param lastUpdateDate
+     */
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 
 }
