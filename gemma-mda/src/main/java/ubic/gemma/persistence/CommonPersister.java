@@ -512,6 +512,7 @@ abstract public class CommonPersister extends AbstractPersister {
         }
 
         ontologyEntry = ontologyEntryService.findOrCreate( ontologyEntry );
+        this.getCurrentSession().flush();
         return ontologyEntry;
     }
 

@@ -24,6 +24,8 @@ import java.util.Map;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -52,12 +54,15 @@ import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
  * @spring.property name="blatResultService" ref="blatResultService"
  * @spring.property name="blastResultService" ref="blastResultService"
  * @spring.property name="geneProductService" ref="geneProductService"
+ * @spring.property name="chromosomeService" ref="chromosomeService"
  * @author pavlidis
  * @version $Id$
  */
 abstract public class GenomePersister extends CommonPersister {
 
     protected GeneService geneService;
+
+    protected ChromosomeService chromosomeService;
 
     protected GeneProductService geneProductService;
 
@@ -74,6 +79,8 @@ abstract public class GenomePersister extends CommonPersister {
     protected BlastResultService blastResultService;
 
     protected Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
+
+    protected Map<Object, Chromosome> seenChromosomes = new HashMap<Object, Chromosome>();
 
     protected boolean firstBioSequence = false;
 
@@ -95,6 +102,8 @@ abstract public class GenomePersister extends CommonPersister {
             return persistBioSequence2GeneProduct( ( BioSequence2GeneProduct ) entity );
         } else if ( entity instanceof SequenceSimilaritySearchResult ) {
             return persistSequenceSimilaritySearchResult( ( SequenceSimilaritySearchResult ) entity );
+        } else if ( entity instanceof Chromosome ) {
+            return persistChromosome( ( Chromosome ) entity );
         }
         return super.persist( entity );
     }
@@ -200,6 +209,7 @@ abstract public class GenomePersister extends CommonPersister {
      */
     private BlastResult persistBlastResult( BlastResult blastResult ) {
         blastResult.setQuerySequence( persistBioSequence( blastResult.getQuerySequence() ) );
+        blastResult.setTargetChromosome( persistChromosome( blastResult.getTargetChromosome() ) );
         return blastResultService.create( blastResult );
     }
 
@@ -208,7 +218,32 @@ abstract public class GenomePersister extends CommonPersister {
      */
     private BlatResult persistBlatResult( BlatResult blatResult ) {
         blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
+        blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome() ) );
         return blatResultService.create( blatResult );
+    }
+
+    /**
+     * @param chromosome
+     * @return
+     */
+    private Chromosome persistChromosome( Chromosome chromosome ) {
+        if ( chromosome == null ) return null;
+        if ( !isTransient( chromosome ) ) return chromosome;
+
+        String key = chromosome.getTaxon().getCommonName() + " " + chromosome.getName();
+
+        if ( seenChromosomes.containsKey( key ) ) {
+            return seenChromosomes.get( key );
+        }
+
+        chromosome.setSequence( persistBioSequence( chromosome.getSequence() ) );
+        chromosome.setTaxon( persistTaxon( chromosome.getTaxon() ) );
+        chromosome = chromosomeService.findOrCreate( chromosome );
+
+        seenChromosomes.put( key, chromosome );
+
+        return chromosome;
+
     }
 
     /**
@@ -350,5 +385,12 @@ abstract public class GenomePersister extends CommonPersister {
      */
     public void setGeneProductService( GeneProductService geneProductService ) {
         this.geneProductService = geneProductService;
+    }
+
+    /**
+     * @param chromosomeService the chromosomeService to set
+     */
+    public void setChromosomeService( ChromosomeService chromosomeService ) {
+        this.chromosomeService = chromosomeService;
     }
 }

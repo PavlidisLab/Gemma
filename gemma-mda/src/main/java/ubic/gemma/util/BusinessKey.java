@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -151,7 +152,7 @@ public class BusinessKey {
      */
     public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
-        addRestrictions( innerQuery, taxon );
+        attachCriteria( innerQuery, taxon );
         if ( log.isDebugEnabled() ) log.debug( queryObject.toString() );
     }
 
@@ -239,7 +240,7 @@ public class BusinessKey {
                 || bioSequence.getTaxon() == null
                 || ( StringUtils.isBlank( bioSequence.getName() ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
                         .getSequenceDatabaseEntry() == null ) ) {
-            throw new IllegalArgumentException( "Biosequence did not have a valid key" );
+            throw new IllegalArgumentException( bioSequence + " did not have a valid key" );
         }
     }
 
@@ -411,7 +412,7 @@ public class BusinessKey {
             queryObject.add( Restrictions.eq( "sequence", bioSequence.getSequence() ) );
         }
 
-        addRestrictions( queryObject, bioSequence.getTaxon() );
+        attachCriteria( queryObject, bioSequence.getTaxon(), "taxon" );
 
         if ( bioSequence.getSequenceDatabaseEntry() != null ) {
             queryObject.createCriteria( "sequenceDatabaseEntry" ).add(
@@ -457,13 +458,41 @@ public class BusinessKey {
      */
     public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
         checkValidKey( taxon );
+        queryObject.createCriteria( "taxon" );
+        attachCriteria( queryObject, taxon );
+    }
 
+    /**
+     * @param queryObject
+     * @param taxon
+     */
+    private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
         if ( taxon.getNcbiId() != null ) {
-            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+            queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
         } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
-            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
+            queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
-            queryObject.createCriteria( "taxon" ).add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
+            queryObject.add( Restrictions.eq( "commonName", taxon.getCommonName() ) );
         }
+    }
+
+    /**
+     * @param chromosome
+     */
+    public static void checkValidKey( Chromosome chromosome ) {
+        if ( StringUtils.isBlank( chromosome.getName() ) ) {
+            throw new IllegalArgumentException( "Chromosome did not have a valid key" );
+        }
+        checkValidKey( chromosome.getTaxon() );
+    }
+
+    /**
+     * @param queryObject
+     * @param chromosome
+     */
+    public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
+        queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
+        attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
+        log.info( queryObject );
     }
 }

@@ -22,10 +22,55 @@
  */
 package ubic.gemma.model.genome;
 
+import org.hibernate.Criteria;
+
+import ubic.gemma.util.BusinessKey;
+
 /**
- * @see ubic.gemma.model.genome.Chromosome
+ * @author pavlidis
+ * @version $Id$
  */
-public class ChromosomeDaoImpl
-    extends ubic.gemma.model.genome.ChromosomeDaoBase
-{
+public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase {
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.ChromosomeDaoBase#find(ubic.gemma.model.genome.Chromosome)
+     */
+    @Override
+    public Chromosome find( Chromosome chromosome ) {
+        try {
+
+            BusinessKey.checkValidKey( chromosome );
+            Criteria queryObject = super.getSession( false ).createCriteria( Chromosome.class );
+            BusinessKey.addRestrictions( queryObject, chromosome );
+
+            java.util.List results = queryObject.list();
+            Object result = null;
+            if ( results != null ) {
+                if ( results.size() > 1 ) {
+
+                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
+                            + Chromosome.class.getName() + "s were found when executing query" );
+
+                } else if ( results.size() == 1 ) {
+                    result = results.iterator().next();
+                }
+            }
+            return ( Chromosome ) result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
+    @Override
+    public Chromosome findOrCreate( Chromosome chromosome ) {
+        Chromosome existing = this.find( chromosome );
+        if ( existing != null ) {
+            assert existing.getId() != null;
+            return existing;
+        }
+        return create( chromosome );
+    }
+
 }
