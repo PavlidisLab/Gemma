@@ -55,6 +55,17 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         this.getBioSequenceDao().update( bioSequence );
     }
 
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
+     */
+    @Override
+    protected void handleUpdate( Collection bioSequences ) throws Exception {
+        this.getBioSequenceDao().update( bioSequences );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
     @Override
     protected BioSequence handleFindOrCreate( BioSequence bioSequence ) throws Exception {
         return this.getBioSequenceDao().findOrCreate( bioSequence );
@@ -95,5 +106,4 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
         }
         return result;
     }
-
 }
