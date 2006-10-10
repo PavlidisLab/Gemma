@@ -1,0 +1,8 @@
+gzip -d *.gz
+head -n 10000 mm8.chr19.fa > mm8.chr19.10000.fa
+head -n 10000 rn4.chr20.fa > rn4.chr20.10000.fa
+head -n 10000 hg18.chr22.fa > hg18.chr22.10000.fa 
+
+c:/cygwin/usr/local/bin/faToTwoBit mm8.chr19.10000.fa mm8.chr19.10000.2bit
+c:/cygwin/usr/local/bin/faToTwoBit hg18.chr22.10000.fa  hg18.chr22.10000.2bit
+c:/cygwin/usr/local/bin/faToTwoBit rn4.chr20.10000.fa rn4.chr20.10000.2bit
