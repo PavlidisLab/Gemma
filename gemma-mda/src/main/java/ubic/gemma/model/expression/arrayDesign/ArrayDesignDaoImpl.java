@@ -167,4 +167,20 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return queryByIdReturnCollection( id, queryString );
     }
+    
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
+     */
+    @Override
+    protected Collection handleGetAllAssociatedBioAssays(Long id) throws Exception {
+        final String queryString = "select bioAssay from BioAssayImpl as bioAssay where bioAssay.arrayDesignUsed.id = :id";
+        return queryByIdReturnCollection( id, queryString );
+        
+    }
+    
+    
+    
 }

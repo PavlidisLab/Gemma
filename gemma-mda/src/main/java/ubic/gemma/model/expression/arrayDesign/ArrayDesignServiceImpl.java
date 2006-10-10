@@ -27,6 +27,14 @@ import java.util.Collection;
  * @version $Id$
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
+/**
+ * 
+ *
+ * <hr>
+ * <p>Copyright (c) 2006 UBC Pavlab
+ * @author klc
+ * @version $Id$
+ */
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
 
     /**
@@ -132,5 +140,15 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     protected ArrayDesign handleLoad( long id ) throws Exception {
         return ( ArrayDesign) this.getArrayDesignDao().load( id );
     }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.handleGetAllAssociatedBioAssays(long)
+     */
+    @Override
+   protected java.util.Collection handleGetAllAssociatedBioAssays(java.lang.Long id){
+       return this.getArrayDesignDao().getAllAssociatedBioAssays(id);
+       
+   }
 
 }

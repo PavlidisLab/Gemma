@@ -32,6 +32,10 @@
 							property="advertisedNumberOfDesignElements"
 							titleKey="arrayDesign.advertisedNumberOfDesignElements">						
 						</display:column>
+						
+						<display:column  sortable="false" href="deleteArrayDesign.html" paramId="id" paramProperty="id"   titleKey="arrayDesign.delete"> 
+						delete </display:column>
+						
 						<display:setProperty name="basic.empty.showtable" value="true" />
 					</display:table>
 				</tr>

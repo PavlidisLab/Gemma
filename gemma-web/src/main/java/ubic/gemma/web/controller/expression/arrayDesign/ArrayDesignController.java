@@ -18,12 +18,15 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import java.util.Collection;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -64,22 +67,21 @@ public class ArrayDesignController extends BaseMultiActionController {
         String name = request.getParameter( "name" );
         String id = request.getParameter( "id" );
 
-        if ( (name == null) && (id == null) ) {
+        if ( ( name == null ) && ( id == null ) ) {
             // should be a validation error, on 'submit'.
             throw new EntityNotFoundException( "Must provide an Array Design name or Id" );
         }
         ArrayDesign arrayDesign = null;
-        if (id != null) {
+        if ( id != null ) {
             arrayDesign = arrayDesignService.load( Long.parseLong( id ) );
             this.addMessage( request, "object.found", new Object[] { messageId, id } );
             request.setAttribute( "id", id );
-        }
-        else if (name != null) {
+        } else if ( name != null ) {
             arrayDesign = arrayDesignService.findArrayDesignByName( name );
             this.addMessage( request, "object.found", new Object[] { messageName, name } );
             request.setAttribute( "name", name );
         }
-        
+
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( name + " not found" );
         }
@@ -89,6 +91,7 @@ public class ArrayDesignController extends BaseMultiActionController {
 
     /**
      * Disabled for now
+     * 
      * @param request
      * @param response
      * @return
@@ -105,19 +108,32 @@ public class ArrayDesignController extends BaseMultiActionController {
      */
     @SuppressWarnings("unused")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        String name = request.getParameter( "name" );
+        String stringId = request.getParameter( "id" );
 
-        if ( name == null ) {
+        if ( stringId == null ) {
             // should be a validation error.
-            throw new EntityNotFoundException( "Must provide a name" );
+            throw new EntityNotFoundException( "Must provide an id" );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.findArrayDesignByName( name );
+        long id = Long.parseLong( stringId );
+
+       
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
             throw new EntityNotFoundException( arrayDesign + " not found" );
         }
-
-        return doDelete( request, arrayDesign );
+        
+        //check that no EE depend on the arraydesign we want to delete
+        //Do this by checking if there are any bioassays that depend this AD
+        Collection assays = arrayDesignService.getAllAssociatedBioAssays( id );
+        if (assays.size() == 0) 
+            return doDelete( request, arrayDesign );
+        
+        //String eeName = ((BioAssay) assays.iterator().next()).  //todo tell user what EE depend on this array design
+        addMessage(request, "Array Design " + arrayDesign.getName() + " can't be Deleted. ExpressionExperiments depend on it.", new Object[] {messageName, arrayDesign.getName()} );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ));
+        
+        
     }
 
     /**
@@ -130,7 +146,7 @@ public class ArrayDesignController extends BaseMultiActionController {
         arrayDesignService.remove( arrayDesign );
         log.info( "Bibliographic reference with pubMedId: " + arrayDesign.getName() + " deleted" );
         addMessage( request, "object.deleted", new Object[] { messageName, arrayDesign.getName() } );
-        return new ModelAndView( "arrayDesigns", "arrayDesign", arrayDesign );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ));
     }
 
 }
