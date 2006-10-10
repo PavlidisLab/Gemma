@@ -18,9 +18,12 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -62,6 +65,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -371,6 +375,7 @@ public class GeoConverter implements Converter {
 
         result.setExternalDatabase( this.geoDatabase );
         result.setAccession( geoData.getGeoAccession() );
+
         return result;
     }
 
@@ -1077,12 +1082,23 @@ public class GeoConverter implements Converter {
             expExp = resultToAddTo;
         }
 
-        expExp.setDescription( series.getSummaries() );
+        expExp.setDescription( series.getSummaries() + ". Date Last Updated: " + series.getLastUpdateDate() );
         expExp.setName( series.getTitle() );
 
         convertContacts( series, expExp );
 
         expExp.setAccession( convertDatabaseEntry( series ) );
+
+        URL remoteUrl = null;
+        try {
+            remoteUrl = new URL( series.getSupplementaryFile() );
+            LocalFile expExpRawDataFile = LocalFile.Factory.newInstance();
+            expExpRawDataFile.setRemoteURL( remoteUrl );
+            expExpRawDataFile.setLocalURL( remoteUrl );// FIXME required, but unecessary(?)
+            expExp.setRawDataFile( expExpRawDataFile );
+        } catch ( MalformedURLException e ) {
+            log.error( "Problems with url: " + remoteUrl + ".  Will not store the url of the raw data file." );
+        }
 
         ExperimentalDesign design = ExperimentalDesign.Factory.newInstance();
         design.setDescription( "" );
