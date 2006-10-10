@@ -734,9 +734,16 @@ public class GeoConverter implements Converter {
         Collection compositeSequences = new ArrayList( 5000 );
         for ( String id : identifiers ) {
             String externalRef = refIter.next();
+
+            String[] refs = externalRef.split( "," );
             String description = "";
 
-            if ( descIter != null ) description = descIter.next();
+            if ( refs.length > 1 ) {
+                description = description + "Multiple external sequence references: " + externalRef + "; ";
+                externalRef = refs[0];
+            }
+
+            if ( descIter != null ) description = description + " " + descIter.next();
 
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
             cs.setName( id );
