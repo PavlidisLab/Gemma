@@ -71,6 +71,8 @@ public class GeoPlatform extends GeoData {
 
     private String sample = "DNA";
 
+    private String lastUpdateDate = "";
+
     /**
      * @param s
      */
@@ -295,12 +297,32 @@ public class GeoPlatform extends GeoData {
         this.webLinks = webLinks;
     }
 
+    /**
+     * @return String
+     */
     public String getSample() {
         return sample;
     }
 
+    /**
+     * @param sample
+     */
     public void setSample( String sample ) {
         this.sample = sample;
+    }
+
+    /**
+     * @return String
+     */
+    public String getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    /**
+     * @param lastUpdateDate
+     */
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 
 }

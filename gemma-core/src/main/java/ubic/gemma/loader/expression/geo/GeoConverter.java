@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -594,7 +593,7 @@ public class GeoConverter implements Converter {
 
         expExp.setDescription( expExp.getDescription() + " Includes " + geoDataset.getGeoAccession() + ". " );
         if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
-            expExp.setDescription( expExp.getDescription() + " Update date " + geoDataset.getUpdateDate() + ". " );
+            expExp.setDescription( expExp.getDescription() + " Update date: " + geoDataset.getUpdateDate() + ". " );
         }
 
         if ( StringUtils.isEmpty( expExp.getName() ) ) {
@@ -602,6 +601,12 @@ public class GeoConverter implements Converter {
         } else {
             expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
                     + ": " + geoDataset.getTitle() + ". " );
+        }
+
+        GeoPlatform platform = geoDataset.getPlatform();
+        if ( platform != null ) {
+            expExp.setDescription( expExp.getDescription() + ". Platform " + platform.getGeoAccession()
+                    + " Last Updated: " + platform.getLastUpdateDate() );
         }
     }
 
@@ -1089,6 +1094,7 @@ public class GeoConverter implements Converter {
             expExp = resultToAddTo;
         }
 
+        if ( series.getLastUpdateDate() == null ) series.setLastUpdateDate( "not available" );
         expExp.setDescription( series.getSummaries() + ". Date Last Updated: " + series.getLastUpdateDate() );
         expExp.setName( series.getTitle() );
 
