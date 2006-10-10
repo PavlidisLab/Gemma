@@ -38,7 +38,7 @@ public interface FastaCmd {
 
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database );
 
-    public BioSequence getByAccesion( String accession, String database, String blastHome );
+    public BioSequence getByAccession( String accession, String database, String blastHome );
 
     public BioSequence getByIdentifier( int identifier, String database, String blastHome );
 

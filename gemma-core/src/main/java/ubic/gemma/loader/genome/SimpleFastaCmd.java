@@ -19,8 +19,13 @@
 package ubic.gemma.loader.genome;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -49,8 +54,11 @@ public class SimpleFastaCmd implements FastaCmd {
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database, String blastHome ) {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            return this.getMultiple( accessions, database, blastHome );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /*
@@ -60,8 +68,12 @@ public class SimpleFastaCmd implements FastaCmd {
      */
     public Collection<BioSequence> getBatchIdentifiers( Collection<Integer> identifiers, String database,
             String blastHome ) {
-        // write to temp file; fetch;
-        return null;
+        try {
+            return this.getMultiple( identifiers, database, blastHome );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     /*
@@ -69,12 +81,43 @@ public class SimpleFastaCmd implements FastaCmd {
      * 
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccesion(java.lang.String, java.lang.String)
      */
-    public BioSequence getByAccesion( String accession, String database, String blastHome ) {
+    public BioSequence getByAccession( String accession, String database, String blastHome ) {
         try {
             return getSingle( accession, database, blastHome );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /**
+     * @param keys
+     * @param database
+     * @param blastHome
+     * @return
+     * @throws IOException
+     */
+    private Collection<BioSequence> getMultiple( Collection<? extends Object> keys, String database, String blastHome )
+            throws IOException {
+
+        File tmp = File.createTempFile( "sequenceIds", ".txt" );
+        Writer tmpOut = new FileWriter( tmp );
+
+        for ( Object object : keys ) {
+            tmpOut.write( object.toString() + "\n" );
+        }
+
+        tmpOut.close();
+        String[] opts = new String[] { "BLASTDB=" + blastHome };
+        Process pr = Runtime.getRuntime().exec(
+                fastaCmdExecutable + " -d " + database + " -i " + tmp.getAbsolutePath(), opts );
+
+        InputStream is = new BufferedInputStream( pr.getInputStream() );
+        FastaParser parser = new FastaParser();
+        parser.parse( is );
+        Collection<BioSequence> sequences = parser.getResults();
+        tmp.delete();
+        return sequences;
+
     }
 
     /**
@@ -152,7 +195,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * @see ubic.gemma.loader.genome.FastaCmd#getByAccesion(java.lang.String, java.lang.String)
      */
     public BioSequence getByAccesion( String accession, String database ) {
-        return this.getByAccesion( accession, database, blastDbHome );
+        return this.getByAccession( accession, database, blastDbHome );
     }
 
 }
