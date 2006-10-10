@@ -148,11 +148,16 @@ public class ExpressionExperimentLoadController extends BaseFormController {
 
             } else {               
                 job.updateProgress( new ProgressData( 0, "Loading EE..." ) );
-
-                ExpressionExperiment result = ( ExpressionExperiment ) geoDatasetService.fetchAndLoad( accesionNum );
-                model.put( "expressionExperiment", result );
-              
-                 job.setForwardingURL("/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() );
+                Collection result = geoDatasetService.fetchAndLoad( accesionNum );
+                //ExpressionExperiment result = ( ExpressionExperiment ) geoDatasetService.fetchAndLoad( accesionNum );
+                //model.put( "expressionExperiment", result );
+                if (result.size() == 1) {
+                    ExpressionExperiment loaded = (ExpressionExperiment) result.iterator().next();
+                    job.setForwardingURL("/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + loaded.getId() );                    
+                }
+                else {
+                    job.setForwardingURL("/Gemma/expressionExperiment/showAllExpressionExperiments.html" );
+                }
             }
 
             ProgressManager.destroyProgressJob( job );
