@@ -44,7 +44,7 @@ public abstract class RecordParser implements Parser {
             line = br.readLine();
             String lastRecord = null;
 
-            // start a fresh record?
+            // start a fresh record? (null condition happens at end)
             if ( line == null || line.startsWith( recordSeparator ) ) {
                 if ( record != null ) {
                     lastRecord = record.toString();
@@ -77,8 +77,8 @@ public abstract class RecordParser implements Parser {
             }
 
         }
-        log.info( "Parsed " + recordsParsed + " records. "
-                + ( nullRecords > 0 ? nullRecords + " yielded no parse result." : "" ) );
+        log.info( "Successfully parsed " + recordsParsed + " records."
+                + ( nullRecords > 0 ? " Another " + nullRecords + " records yielded no parse result." : "" ) );
 
     }
 

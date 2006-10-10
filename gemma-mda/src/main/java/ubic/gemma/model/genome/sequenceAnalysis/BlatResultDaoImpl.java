@@ -41,7 +41,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<BlatResult> find( BioSequence bioSequence ) {
+    public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
         Criteria queryObject = super.getSession( false ).createCriteria( BlatResult.class );

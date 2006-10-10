@@ -1,0 +1,128 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.loader.expression.arrayDesign;
+
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.analysis.sequence.ProbeMapper;
+import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.PersisterHelper;
+
+/**
+ * For an array design, generate gene product mappings for the sequences.
+ * 
+ * @author pavlidis
+ * @version $Id$
+ * @spring.bean name="arrayDesignProbeMapperService"
+ * @spring.property name="blatResultService" ref="blatResultService"
+ * @spring.property name="blatAssociationService" ref="blatAssociationService"
+ * @spring.property name="persisterHelper" ref="persisterHelper"
+ */
+public class ArrayDesignProbeMapperService {
+
+    private static Log log = LogFactory.getLog( ArrayDesignProbeMapperService.class.getName() );
+
+    BlatResultService blatResultService;
+
+    BlatAssociationService blatAssociationService;
+
+    PersisterHelper persisterHelper;
+
+    private double identityThreshold = ProbeMapper.DEFAULT_IDENTITY_THRESHOLD;
+    private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
+
+    /**
+     * @param arrayDesign
+     */
+    @SuppressWarnings("unchecked")
+    public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon ) {
+
+        GoldenPathSequenceAnalysis goldenPathDb;
+        try {
+            goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
+        ProbeMapper probeMapper = new ProbeMapper();
+        probeMapper.setIdentityThreshold( identityThreshold );
+        probeMapper.setScoreThreshold( scoreThreshold );
+
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+            BioSequence bs = compositeSequence.getBiologicalCharacteristic();
+            Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+            Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
+                    blatResults );
+
+            log.info( "Found " + results.size() + " mappings for " + compositeSequence );
+
+            for ( String key : results.keySet() ) {
+                persisterHelper.persist( results.get( key ) );
+            }
+
+        }
+    }
+
+    /**
+     * @param blatAssociationService the blatAssociationService to set
+     */
+    public void setBlatAssociationService( BlatAssociationService blatAssociationService ) {
+        this.blatAssociationService = blatAssociationService;
+    }
+
+    /**
+     * @param bioSequenceService the bioSequenceService to set
+     */
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param identityThreshold the identityThreshold to set
+     */
+    public void setIdentityThreshold( double identityThreshold ) {
+        this.identityThreshold = identityThreshold;
+    }
+
+    /**
+     * @param scoreThreshold the scoreThreshold to set
+     */
+    public void setScoreThreshold( double scoreThreshold ) {
+        this.scoreThreshold = scoreThreshold;
+    }
+}

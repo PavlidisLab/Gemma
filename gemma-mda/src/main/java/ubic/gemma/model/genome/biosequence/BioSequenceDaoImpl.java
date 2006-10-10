@@ -115,10 +115,4 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         }
         log.debug( sb.toString() );
     }
-
-    @Override
-    protected Collection handleGetSequenceSimilaritySearchResults( Long id ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

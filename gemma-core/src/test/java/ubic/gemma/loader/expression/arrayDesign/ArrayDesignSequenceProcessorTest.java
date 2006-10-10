@@ -21,12 +21,9 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.HibernateTemplate;

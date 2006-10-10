@@ -91,11 +91,34 @@ public class SimpleFastaCmdTest extends TestCase {
         assertEquals( expected, bs.getSequence() );
     }
 
+    public void testGetSingleAccNotFound() throws Exception {
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", "testblastdb", ConfigUtils.getString( "gemma.home" )
+                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        assertNull( bs );
+    }
+
     public void testGetMultipleAcc() throws Exception {
         SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
 
         Collection<String> input = new ArrayList<String>();
         input.add( "AA000002.1" );
+        input.add( "AA000003.1" );
+
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, "testblastdb", ConfigUtils
+                .getString( "gemma.home" )
+                + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+        assertNotNull( bs );
+        assertEquals( 2, bs.size() );
+    }
+
+    public void testGetMultipleAccSomeNotFound() throws Exception {
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
+        Collection<String> input = new ArrayList<String>();
+        input.add( "FAKE.2" );
+        input.add( "AA000002.1" );
+        input.add( "FAKE.1" );
         input.add( "AA000003.1" );
 
         Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, "testblastdb", ConfigUtils

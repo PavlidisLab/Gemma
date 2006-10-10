@@ -19,7 +19,9 @@
 package ubic.gemma.analysis.sequence;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -43,9 +45,17 @@ public class ProbeMapperTest extends TestCase {
     private String databaseHost;
     private String databaseUser;
     private String databasePassword;
+    List<Double> tester;
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        tester = new ArrayList<Double>();
+        tester.add( new Double( 400 ) );
+        tester.add( new Double( 200 ) );
+        tester.add( new Double( 100 ) );
+        tester.add( new Double( 50 ) );
+
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" );
         BlatResultParser brp = new BlatResultParser();
         brp.parse( is );
@@ -97,4 +107,33 @@ public class ProbeMapperTest extends TestCase {
         }
 
     }
+
+    public void testComputeSpecificityA() throws Exception {
+        ProbeMapper pm = new ProbeMapper();
+        Double actual = pm.computeSpecificity( tester, 400 );
+        Double expected = 0.5;
+        assertEquals( expected, actual, 0.0001 );
+    }
+
+    public void testComputeSpecificityB() throws Exception {
+        ProbeMapper pm = new ProbeMapper();
+        Double actual = pm.computeSpecificity( tester, 200 );
+        Double expected = 0.5;
+        assertEquals( expected, actual, 0.0001 );
+    }
+
+    public void testComputeSpecificityC() throws Exception {
+        ProbeMapper pm = new ProbeMapper();
+        Double actual = pm.computeSpecificity( tester, 50 );
+        Double expected = 0.25;
+        assertEquals( expected, actual, 0.0001 );
+    }
+
+    public void testComputeSpecificityD() throws Exception {
+        ProbeMapper pm = new ProbeMapper();
+        Double actual = pm.computeSpecificity( tester, 395 );
+        Double expected = 0.4936;
+        assertEquals( expected, actual, 0.0001 );
+    }
+
 }

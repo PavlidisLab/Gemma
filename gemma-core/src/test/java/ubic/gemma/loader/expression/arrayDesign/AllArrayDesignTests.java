@@ -30,13 +30,16 @@ import junit.framework.TestSuite;
 public class AllArrayDesignTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite( "Test for ubic.gemma.loader.expression.arrayDesign" );
+        TestSuite suite = new TestSuite( "Tests for ubic.gemma.loader.expression.arrayDesign" );
         // $JUnit-BEGIN$
         suite.addTestSuite( ArrayDesignParserIntegrationTest.class );
         suite.addTestSuite( IlluminaProbeReaderTest.class );
         suite.addTestSuite( AffyProbeReaderTest.class );
         suite.addTestSuite( ArrayDesignSequenceProcessorTest.class );
         suite.addTestSuite( CompositeSequenceParserTest.class );
+        suite.addTestSuite( ArrayDesignProbeMapperServiceIntegrationTest.class );
+        suite.addTestSuite( ArrayDesignSequenceAlignmentServiceIntegrationTest.class );
+        suite.addTestSuite( ArrayDesignSequenceProcessorFastacmdTest.class );
         // $JUnit-END$
         return suite;
     }

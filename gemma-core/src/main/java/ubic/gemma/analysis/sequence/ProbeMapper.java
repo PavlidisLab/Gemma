@@ -19,9 +19,12 @@
 package ubic.gemma.analysis.sequence;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -72,7 +75,8 @@ public class ProbeMapper {
     }
 
     /**
-     * From a collection of BlatAssociations, pick the one with the best scoring statistics.
+     * From a collection of BlatAssociations, pick the one with the best scoring statistics and fill in the specificity
+     * for all of them.
      * 
      * @param results
      * @return
@@ -81,6 +85,7 @@ public class ProbeMapper {
 
         int maxScore = 0;
         BlatAssociation best = null;
+        List<Double> scores = new ArrayList<Double>();
         for ( BlatAssociation blatAssociation : results ) {
 
             BlatResult br = blatAssociation.getBlatResult();
@@ -88,26 +93,72 @@ public class ProbeMapper {
             double blatScore = br.score();
             double overlap = ( double ) blatAssociation.getOverlap() / ( double ) ( br.getQuerySequence().getLength() );
             int score = computeScore( blatScore, overlap );
+            scores.add( new Double( score ) );
             if ( score >= maxScore ) {
                 maxScore = score;
                 best = blatAssociation;
             }
         }
 
-        // examine ties.
+        Collections.sort( scores );
+        Collections.reverse( scores );
 
-        // FIXME - measure the specificity.
-        int numTied = 0;
+        // measure the specificity for all the scores (this could be made more efficient)
         for ( BlatAssociation ld : results ) {
             double blatScore = ld.getBlatResult().score();
             double overlap = ld.getOverlap() / ( double ) ( ld.getBlatResult().getQuerySequence().getLength() );
             int score = computeScore( blatScore, overlap );
-            if ( score == maxScore ) {
-                numTied++;
-            }
+            ld.setSpecificity( computeSpecificity( scores, score ) );
         }
 
         return best;
+    }
+
+    /**
+     * Compute a score to quantify the specificity of a hit to a GeneProduct. A value between 0 and 1.
+     * <p>
+     * The criteria considered are: the number of equal or better hits, and the difference between this hit and the next
+     * worst hit.
+     * <p>
+     * If there are n identical or better hits (including this one), the specificity is 1/n.
+     * <p>
+     * If this is the best hit, then the specificity is (scoremax - nextscore)/scoremax.
+     * 
+     * @param scores A list in decreasing order. If it is not sorted you won't get the right results!
+     * @param score
+     * @return
+     */
+    protected Double computeSpecificity( List<Double> scores, int score ) {
+
+        if ( scores.size() == 1 ) {
+            return 1.0;
+        }
+
+        // algorithm: compute the number of scores which are equal or higher than this one.
+        int numBetter = 0;
+        int i = 0;
+        double nextBest = 0.0;
+        double total = 0.0;
+        for ( Double s : scores ) {
+
+            total += s;
+
+            if ( s >= score ) {
+                numBetter++; // this is guaranteed to be at least one
+            }
+            if ( s < score ) {
+                nextBest = s;
+                break;
+            }
+            i++;
+        }
+
+        if ( numBetter > 1 ) {
+            return 1.0 / numBetter;
+        }
+
+        return ( score - nextBest ) / score;
+
     }
 
     /**
@@ -119,7 +170,7 @@ public class ProbeMapper {
      * @param overlap A value from 0-1 indicating how much of the alignment overlaps the GeneProduct being considered.
      * @return
      */
-    private int computeScore( double blatScore, double overlap ) {
+    protected int computeScore( double blatScore, double overlap ) {
         return ( int ) ( 1000 * blatScore * overlap );
     }
 
@@ -298,11 +349,17 @@ public class ProbeMapper {
         return blatAssociations;
     }
 
+    /**
+     * @param scoreThreshold
+     */
     public void setScoreThreshold( double scoreThreshold ) {
         this.scoreThreshold = scoreThreshold;
 
     }
 
+    /**
+     * @param identityThreshold
+     */
     public void setIdentityThreshold( double identityThreshold ) {
         this.identityThreshold = identityThreshold;
 

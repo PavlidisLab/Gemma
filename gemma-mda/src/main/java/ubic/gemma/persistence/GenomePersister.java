@@ -265,7 +265,11 @@ abstract public class GenomePersister extends CommonPersister {
      */
     protected BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association ) {
         BlatResult blatResult = association.getBlatResult();
-        blatResult = blatResultService.create( blatResult );
+        if ( isTransient( blatResult ) ) {
+            blatResult = blatResultService.create( blatResult );
+        }
+        association.setGeneProduct( persistGeneProduct( association.getGeneProduct() ) );
+        association.setBioSequence( persistBioSequence( association.getBioSequence() ) );
         return blatAssociationService.create( association );
     }
 

@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -70,6 +71,8 @@ public class BlatResultParser extends BasicLineParser {
     private static final int BLOCKSIZES_FIELD = 18;
     private static final int QSTARTS_FIELD = 19;
     private static final int TSTARTS_FIELD = 20;
+
+    private Taxon taxon;
 
     private Collection<BlatResult> results = new HashSet<BlatResult>();
     private double scoreThreshold = 0.0;
@@ -154,6 +157,11 @@ public class BlatResultParser extends BasicLineParser {
             result.getTargetChromosome().getSequence().setName( chrom );
             result.getTargetChromosome().getSequence().setLength( Long.parseLong( f[TSIZE_FIELD] ) );
 
+            if ( taxon != null ) {
+                result.getTargetChromosome().setTaxon( taxon );
+                result.getTargetChromosome().getSequence().setTaxon( taxon );
+            }
+
             if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
                 return null;
             }
@@ -186,5 +194,19 @@ public class BlatResultParser extends BasicLineParser {
     @Override
     public Collection<BlatResult> getResults() {
         return results;
+    }
+
+    /**
+     * @return the taxon
+     */
+    public Taxon getTaxon() {
+        return this.taxon;
+    }
+
+    /**
+     * @param taxon the taxon to set
+     */
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
     }
 }

@@ -19,18 +19,21 @@
 package ubic.gemma.loader.genome;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.loader.util.concurrent.ParsingStreamConsumer;
+import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
 
@@ -98,7 +101,9 @@ public class SimpleFastaCmd implements FastaCmd {
      */
     private Collection<BioSequence> getMultiple( Collection<? extends Object> keys, String database, String blastHome )
             throws IOException {
-
+        if ( blastHome == null ) {
+            throw new IllegalArgumentException();
+        }
         File tmp = File.createTempFile( "sequenceIds", ".txt" );
         Writer tmpOut = new FileWriter( tmp );
 
@@ -108,16 +113,41 @@ public class SimpleFastaCmd implements FastaCmd {
 
         tmpOut.close();
         String[] opts = new String[] { "BLASTDB=" + blastHome };
-        Process pr = Runtime.getRuntime().exec(
-                fastaCmdExecutable + " -d " + database + " -i " + tmp.getAbsolutePath(), opts );
+        String command = fastaCmdExecutable + " -d " + database + " -i " + tmp.getAbsolutePath();
+        log.debug( command );
+        log.debug( "BLASTDB=" + blastHome );
+        Process pr = Runtime.getRuntime().exec( command, opts );
 
-        InputStream is = new BufferedInputStream( pr.getInputStream() );
-        FastaParser parser = new FastaParser();
-        parser.parse( is );
-        Collection<BioSequence> sequences = parser.getResults();
+        Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
         tmp.delete();
         return sequences;
 
+    }
+
+    /**
+     * @param pr
+     * @return
+     * @throws IOException
+     */
+    private Collection<BioSequence> getSequencesFromFastaCmdOutput( Process pr ) {
+        final InputStream is = new BufferedInputStream( pr.getInputStream() );
+        InputStream err = pr.getErrorStream();
+
+        final FastaParser parser = new FastaParser();
+
+        ParsingStreamConsumer sg = new ParsingStreamConsumer( parser, is );
+        GenericStreamConsumer gsc = new GenericStreamConsumer( err );
+        sg.start();
+        gsc.start();
+
+        try {
+            int exitVal = pr.waitFor();
+            log.debug( "fastacmd exit value=" + exitVal ); // often nonzero if some sequences are not found.
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
+        }
+        Collection<BioSequence> sequences = parser.getResults();
+        return sequences;
     }
 
     /**
@@ -127,14 +157,13 @@ public class SimpleFastaCmd implements FastaCmd {
      * @throws IOException
      */
     private BioSequence getSingle( Object key, String database, String blastHome ) throws IOException {
-
+        if ( blastHome == null ) {
+            throw new IllegalArgumentException();
+        }
         String[] opts = new String[] { "BLASTDB=" + blastHome };
         Process pr = Runtime.getRuntime().exec( fastaCmdExecutable + " -d " + database + " -s " + key.toString(), opts );
 
-        InputStream is = new BufferedInputStream( pr.getInputStream() );
-        FastaParser parser = new FastaParser();
-        parser.parse( is );
-        Collection<BioSequence> sequences = parser.getResults();
+        Collection<BioSequence> sequences = getSequencesFromFastaCmdOutput( pr );
         if ( sequences.size() == 0 ) {
             return null;
         }
@@ -176,8 +205,7 @@ public class SimpleFastaCmd implements FastaCmd {
      * @see ubic.gemma.loader.genome.FastaCmd#getBatchAccessions(java.util.Collection, java.lang.String)
      */
     public Collection<BioSequence> getBatchAccessions( Collection<String> accessions, String database ) {
-        // TODO Auto-generated method stub
-        return null;
+        return this.getBatchAccessions( accessions, database, blastDbHome );
     }
 
     /*

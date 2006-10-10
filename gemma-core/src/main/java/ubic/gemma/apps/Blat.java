@@ -26,29 +26,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.ConfigurationUtils;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Class to manage the gfServer and run BLAT searches.
@@ -80,8 +77,10 @@ public class Blat {
         }
     }
     private boolean doShutdown = true;
-    private String gfClientExe = "C:/bin/cygwini686/gfClient.exe";
-    private String gfServerExe = "C:/bin/cygwini686/gfServer.exe";
+
+    // typical values.
+    private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
+    private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
     private String host = "localhost";
     private String seqDir = "/";
 
@@ -367,6 +366,10 @@ public class Blat {
             public Process call() throws IOException {
                 try {
                     Process run = Runtime.getRuntime().exec( cmd );
+
+                    GenericStreamConsumer gsc = new GenericStreamConsumer( run.getErrorStream() );
+                    gsc.start();
+
                     try {
                         run.waitFor();
                     } catch ( InterruptedException e ) {
@@ -420,7 +423,7 @@ public class Blat {
             log.error( e, e );
             throw new RuntimeException( "GfClient Failed (Interrupted)", e );
         }
-        return processPsl( outputPath );
+        return processPsl( outputPath, null );
     }
 
     /**
@@ -479,121 +482,20 @@ public class Blat {
      */
     private void init() throws ConfigurationException {
 
-        URL universalConfigFileLocation = ConfigurationUtils.locate( "Gemma.properties" );
-        if ( universalConfigFileLocation == null )
-            throw new ConfigurationException( "Cannot find config file Gemam.properties" );
-        Configuration universalConfig = new PropertiesConfiguration( universalConfigFileLocation );
-
-        URL userSpecificConfigFileLocation = ConfigurationUtils.locate( "build.properties" );
-
-        Configuration userConfig = null;
-        if ( userSpecificConfigFileLocation != null ) {
-            userConfig = new PropertiesConfiguration( userSpecificConfigFileLocation );
-        }
-
-        if ( userConfig == null ) {
-            log.debug( "Reading global config" );
-            this.humanServerPort = universalConfig.getInt( "gfClient.humanServerPort" );
-            this.mouseServerPort = universalConfig.getInt( "gfClient.mouseServerPort" );
-            this.ratServerPort = universalConfig.getInt( "gfClient.ratServerPort" );
-            this.humanServerHost = universalConfig.getString( "gfClient.humanServerHost" );
-            this.mouseServerHost = universalConfig.getString( "gfClient.mouseServerHost" );
-            this.ratServerHost = universalConfig.getString( "gfClient.ratServerHost" );
-            this.host = universalConfig.getString( "gfClient.host" );
-            this.seqDir = universalConfig.getString( "gfClient.seqDir" );
-            this.mouseSeqFiles = universalConfig.getString( "gfClient.mouse.seqFiles" );
-            this.ratSeqFiles = universalConfig.getString( "gfClient.rat.seqFiles" );
-            this.humanSeqFiles = universalConfig.getString( "gfClient.human.seqFiles" );
-            this.gfClientExe = universalConfig.getString( "gfClient.exe" );
-            this.gfServerExe = universalConfig.getString( "gfServer.exe" );
-        }
-
-        try {
-            this.humanServerPort = userConfig.getInt( "gfClient.humanServerPort" );
-            if ( humanServerPort <= 0 ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.humanServerPort = universalConfig.getInt( "gfClient.humanServerPort" );
-        }
-
-        try {
-            this.mouseServerPort = userConfig.getInt( "gfClient.mouseServerPort" );
-            if ( mouseServerPort <= 0 ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.mouseServerPort = universalConfig.getInt( "gfClient.mouseServerPort" );
-        }
-
-        try {
-            this.ratServerPort = userConfig.getInt( "gfClient.ratServerPort" );
-            if ( ratServerPort <= 0 ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.ratServerPort = universalConfig.getInt( "gfClient.ratServerPort" );
-        }
-
-        try {
-            this.humanServerHost = userConfig.getString( "gfClient.humanServerHost" );
-            if ( humanServerHost == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.humanServerHost = universalConfig.getString( "gfClient.humanServerHost" );
-        }
-
-        try {
-            this.mouseServerHost = userConfig.getString( "gfClient.mouseServerHost" );
-            if ( mouseServerHost == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.mouseServerHost = universalConfig.getString( "gfClient.mouseServerHost" );
-        }
-
-        try {
-            this.ratServerHost = userConfig.getString( "gfClient.ratServerHost" );
-            if ( ratServerHost == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.ratServerHost = universalConfig.getString( "gfClient.ratServerHost" );
-        }
-
-        try {
-            this.host = userConfig.getString( "gfClient.host" );
-            if ( host == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.host = universalConfig.getString( "gfClient.host" );
-        }
-        try {
-            this.seqDir = userConfig.getString( "gfClient.seqDir" );
-        } catch ( NoSuchElementException e ) {
-            if ( seqDir == null ) throw new NoSuchElementException();
-            this.seqDir = universalConfig.getString( "gfClient.seqDir" );
-        }
-        try {
-            this.gfClientExe = userConfig.getString( "gfClient.exe" );
-            if ( gfClientExe == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.gfClientExe = universalConfig.getString( "gfClient.exe" );
-        }
-        try {
-            this.gfServerExe = userConfig.getString( "gfServer.exe" );
-            if ( gfServerExe == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.gfServerExe = universalConfig.getString( "gfServer.exe" );
-        }
-        try {
-            this.humanSeqFiles = userConfig.getString( "gfClient.human.seqFiles" );
-            if ( humanSeqFiles == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.humanSeqFiles = universalConfig.getString( "gfClient.human.seqFiles" );
-        }
-
-        try {
-            this.ratSeqFiles = userConfig.getString( "gfClient.rat.seqFiles" );
-            if ( ratSeqFiles == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.ratSeqFiles = universalConfig.getString( "gfClient.rat.seqFiles" );
-        }
-
-        try {
-            this.mouseSeqFiles = userConfig.getString( "gfClient.mouse.seqFiles" );
-            if ( mouseSeqFiles == null ) throw new NoSuchElementException();
-        } catch ( NoSuchElementException e ) {
-            this.mouseSeqFiles = universalConfig.getString( "gfClient.mouse.seqFiles" );
-        }
+        log.debug( "Reading global config" );
+        this.humanServerPort = ConfigUtils.getInt( "gfClient.humanServerPort" );
+        this.mouseServerPort = ConfigUtils.getInt( "gfClient.mouseServerPort" );
+        this.ratServerPort = ConfigUtils.getInt( "gfClient.ratServerPort" );
+        this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
+        this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
+        this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );
+        this.host = ConfigUtils.getString( "gfClient.host" );
+        this.seqDir = ConfigUtils.getString( "gfClient.seqDir" );
+        this.mouseSeqFiles = ConfigUtils.getString( "gfClient.mouse.seqFiles" );
+        this.ratSeqFiles = ConfigUtils.getString( "gfClient.rat.seqFiles" );
+        this.humanSeqFiles = ConfigUtils.getString( "gfClient.human.seqFiles" );
+        this.gfClientExe = ConfigUtils.getString( "gfClient.exe" );
+        this.gfServerExe = ConfigUtils.getString( "gfServer.exe" );
 
         if ( gfServerExe == null ) {
             log.warn( "You will not be able to start the server due to a configuration error." );
@@ -619,16 +521,17 @@ public class Blat {
             log.info( "Falling back on exec()" );
             this.execGfClient( querySequenceFile, outputPath, portToUse );
         }
-        return this.processPsl( outputPath );
+        return this.processPsl( outputPath, null );
     }
 
     /**
      * @param outputPath to the Blat output file in psl format
      * @return processed results.
      */
-    private Collection<BlatResult> processPsl( String outputPath ) throws IOException {
+    private Collection<BlatResult> processPsl( String outputPath, Taxon taxon ) throws IOException {
         log.debug( "Processing " + outputPath );
         BlatResultParser brp = new BlatResultParser();
+        brp.setTaxon( taxon );
         brp.setScoreThreshold( BLAT_SCORE_THRESHOLD );
         brp.parse( outputPath );
         return brp.getResults();

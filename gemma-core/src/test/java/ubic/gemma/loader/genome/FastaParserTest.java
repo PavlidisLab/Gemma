@@ -50,7 +50,7 @@ public class FastaParserTest extends TestCase {
         p.parse( f );
         Collection<BioSequence> actualResult = p.getResults();
         assertTrue( actualResult != null );
-        assertEquals( 2, actualResult.size() );
+        assertEquals( 172, actualResult.size() );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
             log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
@@ -62,7 +62,7 @@ public class FastaParserTest extends TestCase {
         p.parse( g );
         Collection<BioSequence> actualResult = p.getResults();
         assertTrue( actualResult != null );
-        assertEquals( 2, actualResult.size() );
+        assertEquals( 172, actualResult.size() );
         for ( Object object : actualResult ) {
             BioSequence b = ( BioSequence ) object;
 

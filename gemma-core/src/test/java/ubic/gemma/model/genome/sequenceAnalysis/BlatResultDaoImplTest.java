@@ -70,7 +70,8 @@ public class BlatResultDaoImplTest extends BaseTransactionalSpringContextTest {
 
         bs.setTaxon( t );
 
-        Collection res = this.blatResultDao.find( bs );
+        Collection res = this.blatResultDao.findByBioSequence( bs );
         assertEquals( 1, res.size() );
     }
+
 }

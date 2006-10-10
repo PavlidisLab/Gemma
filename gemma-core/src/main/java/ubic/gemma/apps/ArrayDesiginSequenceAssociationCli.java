@@ -62,7 +62,7 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
 
         addOption( taxonOption );
 
-        Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "Input sequence file" ).withDescription(
+        Option fileOption = OptionBuilder.hasArg().withArgName( "Input sequence file" ).withDescription(
                 "Path to file (FASTA)" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
@@ -141,16 +141,21 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            InputStream sequenceFileIs = new FileInputStream( sequenceFile );
+            if ( this.hasOption( 'f' ) ) {
+                InputStream sequenceFileIs = new FileInputStream( sequenceFile );
 
-            if ( sequenceFileIs == null ) {
-                log.error( "No file " + sequenceFile + " was readable" );
-                bail( ErrorCode.INVALID_OPTION );
+                if ( sequenceFileIs == null ) {
+                    log.error( "No file " + sequenceFile + " was readable" );
+                    bail( ErrorCode.INVALID_OPTION );
+                }
+                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceType,
+                        taxon );
+                sequenceFileIs.close();
+            } else {
+                // FIXME - put in correctdatabases to search.
+                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, new String[] { "nt",
+                        "est_others", "est_human", "est_mouse" }, null );
             }
-
-            arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceType, taxon );
-
-            sequenceFileIs.close();
 
         } catch ( Exception e ) {
             log.error( e, e );

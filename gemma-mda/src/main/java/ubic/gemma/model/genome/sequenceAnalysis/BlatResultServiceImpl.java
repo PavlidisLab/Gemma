@@ -22,6 +22,10 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.Collection;
+
+import ubic.gemma.model.genome.biosequence.BioSequence;
+
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService
  */
@@ -52,19 +56,21 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#find(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    protected java.util.Collection handleFind( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
-            throws java.lang.Exception {
-        return this.getBlatResultDao().find( bioSequence );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatResult handleFindOrCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) throws java.lang.Exception {
         return this.getBlatResultDao().findOrCreate( blatResult );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleFindByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
+     */
+    @Override
+    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+        return this.getBlatResultDao().findByBioSequence( bioSequence );
     }
 
 }

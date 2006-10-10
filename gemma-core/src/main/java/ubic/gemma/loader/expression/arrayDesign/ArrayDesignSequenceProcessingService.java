@@ -23,13 +23,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -37,7 +35,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
+import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
+import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -65,6 +65,8 @@ import ubic.gemma.util.progress.ProgressManager;
 public class ArrayDesignSequenceProcessingService {
 
     private static final int BATCH_SIZE = 100;
+
+    private static final int MAX_VERSION_NUMBER = 10;
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
@@ -343,6 +345,181 @@ public class ArrayDesignSequenceProcessingService {
         return this.processAffymetrixDesign( arrayDesignName, arrayDesignFileStream, probeSequenceFileStream, taxon );
     }
 
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames ) {
+        return this.processArrayDesign( arrayDesign, databaseNames, null );
+    }
+
+    /**
+     * For the case where the sequences are retrieved simply by the Genbank accession. For this to work, the array
+     * design must already have the biosequence objects, but they haven't been populated with the actual sequences (if
+     * they have, the values will be replaced)
+     * 
+     * @param arrayDesign
+     * @param databaseNames the names of the BLAST-formatted databases to search (e.g., nt, est_mouse)
+     * @return
+     */
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            String blastDbHome ) {
+        Map<String, BioSequence> accessionsToFetch = new HashMap<String, BioSequence>();
+        Collection<String> notFound = accessionsToFetch.keySet();
+
+        int versionNumber = 1;
+        initializeFetchList( arrayDesign, accessionsToFetch, versionNumber );
+
+        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
+
+        while ( versionNumber < MAX_VERSION_NUMBER ) {
+            Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
+
+            Map<String, BioSequence> found = updateSequences( accessionsToFetch, retrievedSequences );
+
+            finalResult.addAll( found.values() );
+
+            notFound = getUnFound( notFound, found );
+
+            if ( notFound.isEmpty() ) {
+                break;
+            }
+
+            // logMissingSequences( arrayDesign, notFound );
+
+            // bump up the version numbers.
+            ++versionNumber;
+
+            for ( String accession : notFound ) {
+                // remove the version number and increase it
+                BioSequence bs = accessionsToFetch.get( accession );
+                accessionsToFetch.remove( accession );
+                accession = accession.replaceFirst( "\\d$", Integer.toString( versionNumber ) );
+                accessionsToFetch.put( accession, bs );
+            }
+            notFound = accessionsToFetch.keySet();
+
+        }
+
+        if ( !notFound.isEmpty() ) {
+            logMissingSequences( arrayDesign, notFound );
+        }
+        return finalResult;
+
+    }
+
+    /**
+     * @param arrayDesign
+     * @param notFound
+     * @return
+     */
+    private void logMissingSequences( ArrayDesign arrayDesign, Collection<String> notFound ) {
+        log.warn( notFound.size() + " sequences were not found for " + arrayDesign );
+        StringBuilder buf = new StringBuilder();
+        buf
+                .append( "Missing sequences for following accessions at version numbers up to " + MAX_VERSION_NUMBER
+                        + " : " );
+        for ( String string : notFound ) {
+            string = string.replaceFirst( "\\.\\d$", "" );
+            buf.append( string + " " );
+        }
+        log.info( buf );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param accessionsToFetch
+     * @param versionNumber
+     */
+    private void initializeFetchList( ArrayDesign arrayDesign, Map<String, BioSequence> accessionsToFetch,
+            int versionNumber ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs == null ) {
+                log.warn( cs + " has no biosequence" );
+                continue;
+            }
+            String accession = bs.getSequenceDatabaseEntry().getAccession();
+            accession = addVersionNumber( accession, versionNumber ); // wild guess - we don't know the version.
+            accessionsToFetch.put( accession, bs );
+        }
+    }
+
+    /**
+     * @param accessionsToFetch
+     * @param found
+     * @return
+     */
+    private Collection<String> getUnFound( Collection<String> accessionsToFetch, Map<String, BioSequence> found ) {
+        Collection<String> notFound = new HashSet<String>();
+        for ( String accession : accessionsToFetch ) {
+            if ( !found.containsKey( accession ) ) {
+                notFound.add( accession );
+            }
+        }
+        return notFound;
+    }
+
+    /**
+     * copy sequences into the original versions.
+     * 
+     * @param accessionsToFetch
+     * @param retrievedSequences
+     * @return
+     */
+    private Map<String, BioSequence> updateSequences( Map<String, BioSequence> accessionsToFetch,
+            Collection<BioSequence> retrievedSequences ) {
+
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        for ( BioSequence sequence : retrievedSequences ) {
+            String accession = sequence.getSequenceDatabaseEntry().getAccession();
+            BioSequence old = accessionsToFetch.get( accession );
+
+            old.setSequence( sequence.getSequence() );
+            old.setLength( new Long( sequence.getSequence().length() ) );
+            old.setIsApproximateLength( false );
+            found.put( accession, old );
+            accessionsToFetch.remove( accession );
+        }
+        bioSequenceService.update( found.values() );
+        return found;
+    }
+
+    /**
+     * @param databaseNames
+     * @param blastDbHome
+     * @param accessionsToFetch
+     * @return
+     */
+    private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
+            Collection<String> accessionsToFetch ) {
+        // search the databases.
+        FastaCmd fc = new SimpleFastaCmd();
+        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
+        for ( String dbname : databaseNames ) {
+            Collection<BioSequence> moreBioSequences;
+            if ( blastDbHome != null ) {
+                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname, blastDbHome );
+            } else {
+                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname );
+            }
+
+            log.info( moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched " + " from "
+                    + dbname );
+            retrievedSequences.addAll( moreBioSequences );
+        }
+        return retrievedSequences;
+    }
+
+    /**
+     * Add a version number if it is missing; this is needed for sucessful retrieval from blast databases.
+     * 
+     * @param accession
+     * @return
+     */
+    private String addVersionNumber( String accession, int versionNumber ) {
+        if ( !accession.matches( "\\.\\d$" ) ) {
+            accession = accession + "." + versionNumber;
+        }
+        return accession;
+    }
+
     /**
      * The sequence file <em>must</em> provide an unambiguous way to associate the sequences with design elements on
      * the array.
@@ -462,7 +639,7 @@ public class ArrayDesignSequenceProcessingService {
      * @return
      */
     private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked ) {
-        int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / ( double ) totalThingsToDo ) );
+        int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / totalThingsToDo ) );
         if ( newPercent > percentDoneLastTimeWeChecked ) {
             ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( newPercent, howManyAreDone
                     + " items of " + totalThingsToDo + " processed." ) );

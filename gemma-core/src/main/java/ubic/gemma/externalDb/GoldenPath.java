@@ -116,7 +116,7 @@ public class GoldenPath {
             throw new RuntimeException( e );
         } catch ( ClassNotFoundException e ) {
             throw new RuntimeException( e );
-        }  
+        }
 
         qr = new QueryRunner();
     }
@@ -133,9 +133,9 @@ public class GoldenPath {
             throw new IllegalArgumentException( "No GoldenPath database for  " + taxon );
         }
 
-        String databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
-        String databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
-        String databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
+        String databaseHost = ConfigUtils.getString( "gemma.db.host" );
+        String databaseUser = ConfigUtils.getString( "gemma.db.user" );
+        String databasePassword = ConfigUtils.getString( "gemma.db.password" );
 
         this.init( 3306, databaseHost, databaseUser, databasePassword );
     }
