@@ -22,6 +22,8 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * @author pavlidis
  * @version $Id$
@@ -151,4 +153,14 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
        
    }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
+     */
+    @Override
+   protected Taxon handleGetTaxon(java.lang.Long id){
+       return this.getArrayDesignDao().getTaxon(id);
+       
+   }
+    
 }

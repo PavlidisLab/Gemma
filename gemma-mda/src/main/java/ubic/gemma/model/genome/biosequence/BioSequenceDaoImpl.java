@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -113,5 +114,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             sb.append( "\n" );
         }
         log.debug( sb.toString() );
+    }
+
+    @Override
+    protected Collection handleGetSequenceSimilaritySearchResults( Long id ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

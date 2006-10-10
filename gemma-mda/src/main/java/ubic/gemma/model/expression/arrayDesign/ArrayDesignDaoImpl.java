@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -179,6 +181,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select bioAssay from BioAssayImpl as bioAssay where bioAssay.arrayDesignUsed.id = :id";
         return queryByIdReturnCollection( id, queryString );
         
+    }
+
+    @Override
+    protected Taxon handleGetTaxon( Long id ) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
     
     

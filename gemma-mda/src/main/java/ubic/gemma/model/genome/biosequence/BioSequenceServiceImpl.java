@@ -95,6 +95,17 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetSequenceSimilaritySearchResults(Long )
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection handleGetSequenceSimilaritySearchResults( Long id ) throws Exception {
+        return this.getBioSequenceDao().getSequenceSimilaritySearchResults (id);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleFindOrCreate(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
