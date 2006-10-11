@@ -1098,7 +1098,7 @@ public class GeoConverter implements Converter {
         }
 
         if ( series.getLastUpdateDate() == null ) series.setLastUpdateDate( "not available" );
-        expExp.setDescription( series.getSummaries() + ". Date " + series.getGeoAccession() + " Last Updated: "
+        expExp.setDescription( series.getSummaries() + ". Date " + series.getGeoAccession() + " Updated On: "
                 + series.getLastUpdateDate() );
         expExp.setName( series.getTitle() );
 
@@ -1184,15 +1184,18 @@ public class GeoConverter implements Converter {
                     }
 
                     if ( StringUtils.isEmpty( sample.getLastUpdateDate() ) )
-                        sample.setSupplementaryFile( "not available" );
-                    expExp.setDescription( expExp.getDescription() + ". Sample " + sample.getGeoAccession()
+                        sample.setSupplementaryFile( "unavailable" );
+                    expExp.setDescription( expExp.getDescription() + ". " + sample.getGeoAccession()
                             + " Last Updated: " + sample.getLastUpdateDate() );
 
-                    if ( StringUtils.isEmpty( sample.getSupplementaryFile() ) )
-                        sample.setSupplementaryFile( "not available" );
-                    expExp.setDescription( expExp.getDescription() + ". Sample " + sample.getGeoAccession()
-                            + " Supplementary File: " + sample.getSupplementaryFile() );
-
+                    /*
+                     * This adds too many strings for a sql column. Anyhow, this file ends up in the LocalFile of the
+                     * ExpressionExperiment
+                     */
+                    // if ( StringUtils.isEmpty( sample.getSupplementaryFile() ) )
+                    // sample.setSupplementaryFile( "unavailable" );
+                    // expExp.setDescription( expExp.getDescription() + ". " + sample.getGeoAccession() + " Raw File: "
+                    // + sample.getSupplementaryFile() );
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
