@@ -332,6 +332,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         arrayDesignService.update( arrayDesign );
+        this.getCurrentSession().flush();
         return arrayDesign;
     }
 

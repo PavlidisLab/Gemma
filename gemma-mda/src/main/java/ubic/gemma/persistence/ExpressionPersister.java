@@ -184,7 +184,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         fillInBioAssayAssociations( assay );
 
         if ( !isTransient( assay ) ) return assay;
-        if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
+        log.info( "Persisting " + assay );
 
         return bioAssayService.findOrCreate( assay );
     }
@@ -330,8 +330,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 }
             }
         }
-
-        return expressionExperimentService.create( entity );
+        ExpressionExperiment newObject  = expressionExperimentService.create( entity );
+        this.getCurrentSession().flush();
+        return newObject;
     }
 
     /**
