@@ -27,7 +27,6 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.FSDirectory;
-import org.compass.gps.CompassGps;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 /**
