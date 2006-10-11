@@ -59,7 +59,6 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.loader.expression.geo.model.GeoSubset;
 import ubic.gemma.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.loader.util.parser.Parser;
-import ubic.gemma.model.common.description.LocalFile;
 
 /**
  * Class for parsing GSE and GDS files from NCBI GEO. See
@@ -395,7 +394,7 @@ public class GeoFamilyParser implements Parser {
      * (in a platform section of a GSE file):
      * 
      * <pre>
-     *                                             #SEQ_LEN = Sequence length
+     *                                               #SEQ_LEN = Sequence length
      * </pre>
      * 
      * @param line
@@ -477,8 +476,8 @@ public class GeoFamilyParser implements Parser {
      * For samples in GSE files, they become values for the data in the sample. For example
      * 
      * <pre>
-     *                                                                                     #ID_REF = probe id
-     *                                                                                     #VALUE = RMA value
+     *                                                                                       #ID_REF = probe id
+     *                                                                                       #VALUE = RMA value
      * </pre>
      * 
      * <p>
@@ -489,9 +488,9 @@ public class GeoFamilyParser implements Parser {
      * provided. Here is an example.
      * 
      * <pre>
-     *                                                                                     #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
-     *                                                                                     #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
-     *                                                                                     #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                                                                                       #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
+     *                                                                                       #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
+     *                                                                                       #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
      * 
      * @param line
@@ -836,7 +835,7 @@ public class GeoFamilyParser implements Parser {
         } else if ( startsWithIgnoreCase( line, "!Platform_last_update_date" ) ) {
             platformLastUpdateDate( currentPlatformAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Platform_supplementary_file" ) ) {
-            // FIXME - use this.
+            platformSupplementaryFileSet( currentPlatformAccession, value );
         } else {
             log.error( "Unknown flag in platform: " + line );
         }
@@ -1225,6 +1224,15 @@ public class GeoFamilyParser implements Parser {
      * @param accession
      * @param value
      */
+    private void platformSupplementaryFileSet( String accession, String value ) {
+        GeoPlatform platform = results.getPlatformMap().get( accession );
+        supplementaryFileSet( platform, value );
+    }
+
+    /**
+     * @param accession
+     * @param value
+     */
     private void seriesSupplementaryFileSet( String accession, String value ) {
         GeoSeries series = results.getSeriesMap().get( accession );
         supplementaryFileSet( series, value );
@@ -1234,9 +1242,13 @@ public class GeoFamilyParser implements Parser {
      * @param series
      * @param value
      */
-    private void supplementaryFileSet( GeoSeries series, String value ) {
-        log.warn( value );
-        series.setSupplementaryFile( value );
+    private void supplementaryFileSet( Object object, String value ) {
+
+        if ( object instanceof GeoPlatform )
+            ( ( GeoPlatform ) object ).setSupplementaryFile( value );
+
+        else if ( object instanceof GeoSeries ) ( ( GeoSeries ) object ).setSupplementaryFile( value );
+
     }
 
     /**

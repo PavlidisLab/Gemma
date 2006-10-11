@@ -607,6 +607,9 @@ public class GeoConverter implements Converter {
         if ( platform != null ) {
             expExp.setDescription( expExp.getDescription() + ". Platform " + platform.getGeoAccession()
                     + " Last Updated: " + platform.getLastUpdateDate() );
+
+            expExp.setDescription( expExp.getDescription() + ". Platform " + platform.getGeoAccession()
+                    + " Supplementary File: " + platform.getSupplementaryFile() );
         }
     }
 
@@ -1095,7 +1098,8 @@ public class GeoConverter implements Converter {
         }
 
         if ( series.getLastUpdateDate() == null ) series.setLastUpdateDate( "not available" );
-        expExp.setDescription( series.getSummaries() + ". Date Last Updated: " + series.getLastUpdateDate() );
+        expExp.setDescription( series.getSummaries() + ". Date " + series.getGeoAccession() + " Last Updated: "
+                + series.getLastUpdateDate() );
         expExp.setName( series.getTitle() );
 
         convertContacts( series, expExp );
