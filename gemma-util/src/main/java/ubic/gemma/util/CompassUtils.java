@@ -77,11 +77,11 @@ public class CompassUtils {
         }
     }
 
-    public static void deleteCompassIndex( CompassGpsInterfaceDevice gps) throws IOException {
+    /**
+     * @param gps
+     * @throws IOException
+     */
+    public static void deleteCompassIndex( CompassGpsInterfaceDevice gps ) throws IOException {
         gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
-        // CompassSettings settings = config.getSettings();
-        // String indexLocation = settings.getSetting( "compass.engine.connection" );
-        // log.debug( "compass index location: " + indexLocation );
-
     }
 }
