@@ -45,7 +45,6 @@ public class CompassUtils {
      * @throws IOException
      */
     public static void disableLuceneLocks() {
-        // TODO candidate for a potential CompassUtils
         log.debug( "lock directory is " + FSDirectory.LOCK_DIR );
 
         log.debug( "disabling lucene locks" );
@@ -58,7 +57,7 @@ public class CompassUtils {
      * @throws IOException
      */
     @SuppressWarnings("unchecked")
-    public static void deleteCompassLocks() throws IOException {
+    public static void deleteCompassLocks() {
         log.debug( "compass lock dir: " + FSDirectory.LOCK_DIR );
 
         Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils

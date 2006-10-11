@@ -53,16 +53,14 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         pJob = null;
 
     }
-    
-    
+
     /*
-     * Test method for 'ubic.gemma.web.util.progress.ProgressManager.CreateProgressJob(String, String)'
-     * Tests creating a progress Job for an invalid user/anonymous user
+     * Test method for 'ubic.gemma.web.util.progress.ProgressManager.CreateProgressJob(String, String)' Tests creating a
+     * progress Job for an invalid user/anonymous user
      */
     public void testCreateAnonymousProgressJob() {
 
-        pJob = ProgressManager.createProgressJob( "123456" ,
-                "Testing the Progress Manager in anonymous ways" );
+        pJob = ProgressManager.createProgressJob( "123456", "Testing the Progress Manager in anonymous ways" );
         assertEquals( pJob.getUser(), null );
         assertEquals( pJob.getProgressData().getDescription(), "Testing the Progress Manager in anonymous ways" );
 
@@ -70,7 +68,6 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         pJob = null;
 
     }
-    
 
     /*
      * Tests the destruction of a progress job. todo add testing for deletion of a user with more than just 1 job.
@@ -120,9 +117,9 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
 
         MockClient mClient = new MockClient();
         ProgressManager.addToNotification( ConfigUtils.getString( "gemma.admin.user" ), mClient );
-        pJob1.updateProgress();
+        pJob1.nudgeProgress();
         assertEquals( mClient.upDateTimes(), 1 );
-        pJob2.updateProgress();
+        pJob2.nudgeProgress();
         assertEquals( mClient.upDateTimes(), 2 );
         assertEquals( mClient.getProgressData().size(), 1 );
 
@@ -221,13 +218,13 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
 
         MockClient mClient = new MockClient();
         ProgressManager.addToRecentNotification( ConfigUtils.getString( "gemma.admin.user" ), mClient );
-        pJob1.updateProgress();
+        pJob1.nudgeProgress();
         assertEquals( mClient.upDateTimes(), 1 );
-        pJob2.updateProgress();
+        pJob2.nudgeProgress();
         assertEquals( mClient.upDateTimes(), 2 );
-        pJob3.updateProgress();
+        pJob3.nudgeProgress();
         assertEquals( mClient.upDateTimes(), 3 );
-        pJob4.updateProgress();
+        pJob4.nudgeProgress();
         assertEquals( mClient.upDateTimes(), 4 );
 
         assertEquals( mClient.getProgressData().size(), 1 );
@@ -328,8 +325,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
      * Tests if the thread local variable gets inherited to new threads
      */
     public void testMultipleThreads() {
-        ProgressJob pj = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
-                "i luve tests" );
+        ProgressJob pj = ProgressManager
+                .createProgressJob( ConfigUtils.getString( "gemma.admin.user" ), "i luve tests" );
         MockProgress mProgress = new MockProgress( 3, ConfigUtils.getString( "gemma.admin.user" ), "test runs", pj
                 .getId() );
         mProgress.start();
@@ -338,7 +335,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
     public void updateCurrentThreadsProgressJobTest() {
 
         ProgressManager.dump();
-        assertEquals( false, ProgressManager.updateCurrentThreadsProgressJob( null ) );
+        assertEquals( false, ProgressManager.nudgeCurrentThreadsProgressJob() );
 
         ProgressJob pj = ProgressManager.createProgressJob( ConfigUtils.getString( "gemma.admin.user" ),
                 "i luve happie tests" );
@@ -350,8 +347,8 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
 
         ProgressManager.destroyProgressJob( pj );
 
-        assertEquals(mc.upDateTimes(), 100);
-        
+        assertEquals( mc.upDateTimes(), 100 );
+
     }
 
     class FakeProgress extends Thread {
@@ -360,7 +357,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         public void run() {
 
             for ( int i = 0; i < 100; i++ ) {
-                assertEquals( true, ProgressManager.updateCurrentThreadsProgressJob( null ) );
+                assertEquals( true, ProgressManager.nudgeCurrentThreadsProgressJob() );
                 try {
                     Thread.sleep( DELAY );
                 } catch ( InterruptedException e ) {
@@ -400,7 +397,7 @@ public class ProgressIntegrationTest extends BaseTransactionalSpringContextTest 
         public void run() {
 
             for ( int i = 0; i < 100; i++ ) {
-                simpleJob.updateProgress();
+                simpleJob.nudgeProgress();
 
                 try {
                     Thread.sleep( DELAY );

@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Session;
-
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.OntologyEntry;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
@@ -51,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.util.progress.LoggingSupport;
 
 /**
  * Expression experiment is a top-level persister. That is, it contains only outbound associations.
@@ -149,9 +148,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment entity ) {
 
-        log.info( "Filling in DesignElementDataVectors" );
-
-        Session sess = this.getCurrentSession();
+        LoggingSupport.progressLog( log, "Filling in DesignElementDataVectors..." );
 
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
@@ -161,16 +158,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             BioAssayDimension baDim = fillInDesignElementDataVectorAssociations( vect );
             bioAssays.addAll( baDim.getBioAssays() );
 
-            if ( ++count % 2000 == 0 ) {
-                log.info( "Filled in " + count + " DesignElementDataVectors" );
+            if ( ++count % 10000 == 0 ) {
+                LoggingSupport.progressLog( log, "Filled in " + count + " DesignElementDataVectors" );
             }
 
-            // if ( ++count % 100 == 0 ) {
-            // sess.flush();
-            // sess.clear();
-            // }
         }
-        log.info( "Done, filled in " + count + " DesignElementDataVectors, " + bioAssays.size() + " bioassays" );
+        LoggingSupport.progressLog( log, "Done, filled in " + count + " DesignElementDataVectors, " + bioAssays.size()
+                + " bioassays" );
         return bioAssays;
     }
 
@@ -184,7 +178,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         fillInBioAssayAssociations( assay );
 
         if ( !isTransient( assay ) ) return assay;
-        log.info( "Persisting " + assay );
+        if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
 
         return bioAssayService.findOrCreate( assay );
     }
@@ -318,7 +312,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( entity.getExperimentalDesign() != null ) {
             ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
-            processExperimentalDesign( experimentalDesign, entity.getBioAssays() );
+            processExperimentalDesign( experimentalDesign );
         }
 
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
@@ -330,15 +324,14 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 }
             }
         }
-        ExpressionExperiment newObject  = expressionExperimentService.create( entity );
-        this.getCurrentSession().flush();
-        return newObject;
+
+        return expressionExperimentService.create( entity );
     }
 
     /**
      * @param experimentalDesign
      */
-    private void processExperimentalDesign( ExperimentalDesign experimentalDesign, Collection<BioAssay> bioAssays ) {
+    private void processExperimentalDesign( ExperimentalDesign experimentalDesign ) {
 
         /* At this point, the bioassay experimental factor values have already been persisted. */
 

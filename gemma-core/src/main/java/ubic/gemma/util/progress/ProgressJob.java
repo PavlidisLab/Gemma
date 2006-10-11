@@ -52,13 +52,12 @@ public interface ProgressJob {
      */
     public abstract void setRunningStatus( boolean runningStatus );
 
-  
     public abstract String getUser();
 
     /**
-     * Updates the current progress of the job. Simple increments the progress percent by 1.
+     * Updates the current progress of the job, incrementing the progress percent by 1.
      */
-    public abstract void updateProgress();
+    public abstract void nudgeProgress();
 
     /**
      * Upates the current progress of the job to the desired percent. doesn't change anything else.
@@ -68,6 +67,13 @@ public interface ProgressJob {
     public abstract void updateProgress( int newPercent );
 
     /**
+     * Upates the current progress of the job with the desired updated message. Doesn't change anything else.
+     * 
+     * @param message
+     */
+    public abstract void updateProgress( String message );
+
+    /**
      * Updates the progress job by a complete progressData. In case a few things need to be updated
      * 
      * @param pd
@@ -75,28 +81,27 @@ public interface ProgressJob {
     public abstract void updateProgress( ProgressData pd );
 
     public abstract void addObserver( Observer O );
-    
+
     public abstract Long getId();
-    
+
     public abstract void done();
-    
+
     public abstract int getPhase();
-    
-    public abstract void setPhase(int phase);
-    
-    public abstract void setDescription(String description);
-    
+
+    public abstract void setPhase( int phase );
+
+    public abstract void setDescription( String description );
+
     public abstract String getDescription();
-    
+
     public abstract JobInfo getJobInfo();
-    
+
     public abstract String getTrackingId();
-    public abstract void   setTrackingId(String trackingId);
-    
-    
+
+    public abstract void setTrackingId( String trackingId );
+
     public abstract String getForwardingURL();
+
     public abstract void setForwardingURL( String forwardingURL );
-    
-    
 
 }

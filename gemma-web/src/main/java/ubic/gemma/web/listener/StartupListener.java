@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.listener;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,35 +57,58 @@ import ubic.gemma.util.LabelValue;
  * <li>Static information used to populate drop-downs, e.g., the list of user roles
  * </ul>
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author keshav
  * @author pavlidis
+ * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a> (original version)
  * @version $Id$
  */
 public class StartupListener extends ContextLoaderListener implements ServletContextListener {
+
+    /**
+     * The style to be used if one is not defined in web.xml.
+     */
+    private static final String DEFAULT_THEME = "simplicity";
+
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
-    @SuppressWarnings("unchecked")
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.web.context.ContextLoaderListener#contextInitialized(javax.servlet.ServletContextEvent)
+     */
     @Override
     public void contextInitialized( ServletContextEvent event ) {
-        if ( log.isDebugEnabled() ) {
-            log.debug( "initializing context..." );
-        }
+        log.info( "Initializing application context..." );
 
         // call Spring's context ContextLoaderListener to initialize
         // all the context files specified in web.xml
         super.contextInitialized( event );
 
-        /* delete the lucene lock file */
-        try {
-            CompassUtils.deleteCompassLocks();
-        } catch ( IOException e ) {
-            log.error( "Problem deleting compass locks.  Error is: " );
-            e.printStackTrace();
-        }
+        CompassUtils.deleteCompassLocks();
 
         ServletContext context = event.getServletContext();
 
+        Map<String, Object> config = initializeConfiguration( context );
+
+        loadTheme( context, config );
+
+        loadVersionInformation( config );
+
+        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
+
+        loadRememberMeStatus( config, ctx );
+
+        context.setAttribute( Constants.CONFIG, config );
+
+        populateDropDowns( context );
+    }
+
+    /**
+     * @param context
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> initializeConfiguration( ServletContext context ) {
         // Check if the config
         // object already exists
         Map<String, Object> config = ( Map<String, Object> ) context.getAttribute( Constants.CONFIG );
@@ -94,26 +116,21 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         if ( config == null ) {
             config = new HashMap<String, Object>();
         }
+        return config;
+    }
 
-        if ( context.getInitParameter( "theme" ) != null ) {
-            log.info( "Found theme " + context.getInitParameter( "theme" ) );
-            config.put( "theme", context.getInitParameter( "theme" ) );
-        } else {
-            log.warn( "No theme found, using default=simplicity" );
-            config.put( "theme", "simplicity" );
-        }
-
-        log.debug( "Version is " + ConfigUtils.getAppVersion() );
-        config.put( "version", ConfigUtils.getAppVersion() );
-
-        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
-
+    /**
+     * @param config
+     * @param ctx
+     */
+    private void loadRememberMeStatus( Map<String, Object> config, ApplicationContext ctx ) {
         try {
             ProviderManager provider = ( ProviderManager ) ctx.getBean( "authenticationManager" );
             for ( Iterator it = provider.getProviders().iterator(); it.hasNext(); ) {
                 AuthenticationProvider p = ( AuthenticationProvider ) it.next();
                 if ( p instanceof RememberMeAuthenticationProvider ) {
                     config.put( "rememberMeEnabled", Boolean.TRUE );
+                    log.debug( "Remember Me is enabled" );
                     break;
                 }
             }
@@ -121,19 +138,40 @@ public class StartupListener extends ContextLoaderListener implements ServletCon
         } catch ( NoSuchBeanDefinitionException n ) {
             // ignore, should only happen when testing
         }
-
-        context.setAttribute( Constants.CONFIG, config );
-
-        // output the retrieved values for the Init and Context Parameters
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Remember Me Enabled? " + config.get( "rememberMeEnabled" ) );
-        }
-
-        setupContext( context );
     }
 
+    /**
+     * Load the style theme for the site.
+     * 
+     * @param context
+     * @param config
+     */
+    private void loadTheme( ServletContext context, Map<String, Object> config ) {
+        if ( context.getInitParameter( "theme" ) != null ) {
+            log.info( "Found theme " + context.getInitParameter( "theme" ) );
+            config.put( "theme", context.getInitParameter( "theme" ) );
+        } else {
+            log.warn( "No theme found, using default=" + DEFAULT_THEME );
+            config.put( "theme", DEFAULT_THEME );
+        }
+    }
+
+    /**
+     * @param config
+     */
+    private void loadVersionInformation( Map<String, Object> config ) {
+        log.debug( "Version is " + ConfigUtils.getAppVersion() );
+        config.put( "version", ConfigUtils.getAppVersion() );
+    }
+
+    /**
+     * This is used to get information from the system that does not change and which can be reused throughout -
+     * typically used in drop-down menus.
+     * 
+     * @param context
+     */
     @SuppressWarnings("unchecked")
-    public static void setupContext( ServletContext context ) {
+    public static void populateDropDowns( ServletContext context ) {
         log.debug( "Populating drop-downs..." );
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
 

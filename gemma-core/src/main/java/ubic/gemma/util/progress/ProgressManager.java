@@ -152,7 +152,7 @@ public class ProgressManager {
         usersJobs = progressJobs.get( id );
 
         // No job currently assciated with this thread or the job assciated with the thread is no longer valid
-        if (( currentJob.get() == null ) || (progressJobsById.get( currentJob.get()) == null ) ) {
+        if ( ( currentJob.get() == null ) || ( progressJobsById.get( currentJob.get() ) == null ) ) {
             Calendar cal = new GregorianCalendar();
             JobInfo jobI = JobInfo.Factory.newInstance();
             jobI.setRunningStatus( true );
@@ -175,9 +175,9 @@ public class ProgressManager {
             progressJobsById.put( createdJobI.getId(), newJob );
         } else {
             Long oldId = currentJob.get();
-            newJob = progressJobsById.get( oldId );  
-            
-            assert newJob != null : "newJob is unexpectedly null in progress Manager";  //This should not be the case!
+            newJob = progressJobsById.get( oldId );
+
+            assert newJob != null : "newJob is unexpectedly null in progress Manager"; // This should not be the case!
             newJob.setPhase( newJob.getPhase() + 1 );
             newJob.setDescription( description );
         }
@@ -189,7 +189,7 @@ public class ProgressManager {
     }
 
     // As the progress manager is a singleton leaks and strange behavior are likely.
-    // i made this to get a peak at what was going on under the hood at runtime.
+    // i made this to get a peek at what was going on under the hood at runtime.
     public static synchronized void dump() {
         logger.info( "Dump ProgressMangagers State:" );
 
@@ -216,10 +216,11 @@ public class ProgressManager {
     }
 
     /**
-     * This will send an update to the current threads progress job, if it indeed has one. Should be used for adding
-     * progress updates with minimal intrusion into objects that are long running Returns true if the thread had a
-     * progress job already and it was successful in updating it. Returns false if the thread had no progress job. If
-     * ProgressData == null then the threads progressJob's percent will be incremented by one
+     * This will send an update to the current threads progress job, if it has one. Should be used for adding progress
+     * updates with minimal intrusion into objects that are long running.
+     * 
+     * @param pData a progress data instance.
+     * @return true if the thread had a progress job already and it was successful in updating it, false otherwise.
      */
     public static synchronized boolean updateCurrentThreadsProgressJob( ProgressData pData ) {
 
@@ -231,10 +232,62 @@ public class ProgressManager {
         threadsJob = progressJobsById.get( id );
 
         if ( pData == null )
-            threadsJob.updateProgress();
+            threadsJob.nudgeProgress();
         else
             threadsJob.updateProgress( pData );
 
+        return true;
+    }
+
+    /**
+     * @param message
+     * @return
+     */
+    public static synchronized boolean updateCurrentThreadsProgressJob( String message ) {
+
+        ProgressJob threadsJob = null;
+
+        if ( currentJob.get() == null ) return false;
+
+        Long id = currentJob.get();
+        threadsJob = progressJobsById.get( id );
+
+        threadsJob.updateProgress( message );
+
+        return true;
+    }
+
+    /**
+     * Increase the progress state of the job by 1 percent.
+     * 
+     * @return true if there is a progress job.
+     */
+    public static synchronized boolean nudgeCurrentThreadsProgressJob() {
+        ProgressJob threadsJob = null;
+
+        if ( currentJob.get() == null ) return false;
+
+        Long id = currentJob.get();
+        threadsJob = progressJobsById.get( id );
+        threadsJob.nudgeProgress();
+        return true;
+    }
+
+    /**
+     * Increase the progress state of the job by 1 percent and update the description
+     * 
+     * @param message The new description for the job.
+     * @return true if there is a progress job.
+     */
+    public static synchronized boolean nudgeCurrentThreadsProgressJob( String message ) {
+        ProgressJob threadsJob = null;
+
+        if ( currentJob.get() == null ) return false;
+
+        Long id = currentJob.get();
+        threadsJob = progressJobsById.get( id );
+        threadsJob.nudgeProgress();
+        threadsJob.setDescription( message );
         return true;
     }
 

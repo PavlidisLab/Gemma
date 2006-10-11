@@ -31,7 +31,7 @@ public class ReloadController implements Controller {
             log.debug( "Entering 'execute' method" );
         }
 
-        StartupListener.setupContext( request.getSession().getServletContext() );
+        StartupListener.populateDropDowns( request.getSession().getServletContext() );
 
         String referer = request.getHeader( "Referer" );
 

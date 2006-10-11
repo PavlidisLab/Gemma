@@ -31,6 +31,24 @@ import ubic.gemma.model.common.auditAndSecurity.JobInfo;
  * @author klc
  * @version $Id$
  */
+/**
+ * TODO - DOCUMENT ME
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+/**
+ * TODO - DOCUMENT ME
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+/**
+ * TODO - DOCUMENT ME
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
 public class ProgressJobImpl extends Observable implements ProgressJob {
 
     protected ProgressData pData;
@@ -89,7 +107,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     /**
      * Updates the percent completion of the job by 1 percent
      */
-    public void updateProgress() {
+    public void nudgeProgress() {
         pData.setPercent( pData.getPercent() + 1 );
         setChanged();
         notifyObservers( pData );
@@ -115,6 +133,17 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
      */
     public void updateProgress( int newPercent ) {
         pData.setPercent( newPercent );
+        setChanged();
+        notifyObservers( pData );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.progress.ProgressJob#updateProgress(java.lang.String)
+     */
+    public void updateProgress( String newDescription ) {
+        pData.setDescription( newDescription );
         setChanged();
         notifyObservers( pData );
     }
@@ -165,7 +194,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public String getTrackingId() {
         return trackingId;
     }
- 
+
     /**
      * @param anonymousId the anonymousId to set
      */

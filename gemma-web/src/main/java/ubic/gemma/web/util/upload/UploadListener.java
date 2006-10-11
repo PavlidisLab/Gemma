@@ -84,7 +84,7 @@ public class UploadListener implements OutputStreamListener {
         Double newPercent = ( totalBytesRead / totalToRead ) * 100 ;
 
         if ( newPercent.intValue() > oldPercent ) {
-            pJob.updateProgress();
+            pJob.nudgeProgress();
             oldPercent =  newPercent.intValue();
         }
 
