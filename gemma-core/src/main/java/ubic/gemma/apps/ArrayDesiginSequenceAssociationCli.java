@@ -33,6 +33,12 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
+/**
+ * Attach sequences to array design, fetching from BLAST database if requested.
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
 public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
     TaxonService taxonService;
