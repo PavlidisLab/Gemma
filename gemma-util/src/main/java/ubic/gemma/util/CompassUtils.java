@@ -27,6 +27,8 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.FSDirectory;
+import org.compass.gps.CompassGps;
+import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 /**
  * Utility methods to manipulate compass (and lucene).
@@ -73,6 +75,13 @@ public class CompassUtils {
             // FileUtils.forceDeleteOnExit( file ); //delete on jvm term.
             file.delete(); // delete right away, not on jvm termination (not forcing).
         }
+    }
+
+    public static void deleteCompassIndex( CompassGpsInterfaceDevice gps) throws IOException {
+        gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
+        // CompassSettings settings = config.getSettings();
+        // String indexLocation = settings.getSetting( "compass.engine.connection" );
+        // log.debug( "compass index location: " + indexLocation );
 
     }
 }
