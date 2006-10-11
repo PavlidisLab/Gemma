@@ -30,6 +30,8 @@ import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.expression.designElement.Reporter;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.BaseTransactionalSpringContextTest;
 
 /**
@@ -37,6 +39,9 @@ import ubic.gemma.testing.BaseTransactionalSpringContextTest;
  * @version $Id$
  */
 public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
+    
+    private static final String DEFAULT_TAXON = "Mus musculus";
+    
     ArrayDesign ad;
     ArrayDesignDao arrayDesignDao;
     ExternalDatabaseDao externalDatabaseDao;
@@ -71,7 +76,7 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         ad.getCompositeSequences().remove( cs );
         cs.setArrayDesign( null );
         arrayDesignDao.update( ad );
-        assertEquals( 2, ad.getCompositeSequences().size() );
+        assertEquals( 3, ad.getCompositeSequences().size() );
     }
 
     // FIXME: Need to add a meaning test of reporters
@@ -186,6 +191,19 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         }
 
     }
+    
+    
+    /*
+     * A test of getting a taxon assciated with an arrayDesign.  
+     *todo: this test should use an actual array design that has many bioSequences assciated with it.
+     */
+    public void testGetTaxon() {
+        
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );        
+        Taxon tax = arrayDesignDao.getTaxon( ad.getId() );
+        assertEquals( DEFAULT_TAXON, tax.getScientificName() );
+        
+    }
 
     /*
      * @see TestCase#setUp()
@@ -227,6 +245,16 @@ public class ArrayDesignDaoImplTest extends BaseTransactionalSpringContextTest {
         c1.getComponentReporters().add( r1 );
         c2.getComponentReporters().add( r2 );
         c3.getComponentReporters().add( r3 );
+                
+        Taxon tax = Taxon.Factory.newInstance();
+        tax.setScientificName( DEFAULT_TAXON);
+        BioSequence bs = BioSequence.Factory.newInstance( tax );    
+        bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
+        bs.setTaxon(tax);
+        
+        c1.setBiologicalCharacteristic( bs );
+        c2.setBiologicalCharacteristic( bs );
+        c3.setBiologicalCharacteristic( bs );
 
         ad.getCompositeSequences().add( c1 );
         ad.getCompositeSequences().add( c2 );

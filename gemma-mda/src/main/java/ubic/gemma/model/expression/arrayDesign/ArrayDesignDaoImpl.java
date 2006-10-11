@@ -133,6 +133,24 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
     }
 
+    private Object queryByIdReturnObject( Long id, final String queryString ) {
+        try {
+            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            queryObject.setFirstResult( 1 );
+            queryObject.setMaxResults( 1 ); // this should gaurantee that there is only one or no element in the
+                                            // collection returned
+            queryObject.setParameter( "id", id );
+            java.util.List results = queryObject.list();
+
+            if ( ( results == null ) || ( results.size() == 0 ) ) return null;
+
+            return results.iterator().next();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }
+
     /**
      * @param id
      * @param queryString
@@ -169,26 +187,32 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return queryByIdReturnCollection( id, queryString );
     }
-    
-    
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @Override
-    protected Collection handleGetAllAssociatedBioAssays(Long id) throws Exception {
+    protected Collection handleGetAllAssociatedBioAssays( Long id ) throws Exception {
         final String queryString = "select bioAssay from BioAssayImpl as bioAssay where bioAssay.arrayDesignUsed.id = :id";
         return queryByIdReturnCollection( id, queryString );
-        
+
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
+     * 
+     * This only returns 1 taxon, the 1st taxon as decided by the join which ever that is.
+     */
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
-        // TODO Auto-generated method stub
-        return null;
+        
+        final String queryString = "select bioC.taxon from ArrayDesignImpl as arrayD inner join arrayD.compositeSequences as compositeS inner join compositeS.biologicalCharacteristic as bioC inner join bioC.taxon where arrayD.id = :id";
+
+        return (Taxon) queryByIdReturnObject(id, queryString);
+
     }
-    
-    
-    
+
 }
