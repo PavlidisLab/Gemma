@@ -19,7 +19,6 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import ubic.gemma.apps.Blat;
-import ubic.gemma.apps.Blat.BlattableGenome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.ConfigUtils;
@@ -36,8 +35,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
     @SuppressWarnings("unchecked")
     protected void onSetUp() throws Exception {
         super.onSetUp();
-        
-        
+
         // blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
     }
 
@@ -65,10 +63,6 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
 
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
-        
-//        arrayDesignProbeMapperService.setIdentityThreshold( 0.0 );
-//        arrayDesignProbeMapperService.setScoreThreshold( 0.0 );
-//        arrayDesignProbeMapperService.setBlatScoreThreshold( 0.0 );
 
         // see also the ArrayDesignSequenceAlignementTest.
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );

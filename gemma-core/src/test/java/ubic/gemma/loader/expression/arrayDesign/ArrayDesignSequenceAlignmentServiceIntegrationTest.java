@@ -20,20 +20,10 @@ package ubic.gemma.loader.expression.arrayDesign;
 
 import java.util.Collection;
 
-import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
 import ubic.gemma.apps.Blat;
-import ubic.gemma.apps.Blat.BlattableGenome;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -54,7 +44,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
     @SuppressWarnings("unchecked")
     protected void onSetUp() throws Exception {
         super.onSetUp();
-    //    blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
+        // blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
     }
 
     /*
@@ -65,7 +55,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
     @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
-   //     blat.stopServer( ConfigUtils.getInt( "gfClient.humanServerPort" ) );
+        // blat.stopServer( ConfigUtils.getInt( "gfClient.humanServerPort" ) );
     }
 
     /**
@@ -81,7 +71,8 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
 
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
         ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
-        aligner.processArrayDesign( ad, taxon );
+        Collection<BlatResult> blatResults = aligner.processArrayDesign( ad, taxon );
+        assertEquals( 2, blatResults.size() );
 
     }
 
