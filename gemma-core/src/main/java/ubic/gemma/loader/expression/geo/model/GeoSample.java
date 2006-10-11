@@ -40,6 +40,8 @@ public class GeoSample extends GeoData implements Comparable {
     private String scanProtocol = "";
     private String description = "";
     private String type = "DNA";
+    private String supplementaryFile = "";
+    private String lastUpdateDate = "";
 
     Collection<GeoPlatform> platforms;
 
@@ -344,6 +346,34 @@ public class GeoSample extends GeoData implements Comparable {
      */
     public int compareTo( Object o ) {
         return ( ( GeoData ) o ).getGeoAccession().compareTo( this.getGeoAccession() );
+    }
+
+    /**
+     * @return String
+     */
+    public String getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    /**
+     * @param lastUpdateDate
+     */
+    public void setLastUpdateDate( String lastUpdateDate ) {
+        this.lastUpdateDate = lastUpdateDate;
+    }
+
+    /**
+     * @return String
+     */
+    public String getSupplementaryFile() {
+        return supplementaryFile;
+    }
+
+    /**
+     * @param supplementaryFile
+     */
+    public void setSupplementaryFile( String supplementaryFile ) {
+        this.supplementaryFile = supplementaryFile;
     }
 
 }

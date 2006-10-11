@@ -1183,6 +1183,16 @@ public class GeoConverter implements Converter {
                         continue;
                     }
 
+                    if ( StringUtils.isEmpty( sample.getLastUpdateDate() ) )
+                        sample.setSupplementaryFile( "not available" );
+                    expExp.setDescription( expExp.getDescription() + ". Sample " + sample.getGeoAccession()
+                            + " Last Updated: " + sample.getLastUpdateDate() );
+
+                    if ( StringUtils.isEmpty( sample.getSupplementaryFile() ) )
+                        sample.setSupplementaryFile( "not available" );
+                    expExp.setDescription( expExp.getDescription() + ". Sample " + sample.getGeoAccession()
+                            + " Supplementary File: " + sample.getSupplementaryFile() );
+
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
