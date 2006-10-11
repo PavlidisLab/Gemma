@@ -73,8 +73,6 @@ public class GeoPlatform extends GeoData {
 
     private String lastUpdateDate = "";
 
-    private String supplementaryFile = "";
-
     /**
      * @param s
      */
@@ -326,19 +324,4 @@ public class GeoPlatform extends GeoData {
     public void setLastUpdateDate( String lastUpdateDate ) {
         this.lastUpdateDate = lastUpdateDate;
     }
-
-    /**
-     * @return String
-     */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
-    }
-
-    /**
-     * @param supplementaryFile
-     */
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
-    }
-
 }

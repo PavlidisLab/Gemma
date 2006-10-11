@@ -607,9 +607,6 @@ public class GeoConverter implements Converter {
         if ( platform != null ) {
             expExp.setDescription( expExp.getDescription() + ". Platform " + platform.getGeoAccession()
                     + " Last Updated: " + platform.getLastUpdateDate() );
-
-            expExp.setDescription( expExp.getDescription() + ". Platform " + platform.getGeoAccession()
-                    + " Supplementary File: " + platform.getSupplementaryFile() );
         }
     }
 
