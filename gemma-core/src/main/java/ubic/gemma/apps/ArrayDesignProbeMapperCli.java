@@ -20,10 +20,15 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * <p>
  * Typical workflow would be to run:
  * <ol>
+ * <li>Create the array design, perhaps by loading a GPL or via a GSE.
  * <li>ArrayDesignSequenceAssociationCli - attach sequences to array design, fetching from BLAST database if necessary.
- * <li>ArrayDesignBlatCli - runs blat
- * <li>ArrayDesignProbeMapperCli (this class)
+ * For affymetrix designs, get the probe sequences and pass them to the command line (also a web interface)
+ * <li>ArrayDesignBlatCli - runs blat. You must start the appropriate server using the configuration in the properties
+ * files.
+ * <li>ArrayDesignProbeMapperCli (this class); you must have the correct GoldenPath database installed and available as
+ * configured in your properties files.
  * </ol>
+ * TODO : allow tuning of paramters from the command line.
  * 
  * @author pavlidis
  * @version $Id$
