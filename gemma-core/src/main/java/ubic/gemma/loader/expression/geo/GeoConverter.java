@@ -1189,8 +1189,8 @@ public class GeoConverter implements Converter {
                             + " Last Updated: " + sample.getLastUpdateDate() );
 
                     /*
-                     * This adds too many strings for a sql column. Anyhow, this file ends up in the LocalFile of the
-                     * ExpressionExperiment
+                     * This adds too many strings for a sql column. Anyhow, this file location is included in the
+                     * LocalFile of the ExpressionExperiment
                      */
                     // if ( StringUtils.isEmpty( sample.getSupplementaryFile() ) )
                     // sample.setSupplementaryFile( "unavailable" );
