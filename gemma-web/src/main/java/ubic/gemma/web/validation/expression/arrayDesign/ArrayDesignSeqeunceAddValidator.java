@@ -49,8 +49,8 @@ public class ArrayDesignSeqeunceAddValidator implements Validator {
      */
     @SuppressWarnings("unused")
     public void validate( Object obj, Errors errors ) {
-        ValidationUtils.rejectIfEmptyOrWhitespace( errors, "sequenceFile", "errors.required",
-                "Sequence file is required" );
+        // ValidationUtils.rejectIfEmptyOrWhitespace( errors, "sequenceFile", "errors.required",
+        // "Sequence file is required" );
 
         ValidationUtils.rejectIfEmptyOrWhitespace( errors, "arrayDesign", "errors.required",
                 "Array Design is required" );

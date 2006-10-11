@@ -29,6 +29,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -44,7 +45,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.BackgroundControllerJob;
+import ubic.gemma.web.controller.BackgroundProcessingFormController;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
 import ubic.gemma.web.propertyeditor.ArrayDesignPropertyEditor;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
@@ -67,7 +69,7 @@ import ubic.gemma.web.util.upload.FileUploadUtil;
  * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="arrayDesignSequenceProcessingService" ref="arrayDesignSequenceProcessingService"
  */
-public class ArrayDesignSequenceAddController extends BaseFormController {
+public class ArrayDesignSequenceAddController extends BackgroundProcessingFormController {
 
     TaxonService taxonService;
 
@@ -81,6 +83,7 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
      * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
      */
     @Override
+    @SuppressWarnings("unused")
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         ArrayDesignSequenceAddCommand adsac = new ArrayDesignSequenceAddCommand();
         return adsac;
@@ -112,48 +115,19 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
         FileUpload fileUpload = commandObject.getSequenceFile();
 
         ArrayDesign arrayDesign = commandObject.getArrayDesign();
-
-        // should be done by validaiton.
-        if ( arrayDesign == null ) {
-            Object[] args = new Object[] { getText( "arrayDesignSequenceAddCommand.arrayDesign", request.getLocale() ) };
-            errors.rejectValue( "arrayDesign", "errors.required", args, "Array Design is required" );
-            return showForm( request, response, errors );
-        }
-
-        // validate type is okay
-
         SequenceType sequenceType = commandObject.getSequenceType();
-        if ( sequenceType == null ) {
-            errors.rejectValue( "sequenceType", "sequenceType.missing", "Sequence Type is missing" );
+        Taxon taxon = commandObject.getTaxon();
+
+        if ( arrayDesignService.getCompositeSequenceCount( arrayDesign ) == 0 ) {
+            errors.rejectValue( "arrayDesign", "arrayDesign.nocompositesequences",
+                    "Array design did not have any compositesequences" );
             return showForm( request, response, errors );
         }
-
-        Taxon taxon = commandObject.getTaxon();
-        // validate
-
-        // validate array design has design elements.
-        if ( sequenceType == SequenceType.AFFY_PROBE ) {
-            // if ( arrayDesignService.getReporterCount( arrayDesign ) == 0 ) {
-            // errors
-            // .rejectValue( "arrayDesign", "arrayDesign.noreporters",
-            // "Array design did not have any reporters" );
-            // return showForm( request, response, errors );
-            // }
-        } else {
-            if ( arrayDesignService.getCompositeSequenceCount( arrayDesign ) == 0 ) {
-                errors.rejectValue( "arrayDesign", "arrayDesign.nocompositesequences",
-                        "Array design did not have any compositesequences" );
-                return showForm( request, response, errors );
-            }
-        }
-
-        // TODO - possible additional validation to make sure array design is in right state for this processing.
 
         // validate a file was entered
-        if ( fileUpload.getFile().length == 0 ) {
+        if ( fileUpload.getName() != null && fileUpload.getFile().length == 0 ) {
             Object[] args = new Object[] { getText( "arrayDesignSequenceAddCommand.file", request.getLocale() ) };
             errors.rejectValue( "file", "errors.required", args, "File" );
-
             return showForm( request, response, errors );
         }
 
@@ -238,6 +212,18 @@ public class ArrayDesignSequenceAddController extends BaseFormController {
      */
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.web.controller.BackgroundProcessingFormController#getRunner(org.acegisecurity.context.SecurityContext,
+     *      java.lang.Object, java.lang.String)
+     */
+    @Override
+    protected BackgroundControllerJob getRunner( SecurityContext securityContext, Object command, String jobDescription ) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
