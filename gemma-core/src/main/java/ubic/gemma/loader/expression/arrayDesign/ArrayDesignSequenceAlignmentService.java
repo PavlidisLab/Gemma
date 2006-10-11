@@ -21,6 +21,7 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -64,7 +65,7 @@ public class ArrayDesignSequenceAlignmentService {
     /**
      * @param ad
      */
-    public void processArrayDesign( ArrayDesign ad, Taxon taxon ) {
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon ) {
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         Map<String, BioSequence> sequencesToBlat = new HashMap<String, BioSequence>();
         for ( CompositeSequence sequence : compositeSequences ) {
@@ -82,6 +83,8 @@ public class ArrayDesignSequenceAlignmentService {
         } else if ( taxon.getCommonName().equals( "human" ) ) {
             bg = BlattableGenome.HUMAN;
         }
+
+        Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
         try {
             Map<String, Collection<BlatResult>> results = blat.blatQuery( sequencesToBlat.values(), bg );
@@ -102,6 +105,7 @@ public class ArrayDesignSequenceAlignmentService {
                     br.setTargetChromosome( ( Chromosome ) persisterHelper.persist( br.getTargetChromosome() ) );
                     br.setQuerySequence( sequencesToBlat.get( acc ) );
                     br = blatResultService.create( br );
+                    allResults.add( br );
                 }
 
             }
@@ -109,6 +113,8 @@ public class ArrayDesignSequenceAlignmentService {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+
+        return allResults;
 
     }
 

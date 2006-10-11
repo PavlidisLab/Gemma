@@ -77,8 +77,11 @@ public abstract class RecordParser implements Parser {
             }
 
         }
-        log.info( "Successfully parsed " + recordsParsed + " records."
-                + ( nullRecords > 0 ? " Another " + nullRecords + " records yielded no parse result." : "" ) );
+
+        if ( log.isInfoEnabled() && recordsParsed > 0 ) {
+            log.info( "Successfully parsed " + recordsParsed + " records."
+                    + ( nullRecords > 0 ? " Another " + nullRecords + " records yielded no parse result." : "" ) );
+        }
 
     }
 

@@ -37,10 +37,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -55,8 +57,8 @@ import ubic.gemma.util.ConfigUtils;
 public class Blat {
 
     private static final Log log = LogFactory.getLog( Blat.class );
-    public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.8; // FIXME - make this user-modifiable.
-
+    public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.8;
+    public static final double STEPSIZE = 5;
     private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
 
     private static String os = System.getProperty( "os.name" ).toLowerCase();
@@ -272,7 +274,11 @@ public class Blat {
 
         log.debug( "Processing " + sequences.size() + " sequences for blat analysis" );
         for ( BioSequence b : sequences ) {
-            out.write( ">" + b.getName() + "\n" + b.getSequence() + "\n" );
+            if ( StringUtils.isNotBlank( b.getSequence() ) ) {
+                out.write( ">" + b.getName() + "\n" + b.getSequence() + "\n" );
+            } else {
+                log.warn( "Blank sequence for " + b );
+            }
         }
         out.close();
 
@@ -307,8 +313,8 @@ public class Blat {
         } catch ( UnknownHostException e ) {
             throw new RuntimeException( "Unknown host " + host, e );
         } catch ( IOException e ) {
-            String cmd = this.getGfServerExe() + " -canStop start " + this.getHost() + " " + port + " "
-                    + this.getSeqFiles( genome );
+            String cmd = this.getGfServerExe() + " -canStop -stepSize=" + STEPSIZE + " start " + this.getHost() + " "
+                    + port + " " + this.getSeqFiles( genome );
             log.info( "Starting gfServer with command " + cmd );
             this.serverProcess = Runtime.getRuntime().exec( cmd, null, new File( this.getSeqDir() ) );
 
@@ -353,7 +359,7 @@ public class Blat {
     }
 
     /**
-     * Run a gfClient query, using a call to exec(). This runs in a separate thread.
+     * Run a gfClient query, using a call to exec().
      * 
      * @param querySequenceFile
      * @param outputPath
@@ -361,92 +367,107 @@ public class Blat {
      */
     private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
-        final String cmd = gfClientExe + " -nohead " + host + " " + portToUse + " " + seqDir + " "
+        final String cmd = gfClientExe + " -nohead -minScore=16 " + host + " " + portToUse + " " + seqDir + " "
                 + querySequenceFile.getAbsolutePath() + " " + outputPath;
+        log.info( cmd );
 
-        FutureTask<Process> future = new FutureTask<Process>( new Callable<Process>() {
-            public Process call() throws IOException {
-                try {
-                    Process run = Runtime.getRuntime().exec( cmd );
+        final Process run = Runtime.getRuntime().exec( cmd );
 
-                    // GenericStreamConsumer gsc = new GenericStreamConsumer( run.getErrorStream() );
-                    // gsc.start();
-
-                    try {
-                        run.waitFor();
-                    } catch ( InterruptedException e ) {
-                        ;
-                    }
-                    return run;
-                } catch ( IOException e ) {
-                    String message = e.getMessage();
-                    if ( message.startsWith( "CreateProcess" ) && message.indexOf( "error=" ) > 0 ) {
-                        int errorCode = Integer.parseInt( message.substring( e.getMessage().lastIndexOf( "error=" )
-                                + ( new String( "error=" ) ).length() ) );
-
-                        if ( errorCode == 2 )
-                            throw new IOException( "Could not locate executable to run command (Error " + errorCode
-                                    + ") " + cmd );
-
-                        throw new IOException( "Error (" + errorCode + ") " + cmd );
-                    }
-                    return null;
-                }
-            }
-        } );
-
-        Executors.newSingleThreadExecutor().execute( future );
-        while ( !future.isDone() ) {
-            try {
-                Thread.sleep( 10 );
-            } catch ( InterruptedException ie ) {
-                ;
-            }
-        }
+        // to ensure that we aren't left waiting for these streams
+        GenericStreamConsumer gscErr = new GenericStreamConsumer( run.getErrorStream() );
+        GenericStreamConsumer gscIn = new GenericStreamConsumer( run.getInputStream() );
+        gscErr.start();
+        gscIn.start();
 
         try {
+            int exitVal = run.waitFor();
 
-            if ( future.get() == null ) {
-                log.error( "GfClient Failed" );
-                throw new RuntimeException( "GfClient Failed" );
-            } else if ( future.get().exitValue() != 0 ) {
-
-                StringBuilder buf = getErrOutput( future );
-
-                throw new RuntimeException( "GfClient Error on command : " + cmd + " exit value: "
-                        + future.get().exitValue() + " error:" + buf );
-            } else {
-                log.info( "GfClient Success" );
-            }
-        } catch ( ExecutionException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "GfClient Failed", e );
+            log.debug( "blat exit value=" + exitVal );
         } catch ( InterruptedException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "GfClient Failed (Interrupted)", e );
+            throw new RuntimeException( e );
         }
+
+        //        
+        // FutureTask<Process> future = new FutureTask<Process>( new Callable<Process>() {
+        // public Process call() throws IOException {
+        // try {
+        // Process run = Runtime.getRuntime().exec( cmd );
+        //
+        // try {
+        // run.waitFor();
+        // } catch ( InterruptedException e ) {
+        // ;
+        // }
+        // return run;
+        // } catch ( IOException e ) {
+        // String message = e.getMessage();
+        // if ( message.startsWith( "CreateProcess" ) && message.indexOf( "error=" ) > 0 ) {
+        // int errorCode = Integer.parseInt( message.substring( e.getMessage().lastIndexOf( "error=" )
+        // + ( new String( "error=" ) ).length() ) );
+        //
+        // if ( errorCode == 2 )
+        // throw new IOException( "Could not locate executable to run command (Error " + errorCode
+        // + ") " + cmd );
+        //
+        // throw new IOException( "Error (" + errorCode + ") " + cmd );
+        // }
+        // return null;
+        // }
+        // }
+        // } );
+        //
+        // Executors.newSingleThreadExecutor().execute( future );
+        // while ( !future.isDone() ) {
+        // try {
+        // Thread.sleep( 10 );
+        // } catch ( InterruptedException ie ) {
+        // ;
+        // }
+        // }
+
+        // try {
+        //
+        // if ( future.get() == null ) {
+        // log.error( "GfClient Failed" );
+        // throw new RuntimeException( "GfClient Failed" );
+        // } else if ( future.get().exitValue() != 0 ) {
+        //
+        // StringBuilder buf = getErrOutput( future );
+        //
+        // throw new RuntimeException( "GfClient Error on command : " + cmd + " exit value: "
+        // + future.get().exitValue() + " error:" + buf );
+        // } else {
+        log.info( "GfClient Success" );
+        // }
+        // } catch ( ExecutionException e ) {
+        // log.error( e, e );
+        // throw new RuntimeException( "GfClient Failed", e );
+        // } catch ( InterruptedException e ) {
+        // log.error( e, e );
+        // throw new RuntimeException( "GfClient Failed (Interrupted)", e );
+        // }
         return processPsl( outputPath, null );
     }
 
-    /**
-     * @param future
-     * @return
-     * @throws InterruptedException
-     * @throws ExecutionException
-     * @throws IOException
-     */
-    private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException,
-            IOException {
-        InputStream result = future.get().getErrorStream();
-        BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
-        String l = null;
-        StringBuilder buf = new StringBuilder();
-        while ( ( l = br.readLine() ) != null ) {
-            buf.append( l + "\n" );
-        }
-        br.close();
-        return buf;
-    }
+    // /**
+    // * @param future
+    // * @return
+    // * @throws InterruptedException
+    // * @throws ExecutionException
+    // * @throws IOException
+    // */
+    // private StringBuilder getErrOutput( FutureTask<Process> future ) throws InterruptedException, ExecutionException,
+    // IOException {
+    // InputStream result = future.get().getErrorStream();
+    // BufferedReader br = new BufferedReader( new InputStreamReader( result ) );
+    // String l = null;
+    // StringBuilder buf = new StringBuilder();
+    // while ( ( l = br.readLine() ) != null ) {
+    // buf.append( l + "\n" );
+    // }
+    // br.close();
+    // return buf;
+    // }
 
     /**
      * Get a temporary file name.

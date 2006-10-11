@@ -54,7 +54,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
     @SuppressWarnings("unchecked")
     protected void onSetUp() throws Exception {
         super.onSetUp();
-        blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
+    //    blat.startServer( BlattableGenome.HUMAN, ConfigUtils.getInt( "gfClient.humanServerPort" ) );
     }
 
     /*
@@ -65,7 +65,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
     @Override
     protected void onTearDown() throws Exception {
         super.onTearDown();
-        blat.stopServer( ConfigUtils.getInt( "gfClient.humanServerPort" ) );
+   //     blat.stopServer( ConfigUtils.getInt( "gfClient.humanServerPort" ) );
     }
 
     /**

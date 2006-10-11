@@ -23,6 +23,7 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.hibernate.Criteria;
 
@@ -48,7 +49,18 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
 
-        return queryObject.list();
-    }
+        List results = queryObject.list();
 
+        if ( results != null ) {
+            for ( Object object : results ) {
+                BlatResult br = ( BlatResult ) object;
+                if ( br.getTargetChromosome() != null ) {
+                    br.getTargetChromosome().getName(); // to initialize the proxies.
+                }
+                br.getQuerySequence();
+            }
+        }
+
+        return results;
+    }
 }

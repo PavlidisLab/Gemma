@@ -102,7 +102,7 @@ public class GeoPlatform extends GeoData {
      */
     public void addToColumnData( String columnName, String value ) {
         if ( !data.containsKey( columnName ) ) {
-            log.info( "Adding " + columnName + " to " + this.getGeoAccession() );
+            if ( log.isDebugEnabled() ) log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
             data.put( columnName, new ArrayList<String>() );
         }
         getColumnData( columnName ).add( value );

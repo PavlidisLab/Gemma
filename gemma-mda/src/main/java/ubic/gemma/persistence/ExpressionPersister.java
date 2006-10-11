@@ -184,7 +184,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         fillInBioAssayAssociations( assay );
 
         if ( !isTransient( assay ) ) return assay;
-        log.info( "Persisting " + assay );
+        if ( log.isDebugEnabled() ) log.debug( "Persisting " + assay );
 
         return bioAssayService.findOrCreate( assay );
     }
@@ -285,7 +285,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
-        
+
         ExpressionExperiment existing = expressionExperimentService.findByName( entity.getName() );
         if ( existing != null ) {
             log.warn( "Expression experiment with same name exists (" + existing

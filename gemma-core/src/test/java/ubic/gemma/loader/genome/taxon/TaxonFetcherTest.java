@@ -29,6 +29,7 @@ import junit.framework.TestCase;
  */
 public class TaxonFetcherTest extends TestCase {
 
+    // FIXME - this test takes too long.
     public void testFetch() throws Exception {
         TaxonFetcher fetcher = new TaxonFetcher();
         Collection<LocalFile> files = fetcher.fetch();

@@ -76,10 +76,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
+                    // insert count FIXME
+                    ( ( ExpressionExperiment ) result )
+                            .setBioAssayCount( handleGetBioAssayCountById( ( ( ExpressionExperiment ) result ).getId() ) );
                 }
             }
-            // insert count
-            ((ExpressionExperiment)result).setBioAssayCount( handleGetBioAssayCountById( ((ExpressionExperiment)result).getId() ) );
             return ( ExpressionExperiment ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
@@ -103,7 +104,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
         newExpressionExperiment = ( ExpressionExperiment ) create( expressionExperiment );
-        // insert count
+        // insert count FIXME
         newExpressionExperiment.setBioAssayCount( handleGetBioAssayCountById( newExpressionExperiment.getId() ) );
         return newExpressionExperiment;
     }
@@ -158,7 +159,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         return count;
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -220,7 +221,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 }
 
-                //session.flush();
+                // session.flush();
                 // Delete BioMaterials
                 for ( BioAssay ba : toDeletePers.getBioAssays() ) {
 
@@ -228,26 +229,26 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     // Not happy about this at all. but what to do?
                     ba.getArrayDesignUsed().getCompositeSequences().size();
 
-                    // Delete Biomaterial 
+                    // Delete Biomaterial
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
-//                        //fixme Cascade happens for treatment and Protocol application but not protocol. 
-//                        for (Treatment treat : bm.getTreatments())
-//                            for (ProtocolApplication protoApp : treat.getProtocolApplications()) {
-//                                 if (protoApp.getProtocol() != null) {
-//                                     at = protoApp.getProtocol().getAuditTrail();
-//                                     if ( at != null ) {
-//                                         for ( AuditEvent event : at.getEvents() )
-//                                             session.delete( event );
-//                                         session.delete( at );
-//                                     }                                     
-//                                     session.delete( protoApp.getProtocol() );
-//                                 }
-//                            }
+                        // //fixme Cascade happens for treatment and Protocol application but not protocol.
+                        // for (Treatment treat : bm.getTreatments())
+                        // for (ProtocolApplication protoApp : treat.getProtocolApplications()) {
+                        // if (protoApp.getProtocol() != null) {
+                        // at = protoApp.getProtocol().getAuditTrail();
+                        // if ( at != null ) {
+                        // for ( AuditEvent event : at.getEvents() )
+                        // session.delete( event );
+                        // session.delete( at );
+                        // }
+                        // session.delete( protoApp.getProtocol() );
+                        // }
+                        // }
                         session.delete( bm );
                     }
                     // delete references to files on disk
                     for ( LocalFile lf : ba.getDerivedDataFiles() ) {
-                        for ( LocalFile sf : lf.getSourceFiles() )                            
+                        for ( LocalFile sf : lf.getSourceFiles() )
                             session.delete( sf );
                         session.delete( lf );
                     }
@@ -275,46 +276,43 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 session.delete( toDeletePers );
                 session.flush();
                 session.clear();
-                
+
                 return null;
             }
         }, true );
 
     }
 
-    public ExpressionExperiment expressionExperimentValueObjectToEntity( ExpressionExperimentValueObject expressionExperimentValueObject ) {
-        return (ExpressionExperiment) this.load( Long.parseLong( expressionExperimentValueObject.getId()));
+    public ExpressionExperiment expressionExperimentValueObjectToEntity(
+            ExpressionExperimentValueObject expressionExperimentValueObject ) {
+        return ( ExpressionExperiment ) this.load( Long.parseLong( expressionExperimentValueObject.getId() ) );
     }
-    
-    public ExpressionExperimentValueObject toExpressionExperimentValueObject(final ExpressionExperiment entity)
-    {
+
+    public ExpressionExperimentValueObject toExpressionExperimentValueObject( final ExpressionExperiment entity ) {
         ExpressionExperimentValueObject vo = new ExpressionExperimentValueObject();
-        
-        
+
         vo.setId( entity.getId().toString() );
         vo.setAccession( entity.getAccession().getAccession() );
-        vo.setName(  entity.getName() );
+        vo.setName( entity.getName() );
         vo.setExternalDatabase( entity.getAccession().getExternalDatabase().getName() );
         vo.setExternalUri( entity.getAccession().getExternalDatabase().getWebUri() );
         vo.setSource( entity.getSource() );
         vo.setBioAssayCount( this.handleGetBioAssayCountById( entity.getId() ) );
-        vo.setTaxon( getTaxon(entity) );
+        vo.setTaxon( getTaxon( entity ) );
         vo.setDesignElementDataVectorCount( this.handleGetDesignElementDataVectorCountById( entity.getId() ) );
-        
+
         if ( entity != null && entity.getAuditTrail() != null && entity.getAuditTrail().getCreationEvent() != null
                 && entity.getAuditTrail().getCreationEvent().getDate() != null ) {
             vo.setCreateDate( entity.getAuditTrail().getCreationEvent().getDate() );
-        }
-        else {
+        } else {
             vo.setCreateDate( null );
         }
 
-        
         return vo;
     }
-    
-    public String getTaxon(ExpressionExperiment object) {
-        
+
+    public String getTaxon( ExpressionExperiment object ) {
+
         if ( object == null ) {
             return "Taxon unavailable";
         }

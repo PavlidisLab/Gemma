@@ -468,10 +468,17 @@ public class ArrayDesignSequenceProcessingService {
 
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
+            String sequenceString = sequence.getSequence();
+
+            if ( StringUtils.isBlank( sequenceString ) ) {
+                log.warn( "Blank sequence for " + sequence );
+                continue;
+            }
+
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             BioSequence old = accessionsToFetch.get( accession );
 
-            old.setSequence( sequence.getSequence() );
+            old.setSequence( sequenceString );
             old.setLength( new Long( sequence.getSequence().length() ) );
             old.setIsApproximateLength( false );
             found.put( accession, old );
@@ -500,8 +507,9 @@ public class ArrayDesignSequenceProcessingService {
                 moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname );
             }
 
-            log.info( moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched " + " from "
-                    + dbname );
+            if ( log.isDebugEnabled() )
+                log.debug( moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched "
+                        + " from " + dbname );
             retrievedSequences.addAll( moreBioSequences );
         }
         return retrievedSequences;

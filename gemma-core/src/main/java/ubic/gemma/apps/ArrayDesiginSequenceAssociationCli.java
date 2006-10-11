@@ -39,7 +39,7 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
     ArrayDesignService arrayDesignService;
     private String commonName;
     private String arrayDesignName;
-    private String sequenceTypeOption;
+    private String sequenceType;
     private String sequenceFile;
 
     public static void main( String[] args ) {
@@ -101,7 +101,7 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
         }
 
         if ( this.hasOption( 'y' ) ) {
-            sequenceTypeOption = this.getOptionValue( 'y' );
+            sequenceType = this.getOptionValue( 'y' );
         }
 
         if ( this.hasOption( 'f' ) ) {
@@ -134,10 +134,10 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            SequenceType sequenceType = SequenceType.fromString( sequenceTypeOption );
+            SequenceType sequenceTypeEn = SequenceType.fromString( sequenceType );
 
-            if ( sequenceType == null ) {
-                log.error( "No sequenceType " + sequenceTypeOption + " found" );
+            if ( sequenceTypeEn == null ) {
+                log.error( "No sequenceType " + sequenceType + " found" );
                 bail( ErrorCode.INVALID_OPTION );
             }
 
@@ -148,11 +148,11 @@ public class ArrayDesiginSequenceAssociationCli extends AbstractSpringAwareCLI {
                     log.error( "No file " + sequenceFile + " was readable" );
                     bail( ErrorCode.INVALID_OPTION );
                 }
-                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceType,
+                arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn,
                         taxon );
                 sequenceFileIs.close();
             } else {
-                // FIXME - put in correctdatabases to search.
+                // FIXME - put in correctdatabases to search. Don't always want to do mouse, human etc.
                 arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, new String[] { "nt",
                         "est_others", "est_human", "est_mouse" }, null );
             }

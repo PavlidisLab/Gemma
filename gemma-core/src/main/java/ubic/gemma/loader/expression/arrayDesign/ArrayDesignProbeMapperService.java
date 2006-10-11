@@ -81,11 +81,12 @@ public class ArrayDesignProbeMapperService {
 
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = compositeSequence.getBiologicalCharacteristic();
-            Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+            final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+
             Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
                     blatResults );
 
-            log.info( "Found " + results.size() + " mappings for " + compositeSequence );
+            if ( log.isDebugEnabled() ) log.debug( "Found " + results.size() + " mappings for " + compositeSequence );
 
             for ( String key : results.keySet() ) {
                 persisterHelper.persist( results.get( key ) );
