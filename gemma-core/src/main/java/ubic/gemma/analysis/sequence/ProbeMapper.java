@@ -51,6 +51,7 @@ public class ProbeMapper {
     private Log log = LogFactory.getLog( ProbeMapper.class.getName() );
     private double identityThreshold = DEFAULT_IDENTITY_THRESHOLD;
     private double scoreThreshold = DEFAULT_SCORE_THRESHOLD;
+    private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
     /**
@@ -185,7 +186,7 @@ public class ProbeMapper {
     public Map<String, Collection<BlatAssociation>> processSequences( GoldenPathSequenceAnalysis goldenpath,
             Collection<BioSequence> sequences ) {
         Blat b = new Blat();
-
+        b.setBlatScoreThreshold( blatScoreThreshold );
         BlattableGenome bg = inferBlatGenome( goldenpath );
 
         try {
@@ -234,6 +235,7 @@ public class ProbeMapper {
     public Collection<BlatAssociation> processSequence( GoldenPathSequenceAnalysis goldenPath, BioSequence sequence ) {
         BlattableGenome bg = inferBlatGenome( goldenPath );
         Blat b = new Blat();
+        b.setBlatScoreThreshold( blatScoreThreshold );
         Collection<BlatResult> results;
         try {
             results = b.blatQuery( sequence, bg );
@@ -363,5 +365,19 @@ public class ProbeMapper {
     public void setIdentityThreshold( double identityThreshold ) {
         this.identityThreshold = identityThreshold;
 
+    }
+
+    /**
+     * @return the blatScoreThreshold
+     */
+    public double getBlatScoreThreshold() {
+        return this.blatScoreThreshold;
+    }
+
+    /**
+     * @param blatScoreThreshold the blatScoreThreshold to set
+     */
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
     }
 }

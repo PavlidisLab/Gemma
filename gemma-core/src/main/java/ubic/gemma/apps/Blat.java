@@ -41,7 +41,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.genome.BlatResultParser;
-import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -56,7 +55,10 @@ import ubic.gemma.util.ConfigUtils;
 public class Blat {
 
     private static final Log log = LogFactory.getLog( Blat.class );
-    private static final double BLAT_SCORE_THRESHOLD = 0.8; // FIXME - make this user-modifiable.
+    public static final double DEFAULT_BLAT_SCORE_THRESHOLD = 0.8; // FIXME - make this user-modifiable.
+
+    private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
+
     private static String os = System.getProperty( "os.name" ).toLowerCase();
 
     public static enum BlattableGenome {
@@ -367,8 +369,8 @@ public class Blat {
                 try {
                     Process run = Runtime.getRuntime().exec( cmd );
 
-                    GenericStreamConsumer gsc = new GenericStreamConsumer( run.getErrorStream() );
-                    gsc.start();
+                    // GenericStreamConsumer gsc = new GenericStreamConsumer( run.getErrorStream() );
+                    // gsc.start();
 
                     try {
                         run.waitFor();
@@ -532,7 +534,7 @@ public class Blat {
         log.debug( "Processing " + outputPath );
         BlatResultParser brp = new BlatResultParser();
         brp.setTaxon( taxon );
-        brp.setScoreThreshold( BLAT_SCORE_THRESHOLD );
+        brp.setScoreThreshold( this.blatScoreThreshold );
         brp.parse( outputPath );
         return brp.getResults();
     }
@@ -556,6 +558,20 @@ public class Blat {
      */
     public int getRatServerPort() {
         return this.ratServerPort;
+    }
+
+    /**
+     * @return the blatScoreThreshold
+     */
+    public double getBlatScoreThreshold() {
+        return this.blatScoreThreshold;
+    }
+
+    /**
+     * @param blatScoreThreshold the blatScoreThreshold to set
+     */
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
     }
 
 }

@@ -18,8 +18,12 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.util.Collection;
+
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -32,11 +36,17 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
      * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
      */
     public final void testProcessArrayDesign() throws Exception {
+        ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
+        // finally the real business. There are 243 sequences on the array, but one is not going to be found ()
+        Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
+                ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast" );
+
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                 .getBean( "arrayDesignProbeMapperService" );
-
+        //
         arrayDesignProbeMapperService.setIdentityThreshold( 0.5 );
         arrayDesignProbeMapperService.setScoreThreshold( 0.5 );
+        arrayDesignProbeMapperService.setBlatScoreThreshold( 0.5 );
 
         // see also the ArrayDesignSequenceAlignementTest.
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );

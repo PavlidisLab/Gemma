@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
+import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -59,6 +60,7 @@ public class ArrayDesignProbeMapperService {
 
     private double identityThreshold = ProbeMapper.DEFAULT_IDENTITY_THRESHOLD;
     private double scoreThreshold = ProbeMapper.DEFAULT_SCORE_THRESHOLD;
+    private double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
 
     /**
      * @param arrayDesign
@@ -75,6 +77,7 @@ public class ArrayDesignProbeMapperService {
         ProbeMapper probeMapper = new ProbeMapper();
         probeMapper.setIdentityThreshold( identityThreshold );
         probeMapper.setScoreThreshold( scoreThreshold );
+        probeMapper.setBlatScoreThreshold( blatScoreThreshold );
 
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = compositeSequence.getBiologicalCharacteristic();
@@ -124,5 +127,12 @@ public class ArrayDesignProbeMapperService {
      */
     public void setScoreThreshold( double scoreThreshold ) {
         this.scoreThreshold = scoreThreshold;
+    }
+
+    /**
+     * @param blatScoreThreshold the blatScoreThreshold to set
+     */
+    public void setBlatScoreThreshold( double blatScoreThreshold ) {
+        this.blatScoreThreshold = blatScoreThreshold;
     }
 }

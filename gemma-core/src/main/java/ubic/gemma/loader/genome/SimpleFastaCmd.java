@@ -19,12 +19,10 @@
 package ubic.gemma.loader.genome;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.Collection;
 
@@ -33,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.concurrent.GenericStreamConsumer;
 import ubic.gemma.loader.util.concurrent.ParsingStreamConsumer;
-import ubic.gemma.loader.util.parser.Parser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
 
