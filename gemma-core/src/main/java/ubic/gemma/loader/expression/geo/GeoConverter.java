@@ -947,7 +947,8 @@ public class GeoConverter implements Converter {
         bioAssay.setDescription( sample.getDescription() );
         bioAssay.setAccession( convertDatabaseEntry( sample ) );
 
-        // FIXME: use the ones from the ExperimentalFactor.
+        // FIXME: use the ones from the ExperimentalFactor. In other words, these factor values should correspond to
+        // experimentalfactors
         for ( GeoReplication replication : sample.getReplicates() ) {
             bioMaterial.getFactorValues().add( convertReplicationToFactorValue( replication ) );
         }
@@ -1321,28 +1322,54 @@ public class GeoConverter implements Converter {
         Collection<ExperimentalFactor> existingExperimentalFactors = experimentalDesign.getExperimentalFactors();
 
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
-        experimentalFactor.setName( geoSubSet.getDescription() );
-        experimentalFactor.setDescription( geoSubSet.getType().toString() );
+        experimentalFactor.setName( geoSubSet.getType().toString() );
+        experimentalFactor.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
 
         boolean duplicateExists = false;
         for ( ExperimentalFactor existingExperimentalFactor : existingExperimentalFactors ) {
-            if ( ( experimentalFactor.getName() + experimentalFactor.getDescription() )
-                    .equalsIgnoreCase( existingExperimentalFactor.getName()
-                            + existingExperimentalFactor.getDescription() ) ) {
+            if ( ( experimentalFactor.getName() ).equalsIgnoreCase( existingExperimentalFactor.getName() ) ) {
                 duplicateExists = true;
-                log.debug( experimentalFactor.getName()
-                        + " already exists.  Not adding to list of experimental factors." );
+                if ( log.isDebugEnabled() )
+                    log.debug( experimentalFactor.getName()
+                            + " already exists.  Not adding to list of experimental factors." );
                 break;
             }
         }
 
         if ( !duplicateExists ) {
             experimentalDesign.getExperimentalFactors().add( experimentalFactor );
-            duplicateExists = false;
         }
 
         /* bi-directional ... don't forget this. */
         experimentalFactor.setExperimentalDesign( experimentalDesign );
+
+        // By definition each subset defines a new factor value.
+        FactorValue factorValue = FactorValue.Factory.newInstance();
+        factorValue.setExperimentalFactor( experimentalFactor );
+        factorValue.setValue( geoSubSet.getDescription() ); // :( OntologyEntry or Measurement would be preferable.
+        experimentalFactor.getFactorValues().add( factorValue );
+
+        // fill in biomaterial-->factorvalue.
+        for ( GeoSample sample : geoSubSet.getSamples() ) {
+
+            // find the matching biomaterial(s) in the expression experiment.
+            for ( BioAssay bioAssay : expExp.getBioAssays() ) {
+                if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
+                    Collection<BioMaterial> bioMaterials = bioAssay.getSamplesUsed();
+
+                    // this is a bit funny if one of them is the control channel
+                    // ....how do we figure this out!
+                    for ( BioMaterial material : bioMaterials ) {
+                        if ( log.isInfoEnabled() ) {
+                            log.info( "Adding " + factorValue + " to " + material );
+                        }
+                        material.getFactorValues().add( factorValue );
+                    }
+                    break;
+                }
+            }
+
+        }
     }
 
     /**
