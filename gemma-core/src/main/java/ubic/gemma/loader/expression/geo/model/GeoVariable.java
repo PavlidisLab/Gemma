@@ -36,6 +36,11 @@ import java.util.Collection;
  */
 public class GeoVariable {
 
+    @Override
+    public String toString() {
+        return this.getType().toString() + this.getDescription();
+    }
+
     VariableType type;
     String description = "";
 

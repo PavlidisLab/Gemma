@@ -283,9 +283,9 @@ public class DatasetCombiner {
         for ( int j = 0; j < sampleAccs.size(); j++ ) {
             String targetAcc = sampleAccs.get( j );
 
-//            if ( alreadyMatched.contains( targetAcc ) ) {
-//                continue;
-//            }
+            // if ( alreadyMatched.contains( targetAcc ) ) {
+            // continue;
+            // }
 
             int mindistance = Integer.MAX_VALUE;
             String bestMatch = null;
@@ -300,9 +300,9 @@ public class DatasetCombiner {
 
                 String testAcc = sampleAccs.get( i );
 
-//                if ( alreadyMatched.contains( testAcc ) ) {
-//                    continue;
-//                }
+                // if ( alreadyMatched.contains( testAcc ) ) {
+                // continue;
+                // }
 
                 String jTitle = accToTitle.get( testAcc );
                 if ( StringUtils.isBlank( jTitle ) )
@@ -333,16 +333,16 @@ public class DatasetCombiner {
 
             assert targetAcc != null;
             result.addCorrespondence( targetAcc, bestMatchAcc );
-            // alreadyMatched.add( targetAcc );
-            // alreadyMatched.add( bestMatchAcc );
 
             if ( numDatasets > 1 ) {
                 if ( bestMatchAcc == null ) {
-                    log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle
-                            + " (Can happen if sample was only run on one platform)\n" );
+                    log.warn( "No match found for:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc )
+                            + ")" + " (Can happen if sample was only run on one platform)\n" );
                 } else {
-                    log.info( "Match:\n" + targetAcc + "\t" + iTitle + "\n" + bestMatchAcc + "\t" + bestMatch
-                            + " (Distance: " + mindistance + ")\n" );
+                    if ( log.isInfoEnabled() )
+                        log.info( "Match:\n" + targetAcc + "\t" + iTitle + " (" + accToDataset.get( targetAcc ) + ")"
+                                + "\n" + bestMatchAcc + "\t" + bestMatch + " (" + accToDataset.get( bestMatchAcc )
+                                + ")" + " (Distance: " + mindistance + ")\n" );
                 }
             }
         }

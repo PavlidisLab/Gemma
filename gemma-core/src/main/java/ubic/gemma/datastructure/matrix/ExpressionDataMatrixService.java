@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.bioAssayData;
+package ubic.gemma.datastructure.matrix;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +30,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 

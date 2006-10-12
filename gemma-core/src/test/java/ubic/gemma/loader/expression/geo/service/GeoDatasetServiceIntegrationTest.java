@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixNamed;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -34,7 +35,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.ExpressionDataMatrixService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;

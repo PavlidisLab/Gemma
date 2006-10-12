@@ -115,4 +115,9 @@ public class GeoReplication {
     public void setRepeats( ReplicationType repeats ) {
         this.type = repeats;
     }
+
+    @Override
+    public String toString() {
+        return this.type.toString() + " " + this.getDescription();
+    }
 }

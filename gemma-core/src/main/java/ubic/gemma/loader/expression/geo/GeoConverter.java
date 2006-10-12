@@ -76,6 +76,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -236,22 +237,35 @@ public class GeoConverter implements Converter {
         log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
 
         bioMaterial.setDescription( ( bioMaterial.getDescription() == null ? "" : bioMaterial.getDescription() + ";" )
-                + "Channel "
-                + channel.getChannelNumber()
-                + " sample source="
-                + channel.getOrganism()
-                + " "
-                + channel.getSourceName()
-                + "\n"
-                + ( StringUtils.isBlank( channel.getExtractProtocol() ) ? "" : "Extraction Protocol: "
-                        + channel.getExtractProtocol() + "\n" )
-                + ( StringUtils.isBlank( channel.getLabelProtocol() ) ? "" : "Labeling Protocol: "
-                        + channel.getLabelProtocol() + "\n" )
-                + ( StringUtils.isBlank( channel.getTreatmentProtocol() ) ? "" : "Treatment Protocol: "
-                        + channel.getTreatmentProtocol() + "\n" )
-                + ( StringUtils.isBlank( channel.getGrowthProtocol() ) ? "" : "Growth Protocol: "
-                        + channel.getGrowthProtocol() ) + "\n" );
-        // these protocols could be made into 'real' protocols, if anybody cares.
+                + "Channel " + channel.getChannelNumber() );
+
+        if ( !StringUtils.isBlank( channel.getGrowthProtocol() ) ) {
+            Treatment treatment = Treatment.Factory.newInstance();
+            treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " treatment" );
+            treatment.setDescription( channel.getTreatmentProtocol() );
+            bioMaterial.getTreatments().add( treatment );
+        }
+
+        if ( !StringUtils.isBlank( channel.getTreatmentProtocol() ) ) {
+            Treatment treatment = Treatment.Factory.newInstance();
+            treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " growth" );
+            treatment.setDescription( channel.getGrowthProtocol() );
+            bioMaterial.getTreatments().add( treatment );
+        }
+
+        if ( !StringUtils.isBlank( channel.getExtractProtocol() ) ) {
+            Treatment treatment = Treatment.Factory.newInstance();
+            treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " extraction" );
+            treatment.setDescription( channel.getExtractProtocol() );
+            bioMaterial.getTreatments().add( treatment );
+        }
+
+        if ( !StringUtils.isBlank( channel.getLabelProtocol() ) ) {
+            Treatment treatment = Treatment.Factory.newInstance();
+            treatment.setName( sample.getGeoAccession() + " channel " + channel.getChannelNumber() + " label" );
+            treatment.setDescription( channel.getLabelProtocol() );
+            bioMaterial.getTreatments().add( treatment );
+        }
 
         for ( String characteristic : channel.getCharacteristics() ) {
             Characteristic gemmaChar = Characteristic.Factory.newInstance();
@@ -261,10 +275,38 @@ public class GeoConverter implements Converter {
                 characteristic = characteristic.substring( 0, 199 ) + " (truncated at 200 characters)";
             }
 
-            gemmaChar.setCategory( characteristic );
-            gemmaChar.setValue( characteristic ); // TODO need to put in actual value.
+            gemmaChar.setCategory( "GEO Sample characteristic" );
+            gemmaChar.setValue( characteristic );
             bioMaterial.getCharacteristics().add( gemmaChar );
         }
+
+        if ( channel.getSourceName() != null ) {
+            Characteristic sourceChar = Characteristic.Factory.newInstance();
+            sourceChar.setCategory( "GEO Sample source" );
+            sourceChar.setValue( channel.getSourceName() );
+            bioMaterial.getCharacteristics().add( sourceChar );
+        }
+
+        if ( channel.getOrganism() != null ) {
+            Taxon taxon = Taxon.Factory.newInstance();
+            taxon.setScientificName( channel.getOrganism() );
+            bioMaterial.setSourceTaxon( taxon );
+        }
+
+        if ( channel.getMolecule() != null ) {
+            Characteristic moleculeChar = Characteristic.Factory.newInstance();
+            moleculeChar.setCategory( "GEO Sample molecule" );
+            moleculeChar.setValue( channel.getMolecule().toString() );
+            bioMaterial.getCharacteristics().add( moleculeChar );
+        }
+
+        if ( channel.getLabel() != null ) {
+            Characteristic labelChar = Characteristic.Factory.newInstance();
+            labelChar.setCategory( "GEO Sample label" );
+            labelChar.setValue( channel.getLabel() );
+            bioMaterial.getCharacteristics().add( labelChar );
+        }
+
         return bioMaterial;
     }
 
@@ -762,10 +804,6 @@ public class GeoConverter implements Converter {
             } else {
                 BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setTaxon( taxon );
-                // TODO Paul, how do you want to determine the polymer type and the sequence. When these are parsed,
-                // they are put in the sample (ie. paragraph starts with ^SAMPLE and line starts with !Sample_type).
-                // Here, we only have a hook
-                // to the platform.
                 bs.setPolymerType( PolymerType.DNA );
                 bs.setType( SequenceType.DNA );
 
@@ -923,7 +961,8 @@ public class GeoConverter implements Converter {
      * @param sample
      */
     @SuppressWarnings("unchecked")
-    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial ) {
+    private BioAssay convertSample( Collection<ExperimentalFactor> experimentalFactors, GeoSample sample,
+            BioMaterial bioMaterial ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
             return null;
@@ -950,11 +989,17 @@ public class GeoConverter implements Converter {
         // FIXME: use the ones from the ExperimentalFactor. In other words, these factor values should correspond to
         // experimentalfactors
         for ( GeoReplication replication : sample.getReplicates() ) {
+
+            // find the experimentalFactor that matches this.
+
             bioMaterial.getFactorValues().add( convertReplicationToFactorValue( replication ) );
         }
 
         // FIXME: use the ones from the ExperimentalFactor.
         for ( GeoVariable variable : sample.getVariables() ) {
+
+            // find the experimentalFactor that matches this.
+
             bioMaterial.getFactorValues().add( convertVariableToFactorValue( variable ) );
         }
 
@@ -1179,7 +1224,8 @@ public class GeoConverter implements Converter {
             throw new IllegalArgumentException( "No sample correspondence!" );
         }
 
-        log.info( series.getSampleCorrespondence() );
+        // spits out a big summary of the correspondence.
+        if ( log.isDebugEnabled() ) log.debug( series.getSampleCorrespondence() );
 
         int i = 1;
 
@@ -1203,7 +1249,8 @@ public class GeoConverter implements Converter {
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
-                        BioAssay ba = convertSample( sample, bioMaterial );
+                        BioAssay ba = convertSample( expExp.getExperimentalDesign().getExperimentalFactors(), sample,
+                                bioMaterial );
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
@@ -1312,6 +1359,8 @@ public class GeoConverter implements Converter {
     }
 
     /**
+     * Subsets are the main way we get factors.
+     * 
      * @param expExp
      * @param geoSubSet
      * @return ExperimentalFactor
@@ -1346,7 +1395,8 @@ public class GeoConverter implements Converter {
         // By definition each subset defines a new factor value.
         FactorValue factorValue = FactorValue.Factory.newInstance();
         factorValue.setExperimentalFactor( experimentalFactor );
-        factorValue.setValue( geoSubSet.getDescription() ); // :( OntologyEntry or Measurement would be preferable.
+        factorValue.setValue( StringUtils.strip( geoSubSet.getDescription() ) ); // :( OntologyEntry or Measurement
+        // would be preferable.
         experimentalFactor.getFactorValues().add( factorValue );
 
         // fill in biomaterial-->factorvalue.
@@ -1361,7 +1411,8 @@ public class GeoConverter implements Converter {
                     // ....how do we figure this out!
                     for ( BioMaterial material : bioMaterials ) {
                         if ( log.isInfoEnabled() ) {
-                            log.info( "Adding " + factorValue + " to " + material );
+                            log.info( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
+                                    + material );
                         }
                         material.getFactorValues().add( factorValue );
                     }
@@ -1409,6 +1460,7 @@ public class GeoConverter implements Converter {
      * @return
      */
     private FactorValue convertVariableToFactorValue( GeoVariable variable ) {
+        log.info( "Converting variable " + variable );
         FactorValue factorValue = FactorValue.Factory.newInstance();
         factorValue.setValue( variable.getDescription() );
         return factorValue;

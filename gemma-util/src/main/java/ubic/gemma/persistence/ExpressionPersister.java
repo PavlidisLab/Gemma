@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -61,7 +62,8 @@ import ubic.gemma.util.progress.LoggingSupport;
  * @spring.property name="bioMaterialService" ref="bioMaterialService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name="compoundService" ref="compoundService"
- * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
+ * @spring.property name="experimentalDesignService" ref="experimentalDesignService" *
+ * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  * @author pavlidis
  * @version $Id$
  */
@@ -82,6 +84,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private CompoundService compoundService;
 
     private ExperimentalDesignService experimentalDesignService;
+
+    private ExperimentalFactorService experimentalFactorService;
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
 
@@ -295,8 +299,27 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setAccession( persistDatabaseEntry( entity.getAccession() ) );
         }
 
+        // this has to come first and be persisted, so our factorvalues get persisted before we process the bioassays.
+        if ( entity.getExperimentalDesign() != null ) {
+            ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
+            processExperimentalDesign( experimentalDesign );
+            assert experimentalDesign.getId() != null;
+            entity.setExperimentalDesign( experimentalDesign );
+        }
+
         if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
 
+        processBioAssays( entity );
+
+        return expressionExperimentService.create( entity );
+    }
+
+    /**
+     * Handle persisting of the bioassays on the way to persisting the expression experiment.
+     * 
+     * @param entity
+     */
+    private void processBioAssays( ExpressionExperiment entity ) {
         Collection<BioAssay> alreadyFilled = new HashSet<BioAssay>();
 
         if ( entity.getDesignElementDataVectors().size() > 0 ) {
@@ -310,11 +333,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             }
         }
 
-        if ( entity.getExperimentalDesign() != null ) {
-            ExperimentalDesign experimentalDesign = entity.getExperimentalDesign();
-            processExperimentalDesign( experimentalDesign );
-        }
-
         for ( ExpressionExperimentSubSet subset : entity.getSubsets() ) {
             for ( BioAssay bA : subset.getBioAssays() ) {
                 bA.setId( persistBioAssay( bA ).getId() );
@@ -324,8 +342,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 }
             }
         }
-
-        return expressionExperimentService.create( entity );
     }
 
     /**
@@ -341,6 +357,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         Collection<ExperimentalFactor> factors = experimentalDesign.getExperimentalFactors();
         experimentalDesign.setExperimentalFactors( null );
 
+        // note we use create because this is specific to the instance. (we're overriding a cascade)
         experimentalDesign = experimentalDesignService.create( experimentalDesign );
 
         // put back.
@@ -350,12 +367,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             experimentalFactor.setExperimentalDesign( experimentalDesign );
 
-            persistCollectionElements( experimentalFactor.getAnnotations() );
-
-            OntologyEntry category = experimentalFactor.getCategory();
-            if ( category != null ) {
-                experimentalFactor.setCategory( persistOntologyEntry( category ) );
-            }
+            experimentalFactor = persistExperimentalFactor( experimentalFactor );
 
             // factorvalue is cascaded.
             for ( FactorValue factorValue : experimentalFactor.getFactorValues() ) {
@@ -366,6 +378,24 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
+     * @param experimentalFactor
+     * @return
+     */
+    private ExperimentalFactor fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor ) {
+        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
+
+        persistCollectionElements( experimentalFactor.getAnnotations() );
+
+        OntologyEntry category = experimentalFactor.getCategory();
+        if ( category != null ) {
+            experimentalFactor.setCategory( persistOntologyEntry( category ) );
+        }
+        return experimentalFactor;
+    }
+
+    /**
+     * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
+     * 
      * @param factorValue
      * @return
      */
@@ -375,7 +405,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         fillInFactorValueAssociations( factorValue );
 
-        return factorValueService.findOrCreate( factorValue );
+        // we use create because factor values are specific to this design.
+        return factorValueService.create( factorValue );
 
     }
 
@@ -383,6 +414,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param factorValue
      */
     private void fillInFactorValueAssociations( FactorValue factorValue ) {
+
+        fillInExperimentalFactorAssociations( factorValue.getExperimentalFactor() );
+
+        factorValue.setExperimentalFactor( persistExperimentalFactor( factorValue.getExperimentalFactor() ) );
+
         if ( factorValue.getOntologyEntry() != null ) {
             if ( factorValue.getMeasurement() != null ) {
                 throw new IllegalStateException(
@@ -395,8 +431,19 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 throw new IllegalStateException(
                         "FactorValue can only have one of a value, ontology entry, or measurement." );
             }
-
         }
+    }
+
+    /**
+     * Note that this uses 'create', not 'findOrCreate'.
+     * 
+     * @param experimentalFactor
+     * @return
+     */
+    private ExperimentalFactor persistExperimentalFactor( ExperimentalFactor experimentalFactor ) {
+        if ( !isTransient( experimentalFactor ) ) return experimentalFactor;
+        fillInExperimentalFactorAssociations( experimentalFactor );
+        return experimentalFactorService.create( experimentalFactor );
     }
 
     /**
@@ -497,6 +544,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
         this.experimentalDesignService = experimentalDesignService;
+    }
+
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
     }
 
 }
