@@ -51,7 +51,7 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
             }
 
             if ( localFile.getRemoteURL() != null ) {
-                queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURL() ) );
+                queryObject.add( Restrictions.eq( "remoteURL", localFile.getRemoteURL() ) );
             }
 
             java.util.List results = queryObject.list();
