@@ -27,7 +27,7 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.io.ByteArrayConverter; 
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -176,7 +176,7 @@ public class TestPersistentObjectHelper {
             ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
             ef.setDescription( i + ": A test experimental factor" );
             log.debug( "experimental factor => factor values" );
-            ef.setFactorValues( getFactorValues() );
+            ef.setFactorValues( getFactorValues( ef ) );
             efCol.add( ef );
         }
         return efCol;
@@ -185,11 +185,12 @@ public class TestPersistentObjectHelper {
     /**
      * @return Collection
      */
-    public Collection<FactorValue> getFactorValues() {
+    public Collection<FactorValue> getFactorValues( ExperimentalFactor ef ) {
         Collection<FactorValue> fvCol = new HashSet<FactorValue>();
         for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
             FactorValue fv = FactorValue.Factory.newInstance();
             fv.setValue( "Factor value " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
+            fv.setExperimentalFactor( ef );
             fvCol.add( fv );
         }
         return fvCol;

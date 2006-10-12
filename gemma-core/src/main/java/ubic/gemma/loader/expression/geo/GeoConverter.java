@@ -143,6 +143,13 @@ public class GeoConverter implements Converter {
 
     private static final String RAT = "rattus";
 
+    private static Map<String, String> organismDatabases = new HashMap<String, String>();
+
+    static {
+        organismDatabases.put( "Saccharomyces cerevisiae", "SGD" );
+        organismDatabases.put( "Schizosaccharomyces pombe", "GeneDB" );
+    }
+
     /**
      * Find the bioassay in the experiment that matches the one given.
      */
@@ -961,8 +968,7 @@ public class GeoConverter implements Converter {
      * @param sample
      */
     @SuppressWarnings("unchecked")
-    private BioAssay convertSample( Collection<ExperimentalFactor> experimentalFactors, GeoSample sample,
-            BioMaterial bioMaterial ) {
+    private BioAssay convertSample( GeoSample sample, BioMaterial bioMaterial ) {
         if ( sample == null ) {
             log.warn( "Null sample" );
             return null;
@@ -986,23 +992,29 @@ public class GeoConverter implements Converter {
         bioAssay.setDescription( sample.getDescription() );
         bioAssay.setAccession( convertDatabaseEntry( sample ) );
 
-        // FIXME: use the ones from the ExperimentalFactor. In other words, these factor values should correspond to
+        /*
+         * NOTE - according to GEO (http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html) "variable information is
+         * optional and does not appear in Series records or downloads, but will be used to assemble corresponding GEO
+         * DataSet records" If we would get that informatio we would pass it into this method as
+         * expExp.getExperimentalDesign().getExperimentalFactors().
+         */
+
+        // : use the ones from the ExperimentalFactor. In other words, these factor values should correspond to
         // experimentalfactors
-        for ( GeoReplication replication : sample.getReplicates() ) {
-
-            // find the experimentalFactor that matches this.
-
-            bioMaterial.getFactorValues().add( convertReplicationToFactorValue( replication ) );
-        }
-
-        // FIXME: use the ones from the ExperimentalFactor.
-        for ( GeoVariable variable : sample.getVariables() ) {
-
-            // find the experimentalFactor that matches this.
-
-            bioMaterial.getFactorValues().add( convertVariableToFactorValue( variable ) );
-        }
-
+        // for ( GeoReplication replication : sample.getReplicates() ) {
+        //
+        // // find the experimentalFactor that matches this.
+        //
+        // bioMaterial.getFactorValues().add( convertReplicationToFactorValue( replication ) );
+        // }
+        //
+        // // : use the ones from the ExperimentalFactor.
+        // for ( GeoVariable variable : sample.getVariables() ) {
+        //
+        // // find the experimentalFactor that matches this.
+        //
+        // bioMaterial.getFactorValues().add( convertVariableToFactorValue( variable ) );
+        // }
         for ( GeoChannel channel : sample.getChannels() ) {
             /*
              * In reality GEO does not have information about the samples run on each channel. We're just making it up.
@@ -1249,8 +1261,7 @@ public class GeoConverter implements Converter {
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
-                        BioAssay ba = convertSample( expExp.getExperimentalDesign().getExperimentalFactors(), sample,
-                                bioMaterial );
+                        BioAssay ba = convertSample( sample, bioMaterial );
                         ba.getSamplesUsed().add( bioMaterial );
                         bioMaterial.getBioAssaysUsedIn().add( ba );
                         bioMaterialDescription = bioMaterialDescription + " " + sample;
@@ -1495,7 +1506,7 @@ public class GeoConverter implements Converter {
         if ( varType.equals( VariableType.age ) ) {
             categoryTerm.setValue( "Age" );
         } else if ( varType.equals( VariableType.agent ) ) {
-            categoryTerm.setValue( "----" ); // FIXME - how to convert VariableType.agent.
+            categoryTerm.setValue( "Agent" );
         } else if ( varType.equals( VariableType.cellLine ) ) {
             categoryTerm.setValue( "CellLine" );
         } else if ( varType.equals( VariableType.cellType ) ) {
@@ -1602,12 +1613,16 @@ public class GeoConverter implements Converter {
         } else if ( likelyExternalDatabaseIdentifier.equals( "ORF" ) ) {
             String organism = platform.getOrganisms().iterator().next();
 
-            /*
-             * TODO this is silly, as this won't be a real database. Only matters for some organisms.
-             */
-            result.setName( organism + " ORFs" );
             result.setType( DatabaseType.GENOME );
-            log.warn( "External database is " + result );
+
+            if ( organismDatabases.containsKey( organism ) ) {
+                result.setName( organismDatabases.get( organism ) );
+            } else {
+                // Placeholder
+                result.setName( organism + " ORFs" );
+                log.warn( "External database is " + result );
+            }
+
         }
         if ( result == null || result.getName() == null ) {
             throw new IllegalStateException( "No external database was identified" );
@@ -1652,7 +1667,7 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Turn a rough-cut dimension name into something of reasonable length. FIXME this is pretty hokey.
+     * Turn a rough-cut dimension name into something of reasonable length.
      * 
      * @param dimensionName
      * @return
@@ -1741,7 +1756,7 @@ public class GeoConverter implements Converter {
     }
 
     /**
-     * Attempt to fill in the details of the quantitation type. FIXME, this needs work and testing.
+     * Attempt to fill in the details of the quantitation type.
      * 
      * @param qt QuantitationType to fill in details for.
      * @param name of the quantitation type from the GEO sample column
@@ -1789,6 +1804,8 @@ public class GeoConverter implements Converter {
             sType = ScaleType.LOG2;
         } else if ( description.contains( "log10" ) ) {
             sType = ScaleType.LOG10;
+        } else if ( description.contains( "log" ) ) {
+            sType = ScaleType.LOGBASEUNKNOWN; // though probably log 2.
         }
 
         if ( name.matches( "TOP" ) || name.matches( "LEFT" ) || name.matches( "RIGHT" ) || name.matches( "^BOT.*" ) ) {
