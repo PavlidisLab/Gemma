@@ -29,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.util.progress.LoggingSupport; 
 
 /**
  * @author pavlidis
@@ -71,7 +72,8 @@ public abstract class AbstractFetcher implements Fetcher {
             }
 
             if ( log.isInfoEnabled() ) {
-                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+                LoggingSupport.progressLog( log,
+                        ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
             }
         }
     }

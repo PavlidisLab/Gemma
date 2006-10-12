@@ -324,6 +324,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign = persistArrayDesignCompositeSequenceAssociations( arrayDesign );
 
+        LoggingSupport.progressLog( log, "Persisting " + arrayDesign);
+        
         arrayDesignService.update( arrayDesign );
 
         // now have persistent CS

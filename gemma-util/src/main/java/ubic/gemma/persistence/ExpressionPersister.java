@@ -279,7 +279,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private ExpressionExperiment persistExpressionExperiment( ExpressionExperiment entity ) {
 
-        log.info( "Persisting " + entity );
+        LoggingSupport.progressLog( log, "Persisting " + entity );
 
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
@@ -307,7 +307,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             entity.setExperimentalDesign( experimentalDesign );
         }
 
-        if ( log.isInfoEnabled() ) log.info( entity.getBioAssays().size() + " bioAssays in " + entity );
+        if ( log.isInfoEnabled() )
+            LoggingSupport.progressLog( log, entity.getBioAssays().size() + " bioAssays in " + entity );
 
         processBioAssays( entity );
 

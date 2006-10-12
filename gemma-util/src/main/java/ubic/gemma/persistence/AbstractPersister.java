@@ -30,6 +30,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
+import ubic.gemma.util.progress.LoggingSupport;
+
 // import ubic.gemma.security.interceptor.CrudInterceptorUtils;
 
 /**
@@ -96,8 +98,7 @@ public abstract class AbstractPersister implements Persister {
         assert col != null && col.size() > 0;
         if ( increment ) ++count;
         if ( ( !increment || count % numElementsPerUpdate == 0 ) && log.isInfoEnabled() ) {
-            log
-                    .info( "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
+            LoggingSupport.progressLog( log, "Processed " + count + "/" + col.size() + " " + col.iterator().next().getClass().getName()
                             + "'s" );
         }
         return count;
