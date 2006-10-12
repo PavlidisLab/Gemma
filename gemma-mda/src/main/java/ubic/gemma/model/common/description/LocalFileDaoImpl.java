@@ -42,11 +42,13 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
     public LocalFile find( ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
 
-            BusinessKey.checkValidKey( localFile );
-
             Criteria queryObject = super.getSession( false ).createCriteria( LocalFile.class );
-
-            queryObject.add( Restrictions.eq( "localURL", localFile.getLocalURL() ) );
+            if ( localFile != null ) {
+                if ( localFile.getLocalURL() != null ) {
+                    BusinessKey.checkValidKey( localFile );
+                    queryObject.add( Restrictions.eq( "localURL", localFile.getLocalURL() ) );
+                }
+            }
 
             // assert localFile != null;
             // if ( localFile.getSize() != null && localFile.getSize() != 0 )
