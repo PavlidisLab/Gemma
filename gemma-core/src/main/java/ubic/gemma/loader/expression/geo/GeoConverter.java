@@ -234,10 +234,7 @@ public class GeoConverter implements Converter {
     private BioMaterial convertChannel( GeoSample sample, GeoChannel channel, BioMaterial bioMaterial ) {
         if ( bioMaterial == null ) return null;
         log.debug( "Sample: " + sample.getGeoAccession() + " - Converting channel " + channel.getSourceName() );
-        // BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
 
-        // bioMaterial.setExternalAccession( convertDatabaseEntry( sample ) );
-        // bioMaterial.setName( sample.getGeoAccession() + "_channel_" + channel.getChannelNumber() );
         bioMaterial.setDescription( ( bioMaterial.getDescription() == null ? "" : bioMaterial.getDescription() + ";" )
                 + "Channel "
                 + channel.getChannelNumber()
@@ -245,14 +242,15 @@ public class GeoConverter implements Converter {
                 + channel.getOrganism()
                 + " "
                 + channel.getSourceName()
-                + ( StringUtils.isBlank( channel.getExtractProtocol() ) ? "" : " Extraction Protocol: "
-                        + channel.getExtractProtocol() )
-                + ( StringUtils.isBlank( channel.getLabelProtocol() ) ? "" : " Labeling Protocol: "
-                        + channel.getLabelProtocol() )
-                + ( StringUtils.isBlank( channel.getTreatmentProtocol() ) ? "" : " Treatment Protocol: "
-                        + channel.getTreatmentProtocol() )
-                + ( StringUtils.isBlank( channel.getGrowthProtocol() ) ? "" : " Growth Protocol: "
-                        + channel.getGrowthProtocol() ) );
+                + "\n"
+                + ( StringUtils.isBlank( channel.getExtractProtocol() ) ? "" : "Extraction Protocol: "
+                        + channel.getExtractProtocol() + "\n" )
+                + ( StringUtils.isBlank( channel.getLabelProtocol() ) ? "" : "Labeling Protocol: "
+                        + channel.getLabelProtocol() + "\n" )
+                + ( StringUtils.isBlank( channel.getTreatmentProtocol() ) ? "" : "Treatment Protocol: "
+                        + channel.getTreatmentProtocol() + "\n" )
+                + ( StringUtils.isBlank( channel.getGrowthProtocol() ) ? "" : "Growth Protocol: "
+                        + channel.getGrowthProtocol() ) + "\n" );
         // these protocols could be made into 'real' protocols, if anybody cares.
 
         for ( String characteristic : channel.getCharacteristics() ) {
@@ -297,11 +295,12 @@ public class GeoConverter implements Converter {
     private void convertContacts( GeoSeries series, ExpressionExperiment expExp ) {
         expExp.getInvestigators().add( convertContact( series.getContact() ) );
         if ( series.getContributers().size() > 0 ) {
-            expExp.setDescription( expExp.getDescription() + " -- Contributers: " );
+            expExp.setDescription( expExp.getDescription() + "\nContributers: " );
             for ( GeoContact contributer : series.getContributers() ) {
                 expExp.setDescription( expExp.getDescription() + " " + contributer.getName() );
                 expExp.getInvestigators().add( convertContact( contributer ) );
             }
+            expExp.setDescription( expExp.getDescription() + "\n" );
         }
     }
 
@@ -591,22 +590,22 @@ public class GeoConverter implements Converter {
             expExp.setDescription( geoDataset.getDescription() ); // probably not empty.
         }
 
-        expExp.setDescription( expExp.getDescription() + " Includes " + geoDataset.getGeoAccession() + ". " );
+        expExp.setDescription( expExp.getDescription() + "\nIncludes " + geoDataset.getGeoAccession() + ".\n" );
         if ( StringUtils.isNotEmpty( geoDataset.getUpdateDate() ) ) {
-            expExp.setDescription( expExp.getDescription() + " Update date: " + geoDataset.getUpdateDate() + ". " );
+            expExp.setDescription( expExp.getDescription() + " Update date: " + geoDataset.getUpdateDate() + ".\n" );
         }
 
         if ( StringUtils.isEmpty( expExp.getName() ) ) {
             expExp.setName( geoDataset.getTitle() );
         } else {
             expExp.setDescription( expExp.getDescription() + " Dataset description " + geoDataset.getGeoAccession()
-                    + ": " + geoDataset.getTitle() + ". " );
+                    + ": " + geoDataset.getTitle() + ".\n" );
         }
 
         GeoPlatform platform = geoDataset.getPlatform();
         if ( platform != null ) {
-            expExp.setDescription( expExp.getDescription() + ". Platform " + platform.getGeoAccession()
-                    + " Last Updated: " + platform.getLastUpdateDate() );
+            expExp.setDescription( expExp.getDescription() + "Platform " + platform.getGeoAccession()
+                    + " Last Updated: " + platform.getLastUpdateDate() + "\n" );
         }
     }
 
@@ -980,8 +979,8 @@ public class GeoConverter implements Converter {
             // Allow for possibility that platforms use different taxa.
             Taxon taxon = convertPlatformOrganism( platform );
             if ( lastTaxon != null && !taxon.equals( lastTaxon ) ) {
-                log
-                        .warn( "Multiple taxa found among platforms for single sample, new biomaterial will be associated with the last taxon found." );
+                log.warn( "Multiple taxa found among platforms for single sample, "
+                        + " new biomaterial will be associated with the last taxon found." );
             }
             lastTaxon = taxon;
 
@@ -1018,40 +1017,7 @@ public class GeoConverter implements Converter {
             log.warn( "**** Multiple-species dataset! ****" );
             int i = 1;
             for ( String organism : organismDatasetMap.keySet() ) {
-                GeoSeries speciesSpecific = new GeoSeries();
-
-                Collection<GeoDataset> datasets = organismDatasetMap.get( organism );
-                assert datasets.size() > 0;
-
-                for ( GeoSample sample : series.getSamples() ) {
-                    // ugly, we have to assume there is only one platform and one organism...
-                    if ( sample.getPlatforms().iterator().next().getOrganisms().iterator().next().equals( organism ) ) {
-                        speciesSpecific.addSample( sample );
-                    }
-                }
-
-                // strip out samples that aren't from this organism.
-
-                for ( GeoDataset dataset : datasets ) {
-                    dataset.dissociateFromSeries( series );
-                    speciesSpecific.addDataSet( dataset );
-                }
-
-                /*
-                 *
-                 */
-                speciesSpecific.setContact( series.getContact() );
-                speciesSpecific.setContributers( series.getContributers() );
-                speciesSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
-                speciesSpecific.setKeyWords( series.getKeyWords() );
-                speciesSpecific.setOverallDesign( series.getOverallDesign() );
-                speciesSpecific.setPubmedIds( series.getPubmedIds() );
-                speciesSpecific.setReplicates( series.getReplicates() );
-                speciesSpecific.setSampleCorrespondence( series.getSampleCorrespondence() );
-                speciesSpecific.setSummaries( series.getSummaries() );
-                speciesSpecific.setTitle( series.getTitle() + " - " + organism );
-                speciesSpecific.setWebLinks( series.getWebLinks() );
-                converted.add( convertSeries( speciesSpecific, null ) );
+                convertSpeciesSpecific( series, converted, organismDatasetMap, i, organism );
                 i++;
             }
         } else {
@@ -1061,6 +1027,56 @@ public class GeoConverter implements Converter {
         return converted;
     }
 
+    /**
+     * @param series
+     * @param converted
+     * @param organismDatasetMap
+     * @param i
+     * @param organism
+     */
+    private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted,
+            Map<String, Collection<GeoDataset>> organismDatasetMap, int i, String organism ) {
+        GeoSeries speciesSpecific = new GeoSeries();
+
+        Collection<GeoDataset> datasets = organismDatasetMap.get( organism );
+        assert datasets.size() > 0;
+
+        for ( GeoSample sample : series.getSamples() ) {
+            // ugly, we have to assume there is only one platform and one organism...
+            if ( sample.getPlatforms().iterator().next().getOrganisms().iterator().next().equals( organism ) ) {
+                speciesSpecific.addSample( sample );
+            }
+        }
+
+        // strip out samples that aren't from this organism.
+
+        for ( GeoDataset dataset : datasets ) {
+            dataset.dissociateFromSeries( series );
+            speciesSpecific.addDataSet( dataset );
+        }
+
+        /*
+         * Basically copy over most of the information
+         */
+        speciesSpecific.setContact( series.getContact() );
+        speciesSpecific.setContributers( series.getContributers() );
+        speciesSpecific.setGeoAccession( series.getGeoAccession() + "." + i );
+        speciesSpecific.setKeyWords( series.getKeyWords() );
+        speciesSpecific.setOverallDesign( series.getOverallDesign() );
+        speciesSpecific.setPubmedIds( series.getPubmedIds() );
+        speciesSpecific.setReplicates( series.getReplicates() );
+        speciesSpecific.setSampleCorrespondence( series.getSampleCorrespondence() );
+        speciesSpecific.setSummaries( series.getSummaries() );
+        speciesSpecific.setTitle( series.getTitle() + " - " + organism );
+        speciesSpecific.setWebLinks( series.getWebLinks() );
+
+        converted.add( convertSeries( speciesSpecific, null ) );
+    }
+
+    /**
+     * @param series
+     * @return
+     */
     private Map<String, Collection<GeoDataset>> getOrganismDatasetMap( GeoSeries series ) {
         Map<String, Collection<GeoDataset>> organisms = new HashMap<String, Collection<GeoDataset>>();
 
@@ -1094,9 +1110,13 @@ public class GeoConverter implements Converter {
             expExp = resultToAddTo;
         }
 
-        if ( series.getLastUpdateDate() == null ) series.setLastUpdateDate( "not available" );
-        expExp.setDescription( series.getSummaries() + ". Date " + series.getGeoAccession() + " Updated On: "
-                + series.getLastUpdateDate() );
+        if ( series.getLastUpdateDate() == null ) {
+            series.setLastUpdateDate( "not available" );
+        }
+
+        expExp.setDescription( series.getSummaries() + ".\nDate " + series.getGeoAccession() + " Last Updated: "
+                + series.getLastUpdateDate() + "\n" );
+
         expExp.setName( series.getTitle() );
 
         convertContacts( series, expExp );
@@ -1180,19 +1200,6 @@ public class GeoConverter implements Converter {
                         continue;
                     }
 
-                    if ( StringUtils.isEmpty( sample.getLastUpdateDate() ) )
-                        sample.setSupplementaryFile( "unavailable" );
-                    expExp.setDescription( expExp.getDescription() + ". " + sample.getGeoAccession()
-                            + " Last Updated: " + sample.getLastUpdateDate() );
-
-                    /*
-                     * This adds too many strings for a sql column. Anyhow, this file location is included in the
-                     * LocalFile of the ExpressionExperiment
-                     */
-                    // if ( StringUtils.isEmpty( sample.getSupplementaryFile() ) )
-                    // sample.setSupplementaryFile( "unavailable" );
-                    // expExp.setDescription( expExp.getDescription() + ". " + sample.getGeoAccession() + " Raw File: "
-                    // + sample.getSupplementaryFile() );
                     String accession = sample.getGeoAccession();
 
                     if ( accession.equals( cSample ) ) {
@@ -1516,7 +1523,11 @@ public class GeoConverter implements Converter {
             result = genbank;
         } else if ( likelyExternalDatabaseIdentifier.equals( "ORF" ) ) {
             String organism = platform.getOrganisms().iterator().next();
-            result.setName( organism + " ORFs" ); // TODO this is silly, as this won't be a real database.
+
+            /*
+             * TODO this is silly, as this won't be a real database. Only matters for some organisms.
+             */
+            result.setName( organism + " ORFs" );
             result.setType( DatabaseType.GENOME );
             log.warn( "External database is " + result );
         }
@@ -1668,7 +1679,7 @@ public class GeoConverter implements Converter {
 
         if ( name.contains( "Probe ID" ) || description.equalsIgnoreCase( "Probe Set ID" ) ) {
             /*
-             * FIXME special case...not a quantitation type.
+             * special case...not a quantitation type.
              */
             qType = StandardQuantitationType.OTHER;
             pType = PrimitiveType.STRING;
@@ -1836,7 +1847,7 @@ public class GeoConverter implements Converter {
             if ( !reference.equals( columnNames ) && log.isWarnEnabled() ) {
 
                 StringBuilder buf = new StringBuilder();
-                buf.append( "\nSample    " + sample.getGeoAccession() + ":" );
+                buf.append( "\nSample " + sample.getGeoAccession() + ":" );
                 for ( String string : columnNames ) {
                     buf.append( " " + string );
                 }
