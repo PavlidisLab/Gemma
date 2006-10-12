@@ -43,19 +43,16 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
         try {
 
             Criteria queryObject = super.getSession( false ).createCriteria( LocalFile.class );
-            if ( localFile != null ) {
-                if ( localFile.getLocalURL() != null ) {
-                    BusinessKey.checkValidKey( localFile );
-                    queryObject.add( Restrictions.eq( "localURL", localFile.getLocalURL() ) );
-                }
+
+            BusinessKey.checkValidKey( localFile );
+
+            if ( localFile.getLocalURL() != null ) {
+                queryObject.add( Restrictions.eq( "localURL", localFile.getLocalURL() ) );
             }
 
-            // assert localFile != null;
-            // if ( localFile.getSize() != null && localFile.getSize() != 0 )
-            // queryObject.add( Restrictions.eq( "size", localFile.getSize() ) );
-            //
-            // if ( localFile.getRemoteURL() != null )
-            // queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURL() ) );
+            if ( localFile.getRemoteURL() != null ) {
+                queryObject.add( Restrictions.eq( "remoteURI", localFile.getRemoteURL() ) );
+            }
 
             java.util.List results = queryObject.list();
             Object result = null;

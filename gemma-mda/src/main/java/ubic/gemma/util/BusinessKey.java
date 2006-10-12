@@ -312,7 +312,7 @@ public class BusinessKey {
      * @param localFile
      */
     public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null || localFile.getLocalURL() == null ) {
+        if ( localFile == null || ( localFile.getLocalURL() == null && localFile.getRemoteURL() == null ) ) {
             if ( localFile != null )
                 log.error( "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL="
                         + localFile.getRemoteURL() + " size=" + localFile.getSize() );
