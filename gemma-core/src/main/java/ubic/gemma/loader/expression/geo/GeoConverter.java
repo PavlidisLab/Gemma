@@ -1128,7 +1128,6 @@ public class GeoConverter implements Converter {
             remoteUrl = new URL( series.getSupplementaryFile() );
             LocalFile expExpRawDataFile = LocalFile.Factory.newInstance();
             expExpRawDataFile.setRemoteURL( remoteUrl );
-            expExpRawDataFile.setLocalURL( remoteUrl );// FIXME required, but unecessary(?)
             expExp.setRawDataFile( expExpRawDataFile );
         } catch ( MalformedURLException e ) {
             log.error( "Problems with url: " + remoteUrl + ".  Will not store the url of the raw data file." );
