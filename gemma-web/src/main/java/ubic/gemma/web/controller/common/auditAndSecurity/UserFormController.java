@@ -21,6 +21,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.util.UserConstants;
 
 /**
  * For editing users, or showing lists of users (for admins). Regular users clicking on "edit profile" get to here as do
@@ -214,7 +215,7 @@ public class UserFormController extends UserAuthenticatingController {
             } else {
                 user = new UserUpdateCommand();
                 UserRole role = UserRole.Factory.newInstance();
-                role.setName( Constants.USER_ROLE );
+                role.setName( UserConstants.USER_ROLE );
                 role.setUserName( user.getUserName() ); 
                 user.getRoles().add( role );
             }
@@ -260,7 +261,7 @@ public class UserFormController extends UserAuthenticatingController {
          * prevent ordinary users from calling a GET on editUser.html unless a bind error exists.
          */
         if ( ( request.getRequestURI().indexOf( "editUser" ) > -1 )
-                && ( !request.isUserInRole( Constants.ADMIN_ROLE ) && ( errors.getErrorCount() == 0 ) &&
+                && ( !request.isUserInRole( UserConstants.ADMIN_ROLE ) && ( errors.getErrorCount() == 0 ) &&
                 /*
                  * be nice to server-side validation for editProfile
                  */

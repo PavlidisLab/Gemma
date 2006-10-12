@@ -27,8 +27,7 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.Constants;
+import ubic.basecode.io.ByteArrayConverter; 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -62,6 +61,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.UserConstants;
 
 /**
  * Used to generate test data.
@@ -556,7 +556,7 @@ public class TestPersistentObjectHelper {
         ShaPasswordEncoder encoder = new ShaPasswordEncoder();
         String encryptedPassword = encoder.encodePassword( password, ConfigUtils.getProperty( "gemma.salt" ) );
 
-        UserRole ur = UserRole.Factory.newInstance( username, Constants.USER_ROLE, "regular user" );
+        UserRole ur = UserRole.Factory.newInstance( username, UserConstants.USER_ROLE, "regular user" );
 
         testUser.getRoles().add( ur );
         testUser.setPassword( encryptedPassword );

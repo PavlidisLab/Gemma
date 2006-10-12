@@ -36,9 +36,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.aop.MethodBeforeAdvice;
 
-import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
+import ubic.gemma.util.UserConstants;
 
 /**
  * Adapted from Appfuse 1.9
@@ -60,7 +60,7 @@ public class UserSecurityAdvice implements MethodBeforeAdvice {
             boolean administrator = false;
             GrantedAuthority[] roles = auth.getAuthorities();
             for ( int i = 0; i < roles.length; i++ ) {
-                if ( roles[i].getAuthority().equals( Constants.ADMIN_ROLE ) ) {
+                if ( roles[i].getAuthority().equals( UserConstants.ADMIN_ROLE ) ) {
                     administrator = true;
                     break;
                 }

@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import ubic.gemma.Constants;
+import ubic.gemma.util.UserConstants;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserService
@@ -98,7 +98,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
         if ( role == null ) throw new IllegalArgumentException( "Got passed null role!" );
         if ( user == null ) throw new IllegalArgumentException( "Got passed null user" );
 
-        if ( !role.equals( Constants.ADMIN_ROLE ) && !role.equals( Constants.USER_ROLE ) ) {
+        if ( !role.equals( UserConstants.ADMIN_ROLE ) && !role.equals( UserConstants.USER_ROLE ) ) {
             throw new IllegalArgumentException( role + " is not a recognized role" );
         }
 

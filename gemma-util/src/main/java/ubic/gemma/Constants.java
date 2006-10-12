@@ -54,16 +54,6 @@ public class Constants {
     public static final String USER_LIST = "userList";
 
     /**
-     * The name of the Administrator role, as specified in web.xml
-     */
-    public static final String ADMIN_ROLE = "admin";
-
-    /**
-     * The name of the User role, as specified in web.xml
-     */
-    public static final String USER_ROLE = "user";
-
-    /**
      * The name of the user's role list, a request-scoped attribute when adding/editing a user.
      */
     public static final String USER_ROLES = "userRoles";

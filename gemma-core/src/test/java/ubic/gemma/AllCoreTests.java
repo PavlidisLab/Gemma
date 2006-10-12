@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDeleteTest;
 import ubic.gemma.persistence.CrudUtilsTest;
 import ubic.gemma.persistence.PersisterTest;
 import ubic.gemma.security.AllSecurityTests;
-import ubic.gemma.util.progress.ProgressDataTest;
 import ubic.gemma.util.progress.ProgressIntegrationTest;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationTest;
 
@@ -85,7 +84,6 @@ public class AllCoreTests {
         suite.addTestSuite( ExpressionDataMatrixTest.class );
         suite.addTestSuite( ExpressionDataMatrixVisualizationTest.class );
 
-        suite.addTestSuite( ProgressDataTest.class );
         suite.addTestSuite( ProgressIntegrationTest.class );
         suite.addTestSuite( PersisterTest.class );
         suite.addTestSuite( CrudUtilsTest.class );

@@ -76,9 +76,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
-                    // insert count FIXME
-                    ( ( ExpressionExperiment ) result )
-                            .setBioAssayCount( handleGetBioAssayCountById( ( ( ExpressionExperiment ) result ).getId() ) );
                 }
             }
             return ( ExpressionExperiment ) result;
@@ -104,8 +101,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
         log.debug( "Creating new expressionExperiment: " + expressionExperiment.getName() );
         newExpressionExperiment = ( ExpressionExperiment ) create( expressionExperiment );
-        // insert count FIXME
-        newExpressionExperiment.setBioAssayCount( handleGetBioAssayCountById( newExpressionExperiment.getId() ) );
         return newExpressionExperiment;
     }
 

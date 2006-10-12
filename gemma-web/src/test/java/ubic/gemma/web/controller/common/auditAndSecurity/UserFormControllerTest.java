@@ -31,6 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.testing.BaseTransactionalSpringWebTest;
+import ubic.gemma.util.UserConstants;
 
 /**
  * @author pavlidis
@@ -84,7 +85,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         String password = "mypassword";
         User u = createNewUser( request, "newuser", password );
         request.setRemoteUser( "administrator" );
-        request.addParameter( "roles", Constants.ADMIN_ROLE );
+        request.addParameter( "roles", UserConstants.ADMIN_ROLE );
         request.setParameter( "from", "list" );
 
         assertNotNull( u );
@@ -113,7 +114,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
 
         User u = createNewUser( request, "newuser", "testing" );
         request.setRemoteUser( u.getUserName() );
-        request.addParameter( "roles", Constants.USER_ROLE );
+        request.addParameter( "roles", UserConstants.USER_ROLE );
 
         controller.signInUser( request, u, "testing" );
 
@@ -146,7 +147,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "from", "list" );
         request.setParameter( "Add", "true" );
         request.setRemoteUser( "administrator" );
-        request.addParameter( "roles", Constants.ADMIN_ROLE );
+        request.addParameter( "roles", UserConstants.ADMIN_ROLE );
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
@@ -167,7 +168,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "from", "list" );
         request.setRemoteUser( "administrator" );
         request.setParameter( "delete", "true" );
-        request.addUserRole( Constants.ADMIN_ROLE );
+        request.addUserRole( UserConstants.ADMIN_ROLE );
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         ModelAndView mv = controller.handleRequest( request, response );
@@ -190,7 +191,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
 
         request.setParameter( "firstName", "Something new" );
 
-        request.addParameter( "roles", Constants.USER_ROLE );
+        request.addParameter( "roles", UserConstants.USER_ROLE );
         request.setRemoteUser( u.getUserName() );
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -213,13 +214,13 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setRemoteUser( u.getUserName() );
         controller.signInUser( request, u, "testing" );
 
-        request.addParameter( "roles", Constants.USER_ROLE );
+        request.addParameter( "roles", UserConstants.USER_ROLE );
         request.setRemoteUser( u.getUserName() );
 
         request.setParameter( "firstName", "Something new" );
 
         // note use of addParameters
-        request.addParameter( "roles", Constants.ADMIN_ROLE );
+        request.addParameter( "roles", UserConstants.ADMIN_ROLE );
 
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -256,7 +257,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "from", "list" );
         request.setRemoteUser( "administrator" );
 
-        request.addParameter( "roles", Constants.ADMIN_ROLE );
+        request.addParameter( "roles", UserConstants.ADMIN_ROLE );
 
         ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindException.ERROR_KEY_PREFIX + "user" );
@@ -279,7 +280,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         request.setRemoteUser( "administrator" );
-        request.addUserRole( Constants.ADMIN_ROLE );
+        request.addUserRole( UserConstants.ADMIN_ROLE );
 
         ModelAndView mv = controller.handleRequest( request, response );
 
@@ -321,7 +322,7 @@ public class UserFormControllerTest extends BaseTransactionalSpringWebTest {
         request.setParameter( "institution", "UBC" );
         request.setParameter( "email", RandomStringUtils.randomAlphabetic( 6 ) + "@gemma.org" );
         request.setParameter( "passwordHint", "guess" );
-        request.addParameter( "roles", Constants.USER_ROLE );
+        request.addParameter( "roles", UserConstants.USER_ROLE );
         return newUserName;
     }
 

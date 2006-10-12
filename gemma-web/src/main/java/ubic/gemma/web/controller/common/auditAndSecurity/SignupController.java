@@ -25,11 +25,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
-
-import ubic.gemma.Constants;
+ 
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
+import ubic.gemma.util.UserConstants;
 
 /**
  * Controller to signup new users. Based on code from Appfuse.
@@ -94,7 +94,7 @@ public class SignupController extends UserAuthenticatingController {
      */
     private void addUserRole( UserUpdateCommand user ) {
         // Set the default user role on this new user
-        UserRole role = UserRole.Factory.newInstance( user.getUserName(), Constants.USER_ROLE,
+        UserRole role = UserRole.Factory.newInstance( user.getUserName(), UserConstants.USER_ROLE,
                 "added by signupController" );
         user.getRoles().add( role );
     }
