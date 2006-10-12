@@ -88,6 +88,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.util.progress.LoggingSupport;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoDataset objects.
@@ -449,7 +450,7 @@ public class GeoConverter implements Converter {
      * @param expExp
      */
     private ExpressionExperiment convertDataset( GeoDataset geoDataset, ExpressionExperiment expExp ) {
-        log.info( "Converting dataset:" + geoDataset );
+        LoggingSupport.progressLog( log, "Converting dataset:" + geoDataset );
 
         convertDatasetDescriptions( geoDataset, expExp );
 
@@ -754,6 +755,7 @@ public class GeoConverter implements Converter {
         log.debug( "Converting platform: " + platform.getGeoAccession() );
         ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setName( platform.getTitle() );
+        arrayDesign.setShortName( platform.getGeoAccession() );
         arrayDesign.setDescription( platform.getDescriptions() );
 
         platformDesignElementMap.put( arrayDesign.getName(), new HashMap<String, CompositeSequence>() );
@@ -1164,7 +1166,7 @@ public class GeoConverter implements Converter {
     @SuppressWarnings("unchecked")
     private ExpressionExperiment convertSeries( GeoSeries series, ExpressionExperiment resultToAddTo ) {
         if ( series == null ) return null;
-        log.debug( "Converting series: " + series.getGeoAccession() );
+        LoggingSupport.progressLog( log, "Converting series: " + series.getGeoAccession() );
 
         ExpressionExperiment expExp;
 
@@ -1182,6 +1184,7 @@ public class GeoConverter implements Converter {
         }
 
         expExp.setName( series.getTitle() );
+        expExp.setShortName( series.getGeoAccession() );
 
         convertContacts( series, expExp );
 
@@ -1291,7 +1294,7 @@ public class GeoConverter implements Converter {
             bioMaterial.setDescription( bioMaterialDescription );
         }
 
-        log.info( "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays" );
+        LoggingSupport.progressLog( log, "Expression Experiment from " + series + " has " + expExp.getBioAssays().size() + " bioassays" );
 
         // Dataset has additional information about the samples.
         Collection<GeoDataset> dataSets = series.getDatasets();
@@ -1491,7 +1494,7 @@ public class GeoConverter implements Converter {
                     // ....how do we figure this out!
                     for ( BioMaterial material : bioMaterials ) {
                         if ( log.isInfoEnabled() ) {
-                            log.info( "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
+                            LoggingSupport.progressLog( log, "Adding " + factorValue.getExperimentalFactor() + " : " + factorValue + " to "
                                     + material );
                         }
                         material.getFactorValues().add( factorValue );
@@ -1893,7 +1896,7 @@ public class GeoConverter implements Converter {
         qt.setIsBackground( isBackground );
 
         if ( log.isInfoEnabled() ) {
-            log.info( "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
+            LoggingSupport.progressLog( log, "Inferred that quantitation type \"" + name + "\" (Description: \"" + description
                     + "\") corresponds to: " + qType + ",  " + sType + ( qt.getIsBackground() ? " (Background) " : "" )
                     + " Encoding=" + pType );
         }
