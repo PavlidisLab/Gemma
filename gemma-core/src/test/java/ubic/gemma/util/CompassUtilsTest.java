@@ -42,14 +42,18 @@ public class CompassUtilsTest extends BaseSpringContextTest {
         CompassGpsInterfaceDevice gps = ( CompassGpsInterfaceDevice ) this.getBean( "compassGps" );
 
         boolean fail = false;
+        // Disable compass deletion test - DESTRUCTIVE test
+        /*
         try {
-            CompassUtils.deleteCompassIndex( gps );
+            
+            //CompassUtils.deleteCompassIndex( gps );
         } catch ( IOException e ) {
             fail = true;
             e.printStackTrace();
         } finally {
             assertFalse( false );
         }
+        */
     }
 
 }
