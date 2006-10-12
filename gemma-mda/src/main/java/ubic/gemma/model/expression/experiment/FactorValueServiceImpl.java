@@ -69,7 +69,7 @@ public class FactorValueServiceImpl extends ubic.gemma.model.expression.experime
 
     @Override
     protected FactorValue handleCreate( FactorValue factorValue ) throws Exception {
-        this.getFactorValueDao().create( factorValu );
+        this.getFactorValueDao().create( factorValue );
     }
 
 }
